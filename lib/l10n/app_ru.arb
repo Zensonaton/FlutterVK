@@ -88,8 +88,8 @@
 	"music_ConnectRecommendationsDescription": "Подключив рекомендации, Вы получите доступ к разделам по типу «Плейлисты для Вас» и другие, а так же у многих треков появятся обложки.\n\nЧто бы подключить рекомендации, Вам будет необходимо повторно авторизоваться. Хотите попробовать?",
 	"music_ConnectRecommendationsConnect": "Подключить",
 
-	"music_showAllFavoriteTracks": "Показать все треки",
-	"music_showAllPlaylists": "Показать все плейлисты",
+	"music_shuffleAndPlay": "Перемешать",
+	"music_showAllFavoriteTracks": "Все треки",
 
 	"music_trackUnavailableTitle": "Трек недоступен",
 	"music_trackUnavailableDescription": "Сервера ВКонтакте передали информацию о том, что данный трек недоступен. С этим ничего нельзя поделать.",

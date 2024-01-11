@@ -1,4 +1,5 @@
 import "dart:async";
+import "dart:math";
 
 import "package:cached_network_image/cached_network_image.dart";
 import "package:declarative_refresh_indicator/declarative_refresh_indicator.dart";
@@ -1514,21 +1515,47 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
         const SizedBox(
           height: 12,
         ),
-        FilledButton.icon(
-          onPressed: user.favoritesPlaylist?.audios != null
-              ? () => showDialog(
-                    context: context,
-                    builder: (context) => PlaylistDisplayDialog(
-                      audios: user.favoritesPlaylist!.audios!,
-                    ),
-                  )
-              : null,
-          icon: const Icon(
-            Icons.queue_music,
-          ),
-          label: Text(
-            AppLocalizations.of(context)!.music_showAllFavoriteTracks,
-          ),
+
+        Wrap(
+          spacing: 8,
+          children: [
+            FilledButton.icon(
+              onPressed: user.favoritesPlaylist?.audios != null
+                  ? () async {
+                      await player.setShuffle(true);
+
+                      await player.openAudioList(
+                        user.favoritesPlaylist!.audios!,
+                        index: Random().nextInt(
+                          user.favoritesPlaylist!.audios!.length,
+                        ),
+                      );
+                    }
+                  : null,
+              icon: const Icon(
+                Icons.play_arrow,
+              ),
+              label: Text(
+                AppLocalizations.of(context)!.music_shuffleAndPlay,
+              ),
+            ),
+            FilledButton.tonalIcon(
+              onPressed: user.favoritesPlaylist?.audios != null
+                  ? () => showDialog(
+                        context: context,
+                        builder: (context) => PlaylistDisplayDialog(
+                          audios: user.favoritesPlaylist!.audios!,
+                        ),
+                      )
+                  : null,
+              icon: const Icon(
+                Icons.queue_music,
+              ),
+              label: Text(
+                AppLocalizations.of(context)!.music_showAllFavoriteTracks,
+              ),
+            ),
+          ],
         ),
       ],
     );
