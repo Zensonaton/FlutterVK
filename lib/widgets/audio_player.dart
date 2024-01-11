@@ -445,8 +445,9 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
           : null,
       builder: (BuildContext context, AsyncSnapshot<ColorScheme> snapshot) {
         // Если мы получили актуальную цветовую схему, то мы должны сохранить её.
-        if (snapshot.connectionState == ConnectionState.done) {
-          previousColorScheme = snapshot.data!;
+        if (snapshot.connectionState == ConnectionState.done &&
+            snapshot.data != null) {
+          previousColorScheme = snapshot.data;
         }
 
         final ColorScheme scheme = previousColorScheme!;
