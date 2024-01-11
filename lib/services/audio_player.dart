@@ -178,7 +178,9 @@ class MediaKitPlayerExtended extends Player {
         );
 
   /// Инициализирует данный плеер.
-  Future<void> initPlayer() async {
+  Future<void> _initPlayer() async {
+    _logger.d("Called initPlayer");
+
     await _nativePlayer.setProperty(
       "network-timeout",
       "60",
@@ -574,19 +576,19 @@ class VKMusicPlayer extends MediaKitPlayerExtended {
 
   /// Объект SMTC для отображения плеера для Windows.
   ///
-  /// Данный объект не null только в том случае, если используется Windows. Инициализируется при вызове [initPlayer].
+  /// Данный объект не null только в том случае, если используется Windows. Инициализируется при вызове [_initPlayer].
   SMTCWindows? _smtc;
 
   /// Сессия объекта [AudioSession], который позволяет указать операционным системам то, что воспроизводит данное приложение, а так же даёт возможность обрабатывать события "затыкания" приложения в случае, к примеру, звонка.
   ///
-  /// Данный объект инициализируется при вызове [initPlayer].
+  /// Данный объект инициализируется при вызове [_initPlayer].
   AudioSession? _audioSession;
 
   /// Объект [AudioPlayerHandler], который создаёт плеер в уведомлениях Android, а так же передаёт события при взаимодействиях с этим уведомлением.
   AudioPlayerHandler? audioPlayerHandler;
 
   VKMusicPlayer() {
-    initPlayer();
+    _initPlayer();
 
     // Слушаем события от SMTC, если приложение запущено на Windows.
     if (Platform.isWindows) {
@@ -706,8 +708,8 @@ class VKMusicPlayer extends MediaKitPlayerExtended {
 
   /// Инициализирует данный плеер, посылая уведомления и прочую информацию внешним системам.
   @override
-  Future<void> initPlayer() async {
-    super.initPlayer();
+  Future<void> _initPlayer() async {
+    super._initPlayer();
 
     // Создаём объект AudioSession.
     if (_audioSession == null) {
