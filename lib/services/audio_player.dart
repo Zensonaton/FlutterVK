@@ -247,6 +247,8 @@ class MediaKitPlayerExtended extends Player {
     _logger.d("Called setShuffle($shuffle)");
     if (_shuffleEnabled == shuffle) return;
 
+    _shuffleEnabled = shuffle;
+
     // Вся логика для shuffle расположена внутри метода setPlaylist, если аргумент ignoreShuffle равен false.
     if (_playlist != null) {
       setPlaylist(
@@ -256,8 +258,6 @@ class MediaKitPlayerExtended extends Player {
     }
 
     await super.setShuffle(shuffle);
-
-    _shuffleEnabled = shuffle;
     _shuffleStream.add(shuffle);
   }
 
@@ -309,7 +309,10 @@ class MediaKitPlayerExtended extends Player {
     _logger.d("Called open(..., $play)");
 
     if (playable is Playlist) {
-      setPlaylist(playable);
+      setPlaylist(
+        playable,
+        ignoreShuffle: false,
+      );
 
       await super.open(
         playable.medias[playable.index],

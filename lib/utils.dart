@@ -71,7 +71,7 @@ Future<ColorScheme> generateColorSchemeFromImage(
   final ColorScheme? cachedScheme = imageColorSchemeCache[cacheKey];
   if (cachedScheme != null) return cachedScheme;
 
-  logger.d("Creating ColorScheme for image hash cacheKey");
+  logger.d("Creating ColorScheme for image hash $cacheKey");
 
   final Stopwatch watch = Stopwatch()..start();
 
