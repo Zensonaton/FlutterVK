@@ -440,6 +440,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
           ? generateColorSchemeFromImage(
               image!,
               MediaQuery.of(context).platformBrightness,
+              widget.audio!.mediaKey,
             )
           : null,
       builder: (BuildContext context, AsyncSnapshot<ColorScheme> snapshot) {

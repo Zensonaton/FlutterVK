@@ -3,11 +3,12 @@ import "dart:math";
 import "dart:ui";
 
 import "package:flutter/material.dart";
+import "package:palette_generator/palette_generator.dart";
 
 import "services/logger.dart";
 
 /// Кэш для изображений.
-Map<int, ColorScheme> imageColorSchemeCache = {};
+Map<String, ColorScheme> imageColorSchemeCache = {};
 
 /// Извлекает access-токен из строки.
 String? extractAccessToken(String input) {
@@ -56,26 +57,41 @@ class NavigationPage {
   });
 }
 
-/// Создаёт цветовую схему из изображения. Данный метод кэшируется.
+/// Создаёт цветовую схему из изображения.
+///
+/// Результаты работы данного метода кэшируются в [imageColorSchemeCache] при помощи ключа [cacheKey].
 Future<ColorScheme> generateColorSchemeFromImage(
-  ImageProvider provider,
+  ImageProvider imageProvider,
   Brightness brightness,
+  String cacheKey,
 ) async {
-  if (imageColorSchemeCache.containsKey(provider.hashCode)) {
-    return imageColorSchemeCache[provider.hashCode]!;
-  }
+  AppLogger logger = getLogger("generateColorSchemeFromImage");
 
-  AppLogger logger = getLogger("colorSchemeGenerator");
-  logger.d("Creating ColorScheme for image hash ${provider.hashCode}");
+  // Пытаемся извлечь значение из кэша.
+  final ColorScheme? cachedScheme = imageColorSchemeCache[cacheKey];
+  if (cachedScheme != null) return cachedScheme;
 
-  final ColorScheme scheme = await ColorScheme.fromImageProvider(
-    provider: provider,
+  logger.d("Creating ColorScheme for image hash cacheKey");
+
+  final Stopwatch watch = Stopwatch()..start();
+
+  // Извлекаем цвета из изображения, делая объект PaletteGenerator.
+  final PaletteGenerator palette = await PaletteGenerator.fromImageProvider(
+    imageProvider,
+    maximumColorCount: 1,
+  );
+
+  // Превращаем наш PaletteGenerator в цветовую схему.
+  final ColorScheme scheme = ColorScheme.fromSeed(
+    seedColor: palette.dominantColor!.color,
     brightness: brightness,
   );
 
-  imageColorSchemeCache[provider.hashCode] = scheme;
+  imageColorSchemeCache[cacheKey] = scheme;
 
-  logger.d("Done building ColorScheme for image hash ${provider.hashCode}");
+  logger.d(
+    "Done building ColorScheme for image hash $cacheKey, took ${watch.elapsed}",
+  );
 
   return scheme;
 }
