@@ -401,23 +401,15 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
   /// Последняя известная цветовая схема для данного плеера.
   ///
   /// Используется как fallback в тот момент, пока актуальный [ColorScheme] ещё не был создан.
-  ColorScheme? previousColorScheme;
+  ColorScheme? scheme;
 
   @override
   Widget build(BuildContext context) {
     // Если fallback-цветовая схема плеера не была сохранена, то нам нужно её сохранить.
-    previousColorScheme ??= Theme.of(context).colorScheme;
+    scheme ??= Theme.of(context).colorScheme;
 
     /// Url изображения данного трека.
     final String? imageUrl = widget.audio?.album?.thumb?.photo68;
-
-    /// [ImageProvider] (если [imageUrl] не null) для отображения изображения трека.
-    final ImageProvider? image = imageUrl != null
-        ? CachedNetworkImageProvider(
-            imageUrl,
-            cacheKey: widget.audio!.mediaKey,
-          )
-        : null;
 
     /// Размеры блоков слева и справа (блок с названием и блок с управлением громкостью.)
     ///
@@ -434,308 +426,301 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
             ? (widget.progress >= 0.9)
             : false;
 
-    // TODO: Избавиться от этого FutureBuilder, поскольку он вызывает излишние rebuild'ы интерфейса.
-    return FutureBuilder(
-      future: imageUrl != null
-          ? generateColorSchemeFromImage(
-              image!,
-              MediaQuery.of(context).platformBrightness,
-              widget.audio!.mediaKey,
-            )
-          : null,
-      builder: (BuildContext context, AsyncSnapshot<ColorScheme> snapshot) {
-        // Если мы получили актуальную цветовую схему, то мы должны сохранить её.
-        if (snapshot.connectionState == ConnectionState.done &&
-            snapshot.data != null) {
-          previousColorScheme = snapshot.data;
-        }
+    // Запускаем процесс получения ColorScheme для данного трека.
+    if (imageUrl != null && widget.audio != null) {
+      colorSchemeFromUrl(
+        imageUrl,
+        MediaQuery.of(context).platformBrightness,
+        widget.audio!.mediaKey,
+      ).then((ColorScheme newScheme) {
+        setState(() => scheme = newScheme);
+      });
+    }
 
-        final ColorScheme scheme = previousColorScheme!;
-
-        final Widget playPauseButton = widget.useBigLayout
-            ? IconButton.filled(
-                onPressed: () =>
-                    widget.onPlayStateToggle?.call(!widget.playbackState),
-                icon: Icon(
-                  widget.playbackState ? Icons.pause : Icons.play_arrow,
-                  color: scheme.primary,
-                ),
-                style: IconButton.styleFrom(
-                  backgroundColor: scheme.onSecondary,
-                ),
-              )
-            : IconButton(
-                onPressed: () =>
-                    widget.onPlayStateToggle?.call(!widget.playbackState),
-                icon: Icon(
-                  widget.playbackState ? Icons.pause : Icons.play_arrow,
-                  color: scheme.primary,
-                ),
-              );
-        final Widget shuffleButton = IconButton(
-          onPressed: () =>
-              widget.onShuffleToggle?.call(!widget.isShuffleEnabled),
-          icon: Icon(
-            widget.isShuffleEnabled ? Icons.shuffle_on : Icons.shuffle,
-            color: scheme.primary,
-          ),
-        );
-
-        return AnimatedContainer(
-          height: widget.useBigLayout ? 90 : 70,
-          duration: const Duration(
-            milliseconds: 250,
-          ),
-          decoration: BoxDecoration(
-            color: darkenColor(
-              scheme.primaryContainer,
-              widget.playbackState ? 0 : 15,
+    final Widget playPauseButton = widget.useBigLayout
+        ? IconButton.filled(
+            onPressed: () =>
+                widget.onPlayStateToggle?.call(!widget.playbackState),
+            icon: Icon(
+              widget.playbackState ? Icons.pause : Icons.play_arrow,
+              color: scheme!.primary,
             ),
-            borderRadius: widget.useBigLayout
-                ? null
-                : BorderRadius.circular(globalBorderRadius),
-            boxShadow: [
-              BoxShadow(
-                color: scheme.secondaryContainer,
-                blurRadius: widget.playbackState ? 50 : 0,
-                blurStyle: BlurStyle.outer,
-              ),
-            ],
+            style: IconButton.styleFrom(
+              backgroundColor: scheme!.onSecondary,
+            ),
+          )
+        : IconButton(
+            onPressed: () =>
+                widget.onPlayStateToggle?.call(!widget.playbackState),
+            icon: Icon(
+              widget.playbackState ? Icons.pause : Icons.play_arrow,
+              color: scheme!.primary,
+            ),
+          );
+    final Widget shuffleButton = IconButton(
+      onPressed: () => widget.onShuffleToggle?.call(!widget.isShuffleEnabled),
+      icon: Icon(
+        widget.isShuffleEnabled ? Icons.shuffle_on : Icons.shuffle,
+        color: scheme!.primary,
+      ),
+    );
+
+    return AnimatedContainer(
+      height: widget.useBigLayout ? 90 : 70,
+      duration: const Duration(
+        milliseconds: 250,
+      ),
+      decoration: BoxDecoration(
+        color: darkenColor(
+          scheme!.primaryContainer,
+          widget.playbackState ? 0 : 15,
+        ),
+        borderRadius: widget.useBigLayout
+            ? null
+            : BorderRadius.circular(globalBorderRadius),
+        boxShadow: [
+          BoxShadow(
+            color: scheme!.secondaryContainer,
+            blurRadius: widget.playbackState ? 50 : 0,
+            blurStyle: BlurStyle.outer,
           ),
-          child: Stack(
-            children: [
-              // Плеер.
-              SizedBox(
-                height: double.infinity,
-                child: Padding(
-                  padding: EdgeInsets.all(
-                    widget.useBigLayout ? 12 : 8,
+        ],
+      ),
+      child: Stack(
+        children: [
+          // Плеер.
+          SizedBox(
+            height: double.infinity,
+            child: Padding(
+              padding: EdgeInsets.all(
+                widget.useBigLayout ? 12 : 8,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Блок с информацией о треке, его изображении, названия.
+                  Flexible(
+                    child: TrackNameInfoWidget(
+                      width: sideBlocksSize,
+                      scheme: scheme!,
+                      audio: widget.audio,
+                      image: imageUrl != null
+                          ? CachedNetworkImageProvider(
+                              imageUrl,
+                              cacheKey: widget.audio!.mediaKey,
+                            )
+                          : null,
+                      useBigLayout: widget.useBigLayout,
+                      playbackState: widget.playbackState,
+                      favoriteState: widget.favoriteState,
+                      onPlayStateToggle: widget.onPlayStateToggle,
+                      onFavoriteStateToggle: widget.onFavoriteStateToggle,
+                      onNextTrack: widget.onNextTrack,
+                      onPreviousTrack: widget.onPreviousTrack,
+                      onShuffleToggle: widget.onShuffleToggle,
+                      onRepeatToggle: widget.onRepeatToggle,
+                      onFullscreen: widget.onFullscreen,
+                      onDismiss: widget.onDismiss,
+                    ),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Блок с информацией о треке, его изображении, названия.
-                      Flexible(
-                        child: TrackNameInfoWidget(
-                          width: sideBlocksSize,
-                          scheme: scheme,
-                          audio: widget.audio,
-                          image: image,
-                          useBigLayout: widget.useBigLayout,
-                          playbackState: widget.playbackState,
-                          favoriteState: widget.favoriteState,
-                          onPlayStateToggle: widget.onPlayStateToggle,
-                          onFavoriteStateToggle: widget.onFavoriteStateToggle,
-                          onNextTrack: widget.onNextTrack,
-                          onPreviousTrack: widget.onPreviousTrack,
-                          onShuffleToggle: widget.onShuffleToggle,
-                          onRepeatToggle: widget.onRepeatToggle,
-                          onFullscreen: widget.onFullscreen,
-                          onDismiss: widget.onDismiss,
-                        ),
-                      ),
 
-                      // Кнопки управления по центру в desktop-layout'е.
-                      if (widget.useBigLayout)
-                        Flexible(
-                          child: Stack(
-                            clipBehavior: Clip.none,
-                            alignment: Alignment.center,
+                  // Кнопки управления по центру в desktop-layout'е.
+                  if (widget.useBigLayout)
+                    Flexible(
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        alignment: Alignment.center,
+                        children: [
+                          // Надпись "Играет следующим":
+                          if (widget.useBigLayout && widget.nextAudio != null)
+                            NextTrackInfoWidget(
+                              displayNextTrack: displayNextTrack,
+                              scheme: scheme!,
+                              nextAudio: widget.nextAudio!,
+                            ),
+
+                          // Ряд из кнопок управления.
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              // Надпись "Играет следующим":
-                              if (widget.useBigLayout &&
-                                  widget.nextAudio != null)
-                                NextTrackInfoWidget(
-                                  displayNextTrack: displayNextTrack,
-                                  scheme: scheme,
-                                  nextAudio: widget.nextAudio!,
+                              Flexible(
+                                child: shuffleButton,
+                              ),
+                              const SizedBox(
+                                width: 8,
+                              ),
+                              Flexible(
+                                child: IconButton(
+                                  onPressed: widget.onPreviousTrack,
+                                  icon: Icon(
+                                    Icons.skip_previous,
+                                    color: scheme!.primary,
+                                  ),
                                 ),
+                              ),
+                              const SizedBox(
+                                width: 8,
+                              ),
+                              Flexible(
+                                child: playPauseButton,
+                              ),
+                              const SizedBox(
+                                width: 8,
+                              ),
 
-                              // Ряд из кнопок управления.
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Flexible(
-                                    child: shuffleButton,
+                              // Кнопка для запуска следующего трека.
+                              Flexible(
+                                child: IconButton(
+                                  onPressed: widget.onNextTrack,
+                                  icon: Icon(
+                                    Icons.skip_next,
+                                    color: scheme!.primary,
                                   ),
-                                  const SizedBox(
-                                    width: 8,
-                                  ),
-                                  Flexible(
-                                    child: IconButton(
-                                      onPressed: widget.onPreviousTrack,
-                                      icon: Icon(
-                                        Icons.skip_previous,
-                                        color: scheme.primary,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(
-                                    width: 8,
-                                  ),
-                                  Flexible(
-                                    child: playPauseButton,
-                                  ),
-                                  const SizedBox(
-                                    width: 8,
-                                  ),
+                                ),
+                              ),
+                              const SizedBox(
+                                width: 8,
+                              ),
 
-                                  // Кнопка для запуска следующего трека.
-                                  Flexible(
-                                    child: IconButton(
-                                      onPressed: widget.onNextTrack,
-                                      icon: Icon(
-                                        Icons.skip_next,
-                                        color: scheme.primary,
-                                      ),
-                                    ),
+                              // Кнопка повтора.
+                              Flexible(
+                                child: IconButton(
+                                  onPressed: () => widget.onRepeatToggle
+                                      ?.call(!widget.isRepeatEnabled),
+                                  icon: Icon(
+                                    widget.isRepeatEnabled
+                                        ? Icons.repeat_on
+                                        : Icons.repeat,
+                                    color: scheme!.primary,
                                   ),
-                                  const SizedBox(
-                                    width: 8,
-                                  ),
-
-                                  // Кнопка повтора.
-                                  Flexible(
-                                    child: IconButton(
-                                      onPressed: () => widget.onRepeatToggle
-                                          ?.call(!widget.isRepeatEnabled),
-                                      icon: Icon(
-                                        widget.isRepeatEnabled
-                                            ? Icons.repeat_on
-                                            : Icons.repeat,
-                                        color: scheme.primary,
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                                ),
                               ),
                             ],
                           ),
-                        ),
+                        ],
+                      ),
+                    ),
 
-                      // Кнопки управления громкости и прочей мелочи справа в desktop-layout'е.
-                      if (widget.useBigLayout)
-                        Flexible(
-                          child: SizedBox(
-                            width: sideBlocksSize,
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Flexible(
-                                  child: SizedBox(
-                                    width: 150,
-                                    child: Listener(
-                                      onPointerSignal:
-                                          (PointerSignalEvent event) {
-                                        if (event is! PointerScrollEvent) {
-                                          return;
-                                        }
+                  // Кнопки управления громкости и прочей мелочи справа в desktop-layout'е.
+                  if (widget.useBigLayout)
+                    Flexible(
+                      child: SizedBox(
+                        width: sideBlocksSize,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Flexible(
+                              child: SizedBox(
+                                width: 150,
+                                child: Listener(
+                                  onPointerSignal: (PointerSignalEvent event) {
+                                    if (event is! PointerScrollEvent) {
+                                      return;
+                                    }
 
-                                        // Flutter возвращает количество как числа, кратные 100.
-                                        //
-                                        // Поскольку мы храним громкость как число от 0.0 до 1.0, мы должны разделить "шаг скроллинга" на 1000.
-                                        // Так же, нельзя забывать, что логика здесь немного инвертирована.
-                                        final double scrollAmount =
-                                            (-event.scrollDelta.dy) / 1000;
+                                    // Flutter возвращает количество как числа, кратные 100.
+                                    //
+                                    // Поскольку мы храним громкость как число от 0.0 до 1.0, мы должны разделить "шаг скроллинга" на 1000.
+                                    // Так же, нельзя забывать, что логика здесь немного инвертирована.
+                                    final double scrollAmount =
+                                        (-event.scrollDelta.dy) / 1000;
 
-                                        widget.onVolumeChange?.call(
-                                          clampDouble(
-                                            widget.volume + scrollAmount,
-                                            0,
-                                            1,
-                                          ),
-                                        );
-                                      },
-                                      child: SliderTheme(
-                                        data: SliderThemeData(
-                                          overlayShape:
-                                              SliderComponentShape.noThumb,
-                                        ),
-                                        child: Slider(
-                                          value: widget.volume,
-                                          onChanged: (double volume) =>
-                                              widget.onVolumeChange?.call(
-                                            volume,
-                                          ),
-                                          thumbColor: scheme.primary,
-                                          activeColor: scheme.primary,
-                                          inactiveColor: scheme.primary,
-                                        ),
+                                    widget.onVolumeChange?.call(
+                                      clampDouble(
+                                        widget.volume + scrollAmount,
+                                        0,
+                                        1,
                                       ),
+                                    );
+                                  },
+                                  child: SliderTheme(
+                                    data: SliderThemeData(
+                                      overlayShape:
+                                          SliderComponentShape.noThumb,
+                                    ),
+                                    child: Slider(
+                                      value: widget.volume,
+                                      onChanged: (double volume) =>
+                                          widget.onVolumeChange?.call(
+                                        volume,
+                                      ),
+                                      thumbColor: scheme!.primary,
+                                      activeColor: scheme!.primary,
+                                      inactiveColor: scheme!.primary,
                                     ),
                                   ),
                                 ),
-                                const SizedBox(
-                                  width: 8,
-                                ),
-
-                                // Кнопка для перехода в полноэкранный режим.
-                                Flexible(
-                                  child: FittedBox(
-                                    child: IconButton(
-                                      onPressed: () => showWipDialog(
-                                        context,
-                                        title: "Плеер на весь экран (F11)",
-                                      ),
-                                      icon: Icon(
-                                        Icons.fullscreen,
-                                        color: scheme.primary,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
-                          ),
-                        ),
+                            const SizedBox(
+                              width: 8,
+                            ),
 
-                      // Кнопки управления треком (shuffle, лайк, пауза/возобновление) справа в mobile-layout'е.
-                      if (!widget.useBigLayout)
-                        Flexible(
-                          child: FittedBox(
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                // Кнопка shuffle.
-                                shuffleButton,
-
-                                // Кнопка лайка.
-                                IconButton(
-                                  onPressed: () =>
-                                      widget.onFavoriteStateToggle ??
-                                      (!widget.favoriteState),
+                            // Кнопка для перехода в полноэкранный режим.
+                            Flexible(
+                              child: FittedBox(
+                                child: IconButton(
+                                  onPressed: () => showWipDialog(
+                                    context,
+                                    title: "Плеер на весь экран (F11)",
+                                  ),
                                   icon: Icon(
-                                    widget.favoriteState
-                                        ? Icons.favorite
-                                        : Icons.favorite_outline,
-                                    color: scheme.primary,
+                                    Icons.fullscreen,
+                                    color: scheme!.primary,
                                   ),
                                 ),
-
-                                // Кнопка паузы/возобновления.
-                                playPauseButton,
-                              ],
+                              ),
                             ),
-                          ),
-                        )
-                    ],
-                  ),
-                ),
-              ),
+                          ],
+                        ),
+                      ),
+                    ),
 
-              // Полоска внизу для отображения прогресса трека.
-              BottomMusicProgressBar(
-                scheme: scheme,
-                isBuffering: widget.isBuffering,
-                playbackState: widget.playbackState,
-                progress: widget.progress,
-                useBigLayout: widget.useBigLayout,
-              )
-            ],
+                  // Кнопки управления треком (shuffle, лайк, пауза/возобновление) справа в mobile-layout'е.
+                  if (!widget.useBigLayout)
+                    Flexible(
+                      child: FittedBox(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Кнопка shuffle.
+                            shuffleButton,
+
+                            // Кнопка лайка.
+                            IconButton(
+                              onPressed: () =>
+                                  widget.onFavoriteStateToggle ??
+                                  (!widget.favoriteState),
+                              icon: Icon(
+                                widget.favoriteState
+                                    ? Icons.favorite
+                                    : Icons.favorite_outline,
+                                color: scheme!.primary,
+                              ),
+                            ),
+
+                            // Кнопка паузы/возобновления.
+                            playPauseButton,
+                          ],
+                        ),
+                      ),
+                    )
+                ],
+              ),
+            ),
           ),
-        );
-      },
+
+          // Полоска внизу для отображения прогресса трека.
+          BottomMusicProgressBar(
+            scheme: scheme!,
+            isBuffering: widget.isBuffering,
+            playbackState: widget.playbackState,
+            progress: widget.progress,
+            useBigLayout: widget.useBigLayout,
+          )
+        ],
+      ),
     );
   }
 }

@@ -2,6 +2,7 @@ import "dart:io";
 import "dart:math";
 import "dart:ui";
 
+import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
 import "package:palette_generator/palette_generator.dart";
 
@@ -57,11 +58,11 @@ class NavigationPage {
   });
 }
 
-/// Создаёт цветовую схему из изображения.
+/// Создаёт цветовую схему из Url изображения.
 ///
 /// Результаты работы данного метода кэшируются в [imageColorSchemeCache] при помощи ключа [cacheKey].
-Future<ColorScheme> generateColorSchemeFromImage(
-  ImageProvider imageProvider,
+Future<ColorScheme> colorSchemeFromUrl(
+  String imageUrl,
   Brightness brightness,
   String cacheKey,
 ) async {
@@ -77,7 +78,10 @@ Future<ColorScheme> generateColorSchemeFromImage(
 
   // Извлекаем цвета из изображения, делая объект PaletteGenerator.
   final PaletteGenerator palette = await PaletteGenerator.fromImageProvider(
-    imageProvider,
+    CachedNetworkImageProvider(
+      imageUrl,
+      cacheKey: cacheKey,
+    ),
     maximumColorCount: 1,
   );
 
