@@ -154,7 +154,9 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
 
     /// Определяет по оставшейся длине трека то, стоит ли показывать надпись со следующим треком.
     final bool displayNextTrack =
-        (widget.audio != null) ? (widget.progress >= 0.9) : false;
+        (widget.audio != null && widget.nextAudio != null)
+            ? (widget.progress >= 0.9)
+            : false;
 
     // TODO: Избавиться от этого FutureBuilder.
     return FutureBuilder(
