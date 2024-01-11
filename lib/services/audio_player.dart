@@ -359,38 +359,29 @@ class MediaKitPlayerExtended extends Player {
   @override
   Future<void> next() async {
     _logger.d("Called next");
-
     if (_playlist == null) return;
 
-    final bool isLast = _playlist!.index == _playlist!.medias.length - 1;
+    // Если это последний трек в плейлисте, то нужно начать воспроизведение с начала.
+    if (trackIndex == _playlist!.medias.length - 1) {
+      _logger.d(
+        "Last track in playlist, starting playback from the start of playlist",
+      );
 
-    // Если это последний трек в плейлисте, то мы должны либо остановить воспроизведение, либо повторить его.
-    if (isLast) {
-      switch (loopMode) {
-        case PlaylistMode.loop:
-          setPlaylist(
-            _playlist!.copyWith(
-              index: 0,
-            ),
-          );
+      setPlaylist(
+        _playlist!.copyWith(
+          index: 0,
+        ),
+      );
 
-          super.open(
-            currentMedia!,
-          );
-
-          break;
-        case PlaylistMode.none:
-          await super.stop();
-
-          break;
-        default:
-      }
-
-      return;
+      return super.open(
+        currentMedia!,
+      );
     }
 
     setPlaylist(
-      _playlist!.copyWith(index: _playlist!.index + 1),
+      _playlist!.copyWith(
+        index: _playlist!.index + 1,
+      ),
     );
 
     return super.open(
@@ -402,12 +393,18 @@ class MediaKitPlayerExtended extends Player {
   Future<void> previous() async {
     _logger.d("Called previous");
 
-    if (_playlist == null || _playlist!.index - 1 < 0) return;
+    if (_playlist == null) return;
 
-    // Если это самый первый трек в плейлисте, и у нас включён повтор плейлиста, то нужно начать воспроизведение с конца.
-    if (loopMode == PlaylistMode.loop && _playlist!.index == 0) {
+    // Если это самый первый трек в плейлисте, то нужно начать воспроизведение с конца.
+    if (_playlist!.index == 0) {
+      _logger.d(
+        "First track in playlist, starting playback from the end of playlist",
+      );
+
       setPlaylist(
-        _playlist!.copyWith(index: _playlist!.medias.length - 1),
+        _playlist!.copyWith(
+          index: _playlist!.medias.length - 1,
+        ),
       );
 
       return super.open(
@@ -416,8 +413,11 @@ class MediaKitPlayerExtended extends Player {
     }
 
     setPlaylist(
-      _playlist!.copyWith(index: _playlist!.index - 1),
+      _playlist!.copyWith(
+        index: trackIndex! - 1,
+      ),
     );
+
     return super.open(
       currentMedia!,
     );
@@ -545,7 +545,7 @@ class MediaKitPlayerExtended extends Player {
 
         if (loopMode == PlaylistMode.single) {
           await super.open(
-            _playlist!.medias[_playlist!.index],
+            currentMedia!,
           );
 
           return;
