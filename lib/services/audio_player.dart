@@ -318,6 +318,8 @@ class MediaKitPlayerExtended extends Player {
         playable.medias[playable.index],
         play: play,
       );
+
+      return;
     }
 
     await super.open(
