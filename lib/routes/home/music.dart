@@ -16,7 +16,6 @@ import "package:styled_text/styled_text.dart";
 
 import "../../api/audio/edit.dart";
 import "../../api/catalog/get_audio.dart";
-import "../../api/executeScripts/mass_audio_albums.dart";
 import "../../api/executeScripts/mass_audio_get.dart";
 import "../../api/shared.dart";
 import "../../consts.dart";
@@ -67,10 +66,10 @@ Future<void> ensureUserAudioBasicInfo(
 
   logger.d("Loading music information");
 
-  // Получаем базовую информацию по музыке.
-  late APIMassAudioGetResponse response;
+  // Получаем информацию по музыке, вместе с альбомами, если пользователь добавил токен от VK Admin.
   try {
-    response = await user.scriptMassAudioGet(user.id!);
+    final APIMassAudioGetResponse response =
+        await user.scriptMassAudioGetWithAlbums(user.id!);
 
     // Проверяем, что в ответе нет ошибок.
     if (response.error != null) {
@@ -97,93 +96,6 @@ Future<void> ensureUserAudioBasicInfo(
         SnackBar(
           content: Text(
             AppLocalizations.of(context)!.music_basicDataLoadError(
-              e.toString(),
-            ),
-          ),
-        ),
-      );
-    }
-
-    return;
-  }
-
-  // Если мы успешно получили список треков, то мы можем попробовать извлечь список альбомов этих самых треков, что бы у треков были изображения.
-  if (user.recommendationsToken == null) return;
-
-  // Получаем MediaKey треков, делая в запросе не более 200 ключей.
-  List<String> audioIDs = [];
-
-  List<Audio> userAudio = user.audios ?? [];
-
-  for (int i = 0; i < userAudio.length; i += 200) {
-    int endIndex = i + 200;
-    List<Audio> batch = userAudio.sublist(
-      i,
-      endIndex.clamp(
-        0,
-        userAudio.length,
-      ),
-    );
-    List<String> currentMediaKey =
-        batch.map((audio) => audio.mediaKey).toList();
-
-    audioIDs.add(currentMediaKey.join(","));
-  }
-
-  // Получаем базовую информацию по музыке.
-  try {
-    final APIMassAudioAlbumsResponse response2 =
-        await user.scriptMassAudioAlbums(audioIDs);
-
-    // Проверяем, что в ответе нет ошибок.
-    if (response.error != null) {
-      throw Exception(
-        "API error ${response2.error!.errorCode}: ${response2.error!.errorMessage}",
-      );
-    }
-
-    if (response2.response!.length != user.audios!.length) {
-      logger.w(
-        "Количество полученных альбомов треков (${response2.response!.length}) не совпадает с кэшированным количеством треков (${user.audios!.length})",
-      );
-    }
-
-    // Создаём Map, где ключ - медиа ключ доступа, а значение - объект мини-альбома.
-    //
-    // Использовать массив - идея плохая, поскольку ВКонтакте не возвращает информацию по "недоступным" трекам,
-    // ввиду чего происходит смещение, что не очень-то и хорошо.
-    Map<String, Audio> albumsData = {
-      for (var album in response2.response!) album.mediaKey: album
-    };
-
-    // Мы получили список альбомов, обновляем существующий массив треков.
-    for (Audio audio in user.audios!) {
-      // Если у трека уже есть альбом, то ничего не делаем.
-      if (audio.album != null) continue;
-
-      final Audio? extendedAudio = albumsData[audio.mediaKey];
-
-      // Если у *нас* нет информации по альбому этого трека, то ничего не делаем.
-      if (extendedAudio == null || extendedAudio.album == null) continue;
-
-      // Всё ок, заменяем данные в аудио.
-      audio.album = extendedAudio.album;
-    }
-
-    // Изменения теперь можно отобразить в интерфейсе.
-    user.markUpdated(false);
-  } catch (e, stackTrace) {
-    logger.e(
-      "Ошибка при загрузке информации по альбомам треков: ",
-      error: e,
-      stackTrace: stackTrace,
-    );
-
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalizations.of(context)!.music_recommendationsDataLoadError(
               e.toString(),
             ),
           ),
@@ -228,7 +140,7 @@ Future<void> ensureUserAudioRecommendations(
   }
 
   final UserProvider user = Provider.of<UserProvider>(context, listen: false);
-  final AppLogger logger = getLogger("ensureUserAudioInfo");
+  final AppLogger logger = getLogger("ensureUserAudioRecommendations");
 
   // Если информация уже загружена, то ничего не делаем.
   if (!forceUpdate && user.recommendationPlaylists != null) return;
@@ -1729,7 +1641,7 @@ class RecommendedPlaylistsBlock extends StatelessWidget {
 
                         try {
                           final APIMassAudioGetResponse response =
-                              await user.scriptMassAudioGet(
+                              await user.scriptMassAudioGetWithAlbums(
                             user.id!,
                             albumID: playlist.id,
                           );
