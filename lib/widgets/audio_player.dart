@@ -500,6 +500,8 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                 children: [
                   // Блок с информацией о треке, его изображении, названия.
                   Flexible(
+                    flex: 2,
+                    fit: FlexFit.tight,
                     child: TrackNameInfoWidget(
                       width: sideBlocksSize,
                       scheme: scheme!,
@@ -604,6 +606,8 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                   // Кнопки управления громкости и прочей мелочи справа в desktop-layout'е.
                   if (widget.useBigLayout)
                     Flexible(
+                      flex: 2,
+                      fit: FlexFit.tight,
                       child: SizedBox(
                         width: sideBlocksSize,
                         child: Row(
@@ -679,32 +683,28 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
 
                   // Кнопки управления треком (shuffle, лайк, пауза/возобновление) справа в mobile-layout'е.
                   if (!widget.useBigLayout)
-                    Flexible(
-                      child: FittedBox(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // Кнопка shuffle.
-                            shuffleButton,
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Кнопка shuffle.
+                        shuffleButton,
 
-                            // Кнопка лайка.
-                            IconButton(
-                              onPressed: () =>
-                                  widget.onFavoriteStateToggle ??
-                                  (!widget.favoriteState),
-                              icon: Icon(
-                                widget.favoriteState
-                                    ? Icons.favorite
-                                    : Icons.favorite_outline,
-                                color: scheme!.primary,
-                              ),
-                            ),
-
-                            // Кнопка паузы/возобновления.
-                            playPauseButton,
-                          ],
+                        // Кнопка лайка.
+                        IconButton(
+                          onPressed: () =>
+                              widget.onFavoriteStateToggle ??
+                              (!widget.favoriteState),
+                          icon: Icon(
+                            widget.favoriteState
+                                ? Icons.favorite
+                                : Icons.favorite_outline,
+                            color: scheme!.primary,
+                          ),
                         ),
-                      ),
+
+                        // Кнопка паузы/возобновления.
+                        playPauseButton,
+                      ],
                     )
                 ],
               ),
