@@ -1,0 +1,59 @@
+name: fluttervk
+description: Экспериментальный неофициальный клиент ВКонтакте, построенный при помощи фреймворка Flutter с открытым исходным кодом, с базовой поддержкой функционала сообщений, а так же прослушивания музыки.
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: '>=3.1.0 <4.0.0'
+
+dependencies:
+  animations: ^2.0.8
+  audio_service: ^0.18.12
+  audio_session: ^0.1.18
+  cached_network_image: ^3.3.1
+  collection: ^1.17.2
+  declarative_refresh_indicator: ^0.1.0
+  diacritic: ^0.1.5
+  dynamic_color: ^1.6.9
+  flutter:
+    sdk: flutter
+  flutter_animate: ^4.3.0
+  flutter_cache_manager: ^3.3.1
+  flutter_inappwebview: ^6.0.0
+  flutter_isolate: ^2.0.5-pre
+  flutter_localizations:
+    sdk: flutter
+  flutter_staggered_grid_view: ^0.7.0
+  get_it: ^7.6.6
+  http: ^1.1.0
+  intl: any
+  json_annotation: ^4.8.1
+  logger: ^2.0.2+1
+  material_color_utilities: ^0.5.0
+  media_kit: ^1.1.10+1
+  media_kit_libs_audio: ^1.0.4
+  palette_generator: ^0.3.3+3
+  path: ^1.8.3
+  path_provider: ^2.1.1
+  provider: ^6.1.1
+  responsive_builder: ^0.7.0
+  retry: ^3.1.2
+  scrollable_positioned_list: ^0.3.8
+  share_plus: ^7.2.1
+  shared_preferences: ^2.2.2
+  skeleton_text: ^3.0.1
+  skeletonizer: ^1.0.1
+  smtc_windows: ^0.1.2
+  styled_text: ^8.1.0
+  url_launcher: ^6.2.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+  build_runner: ^2.4.7
+  json_serializable: ^6.7.1
+
+flutter:
+  uses-material-design: true
+  generate: true

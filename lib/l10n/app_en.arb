@@ -1,0 +1,7 @@
+{
+	"@@locale": "en",
+
+	"welcome_welcomeTitle": "Welcome! 😎",
+	"welcome_welcomeDescription": "<bold>Flutter VK</bold> is an experimental <link>open source</link> «ВКонтакте» (VKontakte) client, built using the Flutter framework, with basic support for messaging functionality, as well as music streaming support.",
+	"welcome_welcomeContinue": "Continue"
+}

@@ -1,0 +1,38 @@
+{
+	// Use IntelliSense to learn about possible attributes.
+	// Hover to view descriptions of existing attributes.
+	// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Запустить в debug-режиме",
+			"request": "launch",
+			"type": "dart"
+		},
+		{
+			"name": "Запустить в profile-режиме",
+			"request": "launch",
+			"type": "dart",
+			"flutterMode": "profile",
+			"args": [
+				"--cache-sksl",
+				"--purge-persistent-cache"
+			]
+		},
+		{
+			"name": "Запустить в profile-режиме (impeller)",
+			"request": "launch",
+			"type": "dart",
+			"flutterMode": "profile",
+			"args": [
+				"--enable-impeller"
+			]
+		},
+		{
+			"name": "Запустить в release-режиме",
+			"request": "launch",
+			"type": "dart",
+			"flutterMode": "release"
+		}
+	]
+}
