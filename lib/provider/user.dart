@@ -31,6 +31,9 @@ class Settings {
 
   /// Указывает, что поле "Собрано редакцией" включено на экране с музыкой.
   bool byVKChipEnabled = true;
+
+  /// Указывает, что при последнем прослушивании shuffle был включён.
+  bool shuffleEnabled = false;
 }
 
 /// Provider для получения объекта пользователя в контексте интерфейса приложения.
@@ -195,6 +198,10 @@ class UserProvider extends ChangeNotifier {
       "ByVKChipEnabled",
       settings.byVKChipEnabled,
     );
+    await prefs.setBool(
+      "ShuffleEnabled",
+      settings.shuffleEnabled,
+    );
   }
 
   /// Загружает данный объект пользователя с диска.
@@ -224,6 +231,7 @@ class UserProvider extends ChangeNotifier {
     settings.similarMusicChipEnabled =
         prefs.getBool("SimilarMusicChipEnabled") ?? true;
     settings.byVKChipEnabled = prefs.getBool("ByVKChipEnabled") ?? true;
+    settings.shuffleEnabled = prefs.getBool("ShuffleEnabled") ?? false;
 
     markUpdated(false);
 

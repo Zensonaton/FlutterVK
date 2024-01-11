@@ -99,6 +99,11 @@ class _MainAppState extends State<MainApp> {
     // Узнаём, куда нужно перекинуть пользователя.
     home = await user.loadFromDisk() ? const HomeRoute() : const WelcomeRoute();
 
+    // Восстанавливаем состояние shuffle у плеера.
+    if (user.settings.shuffleEnabled) {
+      player.setShuffle(true);
+    }
+
     user.markUpdated(false);
 
     setState(() {});

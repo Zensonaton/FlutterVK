@@ -187,7 +187,7 @@ class MediaKitPlayerExtended extends Player {
 
   /// Возвращает копию плейлиста, в котором все треки расположены в случайном порядке, а переданный трек с индексом [index] находится в самом начале выходного плейлиста.
   List<Media> _getShuffledPlaylist(List<Media> medias, int index) {
-    final Media currentAudio = _playlist!.medias[index];
+    final Media currentAudio = medias[index];
 
     return medias.toList()
       ..shuffle()
@@ -225,12 +225,10 @@ class MediaKitPlayerExtended extends Player {
         );
       } else if (!shuffleEnabled && _unshuffledPlaylist != null) {
         // Восстанавливаем оригинальный плейлист до его перемешивания.
-        setPlaylist(
-          _playlist!.copyWith(
-            medias: _unshuffledPlaylist!,
-            index: _unshuffledPlaylist!.indexOf(
-              currentMedia!,
-            ),
+        playlist = playlist.copyWith(
+          medias: _unshuffledPlaylist!,
+          index: _unshuffledPlaylist!.indexOf(
+            currentMedia!,
           ),
         );
 
@@ -247,12 +245,14 @@ class MediaKitPlayerExtended extends Player {
     _logger.d("Called setShuffle($shuffle)");
     if (_shuffleEnabled == shuffle) return;
 
-    _shuffleEnabled = shuffle;
-
     // Вся логика для shuffle расположена внутри метода setPlaylist, если аргумент ignoreShuffle равен false.
-    setPlaylist(_playlist!);
+    if (_playlist != null) {
+      setPlaylist(_playlist!);
+    }
 
     await super.setShuffle(shuffle);
+
+    _shuffleEnabled = shuffle;
     _shuffleStream.add(shuffle);
   }
 

@@ -805,7 +805,9 @@ class _HomeRouteState extends State<HomeRoute> {
                     ),
                     onShuffleToggle: (bool enabled) async {
                       await player.setShuffle(enabled);
+                      user.settings.shuffleEnabled = enabled;
 
+                      user.markUpdated();
                       setState(() {});
                     },
                     onRepeatToggle: (bool enabled) async {
