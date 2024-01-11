@@ -185,9 +185,58 @@ class MediaKitPlayerExtended extends Player {
     );
   }
 
+  /// Возвращает копию плейлиста, в котором все треки расположены в случайном порядке, а переданный трек с индексом [index] находится в самом начале выходного плейлиста.
+  List<Media> _getShuffledPlaylist(List<Media> medias, int index) {
+    final Media currentAudio = _playlist!.medias[index];
+
+    return medias.toList()
+      ..shuffle()
+      ..remove(currentAudio)
+      ..insert(0, currentAudio);
+  }
+
   /// Заменяет текущий плейлист новым.
-  void setPlaylist(Playlist playlist) {
+  void setPlaylist(Playlist playlist, {bool ignoreShuffle = false}) {
     _logger.d("Called setPlaylist(...)");
+
+    // Перемешиваем новый плейлист, если у нас до этого был включён shuffle.
+    //
+    // Ввиду особенностей работы метода setShuffle у MediaKit'овского Player,
+    //  нам необходимо самим сделать копию плейлиста со случайно разбросанными треками.
+    if (!ignoreShuffle) {
+      if (shuffleEnabled) {
+        // Случайно перемешиваем плейлист.
+        // Но для начала, нам нужно запомнить "оригинальную" версию плейлиста до его перемешивания.
+        // Это необходимо, что бы при вызове этого метода с shuffleEnabled=false мы смогли вернуть оригинальную версию плейлиста.
+        _unshuffledPlaylist = playlist.medias;
+
+        // Узнаём какой трек играет сейчас, до перемешивания.
+        final Media currentTrack = playlist.medias[playlist.index];
+
+        // Случайно переставляем треки в плейлисте, устанавливая текущий трек в самое начало плейлиста.
+        final List<Media> shuffledMedia = _getShuffledPlaylist(
+          playlist.medias,
+          playlist.index,
+        );
+
+        playlist = playlist.copyWith(
+          medias: shuffledMedia,
+          index: shuffledMedia.indexOf(currentTrack),
+        );
+      } else if (!shuffleEnabled && _unshuffledPlaylist != null) {
+        // Восстанавливаем оригинальный плейлист до его перемешивания.
+        setPlaylist(
+          _playlist!.copyWith(
+            medias: _unshuffledPlaylist!,
+            index: _unshuffledPlaylist!.indexOf(
+              currentMedia!,
+            ),
+          ),
+        );
+
+        _unshuffledPlaylist = null;
+      }
+    }
 
     _playlist = playlist;
     _playlistStream.add(_playlist!);
@@ -196,49 +245,12 @@ class MediaKitPlayerExtended extends Player {
   @override
   Future<void> setShuffle(bool shuffle) async {
     _logger.d("Called setShuffle($shuffle)");
-
     if (_shuffleEnabled == shuffle) return;
 
     _shuffleEnabled = shuffle;
 
-    // Ввиду особенностей работы метода setShuffle у MediaKit'овского Player,
-    // нам необходимо самим сделать копию плейлиста со случайно разбросанными треками.
-    if (shuffle) {
-      // Случайно перемешиваем плейлист.
-
-      // Запоминаем "оригинальную" версию плейлиста до его изменения.
-      // Это необходимо, что бы при вызове этого метода с shuffle=false мы смогли вернуть оригинальную версию плейлиста.
-      _unshuffledPlaylist = _playlist!.medias;
-
-      final Media currentAudio = currentMedia!;
-
-      // Случайно переставляем треки в плейлисте, устанавливая текущий трек в самое начало плейлиста.
-      final List<Media> shuffledMedia = _playlist!.medias.toList()
-        ..shuffle()
-        ..remove(currentAudio)
-        ..insert(0, currentAudio);
-
-      setPlaylist(
-        _playlist!.copyWith(
-          medias: shuffledMedia,
-          index: shuffledMedia.indexOf(currentAudio),
-        ),
-      );
-    } else {
-      // Восстанавливаем оригинальный плейлист до его перемешивания.
-      if (_unshuffledPlaylist == null) return;
-
-      setPlaylist(
-        _playlist!.copyWith(
-          medias: _unshuffledPlaylist!,
-          index: _unshuffledPlaylist?.indexOf(
-            currentMedia!,
-          ),
-        ),
-      );
-
-      _unshuffledPlaylist = null;
-    }
+    // Вся логика для shuffle расположена внутри метода setPlaylist, если аргумент ignoreShuffle равен false.
+    setPlaylist(_playlist!);
 
     await super.setShuffle(shuffle);
     _shuffleStream.add(shuffle);
