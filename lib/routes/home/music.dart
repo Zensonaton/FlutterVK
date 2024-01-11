@@ -358,7 +358,7 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
                       focusNode: focusNode,
                       controller: controller,
                       hintText: AppLocalizations.of(context)!
-                          .music_SearchText(widget.audios.length),
+                          .music_searchText(widget.audios.length),
                       elevation: MaterialStateProperty.all(
                         1, // TODO: Сделать нормальный вид у поиска при наведении.
                       ),
@@ -384,14 +384,14 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
             // У пользователя нет треков в данном плейлисте.
             if (widget.audios.isEmpty)
               Text(
-                AppLocalizations.of(context)!.music_PlaylistEmpty,
+                AppLocalizations.of(context)!.music_playlistEmpty,
               ),
 
             // У пользователя есть треки, но поиск ничего не выдал.
             if (widget.audios.isNotEmpty && filteredAudios.isEmpty)
               StyledText(
                 text: AppLocalizations.of(context)!
-                    .music_PlaylistZeroSearchResults,
+                    .music_playlistZeroSearchResults,
                 tags: {
                   "click": StyledTextActionTag(
                     (String? text, Map<String?, String?> attrs) => setState(
@@ -443,9 +443,9 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
                                 showErrorDialog(
                                   context,
                                   title: AppLocalizations.of(context)!
-                                      .music_TrackUnavailableTitle,
+                                      .music_trackUnavailableTitle,
                                   description: AppLocalizations.of(context)!
-                                      .music_TrackUnavailableDescription,
+                                      .music_trackUnavailableDescription,
                                 );
                               }
                             : () async => await player.openAudioList(
@@ -1465,9 +1465,9 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
                     ? () => showErrorDialog(
                           context,
                           title: AppLocalizations.of(context)!
-                              .music_TrackUnavailableTitle,
+                              .music_trackUnavailableTitle,
                           description: AppLocalizations.of(context)!
-                              .music_TrackUnavailableDescription,
+                              .music_trackUnavailableDescription,
                         )
                     : () async => await player.openAudioList(
                           user.favoritesPlaylist!.audios!,
@@ -1527,7 +1527,7 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
             Icons.queue_music,
           ),
           label: Text(
-            AppLocalizations.of(context)!.music_ShowAllFavoriteTracks,
+            AppLocalizations.of(context)!.music_showAllFavoriteTracks,
           ),
         ),
       ],
@@ -1897,7 +1897,7 @@ class EverythingIsDisabledBlock extends StatelessWidget {
     return Column(
       children: [
         Text(
-          AppLocalizations.of(context)!.music_AllBlocksDisabledTitle,
+          AppLocalizations.of(context)!.music_allBlocksDisabledTitle,
           style: Theme.of(context).textTheme.displayMedium!.copyWith(
                 fontWeight: FontWeight.w500,
               ),
@@ -1907,7 +1907,7 @@ class EverythingIsDisabledBlock extends StatelessWidget {
           height: 18,
         ),
         Text(
-          AppLocalizations.of(context)!.music_AllBlocksDisabledDescription,
+          AppLocalizations.of(context)!.music_allBlocksDisabledDescription,
           style: Theme.of(context).textTheme.headlineSmall,
           textAlign: TextAlign.center,
         ),
