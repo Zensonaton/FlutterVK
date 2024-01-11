@@ -709,7 +709,7 @@ class VKMusicPlayer extends MediaKitPlayerExtended {
       ),
     );
 
-    _sendTrackData(audio[0]);
+    await _sendTrackData(audio[0]);
   }
 
   /// Инициализирует данный плеер, посылая уведомления и прочую информацию внешним системам.
