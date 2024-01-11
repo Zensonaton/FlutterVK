@@ -75,7 +75,8 @@ Future<void> ensureUserAudioBasicInfo(
     // Проверяем, что в ответе нет ошибок.
     if (response.error != null) {
       throw Exception(
-          "API error ${response.error!.errorCode}: ${response.error!.errorMessage}");
+        "API error ${response.error!.errorCode}: ${response.error!.errorMessage}",
+      );
     }
 
     user.audios = response.response!.audios;
@@ -137,7 +138,8 @@ Future<void> ensureUserAudioBasicInfo(
     // Проверяем, что в ответе нет ошибок.
     if (response.error != null) {
       throw Exception(
-          "API error ${response2.error!.errorCode}: ${response2.error!.errorMessage}");
+        "API error ${response2.error!.errorCode}: ${response2.error!.errorMessage}",
+      );
     }
 
     if (response2.response!.length != user.audios!.length) {
@@ -242,7 +244,8 @@ Future<void> ensureUserAudioRecommendations(
     // Проверяем, что в ответе нет ошибок.
     if (response.error != null) {
       throw Exception(
-          "API error ${response.error!.errorCode}: ${response.error!.errorMessage}");
+        "API error ${response.error!.errorCode}: ${response.error!.errorMessage}",
+      );
     }
 
     user.recommendationPlaylists = parseRecommendedPlaylists(response);
@@ -370,7 +373,6 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final UserProvider user = Provider.of<UserProvider>(context);
     final String searchText = controller.text;
     final List<Audio> filteredAudios = filterByName(
       widget.audios,
@@ -506,7 +508,7 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
                                 );
                               }
                             : () async => await player.openAudioList(
-                                  user.audios!,
+                                  widget.audios,
                                   index: widget.audios.indexWhere(
                                     (Audio widgetAudio) => widgetAudio == audio,
                                   ),
@@ -682,7 +684,8 @@ class _TrackInfoEditDialogState extends State<TrackInfoEditDialog> {
                     // Проверяем, что в ответе нет ошибок.
                     if (response.error != null) {
                       throw Exception(
-                          "API error ${response.error!.errorCode}: ${response.error!.errorMessage}");
+                        "API error ${response.error!.errorCode}: ${response.error!.errorMessage}",
+                      );
                     }
 
                     // TODO: Обновить данные о треке у пользователя.
@@ -1198,9 +1201,6 @@ class AudioPlaylistWidget extends StatefulWidget {
   /// Указывает, что музыка играет из этого плейлиста.
   final bool currentlyPlaying;
 
-  /// Вызывается при нажатии по центру плейлиста, что вызывает событие паузы или возобновления трека.
-  final Function(bool)? onPlayToggle;
-
   /// Вызывается при открытии плейлиста во весь экран.
   final VoidCallback? onOpen;
 
@@ -1211,7 +1211,6 @@ class AudioPlaylistWidget extends StatefulWidget {
     this.isRecommendationPlaylist = false,
     this.description,
     this.currentlyPlaying = false,
-    this.onPlayToggle,
     this.onOpen,
   });
 
@@ -1225,7 +1224,7 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () => showWipDialog(context),
+      onTap: widget.onOpen,
       onHover: (bool value) => setState(() => isHovered = value),
       child: SizedBox(
         width: 200,
@@ -1685,7 +1684,9 @@ class MyPlaylistsBlock extends StatelessWidget {
 
 /// Виджет, показывающий раздел "Плейлисты для Вас".
 class RecommendedPlaylistsBlock extends StatelessWidget {
-  const RecommendedPlaylistsBlock({
+  final AppLogger logger = getLogger("RecommendedPlaylistsBlock");
+
+  RecommendedPlaylistsBlock({
     super.key,
   });
 
@@ -1722,6 +1723,49 @@ class RecommendedPlaylistsBlock extends StatelessWidget {
                       name: playlist.title,
                       description: playlist.subtitle,
                       isRecommendationPlaylist: true,
+                      onOpen: () async {
+                        // TODO: Реализовать кэширование треков из плейлистов.
+                        LoadingOverlay.of(context).show();
+
+                        try {
+                          final APIMassAudioGetResponse response =
+                              await user.scriptMassAudioGet(
+                            user.id!,
+                            albumID: playlist.id,
+                          );
+
+                          // Проверяем, что в ответе нет ошибок.
+                          if (response.error != null) {
+                            throw Exception(
+                              "API error ${response.error!.errorCode}: ${response.error!.errorMessage}",
+                            );
+                          }
+
+                          if (context.mounted) {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) =>
+                                  PlaylistDisplayDialog(
+                                audios: response.response!.audios,
+                              ),
+                            );
+                          }
+                        } catch (e, stackTrace) {
+                          logger.e(
+                            "Ошибка при открытии плейлиста: ",
+                            error: e,
+                            stackTrace: stackTrace,
+                          );
+
+                          if (context.mounted) {
+                            showErrorDialog(context, description: e.toString());
+                          }
+                        } finally {
+                          if (context.mounted) {
+                            LoadingOverlay.of(context).hide();
+                          }
+                        }
+                      },
                     ),
                 ],
               ),
@@ -1800,6 +1844,7 @@ class _SimillarMusicBlockState extends State<SimillarMusicBlock> {
                     name: playlist.title,
                     description: playlist.subtitle,
                     isRecommendationPlaylist: true,
+                    onOpen: () => showWipDialog(context),
                   ),
               ],
             ),
@@ -1878,6 +1923,7 @@ class _ByVKPlaylistsBlockState extends State<ByVKPlaylistsBlock> {
                     name: playlist.title,
                     description: playlist.subtitle,
                     isRecommendationPlaylist: true,
+                    onOpen: () => showWipDialog(context),
                   ),
               ],
             ),
@@ -2054,8 +2100,7 @@ class _HomeMusicPageState extends State<HomeMusicPage> {
                   if (playlistsEnabled) const SizedBox(height: 4),
 
                   // Раздел "Плейлисты для Вас".
-                  if (recommendedPlaylistsEnabled)
-                    const RecommendedPlaylistsBlock(),
+                  if (recommendedPlaylistsEnabled) RecommendedPlaylistsBlock(),
                   if (recommendedPlaylistsEnabled) const SizedBox(height: 12),
                   if (recommendedPlaylistsEnabled) const Divider(),
                   if (recommendedPlaylistsEnabled) const SizedBox(height: 4),

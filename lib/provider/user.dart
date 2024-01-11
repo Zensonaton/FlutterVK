@@ -311,11 +311,13 @@ class UserProvider extends ChangeNotifier {
   ///
   /// Для данного метода требуется токен от Kate Mobile.
   Future<APIMassAudioGetResponse> scriptMassAudioGet(
-    int userID,
-  ) async =>
+    int userID, {
+    int? albumID,
+  }) async =>
       await scripts_massAudioGet(
         mainToken!,
         userID,
+        albumID: albumID,
       );
 
   /// Массово извлекает информацию по альбомам (и, соответственно, изображениям) треков.

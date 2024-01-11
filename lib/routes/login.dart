@@ -40,7 +40,8 @@ Future<bool> tryAuthorize(
     // Проверяем, что в ответе нет ошибок.
     if (response.error != null) {
       throw Exception(
-          "API error ${response.error!.errorCode}: ${response.error!.errorMessage}");
+        "API error ${response.error!.errorCode}: ${response.error!.errorMessage}",
+      );
     }
 
     LoadingOverlay.of(context).hide();
