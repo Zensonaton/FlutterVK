@@ -198,7 +198,7 @@ class MediaKitPlayerExtended extends Player {
   }
 
   /// Заменяет текущий плейлист новым.
-  void setPlaylist(Playlist playlist, {bool ignoreShuffle = false}) {
+  void setPlaylist(Playlist playlist, {bool ignoreShuffle = true}) {
     _logger.d("Called setPlaylist(...)");
 
     // Перемешиваем новый плейлист, если у нас до этого был включён shuffle.
@@ -249,7 +249,10 @@ class MediaKitPlayerExtended extends Player {
 
     // Вся логика для shuffle расположена внутри метода setPlaylist, если аргумент ignoreShuffle равен false.
     if (_playlist != null) {
-      setPlaylist(_playlist!);
+      setPlaylist(
+        _playlist!,
+        ignoreShuffle: false,
+      );
     }
 
     await super.setShuffle(shuffle);
