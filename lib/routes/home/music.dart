@@ -1660,7 +1660,6 @@ class RecommendedPlaylistsBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Skeleton-loader'ы.
     final UserProvider user = Provider.of<UserProvider>(context);
 
     return Column(
@@ -1676,15 +1675,16 @@ class RecommendedPlaylistsBlock extends StatelessWidget {
         const SizedBox(
           height: 14,
         ),
-        if (user.recommendationPlaylists.isNotEmpty)
-          ScrollConfiguration(
-            behavior: AlwaysScrollableScrollBehavior(),
-            child: SingleChildScrollView(
-              // TODO: ClipBehaviour.
-              scrollDirection: Axis.horizontal,
-              child: Wrap(
-                spacing: 8,
-                children: [
+        ScrollConfiguration(
+          behavior: AlwaysScrollableScrollBehavior(),
+          child: SingleChildScrollView(
+            // TODO: ClipBehaviour.
+            scrollDirection: Axis.horizontal,
+            child: Wrap(
+              spacing: 8,
+              children: [
+                // Настоящие данные.
+                if (user.recommendationPlaylists.isNotEmpty)
                   for (ExtendedVKPlaylist playlist
                       in user.recommendationPlaylists)
                     AudioPlaylistWidget(
@@ -1744,10 +1744,30 @@ class RecommendedPlaylistsBlock extends StatelessWidget {
                         );
                       },
                     ),
-                ],
-              ),
+
+                // Skeleton loader.
+                if (user.recommendationPlaylists.isEmpty)
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    physics: const NeverScrollableScrollPhysics(),
+                    child: Skeletonizer(
+                      child: Wrap(
+                        spacing: 8,
+                        children: [
+                          for (int i = 0; i < 9; i++)
+                            const AudioPlaylistWidget(
+                              name: "Playlist",
+                              description: "Playlist description here",
+                              isRecommendationPlaylist: true,
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
+        ),
       ],
     );
   }
