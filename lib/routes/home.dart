@@ -191,7 +191,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                   color: scheme.primary,
                 ),
                 style: IconButton.styleFrom(
-                  backgroundColor: scheme.primaryContainer,
+                  backgroundColor: scheme.onSecondary,
                 ),
               )
             : IconButton(
