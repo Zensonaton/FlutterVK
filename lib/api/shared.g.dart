@@ -228,29 +228,29 @@ Map<String, dynamic> _$AudioThumbnailsToJson(AudioThumbnails instance) =>
 
 AudioPlaylist _$AudioPlaylistFromJson(Map<String, dynamic> json) =>
     AudioPlaylist(
-      json['id'] as int,
-      json['owner_id'] as int,
-      json['type'] as int,
-      json['title'] as String,
-      json['description'] as String,
-      json['subtitle'] as String?,
-      json['count'] as int,
-      json['access_key'] as String,
-      json['followers'] as int,
-      json['plays'] as int,
-      json['create_time'] as int,
-      json['update_time'] as int,
-      json['genres'],
-      json['is_following'] as bool,
-      json['photo'] == null
+      id: json['id'] as int,
+      ownerID: json['owner_id'] as int,
+      type: json['type'] as int? ?? 0,
+      title: json['title'] as String?,
+      description: json['description'] as String?,
+      count: json['count'] as int,
+      accessKey: json['access_key'] as String?,
+      followers: json['followers'] as int? ?? 0,
+      plays: json['plays'] as int? ?? 0,
+      createTime: json['create_time'] as int?,
+      updateTime: json['update_time'] as int?,
+      isFollowing: json['is_following'] as bool? ?? false,
+      subtitleBadge: json['subtitle_badge'] as bool? ?? false,
+      playButton: json['play_button'] as bool? ?? false,
+      albumType: json['album_type'] as String? ?? "playlist",
+      exclusive: json['exclusive'] as bool? ?? false,
+      subtitle: json['subtitle'] as String?,
+      genres: json['genres'],
+      photo: json['photo'] == null
           ? null
           : AudioThumbnails.fromJson(json['photo'] as Map<String, dynamic>),
-      json['permissions'],
-      json['subtitle_badge'] as bool,
-      json['play_button'] as bool,
-      json['album_type'] as String,
-      json['meta'],
-      json['exclusive'] as bool,
+      permissions: json['permissions'],
+      meta: json['meta'],
     );
 
 Map<String, dynamic> _$AudioPlaylistToJson(AudioPlaylist instance) =>

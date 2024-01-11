@@ -15,6 +15,77 @@ import "../consts.dart";
 import "../main.dart";
 import "../services/logger.dart";
 
+/// Класс, расширяющий обычный объект [AudioPlaylist] от API ВКонтакте, добавляющий информацию о треках в данном плейлисте.
+class ExtendedVKPlaylist extends AudioPlaylist {
+  /// Список из аудио в данном плейлисте.
+  List<Audio>? audios;
+
+  /// Указывает, что данный плейлист является плейлистом с "любимыми" треками пользователя.
+  bool get isFavoritesPlaylist => id == 0;
+
+  /// Указывает, что данный плейлист является обычным плейлистом пользователя, который он либо создал либо сохранил.
+  bool get isRegularPlaylist => id > 0;
+
+  /// Указывает, что данный плейлист является плейлистом из рекомендаций.
+  bool get isRecommendationsPlaylist => id < 0;
+
+  /// Возвращает instance данного класса из передаваемого объекта типа [AudioPlaylist].
+  static ExtendedVKPlaylist fromAudioPlaylist(
+    AudioPlaylist playlist, {
+    List<Audio>? audios,
+    int? totalAudios,
+  }) =>
+      ExtendedVKPlaylist(
+        id: playlist.id,
+        ownerID: playlist.ownerID,
+        type: playlist.type,
+        title: playlist.title,
+        description: playlist.description,
+        count: playlist.count,
+        accessKey: playlist.accessKey,
+        followers: playlist.followers,
+        plays: playlist.plays,
+        createTime: playlist.createTime,
+        updateTime: playlist.updateTime,
+        isFollowing: playlist.isFollowing,
+        subtitleBadge: playlist.subtitleBadge,
+        playButton: playlist.playButton,
+        albumType: playlist.albumType,
+        exclusive: playlist.exclusive,
+        subtitle: playlist.subtitle,
+        genres: playlist.genres,
+        photo: playlist.photo,
+        permissions: playlist.permissions,
+        meta: playlist.meta,
+        audios: audios,
+      );
+
+  ExtendedVKPlaylist({
+    required super.id,
+    required super.ownerID,
+    super.type,
+    super.title,
+    super.description,
+    required super.count,
+    super.accessKey,
+    super.followers,
+    super.plays,
+    super.createTime,
+    super.updateTime,
+    super.isFollowing,
+    super.subtitleBadge,
+    super.playButton,
+    super.albumType,
+    super.exclusive,
+    super.subtitle,
+    super.genres,
+    super.photo,
+    super.permissions,
+    super.meta,
+    this.audios,
+  });
+}
+
 /// Класс с настройками пользователя.
 class Settings {
   /// Указывает, что поле "Моя музыка" включено на экране с музыкой.
@@ -90,20 +161,30 @@ class UserProvider extends ChangeNotifier {
   /// URL к изначальной фотографии с максимальным размером.
   String? photoMaxOrigUrl;
 
-  /// Массив с треками пользователя, полученными с API ВКонтакте.
-  List<Audio>? audios;
+  /// Объект, перечисляющий все плейлисты пользователя.
+  Map<int, ExtendedVKPlaylist> allPlaylists = {};
 
-  /// Информация о количестве треков пользователя.
-  int? audioCount;
+  /// Плейлист с "лайкнутыми" треками пользователя.
+  ///
+  /// Тоже самое, что и `allPlaylists[0]`.
+  ExtendedVKPlaylist? get favoritesPlaylist => allPlaylists[0];
 
-  /// Массив с плейлистами пользователя, полученными с API ВКонтакте.
-  List<AudioPlaylist>? playlists;
+  /// Перечисление всех обычных плейлистов, которые были сделаны данным пользователем.
+  List<ExtendedVKPlaylist> get regularPlaylists => allPlaylists.values
+      .where(
+        (ExtendedVKPlaylist playlist) => playlist.isRegularPlaylist,
+      )
+      .toList();
+
+  /// Перечисление всех "рекомендованных" плейлистов.
+  List<ExtendedVKPlaylist> get recommendationPlaylists => allPlaylists.values
+      .where(
+        (ExtendedVKPlaylist playlist) => playlist.isRecommendationsPlaylist,
+      )
+      .toList();
 
   /// Информация о количестве плейлистов пользователя.
   int? playlistsCount;
-
-  /// Массив с плейлистами, находящимися в разделе "Плейлисты для Вас".
-  List<AudioPlaylist>? recommendationPlaylists;
 
   /// Настройки пользователя.
   Settings settings = Settings();
@@ -137,11 +218,8 @@ class UserProvider extends ChangeNotifier {
     photo50Url = null;
     photoMaxUrl = null;
     photoMaxOrigUrl = null;
-    audios = null;
-    audioCount = null;
-    playlists = null;
     playlistsCount = null;
-    recommendationPlaylists = null;
+    allPlaylists = {};
 
     // Удаляем сохранённые данные SharedPreferences.
     SharedPreferences prefs = await SharedPreferences.getInstance();

@@ -62,9 +62,14 @@ Future<void> ensureUserAudioBasicInfo(
   final AppLogger logger = getLogger("ensureUserAudioInfo");
 
   // Если информация уже загружена, то ничего не делаем.
-  if (!forceUpdate && user.audios != null) return;
+  if (!forceUpdate && user.favoritesPlaylist?.audios != null) return;
 
   logger.d("Loading music information");
+
+  // Сбрасываем информацию у "рекомендованных" плейлистов.
+  user.allPlaylists.removeWhere(
+    (int _, ExtendedVKPlaylist playlist) => playlist.isRecommendationsPlaylist,
+  );
 
   // Получаем информацию по музыке, вместе с альбомами, если пользователь добавил токен от VK Admin.
   try {
@@ -78,10 +83,23 @@ Future<void> ensureUserAudioBasicInfo(
       );
     }
 
-    user.audios = response.response!.audios;
-    user.audioCount = response.response!.audioCount;
-    user.playlists = response.response!.playlists;
     user.playlistsCount = response.response!.playlistsCount;
+
+    // Создаём фейковый плейлист, где хранятся "любимые" треки пользователя.
+    user.allPlaylists[0] = ExtendedVKPlaylist(
+      id: 0,
+      ownerID: user.id!,
+      count: response.response!.audioCount,
+      audios: response.response!.audios,
+    );
+
+    // Создаём объекты плейлистов у пользователя.
+    user.allPlaylists.addAll(
+      {
+        for (var playlist in response.response!.playlists)
+          playlist.id: ExtendedVKPlaylist.fromAudioPlaylist(playlist)
+      },
+    );
 
     user.markUpdated(false);
   } catch (e, stackTrace) {
@@ -115,7 +133,7 @@ Future<void> ensureUserAudioRecommendations(
   bool forceUpdate = false,
 }) async {
   /// Парсит список из плейлистов, возвращая только список из рекомендуемых плейлистов ("Для вас" и подобные).
-  List<AudioPlaylist> parseRecommendedPlaylists(
+  List<ExtendedVKPlaylist> parseRecommendedPlaylists(
     APICatalogGetAudioResponse response,
   ) {
     final Section mainSection = response.response!.catalog.sections[0];
@@ -132,10 +150,16 @@ Future<void> ensureUserAudioRecommendations(
         recommendedPlaylistsBlock.playlistIDs!;
 
     // Достаём те плейлисты, которые рекомендуются нами ВКонтакте.
+    // Превращаем объекты типа AudioPlaylist в ExtendedVKPlaylist.
     return response.response!.playlists
         .where((AudioPlaylist playlist) => recommendedPlaylistIDs.contains(
               playlist.mediaKey,
             ))
+        .map(
+          (AudioPlaylist playlist) => ExtendedVKPlaylist.fromAudioPlaylist(
+            playlist,
+          ),
+        )
         .toList();
   }
 
@@ -143,7 +167,7 @@ Future<void> ensureUserAudioRecommendations(
   final AppLogger logger = getLogger("ensureUserAudioRecommendations");
 
   // Если информация уже загружена, то ничего не делаем.
-  if (!forceUpdate && user.recommendationPlaylists != null) return;
+  if (!forceUpdate && user.recommendationPlaylists.isNotEmpty) return;
 
   // Если у пользователя нет второго токена, то ничего не делаем.
   if (user.recommendationsToken == null) return;
@@ -160,7 +184,12 @@ Future<void> ensureUserAudioRecommendations(
       );
     }
 
-    user.recommendationPlaylists = parseRecommendedPlaylists(response);
+    user.allPlaylists.addAll(
+      {
+        for (var playlist in parseRecommendedPlaylists(response))
+          playlist.id: playlist
+      },
+    );
 
     user.markUpdated(false);
   } catch (e, stackTrace) {
@@ -1380,7 +1409,7 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
   Widget build(BuildContext context) {
     final UserProvider user = Provider.of<UserProvider>(context);
 
-    final int musicCount = user.audioCount ?? 0;
+    final int musicCount = user.favoritesPlaylist?.count ?? 0;
     final int clampedMusicCount = clampInt(
       musicCount,
       0,
@@ -1421,17 +1450,18 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
         ),
 
         // Настоящие данные.
-        if (user.audios != null)
+        if (user.favoritesPlaylist?.audios != null)
           for (int index = 0; index < clampedMusicCount; index++)
             Padding(
               padding: EdgeInsets.only(
                 bottom: index + 1 != clampedMusicCount ? 8 : 0,
               ),
               child: AudioTrackTile(
-                audio: user.audios![index],
-                selected: user.audios![index] == player.currentAudio,
+                audio: user.favoritesPlaylist!.audios![index],
+                selected: user.favoritesPlaylist!.audios![index] ==
+                    player.currentAudio,
                 currentlyPlaying: player.isLoaded && player.state.playing,
-                onPlay: user.audios![index].isRestricted
+                onPlay: user.favoritesPlaylist!.audios![index].isRestricted
                     ? () => showErrorDialog(
                           context,
                           title: AppLocalizations.of(context)!
@@ -1440,7 +1470,7 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
                               .music_TrackUnavailableDescription,
                         )
                     : () async => await player.openAudioList(
-                          user.audios!,
+                          user.favoritesPlaylist!.audios!,
                           index: index,
                         ),
                 onPlayToggle: (bool enabled) async =>
@@ -1453,14 +1483,14 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
                   context: context,
                   isScrollControlled: true,
                   builder: (BuildContext context) => BottomAudioOptionsDialog(
-                    audio: user.audios![index],
+                    audio: user.favoritesPlaylist!.audios![index],
                   ),
                 ),
               ),
             ),
 
         // Skeleton loader.
-        if (user.audios == null)
+        if (user.favoritesPlaylist?.audios == null)
           for (int i = 0; i < 10; i++)
             Skeletonizer(
               child: Padding(
@@ -1485,11 +1515,11 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
           height: 12,
         ),
         FilledButton.icon(
-          onPressed: user.audios != null
+          onPressed: user.favoritesPlaylist?.audios != null
               ? () => showDialog(
                     context: context,
                     builder: (context) => PlaylistDisplayDialog(
-                      audios: user.audios!,
+                      audios: user.favoritesPlaylist!.audios!,
                     ),
                   )
               : null,
@@ -1513,7 +1543,6 @@ class MyPlaylistsBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Skeleton loader.
     final UserProvider user = Provider.of<UserProvider>(context);
 
     final int playlistsCount = user.playlistsCount ?? 0;
@@ -1552,7 +1581,7 @@ class MyPlaylistsBlock extends StatelessWidget {
         ),
 
         // Настоящие данные.
-        if (user.playlists != null)
+        if (user.regularPlaylists.isNotEmpty)
           ScrollConfiguration(
             behavior: AlwaysScrollableScrollBehavior(),
             child: SingleChildScrollView(
@@ -1561,10 +1590,10 @@ class MyPlaylistsBlock extends StatelessWidget {
               child: Wrap(
                 spacing: 8,
                 children: [
-                  for (AudioPlaylist playlist in user.playlists!)
+                  for (AudioPlaylist playlist in user.regularPlaylists)
                     AudioPlaylistWidget(
                       backgroundUrl: playlist.photo?.photo600,
-                      name: playlist.title,
+                      name: playlist.title!,
                       description: playlist.subtitle,
                     ),
                 ],
@@ -1573,7 +1602,7 @@ class MyPlaylistsBlock extends StatelessWidget {
           ),
 
         // Skeleton loader.
-        if (user.playlists == null)
+        if (user.regularPlaylists.isEmpty)
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             physics: const NeverScrollableScrollPhysics(),
@@ -1620,7 +1649,7 @@ class RecommendedPlaylistsBlock extends StatelessWidget {
         const SizedBox(
           height: 14,
         ),
-        if (user.recommendationPlaylists != null)
+        if (user.recommendationPlaylists.isNotEmpty)
           ScrollConfiguration(
             behavior: AlwaysScrollableScrollBehavior(),
             child: SingleChildScrollView(
@@ -1629,54 +1658,63 @@ class RecommendedPlaylistsBlock extends StatelessWidget {
               child: Wrap(
                 spacing: 8,
                 children: [
-                  for (AudioPlaylist playlist in user.recommendationPlaylists!)
+                  for (ExtendedVKPlaylist playlist
+                      in user.recommendationPlaylists)
                     AudioPlaylistWidget(
                       backgroundUrl: playlist.photo!.photo600!,
-                      name: playlist.title,
+                      name: playlist.title!,
                       description: playlist.subtitle,
                       isRecommendationPlaylist: true,
                       onOpen: () async {
-                        // TODO: Реализовать кэширование треков из плейлистов.
-                        LoadingOverlay.of(context).show();
+                        // Если информация по данному плейлисту не загружена, то загружаем её.
+                        if (playlist.audios == null) {
+                          LoadingOverlay.of(context).show();
 
-                        try {
-                          final APIMassAudioGetResponse response =
-                              await user.scriptMassAudioGetWithAlbums(
-                            user.id!,
-                            albumID: playlist.id,
-                          );
-
-                          // Проверяем, что в ответе нет ошибок.
-                          if (response.error != null) {
-                            throw Exception(
-                              "API error ${response.error!.errorCode}: ${response.error!.errorMessage}",
+                          try {
+                            final APIMassAudioGetResponse response =
+                                await user.scriptMassAudioGetWithAlbums(
+                              user.id!,
+                              albumID: playlist.id,
                             );
-                          }
 
-                          if (context.mounted) {
-                            showDialog(
-                              context: context,
-                              builder: (BuildContext context) =>
-                                  PlaylistDisplayDialog(
-                                audios: response.response!.audios,
-                              ),
+                            // Проверяем, что в ответе нет ошибок.
+                            if (response.error != null) {
+                              throw Exception(
+                                "API error ${response.error!.errorCode}: ${response.error!.errorMessage}",
+                              );
+                            }
+
+                            playlist.audios = response.response!.audios;
+                            playlist.count = response.response!.audioCount;
+                          } catch (e, stackTrace) {
+                            logger.e(
+                              "Ошибка при открытии плейлиста: ",
+                              error: e,
+                              stackTrace: stackTrace,
                             );
-                          }
-                        } catch (e, stackTrace) {
-                          logger.e(
-                            "Ошибка при открытии плейлиста: ",
-                            error: e,
-                            stackTrace: stackTrace,
-                          );
 
-                          if (context.mounted) {
-                            showErrorDialog(context, description: e.toString());
-                          }
-                        } finally {
-                          if (context.mounted) {
-                            LoadingOverlay.of(context).hide();
+                            if (context.mounted) {
+                              showErrorDialog(context,
+                                  description: e.toString());
+                            }
+                          } finally {
+                            if (context.mounted) {
+                              LoadingOverlay.of(context).hide();
+                            }
                           }
                         }
+
+                        // Убеждаемся, что данные у плейлисты и вправду загружены.
+                        if (playlist.audios == null) return;
+                        if (!context.mounted) return;
+
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) =>
+                              PlaylistDisplayDialog(
+                            audios: playlist.audios!,
+                          ),
+                        );
                       },
                     ),
                 ],
@@ -1750,10 +1788,11 @@ class _SimillarMusicBlockState extends State<SimillarMusicBlock> {
             child: Wrap(
               spacing: 8,
               children: [
-                for (AudioPlaylist playlist in user.recommendationPlaylists!)
+                for (ExtendedVKPlaylist playlist
+                    in user.recommendationPlaylists)
                   AudioPlaylistWidget(
                     backgroundUrl: playlist.photo!.photo600!,
-                    name: playlist.title,
+                    name: playlist.title!,
                     description: playlist.subtitle,
                     isRecommendationPlaylist: true,
                     onOpen: () => showWipDialog(context),
@@ -1829,10 +1868,11 @@ class _ByVKPlaylistsBlockState extends State<ByVKPlaylistsBlock> {
             child: Wrap(
               spacing: 8,
               children: [
-                for (AudioPlaylist playlist in user.recommendationPlaylists!)
+                for (ExtendedVKPlaylist playlist
+                    in user.recommendationPlaylists)
                   AudioPlaylistWidget(
                     backgroundUrl: playlist.photo!.photo600!,
-                    name: playlist.title,
+                    name: playlist.title!,
                     description: playlist.subtitle,
                     isRecommendationPlaylist: true,
                     onOpen: () => showWipDialog(context),
@@ -1964,7 +2004,7 @@ class _HomeMusicPageState extends State<HomeMusicPage> {
           ): () => showDialog(
                 context: context,
                 builder: (context) => PlaylistDisplayDialog(
-                  audios: user.audios!,
+                  audios: user.favoritesPlaylist!.audios!,
                 ),
               ),
         },

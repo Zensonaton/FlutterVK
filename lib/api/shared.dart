@@ -576,20 +576,20 @@ class AudioPlaylist {
   final int type;
 
   /// Название плейлиста.
-  final String title;
+  final String? title;
 
   /// Описание плейлиста. Иногда пустует.
-  final String description;
+  final String? description;
 
   /// Подпись плейлиста, обычно присутствует в плейлистах-рекомендациях.
   final String? subtitle;
 
   /// Количество аудиозаписей в данном плейлисте.
-  final int count;
+  int count;
 
   /// Ключ доступа.
   @JsonKey(name: "access_key")
-  final String accessKey;
+  final String? accessKey;
 
   /// Количество подписчиков плейлиста.
   final int followers;
@@ -599,11 +599,11 @@ class AudioPlaylist {
 
   /// Timestamp создания плейлиста.
   @JsonKey(name: "create_time")
-  final int createTime;
+  final int? createTime;
 
   /// Timestamp последнего обновления плейлиста.
   @JsonKey(name: "update_time")
-  final int updateTime;
+  final int? updateTime;
 
   /// Список жанров.
   final dynamic genres;
@@ -646,29 +646,29 @@ class AudioPlaylist {
   @override
   int get hashCode => mediaKey.hashCode;
 
-  AudioPlaylist(
-    this.id,
-    this.ownerID,
-    this.type,
+  AudioPlaylist({
+    required this.id,
+    required this.ownerID,
+    this.type = 0,
     this.title,
     this.description,
-    this.subtitle,
-    this.count,
+    required this.count,
     this.accessKey,
-    this.followers,
-    this.plays,
+    this.followers = 0,
+    this.plays = 0,
     this.createTime,
     this.updateTime,
+    this.isFollowing = false,
+    this.subtitleBadge = false,
+    this.playButton = false,
+    this.albumType = "playlist",
+    this.exclusive = false,
+    this.subtitle,
     this.genres,
-    this.isFollowing,
     this.photo,
     this.permissions,
-    this.subtitleBadge,
-    this.playButton,
-    this.albumType,
     this.meta,
-    this.exclusive,
-  );
+  });
 
   factory AudioPlaylist.fromJson(Map<String, dynamic> json) =>
       _$AudioPlaylistFromJson(json);
