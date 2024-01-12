@@ -249,30 +249,31 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                     builder: (context) => const ConnectRecommendationsDialog(),
                   ),
                 ),
-              ListTile(
+              SwitchListTile(
+                secondary: const Icon(
+                  Icons.discord,
+                ),
                 title: Text(
                   AppLocalizations.of(context)!.profile_discordRPCTitle,
                 ),
                 subtitle: Text(
                   AppLocalizations.of(context)!.profile_discordRPCDescription,
                 ),
-                leading: const Icon(
-                  Icons.discord,
-                ),
-                trailing: Switch(
-                  onChanged: (bool? enabled) async {
-                    if (enabled == null) return;
+                onChanged: (bool? enabled) async {
+                  if (enabled == null) return;
 
-                    user.settings.discordRPCEnabled = enabled;
-                    await player.setDiscordRPCEnabled(enabled);
+                  user.settings.discordRPCEnabled = enabled;
+                  await player.setDiscordRPCEnabled(enabled);
 
-                    user.markUpdated();
-                    setState(() {});
-                  },
-                  value: player.discordRPCEnabled,
-                ),
+                  user.markUpdated();
+                  setState(() {});
+                },
+                value: player.discordRPCEnabled,
               ),
               ListTile(
+                leading: const Icon(
+                  Icons.photo_library_outlined,
+                ),
                 title: Text(
                   AppLocalizations.of(context)!.profile_exportMusicThumbsTitle,
                 ),
@@ -280,12 +281,12 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                   AppLocalizations.of(context)!
                       .profile_exportMusicThumbsDescription,
                 ),
-                leading: const Icon(
-                  Icons.photo_library_outlined,
-                ),
                 onTap: () => showWipDialog(context),
               ),
               ListTile(
+                leading: const Icon(
+                  Icons.photo_library,
+                ),
                 title: Text(
                   AppLocalizations.of(context)!.profile_importMusicThumbsTitle,
                 ),
@@ -293,12 +294,12 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                   AppLocalizations.of(context)!
                       .profile_importMusicThumbsDescription,
                 ),
-                leading: const Icon(
-                  Icons.photo_library,
-                ),
                 onTap: () => showWipDialog(context),
               ),
-              ListTile(
+              SwitchListTile(
+                secondary: const Icon(
+                  Icons.multitrack_audio,
+                ),
                 title: Text(
                   AppLocalizations.of(context)!.profile_musicNormalizationTitle,
                 ),
@@ -306,23 +307,21 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                   AppLocalizations.of(context)!
                       .profile_musicNormalizationDescription,
                 ),
-                leading: const Icon(
-                  Icons.multitrack_audio,
-                ),
-                trailing: Switch(
-                  onChanged: (bool? enabled) async {
-                    if (enabled == null) return;
+                value: player.normalizationEnabled,
+                onChanged: (bool? enabled) async {
+                  if (enabled == null) return;
 
-                    // TODO: Сохранить состояние нормализации как настройку.
+                  // TODO: Сохранить состояние нормализации как настройку.
 
-                    await player.setAudioNormalization(enabled);
-                    setState(() {});
-                  },
-                  value: player.normalizationEnabled,
-                ),
+                  await player.setAudioNormalization(enabled);
+                  setState(() {});
+                },
               ),
               if (isDesktop)
-                ListTile(
+                SwitchListTile(
+                  secondary: const Icon(
+                    Icons.timer,
+                  ),
                   title: Text(
                     AppLocalizations.of(context)!.profile_pauseOnMuteTitle,
                   ),
@@ -330,34 +329,35 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                     AppLocalizations.of(context)!
                         .profile_pauseOnMuteDescription,
                   ),
-                  leading: const Icon(
-                    Icons.timer,
-                  ),
-                  trailing: Switch(
-                    onChanged: (bool? enabled) async {
-                      if (enabled == null) return;
+                  value: user.settings.pauseOnMuteEnabled,
+                  onChanged: (bool? enabled) async {
+                    if (enabled == null) return;
 
-                      user.settings.pauseOnMuteEnabled = enabled;
+                    user.settings.pauseOnMuteEnabled = enabled;
 
-                      user.markUpdated();
-                      setState(() {});
-                    },
-                    value: user.settings.pauseOnMuteEnabled,
-                  ),
+                    user.markUpdated();
+                    setState(() {});
+                  },
                 ),
               ListTile(
-                title: Text(
-                  AppLocalizations.of(context)!.profile_exportMusicListTitle,
-                ),
                 leading: const Icon(
                   Icons.my_library_music,
+                ),
+                title: Text(
+                  AppLocalizations.of(context)!.profile_exportMusicListTitle,
                 ),
               ),
               if (kDebugMode)
                 ListTile(
-                  title: const Text("Скопировать Kate Mobile токен"),
-                  subtitle: const Text("Debug-режим"),
-                  leading: const Icon(Icons.key),
+                  leading: const Icon(
+                    Icons.key,
+                  ),
+                  title: const Text(
+                    "Скопировать Kate Mobile токен",
+                  ),
+                  subtitle: const Text(
+                    "Debug-режим",
+                  ),
                   onTap: () {
                     Clipboard.setData(
                       ClipboardData(
@@ -374,9 +374,15 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                 ),
               if (kDebugMode && user.recommendationsToken != null)
                 ListTile(
-                  title: const Text("Скопировать VK Admin токен"),
-                  subtitle: const Text("Debug-режим"),
-                  leading: const Icon(Icons.key),
+                  leading: const Icon(
+                    Icons.key,
+                  ),
+                  title: const Text(
+                    "Скопировать VK Admin токен",
+                  ),
+                  subtitle: const Text(
+                    "Debug-режим",
+                  ),
                   onTap: () {
                     Clipboard.setData(
                       ClipboardData(
@@ -392,10 +398,12 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                   },
                 ),
               ListTile(
+                leading: const Icon(
+                  Icons.logout,
+                ),
                 title: Text(
                   AppLocalizations.of(context)!.home_profilePageLogout,
                 ),
-                leading: const Icon(Icons.logout),
                 onTap: () => showDialog(
                   context: context,
                   builder: (context) => const ProfileLogoutExitDialog(),
