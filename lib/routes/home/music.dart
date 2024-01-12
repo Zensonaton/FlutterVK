@@ -555,6 +555,22 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
                         currentlyPlaying: player.state.playing,
                         audio: audio,
                         dragIndex: index,
+                        onAddToQueue: () async {
+                          await player.addNextToQueue(audio);
+
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                AppLocalizations.of(context)!
+                                    .general_addedToQueue,
+                              ),
+                              duration: const Duration(
+                                seconds: 3,
+                              ),
+                            ),
+                          );
+                        },
                         onPlay: audio.isRestricted
                             ? () {
                                 showErrorDialog(
@@ -876,7 +892,25 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
             ),
           ),
           ListTile(
-            onTap: () => showWipDialog(context),
+            onTap: () async {
+              await player.addNextToQueue(
+                widget.audio,
+              );
+
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    AppLocalizations.of(context)!.general_addedToQueue,
+                  ),
+                  duration: const Duration(
+                    seconds: 3,
+                  ),
+                ),
+              );
+
+              Navigator.of(context).pop();
+            },
             leading: const Icon(
               Icons.queue_music,
             ),
@@ -992,6 +1026,9 @@ class AudioTrackTile extends StatefulWidget {
   /// Чаще всего используется для открытия контекстного меню.
   final VoidCallback? onSecondaryAction;
 
+  /// Действие, вызываемое при добавлении данного трека в очередь (свайп вправо).
+  final VoidCallback? onAddToQueue;
+
   const AudioTrackTile({
     super.key,
     this.selected = false,
@@ -1003,6 +1040,7 @@ class AudioTrackTile extends StatefulWidget {
     this.onPlayToggle,
     this.onLikeToggle,
     this.onSecondaryAction,
+    this.onAddToQueue,
   });
 
   @override
@@ -1021,220 +1059,247 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
     /// Url на изображение данного трека.
     final String? imageUrl = widget.audio.album?.thumb?.photo68;
 
-    return ReorderableDragStartListener(
-      index: widget.dragIndex ?? 0,
-      enabled: widget.dragIndex != null && isDesktop,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: widget.onPlay,
-          onHover: widget.onPlay != null
-              ? (bool value) => setState(() => isHovered = value)
-              : null,
-          borderRadius: BorderRadius.circular(globalBorderRadius),
-          onLongPress: isMobile ? widget.onSecondaryAction : null,
-          onSecondaryTap: widget.onSecondaryAction,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Opacity(
-                opacity: widget.audio.isRestricted ? 0.5 : 1,
-                child: InkWell(
-                  onTap: () {
-                    // Если в данный момент играет именно этот трек, то вызываем onPlayToggle.
-                    if (widget.selected) {
-                      widget.onPlayToggle?.call(
-                        !selectedAndPlaying,
-                      );
+    return Dismissible(
+      key: ValueKey(
+        widget.audio.mediaKey,
+      ),
+      direction: widget.onAddToQueue != null
+          ? DismissDirection.startToEnd
+          : DismissDirection.none,
+      confirmDismiss: (_) async {
+        widget.onAddToQueue?.call();
 
-                      return;
-                    }
+        return false;
+      },
+      background: Container(
+        width: 30,
+        color: Theme.of(context).colorScheme.primary,
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Icon(
+              Icons.queue_music,
+              color: Theme.of(context).colorScheme.onPrimary,
+            ),
+          ),
+        ),
+      ),
+      child: ReorderableDragStartListener(
+        index: widget.dragIndex ?? 0,
+        enabled: widget.dragIndex != null && isDesktop,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: widget.onPlay,
+            onHover: widget.onPlay != null
+                ? (bool value) => setState(() => isHovered = value)
+                : null,
+            borderRadius: BorderRadius.circular(globalBorderRadius),
+            onLongPress: isMobile ? widget.onSecondaryAction : null,
+            onSecondaryTap: widget.onSecondaryAction,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Opacity(
+                  opacity: widget.audio.isRestricted ? 0.5 : 1,
+                  child: InkWell(
+                    onTap: () {
+                      // Если в данный момент играет именно этот трек, то вызываем onPlayToggle.
+                      if (widget.selected) {
+                        widget.onPlayToggle?.call(
+                          !selectedAndPlaying,
+                        );
 
-                    // В ином случае запускаем проигрывание этого трека.
-                    widget.onPlay?.call();
-                  },
-                  borderRadius: BorderRadius.circular(globalBorderRadius),
-                  child: ReorderableDragStartListener(
-                    index: widget.dragIndex ?? 0,
-                    enabled: widget.dragIndex != null && isMobile,
-                    child: SizedBox(
-                      width: 50,
-                      height: 50,
-                      child: Stack(
-                        children: [
-                          ClipRRect(
-                            borderRadius:
-                                BorderRadius.circular(globalBorderRadius),
-                            child: imageUrl != null
-                                ? CachedNetworkImage(
-                                    imageUrl: imageUrl,
-                                    cacheKey: widget.audio.mediaKey,
-                                    width: 50,
-                                    height: 50,
-                                    placeholder:
-                                        (BuildContext context, String url) =>
-                                            const FallbackAudioAvatar(),
-                                  )
-                                : const FallbackAudioAvatar(),
-                          ),
-                          if (isHovered || widget.selected)
-                            Center(
-                              child: Container(
-                                width: 50,
-                                height: 50,
-                                decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.5),
-                                  borderRadius:
-                                      BorderRadius.circular(globalBorderRadius),
-                                ),
-                                child: Animate(
-                                  onComplete: !isHovered && selectedAndPlaying
-                                      ? (AnimationController controller) {
-                                          controller.repeat(
-                                            reverse: true,
-                                          );
-                                        }
-                                      : null,
-                                  effects: !isHovered && selectedAndPlaying
-                                      ? [
-                                          const FadeEffect(
-                                            begin: 0.75,
-                                            duration: Duration(
-                                              seconds: 1,
+                        return;
+                      }
+
+                      // В ином случае запускаем проигрывание этого трека.
+                      widget.onPlay?.call();
+                    },
+                    borderRadius: BorderRadius.circular(globalBorderRadius),
+                    child: ReorderableDragStartListener(
+                      index: widget.dragIndex ?? 0,
+                      enabled: widget.dragIndex != null && isMobile,
+                      child: SizedBox(
+                        width: 50,
+                        height: 50,
+                        child: Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius:
+                                  BorderRadius.circular(globalBorderRadius),
+                              child: imageUrl != null
+                                  ? CachedNetworkImage(
+                                      imageUrl: imageUrl,
+                                      cacheKey: widget.audio.mediaKey,
+                                      width: 50,
+                                      height: 50,
+                                      placeholder:
+                                          (BuildContext context, String url) =>
+                                              const FallbackAudioAvatar(),
+                                    )
+                                  : const FallbackAudioAvatar(),
+                            ),
+                            if (isHovered || widget.selected)
+                              Center(
+                                child: Container(
+                                  width: 50,
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(0.5),
+                                    borderRadius: BorderRadius.circular(
+                                        globalBorderRadius),
+                                  ),
+                                  child: Animate(
+                                    onComplete: !isHovered && selectedAndPlaying
+                                        ? (AnimationController controller) {
+                                            controller.repeat(
+                                              reverse: true,
+                                            );
+                                          }
+                                        : null,
+                                    effects: !isHovered && selectedAndPlaying
+                                        ? [
+                                            const FadeEffect(
+                                              begin: 0.75,
+                                              duration: Duration(
+                                                seconds: 1,
+                                              ),
                                             ),
-                                          ),
-                                          const ScaleEffect(
-                                            begin: Offset(0.9, 0.9),
-                                            end: Offset(1.25, 1.25),
-                                            duration: Duration(
-                                              seconds: 1,
+                                            const ScaleEffect(
+                                              begin: Offset(0.9, 0.9),
+                                              end: Offset(1.25, 1.25),
+                                              duration: Duration(
+                                                seconds: 1,
+                                              ),
                                             ),
-                                          ),
-                                          const ShakeEffect(
-                                            duration: Duration(
-                                              seconds: 1,
+                                            const ShakeEffect(
+                                              duration: Duration(
+                                                seconds: 1,
+                                              ),
                                             ),
-                                          ),
-                                        ]
-                                      : null,
-                                  child: Icon(
-                                    isHovered
-                                        ? (selectedAndPlaying
-                                            ? Icons.pause
-                                            : Icons.play_arrow)
-                                        : Icons.music_note,
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
+                                          ]
+                                        : null,
+                                    child: Icon(
+                                      isHovered
+                                          ? (selectedAndPlaying
+                                              ? Icons.pause
+                                              : Icons.play_arrow)
+                                          : Icons.music_note,
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            )
-                        ],
+                              )
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(
-                width: 8,
-              ),
-              Expanded(
-                child: Opacity(
-                  opacity: widget.audio.isRestricted ? 0.5 : 1,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              widget.audio.title,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                color: widget.selected
-                                    ? Theme.of(context).colorScheme.primary
-                                    : Theme.of(context)
-                                        .colorScheme
-                                        .onBackground,
-                              ),
-                            ),
-                          ),
-                          if (widget.audio.isExplicit)
-                            const SizedBox(
-                              width: 2,
-                            ),
-                          if (widget.audio.isExplicit)
-                            Icon(
-                              Icons.explicit,
-                              size: 16,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onBackground
-                                  .withOpacity(0.5),
-                            ),
-                          if (widget.audio.subtitle != null)
-                            const SizedBox(
-                              width: 6,
-                            ),
-                          if (widget.audio.subtitle != null)
-                            Flexible(
-                              child: Text(
-                                widget.audio.subtitle!,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onBackground
-                                      .withOpacity(0.5),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                      Text(
-                        widget.audio.artist,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: widget.selected
-                              ? Theme.of(context).colorScheme.primary
-                              : Theme.of(context).colorScheme.onBackground,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(
-                width: 8,
-              ),
-              Text(
-                secondsAsString(widget.audio.duration),
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onBackground
-                      .withOpacity(0.75),
-                ),
-              ),
-              if (widget.showLikeButton)
                 const SizedBox(
                   width: 8,
                 ),
-              if (widget.showLikeButton)
-                IconButton(
-                  onPressed: widget.onLikeToggle,
-                  icon: Icon(
-                    Icons.favorite,
-                    color: Theme.of(context).colorScheme.primary,
+                Expanded(
+                  child: Opacity(
+                    opacity: widget.audio.isRestricted ? 0.5 : 1,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                widget.audio.title,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  color: widget.selected
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Theme.of(context)
+                                          .colorScheme
+                                          .onBackground,
+                                ),
+                              ),
+                            ),
+                            if (widget.audio.isExplicit)
+                              const SizedBox(
+                                width: 2,
+                              ),
+                            if (widget.audio.isExplicit)
+                              Icon(
+                                Icons.explicit,
+                                size: 16,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onBackground
+                                    .withOpacity(0.5),
+                              ),
+                            if (widget.audio.subtitle != null)
+                              const SizedBox(
+                                width: 6,
+                              ),
+                            if (widget.audio.subtitle != null)
+                              Flexible(
+                                child: Text(
+                                  widget.audio.subtitle!,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onBackground
+                                        .withOpacity(0.5),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        Text(
+                          widget.audio.artist,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: widget.selected
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.onBackground,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-            ],
+                const SizedBox(
+                  width: 8,
+                ),
+                Text(
+                  secondsAsString(widget.audio.duration),
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onBackground
+                        .withOpacity(0.75),
+                  ),
+                ),
+                if (widget.showLikeButton)
+                  const SizedBox(
+                    width: 8,
+                  ),
+                if (widget.showLikeButton)
+                  IconButton(
+                    onPressed: widget.onLikeToggle,
+                    icon: Icon(
+                      Icons.favorite,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
@@ -1584,6 +1649,23 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
                 selected: user.favoritesPlaylist!.audios![index] ==
                     player.currentAudio,
                 currentlyPlaying: player.isLoaded && player.state.playing,
+                onAddToQueue: () async {
+                  await player.addNextToQueue(
+                    user.favoritesPlaylist!.audios![index],
+                  );
+
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        AppLocalizations.of(context)!.general_addedToQueue,
+                      ),
+                      duration: const Duration(
+                        seconds: 3,
+                      ),
+                    ),
+                  );
+                },
                 onPlay: user.favoritesPlaylist!.audios![index].isRestricted
                     ? () => showErrorDialog(
                           context,

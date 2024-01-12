@@ -482,9 +482,10 @@ class MediaKitPlayerExtended extends Player {
     );
   }
 
+  /// Добавляет трек [media] в конец играющего в данный момент плейлиста.
   @override
   Future<void> add(Media media) async {
-    _logger.d("Called add($media)");
+    _logger.d("Called add(...)");
 
     if (_playlist == null) return;
 
@@ -496,6 +497,29 @@ class MediaKitPlayerExtended extends Player {
 
     if (shuffleEnabled && _unshuffledPlaylist != null) {
       _unshuffledPlaylist!.add(media);
+    }
+  }
+
+  /// Добавляет трек [media] как следующий трек в очереди.
+  ///
+  /// После окончания воспроизведения текущего трека, плеер перейдет к воспроизведению трека из этого метода.
+  Future<void> playNext(Media media) async {
+    _logger.d("Called playNext(...)");
+
+    if (_playlist == null) return;
+
+    setPlaylist(
+      _playlist!.copyWith(
+        medias: [
+          ..._playlist!.medias.slice(0, trackIndex! + 1),
+          media,
+          ..._playlist!.medias.slice(trackIndex! + 1)
+        ],
+      ),
+    );
+
+    if (shuffleEnabled && _unshuffledPlaylist != null) {
+      _unshuffledPlaylist!.insert(trackIndex!, media);
     }
   }
 
@@ -763,6 +787,17 @@ class VKMusicPlayer extends MediaKitPlayerExtended {
         ],
         index: index,
       ),
+    );
+  }
+
+  /// Добавляет трек [media] как следующий трек в очереди.
+  ///
+  /// После окончания воспроизведения текущего трека, плеер перейдет к воспроизведению трека из этого метода.
+  Future<void> addNextToQueue(Audio audio) async {
+    await super.playNext(
+      Media(audio.url, extras: {
+        "audio": audio,
+      }),
     );
   }
 
