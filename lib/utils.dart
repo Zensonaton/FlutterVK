@@ -84,12 +84,11 @@ Future<ColorScheme> colorSchemeFromUrl(
       cacheKey: cacheKey,
       cacheManager: CachedNetworkImagesManager.instance,
     ),
-    maximumColorCount: 1,
   );
 
   // Превращаем наш PaletteGenerator в цветовую схему.
   final ColorScheme scheme = ColorScheme.fromSeed(
-    seedColor: palette.dominantColor?.color ?? Colors.blue,
+    seedColor: palette.dominantColor?.color ?? Colors.blueGrey,
     brightness: brightness,
   );
 
