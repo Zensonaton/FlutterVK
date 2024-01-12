@@ -2,6 +2,7 @@ import "dart:io";
 
 import "package:audio_service/audio_service.dart";
 import "package:dynamic_color/dynamic_color.dart";
+import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
@@ -58,20 +59,24 @@ Future main() async {
   await windowManager.setPreventClose(true);
 
   // Устанавливаем размеры окна.
-  WindowOptions windowOptions = const WindowOptions(
-    size: Size(
-      1280,
-      720,
-    ),
-    minimumSize: Size(
-      400,
-      500,
-    ),
-    center: true,
-  );
-  windowManager.waitUntilReadyToShow(windowOptions, () async {
+  windowManager.waitUntilReadyToShow(
+      const WindowOptions(
+        size: Size(
+          1280,
+          720,
+        ),
+        minimumSize: Size(
+          400,
+          500,
+        ),
+        center: true,
+      ), () async {
     await windowManager.show();
-    await windowManager.focus();
+
+    // Делаем фокус окна не в debug-режиме.
+    if (!kDebugMode) {
+      await windowManager.focus();
+    }
   });
 
   // Делаем панель навигации прозрачной.
