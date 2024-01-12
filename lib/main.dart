@@ -16,6 +16,7 @@ import "provider/user.dart";
 import "routes/home.dart";
 import "routes/welcome.dart";
 import "services/audio_player.dart";
+import "services/cache_manager.dart";
 import "utils.dart";
 import "widgets/loading_overlay.dart";
 
@@ -74,6 +75,7 @@ Future main() async {
       androidNotificationChannelId: "com.zensonaton.fluttervk",
       preloadArtwork: true,
     ),
+    cacheManager: CachedNetworkImagesManager.instance,
   );
 
   ResponsiveSizingConfig.instance.setCustomBreakpoints(
