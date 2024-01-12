@@ -220,7 +220,10 @@ class _HomeRouteState extends State<HomeRoute> {
                     audio: player.currentAudio,
                     previousAudio: player.previousAudio,
                     nextAudio: player.nextAudio,
-                    favoriteState: true,
+                    favoriteState: player.currentAudio != null
+                        ? user.favoriteTrackIDs
+                            .contains(player.currentAudio!.id)
+                        : false,
                     playbackState: player.state.playing,
                     progress: player.progress,
                     volume: player.state.volume / 100,
