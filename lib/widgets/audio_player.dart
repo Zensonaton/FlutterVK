@@ -466,7 +466,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
     final Widget shuffleButton = IconButton(
       onPressed: () => widget.onShuffleToggle?.call(!widget.isShuffleEnabled),
       icon: Icon(
-        widget.isShuffleEnabled ? Icons.shuffle_on : Icons.shuffle,
+        widget.isShuffleEnabled ? Icons.shuffle_on_outlined : Icons.shuffle,
         color: scheme!.primary,
       ),
     );
@@ -602,7 +602,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                       ?.call(!widget.isRepeatEnabled),
                                   icon: Icon(
                                     widget.isRepeatEnabled
-                                        ? Icons.repeat_on
+                                        ? Icons.repeat_on_outlined
                                         : Icons.repeat,
                                     color: scheme!.primary,
                                   ),
