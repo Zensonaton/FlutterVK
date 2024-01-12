@@ -311,9 +311,10 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                 onChanged: (bool? enabled) async {
                   if (enabled == null) return;
 
-                  // TODO: Сохранить состояние нормализации как настройку.
-
+                  user.settings.audioNormalizationEnabled = enabled;
                   await player.setAudioNormalization(enabled);
+
+                  user.markUpdated();
                   setState(() {});
                 },
               ),

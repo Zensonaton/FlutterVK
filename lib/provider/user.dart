@@ -109,6 +109,9 @@ class Settings {
   /// Указывает, что Discord Rich Presence включён.
   bool discordRPCEnabled = true;
 
+  /// Указывает, что нормализация треков включена.
+  bool audioNormalizationEnabled = true;
+
   /// Указывает, что настройка "пауза при минимальной громкости" включена.
   bool pauseOnMuteEnabled = true;
 }
@@ -291,6 +294,10 @@ class UserProvider extends ChangeNotifier {
       settings.discordRPCEnabled,
     );
     await prefs.setBool(
+      "AudioNormalizationEnabled",
+      settings.audioNormalizationEnabled,
+    );
+    await prefs.setBool(
       "PauseOnMuteEnabled",
       settings.pauseOnMuteEnabled,
     );
@@ -325,6 +332,8 @@ class UserProvider extends ChangeNotifier {
     settings.byVKChipEnabled = prefs.getBool("ByVKChipEnabled") ?? true;
     settings.shuffleEnabled = prefs.getBool("ShuffleEnabled") ?? false;
     settings.discordRPCEnabled = prefs.getBool("DiscordRPCEnabled") ?? true;
+    settings.audioNormalizationEnabled =
+        prefs.getBool("AudioNormalizationEnabled") ?? true;
     settings.pauseOnMuteEnabled = prefs.getBool("PauseOnMuteEnabled") ?? false;
 
     markUpdated(false);

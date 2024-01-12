@@ -109,6 +109,11 @@ class _MainAppState extends State<MainApp> {
       await player.setDiscordRPCEnabled(true);
     }
 
+    // Восстанавливаем состояние нормализации у плеера.
+    if (user.settings.audioNormalizationEnabled) {
+      await player.setAudioNormalization(true);
+    }
+
     user.markUpdated(false);
 
     setState(() {});
