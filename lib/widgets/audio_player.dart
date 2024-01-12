@@ -117,11 +117,24 @@ class TrackNameInfoWidget extends StatelessWidget {
                       borderRadius: BorderRadius.circular(
                         globalBorderRadius,
                       ),
-                      child: image != null
-                          ? Image(
-                              image: image!,
-                            )
-                          : const FallbackAudioAvatar(),
+                      child: AnimatedSwitcher(
+                        duration: const Duration(
+                          milliseconds: 500,
+                        ),
+                        child: SizedBox(
+                          key: ValueKey(
+                            audio?.mediaKey ?? "",
+                          ),
+                          width: 60,
+                          height: 600,
+                          child: image != null
+                              ? Image(
+                                  image: image!,
+                                  gaplessPlayback: true,
+                                )
+                              : const FallbackAudioAvatar(),
+                        ),
+                      ),
                     ),
                   ),
                 ),
