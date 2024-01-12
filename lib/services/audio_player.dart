@@ -341,12 +341,17 @@ class MediaKitPlayerExtended extends Player {
   /// Управляет воспроизведением. Вызывает [Player.play] или [Player.pause] в зависимости от аргумента [play].
   Future<void> setPlaying(bool play) async {
     if (play) {
-      this.play();
+      await this.play();
 
       return;
     }
 
-    pause();
+    await pause();
+  }
+
+  /// Переключает состояние воспроизведения.
+  Future<void> togglePlay() async {
+    await setPlaying(!state.playing);
   }
 
   /// Изменяет громкость плеера.

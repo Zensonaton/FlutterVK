@@ -149,6 +149,14 @@ class _MainAppState extends State<MainApp> {
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
+        shortcuts: {
+          LogicalKeySet(LogicalKeyboardKey.space): const ActivateIntent(),
+        },
+        actions: {
+          ActivateIntent: CallbackAction<ActivateIntent>(
+            onInvoke: (ActivateIntent intent) => player.togglePlay(),
+          )
+        },
         supportedLocales: const [
           Locale("ru"),
           Locale("en"),
