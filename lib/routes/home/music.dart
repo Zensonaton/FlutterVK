@@ -1367,6 +1367,8 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
                     child: widget.backgroundUrl != null
                         ? CachedNetworkImage(
                             imageUrl: widget.backgroundUrl!,
+                            memCacheHeight: 200,
+                            memCacheWidth: 200,
                             placeholder: (BuildContext context, String url) =>
                                 const FallbackAudioPlaylistAvatar(),
                           )
@@ -1825,7 +1827,7 @@ class MyPlaylistsBlock extends StatelessWidget {
                 children: [
                   for (ExtendedVKPlaylist playlist in user.regularPlaylists)
                     AudioPlaylistWidget(
-                      backgroundUrl: playlist.photo?.photo600,
+                      backgroundUrl: playlist.photo?.photo270,
                       name: playlist.title!,
                       description: playlist.subtitle,
                       onOpen: () => showDialog(
@@ -1900,7 +1902,7 @@ class RecommendedPlaylistsBlock extends StatelessWidget {
                   for (ExtendedVKPlaylist playlist
                       in user.recommendationPlaylists)
                     AudioPlaylistWidget(
-                      backgroundUrl: playlist.photo!.photo600!,
+                      backgroundUrl: playlist.photo!.photo270!,
                       name: playlist.title!,
                       description: playlist.subtitle,
                       useTextOnImageLayout: true,
@@ -2008,7 +2010,7 @@ class _SimillarMusicBlockState extends State<SimillarMusicBlock> {
                 for (ExtendedVKPlaylist playlist
                     in user.recommendationPlaylists)
                   AudioPlaylistWidget(
-                    backgroundUrl: playlist.photo!.photo600!,
+                    backgroundUrl: playlist.photo!.photo270!,
                     name: playlist.title!,
                     description: playlist.subtitle,
                     useTextOnImageLayout: true,
@@ -2072,7 +2074,7 @@ class _ByVKPlaylistsBlockState extends State<ByVKPlaylistsBlock> {
                 children: [
                   for (ExtendedVKPlaylist playlist in user.madeByVKPlaylists)
                     AudioPlaylistWidget(
-                      backgroundUrl: playlist.photo!.photo600!,
+                      backgroundUrl: playlist.photo!.photo270!,
                       name: playlist.title!,
                       onOpen: () => showDialog(
                         context: context,
