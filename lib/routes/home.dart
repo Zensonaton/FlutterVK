@@ -85,9 +85,14 @@ class _HomeRouteState extends State<HomeRoute> {
       });
     }
 
-    // TODO: Нормальный обработчик ошибок.
+    // Обработчик ошибок плеера. В случае чего-то очень страшного, мы должны остановить воспроизведение и сделать логирование этого.
     player.stream.error.listen((event) {
       player.stop();
+
+      logger.e(
+        "Ошибка воспроизведения плеера: ",
+        error: event,
+      );
 
       showErrorDialog(
         context,
