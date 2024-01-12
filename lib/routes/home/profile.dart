@@ -198,14 +198,18 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
           child: ListView(
             children: [
               if (user.photoMaxUrl != null)
-                // TODO: Сделать скругление аватара.
-                SizedBox(
-                  width: 80,
-                  height: 80,
-                  child: CachedNetworkImage(
-                    imageUrl: user.photoMaxUrl!,
+                CachedNetworkImage(
+                  imageUrl: user.photoMaxUrl!,
+                  imageBuilder: (context, imageProvider) => Container(
                     width: 80,
                     height: 80,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      image: DecorationImage(
+                        image: imageProvider,
+                        fit: BoxFit.scaleDown,
+                      ),
+                    ),
                   ),
                 ),
               if (user.photoMaxUrl != null)
