@@ -9,6 +9,7 @@ import "package:styled_text/styled_text.dart";
 import "../api/shared.dart";
 import "../api/users/get.dart";
 import "../provider/user.dart";
+import "../services/cache_manager.dart";
 import "../services/logger.dart";
 import "../utils.dart";
 import "../widgets/error_dialog.dart";
@@ -190,6 +191,7 @@ class _WelcomeDialogState extends State<WelcomeDialog> {
                     ),
                   ),
                 ),
+                cacheManager: CachedNetworkImagesManager.instance,
               ),
             if (widget.avatarURL != null)
               const SizedBox(

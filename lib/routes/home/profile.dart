@@ -8,6 +8,7 @@ import "package:responsive_builder/responsive_builder.dart";
 
 import "../../main.dart";
 import "../../provider/user.dart";
+import "../../services/cache_manager.dart";
 import "../../utils.dart";
 import "../../widgets/page_route.dart";
 import "../../widgets/wip_dialog.dart";
@@ -211,6 +212,7 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                       ),
                     ),
                   ),
+                  cacheManager: CachedNetworkImagesManager.instance,
                 ),
               if (user.photoMaxUrl != null)
                 const SizedBox(

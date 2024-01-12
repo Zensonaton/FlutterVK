@@ -23,6 +23,7 @@ import "../../consts.dart";
 import "../../main.dart";
 import "../../provider/user.dart";
 import "../../services/audio_player.dart";
+import "../../services/cache_manager.dart";
 import "../../services/logger.dart";
 import "../../utils.dart";
 import "../../widgets/adaptive_dialog.dart";
@@ -1140,6 +1141,8 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
                                       placeholder:
                                           (BuildContext context, String url) =>
                                               const FallbackAudioAvatar(),
+                                      cacheManager:
+                                          CachedNetworkImagesManager.instance,
                                     )
                                   : const FallbackAudioAvatar(),
                             ),
@@ -1371,6 +1374,7 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
                             memCacheWidth: 200,
                             placeholder: (BuildContext context, String url) =>
                                 const FallbackAudioPlaylistAvatar(),
+                            cacheManager: CachedNetworkImagesManager.instance,
                           )
                         : const FallbackAudioPlaylistAvatar(),
                   ),

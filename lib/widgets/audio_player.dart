@@ -6,6 +6,7 @@ import "package:flutter/material.dart";
 
 import "../api/shared.dart";
 import "../consts.dart";
+import "../services/cache_manager.dart";
 import "../utils.dart";
 import "fallback_audio_photo.dart";
 import "swipe_detector.dart";
@@ -516,6 +517,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                           ? CachedNetworkImageProvider(
                               imageUrl,
                               cacheKey: widget.audio!.mediaKey,
+                              cacheManager: CachedNetworkImagesManager.instance,
                             )
                           : null,
                       useBigLayout: widget.useBigLayout,

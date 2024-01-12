@@ -16,6 +16,7 @@ dependencies:
   diacritic: ^0.1.5
   discord_rpc: ^0.0.2
   dynamic_color: ^1.6.9
+  file: ^7.0.0
   flutter:
     sdk: flutter
   flutter_animate: ^4.3.0
