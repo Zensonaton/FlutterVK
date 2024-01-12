@@ -534,12 +534,17 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                         clipBehavior: Clip.none,
                         alignment: Alignment.center,
                         children: [
-                          // Надпись "Играет следующим":
-                          if (widget.useBigLayout && widget.nextAudio != null)
+                          // Надпись "Играет следующим". Если включён повтор текущего трека, то отображаем текущий трек вместо следующего.
+                          if (widget.useBigLayout &&
+                              (widget.isRepeatEnabled
+                                  ? widget.audio != null
+                                  : widget.nextAudio != null))
                             NextTrackInfoWidget(
                               displayNextTrack: displayNextTrack,
                               scheme: scheme!,
-                              nextAudio: widget.nextAudio!,
+                              nextAudio: widget.isRepeatEnabled
+                                  ? widget.audio!
+                                  : widget.nextAudio!,
                             ),
 
                           // Ряд из кнопок управления.
