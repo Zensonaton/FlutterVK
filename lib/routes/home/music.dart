@@ -1063,7 +1063,7 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
       key: ValueKey(
         widget.audio.mediaKey,
       ),
-      direction: widget.onAddToQueue != null
+      direction: (widget.onAddToQueue != null && isMobile)
           ? DismissDirection.startToEnd
           : DismissDirection.none,
       confirmDismiss: (_) async {
@@ -1072,12 +1072,14 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
         return false;
       },
       background: Container(
-        width: 30,
-        color: Theme.of(context).colorScheme.primary,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primary,
+          borderRadius: BorderRadius.circular(globalBorderRadius),
+        ),
         child: Align(
           alignment: Alignment.centerLeft,
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(14),
             child: Icon(
               Icons.queue_music,
               color: Theme.of(context).colorScheme.onPrimary,
