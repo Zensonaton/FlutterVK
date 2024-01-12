@@ -142,8 +142,41 @@ Future<void> ensureUserAudioRecommendations(
     // Ищем блок с рекомендуемыми плейлистами.
     SectionBlock recommendedPlaylistsBlock = mainSection.blocks!.firstWhere(
       (SectionBlock block) => block.dataType == "music_playlists",
-      orElse: () =>
-          throw AssertionError("Блок с лайкнутыми треками не был найден"),
+      orElse: () => throw AssertionError(
+        "Блок с рекомендуемыми плейлистами не был найден",
+      ),
+    );
+
+    // Извлекаем список ID плейлистов из этого блока.
+    final List<String> recommendedPlaylistIDs =
+        recommendedPlaylistsBlock.playlistIDs!;
+
+    // Достаём те плейлисты, которые рекомендуются нами ВКонтакте.
+    // Превращаем объекты типа AudioPlaylist в ExtendedVKPlaylist.
+    return response.response!.playlists
+        .where((AudioPlaylist playlist) => recommendedPlaylistIDs.contains(
+              playlist.mediaKey,
+            ))
+        .map(
+          (AudioPlaylist playlist) => ExtendedVKPlaylist.fromAudioPlaylist(
+            playlist,
+          ),
+        )
+        .toList();
+  }
+
+  /// Парсит список из плейлистов, возвращая только список из плейлистов раздела "Собрано редакцией".
+  List<ExtendedVKPlaylist> parseMadeByVKPlaylists(
+    APICatalogGetAudioResponse response,
+  ) {
+    final Section mainSection = response.response!.catalog.sections[0];
+
+    // Ищем блок с плейлистами "Собрано редакцией". Данный блок имеет [SectionBlock.dataType] == "music_playlists", но он расположен в конце.
+    SectionBlock recommendedPlaylistsBlock = mainSection.blocks!.lastWhere(
+      (SectionBlock block) => block.dataType == "music_playlists",
+      orElse: () => throw AssertionError(
+        "Блок с разделом 'собрано редакцией' не был найден",
+      ),
     );
 
     // Извлекаем список ID плейлистов из этого блока.
@@ -185,9 +218,13 @@ Future<void> ensureUserAudioRecommendations(
       );
     }
 
+    // Добавляем рекомендуемые плейлисты, а так же плейлисты из раздела "сделано редакцией ВКонтакте".
     user.allPlaylists.addAll(
       {
-        for (var playlist in parseRecommendedPlaylists(response))
+        for (ExtendedVKPlaylist playlist in {
+          ...parseRecommendedPlaylists(response),
+          ...parseMadeByVKPlaylists(response),
+        })
           playlist.id: playlist
       },
     );
@@ -1134,8 +1171,10 @@ class AudioPlaylistWidget extends StatefulWidget {
   /// Название данного плейлиста.
   final String name;
 
-  /// Указывает, что данный плейлист является рекомендательным, т.е., плейлистом по типу "Плейлист дня 1" и прочие.
-  final bool isRecommendationPlaylist;
+  /// Указывает, что надписи данного плейлиста должны располагаться поверх изображения плейлиста.
+  ///
+  /// Используется у плейлистов по типу "Плейлист дня 1".
+  final bool useTextOnImageLayout;
 
   /// Описание плейлиста.
   final String? description;
@@ -1150,7 +1189,7 @@ class AudioPlaylistWidget extends StatefulWidget {
     super.key,
     this.backgroundUrl,
     required this.name,
-    this.isRecommendationPlaylist = false,
+    this.useTextOnImageLayout = false,
     this.description,
     this.currentlyPlaying = false,
     this.onOpen,
@@ -1189,7 +1228,7 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
                   ),
 
                   // Если это у нас рекомендательный плейлист, то текст должен находиться внутри изображения плейлиста.
-                  if (widget.isRecommendationPlaylist)
+                  if (widget.useTextOnImageLayout)
                     Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
@@ -1239,8 +1278,8 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
             ),
 
             // Если это обычный плейлист, то нам нужно показать его содержимое под изображением.
-            if (!widget.isRecommendationPlaylist) const SizedBox(height: 2),
-            if (!widget.isRecommendationPlaylist)
+            if (!widget.useTextOnImageLayout) const SizedBox(height: 2),
+            if (!widget.useTextOnImageLayout)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
@@ -1691,7 +1730,7 @@ class RecommendedPlaylistsBlock extends StatelessWidget {
                       backgroundUrl: playlist.photo!.photo600!,
                       name: playlist.title!,
                       description: playlist.subtitle,
-                      isRecommendationPlaylist: true,
+                      useTextOnImageLayout: true,
                       onOpen: () async {
                         // Если информация по данному плейлисту не загружена, то загружаем её.
                         if (playlist.audios == null) {
@@ -1758,7 +1797,7 @@ class RecommendedPlaylistsBlock extends StatelessWidget {
                             const AudioPlaylistWidget(
                               name: "Playlist",
                               description: "Playlist description here",
-                              isRecommendationPlaylist: true,
+                              useTextOnImageLayout: true,
                             ),
                         ],
                       ),
@@ -1841,7 +1880,7 @@ class _SimillarMusicBlockState extends State<SimillarMusicBlock> {
                     backgroundUrl: playlist.photo!.photo600!,
                     name: playlist.title!,
                     description: playlist.subtitle,
-                    isRecommendationPlaylist: true,
+                    useTextOnImageLayout: true,
                     onOpen: () => showWipDialog(context),
                   ),
               ],
@@ -1868,66 +1907,61 @@ class _ByVKPlaylistsBlockState extends State<ByVKPlaylistsBlock> {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Skeleton loader.
-    // TODO: Доделать этот раздел.
     final UserProvider user = Provider.of<UserProvider>(context);
-
-    const int playlistsCount = 0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              AppLocalizations.of(context)!.music_byVKChip,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.primary,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            if (playlistsCount > 0)
-              const SizedBox(
-                width: 8,
-              ),
-            if (playlistsCount > 0)
-              Text(
-                playlistsCount.toString(),
-                style: TextStyle(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onBackground
-                      .withOpacity(0.75),
-                ),
-              ),
-          ],
+        Text(
+          AppLocalizations.of(context)!.music_byVKChip,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.primary,
+            fontWeight: FontWeight.w500,
+          ),
         ),
         const SizedBox(
           height: 14,
         ),
-        ScrollConfiguration(
-          behavior: AlwaysScrollableScrollBehavior(),
-          child: SingleChildScrollView(
-            // TODO: ClipBehaviour.
-            scrollDirection: Axis.horizontal,
-            controller: scrollController,
-            child: Wrap(
-              spacing: 8,
-              children: [
-                for (ExtendedVKPlaylist playlist
-                    in user.recommendationPlaylists)
-                  AudioPlaylistWidget(
-                    backgroundUrl: playlist.photo!.photo600!,
-                    name: playlist.title!,
-                    description: playlist.subtitle,
-                    isRecommendationPlaylist: true,
-                    onOpen: () => showWipDialog(context),
-                  ),
-              ],
+
+        // Настоящие данные.
+        if (user.madeByVKPlaylists.isNotEmpty)
+          ScrollConfiguration(
+            behavior: AlwaysScrollableScrollBehavior(),
+            child: SingleChildScrollView(
+              // TODO: ClipBehaviour.
+              scrollDirection: Axis.horizontal,
+              controller: scrollController,
+              child: Wrap(
+                spacing: 8,
+                children: [
+                  for (ExtendedVKPlaylist playlist in user.madeByVKPlaylists)
+                    AudioPlaylistWidget(
+                      backgroundUrl: playlist.photo!.photo600!,
+                      name: playlist.title!,
+                      onOpen: () => showWipDialog(context),
+                    ),
+                ],
+              ),
             ),
           ),
-        ),
+
+        // Skeleton loader.
+        if (user.madeByVKPlaylists.isEmpty)
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const NeverScrollableScrollPhysics(),
+            child: Skeletonizer(
+              child: Wrap(
+                spacing: 8,
+                children: [
+                  for (int i = 0; i < 10; i++)
+                    const AudioPlaylistWidget(
+                      name: "Playlist name\nPlaylist",
+                    ),
+                ],
+              ),
+            ),
+          ),
       ],
     );
   }

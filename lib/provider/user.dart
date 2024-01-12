@@ -24,10 +24,13 @@ class ExtendedVKPlaylist extends AudioPlaylist {
   bool get isFavoritesPlaylist => id == 0;
 
   /// Указывает, что данный плейлист является обычным плейлистом пользователя, который он либо создал либо сохранил.
-  bool get isRegularPlaylist => id > 0;
+  bool get isRegularPlaylist => id > 0 && ownerID != vkMusicGroupID;
 
   /// Указывает, что данный плейлист является плейлистом из рекомендаций.
   bool get isRecommendationsPlaylist => id < 0;
+
+  /// Указывает, что данный плейлист является плейлистом от ВКонтакте (плейлист из раздела "Собрано редакцией")
+  bool get isMadeByVIPlaylist => ownerID == vkMusicGroupID;
 
   /// Возвращает instance данного класса из передаваемого объекта типа [AudioPlaylist].
   static ExtendedVKPlaylist fromAudioPlaylist(
@@ -189,6 +192,13 @@ class UserProvider extends ChangeNotifier {
   List<ExtendedVKPlaylist> get recommendationPlaylists => allPlaylists.values
       .where(
         (ExtendedVKPlaylist playlist) => playlist.isRecommendationsPlaylist,
+      )
+      .toList();
+
+  /// Перечисление всех плейлистов, которые были сделаны ВКонтакте (раздел "Собрано редакцией").
+  List<ExtendedVKPlaylist> get madeByVKPlaylists => allPlaylists.values
+      .where(
+        (ExtendedVKPlaylist playlist) => playlist.isMadeByVIPlaylist,
       )
       .toList();
 
