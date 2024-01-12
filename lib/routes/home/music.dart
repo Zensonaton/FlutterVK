@@ -1739,11 +1739,17 @@ class MyPlaylistsBlock extends StatelessWidget {
               child: Wrap(
                 spacing: 8,
                 children: [
-                  for (AudioPlaylist playlist in user.regularPlaylists)
+                  for (ExtendedVKPlaylist playlist in user.regularPlaylists)
                     AudioPlaylistWidget(
                       backgroundUrl: playlist.photo?.photo600,
                       name: playlist.title!,
                       description: playlist.subtitle,
+                      onOpen: () => showDialog(
+                        context: context,
+                        builder: (context) => PlaylistDisplayDialog(
+                          playlist: playlist,
+                        ),
+                      ),
                     ),
                 ],
               ),
@@ -1922,7 +1928,12 @@ class _SimillarMusicBlockState extends State<SimillarMusicBlock> {
                     name: playlist.title!,
                     description: playlist.subtitle,
                     useTextOnImageLayout: true,
-                    onOpen: () => showWipDialog(context),
+                    onOpen: () => showDialog(
+                      context: context,
+                      builder: (context) => PlaylistDisplayDialog(
+                        playlist: playlist,
+                      ),
+                    ),
                   ),
               ],
             ),
@@ -1979,7 +1990,12 @@ class _ByVKPlaylistsBlockState extends State<ByVKPlaylistsBlock> {
                     AudioPlaylistWidget(
                       backgroundUrl: playlist.photo!.photo600!,
                       name: playlist.title!,
-                      onOpen: () => showWipDialog(context),
+                      onOpen: () => showDialog(
+                        context: context,
+                        builder: (context) => PlaylistDisplayDialog(
+                          playlist: playlist,
+                        ),
+                      ),
                     ),
                 ],
               ),
