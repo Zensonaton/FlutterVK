@@ -499,7 +499,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
             height: double.infinity,
             child: Padding(
               padding: EdgeInsets.all(
-                widget.useBigLayout ? 12 : 8,
+                widget.useBigLayout ? 14 : 8,
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
