@@ -398,11 +398,15 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                   },
                 ),
               ListTile(
-                leading: const Icon(
+                leading: Icon(
                   Icons.logout,
+                  color: Theme.of(context).colorScheme.error,
                 ),
                 title: Text(
                   AppLocalizations.of(context)!.home_profilePageLogout,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.error,
+                  ),
                 ),
                 onTap: () => showDialog(
                   context: context,
