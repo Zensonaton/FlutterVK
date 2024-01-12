@@ -223,6 +223,7 @@ class _HomeRouteState extends State<HomeRoute> {
                     isShuffleEnabled: player.shuffleEnabled,
                     isRepeatEnabled:
                         player.state.playlistMode == PlaylistMode.single,
+                    pauseOnMuteEnabled: user.settings.pauseOnMuteEnabled,
                     useBigLayout:
                         !isMobileLayout && navigationPage.allowBigAudioPlayer,
                     onFavoriteStateToggle: (_) => showWipDialog(context),

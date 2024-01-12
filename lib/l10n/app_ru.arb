@@ -152,8 +152,8 @@
 	"profile_musicNormalizationTitle": "Нормализация громкости музыки",
 	"profile_musicNormalizationDescription": "При включении данной опции аудиоплеер будет делать громкость у разных треков похожей",
 
-	"profile_volumeMusicPauseTimerTitle": "Автоматическая пауза при выключенном звуке",
-	"profile_volumeMusicPauseTimerDescription": "Если включить данную опцию, то плеер автоматически будет ставиться на паузу если звук в плеере выставлен на 0% на некоторое время",
+	"profile_pauseOnMuteTitle": "Пауза при отключении громкости",
+	"profile_pauseOnMuteDescription": "Данная опция указывает, будет ли плеер ставиться на паузу при установке минимальной громкости в плеере",
 
 	"profile_exportMusicListTitle": "Экспорт списка треков"
 }

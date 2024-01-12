@@ -8,6 +8,7 @@ import "package:responsive_builder/responsive_builder.dart";
 
 import "../../main.dart";
 import "../../provider/user.dart";
+import "../../utils.dart";
 import "../../widgets/page_route.dart";
 import "../../widgets/wip_dialog.dart";
 import "../login.dart";
@@ -312,29 +313,38 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                   onChanged: (bool? enabled) async {
                     if (enabled == null) return;
 
+                    // TODO: Сохранить состояние нормализации как настройку.
+
                     await player.setAudioNormalization(enabled);
                     setState(() {});
                   },
                   value: player.normalizationEnabled,
                 ),
               ),
-              ListTile(
-                title: Text(
-                  AppLocalizations.of(context)!
-                      .profile_volumeMusicPauseTimerTitle,
+              if (isDesktop)
+                ListTile(
+                  title: Text(
+                    AppLocalizations.of(context)!.profile_pauseOnMuteTitle,
+                  ),
+                  subtitle: Text(
+                    AppLocalizations.of(context)!
+                        .profile_pauseOnMuteDescription,
+                  ),
+                  leading: const Icon(
+                    Icons.timer,
+                  ),
+                  trailing: Switch(
+                    onChanged: (bool? enabled) async {
+                      if (enabled == null) return;
+
+                      user.settings.pauseOnMuteEnabled = enabled;
+
+                      user.markUpdated();
+                      setState(() {});
+                    },
+                    value: user.settings.pauseOnMuteEnabled,
+                  ),
                 ),
-                subtitle: Text(
-                  AppLocalizations.of(context)!
-                      .profile_volumeMusicPauseTimerDescription,
-                ),
-                leading: const Icon(
-                  Icons.timer,
-                ),
-                trailing: const Switch(
-                  onChanged: null,
-                  value: false,
-                ),
-              ),
               ListTile(
                 title: Text(
                   AppLocalizations.of(context)!.profile_exportMusicListTitle,

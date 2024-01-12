@@ -108,6 +108,9 @@ class Settings {
 
   /// Указывает, что Discord Rich Presence включён.
   bool discordRPCEnabled = true;
+
+  /// Указывает, что настройка "пауза при минимальной громкости" включена.
+  bool pauseOnMuteEnabled = true;
 }
 
 /// Provider для получения объекта пользователя в контексте интерфейса приложения.
@@ -287,6 +290,10 @@ class UserProvider extends ChangeNotifier {
       "DiscordRPCEnabled",
       settings.discordRPCEnabled,
     );
+    await prefs.setBool(
+      "PauseOnMuteEnabled",
+      settings.pauseOnMuteEnabled,
+    );
   }
 
   /// Загружает данный объект пользователя с диска.
@@ -318,6 +325,7 @@ class UserProvider extends ChangeNotifier {
     settings.byVKChipEnabled = prefs.getBool("ByVKChipEnabled") ?? true;
     settings.shuffleEnabled = prefs.getBool("ShuffleEnabled") ?? false;
     settings.discordRPCEnabled = prefs.getBool("DiscordRPCEnabled") ?? true;
+    settings.pauseOnMuteEnabled = prefs.getBool("PauseOnMuteEnabled") ?? false;
 
     markUpdated(false);
 

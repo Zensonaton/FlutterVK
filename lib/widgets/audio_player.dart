@@ -333,6 +333,9 @@ class BottomMusicPlayer extends StatefulWidget {
   /// Указывает, что у плеера включён режим повтора текущего трека.
   final bool isRepeatEnabled;
 
+  /// Указывает, что настройка "Пауза при отключении громкости" включена.
+  final bool pauseOnMuteEnabled;
+
   /// Указывает громкость у проигрывателя.
   ///
   /// В данном поле указано число от 0.0 до 1.0.
@@ -380,6 +383,7 @@ class BottomMusicPlayer extends StatefulWidget {
     this.isBuffering = false,
     this.isShuffleEnabled = false,
     this.isRepeatEnabled = false,
+    this.pauseOnMuteEnabled = false,
     this.volume = 1,
     this.progress = 0,
     this.onPlayStateToggle,
@@ -636,13 +640,22 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                     final double scrollAmount =
                                         (-event.scrollDelta.dy) / 1000;
 
-                                    widget.onVolumeChange?.call(
-                                      clampDouble(
-                                        widget.volume + scrollAmount,
-                                        0,
-                                        1,
-                                      ),
+                                    // Вычисляем новое значение громкости.
+                                    final double newVolume = clampDouble(
+                                      widget.volume + scrollAmount,
+                                      0,
+                                      1,
                                     );
+
+                                    widget.onVolumeChange?.call(
+                                      newVolume,
+                                    );
+
+                                    // Если пользователь установил минимальную громкость, а так же настройка "Пауза при отключении громкости" включена, то ставим плеер на паузу.
+                                    if (newVolume == 0 &&
+                                        widget.pauseOnMuteEnabled) {
+                                      widget.onPlayStateToggle?.call(false);
+                                    }
                                   },
                                   child: SliderTheme(
                                     data: SliderThemeData(
