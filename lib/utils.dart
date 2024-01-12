@@ -88,7 +88,7 @@ Future<ColorScheme> colorSchemeFromUrl(
 
   // Превращаем наш PaletteGenerator в цветовую схему.
   final ColorScheme scheme = ColorScheme.fromSeed(
-    seedColor: palette.dominantColor?.color ?? Colors.blueGrey,
+    seedColor: palette.dominantColor?.color ?? Colors.grey,
     brightness: brightness,
   );
 

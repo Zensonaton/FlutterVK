@@ -424,7 +424,10 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
   @override
   Widget build(BuildContext context) {
     // Если fallback-цветовая схема плеера не была сохранена, то нам нужно её сохранить.
-    scheme ??= Theme.of(context).colorScheme;
+    scheme ??= ColorScheme.fromSeed(
+      seedColor: Colors.grey,
+      brightness: Theme.of(context).brightness,
+    );
 
     /// Url изображения данного трека.
     final String? imageUrl = widget.audio?.album?.thumb?.photo68;
