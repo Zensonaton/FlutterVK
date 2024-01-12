@@ -465,12 +465,12 @@ class UserProvider extends ChangeNotifier {
   ///
   /// Для данного метода требуется токен от Kate Mobile, а для дополнительной информации по альбомам должен быть токен от VK Admin.
   Future<APIMassAudioGetResponse> scriptMassAudioGetWithAlbums(
-    int userID, {
+    int ownerID, {
     int? albumID,
   }) async {
     final APIMassAudioGetResponse massAudios = await scripts_massAudioGet(
       mainToken!,
-      userID,
+      ownerID,
       albumID: albumID,
     );
 

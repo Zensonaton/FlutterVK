@@ -333,7 +333,7 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
       try {
         final APIMassAudioGetResponse response =
             await user.scriptMassAudioGetWithAlbums(
-          user.id!,
+          widget.playlist.ownerID,
           albumID: widget.playlist.id,
         );
 

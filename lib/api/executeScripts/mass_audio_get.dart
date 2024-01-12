@@ -59,13 +59,13 @@ class APIMassAudioGetResponse {
 /// Для данного метода требуется токен от Kate Mobile.
 Future<APIMassAudioGetResponse> scripts_massAudioGet(
   String token,
-  int userID, {
+  int ownerID, {
   int? albumID,
 }) async {
   // TODO: Метод для offset'а.
 
   final String executeCode = """
-var selfID = $userID;
+var ownerID = $ownerID;
 var albumID = ${albumID ?? 0};
 var audios = [];
 
@@ -87,7 +87,7 @@ while (audioIndex < audioCount) {
 	audioIndex = audioIndex + 200;
 };
 
-var playlistsResp = API.audio.getPlaylists({'owner_id': selfID});
+var playlistsResp = API.audio.getPlaylists({'owner_id': ownerID});
 
 return {'audioCount': audioCount, 'audios': audios, 'playlistsCount': playlistsResp.count, 'playlists': playlistsResp.items};""";
 
