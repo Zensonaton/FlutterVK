@@ -1,5 +1,7 @@
 // ignore_for_file: implementation_imports
 
+import "dart:io";
+
 import "package:flutter_cache_manager/flutter_cache_manager.dart";
 import "package:flutter_cache_manager/src/storage/file_system/file_system_io.dart";
 import "package:path/path.dart";
@@ -10,14 +12,18 @@ import "package:file/src/interface/file.dart";
 /// Расширение класса [IOFileSystem] с целью изменения папки для хранения файлов.
 class IOCacheManagerExtended extends IOFileSystem {
   final String _cacheKey;
+  final bool allowStoreInAppDir;
 
   IOCacheManagerExtended(
-    super.cacheKey,
-  ) : _cacheKey = cacheKey;
+    super.cacheKey, {
+    this.allowStoreInAppDir = true,
+  }) : _cacheKey = cacheKey;
 
   @override
   Future<File> createFile(String name) async {
-    final baseDir = await getApplicationSupportDirectory();
+    final baseDir = (allowStoreInAppDir && Platform.isWindows)
+        ? await getApplicationSupportDirectory()
+        : await getApplicationCacheDirectory();
     final path = join(
       baseDir.path,
       _cacheKey,
