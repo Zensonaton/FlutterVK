@@ -16,6 +16,7 @@ import "provider/user.dart";
 import "routes/home.dart";
 import "routes/welcome.dart";
 import "services/audio_player.dart";
+import "utils.dart";
 import "widgets/loading_overlay.dart";
 
 /// Глобальный объект [BuildContext].
@@ -31,7 +32,36 @@ late final VKMusicPlayer player;
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
-  await windowManager.ensureInitialized();
+
+  // Инициализируем WindowManager на Desktop-платформах.
+  if (isDesktop) {
+    await windowManager.ensureInitialized();
+
+    // Делаем так, что бы пользователь не смог закрыть приложение.
+    // Обработка закрытия приложения находится в ином месте: [_MainAppState.onWindowClose].
+    await windowManager.setPreventClose(true);
+
+    // Устанавливаем размеры окна.
+    windowManager.waitUntilReadyToShow(
+        const WindowOptions(
+          size: Size(
+            1280,
+            720,
+          ),
+          minimumSize: Size(
+            400,
+            500,
+          ),
+          center: true,
+        ), () async {
+      await windowManager.show();
+
+      // Делаем фокус окна не в debug-режиме.
+      if (!kDebugMode) {
+        await windowManager.focus();
+      }
+    });
+  }
 
   // Инициализируем плеер.
   player = VKMusicPlayer();
@@ -53,31 +83,6 @@ Future main() async {
       watch: 100,
     ),
   );
-
-  // Делаем так, что бы пользователь не смог закрыть приложение.
-  // Обработка закрытия приложения находится в ином месте: [_MainAppState.onWindowClose].
-  await windowManager.setPreventClose(true);
-
-  // Устанавливаем размеры окна.
-  windowManager.waitUntilReadyToShow(
-      const WindowOptions(
-        size: Size(
-          1280,
-          720,
-        ),
-        minimumSize: Size(
-          400,
-          500,
-        ),
-        center: true,
-      ), () async {
-    await windowManager.show();
-
-    // Делаем фокус окна не в debug-режиме.
-    if (!kDebugMode) {
-      await windowManager.focus();
-    }
-  });
 
   // Делаем панель навигации прозрачной.
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
@@ -137,7 +142,7 @@ class _MainAppState extends State<MainApp> with WindowListener {
     }
 
     // Переключаем состояние Discord Rich Presence.
-    if (user.settings.discordRPCEnabled) {
+    if (user.settings.discordRPCEnabled && isDesktop) {
       await player.setDiscordRPCEnabled(true);
     }
 
