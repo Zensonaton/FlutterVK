@@ -47,6 +47,7 @@ dependencies:
   smtc_windows: ^0.1.2
   styled_text: ^8.1.0
   url_launcher: ^6.2.2
+  window_manager: ^0.3.7
 
 dev_dependencies:
   flutter_test:

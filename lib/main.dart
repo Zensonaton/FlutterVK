@@ -1,3 +1,5 @@
+import "dart:io";
+
 import "package:audio_service/audio_service.dart";
 import "package:dynamic_color/dynamic_color.dart";
 import "package:flutter/material.dart";
@@ -7,6 +9,7 @@ import "package:flutter_localizations/flutter_localizations.dart";
 import "package:media_kit/media_kit.dart";
 import "package:provider/provider.dart";
 import "package:responsive_builder/responsive_builder.dart";
+import "package:window_manager/window_manager.dart";
 
 import "provider/user.dart";
 import "routes/home.dart";
@@ -27,6 +30,7 @@ late final VKMusicPlayer player;
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
+  await windowManager.ensureInitialized();
 
   // Инициализируем плеер.
   player = VKMusicPlayer();
@@ -40,6 +44,7 @@ Future main() async {
       preloadArtwork: true,
     ),
   );
+
   ResponsiveSizingConfig.instance.setCustomBreakpoints(
     const ScreenBreakpoints(
       desktop: 900,
@@ -47,6 +52,27 @@ Future main() async {
       watch: 100,
     ),
   );
+
+  // Делаем так, что бы пользователь не смог закрыть приложение.
+  // Обработка закрытия приложения находится в ином месте: [_MainAppState.onWindowClose].
+  await windowManager.setPreventClose(true);
+
+  // Устанавливаем размеры окна.
+  WindowOptions windowOptions = const WindowOptions(
+    size: Size(
+      1280,
+      720,
+    ),
+    minimumSize: Size(
+      400,
+      500,
+    ),
+    center: true,
+  );
+  windowManager.waitUntilReadyToShow(windowOptions, () async {
+    await windowManager.show();
+    await windowManager.focus();
+  });
 
   // Делаем панель навигации прозрачной.
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
@@ -72,7 +98,7 @@ class MainApp extends StatefulWidget {
   State<MainApp> createState() => _MainAppState();
 }
 
-class _MainAppState extends State<MainApp> {
+class _MainAppState extends State<MainApp> with WindowListener {
   static final fallbackLightColorScheme = ColorScheme.fromSeed(
     seedColor: Colors.blueAccent,
   );
@@ -91,6 +117,9 @@ class _MainAppState extends State<MainApp> {
   Widget? home;
 
   void init() async {
+    // Загружаем обработчик событий окна.
+    windowManager.addListener(this);
+
     // Загружаем объект пользователя с диска.
     final UserProvider user = Provider.of<UserProvider>(context, listen: false);
 
@@ -122,6 +151,20 @@ class _MainAppState extends State<MainApp> {
     super.initState();
 
     init();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+
+    windowManager.removeListener(this);
+  }
+
+  @override
+  void onWindowClose() {
+    // TODO: Сделать так, что бы приложение просто минимизировалось при закрытии, если это позволяет сделать настройка у пользователя.
+
+    exit(-1);
   }
 
   @override
