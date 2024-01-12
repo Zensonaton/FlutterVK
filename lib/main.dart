@@ -22,8 +22,6 @@ import "widgets/loading_overlay.dart";
 BuildContext? buildContext;
 
 /// Объект аудиоплеера.
-///
-/// TODO: Каким-то образом, спрятать данный объект куда-то, вместо того, что бы использовать его как глобальную переменную.
 late final VKMusicPlayer player;
 
 Future main() async {
