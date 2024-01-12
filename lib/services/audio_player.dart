@@ -39,7 +39,7 @@ class MediaKitPlayerExtended extends Player {
 
   final NativePlayer _nativePlayer;
 
-  late final List<StreamSubscription> _subscriptions;
+  late List<StreamSubscription> _subscriptions;
   final StreamController<AudioPlaybackState> _playerStateStream;
   final StreamController<Playlist> _playlistStream;
   final StreamController<bool> _normalizationStream;
@@ -670,17 +670,23 @@ class VKMusicPlayer extends MediaKitPlayerExtended {
     }
 
     // Слушаем события плеера.
-    // TODO: Сделать dispose() для этих Stream'ов.
-    playerStateStream.listen((AudioPlaybackState state) => _updateState());
-    stream.position.listen((Duration _) => _updateState());
+    _subscriptions = [
+      ..._subscriptions,
 
-    // Обработчик изменения текущего трека.
-    indexChangeStream.listen((int index) async {
-      final Audio? audio = currentAudio;
-      if (audio == null) return;
+      // Событие изменение состояния плеера (пауза, ...).
+      playerStateStream.listen((AudioPlaybackState state) => _updateState()),
 
-      await _sendTrackData(audio);
-    });
+      // События изменения позиции трека.
+      stream.position.listen((Duration _) => _updateState()),
+
+      // Обработчик изменения текущего трека.
+      indexChangeStream.listen((int index) async {
+        final Audio? audio = currentAudio;
+        if (audio == null) return;
+
+        await _sendTrackData(audio);
+      }),
+    ];
   }
 
   /// Включает или отключает трансляцию Discord Rich Presence.
