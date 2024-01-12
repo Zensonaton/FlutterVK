@@ -1,5 +1,4 @@
 import "package:flutter/material.dart";
-import "package:flutter_cache_manager/flutter_cache_manager.dart";
 import "package:shared_preferences/shared_preferences.dart";
 
 import "../api/audio/edit.dart";
@@ -13,6 +12,7 @@ import "../api/shared.dart";
 import "../api/users/get.dart";
 import "../consts.dart";
 import "../main.dart";
+import "../services/cache_manager.dart";
 import "../services/logger.dart";
 
 /// Класс, расширяющий обычный объект [AudioPlaylist] от API ВКонтакте, добавляющий информацию о треках в данном плейлисте.
@@ -253,7 +253,8 @@ class UserProvider extends ChangeNotifier {
     markUpdated(false);
 
     // Очищаем кэш.
-    await DefaultCacheManager().emptyCache();
+    await CachedNetworkImagesManager.instance.emptyCache();
+    await VKMusicCacheManager.instance.emptyCache();
   }
 
   /// Сохраняет важные поля пользователя на диск.
