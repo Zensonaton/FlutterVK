@@ -437,7 +437,9 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
         MediaQuery.of(context).platformBrightness,
         widget.audio!.mediaKey,
       ).then((ColorScheme newScheme) {
-        setState(() => scheme = newScheme);
+        if (scheme == newScheme) return;
+
+        scheme = newScheme;
       });
     }
 
