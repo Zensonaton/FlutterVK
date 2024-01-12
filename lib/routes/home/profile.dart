@@ -250,6 +250,29 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                 ),
               ListTile(
                 title: Text(
+                  AppLocalizations.of(context)!.profile_discordRPCTitle,
+                ),
+                subtitle: Text(
+                  AppLocalizations.of(context)!.profile_discordRPCDescription,
+                ),
+                leading: const Icon(
+                  Icons.discord,
+                ),
+                trailing: Switch(
+                  onChanged: (bool? enabled) async {
+                    if (enabled == null) return;
+
+                    user.settings.discordRPCEnabled = enabled;
+                    await player.setDiscordRPCEnabled(enabled);
+
+                    user.markUpdated();
+                    setState(() {});
+                  },
+                  value: player.discordRPCEnabled,
+                ),
+              ),
+              ListTile(
+                title: Text(
                   AppLocalizations.of(context)!.profile_exportMusicThumbsTitle,
                 ),
                 subtitle: Text(

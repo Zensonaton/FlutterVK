@@ -105,6 +105,9 @@ class Settings {
 
   /// Указывает, что при последнем прослушивании shuffle был включён.
   bool shuffleEnabled = false;
+
+  /// Указывает, что Discord Rich Presence включён.
+  bool discordRPCEnabled = true;
 }
 
 /// Provider для получения объекта пользователя в контексте интерфейса приложения.
@@ -280,6 +283,10 @@ class UserProvider extends ChangeNotifier {
       "ShuffleEnabled",
       settings.shuffleEnabled,
     );
+    await prefs.setBool(
+      "DiscordRPCEnabled",
+      settings.discordRPCEnabled,
+    );
   }
 
   /// Загружает данный объект пользователя с диска.
@@ -310,6 +317,7 @@ class UserProvider extends ChangeNotifier {
         prefs.getBool("SimilarMusicChipEnabled") ?? true;
     settings.byVKChipEnabled = prefs.getBool("ByVKChipEnabled") ?? true;
     settings.shuffleEnabled = prefs.getBool("ShuffleEnabled") ?? false;
+    settings.discordRPCEnabled = prefs.getBool("DiscordRPCEnabled") ?? true;
 
     markUpdated(false);
 

@@ -4,12 +4,15 @@ import "package:collection/collection.dart";
 
 import "package:audio_service/audio_service.dart";
 import "package:audio_session/audio_session.dart";
+import "package:discord_rpc/discord_rpc.dart";
 import "package:flutter/foundation.dart";
 import "package:media_kit/media_kit.dart";
 import "package:smtc_windows/smtc_windows.dart";
 
 import "../api/shared.dart";
+import "../consts.dart";
 import "../main.dart";
+import "../utils.dart";
 import "logger.dart";
 
 /// enum, хранящий в себе различные возможные состояния работы [MediaKitPlayerExtended].
@@ -595,6 +598,18 @@ class VKMusicPlayer extends MediaKitPlayerExtended {
   /// Объект [AudioPlayerHandler], который создаёт плеер в уведомлениях Android, а так же передаёт события при взаимодействиях с этим уведомлением.
   AudioPlayerHandler? audioPlayerHandler;
 
+  /// Объект [DiscordRPC], который позволяет транслировать Rich Presence (надпись "сейчас слушает ...") в Discord.
+  ///
+  /// Инициализируется при вызове метода [_initPlayer]. Устанавливается лишь в случае, если [isDesktop] = true.
+  DiscordRPC? _discordRPC;
+
+  bool _discordRPCEnabled = false;
+
+  /// Указывает, что [DiscordRPC] должен быть показан пользователю.
+  ///
+  /// Зависит от настройки.
+  bool get discordRPCEnabled => _discordRPCEnabled;
+
   VKMusicPlayer() {
     _initPlayer();
 
@@ -655,27 +670,52 @@ class VKMusicPlayer extends MediaKitPlayerExtended {
     stream.position.listen((Duration _) => _updateState());
 
     // Обработчик изменения текущего трека.
-    indexChangeStream.listen((int index) {
+    indexChangeStream.listen((int index) async {
       final Audio? audio = currentAudio;
       if (audio == null) return;
 
-      audioPlayerHandler?.mediaItem.add(
-        MediaItem(
-          id: audio.mediaKey,
-          title: audio.title,
-          album: audio.album?.title,
-          artist: audio.artist,
-          duration: Duration(
-            seconds: audio.duration,
-          ),
-          artUri: audio.album?.thumb != null
-              ? Uri.parse(
-                  audio.album!.thumb!.photo!,
-                )
-              : null,
-        ),
-      );
+      await _sendTrackData(audio);
     });
+  }
+
+  /// Включает или отключает трансляцию Discord Rich Presence.
+  Future<void> setDiscordRPCEnabled(bool enabled) async {
+    logger.d("called setDiscordRPCEnabled($enabled)");
+
+    if (enabled == discordRPCEnabled) return;
+
+    assert(
+      isDesktop,
+      "Discord RPC может быть включён только на Desktop-системах.",
+    );
+
+    _discordRPCEnabled = enabled;
+
+    if (enabled) {
+      if (currentAudio != null) await _sendTrackData(currentAudio!);
+
+      return;
+    }
+
+    _discordRPC?.clearPresence();
+  }
+
+  @override
+  Future<void> play() async {
+    super.play();
+
+    if (currentAudio != null) {
+      _sendTrackData(currentAudio!);
+    }
+  }
+
+  @override
+  Future<void> pause() async {
+    super.pause();
+
+    if (discordRPCEnabled) {
+      _discordRPC?.clearPresence();
+    }
   }
 
   @override
@@ -687,6 +727,9 @@ class VKMusicPlayer extends MediaKitPlayerExtended {
     }
 
     await _audioSession?.setActive(false);
+    if (discordRPCEnabled) {
+      _discordRPC?.clearPresence();
+    }
   }
 
   /// Запускает воспроизведение указанного массива треков.
@@ -710,8 +753,6 @@ class VKMusicPlayer extends MediaKitPlayerExtended {
         index: index,
       ),
     );
-
-    await _sendTrackData(audio[0]);
   }
 
   /// Инициализирует данный плеер, посылая уведомления и прочую информацию внешним системам.
@@ -767,18 +808,48 @@ class VKMusicPlayer extends MediaKitPlayerExtended {
     }
 
     await _audioSession!.setActive(true);
+
+    // Инициализируем Discord Rich Presence на Desktop-системах.
+    if (isDesktop) {
+      DiscordRPC.initialize();
+
+      _discordRPC = DiscordRPC(
+        applicationId: discordAppID.toString(),
+      );
+      _discordRPC!.start(
+        autoRegister: true,
+      );
+      _discordRPC!.clearPresence();
+    }
   }
 
   /// Метод, отправляющий операционным системам информацию о том, что поменялся текущий трек.
   ///
   /// Данный метод должен вызываться при изменении трека.
   Future<void> _sendTrackData(Audio audio) async {
+    // Обновляем трек в уведомлении Android.
+    audioPlayerHandler?.mediaItem.add(
+      MediaItem(
+        id: audio.mediaKey,
+        title: audio.title,
+        album: audio.album?.title,
+        artist: audio.artist,
+        duration: Duration(
+          seconds: audio.duration,
+        ),
+        artUri: audio.album?.thumb != null
+            ? Uri.parse(
+                audio.album!.thumb!.photo!,
+              )
+            : null,
+      ),
+    );
+
     // Если у пользователя Windows, то посылаем SMTC обновление.
     if (Platform.isWindows) {
-      if (!_smtc!.enabled) _smtc!.enableSmtc();
+      if (!_smtc!.enabled) await _smtc!.enableSmtc();
 
-      // TODO: Обновлять информацию о треке другим образом.
-      _smtc!.updateMetadata(
+      await _smtc!.updateMetadata(
         MusicMetadata(
           title: audio.title,
           albumArtist: audio.artist,
@@ -787,9 +858,23 @@ class VKMusicPlayer extends MediaKitPlayerExtended {
         ),
       );
     }
+
+    // Обновляем Discord RPC, если это разрешено пользователем.
+    if (discordRPCEnabled) {
+      _discordRPC?.updatePresence(
+        DiscordPresence(
+          state: audio.title,
+          details: audio.artist,
+          partySize: _playlist?.index,
+          partySizeMax: _playlist?.medias.length,
+          largeImageKey: "flutter-vk-logo",
+          largeImageText: "Flutter VK",
+        ),
+      );
+    }
   }
 
-  /// Посылает обновления состояния в уведомления Android и SMTC.
+  /// Посылает обновления состояния в уведомления Android и Windows SMTC.
   void _updateState() async {
     // Если у пользователя Windows, то посылаем SMTC обновление.
     if (Platform.isWindows) {
@@ -798,7 +883,7 @@ class VKMusicPlayer extends MediaKitPlayerExtended {
       );
     }
 
-    // Обновляем состояние в уведомлении.
+    // Обновляем состояние в уведомлении Android и других систем.
     audioPlayerHandler?.playbackState.add(
       PlaybackState(
         controls: [

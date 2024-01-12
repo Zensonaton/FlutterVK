@@ -14,6 +14,7 @@ dependencies:
   collection: ^1.17.2
   declarative_refresh_indicator: ^0.1.0
   diacritic: ^0.1.5
+  discord_rpc: ^0.0.2
   dynamic_color: ^1.6.9
   flutter:
     sdk: flutter

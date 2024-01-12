@@ -50,6 +50,13 @@ Future main() async {
     ),
   );
 
+  // Делаем панель навигации прозрачной.
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    systemNavigationBarColor: Colors.transparent,
+    systemNavigationBarDividerColor: Colors.transparent,
+  ));
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+
   runApp(
     ChangeNotifierProvider(
       create: (context) => UserProvider(false),
@@ -86,13 +93,6 @@ class _MainAppState extends State<MainApp> {
   Widget? home;
 
   void init() async {
-    // Делаем панель навигации прозрачной.
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      systemNavigationBarColor: Colors.transparent,
-      systemNavigationBarDividerColor: Colors.transparent,
-    ));
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-
     // Загружаем объект пользователя с диска.
     final UserProvider user = Provider.of<UserProvider>(context, listen: false);
 
@@ -102,6 +102,11 @@ class _MainAppState extends State<MainApp> {
     // Восстанавливаем состояние shuffle у плеера.
     if (user.settings.shuffleEnabled) {
       player.setShuffle(true);
+    }
+
+    // Переключаем состояние Discord Rich Presence.
+    if (user.settings.discordRPCEnabled) {
+      await player.setDiscordRPCEnabled(true);
     }
 
     user.markUpdated(false);

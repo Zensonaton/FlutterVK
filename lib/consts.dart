@@ -52,3 +52,8 @@ const Map<int, String> musicGenres = {
   22: "Electropop & Disco",
   18: "Other",
 };
+
+/// ID приложения Discord, используемый для работы Rich Presence.
+///
+/// Олицетворяет приложение "Flutter VK".
+const int discordAppID = 1195224178996027412;

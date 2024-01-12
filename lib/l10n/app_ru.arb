@@ -146,6 +146,9 @@
 	"profile_importMusicThumbsTitle": "Импортировать обложки аудио",
 	"profile_importMusicThumbsDescription": "Возможность импорта ранее экспортированных обложек у аудио",
 
+	"profile_discordRPCTitle": "Discord Rich Presence",
+	"profile_discordRPCDescription": "Включает трансляцию текущего трека в Discord",
+
 	"profile_musicNormalizationTitle": "Нормализация громкости музыки",
 	"profile_musicNormalizationDescription": "При включении данной опции аудиоплеер будет делать громкость у разных треков похожей",
 
