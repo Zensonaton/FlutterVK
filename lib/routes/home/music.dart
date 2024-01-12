@@ -22,6 +22,7 @@ import "../../api/shared.dart";
 import "../../consts.dart";
 import "../../main.dart";
 import "../../provider/user.dart";
+import "../../services/audio_player.dart";
 import "../../services/logger.dart";
 import "../../utils.dart";
 import "../../widgets/adaptive_dialog.dart";
@@ -2048,16 +2049,29 @@ class HomeMusicPage extends StatefulWidget {
 }
 
 class _HomeMusicPageState extends State<HomeMusicPage> {
+  /// Подписка на события плеера.
+  late final StreamSubscription subscription;
+
   @override
   void initState() {
     super.initState();
 
     ensureUserAudioAllInformation(context);
+    subscription = player.playerStateStream.listen(
+      (AudioPlaybackState state) => setState(() {}),
+    );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+
+    subscription.cancel();
   }
 
   /// Указывает, что в данный момент загружается информация.
   ///
-  /// Данное поле равно `false` в первый момент захода на экран.
+  /// Данное поле равно `true` в первый момент захода на экран.
   bool loadingData = false;
 
   @override
