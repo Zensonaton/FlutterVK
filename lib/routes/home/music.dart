@@ -291,20 +291,14 @@ List<Audio> filterByName(
 /// ```
 class PlaylistDisplayDialog extends StatefulWidget {
   /// Информация об открываемом плейлисте.
-  ///
-  /// Если информация не передаётся, то информация о плейлисте не будет показана (как это происходит на экране с показом 'любимых треков').
-  final AudioPlaylist? playlist;
-
-  /// Список треков в данном плейлисте.
-  final List<Audio> audios;
+  final ExtendedVKPlaylist playlist;
 
   /// Если true, то сразу после открытия данного диалога фокус будет на [SearchBar].
   final bool focusSearchBarOnOpen;
 
   const PlaylistDisplayDialog({
     super.key,
-    this.playlist,
-    required this.audios,
+    required this.playlist,
     this.focusSearchBarOnOpen = true,
   });
 
@@ -313,6 +307,8 @@ class PlaylistDisplayDialog extends StatefulWidget {
 }
 
 class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
+  final AppLogger logger = getLogger("PlaylistDisplayDialog");
+
   /// Контроллер, используемый для управления введённым в поле поиска текстом.
   final TextEditingController controller = TextEditingController();
 
@@ -322,9 +318,57 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
   /// FocusNode для фокуса поля поиска сразу после открытия данного диалога.
   final FocusNode focusNode = FocusNode();
 
+  /// Указывает, что в данный момент данные о плейлисте загружаются.
+  bool _loading = false;
+
+  /// Загрузка данных данного плейлиста.
+  Future<void> init() async {
+    final UserProvider user = Provider.of<UserProvider>(context, listen: false);
+
+    // Если информация по данному плейлисту не загружена, то загружаем её.
+    if (widget.playlist.audios == null) {
+      setState(() => _loading = true);
+
+      try {
+        final APIMassAudioGetResponse response =
+            await user.scriptMassAudioGetWithAlbums(
+          user.id!,
+          albumID: widget.playlist.id,
+        );
+
+        // Проверяем, что в ответе нет ошибок.
+        if (response.error != null) {
+          throw Exception(
+            "API error ${response.error!.errorCode}: ${response.error!.errorMessage}",
+          );
+        }
+
+        widget.playlist.audios = response.response!.audios;
+        widget.playlist.count = response.response!.audioCount;
+
+        if (context.mounted) setState(() {});
+      } catch (e, stackTrace) {
+        logger.e(
+          "Ошибка при открытии плейлиста: ",
+          error: e,
+          stackTrace: stackTrace,
+        );
+
+        if (context.mounted) {
+          showErrorDialog(context, description: e.toString());
+        }
+
+        return;
+      } finally {
+        if (context.mounted) setState(() => _loading = false);
+      }
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    init();
 
     subscription = player.stream.playing.listen((state) => setState(() {}));
 
@@ -352,11 +396,9 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final String searchText = controller.text;
-    final List<Audio> filteredAudios = filterByName(
-      widget.audios,
-      searchText,
-    );
+    final List<Audio> playlistAudios = widget.playlist.audios ?? [];
+    final List<Audio> filteredAudios =
+        filterByName(playlistAudios, controller.text);
     final bool isMobileLayout =
         getDeviceType(MediaQuery.of(context).size) == DeviceScreenType.mobile;
 
@@ -396,7 +438,7 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
                       focusNode: focusNode,
                       controller: controller,
                       hintText: AppLocalizations.of(context)!
-                          .music_searchText(widget.audios.length),
+                          .music_searchText(playlistAudios.length),
                       elevation: MaterialStateProperty.all(
                         1, // TODO: Сделать нормальный вид у поиска при наведении.
                       ),
@@ -420,13 +462,15 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
             ),
 
             // У пользователя нет треков в данном плейлисте.
-            if (widget.audios.isEmpty)
+            if (playlistAudios.isEmpty && !_loading)
               Text(
                 AppLocalizations.of(context)!.music_playlistEmpty,
               ),
 
             // У пользователя есть треки, но поиск ничего не выдал.
-            if (widget.audios.isNotEmpty && filteredAudios.isEmpty)
+            if (playlistAudios.isNotEmpty &&
+                filteredAudios.isEmpty &&
+                !_loading)
               StyledText(
                 text: AppLocalizations.of(context)!
                     .music_playlistZeroSearchResults,
@@ -440,6 +484,38 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
                     ),
                   ),
                 },
+              ),
+
+            // Информация по данному плейлисту ещё не была загружена.
+            if (_loading)
+              Expanded(
+                child: ListView.builder(
+                  itemCount: 50,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemBuilder: (BuildContext context, int index) {
+                    return Skeletonizer(
+                      child: Padding(
+                        padding: const EdgeInsets.only(
+                          bottom: 8,
+                        ),
+                        child: AudioTrackTile(
+                          audio: Audio(
+                            id: -1,
+                            ownerID: -1,
+                            title:
+                                fakeTrackNames[index % fakeTrackNames.length],
+                            artist: fakeTrackNames[
+                                (index + 1) % fakeTrackNames.length],
+                            duration: 60 * 3,
+                            accessKey: "",
+                            url: "",
+                            date: 0,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
 
             // Результаты поиска/отображение всех элементов.
@@ -467,7 +543,9 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
                     final Audio audio = filteredAudios[index];
 
                     return Padding(
-                      key: ValueKey(audio.accessKey),
+                      key: ValueKey(
+                        audio.mediaKey,
+                      ),
                       padding: const EdgeInsets.only(
                         bottom: 8,
                       ),
@@ -487,8 +565,8 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
                                 );
                               }
                             : () async => await player.openAudioList(
-                                  widget.audios,
-                                  index: widget.audios.indexWhere(
+                                  playlistAudios,
+                                  index: playlistAudios.indexWhere(
                                     (Audio widgetAudio) => widgetAudio == audio,
                                   ),
                                 ),
@@ -1237,6 +1315,8 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
                         children: [
                           Text(
                             widget.name,
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 2,
                             style: Theme.of(context)
                                 .textTheme
                                 .headlineLarge!
@@ -1248,6 +1328,8 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
                             Text(
                               widget.description!,
                               style: Theme.of(context).textTheme.bodyLarge,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 3,
                             ),
                         ],
                       ),
@@ -1531,18 +1613,18 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
 
         // Skeleton loader.
         if (user.favoritesPlaylist?.audios == null)
-          for (int i = 0; i < 10; i++)
+          for (int index = 0; index < 10; index++)
             Skeletonizer(
               child: Padding(
                 padding: EdgeInsets.only(
-                  bottom: i + 1 != 10 ? 8 : 0,
+                  bottom: index + 1 != 10 ? 8 : 0,
                 ),
                 child: AudioTrackTile(
                     audio: Audio(
                   id: -1,
                   ownerID: -1,
-                  artist: "Artist name",
-                  title: "Track name",
+                  title: fakeTrackNames[index % fakeTrackNames.length],
+                  artist: fakeTrackNames[(index + 1) % fakeTrackNames.length],
                   duration: 60 * 3,
                   accessKey: "",
                   url: "",
@@ -1583,7 +1665,7 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
                   ? () => showDialog(
                         context: context,
                         builder: (context) => PlaylistDisplayDialog(
-                          audios: user.favoritesPlaylist!.audios!,
+                          playlist: user.favoritesPlaylist!,
                         ),
                       )
                   : null,
@@ -1676,9 +1758,9 @@ class MyPlaylistsBlock extends StatelessWidget {
               child: Wrap(
                 spacing: 8,
                 children: [
-                  for (int i = 0; i < 10; i++)
-                    const AudioPlaylistWidget(
-                      name: "Playlist",
+                  for (int index = 0; index < 10; index++)
+                    AudioPlaylistWidget(
+                      name: fakePlaylistNames[index % fakePlaylistNames.length],
                     ),
                 ],
               ),
@@ -1731,57 +1813,14 @@ class RecommendedPlaylistsBlock extends StatelessWidget {
                       name: playlist.title!,
                       description: playlist.subtitle,
                       useTextOnImageLayout: true,
-                      onOpen: () async {
-                        // Если информация по данному плейлисту не загружена, то загружаем её.
-                        if (playlist.audios == null) {
-                          LoadingOverlay.of(context).show();
-
-                          try {
-                            final APIMassAudioGetResponse response =
-                                await user.scriptMassAudioGetWithAlbums(
-                              user.id!,
-                              albumID: playlist.id,
-                            );
-
-                            // Проверяем, что в ответе нет ошибок.
-                            if (response.error != null) {
-                              throw Exception(
-                                "API error ${response.error!.errorCode}: ${response.error!.errorMessage}",
-                              );
-                            }
-
-                            playlist.audios = response.response!.audios;
-                            playlist.count = response.response!.audioCount;
-                          } catch (e, stackTrace) {
-                            logger.e(
-                              "Ошибка при открытии плейлиста: ",
-                              error: e,
-                              stackTrace: stackTrace,
-                            );
-
-                            if (context.mounted) {
-                              showErrorDialog(context,
-                                  description: e.toString());
-                            }
-                          } finally {
-                            if (context.mounted) {
-                              LoadingOverlay.of(context).hide();
-                            }
-                          }
-                        }
-
-                        // Убеждаемся, что данные у плейлисты и вправду загружены.
-                        if (playlist.audios == null) return;
-                        if (!context.mounted) return;
-
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) =>
-                              PlaylistDisplayDialog(
-                            audios: playlist.audios!,
-                          ),
-                        );
-                      },
+                      onOpen: () async => showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return PlaylistDisplayDialog(
+                            playlist: playlist,
+                          );
+                        },
+                      ),
                     ),
 
                 // Skeleton loader.
@@ -1793,9 +1832,10 @@ class RecommendedPlaylistsBlock extends StatelessWidget {
                       child: Wrap(
                         spacing: 8,
                         children: [
-                          for (int i = 0; i < 9; i++)
-                            const AudioPlaylistWidget(
-                              name: "Playlist",
+                          for (int index = 0; index < 9; index++)
+                            AudioPlaylistWidget(
+                              name: fakePlaylistNames[
+                                  index % fakePlaylistNames.length],
                               description: "Playlist description here",
                               useTextOnImageLayout: true,
                             ),
@@ -1954,9 +1994,9 @@ class _ByVKPlaylistsBlockState extends State<ByVKPlaylistsBlock> {
               child: Wrap(
                 spacing: 8,
                 children: [
-                  for (int i = 0; i < 10; i++)
-                    const AudioPlaylistWidget(
-                      name: "Playlist name\nPlaylist",
+                  for (int index = 0; index < 10; index++)
+                    AudioPlaylistWidget(
+                      name: fakePlaylistNames[index % fakePlaylistNames.length],
                     ),
                 ],
               ),
@@ -2082,12 +2122,14 @@ class _HomeMusicPageState extends State<HomeMusicPage> {
           const SingleActivator(
             LogicalKeyboardKey.keyF,
             control: true,
-          ): () => showDialog(
-                context: context,
-                builder: (context) => PlaylistDisplayDialog(
-                  audios: user.favoritesPlaylist!.audios!,
-                ),
-              ),
+          ): user.favoritesPlaylist != null
+              ? () => showDialog(
+                    context: context,
+                    builder: (context) => PlaylistDisplayDialog(
+                      playlist: user.favoritesPlaylist!,
+                    ),
+                  )
+              : () {},
         },
         child: Column(
           mainAxisSize: MainAxisSize.min,

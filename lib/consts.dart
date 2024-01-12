@@ -62,3 +62,26 @@ const int discordAppID = 1195224178996027412;
 ///
 /// Используется для идентификации плейлистов "сделано редакцией (ВКонтакте)", поскольку они делаются именно этой группой.
 const int vkMusicGroupID = -147845620;
+
+/// Случайные названия треков, используемые в Skeleton Loader'ах.
+const List<String> fakeTrackNames = [
+  "Track",
+  "Track Name",
+  "Flutter VK",
+  "Test",
+  "Super long track name",
+  "Audio",
+  "Test track",
+  "Blood In The Water",
+];
+
+/// Случайные названия плейлистов, используемые в Skeleton Loader'ах.
+const List<String> fakePlaylistNames = [
+  "Playlist",
+  "Playlist of the day",
+  "Track",
+  "My playlist",
+  "Wow",
+  "My play",
+  "Suuuuper long playlist name used for something!"
+];
