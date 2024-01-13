@@ -73,6 +73,7 @@ Future main() async {
     config: const AudioServiceConfig(
       androidNotificationChannelName: "Flutter VK",
       androidNotificationChannelId: "com.zensonaton.fluttervk",
+      androidNotificationIcon: "drawable/notification_icon",
       androidNotificationOngoing: true,
       preloadArtwork: true,
     ),
