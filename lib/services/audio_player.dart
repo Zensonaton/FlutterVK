@@ -671,15 +671,6 @@ class MediaKitPlayerExtended extends Player {
         _loopMode = PlaylistMode.none,
         _isLoaded = false {
     _subscriptions = [
-      // Состояние буферизации.
-      stream.buffering.listen(
-        (bool isBuffering) {
-          if (!isBuffering) return;
-
-          _playerStateStream.add(AudioPlaybackState.buffering);
-        },
-      ),
-
       // Состояния проигрывания трека (пауза/воспроизведение).
       stream.playing.listen(
         (bool playing) {
@@ -687,6 +678,26 @@ class MediaKitPlayerExtended extends Player {
 
           _playerStateStream.add(
             playing ? AudioPlaybackState.playing : AudioPlaybackState.paused,
+          );
+        },
+      ),
+
+      // Состояние буферизации.
+      stream.buffering.listen(
+        (bool isBuffering) {
+          // К сожалению, событие о окончании буферизации отправляется позднее, чем состояние воспроизведения трека.
+          // По этой причине, здесь может произойти отправка события о том, что идёт воспроизведение.
+
+          if (isBuffering) {
+            _playerStateStream.add(AudioPlaybackState.buffering);
+
+            return;
+          }
+
+          _playerStateStream.add(
+            state.playing
+                ? AudioPlaybackState.playing
+                : AudioPlaybackState.paused,
           );
         },
       ),
@@ -758,6 +769,9 @@ class VKMusicPlayer extends MediaKitPlayerExtended {
   /// Зависит от настройки.
   bool get discordRPCEnabled => _discordRPCEnabled;
 
+  /// Указывает, что данный плеер был поставлен на паузу потому что другое приложение начало воспроизводить музыку.
+  bool _pausedExternally = false;
+
   VKMusicPlayer() {
     _initPlayer();
 
@@ -819,9 +833,6 @@ class VKMusicPlayer extends MediaKitPlayerExtended {
       // Событие изменение состояния плеера (пауза, ...).
       playerStateStream.listen((AudioPlaybackState state) => _updateState()),
 
-      // События изменения позиции трека.
-      stream.position.listen((Duration _) => _updateState()),
-
       // Обработчик изменения текущего трека.
       indexChangeStream.listen((int index) async {
         final Audio? audio = currentAudio;
@@ -858,9 +869,7 @@ class VKMusicPlayer extends MediaKitPlayerExtended {
   Future<void> play() async {
     super.play();
 
-    if (currentAudio != null) {
-      _sendTrackData(currentAudio!);
-    }
+    _pausedExternally = false;
   }
 
   @override
@@ -874,13 +883,14 @@ class VKMusicPlayer extends MediaKitPlayerExtended {
 
   @override
   Future<void> stop() async {
-    super.stop();
+    await super.stop();
 
     if (Platform.isWindows) {
       _smtc?.disableSmtc();
     }
 
     await _audioSession?.setActive(false);
+    audioPlayerHandler?.playbackState.add(PlaybackState());
     if (discordRPCEnabled) {
       _discordRPC?.clearPresence();
     }
@@ -964,7 +974,12 @@ class VKMusicPlayer extends MediaKitPlayerExtended {
               break;
             case AudioInterruptionType.pause:
             case AudioInterruptionType.unknown:
+              if (!state.playing) return;
+
               await player.pause();
+
+              // Здесь мы должны запомнить то, что пауза была установлена внешне.
+              _pausedExternally = true;
 
               break;
           }
@@ -976,6 +991,9 @@ class VKMusicPlayer extends MediaKitPlayerExtended {
               break;
             case AudioInterruptionType.pause:
             case AudioInterruptionType.unknown:
+              // Мы имеем право на возобновление плеера только в том случае, если пауза была установлена внешне.
+              if (!_pausedExternally) return;
+
               await player.play();
 
               break;
@@ -983,8 +1001,6 @@ class VKMusicPlayer extends MediaKitPlayerExtended {
         }
       });
     }
-
-    await _audioSession!.setActive(true);
 
     // Инициализируем Discord Rich Presence на Desktop-системах.
     if (isDesktop) {
@@ -1004,6 +1020,9 @@ class VKMusicPlayer extends MediaKitPlayerExtended {
   ///
   /// Данный метод должен вызываться при изменении трека.
   Future<void> _sendTrackData(Audio audio) async {
+    // Указываем, что в данный момент идёт сессия музыки.
+    await _audioSession!.setActive(true);
+
     // Обновляем трек в уведомлении Android.
     audioPlayerHandler?.mediaItem.add(
       MediaItem(
