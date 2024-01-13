@@ -255,27 +255,28 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                     builder: (context) => const ConnectRecommendationsDialog(),
                   ),
                 ),
-              SwitchListTile(
-                secondary: const Icon(
-                  Icons.discord,
-                ),
-                title: Text(
-                  AppLocalizations.of(context)!.profile_discordRPCTitle,
-                ),
-                subtitle: Text(
-                  AppLocalizations.of(context)!.profile_discordRPCDescription,
-                ),
-                onChanged: (bool? enabled) async {
-                  if (enabled == null) return;
+              if (isDesktop)
+                SwitchListTile(
+                  secondary: const Icon(
+                    Icons.discord,
+                  ),
+                  title: Text(
+                    AppLocalizations.of(context)!.profile_discordRPCTitle,
+                  ),
+                  subtitle: Text(
+                    AppLocalizations.of(context)!.profile_discordRPCDescription,
+                  ),
+                  onChanged: (bool? enabled) async {
+                    if (enabled == null) return;
 
-                  user.settings.discordRPCEnabled = enabled;
-                  await player.setDiscordRPCEnabled(enabled);
+                    user.settings.discordRPCEnabled = enabled;
+                    await player.setDiscordRPCEnabled(enabled);
 
-                  user.markUpdated();
-                  setState(() {});
-                },
-                value: player.discordRPCEnabled,
-              ),
+                    user.markUpdated();
+                    setState(() {});
+                  },
+                  value: player.discordRPCEnabled,
+                ),
               ListTile(
                 leading: const Icon(
                   Icons.photo_library_outlined,
