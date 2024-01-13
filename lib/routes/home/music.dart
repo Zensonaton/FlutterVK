@@ -7,7 +7,6 @@ import "package:diacritic/diacritic.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
-import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "package:provider/provider.dart";
 import "package:responsive_builder/responsive_builder.dart";
@@ -1154,48 +1153,30 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
                                   decoration: BoxDecoration(
                                     color: Colors.black.withOpacity(0.5),
                                     borderRadius: BorderRadius.circular(
-                                        globalBorderRadius),
-                                  ),
-                                  child: Animate(
-                                    onComplete: !isHovered && selectedAndPlaying
-                                        ? (AnimationController controller) {
-                                            controller.repeat(
-                                              reverse: true,
-                                            );
-                                          }
-                                        : null,
-                                    effects: !isHovered && selectedAndPlaying
-                                        ? [
-                                            const FadeEffect(
-                                              begin: 0.75,
-                                              duration: Duration(
-                                                seconds: 1,
-                                              ),
-                                            ),
-                                            const ScaleEffect(
-                                              begin: Offset(0.9, 0.9),
-                                              end: Offset(1.25, 1.25),
-                                              duration: Duration(
-                                                seconds: 1,
-                                              ),
-                                            ),
-                                            const ShakeEffect(
-                                              duration: Duration(
-                                                seconds: 1,
-                                              ),
-                                            ),
-                                          ]
-                                        : null,
-                                    child: Icon(
-                                      isHovered
-                                          ? (selectedAndPlaying
-                                              ? Icons.pause
-                                              : Icons.play_arrow)
-                                          : Icons.music_note,
-                                      color:
-                                          Theme.of(context).colorScheme.primary,
+                                      globalBorderRadius,
                                     ),
                                   ),
+                                  child: !isHovered && selectedAndPlaying
+                                      ? Center(
+                                          child: Image.asset(
+                                            "assets/images/audioEqualizer.gif",
+                                            width: 18,
+                                            height: 18,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary,
+                                          ),
+                                        )
+                                      : Icon(
+                                          isHovered
+                                              ? (selectedAndPlaying
+                                                  ? Icons.pause
+                                                  : Icons.play_arrow)
+                                              : Icons.music_note,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
+                                        ),
                                 ),
                               )
                           ],
