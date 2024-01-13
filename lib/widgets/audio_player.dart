@@ -267,7 +267,7 @@ class NextTrackInfoWidget extends StatelessWidget {
 
   /// Указывает, что должен показаться данный виджет.
   ///
-  /// Поле должно быть равно true только перед окончанием текущего трека ([Audio.auration] * 0.9).
+  /// Поле должно быть равно true только перед окончанием текущего трека ([Audio.auration] * 0.85).
   final bool displayNextTrack;
 
   /// Цветовая схема класса [ColorScheme].
@@ -444,7 +444,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
     /// Определяет по оставшейся длине трека то, стоит ли показывать надпись со следующим треком.
     final bool displayNextTrack =
         (widget.audio != null && widget.nextAudio != null)
-            ? (widget.progress >= 0.9)
+            ? (widget.progress >= 0.85)
             : false;
 
     // Запускаем процесс получения ColorScheme для данного трека.
