@@ -1068,17 +1068,17 @@ class VKMusicPlayer extends MediaKitPlayerExtended {
           MediaControl.skipToPrevious,
           MediaControl.skipToNext,
           // TODO: Кнопки для лайка и shuffle.
-          const MediaControl(
-            androidIcon: "drawable/baseline_forward_30_24",
-            label: "Shuffle",
-            action: MediaAction.setShuffleMode,
-          ),
-          MediaControl.custom(
-            androidIcon: "drawable/ic_baseline_favorite_24",
-            label: "favorite",
-            name: "favorite",
-            extras: <String, dynamic>{"level": 1},
-          ),
+          // const MediaControl(
+          //   androidIcon: "drawable/baseline_forward_30_24",
+          //   label: "Shuffle",
+          //   action: MediaAction.setShuffleMode,
+          // ),
+          // MediaControl.custom(
+          //   androidIcon: "drawable/ic_baseline_favorite_24",
+          //   label: "favorite",
+          //   name: "favorite",
+          //   extras: <String, dynamic>{"level": 1},
+          // ),
         ],
         systemActions: const {
           MediaAction.seek,
@@ -1087,9 +1087,14 @@ class VKMusicPlayer extends MediaKitPlayerExtended {
           MediaAction.skipToPrevious,
           MediaAction.skipToNext,
         },
+        androidCompactActionIndices: [
+          1,
+          0,
+          2,
+        ],
         updatePosition: state.position,
         playing: state.playing,
-        bufferedPosition: state.buffer,
+        bufferedPosition: state.buffering ? state.buffer : Duration.zero,
         processingState: state.buffering
             ? AudioProcessingState.buffering
             : AudioProcessingState.ready,
