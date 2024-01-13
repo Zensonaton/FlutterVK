@@ -91,9 +91,6 @@ class TrackNameInfoWidget extends StatelessWidget {
                   title: "Плеер на всё окно",
                 )
             : null,
-        onDoubleTap: !useBigLayout
-            ? () => onPlayStateToggle?.call(!playbackState)
-            : null,
         onSwipeUp: !useBigLayout
             ? () => showWipDialog(
                   context,
