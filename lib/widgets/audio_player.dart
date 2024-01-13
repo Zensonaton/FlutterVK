@@ -489,7 +489,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
     );
 
     return AnimatedContainer(
-      height: widget.useBigLayout ? 90 : 70,
+      height: widget.useBigLayout ? 88 : 66,
       duration: const Duration(
         milliseconds: 250,
       ),
