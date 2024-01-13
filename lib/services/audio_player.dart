@@ -1,18 +1,22 @@
 import "dart:async";
 import "dart:io";
-import "package:collection/collection.dart";
 
 import "package:audio_service/audio_service.dart";
 import "package:audio_session/audio_session.dart";
+import "package:collection/collection.dart";
 import "package:discord_rpc/discord_rpc.dart";
 import "package:flutter/foundation.dart";
+import "package:flutter_cache_manager/flutter_cache_manager.dart";
 import "package:media_kit/media_kit.dart";
 import "package:smtc_windows/smtc_windows.dart";
 
 import "../api/shared.dart";
 import "../consts.dart";
 import "../main.dart";
+import "../provider/user.dart";
 import "../utils.dart";
+import "cache_manager.dart";
+import "download_manager.dart";
 import "logger.dart";
 
 /// enum, хранящий в себе различные возможные состояния работы [MediaKitPlayerExtended].
@@ -53,6 +57,18 @@ class MediaKitPlayerExtended extends Player {
 
   Playlist? _playlist;
   List<Media>? _unshuffledPlaylist;
+
+  final DownloadManager _downloadManager = DownloadManager();
+
+  /// Максимальное количество треков, которые могут быть загружены заранее.
+  int maxPreloadTracks = 5;
+
+  /// Указывает 'время жизни' для треков в кэше.
+  ///
+  /// Если не указывать, то при сохранении треки будут храниться месяц (30 дней).
+  Duration? cacheLifespanDuration = const Duration(
+    days: 1,
+  );
 
   /// Указывает включённость нормализации.
   ///
@@ -201,48 +217,146 @@ class MediaKitPlayerExtended extends Player {
   }
 
   /// Заменяет текущий плейлист новым.
-  void setPlaylist(Playlist playlist, {bool ignoreShuffle = true}) {
-    _logger.d("Called setPlaylist(...)");
+  Future<void> setPlaylist(
+    Playlist playlist, {
+    bool ignoreShuffle = true,
+  }) async {
+    _logger.d(
+      "Called setPlaylist(...)",
+    );
+
+    // Узнаём, какой трек играет сейчас.
+    int index = playlist.index;
+    Media media = playlist.medias[index];
 
     // Перемешиваем новый плейлист, если у нас до этого был включён shuffle.
-    //
-    // Ввиду особенностей работы метода setShuffle у MediaKit'овского Player,
-    //  нам необходимо самим сделать копию плейлиста со случайно разбросанными треками.
     if (!ignoreShuffle) {
       if (shuffleEnabled) {
-        // Случайно перемешиваем плейлист.
-        // Но для начала, нам нужно запомнить "оригинальную" версию плейлиста до его перемешивания.
-        // Это необходимо, что бы при вызове этого метода с shuffleEnabled=false мы смогли вернуть оригинальную версию плейлиста.
-        _unshuffledPlaylist = playlist.medias;
+        // Случайно перемешиваем плейлист, сохраняя "оригинальную" версию плейлиста.
+        _unshuffledPlaylist = List.from(playlist.medias);
 
-        // Узнаём какой трек играет сейчас, до перемешивания.
-        final Media currentTrack = playlist.medias[playlist.index];
-
-        // Случайно переставляем треки в плейлисте, устанавливая текущий трек в самое начало плейлиста.
         final List<Media> shuffledMedia = _getShuffledPlaylist(
           playlist.medias,
           playlist.index,
         );
 
+        // Получаем новый индекс в плейлисте.
+        index = shuffledMedia.indexOf(media);
         playlist = playlist.copyWith(
           medias: shuffledMedia,
-          index: shuffledMedia.indexOf(currentTrack),
+          index: index,
         );
       } else if (!shuffleEnabled && _unshuffledPlaylist != null) {
+        // Получаем новый индекс в плейлисте.
+        index = _unshuffledPlaylist!.indexOf(media);
+
         // Восстанавливаем оригинальный плейлист до его перемешивания.
         playlist = playlist.copyWith(
           medias: _unshuffledPlaylist!,
-          index: _unshuffledPlaylist!.indexOf(
-            currentMedia!,
-          ),
+          index: index,
         );
 
         _unshuffledPlaylist = null;
       }
     }
 
+    // Загружаем, а также кэшируем треки.
+    for (var i = index; i < index + 5 && i < playlist.medias.length; i++) {
+      // Если трека нет в кэше, пытаемся загрузить и закэшировать его.
+      await _preloadAndCacheMedia(
+        playlist.medias[i],
+      );
+    }
+
     _playlist = playlist;
     _playlistStream.add(_playlist!);
+  }
+
+  /// Загружает, а так же кэширует трек.
+  Future<void> _preloadAndCacheMedia(Media media) async {
+    final Audio audio = media.extras!["audio"];
+
+    // Если мы уже заменили кэшированной версией трека, то ничего не делаем.
+    if (media.extras!["fromCache"]) return;
+
+    // Если трека нет в кэше, пытаемся загрузить и закешировать его.
+    final FileInfo? cachedFile =
+        await VKMusicCacheManager.instance.getFileFromCache(audio.mediaKey);
+
+    if (cachedFile != null) {
+      // Если у трека есть кэшированная его версия, то заменяем её.
+      media = Media(
+        cachedFile.file.uri.toString(),
+        extras: {
+          ...media.extras!,
+          "fromCache": true,
+        },
+      );
+
+      return;
+    }
+
+    // Кэшированной версии трека нет, загружаем.
+    _logger.d(
+      "Cache miss for ${audio.title} (${audio.mediaKey})",
+    );
+
+    // Загружаем трек при помощи менеджера загрузок.
+    _downloadManager
+        .download(
+      audio.url,
+      cacheKey: audio.mediaKey,
+    )
+        .then(
+      (response) async {
+        if (response.statusCode != 200) {
+          _logger.w(
+            "Bad status code for track ${audio.title}: ${response.statusCode}",
+          );
+
+          return;
+        }
+
+        _logger.d(
+          "${audio.title} has been downloaded (${response.bodyBytes.length} bytes)",
+        );
+
+        // Сохраняем скачанный трек в кэш.
+        await VKMusicCacheManager.instance.putFile(
+          audio.url,
+          response.bodyBytes,
+          fileExtension: "mр3",
+          key: audio.mediaKey,
+          eTag: response.headers["etag"],
+          maxAge: cacheLifespanDuration == null
+              ? const Duration(
+                  days: 30,
+                )
+              : cacheLifespanDuration!,
+        );
+      },
+    );
+  }
+
+  /// Устанавливает настройки для кэширования треков.
+  ///
+  /// [maxPreloadTracks] указывает количество треков, которые загружаются "наперёд". Слишком большие значения устанавливать не рекомендуется, поскольку у пользователя может быть лимитированное подключение к интернету. При указании null предзагрузка будет полностью отключена.
+  /// [tracksLifespan] указывает, сколько треки будут храниться в хранилище у пользователя. Если использовать null, то при сохранении треки будут храниться месяц (30 дней).
+  /// [parallelDownloads] указывает максимальное количество треков, которые могут загружаться паралельно.
+  void setMediaCachingSettings({
+    int maxPreloadTracks = 5,
+    Duration? tracksLifespan = const Duration(
+      days: 1,
+    ),
+    int parallelDownloads = 2,
+  }) {
+    _logger.d(
+      "Called setMediaCachingSettings($maxPreloadTracks, $tracksLifespan, $parallelDownloads)",
+    );
+
+    this.maxPreloadTracks = maxPreloadTracks;
+    cacheLifespanDuration = tracksLifespan;
+    _downloadManager.parallelDownloads = parallelDownloads;
   }
 
   @override
@@ -254,7 +368,7 @@ class MediaKitPlayerExtended extends Player {
 
     // Вся логика для shuffle расположена внутри метода setPlaylist, если аргумент ignoreShuffle равен false.
     if (_playlist != null) {
-      setPlaylist(
+      await setPlaylist(
         _playlist!,
         ignoreShuffle: false,
       );
@@ -312,7 +426,7 @@ class MediaKitPlayerExtended extends Player {
     _logger.d("Called open(..., $play)");
 
     if (playable is Playlist) {
-      setPlaylist(
+      await setPlaylist(
         playable,
         ignoreShuffle: false,
       );
@@ -380,7 +494,7 @@ class MediaKitPlayerExtended extends Player {
         "Last track in playlist, starting playback from the start of playlist",
       );
 
-      setPlaylist(
+      await setPlaylist(
         _playlist!.copyWith(
           index: 0,
         ),
@@ -391,9 +505,9 @@ class MediaKitPlayerExtended extends Player {
       );
     }
 
-    setPlaylist(
+    await setPlaylist(
       _playlist!.copyWith(
-        index: _playlist!.index + 1,
+        index: trackIndex! + 1,
       ),
     );
 
@@ -414,7 +528,7 @@ class MediaKitPlayerExtended extends Player {
         "First track in playlist, starting playback from the end of playlist",
       );
 
-      setPlaylist(
+      await setPlaylist(
         _playlist!.copyWith(
           index: _playlist!.medias.length - 1,
         ),
@@ -425,7 +539,7 @@ class MediaKitPlayerExtended extends Player {
       );
     }
 
-    setPlaylist(
+    await setPlaylist(
       _playlist!.copyWith(
         index: trackIndex! - 1,
       ),
@@ -445,7 +559,7 @@ class MediaKitPlayerExtended extends Player {
       return;
     }
 
-    setPlaylist(
+    await setPlaylist(
       _playlist!.copyWith(index: index),
     );
     return super.open(
@@ -472,7 +586,7 @@ class MediaKitPlayerExtended extends Player {
       }).toList(),
     );
 
-    setPlaylist(
+    await setPlaylist(
       _playlist!.copyWith(
         index: newPlaylist.medias.indexOf(
           currentMedia!,
@@ -489,9 +603,12 @@ class MediaKitPlayerExtended extends Player {
 
     if (_playlist == null) return;
 
-    setPlaylist(
+    await setPlaylist(
       _playlist!.copyWith(
-        medias: [..._playlist!.medias, media],
+        medias: [
+          ..._playlist!.medias,
+          media,
+        ],
       ),
     );
 
@@ -508,7 +625,7 @@ class MediaKitPlayerExtended extends Player {
 
     if (_playlist == null) return;
 
-    setPlaylist(
+    await setPlaylist(
       _playlist!.copyWith(
         medias: [
           ..._playlist!.medias.slice(0, trackIndex! + 1),
@@ -611,6 +728,8 @@ class MediaKitPlayerExtended extends Player {
 }
 
 /// Класс для работы с аудиоплеером.
+///
+/// Данный класс является расширением класса [MediaKitPlayerExtended], который в свою очередь расширяет [Player] от media_kit с целью добавления дополнительных Stream'ов и state-переменных.
 class VKMusicPlayer extends MediaKitPlayerExtended {
   final AppLogger logger = getLogger("VKMusicPlayer");
 
@@ -767,22 +886,34 @@ class VKMusicPlayer extends MediaKitPlayerExtended {
     }
   }
 
-  /// Запускает воспроизведение указанного массива треков.
-  ///
-  /// При [maxPreloadTracks] > 0, приложение будет пытаться заранее загружать треки и помещать их в кэш.
+  /// Запускает воспроизведение указанного плейлиста.
   Future<void> openAudioList(
-    List<Audio> audio, {
+    ExtendedVKPlaylist playlist, {
     int index = 0,
-    bool readFromCache = true,
-    int maxPreloadTracks = 5,
   }) async {
+    assert(
+      playlist.audios != null,
+      "Ожидалось, что ExtendedVKPlaylist будет иметь массив треков",
+    );
+
+    // Сохраняем настройки кэша.
+    setMediaCachingSettings(
+      maxPreloadTracks: playlist.isFavoritesPlaylist ? 5 : 2,
+      tracksLifespan: playlist.isFavoritesPlaylist
+          ? null
+          : const Duration(
+              days: 1,
+            ),
+    );
+
     // Добавляем все треки в очередь воспроизведения настоящего плеера.
     await open(
       Playlist(
         [
-          for (Audio audio in audio)
+          for (Audio audio in playlist.audios!)
             Media(audio.url, extras: {
               "audio": audio,
+              "fromCache": false,
             }),
         ],
         index: index,

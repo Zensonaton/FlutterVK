@@ -583,7 +583,7 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
                                 );
                               }
                             : () async => await player.openAudioList(
-                                  playlistAudios,
+                                  widget.playlist,
                                   index: playlistAudios.indexWhere(
                                     (Audio widgetAudio) => widgetAudio == audio,
                                   ),
@@ -1683,7 +1683,7 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
                               .music_trackUnavailableDescription,
                         )
                     : () async => await player.openAudioList(
-                          user.favoritesPlaylist!.audios!,
+                          user.favoritesPlaylist!,
                           index: index,
                         ),
                 onPlayToggle: (bool enabled) async =>
@@ -1737,7 +1737,7 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
                       await player.setShuffle(true);
 
                       await player.openAudioList(
-                        user.favoritesPlaylist!.audios!,
+                        user.favoritesPlaylist!,
                         index: Random().nextInt(
                           user.favoritesPlaylist!.audios!.length,
                         ),
