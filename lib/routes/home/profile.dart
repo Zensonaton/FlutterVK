@@ -201,6 +201,14 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
               if (user.photoMaxUrl != null)
                 CachedNetworkImage(
                   imageUrl: user.photoMaxUrl!,
+                  placeholder: (BuildContext context, String url) {
+                    return const SizedBox(
+                      height: 80,
+                      width: 80,
+                    );
+                  },
+                  placeholderFadeInDuration: Duration.zero,
+                  fadeOutDuration: Duration.zero,
                   imageBuilder: (context, imageProvider) => Container(
                     width: 80,
                     height: 80,
