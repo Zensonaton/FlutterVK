@@ -410,6 +410,7 @@ class UserProvider extends ChangeNotifier {
     int audioID,
     String title,
     String artist,
+    int genreID,
   ) async =>
       await audio_edit(
         mainToken!,
@@ -417,6 +418,7 @@ class UserProvider extends ChangeNotifier {
         audioID,
         title,
         artist,
+        genreID,
       );
 
   /// Возвращает информацию о категории для раздела "аудио".

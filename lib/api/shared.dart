@@ -725,17 +725,17 @@ class AudioAlbum {
 @JsonSerializable()
 class Audio {
   /// ID аудиозаписи.
-  final int id;
+  int id;
 
   /// ID владельца аудиозаписи.
   @JsonKey(name: "owner_id")
-  final int ownerID;
+  int ownerID;
 
   /// Имя исполнителя.
-  final String artist;
+  String artist;
 
   /// Название аудиозаписи.
-  final String title;
+  String title;
 
   /// Длительность аудиозаписи в секундах.
   final int duration;
@@ -745,7 +745,7 @@ class Audio {
 
   /// Ключ доступа.
   @JsonKey(name: "access_key")
-  final String accessKey;
+  String accessKey;
 
   /// Объект с информацией по рекламе.
   final dynamic ads;
@@ -806,7 +806,7 @@ class Audio {
 
   // ID жанра аудиозаписи. Список жанров описан [здесь](https://dev.vk.com/ru/reference/objects/audio-genres).
   @JsonKey(name: "genre_id")
-  final int? genreID;
+  int? genreID;
 
   /// Возвращает строку, которая используется как идентификатор пользователя и медиа.
   String get mediaKey => "${ownerID}_$id";

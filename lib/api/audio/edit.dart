@@ -37,6 +37,7 @@ Future<APIAudioEditResponse> audio_edit(
   int audioID,
   String title,
   String artist,
+  int genreID,
 ) async {
   var response = await vkAPIcall(
     "audio.edit",
@@ -46,6 +47,7 @@ Future<APIAudioEditResponse> audio_edit(
       "title": title,
       "audio_id": audioID.toString(),
       "owner_id": ownerID.toString(),
+      "genre_id": genreID.toString(),
     },
   );
 

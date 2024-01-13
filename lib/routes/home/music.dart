@@ -599,6 +599,7 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
                           builder: (BuildContext context) =>
                               BottomAudioOptionsDialog(
                             audio: audio,
+                            playlist: widget.playlist,
                           ),
                         ),
                       ),
@@ -626,9 +627,13 @@ class TrackInfoEditDialog extends StatefulWidget {
   /// Трек, данные которого будут изменяться.
   final Audio audio;
 
+  /// Плейлист, в котором находится данный трек.
+  final ExtendedVKPlaylist playlist;
+
   const TrackInfoEditDialog({
     super.key,
     required this.audio,
+    required this.playlist,
   });
 
   @override
@@ -644,12 +649,16 @@ class _TrackInfoEditDialogState extends State<TrackInfoEditDialog> {
   /// [TextEditingController] для поля ввода артиста трека.
   final TextEditingController artistController = TextEditingController();
 
+  /// Выбранный жанр у трека.
+  late int trackGenre;
+
   @override
   void initState() {
     super.initState();
 
     titleController.text = widget.audio.title;
     artistController.text = widget.audio.artist;
+    trackGenre = widget.audio.genreID ?? 18; // Жанр "Other".
   }
 
   @override
@@ -719,24 +728,27 @@ class _TrackInfoEditDialogState extends State<TrackInfoEditDialog> {
                 ),
               ),
             ),
-            // TODO: Редактирование жанра. Оно уже почти реализовано, просто мне *сейчас* лень.
-            // const SizedBox(height: 28),
-            // DropdownMenu(
-            //   label: const Text("Жанр"),
-            //   onSelected: (_) => showWipDialog(
-            //     context,
-            //   ),
-            //   initialSelection: 18, // Значение "Other".
-            //   width:
-            //       500 - 24 * 2, // Не очень красивое решение. Спасибо, Flutter.
-            //   dropdownMenuEntries: [
-            //     for (MapEntry<int, String> genre in musicGenres.entries)
-            //       DropdownMenuEntry(
-            //         value: genre.key,
-            //         label: genre.value,
-            //       ),
-            //   ],
-            // ),
+            const SizedBox(height: 28),
+            DropdownMenu(
+              label: Text(
+                AppLocalizations.of(context)!.music_trackGenre,
+              ),
+              onSelected: (int? genreID) {
+                if (genreID == null) return;
+
+                setState(() => trackGenre = genreID);
+              },
+              initialSelection: widget.audio.genreID ?? 18, // Жанр "Other".
+              width:
+                  500 - 24 * 2, // Не очень красивое решение. Спасибо, Flutter.
+              dropdownMenuEntries: [
+                for (MapEntry<int, String> genre in musicGenres.entries)
+                  DropdownMenuEntry(
+                    value: genre.key,
+                    label: genre.value,
+                  ),
+              ],
+            ),
             const SizedBox(height: 24),
             Align(
               alignment: Alignment.bottomRight,
@@ -753,6 +765,7 @@ class _TrackInfoEditDialogState extends State<TrackInfoEditDialog> {
                       widget.audio.id,
                       titleController.text,
                       artistController.text,
+                      trackGenre,
                     );
 
                     // Проверяем, что в ответе нет ошибок.
@@ -762,7 +775,12 @@ class _TrackInfoEditDialogState extends State<TrackInfoEditDialog> {
                       );
                     }
 
-                    // TODO: Обновить данные о треке у пользователя.
+                    // Обновляем данные о треке у пользователя.
+                    widget.audio.title = titleController.text;
+                    widget.audio.artist = artistController.text;
+                    widget.audio.genreID = trackGenre;
+
+                    user.markUpdated(false);
                   } catch (e, stackTrace) {
                     logger.e(
                       "Ошибка при редактировании данных трека: ",
@@ -806,9 +824,13 @@ class BottomAudioOptionsDialog extends StatefulWidget {
   /// Трек, над которым производится манипуляция.
   final Audio audio;
 
+  /// Плейлист, в котором находится данный трек.
+  final ExtendedVKPlaylist playlist;
+
   const BottomAudioOptionsDialog({
     super.key,
     required this.audio,
+    required this.playlist,
   });
 
   @override
@@ -861,6 +883,7 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
                       context: context,
                       builder: (BuildContext context) => TrackInfoEditDialog(
                         audio: widget.audio,
+                        playlist: widget.playlist,
                       ),
                     );
                   }
@@ -1678,6 +1701,7 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
                   isScrollControlled: true,
                   builder: (BuildContext context) => BottomAudioOptionsDialog(
                     audio: user.favoritesPlaylist!.audios![index],
+                    playlist: user.favoritesPlaylist!,
                   ),
                 ),
               ),
