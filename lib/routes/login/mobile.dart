@@ -4,7 +4,7 @@ import "package:flutter_inappwebview/flutter_inappwebview.dart";
 
 import "../../consts.dart";
 import "../../utils.dart";
-import "../../widgets/error_dialog.dart";
+import "../../widgets/dialogs.dart";
 import "../login.dart";
 
 /// Часть Route'а [LoginRoute], показываемая при запуске на мобильных платформах.
@@ -76,6 +76,7 @@ class _MobileLoginWidgetState extends State<MobileLoginWidget> {
         String? token = extractAccessToken(url);
         if (token == null) {
           isWebViewShown = true;
+
           showErrorDialog(
             context,
             description: "Access-токен не был найден в URL.",
@@ -86,6 +87,7 @@ class _MobileLoginWidgetState extends State<MobileLoginWidget> {
 
         // Пытаемся авторизоваться по токену.
         setState(() => isWebViewShown = false);
+
         await tryAuthorize(
           context,
           token,

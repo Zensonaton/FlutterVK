@@ -12,7 +12,7 @@ import "../provider/user.dart";
 import "../services/cache_manager.dart";
 import "../services/logger.dart";
 import "../utils.dart";
-import "../widgets/error_dialog.dart";
+import "../widgets/dialogs.dart";
 import "../widgets/loading_overlay.dart";
 import "../widgets/page_route.dart";
 import "home.dart";
@@ -104,8 +104,14 @@ Future<bool> tryAuthorize(
       );
     }
   } catch (e, stackTrace) {
-    logger.e("Ошибка при авторизации: ", error: e, stackTrace: stackTrace);
-    if (context.mounted) showErrorDialog(context, description: e.toString());
+    // ignore: use_build_context_synchronously
+    showLogErrorDialog(
+      "Ошибка при авторизации: ",
+      e,
+      stackTrace,
+      logger,
+      context,
+    );
 
     return false;
   } finally {

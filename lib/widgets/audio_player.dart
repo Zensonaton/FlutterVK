@@ -8,9 +8,9 @@ import "../api/shared.dart";
 import "../consts.dart";
 import "../services/cache_manager.dart";
 import "../utils.dart";
+import "dialogs.dart";
 import "fallback_audio_photo.dart";
 import "swipe_detector.dart";
-import "wip_dialog.dart";
 
 /// Виджет, располагаемый в левой части [BottomMusicPlayer], показывая информацию по текущему треку.
 class TrackNameInfoWidget extends StatelessWidget {

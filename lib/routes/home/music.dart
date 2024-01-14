@@ -27,10 +27,9 @@ import "../../services/cache_manager.dart";
 import "../../services/logger.dart";
 import "../../utils.dart";
 import "../../widgets/adaptive_dialog.dart";
-import "../../widgets/error_dialog.dart";
+import "../../widgets/dialogs.dart";
 import "../../widgets/fallback_audio_photo.dart";
 import "../../widgets/loading_overlay.dart";
-import "../../widgets/wip_dialog.dart";
 import "../home.dart";
 import "profile.dart";
 
@@ -351,15 +350,14 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
 
         if (context.mounted) setState(() {});
       } catch (e, stackTrace) {
-        logger.e(
+        // ignore: use_build_context_synchronously
+        showLogErrorDialog(
           "Ошибка при открытии плейлиста: ",
-          error: e,
-          stackTrace: stackTrace,
+          e,
+          stackTrace,
+          logger,
+          context,
         );
-
-        if (context.mounted) {
-          showErrorDialog(context, description: e.toString());
-        }
 
         return;
       } finally {
@@ -1034,92 +1032,58 @@ class CacheTracksDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        width: 500,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.file_download_outlined,
-            ),
-            const SizedBox(
-              height: 16,
-            ),
-            Text(
-              AppLocalizations.of(context)!.music_cacheTracksTitle,
-              style: Theme.of(context).textTheme.headlineSmall,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(
-              height: 24,
-            ),
-            Text(
-              AppLocalizations.of(context)!.music_cacheTracksDescription(
-                playlist.audios?.length ?? 0,
-              ),
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-            const SizedBox(
-              height: 24,
-            ),
-            Align(
-              alignment: Alignment.bottomRight,
-              child: Wrap(
-                spacing: 8,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: Text(
-                      AppLocalizations.of(context)!.general_no,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () async {
-                      int cachedAudios = 0;
-
-                      // Проходимся по всем трекам в плейлисте, запускаем процесс загрузки.
-                      for (Audio audio in playlist.audios!) {
-                        // Проверяем наличие трека в кэше.
-                        final FileInfo? cachedFile = await VKMusicCacheManager
-                            .instance
-                            .getFileFromCache(audio.mediaKey);
-
-                        // Трек есть в кэше, тогда не загружаем его.
-                        if (cachedFile != null) continue;
-
-                        // Файла нет в кэше, загружаем его.
-                        player.cacheAudio(audio);
-                        cachedAudios += 1;
-                      }
-
-                      // Делаем надпись о том, сколько треков будут загружаться.
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            duration: const Duration(
-                              seconds: 15,
-                            ),
-                            content: Text(
-                              "Была начата загрузка $cachedAudios треков которые не находятся в кэше. Не запускайте повторно процесс кэширования, ожидайте и не трогайте устройство. Никакого уведомления о завершения данной операции не будет.",
-                            ),
-                          ),
-                        );
-
-                        Navigator.of(context).pop();
-                      }
-                    },
-                    child: Text(
-                      AppLocalizations.of(context)!.general_yes,
-                    ),
-                  )
-                ],
-              ),
-            )
-          ],
-        ),
+    return MaterialDialog(
+      icon: Icons.file_download_outlined,
+      title: AppLocalizations.of(context)!.music_cacheTracksTitle,
+      text: AppLocalizations.of(context)!.music_cacheTracksDescription(
+        playlist.audios?.length ?? 0,
       ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(
+            AppLocalizations.of(context)!.general_no,
+          ),
+        ),
+        TextButton(
+          onPressed: () async {
+            int cachedAudios = 0;
+
+            // Проходимся по всем трекам в плейлисте, запускаем процесс загрузки.
+            for (Audio audio in playlist.audios!) {
+              // Проверяем наличие трека в кэше.
+              final FileInfo? cachedFile = await VKMusicCacheManager.instance
+                  .getFileFromCache(audio.mediaKey);
+
+              // Трек есть в кэше, тогда не загружаем его.
+              if (cachedFile != null) continue;
+
+              // Файла нет в кэше, загружаем его.
+              player.cacheAudio(audio);
+              cachedAudios += 1;
+            }
+
+            // Делаем надпись о том, сколько треков будут загружаться.
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  duration: const Duration(
+                    seconds: 15,
+                  ),
+                  content: Text(
+                    "Была начата загрузка $cachedAudios треков которые не находятся в кэше. Не запускайте повторно процесс кэширования, ожидайте и не трогайте устройство. Никакого уведомления о завершения данной операции не будет.",
+                  ),
+                ),
+              );
+
+              Navigator.of(context).pop();
+            }
+          },
+          child: Text(
+            AppLocalizations.of(context)!.general_yes,
+          ),
+        ),
+      ],
     );
   }
 }

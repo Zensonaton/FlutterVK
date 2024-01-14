@@ -10,8 +10,9 @@ import "../../main.dart";
 import "../../provider/user.dart";
 import "../../services/cache_manager.dart";
 import "../../utils.dart";
+import "../../widgets/dialogs.dart";
 import "../../widgets/page_route.dart";
-import "../../widgets/wip_dialog.dart";
+
 import "../login.dart";
 import "../welcome.dart";
 
@@ -35,62 +36,36 @@ class ProfileLogoutExitDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final UserProvider user = Provider.of<UserProvider>(context, listen: false);
 
-    return Dialog(
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        width: 500,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.logout_outlined,
-            ),
-            const SizedBox(
-              height: 16,
-            ),
-            Text(
-              AppLocalizations.of(context)!.home_profilePageLogoutTitle,
-              style: Theme.of(context).textTheme.headlineSmall,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            Text(
-              AppLocalizations.of(context)!.home_profilePageLogoutDescription(
-                user.fullName!,
-              ),
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text(
-                    AppLocalizations.of(context)!.general_no,
-                  ),
-                ),
-                TextButton(
-                  onPressed: () {
-                    user.logout();
-
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      Material3PageRoute(
-                        builder: (context) => const WelcomeRoute(),
-                      ),
-                      (route) => false,
-                    );
-                  },
-                  child: Text(
-                    AppLocalizations.of(context)!.general_yes,
-                  ),
-                )
-              ],
-            )
-          ],
-        ),
+    return MaterialDialog(
+      icon: Icons.logout_outlined,
+      title: AppLocalizations.of(context)!.home_profilePageLogoutTitle,
+      text: AppLocalizations.of(context)!.home_profilePageLogoutDescription(
+        user.fullName!,
       ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(
+            AppLocalizations.of(context)!.general_no,
+          ),
+        ),
+        TextButton(
+          onPressed: () {
+            user.logout();
+
+            Navigator.pushAndRemoveUntil(
+              context,
+              Material3PageRoute(
+                builder: (context) => const WelcomeRoute(),
+              ),
+              (route) => false,
+            );
+          },
+          child: Text(
+            AppLocalizations.of(context)!.general_yes,
+          ),
+        )
+      ],
     );
   }
 }
@@ -113,63 +88,36 @@ class ConnectRecommendationsDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        width: 500,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.auto_fix_high,
-            ),
-            const SizedBox(
-              height: 16,
-            ),
-            Text(
-              AppLocalizations.of(context)!.music_ConnectRecommendationsTitle,
-              style: Theme.of(context).textTheme.headlineSmall,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            Text(
-              AppLocalizations.of(context)!
-                  .music_ConnectRecommendationsDescription,
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text(
-                    AppLocalizations.of(context)!.general_no,
-                  ),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-
-                    Navigator.push(
-                      context,
-                      Material3PageRoute(
-                        builder: (context) => const LoginRoute(
-                          useAlternateAuth: true,
-                        ),
-                      ),
-                    );
-                  },
-                  child: Text(
-                    AppLocalizations.of(context)!
-                        .music_ConnectRecommendationsConnect,
-                  ),
-                )
-              ],
-            )
-          ],
+    return MaterialDialog(
+      icon: Icons.auto_fix_high,
+      title: AppLocalizations.of(context)!.music_ConnectRecommendationsTitle,
+      text:
+          AppLocalizations.of(context)!.music_ConnectRecommendationsDescription,
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(
+            AppLocalizations.of(context)!.general_no,
+          ),
         ),
-      ),
+        TextButton(
+          onPressed: () {
+            Navigator.pop(context);
+
+            Navigator.push(
+              context,
+              Material3PageRoute(
+                builder: (context) => const LoginRoute(
+                  useAlternateAuth: true,
+                ),
+              ),
+            );
+          },
+          child: Text(
+            AppLocalizations.of(context)!.music_ConnectRecommendationsConnect,
+          ),
+        )
+      ],
     );
   }
 }

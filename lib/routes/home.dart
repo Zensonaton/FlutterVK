@@ -16,9 +16,8 @@ import "../services/cache_manager.dart";
 import "../services/logger.dart";
 import "../utils.dart";
 import "../widgets/audio_player.dart";
-import "../widgets/error_dialog.dart";
+import "../widgets/dialogs.dart";
 import "../widgets/loading_overlay.dart";
-import "../widgets/wip_dialog.dart";
 import "home/messages.dart";
 import "home/music.dart";
 import "home/profile.dart";
@@ -103,18 +102,14 @@ Future<void> toggleTrackLikeState(
     // Посылаем обновления объекта пользователя.
     user.markUpdated(false);
   } catch (e, stackTrace) {
-    logger.e(
+    // ignore: use_build_context_synchronously
+    showLogErrorDialog(
       "Ошибка при попытке сделать трек лайкнутым/дизлайкнутым (новое состояние: $like): ",
-      error: e,
-      stackTrace: stackTrace,
+      e,
+      stackTrace,
+      logger,
+      context,
     );
-
-    if (context.mounted) {
-      showErrorDialog(
-        context,
-        description: e.toString(),
-      );
-    }
   } finally {
     if (context.mounted) LoadingOverlay.of(context).hide();
   }
