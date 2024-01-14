@@ -276,7 +276,7 @@ class MediaKitPlayerExtended extends Player {
           await VKMusicCacheManager.instance.getFileFromCache(audio.mediaKey);
 
       // Трек есть в кэше, заменяем кэшированной версией.
-      if (cachedFile != null) {
+      if (cachedFile != null && await cachedFile.file.exists()) {
         playlist.medias[i] = Media(
           cachedFile.file.uri.toString(),
           extras: {
