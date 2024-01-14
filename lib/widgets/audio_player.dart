@@ -418,6 +418,16 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
   /// Используется как fallback в тот момент, пока актуальный [ColorScheme] ещё не был создан.
   ColorScheme? scheme;
 
+  /// В зависимости от установленной настройки, ставит плеер на паузу, если громкость на минимуме.
+  void _pausePlayerOnVolume(double volume) {
+    assert(volume >= 0 && volume <= 1);
+
+    // Если пользователь установил минимальную громкость, а так же настройка "Пауза при отключении громкости" включена, то ставим плеер на паузу.
+    if (volume == 0 && widget.pauseOnMuteEnabled) {
+      widget.onPlayStateToggle?.call(false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Если fallback-цветовая схема плеера не была сохранена, то нам нужно её сохранить.
@@ -663,15 +673,8 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                       1,
                                     );
 
-                                    widget.onVolumeChange?.call(
-                                      newVolume,
-                                    );
-
-                                    // Если пользователь установил минимальную громкость, а так же настройка "Пауза при отключении громкости" включена, то ставим плеер на паузу.
-                                    if (newVolume == 0 &&
-                                        widget.pauseOnMuteEnabled) {
-                                      widget.onPlayStateToggle?.call(false);
-                                    }
+                                    widget.onVolumeChange?.call(newVolume);
+                                    _pausePlayerOnVolume(newVolume);
                                   },
                                   child: SliderTheme(
                                     data: SliderThemeData(
@@ -680,10 +683,10 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                     ),
                                     child: Slider(
                                       value: widget.volume,
-                                      onChanged: (double volume) =>
-                                          widget.onVolumeChange?.call(
-                                        volume,
-                                      ),
+                                      onChanged: (double volume) {
+                                        widget.onVolumeChange?.call(volume);
+                                        _pausePlayerOnVolume(volume);
+                                      },
                                       thumbColor: scheme!.primary,
                                       activeColor: scheme!.primary,
                                       inactiveColor: scheme!.primary,
