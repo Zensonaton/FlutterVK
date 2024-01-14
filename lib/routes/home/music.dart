@@ -557,8 +557,8 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
                       child: AudioTrackTile(
                         selected: audio == player.currentAudio,
                         currentlyPlaying: player.state.playing,
-                        isLiked: user.favoriteTrackIDs.contains(
-                          audio.id,
+                        isLiked: user.favoriteMediaKeys.contains(
+                          audio.mediaKey,
                         ),
                         audio: audio,
                         dragIndex: index,
@@ -600,8 +600,8 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
                           await toggleTrackLikeState(
                             context,
                             audio,
-                            !user.favoriteTrackIDs.contains(
-                              audio.id,
+                            !user.favoriteMediaKeys.contains(
+                              audio.mediaKey,
                             ),
                           );
                         },
@@ -1779,8 +1779,8 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
                 selected: user.favoritesPlaylist!.audios![index] ==
                     player.currentAudio,
                 currentlyPlaying: player.isLoaded && player.state.playing,
-                isLiked: user.favoriteTrackIDs.contains(
-                  user.favoritesPlaylist!.audios![index].id,
+                isLiked: user.favoriteMediaKeys.contains(
+                  user.favoritesPlaylist!.audios![index].mediaKey,
                 ),
                 onAddToQueue: () async {
                   await player.addNextToQueue(
@@ -1816,8 +1816,8 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
                 onLikeToggle: (bool liked) async => await toggleTrackLikeState(
                   context,
                   user.favoritesPlaylist!.audios![index],
-                  !user.favoriteTrackIDs.contains(
-                    user.favoritesPlaylist!.audios![index].id,
+                  !user.favoriteMediaKeys.contains(
+                    user.favoritesPlaylist!.audios![index].mediaKey,
                   ),
                 ),
                 onSecondaryAction: () => showModalBottomSheet(

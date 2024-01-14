@@ -183,11 +183,11 @@ class UserProvider extends ChangeNotifier {
   /// Тоже самое, что и `allPlaylists[0]`.
   ExtendedVKPlaylist? get favoritesPlaylist => allPlaylists[0];
 
-  /// Список из [Audio.id] лайкнутых треков.
-  List<int> get favoriteTrackIDs =>
-      favoritesPlaylist != null && favoritesPlaylist!.audios != null
-          ? favoritesPlaylist!.audios!.map((Audio audio) => audio.id).toList()
-          : [];
+  /// Список из [Audio.mediaKey] лайкнутых треков.
+  List<String> get favoriteMediaKeys => favoritesPlaylist != null &&
+          favoritesPlaylist!.audios != null
+      ? favoritesPlaylist!.audios!.map((Audio audio) => audio.mediaKey).toList()
+      : [];
 
   /// Перечисление всех обычных плейлистов, которые были сделаны данным пользователем.
   List<ExtendedVKPlaylist> get regularPlaylists => allPlaylists.values

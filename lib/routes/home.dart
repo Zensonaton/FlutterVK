@@ -323,8 +323,8 @@ class _HomeRouteState extends State<HomeRoute> {
                     previousAudio: player.previousAudio,
                     nextAudio: player.nextAudio,
                     favoriteState: player.currentAudio != null
-                        ? user.favoriteTrackIDs
-                            .contains(player.currentAudio!.id)
+                        ? user.favoriteMediaKeys
+                            .contains(player.currentAudio!.mediaKey)
                         : false,
                     playbackState: player.state.playing,
                     progress: player.progress,
@@ -340,8 +340,8 @@ class _HomeRouteState extends State<HomeRoute> {
                       await toggleTrackLikeState(
                         context,
                         player.currentAudio!,
-                        !user.favoriteTrackIDs.contains(
-                          player.currentAudio!.id,
+                        !user.favoriteMediaKeys.contains(
+                          player.currentAudio!.mediaKey,
                         ),
                       );
                     },
