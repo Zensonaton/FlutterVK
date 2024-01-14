@@ -58,7 +58,10 @@ Future<APIAudioGetPlaylistsResponse> audio_getPlaylists(
   var response = await vkAPIcall(
     "audio.getPlaylists",
     token,
-    {"owner_id": userID.toString()},
+    {
+      "owner_id": userID.toString(),
+      "count": 100.toString(),
+    },
   );
 
   return APIAudioGetPlaylistsResponse.fromJson(jsonDecode(response.body));
