@@ -1129,19 +1129,21 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
                 Opacity(
                   opacity: widget.audio.isRestricted ? 0.5 : 1,
                   child: InkWell(
-                    onTap: () {
-                      // Если в данный момент играет именно этот трек, то вызываем onPlayToggle.
-                      if (widget.selected) {
-                        widget.onPlayToggle?.call(
-                          !selectedAndPlaying,
-                        );
+                    onTap: widget.onPlayToggle != null || widget.onPlay != null
+                        ? () {
+                            // Если в данный момент играет именно этот трек, то вызываем onPlayToggle.
+                            if (widget.selected) {
+                              widget.onPlayToggle?.call(
+                                !selectedAndPlaying,
+                              );
 
-                        return;
-                      }
+                              return;
+                            }
 
-                      // В ином случае запускаем проигрывание этого трека.
-                      widget.onPlay?.call();
-                    },
+                            // В ином случае запускаем проигрывание этого трека.
+                            widget.onPlay?.call();
+                          }
+                        : null,
                     borderRadius: BorderRadius.circular(globalBorderRadius),
                     child: ReorderableDragStartListener(
                       index: widget.dragIndex ?? 0,
