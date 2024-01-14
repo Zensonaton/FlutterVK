@@ -278,7 +278,7 @@ class MediaKitPlayerExtended extends Player {
     final Audio audio = media.extras!["audio"];
 
     // Если мы уже заменили кэшированной версией трека, то ничего не делаем.
-    if (media.extras!["fromCache"]) return;
+    if (media.extras!["fromCache"] ?? false) return;
 
     // Если трека нет в кэше, пытаемся загрузить и закешировать его.
     final FileInfo? cachedFile =
