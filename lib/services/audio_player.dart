@@ -223,7 +223,7 @@ class MediaKitPlayerExtended extends Player {
     bool ignoreShuffle = true,
   }) async {
     _logger.d(
-      "Called setPlaylist(...)",
+      "Called setPlaylist(..., $ignoreShuffle)",
     );
 
     int index = playlist.index;
