@@ -7,6 +7,7 @@ import "package:collection/collection.dart";
 import "package:discord_rpc/discord_rpc.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter_cache_manager/flutter_cache_manager.dart";
+import "package:http/http.dart";
 import "package:media_kit/media_kit.dart";
 import "package:smtc_windows/smtc_windows.dart";
 
@@ -308,7 +309,10 @@ class MediaKitPlayerExtended extends Player {
       cacheKey: audio.mediaKey,
     )
         .then(
-      (response) async {
+      (Response? response) async {
+        // Данный метод может быть преждевременно отменён в случае, если загрузка файла уже начата.
+        if (response == null) return;
+
         if (response.statusCode != 200) {
           _logger.w(
             "Bad status code for track ${audio.title}: ${response.statusCode}",

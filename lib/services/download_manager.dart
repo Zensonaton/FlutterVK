@@ -21,18 +21,16 @@ class DownloadManager {
         ),
         _queueItems = {};
 
-  /// Загружает файл по указанному [url]. Указав [cacheKey], загрузчик не позволит загружать один и тот же элемент несколько раз, возвращая уже загруженный файл.
-  Future<Response> download(
+  /// Загружает файл по указанному [url].
+  ///
+  /// Указав [cacheKey], загрузчик не позволит загружать один и тот же элемент несколько раз, возвращая уже загруженный файл. Если будет повторный вызов этого метода, пока [cacheKey] уже находится в очереди на загрузку, то тогда данный метод преждевременно вернёт null вместо [Response].
+  Future<Response?> download(
     String url, {
     String? cacheKey,
   }) async {
     // Проверяем, нет ли уже существующего Future с загрузкой данного элемента.
-    if (cacheKey != null) {
-      Future<Response>? queueFuture = _queueItems[cacheKey];
-
-      if (queueFuture != null) {
-        return await queueFuture;
-      }
+    if (cacheKey != null && _queueItems.containsKey(cacheKey)) {
+      return null;
     }
 
     // Создаём Future для загрузки данного файла, и потом помещаем его в _queueItems.
