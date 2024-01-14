@@ -2401,7 +2401,9 @@ class _HomeMusicPageState extends State<HomeMusicPage> {
           children: [
             Expanded(
               child: ListView(
-                padding: EdgeInsets.all(isMobileLayout ? 16 : 24),
+                padding: EdgeInsets.all(
+                  isMobileLayout ? 16 : 24,
+                ),
                 children: [
                   // Часть интерфейса "Добро пожаловать".
                   if (!isMobileLayout)

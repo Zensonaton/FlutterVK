@@ -197,6 +197,7 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
       children: [
         Expanded(
           child: ListView(
+            padding: const EdgeInsets.all(16),
             children: [
               if (user.photoMaxUrl != null)
                 CachedNetworkImage(
