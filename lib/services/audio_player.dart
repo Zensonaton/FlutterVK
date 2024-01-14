@@ -837,6 +837,14 @@ class VKMusicPlayer extends MediaKitPlayerExtended {
       // Событие изменение состояния плеера (пауза, ...).
       playerStateStream.listen((AudioPlaybackState state) => _updateState()),
 
+      // Обработчик изменения текущего плейлиста.
+      playlistStream.listen((Playlist playlist) async {
+        final Audio? audio = currentAudio;
+        if (audio == null) return;
+
+        await _sendTrackData(audio);
+      }),
+
       // Обработчик изменения текущего трека.
       indexChangeStream.listen((int index) async {
         final Audio? audio = currentAudio;
