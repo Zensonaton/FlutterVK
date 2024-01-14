@@ -31,6 +31,7 @@ import "../../widgets/error_dialog.dart";
 import "../../widgets/fallback_audio_photo.dart";
 import "../../widgets/loading_overlay.dart";
 import "../../widgets/wip_dialog.dart";
+import "../home.dart";
 import "profile.dart";
 
 /// Загружает всю информацию пользователя (плейлисты, треки, рекомендации) для раздела «музыка», присваивая её в объект [UserProvider]. Если таковая информация уже присутствует, то данный вызов будет проигнорирован.
@@ -595,10 +596,15 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
                                 ),
                         onPlayToggle: (bool enabled) async =>
                             await player.setPlaying(enabled),
-                        onLikeToggle: (bool liked) => showWipDialog(
-                          context,
-                          title: "Переключение лайка",
-                        ),
+                        onLikeToggle: (bool liked) async {
+                          await toggleTrackLikeState(
+                            context,
+                            audio,
+                            !user.favoriteTrackIDs.contains(
+                              audio.id,
+                            ),
+                          );
+                        },
                         onSecondaryAction: () => showModalBottomSheet(
                           context: context,
                           isScrollControlled: true,
@@ -1807,9 +1813,12 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
                         ),
                 onPlayToggle: (bool enabled) async =>
                     await player.setPlaying(enabled),
-                onLikeToggle: (bool liked) => showWipDialog(
+                onLikeToggle: (bool liked) async => await toggleTrackLikeState(
                   context,
-                  title: "Переключение лайка",
+                  user.favoritesPlaylist!.audios![index],
+                  !user.favoriteTrackIDs.contains(
+                    user.favoritesPlaylist!.audios![index].id,
+                  ),
                 ),
                 onSecondaryAction: () => showModalBottomSheet(
                   context: context,

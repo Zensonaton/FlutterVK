@@ -6,17 +6,119 @@ import "package:media_kit/media_kit.dart";
 import "package:provider/provider.dart";
 import "package:responsive_builder/responsive_builder.dart";
 
+import "../api/audio/add.dart";
+import "../api/audio/delete.dart";
+import "../api/shared.dart";
 import "../main.dart";
 import "../provider/user.dart";
 import "../services/audio_player.dart";
+import "../services/cache_manager.dart";
 import "../services/logger.dart";
 import "../utils.dart";
 import "../widgets/audio_player.dart";
 import "../widgets/error_dialog.dart";
+import "../widgets/loading_overlay.dart";
 import "../widgets/wip_dialog.dart";
 import "home/messages.dart";
 import "home/music.dart";
 import "home/profile.dart";
+
+/// Меняет состояние "лайка" у передаваемого трека.
+///
+/// Учтите, что данный метод делает изменения в интерфейсе.
+Future<void> toggleTrackLikeState(
+  BuildContext context,
+  Audio audio,
+  bool like,
+) async {
+  final UserProvider user = Provider.of<UserProvider>(context, listen: false);
+  final AppLogger logger = getLogger("toggleTrackLikeState");
+
+  LoadingOverlay.of(context).show();
+
+  // Делаем API запрос, что бы либо удалить трек, либо добавить в лайкнутые.
+  try {
+    if (like) {
+      // Сохраняем трек как лайкнутый.
+      final APIAudioAddResponse response = await user.audioAdd(
+        audio.id,
+        audio.ownerID,
+      );
+
+      // Проверяем, что в ответе нет ошибок.
+      if (response.error != null) {
+        throw Exception(
+          "API error ${response.error!.errorCode}: ${response.error!.errorMessage}",
+        );
+      }
+
+      // Всё ок. Обновляем ID трека в текущем плейлисте, что бы он отображался как лайкнутый.
+      // Так же, запоминаем его старый ID и ownerID, в случае, если пользователь захочет его удалить.
+      audio.oldID = audio.id;
+      audio.oldOwnerID = audio.ownerID;
+      audio.id = response.response!;
+      audio.ownerID = user.id!;
+
+      // Добавляем трек в список фаворитов.
+      user.favoritesPlaylist!.count += 1;
+      user.favoritesPlaylist!.audios!.insert(0, audio);
+    } else {
+      // Удаляем трек из лайкнутых.
+      final APIAudioDeleteResponse response = await user.audioDelete(
+        audio.id,
+        audio.ownerID,
+      );
+
+      // Проверяем, что в ответе нет ошибок.
+      if (response.error != null) {
+        throw Exception(
+          "API error ${response.error!.errorCode}: ${response.error!.errorMessage}",
+        );
+      }
+
+      // Всё ок. Удаляем трек из списка фаворитов.
+      user.favoritesPlaylist!.count -= 1;
+      user.favoritesPlaylist!.audios!.remove(audio);
+
+      // Если это возможно, то удаляем трек из кэша.
+      try {
+        VKMusicCacheManager.instance.removeFile(audio.mediaKey);
+      } catch (e) {
+        logger.w(
+          "Не удалось удалить трек из кэша после удаления трека из лайкнутых: ",
+          error: e,
+        );
+      }
+
+      // Если такая информация присутствует, то восстанавливаем старый ID и ownerID трека.
+      if (audio.oldID != null && audio.oldOwnerID != null) {
+        audio.id = audio.oldID!;
+        audio.ownerID = audio.oldOwnerID!;
+
+        audio.oldID = null;
+        audio.oldOwnerID = null;
+      }
+    }
+
+    // Посылаем обновления объекта пользователя.
+    user.markUpdated(false);
+  } catch (e, stackTrace) {
+    logger.e(
+      "Ошибка при попытке сделать трек лайкнутым/дизлайкнутым (новое состояние: $like): ",
+      error: e,
+      stackTrace: stackTrace,
+    );
+
+    if (context.mounted) {
+      showErrorDialog(
+        context,
+        description: e.toString(),
+      );
+    }
+  } finally {
+    if (context.mounted) LoadingOverlay.of(context).hide();
+  }
+}
 
 /// Route, показываемый как "домашняя страница", где расположена навигация между разными частями приложения.
 class HomeRoute extends StatefulWidget {
@@ -234,7 +336,15 @@ class _HomeRouteState extends State<HomeRoute> {
                     pauseOnMuteEnabled: user.settings.pauseOnMuteEnabled,
                     useBigLayout:
                         !isMobileLayout && navigationPage.allowBigAudioPlayer,
-                    onFavoriteStateToggle: (_) => showWipDialog(context),
+                    onFavoriteStateToggle: (bool liked) async {
+                      await toggleTrackLikeState(
+                        context,
+                        player.currentAudio!,
+                        !user.favoriteTrackIDs.contains(
+                          player.currentAudio!.id,
+                        ),
+                      );
+                    },
                     onPlayStateToggle: (bool enabled) async {
                       await player.setPlaying(enabled);
 

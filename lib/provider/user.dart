@@ -1,6 +1,8 @@
 import "package:flutter/material.dart";
 import "package:shared_preferences/shared_preferences.dart";
 
+import "../api/audio/add.dart";
+import "../api/audio/delete.dart";
 import "../api/audio/edit.dart";
 import "../api/audio/get.dart";
 import "../api/audio/get_playlists.dart";
@@ -400,6 +402,32 @@ class UserProvider extends ChangeNotifier {
       audio_getPlaylists(
         mainToken!,
         userID,
+      );
+
+  /// Копирует трек с указанным ID к данному пользователю, передавая относительный для данного пользователя сохранённый ID трека.
+  ///
+  /// API: `audio.add`.
+  Future<APIAudioAddResponse> audioAdd(
+    int audioID,
+    int ownerID,
+  ) async =>
+      audio_add(
+        mainToken!,
+        audioID,
+        ownerID,
+      );
+
+  /// Удаляет трек из лайкнутых.
+  ///
+  /// API: `audio.delete`.
+  Future<APIAudioDeleteResponse> audioDelete(
+    int audioID,
+    int ownerID,
+  ) async =>
+      audio_delete(
+        mainToken!,
+        audioID,
+        ownerID,
       );
 
   /// Модифицирует параметры трека: его название ([title]) и/ли исполнителя ([artist]).
