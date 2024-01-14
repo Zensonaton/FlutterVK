@@ -398,6 +398,8 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final UserProvider user = Provider.of<UserProvider>(context);
+
     final List<Audio> playlistAudios = widget.playlist.audios ?? [];
     final List<Audio> filteredAudios =
         filterByName(playlistAudios, controller.text);
@@ -554,6 +556,9 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
                       child: AudioTrackTile(
                         selected: audio == player.currentAudio,
                         currentlyPlaying: player.state.playing,
+                        isLiked: user.favoriteTrackIDs.contains(
+                          audio.id,
+                        ),
                         audio: audio,
                         dragIndex: index,
                         onAddToQueue: () async {
@@ -590,9 +595,9 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
                                 ),
                         onPlayToggle: (bool enabled) async =>
                             await player.setPlaying(enabled),
-                        onLikeToggle: () => showWipDialog(
+                        onLikeToggle: (bool liked) => showWipDialog(
                           context,
-                          title: "Удаление лайка",
+                          title: "Переключение лайка",
                         ),
                         onSecondaryAction: () => showModalBottomSheet(
                           context: context,
@@ -1126,6 +1131,9 @@ class AudioTrackTile extends StatefulWidget {
   /// Указывает, что плеер в данный момент включён.
   final bool currentlyPlaying;
 
+  /// Указывает, что этот трек лайкнут.
+  final bool isLiked;
+
   /// Указывает, что кнопка для лайка должна быть показана.
   final bool showLikeButton;
 
@@ -1144,8 +1152,8 @@ class AudioTrackTile extends StatefulWidget {
   /// В отличии от [onPlayToggle], данный метод должен "перезапустить" трек, если он в данный момент играет.
   final VoidCallback? onPlay;
 
-  /// Действие, вызываемое при нажатии на кнопку "нравится" данного трека.
-  final VoidCallback? onLikeToggle;
+  /// Действие, вызываемое при переключении состояния "лайка" данного трека.
+  final Function(bool)? onLikeToggle;
 
   /// Действие, вызываемое при выборе ПКМ (или зажатии) по данном элементу.
   ///
@@ -1159,6 +1167,7 @@ class AudioTrackTile extends StatefulWidget {
     super.key,
     this.selected = false,
     this.currentlyPlaying = false,
+    this.isLiked = false,
     this.showLikeButton = true,
     this.dragIndex,
     required this.audio,
@@ -1406,9 +1415,11 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
                   ),
                 if (widget.showLikeButton)
                   IconButton(
-                    onPressed: widget.onLikeToggle,
+                    onPressed: () => widget.onLikeToggle?.call(
+                      !widget.isLiked,
+                    ),
                     icon: Icon(
-                      Icons.favorite,
+                      widget.isLiked ? Icons.favorite : Icons.favorite_outline,
                       color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
@@ -1762,6 +1773,9 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
                 selected: user.favoritesPlaylist!.audios![index] ==
                     player.currentAudio,
                 currentlyPlaying: player.isLoaded && player.state.playing,
+                isLiked: user.favoriteTrackIDs.contains(
+                  user.favoritesPlaylist!.audios![index].id,
+                ),
                 onAddToQueue: () async {
                   await player.addNextToQueue(
                     user.favoritesPlaylist!.audios![index],
@@ -1793,9 +1807,9 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
                         ),
                 onPlayToggle: (bool enabled) async =>
                     await player.setPlaying(enabled),
-                onLikeToggle: () => showWipDialog(
+                onLikeToggle: (bool liked) => showWipDialog(
                   context,
-                  title: "Удаление лайка",
+                  title: "Переключение лайка",
                 ),
                 onSecondaryAction: () => showModalBottomSheet(
                   context: context,
