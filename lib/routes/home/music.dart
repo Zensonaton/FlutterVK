@@ -1486,14 +1486,24 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
                                 .headlineLarge!
                                 .copyWith(
                                   fontWeight: FontWeight.w500,
+                                  color: widget.useTextOnImageLayout
+                                      ? Colors.white
+                                      : null,
                                 ),
                           ),
                           if (widget.description != null)
                             Text(
                               widget.description!,
-                              style: Theme.of(context).textTheme.bodyLarge,
                               overflow: TextOverflow.ellipsis,
                               maxLines: 3,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyLarge!
+                                  .copyWith(
+                                    color: widget.useTextOnImageLayout
+                                        ? Colors.white
+                                        : null,
+                                  ),
                             ),
                         ],
                       ),
@@ -1524,7 +1534,10 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
             ),
 
             // Если это обычный плейлист, то нам нужно показать его содержимое под изображением.
-            if (!widget.useTextOnImageLayout) const SizedBox(height: 2),
+            if (!widget.useTextOnImageLayout)
+              const SizedBox(
+                height: 2,
+              ),
             if (!widget.useTextOnImageLayout)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
