@@ -7,6 +7,7 @@ import "package:diacritic/diacritic.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
+import "package:flutter_cache_manager/flutter_cache_manager.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "package:provider/provider.dart";
 import "package:responsive_builder/responsive_builder.dart";
@@ -1010,6 +1011,108 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
   }
 }
 
+/// Диалог, спрашивающий у пользователя разрешения на кэширование всех треков в плейлисте.
+class CacheTracksDialog extends StatelessWidget {
+  /// Плейлист, кэширование треков которого должно произойти.
+  final ExtendedVKPlaylist playlist;
+
+  const CacheTracksDialog({
+    super.key,
+    required this.playlist,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        width: 500,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.file_download_outlined,
+            ),
+            const SizedBox(
+              height: 16,
+            ),
+            Text(
+              AppLocalizations.of(context)!.music_cacheTracksTitle,
+              style: Theme.of(context).textTheme.headlineSmall,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(
+              height: 24,
+            ),
+            Text(
+              AppLocalizations.of(context)!.music_cacheTracksDescription(
+                playlist.audios?.length ?? 0,
+              ),
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            const SizedBox(
+              height: 24,
+            ),
+            Align(
+              alignment: Alignment.bottomRight,
+              child: Wrap(
+                spacing: 8,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text(
+                      AppLocalizations.of(context)!.general_no,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      int cachedAudios = 0;
+
+                      // Проходимся по всем трекам в плейлисте, запускаем процесс загрузки.
+                      for (Audio audio in playlist.audios!) {
+                        // Проверяем наличие трека в кэше.
+                        final FileInfo? cachedFile = await VKMusicCacheManager
+                            .instance
+                            .getFileFromCache(audio.mediaKey);
+
+                        // Трек есть в кэше, тогда не загружаем его.
+                        if (cachedFile != null) continue;
+
+                        // Файла нет в кэше, загружаем его.
+                        player.cacheAudio(audio);
+                        cachedAudios += 1;
+                      }
+
+                      // Делаем надпись о том, сколько треков будут загружаться.
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            duration: const Duration(
+                              seconds: 15,
+                            ),
+                            content: Text(
+                              "Была начата загрузка $cachedAudios треков которые не находятся в кэше. Не запускайте повторно процесс кэширования, ожидайте и не трогайте устройство. Никакого уведомления о завершения данной операции не будет.",
+                            ),
+                          ),
+                        );
+
+                        Navigator.of(context).pop();
+                      }
+                    },
+                    child: Text(
+                      AppLocalizations.of(context)!.general_yes,
+                    ),
+                  )
+                ],
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// Виджет, олицетворяющий отдельный трек в списке треков.
 class AudioTrackTile extends StatefulWidget {
   /// Объект типа [Audio], олицетворяющий данный трек.
@@ -1621,8 +1724,8 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
+        Wrap(
+          spacing: 8,
           children: [
             Text(
               AppLocalizations.of(context)!.music_myMusicChip,
@@ -1631,10 +1734,6 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
                 fontWeight: FontWeight.w500,
               ),
             ),
-            if (musicCount > 0)
-              const SizedBox(
-                width: 8,
-              ),
             if (musicCount > 0)
               Text(
                 musicCount.toString(),
@@ -1772,6 +1871,22 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
               ),
               label: Text(
                 AppLocalizations.of(context)!.music_showAllFavoriteTracks,
+              ),
+            ),
+            FilledButton.tonalIcon(
+              onPressed: user.favoritesPlaylist?.audios != null
+                  ? () => showDialog(
+                        context: context,
+                        builder: (context) => CacheTracksDialog(
+                          playlist: user.favoritesPlaylist!,
+                        ),
+                      )
+                  : null,
+              icon: const Icon(
+                Icons.file_download_outlined,
+              ),
+              label: Text(
+                AppLocalizations.of(context)!.music_cacheTracks,
               ),
             ),
           ],

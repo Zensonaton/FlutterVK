@@ -51,6 +51,7 @@ class VKMusicCacheManager {
         key,
       ),
       fileService: HttpFileService(),
+      maxNrOfCacheObjects: 50000,
     ),
   );
 }

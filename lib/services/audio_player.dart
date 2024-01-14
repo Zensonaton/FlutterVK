@@ -226,9 +226,7 @@ class MediaKitPlayerExtended extends Player {
       "Called setPlaylist(...)",
     );
 
-    // Узнаём, какой трек играет сейчас.
     int index = playlist.index;
-    Media media = playlist.medias[index];
 
     // Перемешиваем новый плейлист, если у нас до этого был включён shuffle.
     if (!ignoreShuffle) {
@@ -242,14 +240,18 @@ class MediaKitPlayerExtended extends Player {
         );
 
         // Получаем новый индекс в плейлисте.
-        index = shuffledMedia.indexOf(media);
+        index = shuffledMedia.indexOf(
+          playlist.medias[index],
+        );
         playlist = playlist.copyWith(
           medias: shuffledMedia,
           index: index,
         );
       } else if (!shuffleEnabled && _unshuffledPlaylist != null) {
         // Получаем новый индекс в плейлисте.
-        index = _unshuffledPlaylist!.indexOf(media);
+        index = _unshuffledPlaylist!.indexOf(
+          playlist.medias[index],
+        );
 
         // Восстанавливаем оригинальный плейлист до его перемешивания.
         playlist = playlist.copyWith(
@@ -263,82 +265,80 @@ class MediaKitPlayerExtended extends Player {
 
     // Загружаем, а также кэшируем треки.
     for (var i = index; i < index + 5 && i < playlist.medias.length; i++) {
-      // Если трека нет в кэше, пытаемся загрузить и закэшировать его.
-      await _preloadAndCacheMedia(
-        playlist.medias[i],
-      );
+      final Media media = playlist.medias[i];
+      final Audio audio = media.extras?["audio"];
+
+      // Если мы уже заменили кэшированной версией трека, то ничего не делаем.
+      if (media.extras!["fromCache"] ?? false) continue;
+
+      // Проверяем наличие трека в кэше.
+      final FileInfo? cachedFile =
+          await VKMusicCacheManager.instance.getFileFromCache(audio.mediaKey);
+
+      // Трек есть в кэше, заменяем кэшированной версией.
+      if (cachedFile != null) {
+        playlist.medias[i] = Media(
+          cachedFile.file.uri.toString(),
+          extras: {
+            ...media.extras!,
+            "fromCache": true,
+          },
+        );
+
+        continue;
+      }
+
+      // Трека нет в кэше, запускаем загрузку.
+      cacheAudio(audio);
     }
 
     _playlist = playlist;
     _playlistStream.add(_playlist!);
   }
 
-  /// Загружает, а так же кэширует трек.
-  Future<void> _preloadAndCacheMedia(Media media) async {
-    final Audio audio = media.extras!["audio"];
+  /// Загружает, после чего помещает трек в кэш приложения.
+  Future<void> cacheAudio(
+    Audio audio,
+  ) async {
+    _logger.d(
+      "Called cacheAudio for ${audio.title} (${audio.mediaKey})",
+    );
 
-    // Если мы уже заменили кэшированной версией трека, то ничего не делаем.
-    if (media.extras!["fromCache"] ?? false) return;
+    // Загружаем трек при помощи менеджера загрузок.
+    final Response? response = await _downloadManager.download(
+      audio.url,
+      cacheKey: audio.mediaKey,
+    );
 
-    // Если трека нет в кэше, пытаемся загрузить и закешировать его.
-    final FileInfo? cachedFile =
-        await VKMusicCacheManager.instance.getFileFromCache(audio.mediaKey);
+    // Трек *возможно* загружен, обрабатываем его, помещая его в кэш.
+    // Данный метод может быть преждевременно отменён в случае, если загрузка файла уже начата.
+    if (response == null) return;
 
-    if (cachedFile != null) {
-      // Если у трека есть кэшированная его версия, то заменяем её.
-      media = Media(
-        cachedFile.file.uri.toString(),
-        extras: {
-          ...media.extras!,
-          "fromCache": true,
-        },
+    // Проверяем status code.
+    if (response.statusCode != 200) {
+      _logger.w(
+        "Bad status code for track ${audio.title}: ${response.statusCode}",
       );
 
       return;
     }
 
-    // Кэшированной версии трека нет, загружаем.
     _logger.d(
-      "Cache miss for ${audio.title} (${audio.mediaKey})",
+      "${audio.title} has been downloaded (${response.bodyBytes.length} bytes)",
     );
 
-    // Загружаем трек при помощи менеджера загрузок.
-    _downloadManager
-        .download(
+    // Сохраняем скачанный трек в кэш.
+    await VKMusicCacheManager.instance.putFile(
       audio.url,
-      cacheKey: audio.mediaKey,
-    )
-        .then(
-      (Response? response) async {
-        // Данный метод может быть преждевременно отменён в случае, если загрузка файла уже начата.
-        if (response == null) return;
-
-        if (response.statusCode != 200) {
-          _logger.w(
-            "Bad status code for track ${audio.title}: ${response.statusCode}",
-          );
-
-          return;
-        }
-
-        _logger.d(
-          "${audio.title} has been downloaded (${response.bodyBytes.length} bytes)",
-        );
-
-        // Сохраняем скачанный трек в кэш.
-        await VKMusicCacheManager.instance.putFile(
-          audio.url,
-          response.bodyBytes,
-          fileExtension: "mр3",
-          key: audio.mediaKey,
-          eTag: response.headers["etag"],
-          maxAge: cacheLifespanDuration == null
-              ? const Duration(
-                  days: 30,
-                )
-              : cacheLifespanDuration!,
-        );
-      },
+      response.bodyBytes,
+      fileExtension: "mр3",
+      key: audio.mediaKey,
+      eTag: response.headers["etag"],
+      maxAge: cacheLifespanDuration == null
+          ? const Duration(
+              days: 30,
+            )
+          : cacheLifespanDuration!,
     );
   }
 
