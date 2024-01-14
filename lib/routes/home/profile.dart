@@ -443,7 +443,7 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
         // Мы его располагаем после ListView, что бы ScrollBar не был закрыт плеером.
         if (player.isLoaded && !isMobileLayout)
           const SizedBox(
-            height: 90,
+            height: 88,
           ),
       ],
     );
