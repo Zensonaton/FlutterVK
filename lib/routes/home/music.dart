@@ -1633,8 +1633,12 @@ class _ChipFiltersState extends State<ChipFilters> {
 
 /// Виджет с разделом "Моя музыка"
 class MyMusicBlock extends StatefulWidget {
+  /// Указывает, что ряд из кнопок по типу "Перемешать", "Все треки" будет располагаться сверху.
+  final bool useTopButtons;
+
   const MyMusicBlock({
     super.key,
+    this.useTopButtons = false,
   });
 
   @override
@@ -1681,6 +1685,47 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
       0,
       10,
     );
+    final Widget controlButtonsRow = Wrap(
+      spacing: 8,
+      children: [
+        FilledButton.icon(
+          onPressed: user.favoritesPlaylist?.audios != null
+              ? () async {
+                  await player.setShuffle(true);
+
+                  await player.setPlaylist(
+                    user.favoritesPlaylist!,
+                    index: Random().nextInt(
+                      user.favoritesPlaylist!.audios!.length,
+                    ),
+                  );
+                }
+              : null,
+          icon: const Icon(
+            Icons.play_arrow,
+          ),
+          label: Text(
+            AppLocalizations.of(context)!.music_shuffleAndPlay,
+          ),
+        ),
+        FilledButton.tonalIcon(
+          onPressed: user.favoritesPlaylist?.audios != null
+              ? () => showDialog(
+                    context: context,
+                    builder: (context) => PlaylistDisplayDialog(
+                      playlist: user.favoritesPlaylist!,
+                    ),
+                  )
+              : null,
+          icon: const Icon(
+            Icons.queue_music,
+          ),
+          label: Text(
+            AppLocalizations.of(context)!.music_showAllFavoriteTracks,
+          ),
+        ),
+      ],
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1710,6 +1755,13 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
         const SizedBox(
           height: 14,
         ),
+
+        // Кнопки для управления (сверху, если useTopButtons = true).
+        if (widget.useTopButtons) controlButtonsRow,
+        if (widget.useTopButtons)
+          const SizedBox(
+            height: 14,
+          ),
 
         // Настоящие данные.
         if (user.favoritesPlaylist?.audios != null)
@@ -1745,51 +1797,13 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
               ),
             ),
 
-        const SizedBox(
-          height: 12,
-        ),
+        // Кнопки для управления (снизу, если useTopButtons = false).
+        if (!widget.useTopButtons)
+          const SizedBox(
+            height: 12,
+          ),
 
-        Wrap(
-          spacing: 8,
-          children: [
-            FilledButton.icon(
-              onPressed: user.favoritesPlaylist?.audios != null
-                  ? () async {
-                      await player.setShuffle(true);
-
-                      await player.setPlaylist(
-                        user.favoritesPlaylist!,
-                        index: Random().nextInt(
-                          user.favoritesPlaylist!.audios!.length,
-                        ),
-                      );
-                    }
-                  : null,
-              icon: const Icon(
-                Icons.play_arrow,
-              ),
-              label: Text(
-                AppLocalizations.of(context)!.music_shuffleAndPlay,
-              ),
-            ),
-            FilledButton.tonalIcon(
-              onPressed: user.favoritesPlaylist?.audios != null
-                  ? () => showDialog(
-                        context: context,
-                        builder: (context) => PlaylistDisplayDialog(
-                          playlist: user.favoritesPlaylist!,
-                        ),
-                      )
-                  : null,
-              icon: const Icon(
-                Icons.queue_music,
-              ),
-              label: Text(
-                AppLocalizations.of(context)!.music_showAllFavoriteTracks,
-              ),
-            ),
-          ],
-        ),
+        if (!widget.useTopButtons) controlButtonsRow,
       ],
     );
   }
@@ -2317,7 +2331,10 @@ class _HomeMusicPageState extends State<HomeMusicPage> {
                   const SizedBox(height: 2),
 
                   // Раздел "Моя музыка".
-                  if (myMusicEnabled) const MyMusicBlock(),
+                  if (myMusicEnabled)
+                    MyMusicBlock(
+                      useTopButtons: isMobileLayout,
+                    ),
                   if (myMusicEnabled) const SizedBox(height: 12),
                   if (myMusicEnabled) const Divider(),
                   if (myMusicEnabled) const SizedBox(height: 4),
