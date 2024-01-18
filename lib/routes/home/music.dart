@@ -1744,23 +1744,21 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
               Text(
                 musicCount.toString(),
                 style: TextStyle(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onBackground
-                      .withOpacity(0.75),
+                  color:
+                      Theme.of(context).colorScheme.secondary.withOpacity(0.75),
                 ),
               ),
           ],
         ),
-        const SizedBox(
-          height: 14,
+        SizedBox(
+          height: widget.useTopButtons ? 10 : 14,
         ),
 
         // Кнопки для управления (сверху, если useTopButtons = true).
         if (widget.useTopButtons) controlButtonsRow,
         if (widget.useTopButtons)
           const SizedBox(
-            height: 14,
+            height: 10,
           ),
 
         // Настоящие данные.
@@ -1842,10 +1840,8 @@ class MyPlaylistsBlock extends StatelessWidget {
               Text(
                 playlistsCount.toString(),
                 style: TextStyle(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onBackground
-                      .withOpacity(0.75),
+                  color:
+                      Theme.of(context).colorScheme.secondary.withOpacity(0.75),
                 ),
               ),
           ],
@@ -2026,10 +2022,8 @@ class _SimillarMusicBlockState extends State<SimillarMusicBlock> {
               Text(
                 playlistsCount.toString(),
                 style: TextStyle(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onBackground
-                      .withOpacity(0.75),
+                  color:
+                      Theme.of(context).colorScheme.secondary.withOpacity(0.75),
                 ),
               ),
           ],
