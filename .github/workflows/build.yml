@@ -64,13 +64,3 @@ jobs:
 
       - name: Build Windows release
         run: flutter build windows --release
-
-      - name: Publish in Telegram
-        uses: appleboy/telegram-action@master
-        with:
-          to: ${{ secrets.TELEGRAM_TO }}
-          token: ${{ secrets.TELEGRAM_TOKEN }}
-          document: build\windows\x64\runner\Release\fluttervk.exe
-          format: html
-          message: |
-            <b>🚧 Новый билд для #Windows</b>.
