@@ -1,12 +1,12 @@
 import "dart:io";
 
-import "package:audio_service/audio_service.dart";
 import "package:dynamic_color/dynamic_color.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "package:flutter_localizations/flutter_localizations.dart";
+import "package:just_audio_background/just_audio_background.dart";
 import "package:media_kit/media_kit.dart";
 import "package:provider/provider.dart";
 import "package:responsive_builder/responsive_builder.dart";
@@ -16,7 +16,6 @@ import "provider/user.dart";
 import "routes/home.dart";
 import "routes/welcome.dart";
 import "services/audio_player.dart";
-import "services/cache_manager.dart";
 import "utils.dart";
 import "widgets/loading_overlay.dart";
 
@@ -68,16 +67,12 @@ Future main() async {
   player = VKMusicPlayer();
 
   // Регистрируем AudioHandler для управления музыки при помощи уведомлений.
-  player.audioPlayerHandler = await AudioService.init(
-    builder: () => AudioPlayerHandler(),
-    config: const AudioServiceConfig(
-      androidNotificationChannelName: "Flutter VK",
-      androidNotificationChannelId: "com.zensonaton.fluttervk",
-      androidNotificationIcon: "drawable/notification_icon",
-      androidNotificationOngoing: true,
-      preloadArtwork: true,
-    ),
-    cacheManager: CachedNetworkImagesManager.instance,
+  await JustAudioBackground.init(
+    androidNotificationChannelName: "Flutter VK",
+    androidNotificationChannelId: "com.zensonaton.fluttervk",
+    androidNotificationIcon: "drawable/notification_icon",
+    androidNotificationOngoing: true,
+    preloadArtwork: true,
   );
 
   ResponsiveSizingConfig.instance.setCustomBreakpoints(
@@ -148,11 +143,6 @@ class _MainAppState extends State<MainApp> with WindowListener {
     // Переключаем состояние Discord Rich Presence.
     if (user.settings.discordRPCEnabled && isDesktop) {
       await player.setDiscordRPCEnabled(true);
-    }
-
-    // Восстанавливаем состояние нормализации у плеера.
-    if (user.settings.audioNormalizationEnabled) {
-      await player.setAudioNormalization(true);
     }
 
     user.markUpdated(false);

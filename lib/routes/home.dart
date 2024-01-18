@@ -1,8 +1,10 @@
+import "dart:async";
+
 import "package:animations/animations.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
-import "package:media_kit/media_kit.dart";
+import "package:just_audio/just_audio.dart";
 import "package:provider/provider.dart";
 import "package:responsive_builder/responsive_builder.dart";
 
@@ -11,7 +13,6 @@ import "../api/audio/delete.dart";
 import "../api/shared.dart";
 import "../main.dart";
 import "../provider/user.dart";
-import "../services/audio_player.dart";
 import "../services/cache_manager.dart";
 import "../services/logger.dart";
 import "../utils.dart";
@@ -128,6 +129,9 @@ class HomeRoute extends StatefulWidget {
 class _HomeRouteState extends State<HomeRoute> {
   final AppLogger logger = getLogger("HomeRoute");
 
+  /// Подписки на изменения состояния воспроизведения трека.
+  late final List<StreamSubscription> subscriptions;
+
   /// Текущий индекс страницы для [BottomNavigationBar].
   int navigationScreenIndex = 0;
 
@@ -161,42 +165,56 @@ class _HomeRouteState extends State<HomeRoute> {
       ),
     ];
 
-    // Если поменялось время того, сколько было прослушано у трека.
-    player.stream.position.listen((Duration? position) => setState(() {}));
+    subscriptions = [
+      // Событие запуска плеера.
+      player.loadedStateStream.listen(
+        (bool loaded) => setState(() {}),
+      ),
 
-    // Если поменялась громкость плеера.
-    player.stream.volume.listen((double volume) => setState(() {}));
+      // Событие изменения громкости плеера.
+      player.volumeStream.listen(
+        (double volume) => setState(() {}),
+      ),
 
-    // Если поменялся текущий трек.
-    player.indexChangeStream.listen((int index) => setState(() {}));
+      // Изменения состояния работы shuffle.
+      player.shuffleModeEnabledStream.listen(
+        (bool shuffleEnabled) => setState(() {}),
+      ),
 
-    // Если произошло какое-то иное событие.
-    player.playerStateStream.listen(
-      (AudioPlaybackState state) => setState(() {}),
-    );
+      // Изменения состояния работы повтора плейлиста.
+      player.loopModeStream.listen(
+        (LoopMode loopMode) => setState(() {}),
+      ),
 
-    // Логи плеера.
-    if (kDebugMode) {
-      player.stream.log.listen((event) {
-        logger.d(event.text);
-      });
-    }
+      // Событие изменение прогресса "прослушанности" трека.
+      player.positionStream.listen(
+        (Duration position) => setState(() {}),
+      ),
 
-    // Обработчик ошибок плеера. В случае чего-то очень страшного, мы должны остановить воспроизведение и сделать логирование этого.
-    player.stream.error.listen((event) {
-      player.stop();
+      // Другие события состояния плеера, а так же обработчик ошибок.
+      player.playerStateStream.listen(
+        (PlayerState? state) => setState(() {}),
+        onError: (Object error, StackTrace st) {
+          player.stop();
 
-      logger.e(
-        "Ошибка воспроизведения плеера: ",
-        error: event,
-      );
+          logger.e(
+            "Ошибка воспроизведения плеера: ",
+            error: error,
+          );
 
-      showErrorDialog(
-        context,
-        title: "Ошибка воспроизведения",
-        description: event.toString(),
-      );
-    });
+          showErrorDialog(
+            context,
+            title: "Ошибка воспроизведения",
+            description: error.toString(),
+          );
+        },
+      ),
+
+      // Изменения плейлиста.
+      player.sequenceStateStream.listen(
+        (SequenceState? state) => setState(() {}),
+      ),
+    ];
   }
 
   /// Изменяет выбранную страницу для [BottomNavigationBar] по передаваемому индексу страницы.
@@ -204,6 +222,15 @@ class _HomeRouteState extends State<HomeRoute> {
     assert(pageIndex >= 0 && pageIndex < navigationPages.length);
 
     setState(() => navigationScreenIndex = pageIndex);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+
+    for (StreamSubscription subscription in subscriptions) {
+      subscription.cancel();
+    }
   }
 
   @override
@@ -224,7 +251,7 @@ class _HomeRouteState extends State<HomeRoute> {
     final bool isMobileLayout =
         getDeviceType(MediaQuery.of(context).size) == DeviceScreenType.mobile;
 
-    final bool showMiniPlayer = player.isLoaded;
+    final bool showMiniPlayer = player.loaded;
 
     return Scaffold(
       appBar: isMobileLayout
@@ -321,40 +348,31 @@ class _HomeRouteState extends State<HomeRoute> {
                         ? user.favoriteMediaKeys
                             .contains(player.currentAudio!.mediaKey)
                         : false,
-                    playbackState: player.state.playing,
+                    playbackState: player.playing,
                     progress: player.progress,
-                    volume: player.state.volume / 100,
-                    isBuffering: player.state.buffering,
-                    isShuffleEnabled: player.shuffleEnabled,
-                    isRepeatEnabled:
-                        player.state.playlistMode == PlaylistMode.single,
+                    volume: player.volume,
+                    isBuffering: const [
+                      ProcessingState.buffering,
+                      ProcessingState.loading
+                    ].contains(
+                      player.playerState.processingState,
+                    ),
+                    isShuffleEnabled: player.shuffleModeEnabled,
+                    isRepeatEnabled: player.loopMode == LoopMode.one,
                     pauseOnMuteEnabled: user.settings.pauseOnMuteEnabled,
                     useBigLayout:
                         !isMobileLayout && navigationPage.allowBigAudioPlayer,
-                    onFavoriteStateToggle: (bool liked) async {
-                      await toggleTrackLikeState(
-                        context,
-                        player.currentAudio!,
-                        !user.favoriteMediaKeys.contains(
-                          player.currentAudio!.mediaKey,
-                        ),
-                      );
-                    },
-                    onPlayStateToggle: (bool enabled) async {
-                      await player.setPlaying(enabled);
-
-                      setState(() {});
-                    },
-                    onVolumeChange: (double volume) async {
-                      await player.setVolume(volume);
-
-                      setState(() {});
-                    },
-                    onDismiss: () async {
-                      await player.stop();
-
-                      setState(() {});
-                    },
+                    onFavoriteStateToggle: (bool liked) => toggleTrackLikeState(
+                      context,
+                      player.currentAudio!,
+                      !user.favoriteMediaKeys.contains(
+                        player.currentAudio!.mediaKey,
+                      ),
+                    ),
+                    onPlayStateToggle: (bool enabled) =>
+                        player.playOrPause(enabled),
+                    onVolumeChange: (double volume) => player.setVolume(volume),
+                    onDismiss: () => player.stop(),
                     onFullscreen: () => showWipDialog(
                       context,
                       title: "Полноэкранный плеер",
@@ -364,17 +382,12 @@ class _HomeRouteState extends State<HomeRoute> {
                       user.settings.shuffleEnabled = enabled;
 
                       user.markUpdated();
-                      setState(() {});
                     },
-                    onRepeatToggle: (bool enabled) async {
-                      await player.setPlaylistMode(
-                        enabled ? PlaylistMode.single : PlaylistMode.none,
-                      );
-
-                      setState(() {});
-                    },
+                    onRepeatToggle: (bool enabled) =>
+                        player.setLoop(enabled ? LoopMode.one : LoopMode.off),
                     onNextTrack: () => player.next(),
-                    onPreviousTrack: () => player.previous(),
+                    onPreviousTrack: () =>
+                        player.previous(allowSeekToBeginning: true),
                   ),
                 ),
               ),

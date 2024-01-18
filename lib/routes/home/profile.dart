@@ -260,28 +260,6 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                 ),
                 onTap: () => showWipDialog(context),
               ),
-              SwitchListTile(
-                secondary: const Icon(
-                  Icons.multitrack_audio,
-                ),
-                title: Text(
-                  AppLocalizations.of(context)!.profile_musicNormalizationTitle,
-                ),
-                subtitle: Text(
-                  AppLocalizations.of(context)!
-                      .profile_musicNormalizationDescription,
-                ),
-                value: player.normalizationEnabled,
-                onChanged: (bool? enabled) async {
-                  if (enabled == null) return;
-
-                  user.settings.audioNormalizationEnabled = enabled;
-                  await player.setAudioNormalization(enabled);
-
-                  user.markUpdated();
-                  setState(() {});
-                },
-              ),
               if (isDesktop)
                 SwitchListTile(
                   secondary: const Icon(
@@ -380,7 +358,7 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
               ),
 
               // Данный SizedBox нужен, что бы плеер снизу при мобильном layout'е не закрывал ничего важного.
-              if (player.isLoaded && isMobileLayout)
+              if (player.loaded && isMobileLayout)
                 const SizedBox(
                   height: 70,
                 ),
@@ -390,7 +368,7 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
 
         // Данный SizedBox нужен, что бы плеер снизу при desktop layout'е не закрывал ничего важного.
         // Мы его располагаем после ListView, что бы ScrollBar не был закрыт плеером.
-        if (player.isLoaded && !isMobileLayout)
+        if (player.loaded && !isMobileLayout)
           const SizedBox(
             height: 88,
           ),

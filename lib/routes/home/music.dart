@@ -7,8 +7,8 @@ import "package:diacritic/diacritic.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
-import "package:flutter_cache_manager/flutter_cache_manager.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
+import "package:just_audio/just_audio.dart";
 import "package:provider/provider.dart";
 import "package:responsive_builder/responsive_builder.dart";
 import "package:share_plus/share_plus.dart";
@@ -22,7 +22,6 @@ import "../../api/shared.dart";
 import "../../consts.dart";
 import "../../main.dart";
 import "../../provider/user.dart";
-import "../../services/audio_player.dart";
 import "../../services/cache_manager.dart";
 import "../../services/logger.dart";
 import "../../utils.dart";
@@ -314,8 +313,8 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
   /// Контроллер, используемый для управления введённым в поле поиска текстом.
   final TextEditingController controller = TextEditingController();
 
-  /// Подписка на изменения работы плеера.
-  late final StreamSubscription<bool> subscription;
+  /// Подписки на изменения состояния воспроизведения трека.
+  late final List<StreamSubscription> subscriptions;
 
   /// FocusNode для фокуса поля поиска сразу после открытия данного диалога.
   final FocusNode focusNode = FocusNode();
@@ -371,8 +370,17 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
     super.initState();
     init();
 
-    subscription = player.stream.playing.listen((state) => setState(() {}));
+    subscriptions = [
+      // Изменения состояния воспроизведения.
+      player.playingStream.listen(
+        (bool playing) => setState(() {}),
+      ),
 
+      // Изменения плейлиста.
+      player.sequenceStateStream.listen(
+        (SequenceState? state) => setState(() {}),
+      ),
+    ];
     // Если у пользователя ПК, то тогда устанавливаем фокус на поле поиска.
     if (isDesktop && widget.focusSearchBarOnOpen) focusNode.requestFocus();
 
@@ -392,7 +400,9 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
   void dispose() {
     super.dispose();
 
-    subscription.cancel();
+    for (StreamSubscription subscription in subscriptions) {
+      subscription.cancel();
+    }
   }
 
   @override
@@ -554,7 +564,7 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
                       ),
                       child: AudioTrackTile(
                         selected: audio == player.currentAudio,
-                        currentlyPlaying: player.state.playing,
+                        currentlyPlaying: player.loaded && player.playing,
                         isLiked: user.favoriteMediaKeys.contains(
                           audio.mediaKey,
                         ),
@@ -577,32 +587,28 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
                           );
                         },
                         onPlay: audio.isRestricted
-                            ? () {
-                                showErrorDialog(
+                            ? () => showErrorDialog(
                                   context,
                                   title: AppLocalizations.of(context)!
                                       .music_trackUnavailableTitle,
                                   description: AppLocalizations.of(context)!
                                       .music_trackUnavailableDescription,
-                                );
-                              }
-                            : () async => await player.openAudioList(
+                                )
+                            : () => player.setPlaylist(
                                   widget.playlist,
                                   index: playlistAudios.indexWhere(
                                     (Audio widgetAudio) => widgetAudio == audio,
                                   ),
                                 ),
-                        onPlayToggle: (bool enabled) async =>
-                            await player.setPlaying(enabled),
-                        onLikeToggle: (bool liked) async {
-                          await toggleTrackLikeState(
-                            context,
-                            audio,
-                            !user.favoriteMediaKeys.contains(
-                              audio.mediaKey,
-                            ),
-                          );
-                        },
+                        onPlayToggle: (bool enabled) =>
+                            player.playOrPause(enabled),
+                        onLikeToggle: (bool liked) => toggleTrackLikeState(
+                          context,
+                          audio,
+                          !user.favoriteMediaKeys.contains(
+                            audio.mediaKey,
+                          ),
+                        ),
                         onSecondaryAction: () => showModalBottomSheet(
                           context: context,
                           isScrollControlled: true,
@@ -700,7 +706,7 @@ class _TrackInfoEditDialogState extends State<TrackInfoEditDialog> {
               audio: audio,
               showLikeButton: false,
               selected: audio == player.currentAudio,
-              currentlyPlaying: player.state.playing,
+              currentlyPlaying: player.loaded && player.playing,
             ),
             const SizedBox(height: 8),
             const Divider(),
@@ -849,21 +855,33 @@ class BottomAudioOptionsDialog extends StatefulWidget {
 }
 
 class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
-  /// Подписка на изменения работы плеера.
-  late final StreamSubscription<bool> subscription;
+  /// Подписки на изменения состояния воспроизведения трека.
+  late final List<StreamSubscription> subscriptions;
 
   @override
   void initState() {
     super.initState();
 
-    subscription = player.stream.playing.listen((state) => setState(() {}));
+    subscriptions = [
+      // Изменения состояния воспроизведения.
+      player.playingStream.listen(
+        (bool playing) => setState(() {}),
+      ),
+
+      // Изменения плейлиста.
+      player.sequenceStateStream.listen(
+        (SequenceState? state) => setState(() {}),
+      ),
+    ];
   }
 
   @override
   void dispose() {
     super.dispose();
 
-    subscription.cancel();
+    for (StreamSubscription subscription in subscriptions) {
+      subscription.cancel();
+    }
   }
 
   @override
@@ -878,7 +896,7 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
             audio: widget.audio,
             showLikeButton: false,
             selected: widget.audio == player.currentAudio,
-            currentlyPlaying: player.state.playing,
+            currentlyPlaying: player.loaded && player.playing,
           ),
           const SizedBox(height: 8),
           const Divider(),
@@ -1016,74 +1034,6 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
             ),
         ],
       ),
-    );
-  }
-}
-
-/// Диалог, спрашивающий у пользователя разрешения на кэширование всех треков в плейлисте.
-class CacheTracksDialog extends StatelessWidget {
-  /// Плейлист, кэширование треков которого должно произойти.
-  final ExtendedVKPlaylist playlist;
-
-  const CacheTracksDialog({
-    super.key,
-    required this.playlist,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialDialog(
-      icon: Icons.file_download_outlined,
-      title: AppLocalizations.of(context)!.music_cacheTracksTitle,
-      text: AppLocalizations.of(context)!.music_cacheTracksDescription(
-        playlist.audios?.length ?? 0,
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(
-            AppLocalizations.of(context)!.general_no,
-          ),
-        ),
-        TextButton(
-          onPressed: () async {
-            int cachedAudios = 0;
-
-            // Проходимся по всем трекам в плейлисте, запускаем процесс загрузки.
-            for (Audio audio in playlist.audios!) {
-              // Проверяем наличие трека в кэше.
-              final FileInfo? cachedFile = await VKMusicCacheManager.instance
-                  .getFileFromCache(audio.mediaKey);
-
-              // Трек есть в кэше, тогда не загружаем его.
-              if (cachedFile != null) continue;
-
-              // Файла нет в кэше, загружаем его.
-              player.cacheAudio(audio);
-              cachedAudios += 1;
-            }
-
-            // Делаем надпись о том, сколько треков будут загружаться.
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  duration: const Duration(
-                    seconds: 15,
-                  ),
-                  content: Text(
-                    "Была начата загрузка $cachedAudios треков которые не находятся в кэше. Не запускайте повторно процесс кэширования, ожидайте и не трогайте устройство. Никакого уведомления о завершения данной операции не будет.",
-                  ),
-                ),
-              );
-
-              Navigator.of(context).pop();
-            }
-          },
-          child: Text(
-            AppLocalizations.of(context)!.general_yes,
-          ),
-        ),
-      ],
     );
   }
 }
@@ -1275,11 +1225,9 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
                                           ),
                                         )
                                       : Icon(
-                                          isHovered
-                                              ? (selectedAndPlaying
-                                                  ? Icons.pause
-                                                  : Icons.play_arrow)
-                                              : Icons.music_note,
+                                          selectedAndPlaying
+                                              ? Icons.pause
+                                              : Icons.play_arrow,
                                           color: Theme.of(context)
                                               .colorScheme
                                               .primary,
@@ -1677,22 +1625,24 @@ class MyMusicBlock extends StatefulWidget {
 }
 
 class _MyMusicBlockState extends State<MyMusicBlock> {
-  /// Подписки на изменения работы плеера.
-  final List<StreamSubscription> subscriptions = [];
+  /// Подписки на изменения состояния воспроизведения трека.
+  late final List<StreamSubscription> subscriptions;
 
   @override
   void initState() {
     super.initState();
 
-    // Если поменялось состояние паузы.
-    subscriptions.add(
-      player.stream.playing.listen((bool _) => setState(() {})),
-    );
+    subscriptions = [
+      // Изменения состояния воспроизведения.
+      player.playingStream.listen(
+        (bool playing) => setState(() {}),
+      ),
 
-    // Если поменялся текущий трек.
-    subscriptions.add(
-      player.stream.duration.listen((Duration _) => setState(() {})),
-    );
+      // Изменения плейлиста.
+      player.sequenceStateStream.listen(
+        (SequenceState? state) => setState(() {}),
+      ),
+    ];
   }
 
   @override
@@ -1755,7 +1705,7 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
                 audio: user.favoritesPlaylist!.audios![index],
                 selected: user.favoritesPlaylist!.audios![index] ==
                     player.currentAudio,
-                currentlyPlaying: player.isLoaded && player.state.playing,
+                currentlyPlaying: player.loaded && player.playing,
                 isLiked: user.favoriteMediaKeys.contains(
                   user.favoritesPlaylist!.audios![index].mediaKey,
                 ),
@@ -1784,13 +1734,12 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
                           description: AppLocalizations.of(context)!
                               .music_trackUnavailableDescription,
                         )
-                    : () async => await player.openAudioList(
+                    : () => player.setPlaylist(
                           user.favoritesPlaylist!,
                           index: index,
                         ),
-                onPlayToggle: (bool enabled) async =>
-                    await player.setPlaying(enabled),
-                onLikeToggle: (bool liked) async => await toggleTrackLikeState(
+                onPlayToggle: (bool enabled) => player.playOrPause(enabled),
+                onLikeToggle: (bool liked) => toggleTrackLikeState(
                   context,
                   user.favoritesPlaylist!.audios![index],
                   !user.favoriteMediaKeys.contains(
@@ -1842,7 +1791,7 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
                   ? () async {
                       await player.setShuffle(true);
 
-                      await player.openAudioList(
+                      await player.setPlaylist(
                         user.favoritesPlaylist!,
                         index: Random().nextInt(
                           user.favoritesPlaylist!.audios!.length,
@@ -1871,22 +1820,6 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
               ),
               label: Text(
                 AppLocalizations.of(context)!.music_showAllFavoriteTracks,
-              ),
-            ),
-            FilledButton.tonalIcon(
-              onPressed: user.favoritesPlaylist?.audios != null
-                  ? () => showDialog(
-                        context: context,
-                        builder: (context) => CacheTracksDialog(
-                          playlist: user.favoritesPlaylist!,
-                        ),
-                      )
-                  : null,
-              icon: const Icon(
-                Icons.file_download_outlined,
-              ),
-              label: Text(
-                AppLocalizations.of(context)!.music_cacheTracks,
               ),
             ),
           ],
@@ -2277,24 +2210,35 @@ class HomeMusicPage extends StatefulWidget {
 }
 
 class _HomeMusicPageState extends State<HomeMusicPage> {
-  /// Подписка на события плеера.
-  late final StreamSubscription subscription;
+  /// Подписки на изменения состояния воспроизведения трека.
+  late final List<StreamSubscription> subscriptions;
 
   @override
   void initState() {
     super.initState();
 
+    subscriptions = [
+      // Изменения состояния воспроизведения.
+      player.playingStream.listen(
+        (bool playing) => setState(() {}),
+      ),
+
+      // Изменения плейлиста.
+      player.sequenceStateStream.listen(
+        (SequenceState? state) => setState(() {}),
+      ),
+    ];
+
     ensureUserAudioAllInformation(context);
-    subscription = player.playerStateStream.listen(
-      (AudioPlaybackState state) => setState(() {}),
-    );
   }
 
   @override
   void dispose() {
     super.dispose();
 
-    subscription.cancel();
+    for (StreamSubscription subscription in subscriptions) {
+      subscription.cancel();
+    }
   }
 
   /// Указывает, что в данный момент загружается информация.
@@ -2440,7 +2384,7 @@ class _HomeMusicPageState extends State<HomeMusicPage> {
                   if (everythingIsDisabled) const EverythingIsDisabledBlock(),
 
                   // Данный SizedBox нужен, что бы плеер снизу при мобильном layout'е не закрывал ничего важного.
-                  if (player.isLoaded && isMobileLayout)
+                  if (player.loaded && isMobileLayout)
                     const SizedBox(
                       height: 70,
                     ),
@@ -2450,7 +2394,7 @@ class _HomeMusicPageState extends State<HomeMusicPage> {
 
             // Данный SizedBox нужен, что бы плеер снизу при desktop layout'е не закрывал ничего важного.
             // Мы его располагаем после ListView, что бы ScrollBar не был закрыт плеером.
-            if (player.isLoaded && !isMobileLayout)
+            if (player.loaded && !isMobileLayout)
               const SizedBox(
                 height: 88,
               ),
