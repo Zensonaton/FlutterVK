@@ -2,6 +2,7 @@ import "dart:async";
 import "dart:math";
 
 import "package:cached_network_image/cached_network_image.dart";
+import "package:collection/collection.dart";
 import "package:declarative_refresh_indicator/declarative_refresh_indicator.dart";
 import "package:diacritic/diacritic.dart";
 import "package:flutter/foundation.dart";
@@ -281,6 +282,82 @@ List<Audio> filterByName(
       .toList();
 }
 
+/// Создаёт виджет типа [AudioTrackTile] для отображения в [ListView.builder].
+Padding buildListTrackWidget(
+  BuildContext context,
+  int index,
+  List<Audio> audios,
+  UserProvider user,
+  ExtendedVKPlaylist playlist,
+) {
+  final Audio audio = audios[index];
+
+  return Padding(
+    key: ValueKey(
+      audio.mediaKey,
+    ),
+    padding: EdgeInsets.only(
+      bottom: index < audios.length - 1
+          ? 8
+          : 0, // Делаем Padding только в том случае, если это не последний элемент.
+    ),
+    child: AudioTrackTile(
+      selected: audio == player.currentAudio,
+      currentlyPlaying: player.loaded && player.playing,
+      isLiked: user.favoriteMediaKeys.contains(
+        audio.mediaKey,
+      ),
+      audio: audio,
+      dragIndex: index,
+      onAddToQueue: () async {
+        await player.addNextToQueue(audio);
+
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.general_addedToQueue,
+            ),
+            duration: const Duration(
+              seconds: 3,
+            ),
+          ),
+        );
+      },
+      onPlay: audio.isRestricted
+          ? () => showErrorDialog(
+                context,
+                title:
+                    AppLocalizations.of(context)!.music_trackUnavailableTitle,
+                description: AppLocalizations.of(context)!
+                    .music_trackUnavailableDescription,
+              )
+          : () => player.setPlaylist(
+                playlist,
+                index: audios.indexWhere(
+                  (Audio widgetAudio) => widgetAudio == audio,
+                ),
+              ),
+      onPlayToggle: (bool enabled) => player.playOrPause(enabled),
+      onLikeToggle: (bool liked) => toggleTrackLikeState(
+        context,
+        audio,
+        !user.favoriteMediaKeys.contains(
+          audio.mediaKey,
+        ),
+      ),
+      onSecondaryAction: () => showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        builder: (BuildContext context) => BottomAudioOptionsDialog(
+          audio: audio,
+          playlist: playlist,
+        ),
+      ),
+    ),
+  );
+}
+
 /// Диалог, показывающий содержимое плейлиста.
 ///
 /// Пример использования:
@@ -553,72 +630,12 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
                   buildDefaultDragHandles: false,
                   itemCount: filteredAudios.length,
                   itemBuilder: (BuildContext context, int index) {
-                    final Audio audio = filteredAudios[index];
-
-                    return Padding(
-                      key: ValueKey(
-                        audio.mediaKey,
-                      ),
-                      padding: const EdgeInsets.only(
-                        bottom: 8,
-                      ),
-                      child: AudioTrackTile(
-                        selected: audio == player.currentAudio,
-                        currentlyPlaying: player.loaded && player.playing,
-                        isLiked: user.favoriteMediaKeys.contains(
-                          audio.mediaKey,
-                        ),
-                        audio: audio,
-                        dragIndex: index,
-                        onAddToQueue: () async {
-                          await player.addNextToQueue(audio);
-
-                          if (!mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                AppLocalizations.of(context)!
-                                    .general_addedToQueue,
-                              ),
-                              duration: const Duration(
-                                seconds: 3,
-                              ),
-                            ),
-                          );
-                        },
-                        onPlay: audio.isRestricted
-                            ? () => showErrorDialog(
-                                  context,
-                                  title: AppLocalizations.of(context)!
-                                      .music_trackUnavailableTitle,
-                                  description: AppLocalizations.of(context)!
-                                      .music_trackUnavailableDescription,
-                                )
-                            : () => player.setPlaylist(
-                                  widget.playlist,
-                                  index: playlistAudios.indexWhere(
-                                    (Audio widgetAudio) => widgetAudio == audio,
-                                  ),
-                                ),
-                        onPlayToggle: (bool enabled) =>
-                            player.playOrPause(enabled),
-                        onLikeToggle: (bool liked) => toggleTrackLikeState(
-                          context,
-                          audio,
-                          !user.favoriteMediaKeys.contains(
-                            audio.mediaKey,
-                          ),
-                        ),
-                        onSecondaryAction: () => showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          builder: (BuildContext context) =>
-                              BottomAudioOptionsDialog(
-                            audio: audio,
-                            playlist: widget.playlist,
-                          ),
-                        ),
-                      ),
+                    return buildListTrackWidget(
+                      context,
+                      index,
+                      filteredAudios,
+                      user,
+                      widget.playlist,
                     );
                   },
                 ),
@@ -1697,64 +1714,12 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
         // Настоящие данные.
         if (user.favoritesPlaylist?.audios != null)
           for (int index = 0; index < clampedMusicCount; index++)
-            Padding(
-              padding: EdgeInsets.only(
-                bottom: index + 1 != clampedMusicCount ? 8 : 0,
-              ),
-              child: AudioTrackTile(
-                audio: user.favoritesPlaylist!.audios![index],
-                selected: user.favoritesPlaylist!.audios![index] ==
-                    player.currentAudio,
-                currentlyPlaying: player.loaded && player.playing,
-                isLiked: user.favoriteMediaKeys.contains(
-                  user.favoritesPlaylist!.audios![index].mediaKey,
-                ),
-                onAddToQueue: () async {
-                  await player.addNextToQueue(
-                    user.favoritesPlaylist!.audios![index],
-                  );
-
-                  if (!mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        AppLocalizations.of(context)!.general_addedToQueue,
-                      ),
-                      duration: const Duration(
-                        seconds: 3,
-                      ),
-                    ),
-                  );
-                },
-                onPlay: user.favoritesPlaylist!.audios![index].isRestricted
-                    ? () => showErrorDialog(
-                          context,
-                          title: AppLocalizations.of(context)!
-                              .music_trackUnavailableTitle,
-                          description: AppLocalizations.of(context)!
-                              .music_trackUnavailableDescription,
-                        )
-                    : () => player.setPlaylist(
-                          user.favoritesPlaylist!,
-                          index: index,
-                        ),
-                onPlayToggle: (bool enabled) => player.playOrPause(enabled),
-                onLikeToggle: (bool liked) => toggleTrackLikeState(
-                  context,
-                  user.favoritesPlaylist!.audios![index],
-                  !user.favoriteMediaKeys.contains(
-                    user.favoritesPlaylist!.audios![index].mediaKey,
-                  ),
-                ),
-                onSecondaryAction: () => showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  builder: (BuildContext context) => BottomAudioOptionsDialog(
-                    audio: user.favoritesPlaylist!.audios![index],
-                    playlist: user.favoritesPlaylist!,
-                  ),
-                ),
-              ),
+            buildListTrackWidget(
+              context,
+              index,
+              user.favoritesPlaylist!.audios!.slice(0, clampedMusicCount),
+              user,
+              user.favoritesPlaylist!,
             ),
 
         // Skeleton loader.
@@ -1766,16 +1731,17 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
                   bottom: index + 1 != 10 ? 8 : 0,
                 ),
                 child: AudioTrackTile(
-                    audio: Audio(
-                  id: -1,
-                  ownerID: -1,
-                  title: fakeTrackNames[index % fakeTrackNames.length],
-                  artist: fakeTrackNames[(index + 1) % fakeTrackNames.length],
-                  duration: 60 * 3,
-                  accessKey: "",
-                  url: "",
-                  date: 0,
-                )),
+                  audio: Audio(
+                    id: -1,
+                    ownerID: -1,
+                    title: fakeTrackNames[index % fakeTrackNames.length],
+                    artist: fakeTrackNames[(index + 1) % fakeTrackNames.length],
+                    duration: 60 * 3,
+                    accessKey: "",
+                    url: "",
+                    date: 0,
+                  ),
+                ),
               ),
             ),
 
