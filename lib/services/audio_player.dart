@@ -511,8 +511,8 @@ class VKMusicPlayer {
       children: [],
     );
 
-    _queue!.children.insert(
-      (trackIndex ?? -1) + 1,
+    _queue!.insert(
+      nextTrackIndex ?? 0,
       AudioSource.uri(
         Uri.parse(audio.url),
         tag: audio.asMediaItem,
