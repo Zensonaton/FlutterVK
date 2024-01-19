@@ -443,7 +443,9 @@ class VKMusicPlayer {
 
   /// Запускает воспроизведение следующего трека. Если это последний трек в плейлисте, то ничего не делает.
   Future<void> next() async {
-    return await _player.seekToNext();
+    await _player.seekToNext();
+
+    if (!playing) await play();
   }
 
   /// Запускает воспроизведение предыдущего трека в очереди. Если это первый трек в плейлисте, то ничего не делает.
@@ -453,10 +455,12 @@ class VKMusicPlayer {
     bool allowSeekToBeginning = false,
   }) async {
     if (allowSeekToBeginning && _player.position.inSeconds >= 5) {
-      return await seekToBeginning();
+      await seekToBeginning();
+    } else {
+      await _player.seekToPrevious();
     }
 
-    return await _player.seekToPrevious();
+    if (!playing) await play();
   }
 
   /// Включает или отключает случайное перемешивание треков в данном плейлисте, в зависимости от аргумента [shuffle].
