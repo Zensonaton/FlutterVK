@@ -358,6 +358,32 @@ Padding buildListTrackWidget(
   );
 }
 
+/// Загружает информацию по указанному [playlist], заполняя его новыми значениями.
+Future<void> loadPlaylistData(
+  ExtendedVKPlaylist playlist,
+  UserProvider user, {
+  bool forceUpdate = false,
+}) async {
+  // Если информация уже загружена, то ничего не делаем.
+  if (!forceUpdate && playlist.audios != null) return;
+
+  final APIMassAudioGetResponse response =
+      await user.scriptMassAudioGetWithAlbums(
+    playlist.ownerID,
+    albumID: playlist.id,
+  );
+
+  // Проверяем, что в ответе нет ошибок.
+  if (response.error != null) {
+    throw Exception(
+      "API error ${response.error!.errorCode}: ${response.error!.errorMessage}",
+    );
+  }
+
+  playlist.audios = response.response!.audios;
+  playlist.count = response.response!.audioCount;
+}
+
 /// Диалог, показывающий содержимое плейлиста.
 ///
 /// Пример использования:
@@ -408,23 +434,10 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
       setState(() => _loading = true);
 
       try {
-        final APIMassAudioGetResponse response =
-            await user.scriptMassAudioGetWithAlbums(
-          widget.playlist.ownerID,
-          albumID: widget.playlist.id,
+        await loadPlaylistData(
+          widget.playlist,
+          user,
         );
-
-        // Проверяем, что в ответе нет ошибок.
-        if (response.error != null) {
-          throw Exception(
-            "API error ${response.error!.errorCode}: ${response.error!.errorMessage}",
-          );
-        }
-
-        widget.playlist.audios = response.response!.audios;
-        widget.playlist.count = response.response!.audioCount;
-
-        if (context.mounted) setState(() {});
       } catch (e, stackTrace) {
         // ignore: use_build_context_synchronously
         showLogErrorDialog(
@@ -434,8 +447,6 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
           logger,
           context,
         );
-
-        return;
       } finally {
         if (context.mounted) setState(() => _loading = false);
       }
@@ -1384,10 +1395,20 @@ class AudioPlaylistWidget extends StatefulWidget {
   final String? description;
 
   /// Указывает, что музыка играет из этого плейлиста.
+  final bool selected;
+
+  /// Указывает, что плеер сейчас воспроизводит музыку.
   final bool currentlyPlaying;
 
   /// Вызывается при открытии плейлиста во весь экран.
+  ///
+  /// Вызывается при нажатии не по центру плейлиста. При нажатии по центру плейлиста запускается воспроизведение музыки, либо же она ставится на паузу, если музыка играет из этого плейлиста.
   final VoidCallback? onOpen;
+
+  /// Действие, вызываемое при переключения паузы/возобновления при нажатии по центру плейлиста.
+  ///
+  /// Если не указывать, то возможность нажать на центр плейлиста будет выключена.
+  final Function(bool)? onPlayToggle;
 
   const AudioPlaylistWidget({
     super.key,
@@ -1395,8 +1416,10 @@ class AudioPlaylistWidget extends StatefulWidget {
     required this.name,
     this.useTextOnImageLayout = false,
     this.description,
+    this.selected = false,
     this.currentlyPlaying = false,
     this.onOpen,
+    this.onPlayToggle,
   });
 
   @override
@@ -1408,6 +1431,8 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final bool selectedAndPlaying = widget.selected && widget.currentlyPlaying;
+
     return InkWell(
       onTap: widget.onOpen,
       onHover: (bool value) => setState(() => isHovered = value),
@@ -1473,26 +1498,46 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
                         ],
                       ),
                     ),
-                  if (isHovered || widget.currentlyPlaying)
-                    Center(
-                      child: Container(
-                        width: 200,
-                        height: 200,
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.5),
-                          borderRadius:
-                              BorderRadius.circular(globalBorderRadius),
-                        ),
-                        child: Icon(
-                          isHovered
-                              ? (widget.currentlyPlaying
-                                  ? Icons.pause
-                                  : Icons.play_arrow)
-                              : Icons.music_note,
-                          color: Theme.of(context).colorScheme.primary,
-                          size: 50,
-                        ),
+                  if (isHovered || widget.selected)
+                    Container(
+                      width: 200,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(globalBorderRadius),
                       ),
+                      child: !isHovered && selectedAndPlaying
+                          ? Center(
+                              child: Image.asset(
+                                "assets/images/audioEqualizer.gif",
+                                color: Theme.of(context).colorScheme.primary,
+                                width: 32,
+                                height: 32,
+                                fit: BoxFit.fill,
+                              ),
+                            )
+                          : SizedBox(
+                              width: 50,
+                              height: 50,
+                              child: Center(
+                                child: InkWell(
+                                  onTap:
+                                      isDesktop && widget.onPlayToggle != null
+                                          ? () => widget.onPlayToggle?.call(
+                                                !selectedAndPlaying,
+                                              )
+                                          : null,
+                                  child: Icon(
+                                    selectedAndPlaying
+                                        ? Icons.pause
+                                        : Icons.play_arrow,
+                                    size: 56,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                  ),
+                                ),
+                              ),
+                            ),
                     )
                 ],
               ),
@@ -1807,9 +1852,56 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
   }
 }
 
+/// Метод, вызываемый при нажатии по центру плейлиста. Данный метод либо ставит плейлист на паузу, либо загружает его информацию.
+Future<void> onPlaylistPlayToggle(
+  BuildContext context,
+  ExtendedVKPlaylist playlist,
+  bool playing,
+) async {
+  final UserProvider user = Provider.of<UserProvider>(context, listen: false);
+  final AppLogger logger = getLogger("onPlaylistPlayToggle");
+
+  // Если у нас играет этот же плейлист, то тогда мы попросту должны поставить на паузу/убрать паузу.
+  if (player.currentPlaylist == playlist) {
+    return await player.playOrPause(playing);
+  }
+
+  // Если информация по плейлисту не загружена, то мы должны её загрузить.
+  if (playlist.audios == null) {
+    LoadingOverlay.of(context).show();
+
+    try {
+      await loadPlaylistData(
+        playlist,
+        user,
+      );
+    } catch (e, stackTrace) {
+      // ignore: use_build_context_synchronously
+      showLogErrorDialog(
+        "Ошибка при загрузке информации по плейлисту для запуска трека: ",
+        e,
+        stackTrace,
+        logger,
+        context,
+      );
+
+      return;
+    } finally {
+      if (context.mounted) {
+        LoadingOverlay.of(context).hide();
+      }
+    }
+  }
+
+  // Всё ок, запускаем воспроизведение.
+  await player.setPlaylist(playlist);
+}
+
 /// Виджет с разделом "Ваши плейлисты"
 class MyPlaylistsBlock extends StatelessWidget {
-  const MyPlaylistsBlock({
+  final AppLogger logger = getLogger("MyPlaylistsBlock");
+
+  MyPlaylistsBlock({
     super.key,
   });
 
@@ -1865,11 +1957,18 @@ class MyPlaylistsBlock extends StatelessWidget {
                       backgroundUrl: playlist.photo?.photo270,
                       name: playlist.title!,
                       description: playlist.subtitle,
+                      selected: player.currentPlaylist == playlist,
+                      currentlyPlaying: player.playing && player.loaded,
                       onOpen: () => showDialog(
                         context: context,
                         builder: (context) => PlaylistDisplayDialog(
                           playlist: playlist,
                         ),
+                      ),
+                      onPlayToggle: (bool playing) => onPlaylistPlayToggle(
+                        context,
+                        playlist,
+                        playing,
                       ),
                     ),
                 ],
@@ -1941,6 +2040,8 @@ class RecommendedPlaylistsBlock extends StatelessWidget {
                       name: playlist.title!,
                       description: playlist.subtitle,
                       useTextOnImageLayout: true,
+                      selected: player.currentPlaylist == playlist,
+                      currentlyPlaying: player.playing && player.loaded,
                       onOpen: () async => showDialog(
                         context: context,
                         builder: (BuildContext context) {
@@ -1948,6 +2049,11 @@ class RecommendedPlaylistsBlock extends StatelessWidget {
                             playlist: playlist,
                           );
                         },
+                      ),
+                      onPlayToggle: (bool playing) => onPlaylistPlayToggle(
+                        context,
+                        playlist,
+                        playing,
                       ),
                     ),
 
@@ -1981,17 +2087,12 @@ class RecommendedPlaylistsBlock extends StatelessWidget {
 }
 
 /// Виджет, показывающий раздел "Совпадения по вкусам".
-class SimillarMusicBlock extends StatefulWidget {
-  const SimillarMusicBlock({
+class SimillarMusicBlock extends StatelessWidget {
+  final AppLogger logger = getLogger("SimillarMusicBlock");
+
+  SimillarMusicBlock({
     super.key,
   });
-
-  @override
-  State<SimillarMusicBlock> createState() => _SimillarMusicBlockState();
-}
-
-class _SimillarMusicBlockState extends State<SimillarMusicBlock> {
-  final ScrollController scrollController = ScrollController();
 
   @override
   Widget build(BuildContext context) {
@@ -2036,7 +2137,6 @@ class _SimillarMusicBlockState extends State<SimillarMusicBlock> {
           child: SingleChildScrollView(
             // TODO: ClipBehaviour.
             scrollDirection: Axis.horizontal,
-            controller: scrollController,
             child: Wrap(
               spacing: 8,
               children: [
@@ -2047,11 +2147,18 @@ class _SimillarMusicBlockState extends State<SimillarMusicBlock> {
                     name: playlist.title!,
                     description: playlist.subtitle,
                     useTextOnImageLayout: true,
+                    selected: player.currentPlaylist == playlist,
+                    currentlyPlaying: player.playing && player.loaded,
                     onOpen: () => showDialog(
                       context: context,
                       builder: (context) => PlaylistDisplayDialog(
                         playlist: playlist,
                       ),
+                    ),
+                    onPlayToggle: (bool playing) => onPlaylistPlayToggle(
+                      context,
+                      playlist,
+                      playing,
                     ),
                   ),
               ],
@@ -2064,17 +2171,12 @@ class _SimillarMusicBlockState extends State<SimillarMusicBlock> {
 }
 
 /// Виджет, показывающий раздел "Собрано редакцией".
-class ByVKPlaylistsBlock extends StatefulWidget {
-  const ByVKPlaylistsBlock({
+class ByVKPlaylistsBlock extends StatelessWidget {
+  final AppLogger logger = getLogger("ByVKPlaylistsBlock");
+
+  ByVKPlaylistsBlock({
     super.key,
   });
-
-  @override
-  State<ByVKPlaylistsBlock> createState() => _ByVKPlaylistsBlockState();
-}
-
-class _ByVKPlaylistsBlockState extends State<ByVKPlaylistsBlock> {
-  final ScrollController scrollController = ScrollController();
 
   @override
   Widget build(BuildContext context) {
@@ -2101,7 +2203,6 @@ class _ByVKPlaylistsBlockState extends State<ByVKPlaylistsBlock> {
             child: SingleChildScrollView(
               // TODO: ClipBehaviour.
               scrollDirection: Axis.horizontal,
-              controller: scrollController,
               child: Wrap(
                 spacing: 8,
                 children: [
@@ -2109,11 +2210,18 @@ class _ByVKPlaylistsBlockState extends State<ByVKPlaylistsBlock> {
                     AudioPlaylistWidget(
                       backgroundUrl: playlist.photo!.photo270!,
                       name: playlist.title!,
+                      selected: player.currentPlaylist == playlist,
+                      currentlyPlaying: player.playing && player.loaded,
                       onOpen: () => showDialog(
                         context: context,
                         builder: (context) => PlaylistDisplayDialog(
                           playlist: playlist,
                         ),
+                      ),
+                      onPlayToggle: (bool playing) => onPlaylistPlayToggle(
+                        context,
+                        playlist,
+                        playing,
                       ),
                     ),
                 ],
@@ -2334,7 +2442,7 @@ class _HomeMusicPageState extends State<HomeMusicPage> {
                   if (myMusicEnabled) const SizedBox(height: 4),
 
                   // Раздел "Плейлисты".
-                  if (playlistsEnabled) const MyPlaylistsBlock(),
+                  if (playlistsEnabled) MyPlaylistsBlock(),
                   if (playlistsEnabled) const SizedBox(height: 12),
                   if (playlistsEnabled) const Divider(),
                   if (playlistsEnabled) const SizedBox(height: 4),
@@ -2346,13 +2454,13 @@ class _HomeMusicPageState extends State<HomeMusicPage> {
                   if (recommendedPlaylistsEnabled) const SizedBox(height: 4),
 
                   // Раздел "Совпадения по вкусам".
-                  if (similarMusicChipEnabled) const SimillarMusicBlock(),
+                  if (similarMusicChipEnabled) SimillarMusicBlock(),
                   if (similarMusicChipEnabled) const SizedBox(height: 12),
                   if (similarMusicChipEnabled) const Divider(),
                   if (similarMusicChipEnabled) const SizedBox(height: 4),
 
                   // Раздел "Собрано редакцией".
-                  if (byVKChipEnabled) const ByVKPlaylistsBlock(),
+                  if (byVKChipEnabled) ByVKPlaylistsBlock(),
                   if (byVKChipEnabled) const SizedBox(height: 12),
                   if (byVKChipEnabled) const Divider(),
                   if (byVKChipEnabled) const SizedBox(height: 4),
