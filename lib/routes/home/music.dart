@@ -334,7 +334,7 @@ Padding buildListTrackWidget(
               )
           : () => player.setPlaylist(
                 playlist,
-                index: audios.indexWhere(
+                index: playlist.audios!.indexWhere(
                   (Audio widgetAudio) => widgetAudio == audio,
                 ),
               ),
