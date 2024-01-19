@@ -1,4 +1,5 @@
 import "package:json_annotation/json_annotation.dart";
+import "package:just_audio_background/just_audio_background.dart";
 
 import "../utils.dart";
 
@@ -841,6 +842,25 @@ class Audio {
 
   @override
   int get hashCode => mediaKey.hashCode;
+
+  /// Возвращает данный объект как [MediaItem] для аудио плеера.
+  MediaItem get asMediaItem => MediaItem(
+        id: mediaKey,
+        title: title,
+        album: album?.title,
+        artist: artist,
+        artUri: album?.thumb != null
+            ? Uri.parse(
+                album!.thumb!.photo!,
+              )
+            : null,
+        duration: Duration(
+          seconds: duration,
+        ),
+        extras: {
+          "audio": this,
+        },
+      );
 
   Audio({
     required this.id,

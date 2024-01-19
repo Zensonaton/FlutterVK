@@ -5,8 +5,6 @@ import "package:audio_session/audio_session.dart";
 import "package:discord_rpc/discord_rpc.dart";
 import "package:flutter/foundation.dart";
 import "package:just_audio/just_audio.dart";
-import "package:just_audio_background/just_audio_background.dart";
-
 import "package:smtc_windows/smtc_windows.dart";
 
 import "../api/shared.dart";
@@ -27,7 +25,6 @@ class VKMusicPlayer {
 
   ExtendedVKPlaylist? _playlist;
   ConcatenatingAudioSource? _queue;
-  List<Audio>? _audiosQueue;
 
   VKMusicPlayer() {
     _subscriptions = [
@@ -184,7 +181,7 @@ class VKMusicPlayer {
   Audio? get previousAudio {
     if (previousTrackIndex == null) return null;
 
-    return _audiosQueue?[previousTrackIndex!];
+    return _queue?.sequence[previousTrackIndex!].tag.extras["audio"];
   }
 
   /// Возвращает объект [Audio] для трека, который находится предыдущим в очереди. Если очередь пуста, либо это самый первый трек в очереди, то возвращает null.
@@ -193,7 +190,7 @@ class VKMusicPlayer {
   Audio? get currentAudio {
     if (trackIndex == null) return null;
 
-    return _audiosQueue?[trackIndex!];
+    return _queue?.sequence[trackIndex!].tag.extras["audio"];
   }
 
   /// Возвращает объект [Audio] для трека, который находится предыдущим в очереди. Если очередь пуста, либо это самый первый трек в очереди, то возвращает null.
@@ -202,7 +199,7 @@ class VKMusicPlayer {
   Audio? get nextAudio {
     if (nextTrackIndex == null) return null;
 
-    return _audiosQueue?[nextTrackIndex!];
+    return _queue?.sequence[nextTrackIndex!].tag.extras["audio"];
   }
 
   /// Возвращает текущий плейлист.
@@ -419,7 +416,6 @@ class VKMusicPlayer {
 
     _playlist = null;
     _queue = null;
-    _audiosQueue = null;
     _loaded = false;
 
     _loadedStateController.add(_loaded);
@@ -493,22 +489,10 @@ class VKMusicPlayer {
         for (Audio audio in playlist.audios!)
           AudioSource.uri(
             Uri.parse(audio.url),
-            tag: MediaItem(
-              id: audio.mediaKey,
-              title: audio.title,
-              album: audio.album?.title,
-              artist: audio.artist,
-              artUri: audio.album?.thumb != null
-                  ? Uri.parse(audio.album!.thumb!.photo!)
-                  : null,
-              duration: Duration(
-                seconds: audio.duration,
-              ),
-            ),
+            tag: audio.asMediaItem,
           ),
       ],
     );
-    _audiosQueue = playlist.audios!;
 
     await _player.setAudioSource(
       _queue!,
@@ -522,19 +506,18 @@ class VKMusicPlayer {
 
   /// Добавляет указанный трек как следующий для воспроизведения.
   Future<void> addNextToQueue(Audio audio) async {
-    // На случай, если очере~дь пустая.
-    if (_queue == null) {
-      _queue = ConcatenatingAudioSource(
-        children: [],
-      );
-      _audiosQueue = [];
-    }
+    // На случай, если очередь пустая.
+    _queue ??= ConcatenatingAudioSource(
+      children: [],
+    );
 
     _queue!.children.insert(
       (trackIndex ?? -1) + 1,
-      AudioSource.uri(Uri.parse(audio.url)),
+      AudioSource.uri(
+        Uri.parse(audio.url),
+        tag: audio.asMediaItem,
+      ),
     );
-    _audiosQueue!.add(audio);
   }
 
   /// Включает или отключает Discord Rich Presence.
