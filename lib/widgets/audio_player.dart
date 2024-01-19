@@ -729,9 +729,8 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
 
                         // Кнопка лайка.
                         IconButton(
-                          onPressed: () =>
-                              widget.onFavoriteStateToggle ??
-                              (!widget.favoriteState),
+                          onPressed: () => widget.onFavoriteStateToggle
+                              ?.call(!widget.favoriteState),
                           icon: Icon(
                             widget.favoriteState
                                 ? Icons.favorite
