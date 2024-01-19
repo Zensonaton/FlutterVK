@@ -480,6 +480,9 @@ class VKMusicPlayer {
       "audios of ExtendedVKPlaylist is null",
     );
 
+    // Обработка запуска пустого плейлиста.
+    if (playlist.audios!.isEmpty) return;
+
     _playlist = playlist;
     _queue = ConcatenatingAudioSource(
       children: [
