@@ -1894,7 +1894,12 @@ Future<void> onPlaylistPlayToggle(
   }
 
   // Всё ок, запускаем воспроизведение.
-  await player.setPlaylist(playlist);
+  await player.setPlaylist(
+    playlist,
+    index: player.shuffleModeEnabled
+        ? Random().nextInt(playlist.audios?.length ?? 1)
+        : 0,
+  );
 }
 
 /// Виджет с разделом "Ваши плейлисты"
