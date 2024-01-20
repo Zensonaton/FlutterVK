@@ -575,6 +575,7 @@ class VKMusicPlayer {
       await smtc?.updateMetadata(
         MusicMetadata(
           title: currentAudio!.title,
+          artist: currentAudio!.artist,
           albumArtist: currentAudio!.artist,
           album: currentAudio!.album?.title,
           thumbnail: currentAudio!.album?.thumb?.photo,
