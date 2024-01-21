@@ -1436,6 +1436,7 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
 
     return InkWell(
       onTap: widget.onOpen,
+      onSecondaryTap: widget.onOpen,
       onHover: (bool value) => setState(() => isHovered = value),
       child: SizedBox(
         width: 200,
