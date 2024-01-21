@@ -371,6 +371,7 @@ Future<void> loadPlaylistData(
       await user.scriptMassAudioGetWithAlbums(
     playlist.ownerID,
     albumID: playlist.id,
+    accessKey: playlist.accessKey,
   );
 
   // Проверяем, что в ответе нет ошибок.

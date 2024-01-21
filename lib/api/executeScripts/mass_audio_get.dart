@@ -61,18 +61,20 @@ Future<APIMassAudioGetResponse> scripts_massAudioGet(
   String token,
   int ownerID, {
   int? albumID,
+  String? accessKey,
 }) async {
   // TODO: Метод для offset'а.
 
   final String executeCode = """
 var ownerID = $ownerID;
 var albumID = ${albumID ?? 0};
+var accessKey = '${accessKey ?? ''}';
 var audios = [];
 
 var audioCount = 1;
 var audioIndex = 0;
 while (audioIndex < audioCount) {
-	var resp = API.audio.get({'count': 200, 'offset': audioIndex, 'album_id': albumID});
+	var resp = API.audio.get({'count': 200, 'offset': audioIndex, 'owner_id': ownerID, 'album_id': albumID, 'access_key': accessKey});
 	audioCount = resp.count;
 
 	var i = 0;

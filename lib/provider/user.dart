@@ -32,7 +32,7 @@ class ExtendedVKPlaylist extends AudioPlaylist {
   bool get isRecommendationsPlaylist => id < 0;
 
   /// Указывает, что данный плейлист является плейлистом от ВКонтакте (плейлист из раздела "Собрано редакцией")
-  bool get isMadeByVIPlaylist => ownerID == vkMusicGroupID;
+  bool get isMadeByVKPlaylist => ownerID == vkMusicGroupID;
 
   /// Возвращает instance данного класса из передаваемого объекта типа [AudioPlaylist].
   static ExtendedVKPlaylist fromAudioPlaylist(
@@ -206,7 +206,7 @@ class UserProvider extends ChangeNotifier {
   /// Перечисление всех плейлистов, которые были сделаны ВКонтакте (раздел "Собрано редакцией").
   List<ExtendedVKPlaylist> get madeByVKPlaylists => allPlaylists.values
       .where(
-        (ExtendedVKPlaylist playlist) => playlist.isMadeByVIPlaylist,
+        (ExtendedVKPlaylist playlist) => playlist.isMadeByVKPlaylist,
       )
       .toList();
 
@@ -457,17 +457,19 @@ class UserProvider extends ChangeNotifier {
         recommendationsToken!,
       );
 
-  /// Массово извлекает список  треков ВКонтакте. Максимум извлекает около 5000 треков.
+  /// Массово извлекает список треков ВКонтакте. Максимум извлекает около 5000 треков.
   ///
   /// Для данного метода требуется токен от Kate Mobile.
   Future<APIMassAudioGetResponse> scriptMassAudioGet(
     int userID, {
     int? albumID,
+    String? accessKey,
   }) async =>
       await scripts_massAudioGet(
         mainToken!,
         userID,
         albumID: albumID,
+        accessKey: accessKey,
       );
 
   /// Массово извлекает информацию по альбомам (и, соответственно, изображениям) треков по переданным ID треков.
@@ -498,11 +500,13 @@ class UserProvider extends ChangeNotifier {
   Future<APIMassAudioGetResponse> scriptMassAudioGetWithAlbums(
     int ownerID, {
     int? albumID,
+    String? accessKey,
   }) async {
     final APIMassAudioGetResponse massAudios = await scripts_massAudioGet(
       mainToken!,
       ownerID,
       albumID: albumID,
+      accessKey: accessKey,
     );
 
     if (massAudios.error != null) return massAudios;
