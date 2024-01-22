@@ -89,11 +89,13 @@ class TrackNameInfoWidget extends StatelessWidget {
         onTap: !useBigLayout
             ? () => openFullscreenPlayer(
                   context,
+                  fullscreenOnDesktop: false,
                 )
             : null,
         onSwipeUp: !useBigLayout
             ? () => openFullscreenPlayer(
                   context,
+                  fullscreenOnDesktop: false,
                 )
             : null,
         onSwipeDown: !useBigLayout ? onDismiss : null,

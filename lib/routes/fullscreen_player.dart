@@ -20,12 +20,15 @@ import "../widgets/fallback_audio_photo.dart";
 import "../widgets/page_route.dart";
 import "../widgets/scrollable_slider.dart";
 
-/// Метод, который открывает музыкальный плеер на всё окно, либо на весь экран, если приложение запущено на Desktop-платформе.
+/// Метод, который открывает музыкальный плеер на всё окно, либо на весь экран, если приложение запущено на Desktop-платформе. Если [fullscreenOnDesktop] правдив, и приложение запущено на Desktop ([isDesktop]), то тогда приложение перейдёт в полноэкранный режим.
 ///
 /// Для закрытия воспользуйтесь методом [closeFullscreenPlayer].
-Future<void> openFullscreenPlayer(BuildContext context) async {
+Future<void> openFullscreenPlayer(
+  BuildContext context, {
+  bool fullscreenOnDesktop = true,
+}) async {
   // Если приложение запущено на Desktop, то нужно отобразить окно на весь экран.
-  if (isDesktop) {
+  if (isDesktop && fullscreenOnDesktop) {
     await FullScreenWindow.setFullScreen(true);
   }
 
@@ -40,7 +43,9 @@ Future<void> openFullscreenPlayer(BuildContext context) async {
 }
 
 /// Метод, закрывающий ранее открытый при помощи метода [openFullscreenPlayer] полноэкранный плеер.
-Future<void> closeFullscreenPlayer(BuildContext context) async {
+Future<void> closeFullscreenPlayer(
+  BuildContext context,
+) async {
   // Если приложение запущено на Desktop, то нужно закрыть полноэкранный режим.
   if (isDesktop) {
     await FullScreenWindow.setFullScreen(false);
