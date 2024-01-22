@@ -1,15 +1,16 @@
 import "dart:ui";
 
 import "package:cached_network_image/cached_network_image.dart";
-import "package:flutter/gestures.dart";
 import "package:flutter/material.dart";
 
 import "../api/shared.dart";
 import "../consts.dart";
+import "../provider/user.dart";
+import "../routes/fullscreen_player.dart";
 import "../services/cache_manager.dart";
 import "../utils.dart";
-import "dialogs.dart";
 import "fallback_audio_photo.dart";
+import "scrollable_slider.dart";
 import "swipe_detector.dart";
 
 /// Виджет, располагаемый в левой части [BottomMusicPlayer], показывая информацию по текущему треку.
@@ -86,15 +87,13 @@ class TrackNameInfoWidget extends StatelessWidget {
       child: SwipeDetector(
         behavior: HitTestBehavior.translucent,
         onTap: !useBigLayout
-            ? () => showWipDialog(
+            ? () => openFullscreenPlayer(
                   context,
-                  title: "Плеер на всё окно",
                 )
             : null,
         onSwipeUp: !useBigLayout
-            ? () => showWipDialog(
+            ? () => openFullscreenPlayer(
                   context,
-                  title: "Плеер на всё окно",
                 )
             : null,
         onSwipeDown: !useBigLayout ? onDismiss : null,
@@ -110,26 +109,41 @@ class TrackNameInfoWidget extends StatelessWidget {
                   child: SizedBox(
                     width: useBigLayout ? 60 : 50,
                     height: useBigLayout ? 60 : 50,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(
-                        globalBorderRadius,
-                      ),
-                      child: AnimatedSwitcher(
-                        duration: const Duration(
-                          milliseconds: 500,
+                    child: Hero(
+                      tag: "image",
+                      child: Container(
+                        decoration: BoxDecoration(
+                          boxShadow: [
+                            BoxShadow(
+                              blurRadius: 5,
+                              spreadRadius: -1,
+                              color: scheme.tertiary,
+                              blurStyle: BlurStyle.outer,
+                            )
+                          ],
                         ),
-                        child: SizedBox(
-                          key: ValueKey(
-                            audio?.mediaKey ?? "",
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(
+                            globalBorderRadius,
                           ),
-                          width: 60,
-                          height: 600,
-                          child: image != null
-                              ? Image(
-                                  image: image!,
-                                  gaplessPlayback: true,
-                                )
-                              : const FallbackAudioAvatar(),
+                          child: AnimatedSwitcher(
+                            duration: const Duration(
+                              milliseconds: 500,
+                            ),
+                            child: SizedBox(
+                              key: ValueKey(
+                                audio?.mediaKey ?? "",
+                              ),
+                              width: 60,
+                              height: 600,
+                              child: image != null
+                                  ? Image(
+                                      image: image!,
+                                      gaplessPlayback: true,
+                                    )
+                                  : const FallbackAudioAvatar(),
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -264,14 +278,14 @@ class NextTrackInfoWidget extends StatelessWidget {
 
   /// Указывает, что должен показаться данный виджет.
   ///
-  /// Поле должно быть равно true только перед окончанием текущего трека ([Audio.auration] * 0.85).
+  /// Поле должно быть равно true только перед окончанием текущего трека ([Audio.auration] * [nextPlayingTextProgress]).
   final bool displayNextTrack;
 
   /// Цветовая схема класса [ColorScheme].
   final ColorScheme scheme;
 
   /// Объект [Audio], олицетворяющий следующий трек в плейлисте.
-  final Audio nextAudio;
+  final ExtendedVKAudio nextAudio;
 
   @override
   Widget build(BuildContext context) {
@@ -312,16 +326,16 @@ class NextTrackInfoWidget extends StatelessWidget {
 
 /// Виджет плеера, отображаемый внизу экрана, отображающий информацию по текущему треку [audio], а так же дающий возможность делать базовые действия с плеером и треком.
 class BottomMusicPlayer extends StatefulWidget {
-  /// Объект [Audio], который играет в данный момент.
-  final Audio? audio;
+  /// Объект [ExtendedVKAudio], который играет в данный момент.
+  final ExtendedVKAudio? audio;
 
-  /// Объект [Audio], олицетворяющий предыдущий трек в плейлисте, на который плеер сможет переключиться.
-  final Audio? previousAudio;
+  /// Объект [ExtendedVKAudio], олицетворяющий предыдущий трек в плейлисте, на который плеер сможет переключиться.
+  final ExtendedVKAudio? previousAudio;
 
-  /// Объект [Audio], олицетворяющий следующий трек в плейлисте.
+  /// Объект [ExtendedVKAudio], олицетворяющий следующий трек в плейлисте.
   ///
   /// Если данное поле оставить как null, то надпись, показывающая следующий трек перед завершением текущего (при [useBigLayout] = true) отображаться не будет.
-  final Audio? nextAudio;
+  final ExtendedVKAudio? nextAudio;
 
   /// Указывает, что в данный момент трек воспроизводится.
   final bool playbackState;
@@ -418,16 +432,6 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
   /// Используется как fallback в тот момент, пока актуальный [ColorScheme] ещё не был создан.
   ColorScheme? scheme;
 
-  /// В зависимости от установленной настройки, ставит плеер на паузу, если громкость на минимуме.
-  void _pausePlayerOnVolume(double volume) {
-    assert(volume >= 0 && volume <= 1);
-
-    // Если пользователь установил минимальную громкость, а так же настройка "Пауза при отключении громкости" включена, то ставим плеер на паузу.
-    if (volume == 0 && widget.pauseOnMuteEnabled) {
-      widget.onPlayStateToggle?.call(false);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     // Если fallback-цветовая схема плеера не была сохранена, то нам нужно её сохранить.
@@ -451,7 +455,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
     /// Определяет по оставшейся длине трека то, стоит ли показывать надпись со следующим треком.
     final bool displayNextTrack =
         (widget.audio != null && widget.nextAudio != null)
-            ? (widget.progress >= 0.85)
+            ? (widget.progress >= nextPlayingTextProgress)
             : false;
 
     // Запускаем процесс получения ColorScheme для данного трека.
@@ -473,10 +477,10 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                 widget.onPlayStateToggle?.call(!widget.playbackState),
             icon: Icon(
               widget.playbackState ? Icons.pause : Icons.play_arrow,
-              color: scheme!.primary,
+              color: scheme!.onSecondaryContainer,
             ),
             style: IconButton.styleFrom(
-              backgroundColor: scheme!.onSecondary,
+              backgroundColor: scheme!.secondaryContainer,
             ),
           )
         : IconButton(
@@ -539,7 +543,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                       image: imageUrl != null
                           ? CachedNetworkImageProvider(
                               imageUrl,
-                              cacheKey: widget.audio!.mediaKey,
+                              cacheKey: "${widget.audio!.mediaKey}68",
                               cacheManager: CachedNetworkImagesManager.instance,
                             )
                           : null,
@@ -653,45 +657,17 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                             Flexible(
                               child: SizedBox(
                                 width: 150,
-                                child: Listener(
-                                  onPointerSignal: (PointerSignalEvent event) {
-                                    if (event is! PointerScrollEvent) {
-                                      return;
-                                    }
-
-                                    // Flutter возвращает количество как числа, кратные 100.
-                                    //
-                                    // Поскольку мы храним громкость как число от 0.0 до 1.0, мы должны разделить "шаг скроллинга" на 1000.
-                                    // Так же, нельзя забывать, что логика здесь немного инвертирована.
-                                    final double scrollAmount =
-                                        (-event.scrollDelta.dy) / 1000;
-
-                                    // Вычисляем новое значение громкости.
-                                    final double newVolume = clampDouble(
-                                      widget.volume + scrollAmount,
-                                      0,
-                                      1,
-                                    );
-
+                                child: ScrollableSlider(
+                                  value: widget.volume,
+                                  onChanged: (double newVolume) {
                                     widget.onVolumeChange?.call(newVolume);
-                                    _pausePlayerOnVolume(newVolume);
+
+                                    // Если пользователь установил минимальную громкость, а так же настройка "Пауза при отключении громкости" включена, то ставим плеер на паузу.
+                                    if (newVolume == 0 &&
+                                        widget.pauseOnMuteEnabled) {
+                                      widget.onPlayStateToggle?.call(false);
+                                    }
                                   },
-                                  child: SliderTheme(
-                                    data: SliderThemeData(
-                                      overlayShape:
-                                          SliderComponentShape.noThumb,
-                                    ),
-                                    child: Slider(
-                                      value: widget.volume,
-                                      onChanged: (double volume) {
-                                        widget.onVolumeChange?.call(volume);
-                                        _pausePlayerOnVolume(volume);
-                                      },
-                                      thumbColor: scheme!.primary,
-                                      activeColor: scheme!.primary,
-                                      inactiveColor: scheme!.primary,
-                                    ),
-                                  ),
                                 ),
                               ),
                             ),
@@ -703,9 +679,8 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                             Flexible(
                               child: FittedBox(
                                 child: IconButton(
-                                  onPressed: () => showWipDialog(
+                                  onPressed: () => openFullscreenPlayer(
                                     context,
-                                    title: "Плеер на весь экран (F11)",
                                   ),
                                   icon: Icon(
                                     Icons.fullscreen,

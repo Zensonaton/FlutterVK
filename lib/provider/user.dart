@@ -1,10 +1,12 @@
 import "package:flutter/material.dart";
+import "package:just_audio_background/just_audio_background.dart";
 import "package:shared_preferences/shared_preferences.dart";
 
 import "../api/audio/add.dart";
 import "../api/audio/delete.dart";
 import "../api/audio/edit.dart";
 import "../api/audio/get.dart";
+import "../api/audio/get_lyrics.dart";
 import "../api/audio/get_playlists.dart";
 import "../api/catalog/get_audio.dart";
 import "../api/executeScripts/audio_get_data.dart";
@@ -20,7 +22,7 @@ import "../services/logger.dart";
 /// Класс, расширяющий обычный объект [AudioPlaylist] от API ВКонтакте, добавляющий информацию о треках в данном плейлисте.
 class ExtendedVKPlaylist extends AudioPlaylist {
   /// Список из аудио в данном плейлисте.
-  List<Audio>? audios;
+  List<ExtendedVKAudio>? audios;
 
   /// Указывает, что данный плейлист является плейлистом с "любимыми" треками пользователя.
   bool get isFavoritesPlaylist => id == 0;
@@ -37,7 +39,7 @@ class ExtendedVKPlaylist extends AudioPlaylist {
   /// Возвращает instance данного класса из передаваемого объекта типа [AudioPlaylist].
   static ExtendedVKPlaylist fromAudioPlaylist(
     AudioPlaylist playlist, {
-    List<Audio>? audios,
+    List<ExtendedVKAudio>? audios,
     int? totalAudios,
   }) =>
       ExtendedVKPlaylist(
@@ -89,6 +91,98 @@ class ExtendedVKPlaylist extends AudioPlaylist {
     super.meta,
     this.audios,
   });
+}
+
+/// Класс, расширяющий объект [Audio] от API ВКонтакте, добавляя некоторые новые поля.
+class ExtendedVKAudio extends Audio {
+  /// Информация о тексте песни.
+  Lyrics? lyrics;
+
+  /// ID трека ([id]) до его добавления в список фаворитов.
+  ///
+  /// Данное поле устанавливается приложением (оно не передаётся API ВКонтакте) при добавлении трека в списка "любимых треков", поскольку оригинальное поле [id] заменяется новым значением.
+  int? oldID;
+
+  /// ID владельца трека ([ownerID]) до его добавления в список фаворитов.
+  ///
+  /// Данное поле устанавливается приложением (оно не передаётся API ВКонтакте) при добавлении трека в списка "любимых треков", поскольку оригинальное поле [ownerID] заменяется значением ID владельца текущей страницы.
+  int? oldOwnerID;
+
+  /// Возвращает данный объект как [MediaItem] для аудио плеера.
+  MediaItem get asMediaItem => MediaItem(
+        id: mediaKey,
+        title: title,
+        album: album?.title,
+        artist: artist,
+        artUri: album?.thumb != null
+            ? Uri.parse(
+                album!.thumb!.photo!,
+              )
+            : null,
+        duration: Duration(
+          seconds: duration,
+        ),
+        extras: {
+          "audio": this,
+        },
+      );
+
+  ExtendedVKAudio({
+    required super.id,
+    required super.ownerID,
+    required super.artist,
+    required super.title,
+    required super.duration,
+    super.subtitle,
+    required super.accessKey,
+    super.ads,
+    super.isExplicit = false,
+    super.isFocusTrack,
+    super.isLicensed,
+    super.isRestricted = false,
+    super.shortVideosAllowed,
+    super.storiesAllowed,
+    super.storiesCoverAllowed,
+    super.trackCode,
+    required super.url,
+    required super.date,
+    super.album,
+    super.hasLyrics,
+    super.albumID,
+    super.genreID,
+    this.lyrics,
+  });
+
+  /// Возвращает instance данного класса из передаваемого объекта типа [Audio].
+  static ExtendedVKAudio fromAudio(
+    Audio audio, {
+    Lyrics? lyrics,
+  }) =>
+      ExtendedVKAudio(
+        id: audio.id,
+        ownerID: audio.ownerID,
+        artist: audio.artist,
+        title: audio.title,
+        duration: audio.duration,
+        subtitle: audio.subtitle,
+        accessKey: audio.accessKey,
+        ads: audio.ads,
+        isExplicit: audio.isExplicit,
+        isFocusTrack: audio.isFocusTrack,
+        isLicensed: audio.isLicensed,
+        isRestricted: audio.isRestricted,
+        shortVideosAllowed: audio.shortVideosAllowed,
+        storiesAllowed: audio.storiesAllowed,
+        storiesCoverAllowed: audio.storiesCoverAllowed,
+        trackCode: audio.trackCode,
+        url: audio.url,
+        date: audio.date,
+        album: audio.album,
+        hasLyrics: audio.hasLyrics,
+        albumID: audio.albumID,
+        genreID: audio.genreID,
+        lyrics: lyrics,
+      );
 }
 
 /// Класс с настройками пользователя.
@@ -184,10 +278,12 @@ class UserProvider extends ChangeNotifier {
   ExtendedVKPlaylist? get favoritesPlaylist => allPlaylists[0];
 
   /// Список из [Audio.mediaKey] лайкнутых треков.
-  List<String> get favoriteMediaKeys => favoritesPlaylist != null &&
-          favoritesPlaylist!.audios != null
-      ? favoritesPlaylist!.audios!.map((Audio audio) => audio.mediaKey).toList()
-      : [];
+  List<String> get favoriteMediaKeys =>
+      favoritesPlaylist != null && favoritesPlaylist!.audios != null
+          ? favoritesPlaylist!.audios!
+              .map((ExtendedVKAudio audio) => audio.mediaKey)
+              .toList()
+          : [];
 
   /// Перечисление всех обычных плейлистов, которые были сделаны данным пользователем.
   List<ExtendedVKPlaylist> get regularPlaylists => allPlaylists.values
@@ -447,6 +543,17 @@ class UserProvider extends ChangeNotifier {
         title,
         artist,
         genreID,
+      );
+
+  /// Возвращает текст песни (lyrics) у трека по его передаваемому ID ([Audio.mediaKey]).
+  ///
+  /// API: `audio.getLyrics`.
+  Future<APIAudioGetLyricsResponse> audioGetLyrics(
+    String audioID,
+  ) async =>
+      await audio_get_lyrics(
+        mainToken!,
+        audioID,
       );
 
   /// Возвращает информацию о категории для раздела "аудио".

@@ -85,3 +85,6 @@ const List<String> fakePlaylistNames = [
   "My play",
   "Suuuuper long playlist name used for something!"
 ];
+
+/// Значение от 0.0 до 1.0, указывающее то, начиная с какого процента "прослушанности" трека появляется надпись "Сыграет следующим: Артист - Трек" в интерфейсе проигрывателя.
+const double nextPlayingTextProgress = 0.85;

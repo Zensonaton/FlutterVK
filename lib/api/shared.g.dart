@@ -321,7 +321,7 @@ Audio _$AudioFromJson(Map<String, dynamic> json) => Audio(
       album: json['album'] == null
           ? null
           : AudioAlbum.fromJson(json['album'] as Map<String, dynamic>),
-      lyricsID: json['lyrics_id'] as int?,
+      hasLyrics: json['has_lyrics'] as bool? ?? false,
       albumID: json['album_id'] as int?,
       genreID: json['genre_id'] as int?,
     );
@@ -346,7 +346,7 @@ Map<String, dynamic> _$AudioToJson(Audio instance) => <String, dynamic>{
       'url': instance.url,
       'date': instance.date,
       'album': instance.album,
-      'lyrics_id': instance.lyricsID,
+      'has_lyrics': instance.hasLyrics,
       'album_id': instance.albumID,
       'genre_id': instance.genreID,
     };

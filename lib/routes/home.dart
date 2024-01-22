@@ -10,7 +10,6 @@ import "package:responsive_builder/responsive_builder.dart";
 
 import "../api/audio/add.dart";
 import "../api/audio/delete.dart";
-import "../api/shared.dart";
 import "../main.dart";
 import "../provider/user.dart";
 import "../services/cache_manager.dart";
@@ -28,7 +27,7 @@ import "home/profile.dart";
 /// Учтите, что данный метод делает изменения в интерфейсе.
 Future<void> toggleTrackLikeState(
   BuildContext context,
-  Audio audio,
+  ExtendedVKAudio audio,
   bool like,
 ) async {
   final UserProvider user = Provider.of<UserProvider>(context, listen: false);
@@ -191,6 +190,11 @@ class _HomeRouteState extends State<HomeRoute> {
         (Duration position) => setState(() {}),
       ),
 
+      // Изменения плейлиста.
+      player.sequenceStateStream.listen(
+        (SequenceState? state) => setState(() {}),
+      ),
+
       // Другие события состояния плеера, а так же обработчик ошибок.
       player.playerStateStream.listen(
         (PlayerState? state) => setState(() {}),
@@ -208,11 +212,6 @@ class _HomeRouteState extends State<HomeRoute> {
             description: error.toString(),
           );
         },
-      ),
-
-      // Изменения плейлиста.
-      player.sequenceStateStream.listen(
-        (SequenceState? state) => setState(() {}),
       ),
     ];
   }

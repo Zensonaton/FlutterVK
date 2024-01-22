@@ -83,10 +83,12 @@ class VKMusicPlayer {
   /// Данное поле всегда true после запуска воспроизведения любого трека, и false после вызова [stop].
   bool get loaded => _loaded;
 
-  final StreamController<bool> _loadedStateController = StreamController();
+  final StreamController<bool> _loadedStateController =
+      StreamController.broadcast();
 
   /// Stream, указывающий то, загружен ли плеер или нет. Указывает состояние поля [loaded].
-  Stream<bool> get loadedStateStream => _loadedStateController.stream;
+  Stream<bool> get loadedStateStream =>
+      _loadedStateController.stream.asBroadcastStream();
 
   /// Информация о том, играет ли что-то сейчас у плеера или нет.
   ///
@@ -94,13 +96,13 @@ class VKMusicPlayer {
   bool get playing => _player.playing;
 
   /// Stream, указывающий текущее состояние воспроизведения плеера.
-  Stream<bool> get playingStream => _player.playingStream;
+  Stream<bool> get playingStream => _player.playingStream.asBroadcastStream();
 
   /// Состояние громкости плеера. Возвращает процент, где 0.0 указывает выключенную громкость, а 1.0 - самая высокая громкость.
   double get volume => _player.volume;
 
   /// Stream, возвращающий события изменения громкости плеера.
-  Stream<double> get volumeStream => _player.volumeStream;
+  Stream<double> get volumeStream => _player.volumeStream.asBroadcastStream();
 
   /// Возвращает прогресс воспроизведения текущего трека в виде процента, где 0.0 указывает начало трека, а 1.0 - его конец.
   ///
@@ -124,7 +126,8 @@ class VKMusicPlayer {
   /// Stream, возвращающий события о изменения текущей позиции воспроизведения.
   ///
   /// Если Вам необходим процент (число от 0.0 до 1.0), отображающий прогресс прослушивания текущего трека, то для этого есть поле [progress].
-  Stream<Duration> get positionStream => _player.positionStream;
+  Stream<Duration> get positionStream =>
+      _player.positionStream.asBroadcastStream();
 
   /// Возвращает длительность трека.
   ///
@@ -134,31 +137,36 @@ class VKMusicPlayer {
   /// Stream, возвращающий события о изменения длительности данного трека.
   ///
   /// Если Вам необходим процент (число от 0.0 до 1.0), отображающий прогресс прослушивания текущего трека, то для этого есть поле [progress].
-  Stream<Duration?> get durationStream => _player.durationStream;
+  Stream<Duration?> get durationStream =>
+      _player.durationStream.asBroadcastStream();
 
   /// Возвращает текущее состояние плеера.
   PlayerState get playerState => _player.playerState;
 
   /// Stream, возвращающий события о изменении состояния плеера.
-  Stream<PlayerState> get playerStateStream => _player.playerStateStream;
+  Stream<PlayerState> get playerStateStream =>
+      _player.playerStateStream.asBroadcastStream();
 
   /// Возвращет информацию о состоянии плейлиста.
   SequenceState? get sequenceState => _player.sequenceState;
 
   /// Stream, возвращающий события о изменении текущего плеера.
-  Stream<SequenceState?> get sequenceStateStream => _player.sequenceStateStream;
+  Stream<SequenceState?> get sequenceStateStream =>
+      _player.sequenceStateStream.asBroadcastStream();
 
   /// Возвращет информацию о состоянии shuffle.
   bool get shuffleModeEnabled => _player.shuffleModeEnabled;
 
   /// Stream, возвращающий события о изменении состояния shuffle.
-  Stream<bool> get shuffleModeEnabledStream => _player.shuffleModeEnabledStream;
+  Stream<bool> get shuffleModeEnabledStream =>
+      _player.shuffleModeEnabledStream.asBroadcastStream();
 
   /// Возвращет информацию о состоянии повтора плейлиста.
   LoopMode get loopMode => _player.loopMode;
 
   /// Stream, возвращающий события о изменении состояния повтора плейлиста.
-  Stream<LoopMode> get loopModeStream => _player.loopModeStream;
+  Stream<LoopMode> get loopModeStream =>
+      _player.loopModeStream.asBroadcastStream();
 
   /// Указывает индекс предыдущего трека в очереди. Если очередь пуста, либо это самый первый трек в очереди, то возвращает null.
   ///
@@ -178,7 +186,7 @@ class VKMusicPlayer {
   /// Возвращает объект [Audio] для трека, который находится предыдущим в очереди. Если очередь пуста, либо это самый первый трек в очереди, то возвращает null.
   ///
   /// Для получения индекса этого трека можно воспользоваться getter'ом [previousTrackIndex].
-  Audio? get previousAudio {
+  ExtendedVKAudio? get previousAudio {
     if (previousTrackIndex == null) return null;
 
     return _queue?.sequence[previousTrackIndex!].tag.extras["audio"];
@@ -187,7 +195,7 @@ class VKMusicPlayer {
   /// Возвращает объект [Audio] для трека, который находится предыдущим в очереди. Если очередь пуста, либо это самый первый трек в очереди, то возвращает null.
   ///
   /// Для получения индекса этого трека можно воспользоваться getter'ом [trackIndex].
-  Audio? get currentAudio {
+  ExtendedVKAudio? get currentAudio {
     if (trackIndex == null) return null;
 
     return _queue?.sequence[trackIndex!].tag.extras["audio"];
@@ -196,7 +204,7 @@ class VKMusicPlayer {
   /// Возвращает объект [Audio] для трека, который находится предыдущим в очереди. Если очередь пуста, либо это самый первый трек в очереди, то возвращает null.
   ///
   /// Для получения индекса этого трека можно воспользоваться getter'ом [nextTrackIndex].
-  Audio? get nextAudio {
+  ExtendedVKAudio? get nextAudio {
     if (nextTrackIndex == null) return null;
 
     return _queue?.sequence[nextTrackIndex!].tag.extras["audio"];
@@ -385,8 +393,37 @@ class VKMusicPlayer {
   }
 
   /// "Перепрыгивает" на указанный момент в треке.
-  Future<void> seek(Duration position) async {
-    return await _player.seek(position);
+  ///
+  /// Если [play] = true, то при перемотке плеер будет автоматически запущен, если он до этого был приостановлен.
+  Future<void> seek(
+    Duration position, {
+    bool play = false,
+  }) async {
+    await _player.seek(position);
+
+    if (play && !playing) await _player.play();
+  }
+
+  /// "Перепрыгивает" на указанный момент в треке по значению от 0.0 до 1.0.
+  ///
+  /// Если Вы желаете перепрыгнуть на момент в треке по его времени то воспользуйтесь методом [seek].
+  ///
+  /// Если [play] = true, то при перемотке плеер будет автоматически запущен, если он до этого был приостановлен.
+  Future<void> seekNormalized(
+    double position, {
+    bool play = false,
+  }) async {
+    assert(
+      volume >= 0.0 && volume <= 1.0,
+      "seekNormalized position $position is not in range from 0.0 to 1.0",
+    );
+
+    return await seek(
+      Duration(
+        milliseconds: (duration!.inMilliseconds * position).toInt(),
+      ),
+      play: play,
+    );
   }
 
   /// Переключает на трек с указанным индексом.
@@ -486,7 +523,7 @@ class VKMusicPlayer {
     _playlist = playlist;
     _queue = ConcatenatingAudioSource(
       children: [
-        for (Audio audio in playlist.audios!)
+        for (ExtendedVKAudio audio in playlist.audios!)
           AudioSource.uri(
             Uri.parse(audio.url),
             tag: audio.asMediaItem,
@@ -505,7 +542,9 @@ class VKMusicPlayer {
   }
 
   /// Добавляет указанный трек как следующий для воспроизведения.
-  Future<void> addNextToQueue(Audio audio) async {
+  Future<void> addNextToQueue(
+    ExtendedVKAudio audio,
+  ) async {
     // На случай, если очередь пустая.
     _queue ??= ConcatenatingAudioSource(
       children: [],

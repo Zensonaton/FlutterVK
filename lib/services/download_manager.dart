@@ -35,7 +35,7 @@ class DownloadManager {
 
     // Создаём Future для загрузки данного файла, и потом помещаем его в _queueItems.
     Future<Response> future = _queue.add(
-      () async => await get(
+      () => get(
         Uri.parse(url),
       ),
     );

@@ -93,7 +93,11 @@ Future<void> ensureUserAudioBasicInfo(
       id: 0,
       ownerID: user.id!,
       count: response.response!.audioCount,
-      audios: response.response!.audios,
+      audios: response.response!.audios
+          .map(
+            (Audio audio) => ExtendedVKAudio.fromAudio(audio),
+          )
+          .toList(),
     );
 
     // Создаём объекты плейлистов у пользователя.
@@ -254,8 +258,8 @@ Future<void> ensureUserAudioRecommendations(
 }
 
 /// Возвращает только те [Audio], которые совпадают по названию [query].
-List<Audio> filterByName(
-  List<Audio> audios,
+List<ExtendedVKAudio> filterByName(
+  List<ExtendedVKAudio> audios,
   String query,
 ) {
   // Избавляемся от всех пробелов в запросе, а так же диакритические знаки.
@@ -272,7 +276,7 @@ List<Audio> filterByName(
   // Возвращаем список тех треков, у которых совпадает название или исполнитель.
   return audios
       .where(
-        (Audio audio) => removeDiacritics(
+        (ExtendedVKAudio audio) => removeDiacritics(
           (("${audio.title}${audio.artist}").toLowerCase().replaceAll(
                 r" ",
                 "",
@@ -286,11 +290,11 @@ List<Audio> filterByName(
 Padding buildListTrackWidget(
   BuildContext context,
   int index,
-  List<Audio> audios,
+  List<ExtendedVKAudio> audios,
   UserProvider user,
   ExtendedVKPlaylist playlist,
 ) {
-  final Audio audio = audios[index];
+  final ExtendedVKAudio audio = audios[index];
 
   return Padding(
     key: ValueKey(
@@ -335,7 +339,7 @@ Padding buildListTrackWidget(
           : () => player.setPlaylist(
                 playlist,
                 index: playlist.audios!.indexWhere(
-                  (Audio widgetAudio) => widgetAudio == audio,
+                  (ExtendedVKAudio widgetAudio) => widgetAudio == audio,
                 ),
               ),
       onPlayToggle: (bool enabled) => player.playOrPause(enabled),
@@ -381,7 +385,11 @@ Future<void> loadPlaylistData(
     );
   }
 
-  playlist.audios = response.response!.audios;
+  playlist.audios = response.response!.audios
+      .map(
+        (Audio audio) => ExtendedVKAudio.fromAudio(audio),
+      )
+      .toList();
   playlist.count = response.response!.audioCount;
 }
 
@@ -498,8 +506,8 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
   Widget build(BuildContext context) {
     final UserProvider user = Provider.of<UserProvider>(context);
 
-    final List<Audio> playlistAudios = widget.playlist.audios ?? [];
-    final List<Audio> filteredAudios =
+    final List<ExtendedVKAudio> playlistAudios = widget.playlist.audios ?? [];
+    final List<ExtendedVKAudio> filteredAudios =
         filterByName(playlistAudios, controller.text);
     final bool isMobileLayout =
         getDeviceType(MediaQuery.of(context).size) == DeviceScreenType.mobile;
@@ -601,7 +609,7 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
                           bottom: 8,
                         ),
                         child: AudioTrackTile(
-                          audio: Audio(
+                          audio: ExtendedVKAudio(
                             id: -1,
                             ownerID: -1,
                             title:
@@ -670,7 +678,7 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
 /// ```
 class TrackInfoEditDialog extends StatefulWidget {
   /// Трек, данные которого будут изменяться.
-  final Audio audio;
+  final ExtendedVKAudio audio;
 
   /// Плейлист, в котором находится данный трек.
   final ExtendedVKPlaylist playlist;
@@ -711,7 +719,7 @@ class _TrackInfoEditDialogState extends State<TrackInfoEditDialog> {
     final UserProvider user = Provider.of<UserProvider>(context);
 
     // Создаём копию трека, засовывая в неё новые значения с новым именем трека и прочим.
-    final Audio audio = Audio(
+    final ExtendedVKAudio audio = ExtendedVKAudio(
       title: titleController.text,
       artist: artistController.text,
       id: widget.audio.id,
@@ -866,8 +874,8 @@ class _TrackInfoEditDialogState extends State<TrackInfoEditDialog> {
 /// ),
 /// ```
 class BottomAudioOptionsDialog extends StatefulWidget {
-  /// Трек, над которым производится манипуляция.
-  final Audio audio;
+  /// Трек типа [ExtendedVKAudio], над которым производится манипуляция.
+  final ExtendedVKAudio audio;
 
   /// Плейлист, в котором находится данный трек.
   final ExtendedVKPlaylist playlist;
@@ -1069,8 +1077,8 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
 
 /// Виджет, олицетворяющий отдельный трек в списке треков.
 class AudioTrackTile extends StatefulWidget {
-  /// Объект типа [Audio], олицетворяющий данный трек.
-  final Audio audio;
+  /// Объект типа [ExtendedVKAudio], олицетворяющий данный трек.
+  final ExtendedVKAudio audio;
 
   /// Указывает, что этот трек сейчас выбран.
   ///
@@ -1220,7 +1228,7 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
                               child: imageUrl != null
                                   ? CachedNetworkImage(
                                       imageUrl: imageUrl,
-                                      cacheKey: widget.audio.mediaKey,
+                                      cacheKey: "${widget.audio.mediaKey}68",
                                       width: 50,
                                       height: 50,
                                       placeholder:
@@ -1828,7 +1836,7 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
                   bottom: index + 1 != 10 ? 8 : 0,
                 ),
                 child: AudioTrackTile(
-                  audio: Audio(
+                  audio: ExtendedVKAudio(
                     id: -1,
                     ownerID: -1,
                     title: fakeTrackNames[index % fakeTrackNames.length],

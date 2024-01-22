@@ -1,5 +1,4 @@
 import "package:json_annotation/json_annotation.dart";
-import "package:just_audio_background/just_audio_background.dart";
 
 import "../utils.dart";
 
@@ -791,43 +790,27 @@ class Audio {
   /// Очень часто он отсутствует, выдавая пустую строку.
   final String url;
 
-  // Timestamp добавления аудиозаписи.
+  /// Timestamp добавления аудиозаписи.
   final int date;
 
   /// Информация об альбоме данной аудиозаписи.
   AudioAlbum? album;
 
-  // ID текста аудиозаписи, если текст есть.
-  @JsonKey(name: "lyrics_id")
-  final int? lyricsID;
+  /// Указывает наличие текста песни.
+  @JsonKey(name: "has_lyrics")
+  final bool hasLyrics;
 
-  // ID альбома, в котором находится аудиозапись, если она присвоена к какому-либо альбому.
+  /// ID альбома, в котором находится аудиозапись, если она присвоена к какому-либо альбому.
   @JsonKey(name: "album_id")
   final int? albumID;
 
-  // ID жанра аудиозаписи. Список жанров описан [здесь](https://dev.vk.com/ru/reference/objects/audio-genres).
+  /// ID жанра аудиозаписи. Список жанров описан [здесь](https://dev.vk.com/ru/reference/objects/audio-genres).
   @JsonKey(name: "genre_id")
   int? genreID;
 
-  /// ID трека ([id]) до его добавления в список фаворитов.
-  ///
-  /// Данное поле устанавливается приложением (оно не передаётся API ВКонтакте) при добавлении трека в списка "любимых треков", поскольку оригинальное поле [id] заменяется новым значением.
-  @JsonKey(
-    includeFromJson: false,
-    includeToJson: false,
-  )
-  int? oldID;
-
-  /// ID владельца трека ([ownerID]) до его добавления в список фаворитов.
-  ///
-  /// Данное поле устанавливается приложением (оно не передаётся API ВКонтакте) при добавлении трека в списка "любимых треков", поскольку оригинальное поле [ownerID] заменяется значением ID владельца текущей страницы.
-  @JsonKey(
-    includeFromJson: false,
-    includeToJson: false,
-  )
-  int? oldOwnerID;
-
   /// Возвращает строку, которая используется как идентификатор пользователя и медиа.
+  ///
+  /// Выглядит как `123456_123456789`.
   String get mediaKey => "${ownerID}_$id";
 
   /// Возвращает URL данного трека, который используется при нажатии на кнопку "поделиться".
@@ -842,25 +825,6 @@ class Audio {
 
   @override
   int get hashCode => mediaKey.hashCode;
-
-  /// Возвращает данный объект как [MediaItem] для аудио плеера.
-  MediaItem get asMediaItem => MediaItem(
-        id: mediaKey,
-        title: title,
-        album: album?.title,
-        artist: artist,
-        artUri: album?.thumb != null
-            ? Uri.parse(
-                album!.thumb!.photo!,
-              )
-            : null,
-        duration: Duration(
-          seconds: duration,
-        ),
-        extras: {
-          "audio": this,
-        },
-      );
 
   Audio({
     required this.id,
@@ -882,7 +846,7 @@ class Audio {
     required this.url,
     required this.date,
     this.album,
-    this.lyricsID,
+    this.hasLyrics = false,
     this.albumID,
     this.genreID,
   });
