@@ -659,6 +659,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                 width: 150,
                                 child: ScrollableSlider(
                                   value: widget.volume,
+                                  activeColor: scheme!.primary,
                                   onChanged: (double newVolume) {
                                     widget.onVolumeChange?.call(newVolume);
 
