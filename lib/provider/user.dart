@@ -213,6 +213,9 @@ class Settings {
 
   /// Указывает, что настройка "пауза при минимальной громкости" включена.
   bool pauseOnMuteEnabled = true;
+
+  /// Указывает, что полноэкранный плеер использует изображение трека в качестве фона.
+  bool playerThumbAsBackground = true;
 }
 
 /// Provider для получения объекта пользователя в контексте интерфейса приложения.
@@ -416,6 +419,10 @@ class UserProvider extends ChangeNotifier {
       "PauseOnMuteEnabled",
       settings.pauseOnMuteEnabled,
     );
+    await prefs.setBool(
+      "PlayerThumbAsBackground",
+      settings.playerThumbAsBackground,
+    );
   }
 
   /// Загружает данный объект пользователя с диска.
@@ -450,6 +457,8 @@ class UserProvider extends ChangeNotifier {
     settings.audioNormalizationEnabled =
         prefs.getBool("AudioNormalizationEnabled") ?? true;
     settings.pauseOnMuteEnabled = prefs.getBool("PauseOnMuteEnabled") ?? false;
+    settings.playerThumbAsBackground =
+        prefs.getBool("PlayerThumbAsBackground") ?? true;
 
     markUpdated(false);
 

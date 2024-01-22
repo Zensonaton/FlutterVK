@@ -143,17 +143,15 @@
 		}
 	},
 
-	"profile_exportMusicThumbsTitle": "Экспортировать обложки аудио",
-	"profile_exportMusicThumbsDescription": "Полезно в случае, если Вы хотите перенести локально изменённые обложки у треков на другое устройство",
-
-	"profile_importMusicThumbsTitle": "Импортировать обложки аудио",
-	"profile_importMusicThumbsDescription": "Возможность импорта ранее экспортированных обложек у аудио",
 
 	"profile_discordRPCTitle": "Discord Rich Presence",
 	"profile_discordRPCDescription": "Включает трансляцию текущего трека в Discord",
 
 	"profile_pauseOnMuteTitle": "Пауза при отключении громкости",
 	"profile_pauseOnMuteDescription": "Данная опция указывает, будет ли плеер ставиться на паузу при установке минимальной громкости в плеере",
+
+	"profile_useThumbnailAsBackgroundTitle": "Изображение трека как фон",
+	"profile_useThumbnailAsBackgroundDescription": "Работает в полноэкранном плеере",
 
 	"profile_exportMusicListTitle": "Экспорт списка треков"
 }

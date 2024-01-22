@@ -190,10 +190,11 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                     ),
                 textAlign: TextAlign.center,
               ),
-              if (user.photoMaxUrl != null)
-                const SizedBox(
-                  height: 24,
-                ),
+              const SizedBox(
+                height: 24,
+              ),
+
+              // Подключение рекомендаций.
               if (user.recommendationsToken == null)
                 ListTile(
                   title: Text(
@@ -212,6 +213,8 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                     builder: (context) => const ConnectRecommendationsDialog(),
                   ),
                 ),
+
+              // Discord Rich Presence.
               if (isDesktop)
                 SwitchListTile(
                   secondary: const Icon(
@@ -223,6 +226,7 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                   subtitle: Text(
                     AppLocalizations.of(context)!.profile_discordRPCDescription,
                   ),
+                  value: player.discordRPCEnabled,
                   onChanged: (bool? enabled) async {
                     if (enabled == null) return;
 
@@ -232,34 +236,32 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                     user.markUpdated();
                     setState(() {});
                   },
-                  value: player.discordRPCEnabled,
                 ),
-              ListTile(
-                leading: const Icon(
-                  Icons.photo_library_outlined,
+
+              // Использование изображения трека для фона в полноэкранном плеере.
+              SwitchListTile(
+                secondary: const Icon(
+                  Icons.photo_filter,
                 ),
                 title: Text(
-                  AppLocalizations.of(context)!.profile_exportMusicThumbsTitle,
+                  AppLocalizations.of(context)!
+                      .profile_useThumbnailAsBackgroundTitle,
                 ),
                 subtitle: Text(
                   AppLocalizations.of(context)!
-                      .profile_exportMusicThumbsDescription,
+                      .profile_useThumbnailAsBackgroundDescription,
                 ),
-                onTap: () => showWipDialog(context),
+                value: user.settings.playerThumbAsBackground,
+                onChanged: (bool? enabled) async {
+                  if (enabled == null) return;
+
+                  user.settings.playerThumbAsBackground = enabled;
+
+                  user.markUpdated();
+                },
               ),
-              ListTile(
-                leading: const Icon(
-                  Icons.photo_library,
-                ),
-                title: Text(
-                  AppLocalizations.of(context)!.profile_importMusicThumbsTitle,
-                ),
-                subtitle: Text(
-                  AppLocalizations.of(context)!
-                      .profile_importMusicThumbsDescription,
-                ),
-                onTap: () => showWipDialog(context),
-              ),
+
+              // Пауза воспроизведения при минимальной громкости.
               if (isDesktop)
                 SwitchListTile(
                   secondary: const Icon(
@@ -282,6 +284,8 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                     setState(() {});
                   },
                 ),
+
+              // Экспорт списка треков.
               ListTile(
                 leading: const Icon(
                   Icons.my_library_music,
@@ -289,7 +293,10 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                 title: Text(
                   AppLocalizations.of(context)!.profile_exportMusicListTitle,
                 ),
+                onTap: () => showWipDialog(context),
               ),
+
+              // Debug-опции.
               if (kDebugMode)
                 ListTile(
                   leading: const Icon(

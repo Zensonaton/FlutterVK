@@ -338,7 +338,8 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
               child: Stack(
                 children: [
                   // Размытое фоновое изображение.
-                  if (player.currentAudio?.album?.thumb != null)
+                  if (player.currentAudio?.album?.thumb != null &&
+                      user.settings.playerThumbAsBackground)
                     SizedBox(
                       width: double.infinity,
                       height: double.infinity,
