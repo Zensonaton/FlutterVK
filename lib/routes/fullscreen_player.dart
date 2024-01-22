@@ -7,6 +7,7 @@ import "package:flutter/services.dart";
 import "package:fullscreen_window/fullscreen_window.dart";
 import "package:just_audio/just_audio.dart";
 import "package:provider/provider.dart";
+import "package:skeletonizer/skeletonizer.dart";
 
 import "../api/audio/get_lyrics.dart";
 import "../consts.dart";
@@ -521,23 +522,26 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
                                             player.currentAudio!.mediaKey,
                                           ),
                                         )
-                                      : const Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            // TODO: Skeleton loader'ы.
-
-                                            CircularProgressIndicator
-                                                .adaptive(),
-                                            SizedBox(
-                                              height: 12,
-                                            ),
-                                            Text(
-                                              "Загружаю текст песни...", // TODO: INTL
-                                            ),
-                                          ],
+                                      : ListView.builder(
+                                          key: const ValueKey(
+                                            "skeleton",
+                                          ),
+                                          itemCount: 50,
+                                          itemBuilder: (BuildContext context,
+                                              int index) {
+                                            return Skeletonizer(
+                                              child: TrackLyric(
+                                                line: fakeTrackLyrics[index %
+                                                    fakeTrackLyrics.length],
+                                                isActive: false,
+                                              ),
+                                            );
+                                          },
                                         )
                                   : Column(
-                                      mainAxisSize: MainAxisSize.min,
+                                      key: const ValueKey(
+                                        "nolyrics",
+                                      ),
                                       children: [
                                         Image.asset(
                                           "assets/images/dog.gif",

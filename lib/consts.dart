@@ -86,5 +86,23 @@ const List<String> fakePlaylistNames = [
   "Suuuuper long playlist name used for something!"
 ];
 
+/// Случайные строчки текстов песен, используемые в Skeleton Loader'ах.
+const List<String> fakeTrackLyrics = [
+  "Blinding lights.",
+  "AAAH! Behind you!",
+  "Some kind of text",
+  "Flutter VK",
+  "Wow",
+  "Yeah",
+  "Meow",
+  "Track ...",
+  "Test Line That Is A Little Bit Long",
+  "That Line Is Longer Than Any Other In This List, right! Isn't this awesome?",
+  "What do you see before it's over?",
+  "Something",
+  "Middle sized lyric",
+  "VK API sucks",
+];
+
 /// Значение от 0.0 до 1.0, указывающее то, начиная с какого процента "прослушанности" трека появляется надпись "Сыграет следующим: Артист - Трек" в интерфейсе проигрывателя.
 const double nextPlayingTextProgress = 0.85;
