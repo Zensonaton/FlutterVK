@@ -199,11 +199,6 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
   /// Данное поле нужно, что бы при повторном вызове метода [build] не делалось множество HTTP-запросов.
   final List<String> lyricsQueue = [];
 
-  /// Последняя известная цветовая схема для данного плеера.
-  ///
-  /// Используется как fallback в тот момент, пока актуальный [ColorScheme] ещё не был создан.
-  ColorScheme? scheme;
-
   @override
   void initState() {
     super.initState();
@@ -249,24 +244,10 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
   Widget build(BuildContext context) {
     final UserProvider user = Provider.of<UserProvider>(context);
 
-    // Если fallback-цветовая схема плеера не была сохранена, то нам нужно её сохранить.
-    scheme ??= ColorScheme.fromSeed(
-      seedColor: Colors.grey,
-      brightness: Theme.of(context).brightness,
+    // Получаем цветовую схему.
+    final ColorScheme scheme = player.getColorScheme(
+      MediaQuery.of(context).platformBrightness,
     );
-
-    // Запускаем процесс получения ColorScheme для данного трека.
-    if (player.currentAudio?.album?.thumb != null) {
-      colorSchemeFromUrl(
-        player.currentAudio!.album!.thumb!.photo68!,
-        MediaQuery.of(context).platformBrightness,
-        player.currentAudio!.mediaKey,
-      ).then((ColorScheme newScheme) {
-        if (scheme == newScheme) return;
-
-        scheme = newScheme;
-      });
-    }
 
     // Если известно, что у трека есть текст песни, то пытаемся его загрузить.
     if ((player.currentAudio?.hasLyrics ?? false) &&
@@ -340,7 +321,7 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
                 milliseconds: 500,
               ),
               curve: Curves.ease,
-              color: scheme!.primaryContainer,
+              color: scheme.primaryContainer,
               child: Stack(
                 children: [
                   // Размытое фоновое изображение.
@@ -361,7 +342,7 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
                           placeholder: (BuildContext context, String url) =>
                               const FallbackAudioAvatar(),
                           cacheManager: CachedNetworkImagesManager.instance,
-                          color: scheme!.background.withOpacity(0.75),
+                          color: scheme.background.withOpacity(0.75),
                           colorBlendMode: BlendMode.darken,
                         ),
                       ),
@@ -383,14 +364,14 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
                               player.playing
                                   ? Image.asset(
                                       "assets/images/audioEqualizer.gif",
-                                      color: scheme!.primary,
+                                      color: scheme.primary,
                                       width: 32,
                                       height: 32,
                                       fit: BoxFit.fill,
                                     )
                                   : Icon(
                                       Icons.music_note,
-                                      color: scheme!.primary,
+                                      color: scheme.primary,
                                       size: 32,
                                     ),
                               const SizedBox(
@@ -403,8 +384,8 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
                                   Text(
                                     "Воспроизведение музыки",
                                     style: TextStyle(
-                                      color: scheme!.onBackground
-                                          .withOpacity(0.75),
+                                      color:
+                                          scheme.onBackground.withOpacity(0.75),
                                     ),
                                   ), // TODO: INTL
                                   Text(
@@ -488,7 +469,7 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
                                             "Следующим сыграет",
                                             overflow: TextOverflow.ellipsis,
                                             style: TextStyle(
-                                              color: scheme!.onBackground
+                                              color: scheme.onBackground
                                                   .withOpacity(0.75),
                                             ),
                                           ), // TODO: INTL
@@ -606,7 +587,7 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
                                                   BoxShadow(
                                                     blurRadius: 20,
                                                     spreadRadius: -1,
-                                                    color: scheme!.tertiary,
+                                                    color: scheme.tertiary,
                                                     blurStyle: BlurStyle.outer,
                                                   )
                                                 ],
@@ -665,7 +646,7 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
                                                       fontWeight:
                                                           FontWeight.w500,
                                                       fontSize: 36,
-                                                      color: scheme!
+                                                      color: scheme
                                                           .onPrimaryContainer,
                                                     ),
                                                   ),
@@ -678,8 +659,7 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
                                                       .currentAudio!.isExplicit)
                                                     Icon(
                                                       Icons.explicit,
-                                                      color: scheme!
-                                                          .onBackground
+                                                      color: scheme.onBackground
                                                           .withOpacity(0.5),
                                                     ),
                                                 ],
@@ -689,7 +669,7 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
                                                 overflow: TextOverflow.ellipsis,
                                                 style: TextStyle(
                                                   fontSize: 24,
-                                                  color: scheme!
+                                                  color: scheme
                                                       .onPrimaryContainer
                                                       .withOpacity(0.75),
                                                 ),
@@ -712,7 +692,7 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
                                     overlayShape:
                                         SliderComponentShape.noOverlay,
                                     inactiveTrackColor:
-                                        scheme!.primary.withOpacity(0.5),
+                                        scheme.primary.withOpacity(0.5),
                                   ),
                                   child: Slider(
                                     value: player.progress,
@@ -745,7 +725,7 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
                                                 player.shuffleModeEnabled
                                                     ? Icons.shuffle_on_outlined
                                                     : Icons.shuffle,
-                                                color: scheme!.primary,
+                                                color: scheme.primary,
                                               ),
                                             ),
                                             const SizedBox(
@@ -757,7 +737,7 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
                                               ),
                                               icon: Icon(
                                                 Icons.skip_previous,
-                                                color: scheme!.primary,
+                                                color: scheme.primary,
                                               ),
                                             ),
                                             const SizedBox(
@@ -771,7 +751,7 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
                                                     ? Icons.pause_circle
                                                     : Icons.play_circle,
                                                 color:
-                                                    scheme!.onPrimaryContainer,
+                                                    scheme.onPrimaryContainer,
                                               ),
                                               iconSize: 50,
                                             ),
@@ -782,7 +762,7 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
                                               onPressed: () => player.next(),
                                               icon: Icon(
                                                 Icons.skip_next,
-                                                color: scheme!.primary,
+                                                color: scheme.primary,
                                               ),
                                             ),
                                             const SizedBox(
@@ -798,7 +778,7 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
                                                 player.loopMode == LoopMode.one
                                                     ? Icons.repeat_on_outlined
                                                     : Icons.repeat,
-                                                color: scheme!.primary,
+                                                color: scheme.primary,
                                               ),
                                             ),
                                           ],
@@ -840,7 +820,7 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
                                                       context),
                                               icon: Icon(
                                                 Icons.fullscreen_exit,
-                                                color: scheme!.primary,
+                                                color: scheme.primary,
                                               ),
                                             ),
                                           ],

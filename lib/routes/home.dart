@@ -250,7 +250,13 @@ class _HomeRouteState extends State<HomeRoute> {
     final bool isMobileLayout =
         getDeviceType(MediaQuery.of(context).size) == DeviceScreenType.mobile;
 
-    final bool showMiniPlayer = player.loaded;
+    /// Указывает, должен ли быть показан плеер снизу.
+    final bool showMusicPlayer = player.loaded;
+
+    /// Цветовая схема для плеера снизу.
+    final ColorScheme playerColorScheme = player.getColorScheme(
+      MediaQuery.of(context).platformBrightness,
+    );
 
     return Scaffold(
       appBar: isMobileLayout
@@ -304,11 +310,13 @@ class _HomeRouteState extends State<HomeRoute> {
             ],
           ),
           AnimatedAlign(
-            duration: const Duration(milliseconds: 500),
+            duration: const Duration(
+              milliseconds: 500,
+            ),
             curve: Curves.ease,
             alignment: navigationPage.audioPlayerAlign,
             child: AnimatedOpacity(
-              opacity: showMiniPlayer ? 1 : 0,
+              opacity: showMusicPlayer ? 1 : 0,
               curve: Curves.ease,
               duration: const Duration(
                 milliseconds: 500,
@@ -316,7 +324,7 @@ class _HomeRouteState extends State<HomeRoute> {
               child: AnimatedSlide(
                 offset: Offset(
                   0,
-                  showMiniPlayer ? 0 : 1,
+                  showMusicPlayer ? 0 : 1,
                 ),
                 duration: const Duration(
                   milliseconds: 500,
@@ -343,6 +351,7 @@ class _HomeRouteState extends State<HomeRoute> {
                     audio: player.currentAudio,
                     previousAudio: player.previousAudio,
                     nextAudio: player.nextAudio,
+                    scheme: playerColorScheme,
                     favoriteState: player.currentAudio != null
                         ? user.favoriteMediaKeys
                             .contains(player.currentAudio!.mediaKey)

@@ -339,6 +339,9 @@ class BottomMusicPlayer extends StatefulWidget {
   /// Если данное поле оставить как null, то надпись, показывающая следующий трек перед завершением текущего (при [useBigLayout] = true) отображаться не будет.
   final ExtendedVKAudio? nextAudio;
 
+  /// Указывает цветовую схему для плеера.
+  final ColorScheme scheme;
+
   /// Указывает, что в данный момент трек воспроизводится.
   final bool playbackState;
 
@@ -404,6 +407,7 @@ class BottomMusicPlayer extends StatefulWidget {
     this.audio,
     this.previousAudio,
     this.nextAudio,
+    required this.scheme,
     this.playbackState = false,
     this.favoriteState = false,
     this.isBuffering = false,
@@ -429,19 +433,8 @@ class BottomMusicPlayer extends StatefulWidget {
 }
 
 class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
-  /// Последняя известная цветовая схема для данного плеера.
-  ///
-  /// Используется как fallback в тот момент, пока актуальный [ColorScheme] ещё не был создан.
-  ColorScheme? scheme;
-
   @override
   Widget build(BuildContext context) {
-    // Если fallback-цветовая схема плеера не была сохранена, то нам нужно её сохранить.
-    scheme ??= ColorScheme.fromSeed(
-      seedColor: Colors.grey,
-      brightness: Theme.of(context).brightness,
-    );
-
     /// Url изображения данного трека.
     final String? imageUrl = widget.audio?.album?.thumb?.photo68;
 
@@ -460,29 +453,16 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
             ? (widget.progress >= nextPlayingTextProgress)
             : false;
 
-    // Запускаем процесс получения ColorScheme для данного трека.
-    if (imageUrl != null && widget.audio != null) {
-      colorSchemeFromUrl(
-        imageUrl,
-        MediaQuery.of(context).platformBrightness,
-        widget.audio!.mediaKey,
-      ).then((ColorScheme newScheme) {
-        if (scheme == newScheme) return;
-
-        scheme = newScheme;
-      });
-    }
-
     final Widget playPauseButton = widget.useBigLayout
         ? IconButton.filled(
             onPressed: () =>
                 widget.onPlayStateToggle?.call(!widget.playbackState),
             icon: Icon(
               widget.playbackState ? Icons.pause : Icons.play_arrow,
-              color: scheme!.onSecondaryContainer,
+              color: widget.scheme.onSecondaryContainer,
             ),
             style: IconButton.styleFrom(
-              backgroundColor: scheme!.secondaryContainer,
+              backgroundColor: widget.scheme.secondaryContainer,
             ),
           )
         : IconButton(
@@ -490,14 +470,14 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                 widget.onPlayStateToggle?.call(!widget.playbackState),
             icon: Icon(
               widget.playbackState ? Icons.pause : Icons.play_arrow,
-              color: scheme!.primary,
+              color: widget.scheme.primary,
             ),
           );
     final Widget shuffleButton = IconButton(
       onPressed: () => widget.onShuffleToggle?.call(!widget.isShuffleEnabled),
       icon: Icon(
         widget.isShuffleEnabled ? Icons.shuffle_on_outlined : Icons.shuffle,
-        color: scheme!.primary,
+        color: widget.scheme.primary,
       ),
     );
 
@@ -508,7 +488,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
       ),
       decoration: BoxDecoration(
         color: darkenColor(
-          scheme!.primaryContainer,
+          widget.scheme.primaryContainer,
           widget.playbackState ? 0 : 15,
         ),
         borderRadius: widget.useBigLayout
@@ -516,7 +496,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
             : BorderRadius.circular(globalBorderRadius),
         boxShadow: [
           BoxShadow(
-            color: scheme!.secondaryContainer,
+            color: widget.scheme.secondaryContainer,
             blurRadius: widget.playbackState ? 50 : 0,
             blurStyle: BlurStyle.outer,
           ),
@@ -540,7 +520,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                     fit: FlexFit.tight,
                     child: TrackNameInfoWidget(
                       width: sideBlocksSize,
-                      scheme: scheme!,
+                      scheme: widget.scheme,
                       audio: widget.audio,
                       image: imageUrl != null
                           ? CachedNetworkImageProvider(
@@ -577,7 +557,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                   : widget.nextAudio != null))
                             NextTrackInfoWidget(
                               displayNextTrack: displayNextTrack,
-                              scheme: scheme!,
+                              scheme: widget.scheme,
                               nextAudio: widget.isRepeatEnabled
                                   ? widget.audio!
                                   : widget.nextAudio!,
@@ -598,7 +578,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                   onPressed: widget.onPreviousTrack,
                                   icon: Icon(
                                     Icons.skip_previous,
-                                    color: scheme!.primary,
+                                    color: widget.scheme.primary,
                                   ),
                                 ),
                               ),
@@ -618,7 +598,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                   onPressed: widget.onNextTrack,
                                   icon: Icon(
                                     Icons.skip_next,
-                                    color: scheme!.primary,
+                                    color: widget.scheme.primary,
                                   ),
                                 ),
                               ),
@@ -635,7 +615,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                     widget.isRepeatEnabled
                                         ? Icons.repeat_on_outlined
                                         : Icons.repeat,
-                                    color: scheme!.primary,
+                                    color: widget.scheme.primary,
                                   ),
                                 ),
                               ),
@@ -661,7 +641,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                 width: 150,
                                 child: ScrollableSlider(
                                   value: widget.volume,
-                                  activeColor: scheme!.primary,
+                                  activeColor: widget.scheme.primary,
                                   onChanged: (double newVolume) {
                                     widget.onVolumeChange?.call(newVolume);
 
@@ -687,7 +667,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                   ),
                                   icon: Icon(
                                     Icons.fullscreen,
-                                    color: scheme!.primary,
+                                    color: widget.scheme.primary,
                                   ),
                                 ),
                               ),
@@ -713,7 +693,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                             widget.favoriteState
                                 ? Icons.favorite
                                 : Icons.favorite_outline,
-                            color: scheme!.primary,
+                            color: widget.scheme.primary,
                           ),
                         ),
 
@@ -728,7 +708,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
 
           // Полоска внизу для отображения прогресса трека.
           BottomMusicProgressBar(
-            scheme: scheme!,
+            scheme: widget.scheme,
             isBuffering: widget.isBuffering,
             playbackState: widget.playbackState,
             progress: widget.progress,

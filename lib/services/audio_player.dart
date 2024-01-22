@@ -4,6 +4,7 @@ import "dart:io";
 import "package:audio_session/audio_session.dart";
 import "package:discord_rpc/discord_rpc.dart";
 import "package:flutter/foundation.dart";
+import "package:flutter/material.dart";
 import "package:just_audio/just_audio.dart";
 import "package:smtc_windows/smtc_windows.dart";
 
@@ -60,6 +61,14 @@ class VKMusicPlayer {
   ///
   /// Данный объект инициализируется при вызове [_initPlayer].
   AudioSession? audioSession;
+
+  /// Список из значений [Audio.mediaKey], по которым была запущена задача по созданию цветовой схемы в методе [getColorScheme].
+  List<String> _colorSchemeItemsQueue = [];
+
+  /// Последняя известная цветовая схема.
+  ///
+  /// Используется в методе [getColorscheme].
+  ColorScheme? _lastColorScheme;
 
   /// Флаг для [audioSession], устанавливаемый на значение true в случае, если плеер поставился на паузу из-за внешнего звонка или другой причины.
   bool _pausedExternally = false;
@@ -655,5 +664,35 @@ class VKMusicPlayer {
     if (discordRPCEnabled) {
       discordRPC?.clearPresence();
     }
+  }
+
+  /// Возвращает последнюю известную цветовую схему для плеера.
+  ///
+  /// Использует [ColorScheme.fromSeed] как цвет по-умолчанию.
+  ColorScheme getColorScheme(
+    Brightness brightness,
+  ) {
+    _lastColorScheme ??= ColorScheme.fromSeed(
+      seedColor: Colors.grey,
+      brightness: brightness,
+    );
+
+    // Начинаем Future по получению цветовой схемы, если таковая не была начата ранее.
+    if (player.currentAudio?.album?.thumb != null &&
+        !_colorSchemeItemsQueue.contains(
+          player.currentAudio!.mediaKey,
+        )) {
+      _colorSchemeItemsQueue.add(player.currentAudio!.mediaKey);
+
+      colorSchemeFromUrl(
+        player.currentAudio!.album!.thumb!.photo68!,
+        brightness,
+        player.currentAudio!.mediaKey,
+      ).then(
+        (ColorScheme scheme) => _lastColorScheme = scheme,
+      );
+    }
+
+    return _lastColorScheme!;
   }
 }
