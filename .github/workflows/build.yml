@@ -35,14 +35,7 @@ jobs:
         run: flutter build apk --release
 
       - name: Publish in Telegram
-        uses: appleboy/telegram-action@master
-        with:
-          to: ${{ secrets.TELEGRAM_TO }}
-          token: ${{ secrets.TELEGRAM_TOKEN }}
-          document: build/app/outputs/flutter-apk/app-release.apk
-          format: html
-          message: |
-            <b>🚧 Новый билд для #Android</b>.
+        run: curl -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendDocument -F chat_id='${{ secrets.TELEGRAM_TO }}' -F caption=' <b>🚧 Новый билд для #Android</b>.' -F parse_mode='HTML' -F document=@'./build/app/outputs/flutter-apk/app-release.apk'
 
 
   build_windows:
@@ -64,3 +57,21 @@ jobs:
 
       - name: Build Windows release
         run: flutter build windows --release
+
+      - name: Publish in Telegram
+        run: |
+          & "C:\Program Files\7-Zip\7z.exe" a -t7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on "./Windows-release.7z" ./build/Windows/x64/runner/Release/
+
+          $telegramToken = $env:TELEGRAM_TOKEN
+          $telegramTo = $env:TELEGRAM_TO
+          $caption = '<b>🚧 Новый билд для #Windows</b>.'
+
+          $response = Invoke-RestMethod -Uri "https://api.telegram.org/bot$telegramToken/sendDocument" -Method Post -Form @{
+              chat_id = $telegramTo
+              caption = $caption
+              parse_mode = 'HTML'
+              document = Get-Item -Path './Windows-release.7z'
+          }
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_TO: ${{ secrets.TELEGRAM_TO }}
