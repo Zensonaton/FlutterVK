@@ -122,9 +122,6 @@ class ExtendedVKAudio extends Audio {
         duration: Duration(
           seconds: duration,
         ),
-        extras: {
-          "audio": this,
-        },
       );
 
   ExtendedVKAudio({

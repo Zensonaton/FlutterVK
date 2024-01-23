@@ -26,6 +26,7 @@ class VKMusicPlayer {
 
   ExtendedVKPlaylist? _playlist;
   ConcatenatingAudioSource? _queue;
+  List<ExtendedVKAudio>? _audiosQueue;
 
   VKMusicPlayer() {
     _subscriptions = [
@@ -63,7 +64,7 @@ class VKMusicPlayer {
   AudioSession? audioSession;
 
   /// Список из значений [Audio.mediaKey], по которым была запущена задача по созданию цветовой схемы в методе [getColorScheme].
-  List<String> _colorSchemeItemsQueue = [];
+  final List<String> _colorSchemeItemsQueue = [];
 
   /// Последняя известная цветовая схема.
   ///
@@ -198,7 +199,7 @@ class VKMusicPlayer {
   ExtendedVKAudio? get previousAudio {
     if (previousTrackIndex == null) return null;
 
-    return _queue?.sequence[previousTrackIndex!].tag.extras["audio"];
+    return _audiosQueue?[previousTrackIndex!];
   }
 
   /// Возвращает объект [Audio] для трека, который находится предыдущим в очереди. Если очередь пуста, либо это самый первый трек в очереди, то возвращает null.
@@ -207,7 +208,7 @@ class VKMusicPlayer {
   ExtendedVKAudio? get currentAudio {
     if (trackIndex == null) return null;
 
-    return _queue?.sequence[trackIndex!].tag.extras["audio"];
+    return _audiosQueue?[trackIndex!];
   }
 
   /// Возвращает объект [Audio] для трека, который находится предыдущим в очереди. Если очередь пуста, либо это самый первый трек в очереди, то возвращает null.
@@ -216,7 +217,7 @@ class VKMusicPlayer {
   ExtendedVKAudio? get nextAudio {
     if (nextTrackIndex == null) return null;
 
-    return _queue?.sequence[nextTrackIndex!].tag.extras["audio"];
+    return _audiosQueue?[nextTrackIndex!];
   }
 
   /// Возвращает текущий плейлист.
@@ -462,6 +463,7 @@ class VKMusicPlayer {
 
     _playlist = null;
     _queue = null;
+    _audiosQueue = null;
     _loaded = false;
 
     _loadedStateController.add(_loaded);
@@ -530,6 +532,7 @@ class VKMusicPlayer {
     if (playlist.audios!.isEmpty) return;
 
     _playlist = playlist;
+    _audiosQueue = playlist.audios!;
     _queue = ConcatenatingAudioSource(
       children: [
         for (ExtendedVKAudio audio in playlist.audios!)
@@ -558,6 +561,7 @@ class VKMusicPlayer {
     _queue ??= ConcatenatingAudioSource(
       children: [],
     );
+    _audiosQueue ??= [];
 
     _queue!.insert(
       nextTrackIndex ?? 0,
@@ -566,6 +570,7 @@ class VKMusicPlayer {
         tag: audio.asMediaItem,
       ),
     );
+    _audiosQueue!.add(audio);
   }
 
   /// Включает или отключает Discord Rich Presence.
