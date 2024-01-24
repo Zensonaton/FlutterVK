@@ -1,7 +1,6 @@
 import "dart:async";
 import "dart:ui";
 
-import "package:animations/animations.dart";
 import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
@@ -1437,7 +1436,19 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
                 milliseconds: 500,
               ),
               curve: Curves.ease,
-              color: scheme.primaryContainer,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [
+                    scheme.primaryContainer,
+                    darkenColor(
+                      scheme.primaryContainer,
+                      50,
+                    ),
+                  ],
+                ),
+              ),
               child: Stack(
                 children: [
                   // Размытое фоновое изображение.
@@ -1456,8 +1467,6 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
                               player.currentAudio!.album!.thumb!.photo600!,
                           cacheKey: "${player.currentAudio!.mediaKey}600",
                           fit: BoxFit.cover,
-                          placeholder: (BuildContext context, String url) =>
-                              const FallbackAudioAvatar(),
                           cacheManager: CachedNetworkImagesManager.instance,
                           color: scheme.background.withOpacity(0.75),
                           colorBlendMode: BlendMode.darken,
