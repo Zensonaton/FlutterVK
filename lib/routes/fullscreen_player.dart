@@ -854,21 +854,23 @@ class FullscreenPlayerDesktopRoute extends StatelessWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               // Управление громкостью.
-                              ScrollableSlider(
-                                value: player.volume,
-                                onChanged: (double newVolume) async {
-                                  await player.setVolume(newVolume);
+                              if (isDesktop)
+                                ScrollableSlider(
+                                  value: player.volume,
+                                  onChanged: (double newVolume) async {
+                                    await player.setVolume(newVolume);
 
-                                  // Если пользователь установил минимальную громкость, а так же настройка "Пауза при отключении громкости" включена, то ставим плеер на паузу.
-                                  if (newVolume == 0 &&
-                                      user.settings.pauseOnMuteEnabled) {
-                                    await player.pause();
-                                  }
-                                },
-                              ),
-                              const SizedBox(
-                                width: 18,
-                              ),
+                                    // Если пользователь установил минимальную громкость, а так же настройка "Пауза при отключении громкости" включена, то ставим плеер на паузу.
+                                    if (newVolume == 0 &&
+                                        user.settings.pauseOnMuteEnabled) {
+                                      await player.pause();
+                                    }
+                                  },
+                                ),
+                              if (isDesktop)
+                                const SizedBox(
+                                  width: 18,
+                                ),
 
                               // Показ текста песни.
                               IconButton(

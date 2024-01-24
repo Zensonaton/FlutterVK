@@ -638,27 +638,29 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                           mainAxisSize: MainAxisSize.min,
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            Flexible(
-                              child: SizedBox(
-                                width: 150,
-                                child: ScrollableSlider(
-                                  value: widget.volume,
-                                  activeColor: widget.scheme.primary,
-                                  onChanged: (double newVolume) {
-                                    widget.onVolumeChange?.call(newVolume);
+                            if (isDesktop)
+                              Flexible(
+                                child: SizedBox(
+                                  width: 150,
+                                  child: ScrollableSlider(
+                                    value: widget.volume,
+                                    activeColor: widget.scheme.primary,
+                                    onChanged: (double newVolume) {
+                                      widget.onVolumeChange?.call(newVolume);
 
-                                    // Если пользователь установил минимальную громкость, а так же настройка "Пауза при отключении громкости" включена, то ставим плеер на паузу.
-                                    if (newVolume == 0 &&
-                                        widget.pauseOnMuteEnabled) {
-                                      widget.onPlayStateToggle?.call(false);
-                                    }
-                                  },
+                                      // Если пользователь установил минимальную громкость, а так же настройка "Пауза при отключении громкости" включена, то ставим плеер на паузу.
+                                      if (newVolume == 0 &&
+                                          widget.pauseOnMuteEnabled) {
+                                        widget.onPlayStateToggle?.call(false);
+                                      }
+                                    },
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(
-                              width: 8,
-                            ),
+                            if (isDesktop)
+                              const SizedBox(
+                                width: 8,
+                              ),
 
                             // Кнопка для перехода в полноэкранный режим.
                             Flexible(
