@@ -170,11 +170,13 @@
 	"profile_discordRPCTitle": "Discord Rich Presence",
 	"profile_discordRPCDescription": "Включает трансляцию текущего трека в Discord",
 
-	"profile_pauseOnMuteTitle": "Пауза при отключении громкости",
-	"profile_pauseOnMuteDescription": "Данная опция указывает, будет ли плеер ставиться на паузу при установке минимальной громкости в плеере",
-
 	"profile_useThumbnailAsBackgroundTitle": "Изображение трека как фон",
 	"profile_useThumbnailAsBackgroundDescription": "Работает в полноэкранном плеере",
+
+	"profile_usePlayerColorsAppWideTitle": "Использование цветов плеера по всему приложению",
+
+	"profile_pauseOnMuteTitle": "Пауза при отключении громкости",
+	"profile_pauseOnMuteDescription": "Данная опция указывает, будет ли плеер ставиться на паузу при установке минимальной громкости в плеере",
 
 	"profile_exportMusicListTitle": "Экспорт списка треков"
 }

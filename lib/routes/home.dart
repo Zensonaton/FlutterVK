@@ -11,6 +11,7 @@ import "package:responsive_builder/responsive_builder.dart";
 import "../api/audio/add.dart";
 import "../api/audio/delete.dart";
 import "../main.dart";
+import "../provider/color.dart";
 import "../provider/user.dart";
 import "../services/cache_manager.dart";
 import "../services/logger.dart";
@@ -235,6 +236,8 @@ class _HomeRouteState extends State<HomeRoute> {
   @override
   Widget build(BuildContext context) {
     final UserProvider user = Provider.of<UserProvider>(context);
+    final PlayerSchemeProvider colorScheme =
+        Provider.of<PlayerSchemeProvider>(context, listen: false);
 
     if (!user.isAuthorized) {
       return const Center(
@@ -253,9 +256,20 @@ class _HomeRouteState extends State<HomeRoute> {
     /// Указывает, должен ли быть показан плеер снизу.
     final bool showMusicPlayer = player.loaded;
 
-    /// Цветовая схема для плеера снизу.
-    final ColorScheme playerColorScheme = player.getColorScheme(
+    /// Запускаем задачу по получению цветовой схемы.
+    player
+        .getColorSchemeAsync(
       MediaQuery.of(context).platformBrightness,
+    )
+        .then(
+      (ColorScheme? scheme) {
+        if (scheme == null) return;
+
+        colorScheme.setScheme(
+          scheme,
+          mediaKey: player.currentAudio!.mediaKey,
+        );
+      },
     );
 
     return Scaffold(
@@ -351,7 +365,8 @@ class _HomeRouteState extends State<HomeRoute> {
                     audio: player.currentAudio,
                     previousAudio: player.previousAudio,
                     nextAudio: player.nextAudio,
-                    scheme: playerColorScheme,
+                    scheme: colorScheme.colorScheme ??
+                        Theme.of(context).colorScheme,
                     favoriteState: player.currentAudio != null
                         ? user.favoriteMediaKeys
                             .contains(player.currentAudio!.mediaKey)

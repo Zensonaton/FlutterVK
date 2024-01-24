@@ -12,6 +12,7 @@ import "package:provider/provider.dart";
 import "package:responsive_builder/responsive_builder.dart";
 import "package:window_manager/window_manager.dart";
 
+import "provider/color.dart";
 import "provider/user.dart";
 import "routes/home.dart";
 import "routes/welcome.dart";
@@ -28,6 +29,15 @@ BuildContext? buildContext;
 
 /// Объект аудиоплеера.
 late final VKMusicPlayer player;
+
+final fallbackLightColorScheme = ColorScheme.fromSeed(
+  seedColor: Colors.blueAccent,
+);
+
+final fallbackDarkColorScheme = ColorScheme.fromSeed(
+  seedColor: Colors.blueAccent,
+  brightness: Brightness.dark,
+);
 
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -91,8 +101,15 @@ Future main() async {
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => UserProvider(false),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (BuildContext context) => UserProvider(false),
+        ),
+        ChangeNotifierProvider(
+          create: (BuildContext context) => PlayerSchemeProvider(),
+        ),
+      ],
       child: const MainApp(),
     ),
   );
@@ -108,15 +125,6 @@ class MainApp extends StatefulWidget {
 }
 
 class _MainAppState extends State<MainApp> with WindowListener {
-  static final fallbackLightColorScheme = ColorScheme.fromSeed(
-    seedColor: Colors.blueAccent,
-  );
-
-  static final fallbackDarkColorScheme = ColorScheme.fromSeed(
-    seedColor: Colors.blueAccent,
-    brightness: Brightness.dark,
-  );
-
   ThemeData buildTheme(ColorScheme colorScheme) => ThemeData(
         useMaterial3: true,
         colorScheme: colorScheme,
@@ -173,21 +181,33 @@ class _MainAppState extends State<MainApp> with WindowListener {
 
   @override
   Widget build(BuildContext context) {
+    final UserProvider user = Provider.of<UserProvider>(context);
+    final PlayerSchemeProvider colorScheme =
+        Provider.of<PlayerSchemeProvider>(context);
+
     if (home == null) {
       return const Center(
         child: CircularProgressIndicator.adaptive(),
       );
     }
 
-    return DynamicColorBuilder(builder: (lightColorScheme, darkColorScheme) {
+    return DynamicColorBuilder(
+        builder: (ColorScheme? lightColorScheme, ColorScheme? darkColorScheme) {
+      final playerColorScheme =
+          user.settings.playerColorsAppWide ? colorScheme.colorScheme : null;
+
       return MaterialApp(
-        theme: buildTheme(lightColorScheme ?? fallbackLightColorScheme),
-        darkTheme: buildTheme(darkColorScheme ?? fallbackDarkColorScheme),
-        builder: ((BuildContext context, Widget? child) {
+        theme: buildTheme(
+          playerColorScheme ?? lightColorScheme ?? fallbackLightColorScheme,
+        ),
+        darkTheme: buildTheme(
+          playerColorScheme ?? darkColorScheme ?? fallbackDarkColorScheme,
+        ),
+        builder: (BuildContext context, Widget? child) {
           return LoadingOverlay(
             child: child!,
           );
-        }),
+        },
         onGenerateTitle: (BuildContext context) {
           buildContext = context;
 

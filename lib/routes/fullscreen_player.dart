@@ -17,6 +17,7 @@ import "package:visibility_detector/visibility_detector.dart";
 import "../api/audio/get_lyrics.dart";
 import "../consts.dart";
 import "../main.dart";
+import "../provider/color.dart";
 import "../provider/user.dart";
 import "../services/cache_manager.dart";
 import "../services/logger.dart";
@@ -1368,10 +1369,23 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
   @override
   Widget build(BuildContext context) {
     final UserProvider user = Provider.of<UserProvider>(context);
+    final PlayerSchemeProvider colorScheme =
+        Provider.of<PlayerSchemeProvider>(context, listen: false);
 
-    // Получаем цветовую схему.
-    final ColorScheme scheme = player.getColorScheme(
+    /// Запускаем задачу по получению цветовой схемы.
+    player
+        .getColorSchemeAsync(
       MediaQuery.of(context).platformBrightness,
+    )
+        .then(
+      (ColorScheme? scheme) {
+        if (scheme == null) return;
+
+        colorScheme.setScheme(
+          scheme,
+          mediaKey: player.currentAudio!.mediaKey,
+        );
+      },
     );
 
     // Если известно, что у трека есть текст песни, то пытаемся его загрузить.
@@ -1423,7 +1437,7 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
 
     return Theme(
       data: ThemeData(
-        colorScheme: scheme,
+        colorScheme: colorScheme.colorScheme,
       ),
       child: Scaffold(
         body: CallbackShortcuts(
@@ -1445,9 +1459,9 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
                   colors: [
-                    scheme.primaryContainer,
+                    Theme.of(context).colorScheme.primaryContainer,
                     darkenColor(
-                      scheme.primaryContainer,
+                      Theme.of(context).colorScheme.primaryContainer,
                       50,
                     ),
                   ],
@@ -1472,7 +1486,10 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
                           cacheKey: "${player.currentAudio!.mediaKey}600",
                           fit: BoxFit.cover,
                           cacheManager: CachedNetworkImagesManager.instance,
-                          color: scheme.background.withOpacity(0.75),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .background
+                              .withOpacity(0.75),
                           colorBlendMode: BlendMode.darken,
                         ),
                       ),

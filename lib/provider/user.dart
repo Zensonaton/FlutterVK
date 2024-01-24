@@ -216,6 +216,9 @@ class Settings {
 
   /// Указывает, что включён показ текста трека в полноэкранном плеере.
   bool trackLyricsEnabled = true;
+
+  /// Указывает, что цвета плеера распространяются на всё приложение.
+  bool playerColorsAppWide = false;
 }
 
 /// Provider для получения объекта пользователя в контексте интерфейса приложения.
@@ -427,6 +430,10 @@ class UserProvider extends ChangeNotifier {
       "TrackLyricsEnabled",
       settings.trackLyricsEnabled,
     );
+    await prefs.setBool(
+      "PlayerColorsAppWide",
+      settings.playerColorsAppWide,
+    );
   }
 
   /// Загружает данный объект пользователя с диска.
@@ -464,6 +471,8 @@ class UserProvider extends ChangeNotifier {
     settings.playerThumbAsBackground =
         prefs.getBool("PlayerThumbAsBackground") ?? true;
     settings.trackLyricsEnabled = prefs.getBool("TrackLyricsEnabled") ?? true;
+    settings.playerColorsAppWide =
+        prefs.getBool("PlayerColorsAppWide") ?? false;
 
     markUpdated(false);
 

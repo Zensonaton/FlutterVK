@@ -261,6 +261,25 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                 },
               ),
 
+              // Использование цветов плеера по всему приложению.
+              SwitchListTile(
+                secondary: const Icon(
+                  Icons.color_lens,
+                ),
+                title: Text(
+                  AppLocalizations.of(context)!
+                      .profile_usePlayerColorsAppWideTitle,
+                ),
+                value: user.settings.playerColorsAppWide,
+                onChanged: (bool? enabled) async {
+                  if (enabled == null) return;
+
+                  user.settings.playerColorsAppWide = enabled;
+
+                  user.markUpdated();
+                },
+              ),
+
               // Пауза воспроизведения при минимальной громкости.
               if (isDesktop)
                 SwitchListTile(

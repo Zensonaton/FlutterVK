@@ -63,13 +63,8 @@ class VKMusicPlayer {
   /// Данный объект инициализируется при вызове [_initPlayer].
   AudioSession? audioSession;
 
-  /// Список из значений [Audio.mediaKey], по которым была запущена задача по созданию цветовой схемы в методе [getColorScheme].
+  /// Список из значений [Audio.mediaKey], по которым была запущена задача по созданию цветовой схемы в методе [getColorSchemeAsync].
   final List<String> _colorSchemeItemsQueue = [];
-
-  /// Последняя известная цветовая схема.
-  ///
-  /// Используется в методе [getColorscheme].
-  ColorScheme? _lastColorScheme;
 
   /// Флаг для [audioSession], устанавливаемый на значение true в случае, если плеер поставился на паузу из-за внешнего звонка или другой причины.
   bool _pausedExternally = false;
@@ -672,32 +667,26 @@ class VKMusicPlayer {
   }
 
   /// Возвращает последнюю известную цветовую схему для плеера.
-  ///
-  /// Использует [ColorScheme.fromSeed] как цвет по-умолчанию.
-  ColorScheme getColorScheme(
+  Future<ColorScheme?> getColorSchemeAsync(
     Brightness brightness,
-  ) {
-    _lastColorScheme ??= ColorScheme.fromSeed(
-      seedColor: Colors.grey,
-      brightness: brightness,
-    );
-
-    // Начинаем Future по получению цветовой схемы, если таковая не была начата ранее.
+  ) async {
     if (player.currentAudio?.album?.thumb != null &&
         !_colorSchemeItemsQueue.contains(
           player.currentAudio!.mediaKey,
         )) {
       _colorSchemeItemsQueue.add(player.currentAudio!.mediaKey);
 
-      colorSchemeFromUrl(
+      ColorScheme scheme = await colorSchemeFromUrl(
         player.currentAudio!.album!.thumb!.photo68!,
         brightness,
         "${player.currentAudio!.mediaKey}68",
-      ).then(
-        (ColorScheme scheme) => _lastColorScheme = scheme,
       );
+
+      _colorSchemeItemsQueue.remove(player.currentAudio!.mediaKey);
+
+      return scheme;
     }
 
-    return _lastColorScheme!;
+    return null;
   }
 }
