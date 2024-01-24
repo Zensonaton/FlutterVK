@@ -942,8 +942,11 @@ class FullscreenPlayerMobileRoute extends StatelessWidget {
 
     const double imageSize = 400;
 
-    final double lyricsBlockSize =
-        MediaQuery.of(context).size.height - padding * 2 - 200;
+    final double lyricsBlockSize = MediaQuery.of(context).size.height -
+        padding * 2 -
+        200 -
+        MediaQuery.of(context).systemGestureInsets.bottom -
+        MediaQuery.of(context).systemGestureInsets.top;
 
     /// Указывает, что пользователь включил показа текста песни, а так же текст существует и он загружен.
     final bool lyricsLoadedAndShown = user.settings.trackLyricsEnabled &&
@@ -1137,7 +1140,7 @@ class FullscreenPlayerMobileRoute extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.center,
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Expanded(
+                              Flexible(
                                 child: Text(
                                   player.currentAudio!.title,
                                   overflow: TextOverflow.ellipsis,
@@ -1496,9 +1499,11 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
                     ),
 
                   // Внутреннее содержимое, зависящее от типа layout'а.
-                  useMobileLayout
-                      ? FullscreenPlayerMobileRoute()
-                      : FullscreenPlayerDesktopRoute(),
+                  SafeArea(
+                    child: useMobileLayout
+                        ? FullscreenPlayerMobileRoute()
+                        : FullscreenPlayerDesktopRoute(),
+                  ),
                 ],
               ),
             ),
