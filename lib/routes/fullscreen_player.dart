@@ -1134,16 +1134,18 @@ class FullscreenPlayerMobileRoute extends StatelessWidget {
                           // Название трека (и иконка explicit).
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text(
-                                player.currentAudio!.title,
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 2,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onPrimaryContainer,
+                              Expanded(
+                                child: Text(
+                                  player.currentAudio!.title,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimaryContainer,
+                                  ),
                                 ),
                               ),
                               if (player.currentAudio!.isExplicit)
