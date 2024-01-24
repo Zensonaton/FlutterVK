@@ -32,8 +32,8 @@ class LyricTimestamp {
   LyricTimestamp(
     this.line, {
     this.interlude = false,
-    this.begin = 0,
-    this.end = 0,
+    this.begin,
+    this.end,
   });
 
   factory LyricTimestamp.fromJson(Map<String, dynamic> json) =>

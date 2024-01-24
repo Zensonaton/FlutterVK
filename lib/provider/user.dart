@@ -213,6 +213,9 @@ class Settings {
 
   /// Указывает, что полноэкранный плеер использует изображение трека в качестве фона.
   bool playerThumbAsBackground = true;
+
+  /// Указывает, что включён показ текста трека в полноэкранном плеере.
+  bool trackLyricsEnabled = true;
 }
 
 /// Provider для получения объекта пользователя в контексте интерфейса приложения.
@@ -420,6 +423,10 @@ class UserProvider extends ChangeNotifier {
       "PlayerThumbAsBackground",
       settings.playerThumbAsBackground,
     );
+    await prefs.setBool(
+      "TrackLyricsEnabled",
+      settings.trackLyricsEnabled,
+    );
   }
 
   /// Загружает данный объект пользователя с диска.
@@ -456,6 +463,7 @@ class UserProvider extends ChangeNotifier {
     settings.pauseOnMuteEnabled = prefs.getBool("PauseOnMuteEnabled") ?? false;
     settings.playerThumbAsBackground =
         prefs.getBool("PlayerThumbAsBackground") ?? true;
+    settings.trackLyricsEnabled = prefs.getBool("TrackLyricsEnabled") ?? true;
 
     markUpdated(false);
 

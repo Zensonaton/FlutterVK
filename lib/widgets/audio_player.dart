@@ -473,13 +473,6 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
               color: widget.scheme.primary,
             ),
           );
-    final Widget shuffleButton = IconButton(
-      onPressed: () => widget.onShuffleToggle?.call(!widget.isShuffleEnabled),
-      icon: Icon(
-        widget.isShuffleEnabled ? Icons.shuffle_on_outlined : Icons.shuffle,
-        color: widget.scheme.primary,
-      ),
-    );
 
     return AnimatedContainer(
       height: widget.useBigLayout ? 88 : 66,
@@ -568,7 +561,16 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Flexible(
-                                child: shuffleButton,
+                                child: IconButton(
+                                  onPressed: () => widget.onShuffleToggle
+                                      ?.call(!widget.isShuffleEnabled),
+                                  icon: Icon(
+                                    widget.isShuffleEnabled
+                                        ? Icons.shuffle_on_outlined
+                                        : Icons.shuffle,
+                                    color: widget.scheme.primary,
+                                  ),
+                                ),
                               ),
                               const SizedBox(
                                 width: 8,
@@ -682,9 +684,6 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Кнопка shuffle.
-                        shuffleButton,
-
                         // Кнопка лайка.
                         IconButton(
                           onPressed: () => widget.onFavoriteStateToggle

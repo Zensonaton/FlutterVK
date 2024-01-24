@@ -28,7 +28,7 @@ import "home/profile.dart";
 Future<void> toggleTrackLikeState(
   BuildContext context,
   ExtendedVKAudio audio,
-  bool like,
+  bool isFavorite,
 ) async {
   final UserProvider user = Provider.of<UserProvider>(context, listen: false);
   final AppLogger logger = getLogger("toggleTrackLikeState");
@@ -37,7 +37,7 @@ Future<void> toggleTrackLikeState(
 
   // Делаем API запрос, что бы либо удалить трек, либо добавить в лайкнутые.
   try {
-    if (like) {
+    if (isFavorite) {
       // Сохраняем трек как лайкнутый.
       final APIAudioAddResponse response = await user.audioAdd(
         audio.id,
@@ -104,7 +104,7 @@ Future<void> toggleTrackLikeState(
   } catch (e, stackTrace) {
     // ignore: use_build_context_synchronously
     showLogErrorDialog(
-      "Ошибка при попытке сделать трек лайкнутым/дизлайкнутым (новое состояние: $like): ",
+      "Ошибка при попытке сделать трек лайкнутым/дизлайкнутым (новое состояние: $isFavorite): ",
       e,
       stackTrace,
       logger,
@@ -151,7 +151,7 @@ class _HomeRouteState extends State<HomeRoute> {
         allowBigAudioPlayer: false,
       ),
       NavigationPage(
-        label: AppLocalizations.of(buildContext!)!.music_Label,
+        label: AppLocalizations.of(buildContext!)!.music_label,
         icon: Icons.my_library_music_outlined,
         selectedIcon: Icons.my_library_music,
         route: const HomeMusicPage(),

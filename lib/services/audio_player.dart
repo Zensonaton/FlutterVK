@@ -692,7 +692,7 @@ class VKMusicPlayer {
       colorSchemeFromUrl(
         player.currentAudio!.album!.thumb!.photo68!,
         brightness,
-        player.currentAudio!.mediaKey,
+        "${player.currentAudio!.mediaKey}68",
       ).then(
         (ColorScheme scheme) => _lastColorScheme = scheme,
       );

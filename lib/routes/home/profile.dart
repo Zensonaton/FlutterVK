@@ -90,9 +90,9 @@ class ConnectRecommendationsDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialDialog(
       icon: Icons.auto_fix_high,
-      title: AppLocalizations.of(context)!.music_ConnectRecommendationsTitle,
+      title: AppLocalizations.of(context)!.music_connectRecommendationsTitle,
       text:
-          AppLocalizations.of(context)!.music_ConnectRecommendationsDescription,
+          AppLocalizations.of(context)!.music_connectRecommendationsDescription,
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
@@ -114,7 +114,7 @@ class ConnectRecommendationsDialog extends StatelessWidget {
             );
           },
           child: Text(
-            AppLocalizations.of(context)!.music_ConnectRecommendationsConnect,
+            AppLocalizations.of(context)!.music_connectRecommendationsConnect,
           ),
         )
       ],
