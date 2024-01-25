@@ -292,12 +292,23 @@ class _TrackLyricsBlockState extends State<TrackLyricsBlock> {
 }
 
 /// Desktop layout для полноэкранного плеера.
-class FullscreenPlayerDesktopRoute extends StatelessWidget {
+class FullscreenPlayerDesktopRoute extends StatefulWidget {
   final AppLogger logger = getLogger("FullscreenPlayerDesktopRoute");
-
   FullscreenPlayerDesktopRoute({
     super.key,
   });
+
+  @override
+  State<FullscreenPlayerDesktopRoute> createState() =>
+      _FullscreenPlayerDesktopRouteState();
+}
+
+class _FullscreenPlayerDesktopRouteState
+    extends State<FullscreenPlayerDesktopRoute> {
+  /// Переменная, хранящая в себе временное значение [Slider]'а, используемое во время скроллинга прогресса воспроизведения трека.
+  ///
+  /// Данная переменная не null только тогда, пока пользователь меняет значение у [Slider]'а.
+  double? progressScrollValue;
 
   @override
   Widget build(BuildContext context) {
@@ -703,10 +714,15 @@ class FullscreenPlayerDesktopRoute extends StatelessWidget {
                           .withOpacity(0.5),
                     ),
                     child: Slider(
-                      value: player.progress,
-                      onChanged: (double value) {},
-                      onChangeEnd: (double newProgress) =>
-                          player.seekNormalized(newProgress),
+                      value: progressScrollValue ?? player.progress,
+                      onChanged: (double value) {
+                        setState(() => progressScrollValue = value);
+                      },
+                      onChangeEnd: (double newProgress) async {
+                        await player.seekNormalized(newProgress);
+
+                        progressScrollValue = null;
+                      },
                     ),
                   ),
                   const SizedBox(
@@ -934,7 +950,7 @@ class FullscreenPlayerDesktopRoute extends StatelessWidget {
 }
 
 /// Mobile layout для полноэкранного плеера.
-class FullscreenPlayerMobileRoute extends StatelessWidget {
+class FullscreenPlayerMobileRoute extends StatefulWidget {
   final AppLogger logger = getLogger("FullscreenPlayerMobileRoute");
 
   FullscreenPlayerMobileRoute({
@@ -942,14 +958,29 @@ class FullscreenPlayerMobileRoute extends StatelessWidget {
   });
 
   @override
+  State<FullscreenPlayerMobileRoute> createState() =>
+      _FullscreenPlayerMobileRouteState();
+}
+
+class _FullscreenPlayerMobileRouteState
+    extends State<FullscreenPlayerMobileRoute> {
+  /// Переменная, хранящая в себе временное значение [Slider]'а, используемое во время скроллинга прогресса воспроизведения трека.
+  ///
+  /// Данная переменная не null только тогда, пока пользователь меняет значение у [Slider]'а.
+  double? progressScrollValue;
+
+  @override
   Widget build(BuildContext context) {
     final UserProvider user = Provider.of<UserProvider>(context);
 
+    /// Размер Padding'а.
     const double padding = 20;
 
+    /// Размер изображения по центру.
     const double imageSize = 400;
 
-    final double lyricsBlockSize = MediaQuery.of(context).size.height -
+    /// Высота блока с текстом песни.
+    final double lyricsBlockHeight = MediaQuery.of(context).size.height -
         padding * 2 -
         200 -
         MediaQuery.of(context).systemGestureInsets.bottom -
@@ -1030,7 +1061,7 @@ class FullscreenPlayerMobileRoute extends StatelessWidget {
 
           // Изображение трека, либо текст песни поверх него.
           SizedBox(
-            height: lyricsBlockSize,
+            height: lyricsBlockHeight,
             child: Stack(
               alignment: Alignment.center,
               children: [
@@ -1227,10 +1258,15 @@ class FullscreenPlayerMobileRoute extends StatelessWidget {
                         Theme.of(context).colorScheme.primary.withOpacity(0.5),
                   ),
                   child: Slider(
-                    value: player.progress,
-                    onChanged: (double value) {},
-                    onChangeEnd: (double newProgress) =>
-                        player.seekNormalized(newProgress),
+                    value: progressScrollValue ?? player.progress,
+                    onChanged: (double value) {
+                      setState(() => progressScrollValue = value);
+                    },
+                    onChangeEnd: (double newProgress) async {
+                      await player.seekNormalized(newProgress);
+
+                      progressScrollValue = null;
+                    },
                   ),
                 ),
 
