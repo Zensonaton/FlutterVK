@@ -180,6 +180,8 @@ class _TrackLyricsBlockState extends State<TrackLyricsBlock> {
 
     // Скроллим до этого момента в треке.
     if (currentLyricIndex != null) {
+      currentLyricIsVisible = true;
+
       scrollToIndex(
         currentLyricIndex!,
         checkVisibility: false,
@@ -188,8 +190,6 @@ class _TrackLyricsBlockState extends State<TrackLyricsBlock> {
   }
 
   /// Возвращает индекс текущей строчки в тексте песни.
-  ///
-  /// В случае, если поменялся индекс, вызывает метод [onLyricLineChanged].
   int? getCurrentLyricIndex() {
     final int playerPosition = player.position.inMilliseconds;
 
@@ -203,10 +203,6 @@ class _TrackLyricsBlockState extends State<TrackLyricsBlock> {
 
       // Если у нас плеер находится в 'правильной' позиции, то тогда мы нашли активную строчку.
       if (playerPosition >= lyric.begin! && playerPosition <= lyric.end!) {
-        if (currentLyricIndex != i) {
-          onLyricLineChanged(lyric);
-        }
-
         return i;
       }
     }
@@ -230,9 +226,7 @@ class _TrackLyricsBlockState extends State<TrackLyricsBlock> {
   }
 
   /// Метод, вызываемый при изменении строчки песни.
-  void onLyricLineChanged(
-    LyricTimestamp lyric,
-  ) {
+  void onLyricLineChanged() {
     // Если индекс неизвестен, то ничего не делаем.
     if (currentLyricIndex == null) return;
 
@@ -242,7 +236,14 @@ class _TrackLyricsBlockState extends State<TrackLyricsBlock> {
   @override
   Widget build(BuildContext context) {
     // Пытаемся найти индекс текущего момента в тексте песни.
-    currentLyricIndex = getCurrentLyricIndex();
+    final int? newLyricIndex = getCurrentLyricIndex();
+
+    // Если поменялась строчка песни, то скроллим до этой строчки.
+    if (newLyricIndex != currentLyricIndex) {
+      currentLyricIndex = newLyricIndex;
+
+      onLyricLineChanged();
+    }
 
     return ListView.builder(
       controller: controller,
