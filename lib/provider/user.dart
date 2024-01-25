@@ -206,7 +206,7 @@ class Settings {
   bool discordRPCEnabled = true;
 
   /// Указывает, что настройка "пауза при минимальной громкости" включена.
-  bool pauseOnMuteEnabled = true;
+  bool pauseOnMuteEnabled = false;
 
   /// Указывает, что полноэкранный плеер использует изображение трека в качестве фона.
   bool playerThumbAsBackground = true;
