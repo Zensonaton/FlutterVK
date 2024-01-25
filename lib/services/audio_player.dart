@@ -571,7 +571,10 @@ class VKMusicPlayer {
         tag: audio.asMediaItem,
       ),
     );
-    _audiosQueue!.add(audio);
+    _audiosQueue!.insert(
+      nextTrackIndex ?? 0,
+      audio,
+    );
   }
 
   /// Включает или отключает Discord Rich Presence.
