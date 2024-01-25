@@ -1383,7 +1383,65 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
     final PlayerSchemeProvider colorScheme =
         Provider.of<PlayerSchemeProvider>(context, listen: false);
 
-    /// Запускаем задачу по получению цветовой схемы.
+    // Проверка на случай, если запустился плеер без активного трека.
+    if (player.currentAudio == null) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // GIF с собакой.
+              Image.asset(
+                "assets/images/dog.gif",
+                width: 25 * 5,
+                height: 12 * 5,
+                fit: BoxFit.fill,
+              ),
+              const SizedBox(
+                height: 18,
+              ),
+
+              // Текст.
+              StyledText(
+                text: AppLocalizations.of(context)!.music_fullscreenNoAudio,
+                textAlign: TextAlign.center,
+                tags: {
+                  "bold": StyledTextTag(
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  "exit": StyledTextActionTag(
+                    (String? text, Map<String?, String?> attrs) {
+                      closeFullscreenPlayer(context);
+                    },
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                },
+              ),
+              const SizedBox(
+                height: 24,
+              ),
+
+              // Кнопка для выхода.
+              FilledButton.icon(
+                onPressed: () => closeFullscreenPlayer(context),
+                icon: const Icon(
+                  Icons.fullscreen_exit,
+                ),
+                label: Text(
+                  AppLocalizations.of(context)!.music_fullscreenNoAudioButton,
+                ),
+              )
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Запускаем задачу по получению цветовой схемы.
     player.getColorSchemeAsync().then(
       ((ColorScheme, ColorScheme)? schemes) {
         if (schemes == null) return;
@@ -1397,7 +1455,7 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
     );
 
     // Если известно, что у трека есть текст песни, то пытаемся его загрузить.
-    if ((player.currentAudio?.hasLyrics ?? false) &&
+    if (player.currentAudio!.hasLyrics &&
         player.currentAudio!.lyrics == null &&
         !lyricsQueue.contains(player.currentAudio!.mediaKey)) {
       lyricsQueue.add(player.currentAudio!.mediaKey);
