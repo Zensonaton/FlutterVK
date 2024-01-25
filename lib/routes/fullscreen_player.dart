@@ -1525,9 +1525,13 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
                   colors: [
-                    Theme.of(context).colorScheme.primaryContainer,
+                    (colorScheme.darkColorScheme ??
+                            Theme.of(context).colorScheme)
+                        .primaryContainer,
                     darkenColor(
-                      Theme.of(context).colorScheme.primaryContainer,
+                      (colorScheme.darkColorScheme ??
+                              Theme.of(context).colorScheme)
+                          .primaryContainer,
                       50,
                     ),
                   ],
