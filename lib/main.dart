@@ -209,6 +209,11 @@ class _MainAppState extends State<MainApp> with WindowListener {
         darkTheme: buildTheme(
           playerDarkColorScheme ?? darkColorScheme ?? fallbackDarkColorScheme,
         ),
+        themeMode: user.settings.theme,
+        themeAnimationDuration: const Duration(
+          milliseconds: 500,
+        ),
+        themeAnimationCurve: Curves.ease,
         builder: (BuildContext context, Widget? child) {
           return LoadingOverlay(
             child: child!,

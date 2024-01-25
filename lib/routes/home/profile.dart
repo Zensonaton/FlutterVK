@@ -238,6 +238,46 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                   },
                 ),
 
+              // Тема приложения.
+              ListTile(
+                leading: const Icon(
+                  Icons.dark_mode,
+                ),
+                title: Text(
+                  AppLocalizations.of(context)!.profile_themeTitle,
+                ),
+                trailing: DropdownButton(
+                  onChanged: (ThemeMode? mode) {
+                    if (mode == null) return;
+
+                    user.settings.theme = mode;
+
+                    user.markUpdated();
+                  },
+                  value: user.settings.theme,
+                  items: [
+                    DropdownMenuItem(
+                      value: ThemeMode.system,
+                      child: Text(
+                        AppLocalizations.of(context)!.profile_themeSystem,
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: ThemeMode.light,
+                      child: Text(
+                        AppLocalizations.of(context)!.profile_themeLight,
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: ThemeMode.dark,
+                      child: Text(
+                        AppLocalizations.of(context)!.profile_themeDark,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
               // Использование изображения трека для фона в полноэкранном плеере.
               SwitchListTile(
                 secondary: const Icon(

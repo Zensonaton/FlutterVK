@@ -170,6 +170,11 @@
 	"profile_discordRPCTitle": "Discord Rich Presence",
 	"profile_discordRPCDescription": "Включает трансляцию текущего трека в Discord",
 
+	"profile_themeTitle": "Тема",
+	"profile_themeSystem": "Системная",
+	"profile_themeLight": "Светлая",
+	"profile_themeDark": "Тёмная",
+
 	"profile_useThumbnailAsBackgroundTitle": "Изображение трека как фон",
 	"profile_useThumbnailAsBackgroundDescription": "Работает в полноэкранном плеере",
 

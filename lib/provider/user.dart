@@ -205,9 +205,6 @@ class Settings {
   /// Указывает, что Discord Rich Presence включён.
   bool discordRPCEnabled = true;
 
-  /// Указывает, что нормализация треков включена.
-  bool audioNormalizationEnabled = true;
-
   /// Указывает, что настройка "пауза при минимальной громкости" включена.
   bool pauseOnMuteEnabled = true;
 
@@ -219,6 +216,9 @@ class Settings {
 
   /// Указывает, что цвета плеера распространяются на всё приложение.
   bool playerColorsAppWide = false;
+
+  /// Указывает то, какая тема приложения используется.
+  ThemeMode theme = ThemeMode.system;
 }
 
 /// Provider для получения объекта пользователя в контексте интерфейса приложения.
@@ -415,10 +415,6 @@ class UserProvider extends ChangeNotifier {
       settings.discordRPCEnabled,
     );
     await prefs.setBool(
-      "AudioNormalizationEnabled",
-      settings.audioNormalizationEnabled,
-    );
-    await prefs.setBool(
       "PauseOnMuteEnabled",
       settings.pauseOnMuteEnabled,
     );
@@ -433,6 +429,10 @@ class UserProvider extends ChangeNotifier {
     await prefs.setBool(
       "PlayerColorsAppWide",
       settings.playerColorsAppWide,
+    );
+    await prefs.setInt(
+      "Theme",
+      settings.theme.index,
     );
   }
 
@@ -465,14 +465,13 @@ class UserProvider extends ChangeNotifier {
     settings.byVKChipEnabled = prefs.getBool("ByVKChipEnabled") ?? true;
     settings.shuffleEnabled = prefs.getBool("ShuffleEnabled") ?? false;
     settings.discordRPCEnabled = prefs.getBool("DiscordRPCEnabled") ?? true;
-    settings.audioNormalizationEnabled =
-        prefs.getBool("AudioNormalizationEnabled") ?? true;
     settings.pauseOnMuteEnabled = prefs.getBool("PauseOnMuteEnabled") ?? false;
     settings.playerThumbAsBackground =
         prefs.getBool("PlayerThumbAsBackground") ?? true;
     settings.trackLyricsEnabled = prefs.getBool("TrackLyricsEnabled") ?? true;
     settings.playerColorsAppWide =
         prefs.getBool("PlayerColorsAppWide") ?? false;
+    settings.theme = ThemeMode.values[prefs.getInt("Theme") ?? 0];
 
     markUpdated(false);
 
