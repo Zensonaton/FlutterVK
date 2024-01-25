@@ -200,7 +200,7 @@ class TrackNameInfoWidget extends StatelessWidget {
                         onFavoriteStateToggle?.call(!favoriteState),
                     icon: Icon(
                       favoriteState ? Icons.favorite : Icons.favorite_outline,
-                      color: scheme.primary,
+                      color: scheme.onPrimaryContainer,
                     ),
                   ),
                 ),
@@ -251,7 +251,7 @@ class BottomMusicProgressBar extends StatelessWidget {
         child: isBuffering
             ? LinearProgressIndicator(
                 minHeight: 2,
-                color: scheme.primary.withOpacity(
+                color: scheme.onPrimaryContainer.withOpacity(
                   playbackState ? 1 : 0.5,
                 ),
               )
@@ -259,7 +259,7 @@ class BottomMusicProgressBar extends StatelessWidget {
                 widthFactor: progress,
                 child: Container(
                   height: 2,
-                  color: scheme.primary.withOpacity(
+                  color: scheme.onPrimaryContainer.withOpacity(
                     playbackState ? 1 : 0.5,
                   ),
                 ),
@@ -454,15 +454,12 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
             : false;
 
     final Widget playPauseButton = widget.useBigLayout
-        ? IconButton.filled(
+        ? IconButton(
             onPressed: () =>
                 widget.onPlayStateToggle?.call(!widget.playbackState),
             icon: Icon(
               widget.playbackState ? Icons.pause : Icons.play_arrow,
-              color: widget.scheme.onSecondaryContainer,
-            ),
-            style: IconButton.styleFrom(
-              backgroundColor: widget.scheme.secondaryContainer,
+              color: widget.scheme.onPrimaryContainer,
             ),
           )
         : IconButton(
@@ -470,7 +467,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                 widget.onPlayStateToggle?.call(!widget.playbackState),
             icon: Icon(
               widget.playbackState ? Icons.pause : Icons.play_arrow,
-              color: widget.scheme.primary,
+              color: widget.scheme.onPrimaryContainer,
             ),
           );
 
@@ -486,7 +483,9 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
         ),
         borderRadius: widget.useBigLayout
             ? null
-            : BorderRadius.circular(globalBorderRadius),
+            : BorderRadius.circular(
+                globalBorderRadius,
+              ),
         boxShadow: [
           BoxShadow(
             color: widget.scheme.secondaryContainer,
@@ -559,6 +558,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                           // Ряд из кнопок управления.
                           Row(
                             mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Flexible(
                                 child: IconButton(
@@ -568,25 +568,29 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                     widget.isShuffleEnabled
                                         ? Icons.shuffle_on_outlined
                                         : Icons.shuffle,
-                                    color: widget.scheme.primary,
+                                    color: widget.scheme.onPrimaryContainer,
                                   ),
                                 ),
                               ),
                               const SizedBox(
                                 width: 8,
                               ),
+
+                              // Прерыдущий трек.
                               Flexible(
                                 child: IconButton(
                                   onPressed: widget.onPreviousTrack,
                                   icon: Icon(
                                     Icons.skip_previous,
-                                    color: widget.scheme.primary,
+                                    color: widget.scheme.onPrimaryContainer,
                                   ),
                                 ),
                               ),
                               const SizedBox(
                                 width: 8,
                               ),
+
+                              // Кнопка паузы/воспроизведения.
                               Flexible(
                                 child: playPauseButton,
                               ),
@@ -600,7 +604,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                   onPressed: widget.onNextTrack,
                                   icon: Icon(
                                     Icons.skip_next,
-                                    color: widget.scheme.primary,
+                                    color: widget.scheme.onPrimaryContainer,
                                   ),
                                 ),
                               ),
@@ -617,7 +621,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                     widget.isRepeatEnabled
                                         ? Icons.repeat_on_outlined
                                         : Icons.repeat,
-                                    color: widget.scheme.primary,
+                                    color: widget.scheme.onPrimaryContainer,
                                   ),
                                 ),
                               ),
@@ -644,7 +648,11 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                   width: 150,
                                   child: ScrollableSlider(
                                     value: widget.volume,
-                                    activeColor: widget.scheme.primary,
+                                    activeColor:
+                                        widget.scheme.onPrimaryContainer,
+                                    inactiveColor: widget
+                                        .scheme.onPrimaryContainer
+                                        .withOpacity(0.5),
                                     onChanged: (double newVolume) {
                                       widget.onVolumeChange?.call(newVolume);
 
@@ -671,7 +679,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                   ),
                                   icon: Icon(
                                     Icons.fullscreen,
-                                    color: widget.scheme.primary,
+                                    color: widget.scheme.onPrimaryContainer,
                                   ),
                                 ),
                               ),
@@ -694,7 +702,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                             widget.favoriteState
                                 ? Icons.favorite
                                 : Icons.favorite_outline,
-                            color: widget.scheme.primary,
+                            color: widget.scheme.onPrimaryContainer,
                           ),
                         ),
 

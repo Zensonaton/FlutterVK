@@ -859,6 +859,12 @@ class FullscreenPlayerDesktopRoute extends StatelessWidget {
                               if (isDesktop)
                                 ScrollableSlider(
                                   value: player.volume,
+                                  activeColor:
+                                      Theme.of(context).colorScheme.primary,
+                                  inactiveColor: Theme.of(context)
+                                      .colorScheme
+                                      .primary
+                                      .withOpacity(0.5),
                                   onChanged: (double newVolume) async {
                                     await player.setVolume(newVolume);
 
@@ -1216,6 +1222,7 @@ class FullscreenPlayerMobileRoute extends StatelessWidget {
                   data: SliderThemeData(
                     trackShape: CustomTrackShape(),
                     overlayShape: SliderComponentShape.noOverlay,
+                    activeTrackColor: Theme.of(context).colorScheme.primary,
                     inactiveTrackColor:
                         Theme.of(context).colorScheme.primary.withOpacity(0.5),
                   ),
@@ -1377,17 +1384,14 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
         Provider.of<PlayerSchemeProvider>(context, listen: false);
 
     /// Запускаем задачу по получению цветовой схемы.
-    player
-        .getColorSchemeAsync(
-      MediaQuery.of(context).platformBrightness,
-    )
-        .then(
-      (ColorScheme? scheme) {
-        if (scheme == null) return;
+    player.getColorSchemeAsync().then(
+      ((ColorScheme, ColorScheme)? schemes) {
+        if (schemes == null) return;
 
         colorScheme.setScheme(
-          scheme,
-          mediaKey: player.currentAudio!.mediaKey,
+          schemes.$1,
+          schemes.$2,
+          player.currentAudio!.mediaKey,
         );
       },
     );
@@ -1441,7 +1445,7 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
 
     return Theme(
       data: ThemeData(
-        colorScheme: colorScheme.colorScheme,
+        colorScheme: colorScheme.darkColorScheme,
       ),
       child: Scaffold(
         body: CallbackShortcuts(
@@ -1490,10 +1494,9 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
                           cacheKey: "${player.currentAudio!.mediaKey}600",
                           fit: BoxFit.cover,
                           cacheManager: CachedNetworkImagesManager.instance,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .background
-                              .withOpacity(0.75),
+                          color: Colors.black.withOpacity(
+                            0.55,
+                          ),
                           colorBlendMode: BlendMode.darken,
                         ),
                       ),

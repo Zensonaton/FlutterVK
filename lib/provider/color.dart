@@ -5,7 +5,6 @@ import "package:flutter/material.dart";
 /// Использование:
 /// ```dart
 /// final PlayerSchemeProvider scheme = Provider.of<PlayerSchemeProvider>(context, listen: false);
-/// print(user.id);
 /// ```
 ///
 /// Если Вы хотите получить цветовую схему в контексте интерфейса Flutter, и хотите, что бы интерфейс сам обновлялся при изменении полей, то используйте следующий код:
@@ -13,32 +12,35 @@ import "package:flutter/material.dart";
 /// final PlayerSchemeProvider scheme = Provider.of<PlayerSchemeProvider>(context);
 /// ```
 class PlayerSchemeProvider extends ChangeNotifier {
-  ColorScheme? _colorScheme;
-
   String? _mediaKey;
 
-  /// Выдаёт последний известный [ColorScheme].
-  ColorScheme? get colorScheme => _colorScheme;
+  ColorScheme? _lightColorScheme;
+  ColorScheme? _darkColorScheme;
 
-  /// Выдаёт [Audio.mediaKey], с которым ассоциирован последний [colorScheme].
+  /// Выдаёт последний известный [ColorScheme] яркости [Brightness.light].
+  ColorScheme? get lightColorScheme => _lightColorScheme;
+
+  /// Выдаёт последний известный [ColorScheme] яркости [Brightness.dark].
+  ColorScheme? get darkColorScheme => _darkColorScheme;
+
+  /// Возвращает [ColorScheme] в зависимости от параметра [brightness].
+  ColorScheme? colorScheme(Brightness brightness) =>
+      brightness == Brightness.light ? lightColorScheme : darkColorScheme;
+
+  /// Выдаёт [Audio.mediaKey], с которым ассоциирован последний [lightColorScheme] или [darkColorScheme].
   String? get mediaKey => _mediaKey;
 
   /// Изменяет передаваемый [scheme], посылая изменения всему интерфейсу приложения. [mediaKey] используется для защиты от повторного вызова [notifyListeners].
   void setScheme(
-    ColorScheme? scheme, {
-    String? mediaKey,
-  }) {
-    if (scheme != null) {
-      assert(
-        mediaKey != null,
-        "setScheme() requires cacheMediaKey to be non-null when scheme is specified",
-      );
-    }
-
-    _colorScheme = scheme;
+    ColorScheme lightScheme,
+    ColorScheme darkScheme,
+    String mediaKey,
+  ) {
+    _lightColorScheme = lightScheme;
+    _darkColorScheme = darkScheme;
 
     // Посылаем обновления лишь в том случае, если mediaKey изменился, т.е., изменилась обложка трека.
-    if (_mediaKey != mediaKey || scheme == null) {
+    if (_mediaKey != mediaKey) {
       notifyListeners();
     }
     _mediaKey = mediaKey;

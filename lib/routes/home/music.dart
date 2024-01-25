@@ -1245,7 +1245,10 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
                                   width: 50,
                                   height: 50,
                                   decoration: BoxDecoration(
-                                    color: Colors.black.withOpacity(0.5),
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .background
+                                        .withOpacity(0.5),
                                     borderRadius: BorderRadius.circular(
                                       globalBorderRadius,
                                     ),
@@ -1513,7 +1516,10 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
                       width: 200,
                       height: 200,
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.5),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .background
+                            .withOpacity(0.5),
                         borderRadius: BorderRadius.circular(globalBorderRadius),
                       ),
                       child: !isHovered && selectedAndPlaying

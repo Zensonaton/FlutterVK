@@ -193,15 +193,21 @@ class _MainAppState extends State<MainApp> with WindowListener {
 
     return DynamicColorBuilder(
         builder: (ColorScheme? lightColorScheme, ColorScheme? darkColorScheme) {
-      final playerColorScheme =
-          user.settings.playerColorsAppWide ? colorScheme.colorScheme : null;
+      final playerLightColorScheme = user.settings.playerColorsAppWide
+          ? colorScheme.lightColorScheme
+          : null;
+      final playerDarkColorScheme = user.settings.playerColorsAppWide
+          ? colorScheme.darkColorScheme
+          : null;
 
       return MaterialApp(
         theme: buildTheme(
-          playerColorScheme ?? lightColorScheme ?? fallbackLightColorScheme,
+          playerLightColorScheme ??
+              lightColorScheme ??
+              fallbackLightColorScheme,
         ),
         darkTheme: buildTheme(
-          playerColorScheme ?? darkColorScheme ?? fallbackDarkColorScheme,
+          playerDarkColorScheme ?? darkColorScheme ?? fallbackDarkColorScheme,
         ),
         builder: (BuildContext context, Widget? child) {
           return LoadingOverlay(

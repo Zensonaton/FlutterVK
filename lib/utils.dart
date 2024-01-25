@@ -2,15 +2,7 @@ import "dart:io";
 import "dart:math";
 import "dart:ui";
 
-import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
-import "package:palette_generator/palette_generator.dart";
-
-import "services/cache_manager.dart";
-import "services/logger.dart";
-
-/// Кэш для изображений.
-Map<String, ColorScheme> imageColorSchemeCache = {};
 
 /// Извлекает access-токен из строки.
 String? extractAccessToken(String input) {
@@ -57,48 +49,6 @@ class NavigationPage {
     this.audioPlayerAlign = Alignment.bottomCenter,
     this.allowBigAudioPlayer = true,
   });
-}
-
-/// Создаёт цветовую схему из Url изображения.
-///
-/// Результаты работы данного метода кэшируются в [imageColorSchemeCache] при помощи ключа [cacheKey].
-Future<ColorScheme> colorSchemeFromUrl(
-  String imageUrl,
-  Brightness brightness,
-  String cacheKey,
-) async {
-  AppLogger logger = getLogger("generateColorSchemeFromImage");
-
-  // Пытаемся извлечь значение из кэша.
-  final ColorScheme? cachedScheme = imageColorSchemeCache[cacheKey];
-  if (cachedScheme != null) return cachedScheme;
-
-  logger.d("Creating ColorScheme for image hash $cacheKey");
-
-  final Stopwatch watch = Stopwatch()..start();
-
-  // Извлекаем цвета из изображения, делая объект PaletteGenerator.
-  final PaletteGenerator palette = await PaletteGenerator.fromImageProvider(
-    CachedNetworkImageProvider(
-      imageUrl,
-      cacheKey: cacheKey,
-      cacheManager: CachedNetworkImagesManager.instance,
-    ),
-  );
-
-  // Превращаем наш PaletteGenerator в цветовую схему.
-  final ColorScheme scheme = ColorScheme.fromSeed(
-    seedColor: palette.dominantColor?.color ?? Colors.grey,
-    brightness: brightness,
-  );
-
-  imageColorSchemeCache[cacheKey] = scheme;
-
-  logger.d(
-    "Done building ColorScheme for image hash $cacheKey, took ${watch.elapsed}",
-  );
-
-  return scheme;
 }
 
 /// Понижает яркость цвета.

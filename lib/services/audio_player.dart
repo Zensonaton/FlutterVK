@@ -2,10 +2,12 @@ import "dart:async";
 import "dart:io";
 
 import "package:audio_session/audio_session.dart";
+import "package:cached_network_image/cached_network_image.dart";
 import "package:discord_rpc/discord_rpc.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:just_audio/just_audio.dart";
+import "package:palette_generator/palette_generator.dart";
 import "package:smtc_windows/smtc_windows.dart";
 
 import "../api/shared.dart";
@@ -13,6 +15,7 @@ import "../consts.dart";
 import "../main.dart";
 import "../provider/user.dart";
 import "../utils.dart";
+import "cache_manager.dart";
 import "logger.dart";
 
 /// Класс для работы с аудиоплеером.
@@ -65,6 +68,9 @@ class VKMusicPlayer {
 
   /// Список из значений [Audio.mediaKey], по которым была запущена задача по созданию цветовой схемы в методе [getColorSchemeAsync].
   final List<String> _colorSchemeItemsQueue = [];
+
+  /// Кэш для объектов типа [ColorScheme] разных изображений по их [Audio.mediaKey].
+  Map<String, (ColorScheme, ColorScheme)> imageColorSchemeCache = {};
 
   /// Флаг для [audioSession], устанавливаемый на значение true в случае, если плеер поставился на паузу из-за внешнего звонка или другой причины.
   bool _pausedExternally = false;
@@ -666,27 +672,58 @@ class VKMusicPlayer {
     }
   }
 
-  /// Возвращает последнюю известную цветовую схему для плеера.
-  Future<ColorScheme?> getColorSchemeAsync(
-    Brightness brightness,
-  ) async {
-    if (player.currentAudio?.album?.thumb != null &&
-        !_colorSchemeItemsQueue.contains(
+  /// Создаёт две цветовых схемы из цветов плеера: [Brightness.light] и [Brightness.dark].
+  ///
+  /// Данный метод при повторном вызове (если уже идёт процесс создания цветовой схемы) возвращает null. Результаты данного метода кэшируются, поэтому можно повторно вызывать этот метод, если [Audio.mediaKey] одинаков.
+  Future<(ColorScheme, ColorScheme)?> getColorSchemeAsync() async {
+    final AppLogger logger = getLogger("getColorSchemeAsync");
+    final Stopwatch watch = Stopwatch()..start();
+
+    // Если у изображения трека нету фотографии, либо задача уже запущена, то возвращаем null.
+    if (player.currentAudio?.album?.thumb == null ||
+        _colorSchemeItemsQueue.contains(
           player.currentAudio!.mediaKey,
-        )) {
-      _colorSchemeItemsQueue.add(player.currentAudio!.mediaKey);
+        )) return null;
 
-      ColorScheme scheme = await colorSchemeFromUrl(
-        player.currentAudio!.album!.thumb!.photo68!,
-        brightness,
-        "${player.currentAudio!.mediaKey}68",
-      );
+    final String cacheKey = "${player.currentAudio!.mediaKey}68";
 
-      _colorSchemeItemsQueue.remove(player.currentAudio!.mediaKey);
+    // Задача по созданию цветовой схемы не находится в очереди, поэтому помещаем задачу в очередь.
+    _colorSchemeItemsQueue.add(cacheKey);
 
-      return scheme;
+    // Пытаемся извлечь значение цветовых схем из кэша.
+    if (imageColorSchemeCache.containsKey(cacheKey)) {
+      return imageColorSchemeCache[cacheKey];
     }
 
-    return null;
+    logger.d("Creating ColorScheme for $cacheKey");
+
+    // Извлекаем цвета из изображения, делая объект PaletteGenerator.
+    final PaletteGenerator palette = await PaletteGenerator.fromImageProvider(
+      CachedNetworkImageProvider(
+        player.currentAudio!.album!.thumb!.photo68!,
+        cacheKey: cacheKey,
+        cacheManager: CachedNetworkImagesManager.instance,
+      ),
+    );
+
+    // Превращаем наш PaletteGenerator в цветовые схемы.
+    final ColorScheme lightScheme = ColorScheme.fromSeed(
+      seedColor: palette.dominantColor?.color ?? Colors.grey,
+    );
+    final ColorScheme darkScheme = ColorScheme.fromSeed(
+      seedColor: palette.dominantColor?.color ?? Colors.grey,
+      brightness: Brightness.dark,
+    );
+
+    imageColorSchemeCache[cacheKey] = (lightScheme, darkScheme);
+
+    logger.d(
+      "Done building ColorScheme for $cacheKey, took ${watch.elapsed}",
+    );
+
+    // Удаляем из очереди.
+    _colorSchemeItemsQueue.remove(cacheKey);
+
+    return imageColorSchemeCache[cacheKey];
   }
 }

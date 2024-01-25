@@ -257,17 +257,14 @@ class _HomeRouteState extends State<HomeRoute> {
     final bool showMusicPlayer = player.loaded;
 
     /// Запускаем задачу по получению цветовой схемы.
-    player
-        .getColorSchemeAsync(
-      MediaQuery.of(context).platformBrightness,
-    )
-        .then(
-      (ColorScheme? scheme) {
-        if (scheme == null) return;
+    player.getColorSchemeAsync().then(
+      ((ColorScheme, ColorScheme)? schemes) {
+        if (schemes == null) return;
 
         colorScheme.setScheme(
-          scheme,
-          mediaKey: player.currentAudio!.mediaKey,
+          schemes.$1,
+          schemes.$2,
+          player.currentAudio!.mediaKey,
         );
       },
     );
@@ -365,8 +362,9 @@ class _HomeRouteState extends State<HomeRoute> {
                     audio: player.currentAudio,
                     previousAudio: player.previousAudio,
                     nextAudio: player.nextAudio,
-                    scheme: colorScheme.colorScheme ??
-                        Theme.of(context).colorScheme,
+                    scheme:
+                        colorScheme.colorScheme(Theme.of(context).brightness) ??
+                            Theme.of(context).colorScheme,
                     favoriteState: player.currentAudio != null
                         ? user.favoriteMediaKeys
                             .contains(player.currentAudio!.mediaKey)
