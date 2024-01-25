@@ -49,6 +49,7 @@ class VKMusicPlayer {
       sequenceStateStream.listen((SequenceState? state) async {
         if (state == null || currentAudio == null) return;
 
+        await updateMusicSessionTrack();
         await updateMusicSession();
       }),
     ];
@@ -242,7 +243,7 @@ class VKMusicPlayer {
           prevEnabled: true,
           stopEnabled: true,
         ),
-        enabled: true,
+        enabled: false,
       );
 
       try {
@@ -614,6 +615,28 @@ class VKMusicPlayer {
     if (_loaded) return;
   }
 
+  /// Метод, обновляющий данные о музыкальной сессии, отправляя новые данные по текущему треку после вызова метода [startMusicSession].
+  ///
+  /// Данный метод стоит вызывать после изменения текущего трека.
+  Future<void> updateMusicSessionTrack() async {
+    logger.d("Called updateMusicSessionTrack");
+
+    // Если у пользователя Windows, то посылаем SMTC обновление.
+    if (Platform.isWindows) {
+      if (!smtc!.enabled) await smtc!.enableSmtc();
+
+      await smtc?.updateMetadata(
+        MusicMetadata(
+          title: currentAudio!.title,
+          artist: currentAudio!.artist,
+          albumArtist: currentAudio!.artist,
+          album: currentAudio!.album?.title,
+          thumbnail: currentAudio!.album?.thumb?.photo,
+        ),
+      );
+    }
+  }
+
   /// Метод, обновляющий данные о музыкальной сессии после вызова метода [startMusicSession].
   ///
   /// Данный метод рекомендуется вызывать только при событиях изменения состояния плеера, например, начало буферизации, паузы/воспроизведения и/ли подобных.
@@ -625,19 +648,21 @@ class VKMusicPlayer {
     // Указываем, есть ли у нас в данный момент сессия музыки.
     await audioSession?.setActive(playing);
 
-    // Если у пользователя Windows, то посылаем SMTC обновление.
+    // Если у пользователя Windows, то обновляем параметры SMTC.
     if (Platform.isWindows) {
-      if (!smtc!.enabled) await smtc?.enableSmtc();
+      PlaybackStatus status = PlaybackStatus.Stopped;
 
-      await smtc?.updateMetadata(
-        MusicMetadata(
-          title: currentAudio!.title,
-          artist: currentAudio!.artist,
-          albumArtist: currentAudio!.artist,
-          album: currentAudio!.album?.title,
-          thumbnail: currentAudio!.album?.thumb?.photo,
-        ),
-      );
+      if (_player.playerState.processingState == ProcessingState.buffering) {
+        status = PlaybackStatus.Changing;
+      } else if (!loaded) {
+        status = PlaybackStatus.Stopped;
+      } else if (playing) {
+        status = PlaybackStatus.Playing;
+      } else if (!playing) {
+        status = PlaybackStatus.Paused;
+      }
+
+      await smtc?.setPlaybackStatus(status);
     }
 
     // Обновляем Discord RPC, если это разрешено пользователем.
