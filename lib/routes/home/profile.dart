@@ -246,6 +246,54 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                   },
                 ),
 
+              // Действие при закрытии.
+              if (isDesktop)
+                ListTile(
+                  leading: const Icon(
+                    Icons.close,
+                  ),
+                  title: Text(
+                    AppLocalizations.of(context)!.profile_closeActionTitle,
+                  ),
+                  subtitle: Text(
+                    AppLocalizations.of(context)!
+                        .profile_closeActionDescription,
+                  ),
+                  trailing: DropdownButton(
+                    onChanged: (AppCloseBehavior? behavior) {
+                      if (behavior == null) return;
+
+                      user.settings.closeBehavior = behavior;
+
+                      user.markUpdated();
+                    },
+                    value: user.settings.closeBehavior,
+                    items: [
+                      DropdownMenuItem(
+                        value: AppCloseBehavior.close,
+                        child: Text(
+                          AppLocalizations.of(context)!
+                              .profile_closeActionClose,
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: AppCloseBehavior.minimize,
+                        child: Text(
+                          AppLocalizations.of(context)!
+                              .profile_closeActionMinimize,
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: AppCloseBehavior.minimizeIfPlaying,
+                        child: Text(
+                          AppLocalizations.of(context)!
+                              .profile_closeActionMinimizeIfPlaying,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
               // Тема приложения.
               ListTile(
                 leading: const Icon(

@@ -217,8 +217,11 @@ class Settings {
   /// Указывает, что цвета плеера распространяются на всё приложение.
   bool playerColorsAppWide = false;
 
-  /// Указывает то, какая тема приложения используется.
+  /// Указывает, какая тема приложения используется.
   ThemeMode theme = ThemeMode.system;
+
+  /// Указывает поведение в случае закрытия приложения.
+  AppCloseBehavior closeBehavior = AppCloseBehavior.close;
 }
 
 /// Provider для получения объекта пользователя в контексте интерфейса приложения.
@@ -434,6 +437,10 @@ class UserProvider extends ChangeNotifier {
       "Theme",
       settings.theme.index,
     );
+    await prefs.setInt(
+      "CloseBehavior",
+      settings.closeBehavior.index,
+    );
   }
 
   /// Загружает данный объект пользователя с диска.
@@ -472,6 +479,8 @@ class UserProvider extends ChangeNotifier {
     settings.playerColorsAppWide =
         prefs.getBool("PlayerColorsAppWide") ?? false;
     settings.theme = ThemeMode.values[prefs.getInt("Theme") ?? 0];
+    settings.closeBehavior =
+        AppCloseBehavior.values[prefs.getInt("CloseBehavior") ?? 0];
 
     markUpdated(false);
 

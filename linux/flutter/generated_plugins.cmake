@@ -5,8 +5,10 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   discord_rpc
   dynamic_color
+  local_notifier
   media_kit_libs_linux
   screen_retriever
+  system_tray
   url_launcher_linux
   window_manager
 )

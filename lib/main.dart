@@ -7,11 +7,14 @@ import "package:flutter/services.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "package:flutter_localizations/flutter_localizations.dart";
 import "package:just_audio_background/just_audio_background.dart";
+import "package:local_notifier/local_notifier.dart";
 import "package:media_kit/media_kit.dart";
 import "package:provider/provider.dart";
 import "package:responsive_builder/responsive_builder.dart";
+import "package:system_tray/system_tray.dart";
 import "package:window_manager/window_manager.dart";
 
+import "consts.dart";
 import "provider/color.dart";
 import "provider/user.dart";
 import "routes/home.dart";
@@ -39,8 +42,79 @@ final fallbackDarkColorScheme = ColorScheme.fromSeed(
   brightness: Brightness.dark,
 );
 
+/// Инициализирует запись в системном трее Windows.
+Future<void> initSystemTray() async {
+  assert(
+    isDesktop,
+    "initSystemTray() can only be called on Desktop platforms",
+  );
+
+  // Инициализируем меню в трее.
+  final SystemTray systemTray = SystemTray();
+
+  await systemTray.initSystemTray(
+    title: "Flutter VK",
+    iconPath: Platform.isWindows ? "assets/icon.ico" : "assets/icon.png",
+  );
+
+  // Создаём контекстное меню.
+  final Menu menu = Menu()
+    ..buildFrom(
+      [
+        // Показ/скрытие окна приложения.
+        MenuItemLabel(
+          label: AppLocalizations.of(buildContext!)!.general_trayShowHide,
+          onClicked: (MenuItemBase menuItem) async {
+            if (await windowManager.isVisible()) {
+              await windowManager.hide();
+
+              return;
+            }
+
+            await windowManager.show();
+          },
+        ),
+        MenuSeparator(),
+
+        // Закрытие.
+        MenuItemLabel(
+          label: AppLocalizations.of(buildContext!)!.general_appMinimizedClose,
+          onClicked: (MenuItemBase menuItem) => exit(0),
+        ),
+      ],
+    );
+
+  // Устанавливаем контекстное меню.
+  await systemTray.setContextMenu(menu);
+
+  // Обрабатываем события нажатия по иконке.
+  systemTray.registerSystemTrayEventHandler(
+    (String eventName) {
+      if (eventName == kSystemTrayEventClick) {
+        Platform.isWindows
+            ? windowManager.show()
+            : systemTray.popUpContextMenu();
+      } else if (eventName == kSystemTrayEventRightClick) {
+        Platform.isWindows
+            ? systemTray.popUpContextMenu()
+            : windowManager.show();
+      }
+    },
+  );
+}
+
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Делаем панель навигации прозрачной.
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    systemNavigationBarColor: Colors.transparent,
+    systemNavigationBarDividerColor: Colors.transparent,
+  ));
+  SystemChrome.setEnabledSystemUIMode(
+    SystemUiMode.edgeToEdge,
+  );
+
   MediaKit.ensureInitialized();
 
   // Инициализируем WindowManager на Desktop-платформах.
@@ -53,25 +127,35 @@ Future main() async {
 
     // Устанавливаем размеры окна.
     windowManager.waitUntilReadyToShow(
-        const WindowOptions(
-          size: Size(
-            1280,
-            720,
-          ),
-          minimumSize: Size(
-            400,
-            500,
-          ),
-          center: true,
-        ), () async {
-      await windowManager.show();
+      const WindowOptions(
+        size: Size(
+          1280,
+          720,
+        ),
+        minimumSize: Size(
+          400,
+          500,
+        ),
+        center: true,
+      ),
+      () async {
+        await windowManager.show();
 
-      // Делаем фокус окна не в debug-режиме.
-      if (!kDebugMode) {
-        await windowManager.focus();
-      }
-    });
+        // Делаем фокус окна не в debug-режиме.
+        if (!kDebugMode) {
+          await windowManager.focus();
+        }
+
+        // Инициализируем иконку в трее.
+        await initSystemTray();
+      },
+    );
   }
+
+  // Инициализируем библиотеку для создания уведомлений.
+  await localNotifier.setup(
+    appName: "Flutter VK",
+  );
 
   // Инициализируем плеер.
   player = VKMusicPlayer();
@@ -92,13 +176,6 @@ Future main() async {
       watch: 100,
     ),
   );
-
-  // Делаем панель навигации прозрачной.
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    systemNavigationBarColor: Colors.transparent,
-    systemNavigationBarDividerColor: Colors.transparent,
-  ));
-  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
   runApp(
     MultiProvider(
@@ -171,10 +248,47 @@ class _MainAppState extends State<MainApp> with WindowListener {
   }
 
   @override
-  void onWindowClose() {
-    // TODO: Сделать так, что бы приложение просто минимизировалось при закрытии, если это позволяет сделать настройка у пользователя.
+  void onWindowClose() async {
+    final UserProvider user = Provider.of<UserProvider>(context, listen: false);
+    final AppCloseBehavior behavior = user.settings.closeBehavior;
 
-    exit(-1);
+    // В зависимости от настройки "Поведение при закрытии", приложение должно либо закрыться, либо просто минимизироваться.
+    if (behavior == AppCloseBehavior.minimize ||
+        (behavior == AppCloseBehavior.minimizeIfPlaying && player.playing)) {
+      final LocalNotification notification = LocalNotification(
+        title: "Flutter VK",
+        body: AppLocalizations.of(buildContext!)!.general_appMinimized,
+        silent: true,
+        actions: [
+          LocalNotificationAction(
+            text: AppLocalizations.of(buildContext!)!.general_appMinimizedClose,
+          ),
+          LocalNotificationAction(
+            text:
+                AppLocalizations.of(buildContext!)!.general_appMinimizedRestore,
+          ),
+        ],
+      );
+      notification.onClick = windowManager.show;
+      notification.onClickAction = (int index) async {
+        if (index == 0) {
+          exit(0);
+        }
+
+        await windowManager.show();
+        await notification.close();
+      };
+
+      // Отображаем уведомление.
+      await notification.show();
+
+      // Сворачиваем приложение.
+      await windowManager.hide();
+
+      return;
+    }
+
+    exit(0);
   }
 
   @override
@@ -183,6 +297,7 @@ class _MainAppState extends State<MainApp> with WindowListener {
     final PlayerSchemeProvider colorScheme =
         Provider.of<PlayerSchemeProvider>(context);
 
+    // Если мы ещё не загрузились, то показываем загрузку.
     if (home == null) {
       return const Center(
         child: CircularProgressIndicator.adaptive(),

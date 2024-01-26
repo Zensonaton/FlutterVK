@@ -6,9 +6,11 @@ list(APPEND FLUTTER_PLUGIN_LIST
   discord_rpc
   dynamic_color
   fullscreen_window
+  local_notifier
   media_kit_libs_windows_audio
   screen_retriever
   share_plus
+  system_tray
   url_launcher_windows
   window_manager
 )
