@@ -19,6 +19,7 @@ import "../utils.dart";
 import "../widgets/audio_player.dart";
 import "../widgets/dialogs.dart";
 import "../widgets/loading_overlay.dart";
+import "fullscreen_player.dart";
 import "home/messages.dart";
 import "home/music.dart";
 import "home/profile.dart";
@@ -394,9 +395,9 @@ class _HomeRouteState extends State<HomeRoute> {
                         player.playOrPause(enabled),
                     onVolumeChange: (double volume) => player.setVolume(volume),
                     onDismiss: () => player.stop(),
-                    onFullscreen: () => showWipDialog(
+                    onFullscreen: (bool viaSwipeUp) => openFullscreenPlayer(
                       context,
-                      title: "Полноэкранный плеер",
+                      fullscreenOnDesktop: !viaSwipeUp,
                     ),
                     onShuffleToggle: (bool enabled) async {
                       await player.setShuffle(enabled);

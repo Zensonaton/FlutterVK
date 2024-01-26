@@ -70,8 +70,10 @@ class TrackNameInfoWidget extends StatelessWidget {
   /// Метод, вызываемый при переключении повтора трека.
   final ValueSetter<bool>? onRepeatToggle;
 
-  /// Метод, вызываемый при попытке открыть полноэкранный плеер свайпов вверх.
-  final VoidCallback? onFullscreen;
+  /// Метод, вызываемый при попытке открыть полноэкранный плеер свайпом вверх, либо по нажатию на плеер.
+  ///
+  /// Передаёт bool, обозначающий то, что плеер был открыт при помощи свайпа, а не обычного нажатия.
+  final Function(bool)? onFullscreen;
 
   /// Метод, вызываемый при попытке закрыть плеер свайпом вниз.
   final VoidCallback? onDismiss;
@@ -86,18 +88,8 @@ class TrackNameInfoWidget extends StatelessWidget {
           useBigLayout ? SystemMouseCursors.basic : SystemMouseCursors.click,
       child: SwipeDetector(
         behavior: HitTestBehavior.translucent,
-        onTap: !useBigLayout
-            ? () => openFullscreenPlayer(
-                  context,
-                  fullscreenOnDesktop: false,
-                )
-            : null,
-        onSwipeUp: !useBigLayout
-            ? () => openFullscreenPlayer(
-                  context,
-                  fullscreenOnDesktop: false,
-                )
-            : null,
+        onTap: !useBigLayout ? () => onFullscreen?.call(false) : null,
+        onSwipeUp: !useBigLayout ? () => onFullscreen?.call(true) : null,
         onSwipeDown: !useBigLayout ? onDismiss : null,
         onSwipeLeft: !useBigLayout ? onNextTrack : null,
         onSwipeRight: !useBigLayout ? onPreviousTrack : null,
@@ -388,8 +380,10 @@ class BottomMusicPlayer extends StatefulWidget {
   /// Метод, вызываемый при переключении повтора трека.
   final ValueSetter<bool>? onRepeatToggle;
 
-  /// Метод, вызываемый при попытке открыть полноэкранный плеер свайпов вверх.
-  final VoidCallback? onFullscreen;
+  /// Метод, вызываемый при попытке открыть полноэкранный плеер свайпом вверх, либо по нажатию на плеер.
+  ///
+  /// Передаёт bool, обозначающий то, что плеер был открыт при помощи свайпа, а не обычного нажатия.
+  final Function(bool)? onFullscreen;
 
   /// Метод, вызываемый при попытке закрыть плеер свайпом вниз.
   final VoidCallback? onDismiss;
