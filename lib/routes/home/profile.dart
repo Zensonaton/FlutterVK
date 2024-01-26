@@ -147,53 +147,59 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
       children: [
         Expanded(
           child: ListView(
-            padding: const EdgeInsets.all(16),
             children: [
-              if (user.photoMaxUrl != null)
-                CachedNetworkImage(
-                  imageUrl: user.photoMaxUrl!,
-                  placeholder: (BuildContext context, String url) {
-                    return const SizedBox(
-                      height: 80,
-                      width: 80,
-                    );
-                  },
-                  placeholderFadeInDuration: Duration.zero,
-                  fadeOutDuration: Duration.zero,
-                  imageBuilder: (context, imageProvider) => Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      image: DecorationImage(
-                        image: imageProvider,
-                        fit: BoxFit.scaleDown,
+              // Информация о текущем пользователе.
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 18,
+                ),
+                child: Column(
+                  children: [
+                    if (user.photoMaxUrl != null)
+                      CachedNetworkImage(
+                        imageUrl: user.photoMaxUrl!,
+                        placeholder: (BuildContext context, String url) {
+                          return const SizedBox(
+                            height: 80,
+                            width: 80,
+                          );
+                        },
+                        placeholderFadeInDuration: Duration.zero,
+                        fadeOutDuration: Duration.zero,
+                        imageBuilder: (context, imageProvider) => Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            image: DecorationImage(
+                              image: imageProvider,
+                              fit: BoxFit.scaleDown,
+                            ),
+                          ),
+                        ),
+                        cacheManager: CachedNetworkImagesManager.instance,
                       ),
+                    if (user.photoMaxUrl != null)
+                      const SizedBox(
+                        height: 12,
+                      ),
+                    Text(
+                      user.fullName!,
+                      style: Theme.of(context).textTheme.titleMedium,
+                      textAlign: TextAlign.center,
                     ),
-                  ),
-                  cacheManager: CachedNetworkImagesManager.instance,
-                ),
-              if (user.photoMaxUrl != null)
-                const SizedBox(
-                  height: 12,
-                ),
-              Text(
-                user.fullName!,
-                style: Theme.of(context).textTheme.titleMedium,
-                textAlign: TextAlign.center,
-              ),
-              SelectableText(
-                "ID ${user.id}",
-                style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onBackground
-                          .withOpacity(0.5),
+                    SelectableText(
+                      "ID ${user.id}",
+                      style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onBackground
+                                .withOpacity(0.5),
+                          ),
+                      textAlign: TextAlign.center,
                     ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(
-                height: 24,
+                  ],
+                ),
               ),
 
               // Подключение рекомендаций.
@@ -448,7 +454,7 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
               // Данный SizedBox нужен, что бы плеер снизу при мобильном layout'е не закрывал ничего важного.
               if (player.loaded && isMobileLayout)
                 const SizedBox(
-                  height: 70,
+                  height: 80,
                 ),
             ],
           ),

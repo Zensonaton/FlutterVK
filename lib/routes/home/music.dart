@@ -2492,7 +2492,7 @@ class _HomeMusicPageState extends State<HomeMusicPage> {
                   // Данный SizedBox нужен, что бы плеер снизу при мобильном layout'е не закрывал ничего важного.
                   if (player.loaded && isMobileLayout)
                     const SizedBox(
-                      height: 70,
+                      height: 80,
                     ),
                 ],
               ),
