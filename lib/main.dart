@@ -145,7 +145,7 @@ class _MainAppState extends State<MainApp> with WindowListener {
 
     // Восстанавливаем состояние shuffle у плеера.
     if (user.settings.shuffleEnabled) {
-      player.setShuffle(true);
+      await player.setShuffle(true);
     }
 
     // Переключаем состояние Discord Rich Presence.
@@ -154,8 +154,6 @@ class _MainAppState extends State<MainApp> with WindowListener {
     }
 
     user.markUpdated(false);
-
-    setState(() {});
   }
 
   @override

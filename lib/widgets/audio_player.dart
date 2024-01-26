@@ -529,7 +529,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                     ),
                   ),
 
-                  // Кнопки управления по центру в desktop-layout'е.
+                  // Кнопки управления по центру в Desktop Layout'е.
                   if (widget.useBigLayout)
                     Flexible(
                       child: Stack(
@@ -552,7 +552,6 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                           // Ряд из кнопок управления.
                           Row(
                             mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Flexible(
                                 child: IconButton(
@@ -625,7 +624,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                       ),
                     ),
 
-                  // Кнопки управления громкости и прочей мелочи справа в desktop-layout'е.
+                  // Кнопки управления громкости и прочей мелочи справа в Desktop Layout'е.
                   if (widget.useBigLayout)
                     Flexible(
                       flex: 2,
@@ -683,7 +682,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                       ),
                     ),
 
-                  // Кнопки управления треком (shuffle, лайк, пауза/возобновление) справа в mobile-layout'е.
+                  // Кнопки управления треком (shuffle, лайк, пауза/возобновление) справа в Mobile Layout'е.
                   if (!widget.useBigLayout)
                     Row(
                       mainAxisSize: MainAxisSize.min,

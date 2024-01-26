@@ -451,7 +451,7 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                 ),
               ),
 
-              // Данный SizedBox нужен, что бы плеер снизу при мобильном layout'е не закрывал ничего важного.
+              // Данный SizedBox нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
               if (player.loaded && isMobileLayout)
                 const SizedBox(
                   height: 80,
@@ -460,7 +460,7 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
           ),
         ),
 
-        // Данный SizedBox нужен, что бы плеер снизу при desktop layout'е не закрывал ничего важного.
+        // Данный SizedBox нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
         // Мы его располагаем после ListView, что бы ScrollBar не был закрыт плеером.
         if (player.loaded && !isMobileLayout)
           const SizedBox(

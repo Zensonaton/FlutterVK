@@ -22,7 +22,6 @@ class Material3PageRoute<T> extends PageRouteBuilder<T> {
             animation: animation,
             secondaryAnimation: secondaryAnimation,
             transitionType: SharedAxisTransitionType.horizontal,
-            fillColor: Colors.transparent,
             child: child,
           ),
         );

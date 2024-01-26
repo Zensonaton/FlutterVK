@@ -117,6 +117,162 @@ Future<void> toggleTrackLikeState(
   }
 }
 
+/// Wrapper для [BottomMusicPlayer], который передаёт все нужные поля для [BottomMusicPlayer].
+class BottomMusicPlayerWidget extends StatefulWidget {
+  /// Указывает, что используется Mobile Layout плеера.
+  final bool isMobileLayout;
+
+  /// Указывает, что этот мини плеер может быть больших размеров.
+  final bool allowBigAudioPlayer;
+
+  const BottomMusicPlayerWidget({
+    super.key,
+    this.isMobileLayout = false,
+    this.allowBigAudioPlayer = false,
+  });
+
+  @override
+  State<BottomMusicPlayerWidget> createState() =>
+      _BottomMusicPlayerWidgetState();
+}
+
+class _BottomMusicPlayerWidgetState extends State<BottomMusicPlayerWidget> {
+  final AppLogger logger = getLogger("BottomMusicPlayerWidget");
+
+  /// Подписки на изменения состояния воспроизведения трека.
+  late final List<StreamSubscription> subscriptions;
+
+  @override
+  void initState() {
+    super.initState();
+
+    subscriptions = [
+      // Событие изменения громкости плеера.
+      player.volumeStream.listen(
+        (double volume) => setState(() {}),
+      ),
+
+      // Изменения состояния работы shuffle.
+      player.shuffleModeEnabledStream.listen(
+        (bool shuffleEnabled) => setState(() {}),
+      ),
+
+      // Изменения состояния работы повтора плейлиста.
+      player.loopModeStream.listen(
+        (LoopMode loopMode) => setState(() {}),
+      ),
+
+      // Событие изменение прогресса "прослушанности" трека.
+      player.positionStream.listen(
+        (Duration position) => setState(() {}),
+      ),
+
+      // Изменения плейлиста и текущего трека.
+      player.sequenceStateStream.listen(
+        (SequenceState? state) => setState(() {}),
+      ),
+
+      // Обработчик ошибок плеера.
+      player.playerStateStream.listen(
+        (event) {},
+        onError: (Object error, StackTrace stackTrace) async {
+          await player.stop();
+
+          logger.e(
+            "Ошибка воспроизведения плеера: ",
+            error: error,
+            stackTrace: stackTrace,
+          );
+
+          if (context.mounted) {
+            showErrorDialog(
+              context,
+              title: "Ошибка воспроизведения",
+              description: error.toString(),
+            );
+          }
+        },
+      )
+    ];
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+
+    for (StreamSubscription subscription in subscriptions) {
+      subscription.cancel();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final UserProvider user = Provider.of<UserProvider>(context);
+    final PlayerSchemeProvider colorScheme =
+        Provider.of<PlayerSchemeProvider>(context, listen: false);
+
+    /// Запускаем задачу по получению цветовой схемы.
+    player.getColorSchemeAsync().then(
+      ((ColorScheme, ColorScheme)? schemes) {
+        if (schemes == null) return;
+
+        colorScheme.setScheme(
+          schemes.$1,
+          schemes.$2,
+          player.currentAudio!.mediaKey,
+        );
+      },
+    );
+
+    return BottomMusicPlayer(
+      audio: player.currentAudio,
+      previousAudio: player.previousAudio,
+      nextAudio: player.nextAudio,
+      scheme: colorScheme.colorScheme(Theme.of(context).brightness) ??
+          Theme.of(context).colorScheme,
+      favoriteState: player.currentAudio != null
+          ? user.favoriteMediaKeys.contains(player.currentAudio!.mediaKey)
+          : false,
+      playbackState: player.playing,
+      progress: player.progress,
+      volume: player.volume,
+      isBuffering:
+          const [ProcessingState.buffering, ProcessingState.loading].contains(
+        player.playerState.processingState,
+      ),
+      isShuffleEnabled: player.shuffleModeEnabled,
+      isRepeatEnabled: player.loopMode == LoopMode.one,
+      pauseOnMuteEnabled: user.settings.pauseOnMuteEnabled,
+      useBigLayout: !widget.isMobileLayout && widget.allowBigAudioPlayer,
+      onFavoriteStateToggle: (bool liked) => toggleTrackLikeState(
+        context,
+        player.currentAudio!,
+        !user.favoriteMediaKeys.contains(
+          player.currentAudio!.mediaKey,
+        ),
+      ),
+      onPlayStateToggle: (bool enabled) => player.playOrPause(enabled),
+      onVolumeChange: (double volume) => player.setVolume(volume),
+      onDismiss: () => player.stop(),
+      onFullscreen: (bool viaSwipeUp) => openFullscreenPlayer(
+        context,
+        fullscreenOnDesktop: !widget.isMobileLayout,
+      ),
+      onShuffleToggle: (bool enabled) async {
+        await player.setShuffle(enabled);
+        user.settings.shuffleEnabled = enabled;
+
+        user.markUpdated();
+      },
+      onRepeatToggle: (bool enabled) => player.setLoop(
+        enabled ? LoopMode.one : LoopMode.off,
+      ),
+      onNextTrack: () => player.next(),
+      onPreviousTrack: () => player.previous(allowSeekToBeginning: true),
+    );
+  }
+}
+
 /// Route, показываемый как "домашняя страница", где расположена навигация между разными частями приложения.
 class HomeRoute extends StatefulWidget {
   const HomeRoute({
@@ -129,9 +285,6 @@ class HomeRoute extends StatefulWidget {
 
 class _HomeRouteState extends State<HomeRoute> {
   final AppLogger logger = getLogger("HomeRoute");
-
-  /// Подписки на изменения состояния воспроизведения трека.
-  late final List<StreamSubscription> subscriptions;
 
   /// Текущий индекс страницы для [BottomNavigationBar].
   int navigationScreenIndex = 0;
@@ -165,57 +318,6 @@ class _HomeRouteState extends State<HomeRoute> {
         route: const HomeProfilePage(),
       ),
     ];
-
-    subscriptions = [
-      // Событие запуска плеера.
-      player.loadedStateStream.listen(
-        (bool loaded) => setState(() {}),
-      ),
-
-      // Событие изменения громкости плеера.
-      player.volumeStream.listen(
-        (double volume) => setState(() {}),
-      ),
-
-      // Изменения состояния работы shuffle.
-      player.shuffleModeEnabledStream.listen(
-        (bool shuffleEnabled) => setState(() {}),
-      ),
-
-      // Изменения состояния работы повтора плейлиста.
-      player.loopModeStream.listen(
-        (LoopMode loopMode) => setState(() {}),
-      ),
-
-      // Событие изменение прогресса "прослушанности" трека.
-      player.positionStream.listen(
-        (Duration position) => setState(() {}),
-      ),
-
-      // Изменения плейлиста.
-      player.sequenceStateStream.listen(
-        (SequenceState? state) => setState(() {}),
-      ),
-
-      // Другие события состояния плеера, а так же обработчик ошибок.
-      player.playerStateStream.listen(
-        (PlayerState? state) => setState(() {}),
-        onError: (Object error, StackTrace st) {
-          player.stop();
-
-          logger.e(
-            "Ошибка воспроизведения плеера: ",
-            error: error,
-          );
-
-          showErrorDialog(
-            context,
-            title: "Ошибка воспроизведения",
-            description: error.toString(),
-          );
-        },
-      ),
-    ];
   }
 
   /// Изменяет выбранную страницу для [BottomNavigationBar] по передаваемому индексу страницы.
@@ -226,19 +328,8 @@ class _HomeRouteState extends State<HomeRoute> {
   }
 
   @override
-  void dispose() {
-    super.dispose();
-
-    for (StreamSubscription subscription in subscriptions) {
-      subscription.cancel();
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
     final UserProvider user = Provider.of<UserProvider>(context);
-    final PlayerSchemeProvider colorScheme =
-        Provider.of<PlayerSchemeProvider>(context, listen: false);
 
     if (!user.isAuthorized) {
       return const Center(
@@ -253,22 +344,6 @@ class _HomeRouteState extends State<HomeRoute> {
 
     final bool isMobileLayout =
         getDeviceType(MediaQuery.of(context).size) == DeviceScreenType.mobile;
-
-    /// Указывает, должен ли быть показан плеер снизу.
-    final bool showMusicPlayer = player.loaded;
-
-    /// Запускаем задачу по получению цветовой схемы.
-    player.getColorSchemeAsync().then(
-      ((ColorScheme, ColorScheme)? schemes) {
-        if (schemes == null) return;
-
-        colorScheme.setScheme(
-          schemes.$1,
-          schemes.$2,
-          player.currentAudio!.mediaKey,
-        );
-      },
-    );
 
     return Scaffold(
       appBar: isMobileLayout
@@ -327,92 +402,52 @@ class _HomeRouteState extends State<HomeRoute> {
             ),
             curve: Curves.ease,
             alignment: navigationPage.audioPlayerAlign,
-            child: AnimatedOpacity(
-              opacity: showMusicPlayer ? 1 : 0,
-              curve: Curves.ease,
-              duration: const Duration(
-                milliseconds: 500,
-              ),
-              child: AnimatedSlide(
-                offset: Offset(
-                  0,
-                  showMusicPlayer ? 0 : 1,
-                ),
-                duration: const Duration(
-                  milliseconds: 500,
-                ),
-                curve: Curves.ease,
-                child: AnimatedContainer(
+            child: StreamBuilder<bool>(
+              stream: player.loadedStateStream,
+              builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
+                final bool playerLoaded = snapshot.data ?? false;
+
+                return AnimatedOpacity(
+                  opacity: playerLoaded ? 1.0 : 0.0,
+                  curve: Curves.ease,
                   duration: const Duration(
                     milliseconds: 500,
                   ),
-                  padding: !isMobileLayout && navigationPage.allowBigAudioPlayer
-                      ? null
-                      : const EdgeInsets.all(8),
-                  curve: Curves.ease,
-                  width: isMobileLayout
-                      ? null
-                      : (navigationPage.allowBigAudioPlayer
-                          ? clampDouble(
-                              MediaQuery.of(context).size.width,
-                              500,
-                              double.infinity,
-                            )
-                          : 360),
-                  child: BottomMusicPlayer(
-                    audio: player.currentAudio,
-                    previousAudio: player.previousAudio,
-                    nextAudio: player.nextAudio,
-                    scheme:
-                        colorScheme.colorScheme(Theme.of(context).brightness) ??
-                            Theme.of(context).colorScheme,
-                    favoriteState: player.currentAudio != null
-                        ? user.favoriteMediaKeys
-                            .contains(player.currentAudio!.mediaKey)
-                        : false,
-                    playbackState: player.playing,
-                    progress: player.progress,
-                    volume: player.volume,
-                    isBuffering: const [
-                      ProcessingState.buffering,
-                      ProcessingState.loading
-                    ].contains(
-                      player.playerState.processingState,
+                  child: AnimatedSlide(
+                    offset: Offset(
+                      0,
+                      playerLoaded ? 0.0 : 1.0,
                     ),
-                    isShuffleEnabled: player.shuffleModeEnabled,
-                    isRepeatEnabled: player.loopMode == LoopMode.one,
-                    pauseOnMuteEnabled: user.settings.pauseOnMuteEnabled,
-                    useBigLayout:
-                        !isMobileLayout && navigationPage.allowBigAudioPlayer,
-                    onFavoriteStateToggle: (bool liked) => toggleTrackLikeState(
-                      context,
-                      player.currentAudio!,
-                      !user.favoriteMediaKeys.contains(
-                        player.currentAudio!.mediaKey,
+                    duration: const Duration(
+                      milliseconds: 500,
+                    ),
+                    curve: Curves.ease,
+                    child: AnimatedContainer(
+                      duration: const Duration(
+                        milliseconds: 500,
+                      ),
+                      padding:
+                          !isMobileLayout && navigationPage.allowBigAudioPlayer
+                              ? null
+                              : const EdgeInsets.all(8),
+                      curve: Curves.ease,
+                      width: isMobileLayout
+                          ? null
+                          : (navigationPage.allowBigAudioPlayer
+                              ? clampDouble(
+                                  MediaQuery.of(context).size.width,
+                                  500,
+                                  double.infinity,
+                                )
+                              : 360),
+                      child: BottomMusicPlayerWidget(
+                        isMobileLayout: isMobileLayout,
+                        allowBigAudioPlayer: navigationPage.allowBigAudioPlayer,
                       ),
                     ),
-                    onPlayStateToggle: (bool enabled) =>
-                        player.playOrPause(enabled),
-                    onVolumeChange: (double volume) => player.setVolume(volume),
-                    onDismiss: () => player.stop(),
-                    onFullscreen: (bool viaSwipeUp) => openFullscreenPlayer(
-                      context,
-                      fullscreenOnDesktop: !viaSwipeUp,
-                    ),
-                    onShuffleToggle: (bool enabled) async {
-                      await player.setShuffle(enabled);
-                      user.settings.shuffleEnabled = enabled;
-
-                      user.markUpdated();
-                    },
-                    onRepeatToggle: (bool enabled) =>
-                        player.setLoop(enabled ? LoopMode.one : LoopMode.off),
-                    onNextTrack: () => player.next(),
-                    onPreviousTrack: () =>
-                        player.previous(allowSeekToBeginning: true),
                   ),
-                ),
-              ),
+                );
+              },
             ),
           ),
         ],

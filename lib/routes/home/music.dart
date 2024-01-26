@@ -1255,13 +1255,15 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
                                   ),
                                   child: !isHovered && selectedAndPlaying
                                       ? Center(
-                                          child: Image.asset(
-                                            "assets/images/audioEqualizer.gif",
-                                            width: 18,
-                                            height: 18,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .primary,
+                                          child: RepaintBoundary(
+                                            child: Image.asset(
+                                              "assets/images/audioEqualizer.gif",
+                                              width: 18,
+                                              height: 18,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .primary,
+                                            ),
                                           ),
                                         )
                                       : Icon(
@@ -1524,12 +1526,14 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
                       ),
                       child: !isHovered && selectedAndPlaying
                           ? Center(
-                              child: Image.asset(
-                                "assets/images/audioEqualizer.gif",
-                                color: Theme.of(context).colorScheme.primary,
-                                width: 32,
-                                height: 32,
-                                fit: BoxFit.fill,
+                              child: RepaintBoundary(
+                                child: Image.asset(
+                                  "assets/images/audioEqualizer.gif",
+                                  color: Theme.of(context).colorScheme.primary,
+                                  width: 32,
+                                  height: 32,
+                                  fit: BoxFit.fill,
+                                ),
                               ),
                             )
                           : SizedBox(
@@ -1621,20 +1625,24 @@ class _ChipFiltersState extends State<ChipFilters> {
       runSpacing: 8,
       children: [
         FilterChip(
-          onSelected: (bool value) => setState(() {
-            user.settings.myMusicChipEnabled = value;
-            user.markUpdated();
-          }),
+          onSelected: (bool value) => setState(
+            () {
+              user.settings.myMusicChipEnabled = value;
+              user.markUpdated();
+            },
+          ),
           selected: user.settings.myMusicChipEnabled,
           label: Text(
             AppLocalizations.of(context)!.music_myMusicChip,
           ),
         ),
         FilterChip(
-          onSelected: (bool value) => setState(() {
-            user.settings.playlistsChipEnabled = value;
-            user.markUpdated();
-          }),
+          onSelected: (bool value) => setState(
+            () {
+              user.settings.playlistsChipEnabled = value;
+              user.markUpdated();
+            },
+          ),
           selected: user.settings.playlistsChipEnabled,
           label: Text(
             AppLocalizations.of(context)!.music_myPlaylistsChip,
@@ -1642,10 +1650,12 @@ class _ChipFiltersState extends State<ChipFilters> {
         ),
         if (hasRecommendations)
           FilterChip(
-            onSelected: (bool value) => setState(() {
-              user.settings.recommendedPlaylistsChipEnabled = value;
-              user.markUpdated();
-            }),
+            onSelected: (bool value) => setState(
+              () {
+                user.settings.recommendedPlaylistsChipEnabled = value;
+                user.markUpdated();
+              },
+            ),
             selected: user.settings.recommendedPlaylistsChipEnabled,
             label: Text(
               AppLocalizations.of(context)!.music_recommendedPlaylistsChip,
@@ -1653,10 +1663,12 @@ class _ChipFiltersState extends State<ChipFilters> {
           ),
         if (hasRecommendations)
           FilterChip(
-            onSelected: (bool value) => setState(() {
-              user.settings.similarMusicChipEnabled = value;
-              user.markUpdated();
-            }),
+            onSelected: (bool value) => setState(
+              () {
+                user.settings.similarMusicChipEnabled = value;
+                user.markUpdated();
+              },
+            ),
             selected: user.settings.similarMusicChipEnabled,
             label: Text(
               AppLocalizations.of(context)!.music_similarMusicChip,
@@ -1664,10 +1676,12 @@ class _ChipFiltersState extends State<ChipFilters> {
           ),
         if (hasRecommendations)
           FilterChip(
-            onSelected: (bool value) => setState(() {
-              user.settings.byVKChipEnabled = value;
-              user.markUpdated();
-            }),
+            onSelected: (bool value) => setState(
+              () {
+                user.settings.byVKChipEnabled = value;
+                user.markUpdated();
+              },
+            ),
             selected: user.settings.byVKChipEnabled,
             label: Text(
               AppLocalizations.of(context)!.music_byVKChip,
@@ -2489,7 +2503,7 @@ class _HomeMusicPageState extends State<HomeMusicPage> {
                   // Случай, если пользователь отключил все возможные разделы музыки.
                   if (everythingIsDisabled) const EverythingIsDisabledBlock(),
 
-                  // Данный SizedBox нужен, что бы плеер снизу при мобильном layout'е не закрывал ничего важного.
+                  // Данный SizedBox нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
                   if (player.loaded && isMobileLayout)
                     const SizedBox(
                       height: 80,
@@ -2498,7 +2512,7 @@ class _HomeMusicPageState extends State<HomeMusicPage> {
               ),
             ),
 
-            // Данный SizedBox нужен, что бы плеер снизу при desktop layout'е не закрывал ничего важного.
+            // Данный SizedBox нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
             // Мы его располагаем после ListView, что бы ScrollBar не был закрыт плеером.
             if (player.loaded && !isMobileLayout)
               const SizedBox(

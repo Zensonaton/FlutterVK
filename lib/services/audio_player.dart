@@ -34,24 +34,28 @@ class VKMusicPlayer {
   VKMusicPlayer() {
     _subscriptions = [
       // Слушаем события запуска воспроизведения.
-      _player.playerStateStream.listen((PlayerState state) async {
-        if (_player.playerState.playing && !_loaded) {
-          await startMusicSession();
-          _loaded = true;
+      _player.playerStateStream.listen(
+        (PlayerState state) async {
+          if (_player.playerState.playing && !_loaded) {
+            await startMusicSession();
+            _loaded = true;
 
-          _loadedStateController.add(_loaded);
-        }
+            _loadedStateController.add(_loaded);
+          }
 
-        await updateMusicSession();
-      }),
+          await updateMusicSession();
+        },
+      ),
 
       // // Обработчик изменения текущего трека.
-      sequenceStateStream.listen((SequenceState? state) async {
-        if (state == null || currentAudio == null) return;
+      sequenceStateStream.listen(
+        (SequenceState? state) async {
+          if (state == null || currentAudio == null) return;
 
-        await updateMusicSessionTrack();
-        await updateMusicSession();
-      }),
+          await updateMusicSessionTrack();
+          await updateMusicSession();
+        },
+      ),
     ];
 
     _initPlayer();
