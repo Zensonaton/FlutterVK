@@ -5,7 +5,9 @@ import "package:flutter/services.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "package:provider/provider.dart";
 import "package:responsive_builder/responsive_builder.dart";
+import "package:url_launcher/url_launcher.dart";
 
+import "../../consts.dart";
 import "../../main.dart";
 import "../../provider/user.dart";
 import "../../services/cache_manager.dart";
@@ -355,6 +357,24 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                 onTap: () => showWipDialog(context),
               ),
 
+              // Github.
+              ListTile(
+                leading: const Icon(
+                  Icons.source,
+                ),
+                title: Text(
+                  AppLocalizations.of(context)!.profile_githubTitle,
+                ),
+                subtitle: Text(
+                  AppLocalizations.of(context)!.profile_githubDescription,
+                ),
+                onTap: () => launchUrl(
+                  Uri.parse(
+                    repoURL,
+                  ),
+                ),
+              ),
+
               // Debug-опции.
               if (kDebugMode)
                 ListTile(
@@ -406,6 +426,8 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                     );
                   },
                 ),
+
+              // Выход из аккаунта.
               ListTile(
                 leading: Icon(
                   Icons.logout,

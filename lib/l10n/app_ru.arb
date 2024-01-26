@@ -189,5 +189,8 @@
 	"profile_pauseOnMuteTitle": "Пауза при отключении громкости",
 	"profile_pauseOnMuteDescription": "Данная опция указывает, будет ли плеер ставиться на паузу при установке минимальной громкости в плеере",
 
+	"profile_githubTitle": "Github-репозиторий проекта",
+	"profile_githubDescription": "Дополнительная информация, исходный код, Github Issues расположены именно в репозитории Flutter VK",
+
 	"profile_exportMusicListTitle": "Экспорт списка треков"
 }
