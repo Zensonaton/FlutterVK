@@ -172,3 +172,10 @@ class CustomTrackShape extends RoundedRectSliderTrackShape {
     );
   }
 }
+
+extension RandomListItem<T> on List<T> {
+  /// Возвращает случайный элемент из данного [List].
+  T randomItem() {
+    return this[Random().nextInt(length)];
+  }
+}

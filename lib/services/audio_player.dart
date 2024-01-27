@@ -527,31 +527,39 @@ class VKMusicPlayer {
   Future<void> setPlaylist(
     ExtendedVKPlaylist playlist, {
     bool play = true,
-    int index = 0,
+    ExtendedVKAudio? audio,
   }) async {
     assert(
       playlist.audios != null,
       "audios of ExtendedVKPlaylist is null",
     );
 
+    // Создаём список из треков в плейлисте, которые можно воспроизвести.
+    final List<ExtendedVKAudio> audios = playlist.audios!
+        .where(
+          (audio) => !audio.isRestricted,
+        )
+        .toList();
+
     // Обработка запуска пустого плейлиста.
     if (playlist.audios!.isEmpty) return;
 
     _playlist = playlist;
-    _audiosQueue = [...playlist.audios!];
+    _audiosQueue = [...audios];
     _queue = ConcatenatingAudioSource(
-      children: [
-        for (ExtendedVKAudio audio in playlist.audios!)
-          AudioSource.uri(
-            Uri.parse(audio.url),
-            tag: audio.asMediaItem,
-          ),
-      ],
+      children: audios
+          .map(
+            (audio) => AudioSource.uri(
+              Uri.parse(audio.url),
+              tag: audio.asMediaItem,
+            ),
+          )
+          .toList(),
     );
 
     await _player.setAudioSource(
       _queue!,
-      initialIndex: index,
+      initialIndex: audios.contains(audio) ? audios.indexOf(audio!) : 0,
     );
 
     if (play) {

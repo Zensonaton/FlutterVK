@@ -1,5 +1,4 @@
 import "dart:async";
-import "dart:math";
 
 import "package:cached_network_image/cached_network_image.dart";
 import "package:collection/collection.dart";
@@ -342,9 +341,7 @@ Padding buildListTrackWidget(
               )
           : () => player.setPlaylist(
                 playlist,
-                index: playlist.audios!.indexWhere(
-                  (ExtendedVKAudio widgetAudio) => widgetAudio == audio,
-                ),
+                audio: audio,
               ),
       onPlayToggle: (bool enabled) => player.playOrPause(enabled),
       onLikeToggle: (bool liked) => toggleTrackLikeState(
@@ -928,6 +925,8 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final UserProvider user = Provider.of<UserProvider>(context);
+
     return Container(
       width: 500,
       padding: const EdgeInsets.all(24),
@@ -943,21 +942,22 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
           const SizedBox(height: 8),
           const Divider(),
           const SizedBox(height: 8),
-          ListTile(
-            enabled: (widget.audio.album == null),
-            onTap: (widget.audio.album == null)
-                ? () {
-                    Navigator.of(context).pop();
 
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) => TrackInfoEditDialog(
-                        audio: widget.audio,
-                        playlist: widget.playlist,
-                      ),
-                    );
-                  }
-                : null,
+          // Редактировать данные трека.
+          ListTile(
+            enabled:
+                widget.audio.album == null && widget.audio.ownerID == user.id!,
+            onTap: () {
+              Navigator.of(context).pop();
+
+              showDialog(
+                context: context,
+                builder: (BuildContext context) => TrackInfoEditDialog(
+                  audio: widget.audio,
+                  playlist: widget.playlist,
+                ),
+              );
+            },
             leading: const Icon(
               Icons.edit,
             ),
@@ -965,6 +965,8 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
               AppLocalizations.of(context)!.music_detailsEditTitle,
             ),
           ),
+
+          // Удалить из текущего плейлиста.
           ListTile(
             onTap: () => showWipDialog(context),
             leading: const Icon(
@@ -974,6 +976,8 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
               AppLocalizations.of(context)!.music_detailsDeleteTrackTitle,
             ),
           ),
+
+          // Добавить в другой плейлист.
           ListTile(
             onTap: () => showWipDialog(context),
             leading: const Icon(
@@ -984,6 +988,8 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
                   .music_detailsAddToOtherPlaylistTitle,
             ),
           ),
+
+          // Добавить в очередь.
           ListTile(
             onTap: () async {
               await player.addNextToQueue(
@@ -1004,6 +1010,7 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
 
               Navigator.of(context).pop();
             },
+            enabled: !widget.audio.isRestricted,
             leading: const Icon(
               Icons.queue_music,
             ),
@@ -1011,6 +1018,8 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
               AppLocalizations.of(context)!.music_detailsPlayNextTitle,
             ),
           ),
+
+          // Установить обложку.
           ListTile(
             onTap: () => showWipDialog(context),
             leading: const Icon(
@@ -1024,6 +1033,8 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
                   .music_detailsSetThumbnailDescription,
             ),
           ),
+
+          // Перезалить с Youtube.
           ListTile(
             onTap: () => showWipDialog(context),
             leading: const Icon(
@@ -1038,6 +1049,8 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
                   .music_detailsReuploadFromYoutubeDescription,
             ),
           ),
+
+          // Поделиться ссылкой на трек.
           ListTile(
             onTap: () {
               Navigator.of(context).pop();
@@ -1053,6 +1066,8 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
               AppLocalizations.of(context)!.music_detailsShareTitle,
             ),
           ),
+
+          // Debug-опции.
           if (kDebugMode)
             ListTile(
               onTap: () {
@@ -1775,9 +1790,7 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
 
                   await player.setPlaylist(
                     user.favoritesPlaylist!,
-                    index: Random().nextInt(
-                      user.favoritesPlaylist!.audios!.length,
-                    ),
+                    audio: user.favoritesPlaylist!.audios!.randomItem(),
                   );
                 }
               : null,
@@ -1931,9 +1944,7 @@ Future<void> onPlaylistPlayToggle(
   // Всё ок, запускаем воспроизведение.
   await player.setPlaylist(
     playlist,
-    index: player.shuffleModeEnabled
-        ? Random().nextInt(playlist.audios?.length ?? 1)
-        : 0,
+    audio: playlist.audios?.randomItem(),
   );
 }
 
