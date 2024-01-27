@@ -2,6 +2,7 @@ import "dart:async";
 
 import "package:cached_network_image/cached_network_image.dart";
 import "package:collection/collection.dart";
+import "package:debounce_throttle/debounce_throttle.dart";
 import "package:declarative_refresh_indicator/declarative_refresh_indicator.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
@@ -15,6 +16,7 @@ import "package:skeletonizer/skeletonizer.dart";
 import "package:styled_text/styled_text.dart";
 
 import "../../api/audio/edit.dart";
+import "../../api/audio/search.dart";
 import "../../api/catalog/get_audio.dart";
 import "../../api/executeScripts/mass_audio_get.dart";
 import "../../api/shared.dart";
@@ -283,9 +285,9 @@ Padding buildListTrackWidget(
   BuildContext context,
   int index,
   List<ExtendedVKAudio> audios,
-  UserProvider user,
-  ExtendedVKPlaylist playlist,
-) {
+  UserProvider user, {
+  ExtendedVKPlaylist? playlist,
+}) {
   final ExtendedVKAudio audio = audios[index];
 
   return Padding(
@@ -329,7 +331,15 @@ Padding buildListTrackWidget(
                     .music_trackUnavailableDescription,
               )
           : () => player.setPlaylist(
-                playlist,
+                playlist ??
+                    ExtendedVKPlaylist(
+                      id: -1,
+                      ownerID: user.id!,
+                      count: 1,
+                      audios: audios,
+                      title: AppLocalizations.of(context)!
+                          .music_searchPlaylistTitle,
+                    ),
                 audio: audio,
               ),
       onPlayToggle: (bool enabled) => player.playOrPause(enabled),
@@ -345,7 +355,6 @@ Padding buildListTrackWidget(
         isScrollControlled: true,
         builder: (BuildContext context) => BottomAudioOptionsDialog(
           audio: audio,
-          playlist: playlist,
         ),
       ),
     ),
@@ -468,19 +477,9 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
         (SequenceState? state) => setState(() {}),
       ),
     ];
-    // Если у пользователя ПК, то тогда устанавливаем фокус на поле поиска.
+
+    // Если мы запущены на Desktop'е, то тогда устанавливаем фокус на поле поиска.
     if (isDesktop && widget.focusSearchBarOnOpen) focusNode.requestFocus();
-
-    // TODO: Если у пользователя играет что-то, то мы можем "отметить" трек в списке треков.
-    // if (user.audioPlaybackStarted && user.player.currentTrack != null) {
-    //   final int index = widget.audios.indexOf(
-    //     user.player.currentTrack!,
-    //   );
-
-    //   if (index == -1) return;
-
-    //   // Здесь должен отмечаться трек.
-    // }
   }
 
   @override
@@ -526,6 +525,7 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // Кнопка "Назад".
                   if (isMobileLayout)
                     IconButton(
                       icon: Icon(
@@ -533,12 +533,18 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
                       ),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
+                  if (isMobileLayout)
+                    const SizedBox(
+                      width: 12,
+                    ),
+
+                  // Поиск.
                   Expanded(
                     child: SearchBar(
                       focusNode: focusNode,
                       controller: controller,
                       hintText: AppLocalizations.of(context)!
-                          .music_searchText(playlistAudios.length),
+                          .music_searchTextInPlaylist(playlistAudios.length),
                       elevation: MaterialStateProperty.all(
                         1, // TODO: Сделать нормальный вид у поиска при наведении.
                       ),
@@ -572,8 +578,7 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
                 filteredAudios.isEmpty &&
                 !_loading)
               StyledText(
-                text: AppLocalizations.of(context)!
-                    .music_playlistZeroSearchResults,
+                text: AppLocalizations.of(context)!.music_zeroSearchResults,
                 tags: {
                   "click": StyledTextActionTag(
                     (String? text, Map<String?, String?> attrs) => setState(
@@ -645,11 +650,243 @@ class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
                       index,
                       filteredAudios,
                       user,
-                      widget.playlist,
+                      playlist: widget.playlist,
                     );
                   },
                 ),
               ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Диалог, показывающий поле для глобального поиска через API ВКонтакте, а так же сами результаты поиска.
+class SearchDisplayDialog extends StatefulWidget {
+  /// Если true, то сразу после открытия данного диалога фокус будет на [SearchBar].
+  final bool focusSearchBarOnOpen;
+
+  const SearchDisplayDialog({
+    super.key,
+    this.focusSearchBarOnOpen = true,
+  });
+
+  @override
+  State<SearchDisplayDialog> createState() => _SearchDisplayDialogState();
+}
+
+class _SearchDisplayDialogState extends State<SearchDisplayDialog> {
+  final AppLogger logger = getLogger("SearchDisplayDialog");
+
+  /// Контроллер, используемый для управления введённым в поле поиска текстом.
+  final TextEditingController controller = TextEditingController();
+
+  /// FocusNode для фокуса поля поиска сразу после открытия данного диалога.
+  final FocusNode focusNode = FocusNode();
+
+  /// Debouncer для поиска.
+  final debouncer = Debouncer<String>(
+    const Duration(
+      seconds: 1,
+    ),
+    initialValue: "",
+  );
+
+  /// Текущий Future по поиску через API ВКонтакте. Может отсутствовать, если ничего не было введено в поиск.
+  Future<APIAudioSearchResponse>? searchFuture;
+
+  @override
+  void initState() {
+    super.initState();
+
+    final UserProvider user = Provider.of<UserProvider>(context, listen: false);
+
+    // Обработчик печати.
+    controller.addListener(
+      () => debouncer.value = controller.text,
+    );
+
+    // Обработчик событий поиска, испускаемых Debouncer'ом, если пользователь остановил печать.
+    debouncer.values.listen(
+      (String query) {
+        // Если ничего не введено, то делаем пустой Future.
+        if (query.isEmpty) {
+          if (searchFuture != null) {
+            setState(
+              () => searchFuture = null,
+            );
+          }
+
+          return;
+        }
+
+        searchFuture = user.audioSearchWithAlbums(query);
+        setState(() {});
+      },
+    );
+
+    // Если у пользователя ПК, то тогда устанавливаем фокус на поле поиска.
+    if (isDesktop && widget.focusSearchBarOnOpen) focusNode.requestFocus();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final UserProvider user = Provider.of<UserProvider>(context);
+
+    final bool isMobileLayout =
+        getDeviceType(MediaQuery.of(context).size) == DeviceScreenType.mobile;
+
+    return AdaptiveDialog(
+      child: Container(
+        padding: isMobileLayout
+            ? const EdgeInsets.only(
+                top: 16,
+                left: 16,
+                right: 16,
+              )
+            : const EdgeInsets.all(
+                24,
+              ),
+        width: 650,
+        child: Column(
+          children: [
+            Padding(
+              padding: isMobileLayout
+                  ? EdgeInsets.zero
+                  : const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Кнопка "Назад".
+                  if (isMobileLayout)
+                    IconButton(
+                      icon: Icon(
+                        Icons.adaptive.arrow_back,
+                      ),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  if (isMobileLayout)
+                    const SizedBox(
+                      width: 12,
+                    ),
+
+                  // Поиск.
+                  Expanded(
+                    child: SearchBar(
+                      focusNode: focusNode,
+                      controller: controller,
+                      hintText: AppLocalizations.of(context)!.music_searchText,
+                      elevation: MaterialStateProperty.all(
+                        1, // TODO: Сделать нормальный вид у поиска при наведении.
+                      ),
+                      onChanged: (String query) => setState(() {}),
+                      trailing: [
+                        if (controller.text.isNotEmpty)
+                          IconButton(
+                            icon: const Icon(
+                              Icons.close,
+                            ),
+                            onPressed: () => setState(
+                              () => controller.clear(),
+                            ),
+                          )
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(
+              height: 16,
+            ),
+            Expanded(
+              child: FutureBuilder(
+                future: searchFuture,
+                builder: (BuildContext context,
+                    AsyncSnapshot<APIAudioSearchResponse> snapshot) {
+                  // Пользователь ещё ничего не ввёл.
+                  if (snapshot.connectionState == ConnectionState.none) {
+                    return Text(
+                      AppLocalizations.of(context)!.music_typeToSearchText,
+                    );
+                  }
+
+                  // Информация по данному плейлисту ещё не была загружена.
+                  if (snapshot.connectionState == ConnectionState.waiting ||
+                      snapshot.hasError ||
+                      !(snapshot.hasData && snapshot.data!.error == null)) {
+                    return ListView.builder(
+                      itemCount: 50,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemBuilder: (BuildContext context, int index) {
+                        return Skeletonizer(
+                          child: Padding(
+                            padding: const EdgeInsets.only(
+                              bottom: 8,
+                            ),
+                            child: AudioTrackTile(
+                              audio: ExtendedVKAudio(
+                                id: -1,
+                                ownerID: -1,
+                                title: fakeTrackNames[
+                                    index % fakeTrackNames.length],
+                                artist: fakeTrackNames[
+                                    (index + 1) % fakeTrackNames.length],
+                                duration: 60 * 3,
+                                accessKey: "",
+                                url: "",
+                                date: 0,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  }
+
+                  // Ничего не найдено.
+                  if (snapshot.hasData &&
+                      snapshot.data!.response!.items.isEmpty) {
+                    return StyledText(
+                      text:
+                          AppLocalizations.of(context)!.music_zeroSearchResults,
+                      tags: {
+                        "click": StyledTextActionTag(
+                          (String? text, Map<String?, String?> attrs) =>
+                              setState(
+                            () => controller.clear(),
+                          ),
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      },
+                    );
+                  }
+
+                  // Отображаем данные.
+                  return ListView.builder(
+                    itemCount: snapshot.data!.response!.items.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      return buildListTrackWidget(
+                        context,
+                        index,
+                        snapshot.data!.response!.items
+                            .map(
+                              (audio) => ExtendedVKAudio.fromAudio(audio),
+                            )
+                            .toList(),
+                        user,
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
           ],
         ),
       ),
@@ -670,13 +907,9 @@ class TrackInfoEditDialog extends StatefulWidget {
   /// Трек, данные которого будут изменяться.
   final ExtendedVKAudio audio;
 
-  /// Плейлист, в котором находится данный трек.
-  final ExtendedVKPlaylist playlist;
-
   const TrackInfoEditDialog({
     super.key,
     required this.audio,
-    required this.playlist,
   });
 
   @override
@@ -868,13 +1101,9 @@ class BottomAudioOptionsDialog extends StatefulWidget {
   /// Трек типа [ExtendedVKAudio], над которым производится манипуляция.
   final ExtendedVKAudio audio;
 
-  /// Плейлист, в котором находится данный трек.
-  final ExtendedVKPlaylist playlist;
-
   const BottomAudioOptionsDialog({
     super.key,
     required this.audio,
-    required this.playlist,
   });
 
   @override
@@ -943,7 +1172,6 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
                 context: context,
                 builder: (BuildContext context) => TrackInfoEditDialog(
                   audio: widget.audio,
-                  playlist: widget.playlist,
                 ),
               );
             },
@@ -1851,7 +2079,7 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
               index,
               user.favoritesPlaylist!.audios!.slice(0, clampedMusicCount),
               user,
-              user.favoritesPlaylist!,
+              playlist: user.favoritesPlaylist!,
             ),
 
         // Skeleton loader.
@@ -2448,18 +2676,47 @@ class _HomeMusicPageState extends State<HomeMusicPage> {
                   isMobileLayout ? 16 : 24,
                 ),
                 children: [
-                  // Часть интерфейса "Добро пожаловать".
+                  // Часть интерфейса "Добро пожаловать", а так же кнопка поиска.
                   if (!isMobileLayout)
-                    Text(
-                      AppLocalizations.of(context)!.music_welcomeTitle(
-                        user.firstName!,
-                      ),
-                      style:
-                          Theme.of(context).textTheme.displayMedium!.copyWith(
-                                fontWeight: FontWeight.w500,
-                              ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Текст "Добро пожаловать".
+                        Flexible(
+                          child: Text(
+                            AppLocalizations.of(context)!.music_welcomeTitle(
+                              user.firstName!,
+                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .displayMedium!
+                                .copyWith(
+                                  fontWeight: FontWeight.w500,
+                                ),
+                          ),
+                        ),
+
+                        // Поиск.
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                          ),
+                          child: IconButton.filledTonal(
+                            onPressed: () => showDialog(
+                              context: context,
+                              builder: (context) => const SearchDisplayDialog(),
+                            ),
+                            icon: const Icon(
+                              Icons.search,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  if (!isMobileLayout) const SizedBox(height: 36),
+                  if (!isMobileLayout)
+                    const SizedBox(
+                      height: 36,
+                    ),
 
                   // Верхняя часть интерфейса с переключателями.
                   const Focus(

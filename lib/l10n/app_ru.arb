@@ -104,8 +104,8 @@
 	"music_trackUnavailableTitle": "Трек недоступен",
 	"music_trackUnavailableDescription": "Сервера ВКонтакте передали информацию о том, что данный трек недоступен. С этим ничего нельзя поделать.",
 
-	"music_searchText": "Поиск среди {count, plural, one{{count} трека} other{{count} треков}} здесь",
-	"@music_searchText": {
+	"music_searchTextInPlaylist": "Поиск среди {count, plural, one{{count} трека} other{{count} треков}} здесь",
+	"@music_searchTextInPlaylist": {
 		"placeholders": {
 			"count": {
 				"type": "int",
@@ -114,10 +114,19 @@
 		}
 	},
 	"music_playlistEmpty": "В данном плейлисте пусто.",
-	"music_playlistZeroSearchResults": "По Вашему запросу ничего не найдено. Попробуйте <click>очистить свой запрос</click>.",
-	"@music_playlistZeroSearchResults": {
+	"music_zeroSearchResults": "По Вашему запросу ничего не найдено. Попробуйте <click>очистить свой запрос</click>.",
+	"@music_zeroSearchResults": {
 		"description": "<click>...</click> очищает результаты поиска."
 	},
+
+	"music_searchText": "Поиск музыки ВКонтакте",
+
+	"music_typeToSearchText": "Введите название песни сверху что бы начать поиск.",
+	"music_searchPlaylistTitle": "Музыка из результатов поиска",
+	"@music_searchPlaylistTitle": {
+		"description": "Название фейкового плейлиста, который создаётся для запуска воспроизведения трека из результатов поиска. Данная надпись показывается в полноэкранном плеере."
+	},
+
 
 	"music_detailsEditTitle": "Редактировать",
 	"music_detailsDeleteTrackTitle": "Удалить из этого плейлиста",

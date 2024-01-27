@@ -58,6 +58,7 @@ dependencies:
   local_notifier: ^0.1.5
   system_tray: ^2.0.3
   wakelock_plus: ^1.1.4
+  debounce_throttle: ^2.0.0
 
 dev_dependencies:
   flutter_test:

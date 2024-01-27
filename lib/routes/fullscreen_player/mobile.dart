@@ -79,7 +79,6 @@ class TopFullscreenControls extends StatelessWidget {
               isScrollControlled: true,
               builder: (BuildContext context) => BottomAudioOptionsDialog(
                 audio: player.currentAudio!,
-                playlist: player.currentPlaylist!,
               ),
             ),
           ),

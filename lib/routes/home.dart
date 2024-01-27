@@ -405,6 +405,20 @@ class _HomeRouteState extends State<HomeRoute> {
         label: AppLocalizations.of(buildContext!)!.music_label,
         icon: Icons.my_library_music_outlined,
         selectedIcon: Icons.my_library_music,
+        actions: [
+          IconButton(
+            onPressed: () => showDialog(
+              context: context,
+              builder: (context) => const SearchDisplayDialog(),
+            ),
+            icon: const Icon(
+              Icons.search,
+            ),
+          ),
+          const SizedBox(
+            width: 18,
+          ),
+        ],
         route: const HomeMusicPage(),
       ),
       NavigationPage(
@@ -448,6 +462,7 @@ class _HomeRouteState extends State<HomeRoute> {
                 navigationPage.label,
               ),
               centerTitle: true,
+              actions: navigationPage.actions,
             )
           : null,
       resizeToAvoidBottomInset: false,

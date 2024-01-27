@@ -33,6 +33,9 @@ class NavigationPage {
   /// Иконка, которая используется при выборе элемента в [BottomNavigationBar]. Если не указано, то будет использоваться [icon].
   final IconData? selectedIcon;
 
+  /// Список из виджетов, которые будут расположены справа в [AppBar]'е.
+  final List<Widget> actions;
+
   /// Route (страница), которая будет отображена при выборе этого элемента в [BottomNavigationBar].
   final Widget route;
 
@@ -46,6 +49,7 @@ class NavigationPage {
     required this.label,
     required this.icon,
     this.selectedIcon,
+    this.actions = const [],
     required this.route,
     this.audioPlayerAlign = Alignment.bottomCenter,
     this.allowBigAudioPlayer = true,

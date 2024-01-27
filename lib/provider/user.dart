@@ -9,6 +9,7 @@ import "../api/audio/get.dart";
 import "../api/audio/get_lyrics.dart";
 import "../api/audio/get_playlists.dart";
 import "../api/audio/restore.dart";
+import "../api/audio/search.dart";
 import "../api/catalog/get_audio.dart";
 import "../api/executeScripts/audio_get_data.dart";
 import "../api/executeScripts/mass_audio_albums.dart";
@@ -648,6 +649,100 @@ class UserProvider extends ChangeNotifier {
         mainToken!,
         audioID,
       );
+
+  /// Ищет треки во ВКонтакте по их названию.
+  ///
+  /// API: `audio.search`.
+  Future<APIAudioSearchResponse> audioSearch(
+    String query, {
+    bool autoComplete = true,
+    int count = 50,
+    int offset = 0,
+  }) async =>
+      await audio_search(
+        mainToken!,
+        query,
+        autoComplete: autoComplete,
+        count: count,
+        offset: offset,
+      );
+
+  /// Ищет треки во ВКонтакте по их названию, дополняя информацию о треках альбомами.
+  ///
+  /// Требуется токен от Kate Mobile и VK Admin.
+  Future<APIAudioSearchResponse> audioSearchWithAlbums(
+    String query, {
+    bool autoComplete = true,
+    int count = 50,
+    int offset = 0,
+  }) async {
+    final APIAudioSearchResponse response = await audio_search(
+      mainToken!,
+      query,
+      autoComplete: autoComplete,
+      count: count,
+      offset: offset,
+    );
+
+    if (response.error != null) return response;
+
+    // Если у пользователя есть токен VK Admin, то тогда нам нужно получить расширенную информацию о треках.
+    if (recommendationsToken != null) {
+      // Получаем MediaKey треков, делая в запросе не более 200 ключей.
+      List<String> audioIDs = [];
+      List<Audio> audios = response.response!.items;
+
+      for (int i = 0; i < audios.length; i += 200) {
+        int endIndex = i + 200;
+        List<Audio> batch = audios.sublist(
+          i,
+          endIndex.clamp(
+            0,
+            audios.length,
+          ),
+        );
+        List<String> currentMediaKey =
+            batch.map((audio) => audio.mediaKey).toList();
+
+        audioIDs.add(currentMediaKey.join(","));
+      }
+
+      final APIMassAudioAlbumsResponse massAlbums =
+          await scriptMassAudioAlbums(audioIDs);
+
+      if (massAlbums.error != null) {
+        // В случае ошибки создаём копию ответа от первого шага, изменяя там поле error.
+        return APIAudioSearchResponse(
+          response.response,
+          massAlbums.error,
+        );
+      }
+
+      // Всё ок, объеденяем данные, что бы у объекта Audio (с первого запроса) была информация о альбомах.
+
+      // Создаём Map, где ключ - медиа ключ доступа, а значение - объект мини-альбома.
+      //
+      // Использовать массив - идея плохая, поскольку ВКонтакте не возвращает информацию по "недоступным" трекам,
+      // ввиду чего происходит смещение, что не очень-то и хорошо.
+      Map<String, Audio> albumsData = {
+        for (var album in massAlbums.response!) album.mediaKey: album
+      };
+
+      // Мы получили список альбомов, обновляем существующий массив треков.
+      for (Audio audio in audios) {
+        if (audio.album != null) continue;
+        final Audio? extendedAudio = albumsData[audio.mediaKey];
+
+        // Если у нас нет информации по альбому этого трека, то ничего не делаем.
+        if (extendedAudio == null || extendedAudio.album == null) continue;
+
+        // Всё ок, заменяем данные в аудио.
+        audio.album = extendedAudio.album;
+      }
+    }
+
+    return response;
+  }
 
   /// Возвращает информацию о категории для раздела "аудио".
   ///
