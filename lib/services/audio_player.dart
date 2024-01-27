@@ -633,6 +633,8 @@ class VKMusicPlayer {
   Future<void> updateMusicSessionTrack() async {
     logger.d("Called updateMusicSessionTrack");
 
+    if (currentAudio == null) return;
+
     // Если у пользователя Windows, то посылаем SMTC обновление.
     if (Platform.isWindows) {
       if (!smtc!.enabled) await smtc!.enableSmtc();
@@ -655,8 +657,6 @@ class VKMusicPlayer {
   Future<void> updateMusicSession() async {
     logger.d("Called updateMusicSession");
 
-    if (!loaded || currentAudio == null) return;
-
     // Указываем, есть ли у нас в данный момент сессия музыки.
     await audioSession?.setActive(playing);
 
@@ -678,7 +678,7 @@ class VKMusicPlayer {
     }
 
     // Обновляем Discord RPC, если это разрешено пользователем.
-    if (discordRPCEnabled) {
+    if (discordRPCEnabled && currentAudio != null) {
       discordRPC?.updatePresence(
         DiscordPresence(
           state: currentAudio!.title,
@@ -705,6 +705,10 @@ class VKMusicPlayer {
     logger.d("Called stopMusicSession");
 
     if (!loaded) return;
+
+    if (Platform.isWindows) {
+      await smtc?.disableSmtc();
+    }
 
     await audioSession?.setActive(false);
     if (discordRPCEnabled) {
