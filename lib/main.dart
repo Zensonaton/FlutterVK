@@ -14,7 +14,7 @@ import "package:responsive_builder/responsive_builder.dart";
 import "package:system_tray/system_tray.dart";
 import "package:window_manager/window_manager.dart";
 
-import "consts.dart";
+import "enums.dart";
 import "provider/color.dart";
 import "provider/user.dart";
 import "routes/home.dart";

@@ -8,6 +8,7 @@ import "package:responsive_builder/responsive_builder.dart";
 import "package:url_launcher/url_launcher.dart";
 
 import "../../consts.dart";
+import "../../enums.dart";
 import "../../main.dart";
 import "../../provider/user.dart";
 import "../../services/cache_manager.dart";
