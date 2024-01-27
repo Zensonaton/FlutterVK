@@ -12,6 +12,7 @@ import "package:responsive_builder/responsive_builder.dart";
 import "package:scroll_to_index/scroll_to_index.dart";
 import "package:styled_text/styled_text.dart";
 import "package:visibility_detector/visibility_detector.dart";
+import "package:wakelock_plus/wakelock_plus.dart";
 
 import "../api/audio/get_lyrics.dart";
 import "../consts.dart";
@@ -37,6 +38,9 @@ Future<void> openFullscreenPlayer(
     await FullScreenWindow.setFullScreen(true);
   }
 
+  // Делаем Wakelock, что бы экран не отключался во время открытого плеера.
+  await WakelockPlus.enable();
+
   if (context.mounted) {
     Navigator.push(
       context,
@@ -55,6 +59,9 @@ Future<void> closeFullscreenPlayer(
   if (isDesktop) {
     await FullScreenWindow.setFullScreen(false);
   }
+
+  // Убираем Wakelock для защиты от отключения экрана.
+  await WakelockPlus.disable();
 
   if (context.mounted) {
     Navigator.of(context).pop();
