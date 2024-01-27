@@ -30,8 +30,14 @@ Future<Response> apiPost(
 
   final response = await retry(
     () async {
+      String bodyConcat = jsonEncode(body);
+      if (bodyConcat.length > 500) {
+        bodyConcat =
+            "${bodyConcat.substring(0, 500)}... (${bodyConcat.length} chars)";
+      }
+
       logger.d(
-        "Begin POST to $url, body: ${jsonEncode(body)}, headers: $headers",
+        "Begin POST to $url, body: $bodyConcat",
       );
 
       var req = await post(
@@ -52,7 +58,13 @@ Future<Response> apiPost(
     ),
   );
 
-  logger.d("Req status code: ${response.statusCode}, body: ${response.body}");
+  String bodyConcat = response.body;
+  if (bodyConcat.length > 500) {
+    bodyConcat =
+        "${bodyConcat.substring(0, 500)}... (${bodyConcat.length} chars)";
+  }
+
+  logger.d("Req status code: ${response.statusCode}, body: $bodyConcat");
 
   return response;
 }

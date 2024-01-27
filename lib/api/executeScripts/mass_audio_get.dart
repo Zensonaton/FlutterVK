@@ -2,6 +2,7 @@
 
 import "dart:convert";
 
+import "package:flutter/foundation.dart";
 import "package:json_annotation/json_annotation.dart";
 
 import "../execute.dart";
@@ -98,5 +99,8 @@ return {'audioCount': audioCount, 'audios': audios, 'playlistsCount': playlistsR
     executeCode,
   );
 
-  return APIMassAudioGetResponse.fromJson(jsonDecode(response.body));
+  return await compute(
+    (message) => APIMassAudioGetResponse.fromJson(jsonDecode(message)),
+    response.body,
+  );
 }
