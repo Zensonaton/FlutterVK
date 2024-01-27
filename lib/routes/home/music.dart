@@ -919,8 +919,8 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
     return Container(
       width: 500,
       padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+      child: ListView(
+        shrinkWrap: true,
         children: [
           AudioTrackTile(
             audio: widget.audio,
