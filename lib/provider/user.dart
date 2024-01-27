@@ -238,6 +238,9 @@ class Settings {
 
   /// Указывает поведение в случае закрытия приложения.
   AppCloseBehavior closeBehavior = AppCloseBehavior.close;
+
+  /// Указывает, что приложение показывает предупреждение при попытке сохранить уже лайкнутый трек.
+  bool checkBeforeFavorite = true;
 }
 
 /// Provider для получения объекта пользователя в контексте интерфейса приложения.
@@ -469,6 +472,10 @@ class UserProvider extends ChangeNotifier {
       "CloseBehavior",
       settings.closeBehavior.index,
     );
+    await prefs.setBool(
+      "CheckBeforeFavorite",
+      settings.checkBeforeFavorite,
+    );
   }
 
   /// Загружает данный объект пользователя с диска.
@@ -509,6 +516,7 @@ class UserProvider extends ChangeNotifier {
     settings.theme = ThemeMode.values[prefs.getInt("Theme") ?? 0];
     settings.closeBehavior =
         AppCloseBehavior.values[prefs.getInt("CloseBehavior") ?? 0];
+    settings.checkBeforeFavorite = prefs.getBool("CheckBeforeFavorite") ?? true;
 
     markUpdated(false);
 

@@ -25,14 +25,63 @@ import "home/messages.dart";
 import "home/music.dart";
 import "home/profile.dart";
 
+/// Диалог, предупреждающий о том, что трек уже сохранён.
+class DuplicateWarningDialog extends StatelessWidget {
+  /// Аудио, которое пользователь попытался лайкнуть.
+  final ExtendedVKAudio audio;
+
+  /// Плейлист с лайкнутыми треками.
+  final ExtendedVKPlaylist playlist;
+
+  const DuplicateWarningDialog({
+    super.key,
+    required this.audio,
+    required this.playlist,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialDialog(
+      icon: Icons.copy,
+      title: AppLocalizations.of(context)!.checkBeforeFavoriteWarningTitle,
+      text: AppLocalizations.of(context)!.checkBeforeFavoriteWarningDescription,
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(
+            AppLocalizations.of(context)!.general_no,
+          ),
+        ),
+        TextButton(
+          onPressed: () async {
+            Navigator.of(context).pop();
+
+            await toggleTrackLikeState(
+              context,
+              audio,
+              true,
+              checkBeforeSaving: false,
+            );
+          },
+          child: Text(
+            AppLocalizations.of(context)!.general_yes,
+          ),
+        )
+      ],
+    );
+  }
+}
+
 /// Меняет состояние "лайка" у передаваемого трека.
 ///
 /// Учтите, что данный метод делает изменения в интерфейсе.
+/// Если [checkBeforeSaving] равен true, то в случае дубликата трека появится диалог, подтверждающий создание дубликата.
 Future<void> toggleTrackLikeState(
   BuildContext context,
   ExtendedVKAudio audio,
-  bool isFavorite,
-) async {
+  bool isFavorite, {
+  bool checkBeforeSaving = true,
+}) async {
   final UserProvider user = Provider.of<UserProvider>(context, listen: false);
   final AppLogger logger = getLogger("toggleTrackLikeState");
 
@@ -62,6 +111,29 @@ Future<void> toggleTrackLikeState(
           );
         }
       } else {
+        // Если это разрешено, то проверяем то, существует ли такой же трек.
+        if (checkBeforeSaving) {
+          bool isDuplicate = user.favoritesPlaylist!.audios!.any(
+            (favAudio) =>
+                favAudio.title == audio.title &&
+                favAudio.artist == audio.artist &&
+                favAudio.album == audio.album,
+          );
+
+          // Если это дубликат, то показываем предупреждение об этом.
+          if (isDuplicate) {
+            showDialog(
+              context: context,
+              builder: (BuildContext context) => DuplicateWarningDialog(
+                audio: audio,
+                playlist: user.favoritesPlaylist!,
+              ),
+            );
+
+            return;
+          }
+        }
+
         // Сохраняем трек как лайкнутый.
         final APIAudioAddResponse response = await user.audioAdd(
           audio.id,

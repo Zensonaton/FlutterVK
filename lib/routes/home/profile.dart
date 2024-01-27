@@ -242,7 +242,6 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                     await player.setDiscordRPCEnabled(enabled);
 
                     user.markUpdated();
-                    setState(() {});
                   },
                 ),
 
@@ -396,9 +395,31 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                     user.settings.pauseOnMuteEnabled = enabled;
 
                     user.markUpdated();
-                    setState(() {});
                   },
                 ),
+
+              // Предупреждение создание дубликата при сохранении.
+              SwitchListTile(
+                secondary: const Icon(
+                  Icons.copy,
+                ),
+                title: Text(
+                  AppLocalizations.of(context)!
+                      .profile_checkBeforeFavoriteTitle,
+                ),
+                subtitle: Text(
+                  AppLocalizations.of(context)!
+                      .profile_checkBeforeFavoriteDescription,
+                ),
+                value: user.settings.checkBeforeFavorite,
+                onChanged: (bool? enabled) async {
+                  if (enabled == null) return;
+
+                  user.settings.checkBeforeFavorite = enabled;
+
+                  user.markUpdated();
+                },
+              ),
 
               // Экспорт списка треков.
               ListTile(
