@@ -14,7 +14,7 @@ import "../services/logger.dart";
 import "../utils.dart";
 import "../widgets/dialogs.dart";
 import "../widgets/loading_overlay.dart";
-import "../widgets/page_route.dart";
+import "../widgets/page_route_builders.dart";
 import "home.dart";
 import "home/music.dart";
 import "login/desktop.dart";

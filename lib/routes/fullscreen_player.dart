@@ -2,6 +2,7 @@ import "dart:async";
 import "dart:ui";
 
 import "package:cached_network_image/cached_network_image.dart";
+import "package:flutter/cupertino.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
@@ -22,7 +23,6 @@ import "../provider/user.dart";
 import "../services/cache_manager.dart";
 import "../services/logger.dart";
 import "../utils.dart";
-import "../widgets/page_route.dart";
 import "fullscreen_player/desktop.dart";
 import "fullscreen_player/mobile.dart";
 
@@ -44,7 +44,7 @@ Future<void> openFullscreenPlayer(
   if (context.mounted) {
     Navigator.push(
       context,
-      Material3PageRoute(
+      MaterialPageRoute(
         builder: (context) => const FullscreenPlayerRoute(),
       ),
     );

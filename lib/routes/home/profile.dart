@@ -14,8 +14,8 @@ import "../../provider/user.dart";
 import "../../services/cache_manager.dart";
 import "../../utils.dart";
 import "../../widgets/dialogs.dart";
-import "../../widgets/page_route.dart";
 
+import "../../widgets/page_route_builders.dart";
 import "../login.dart";
 import "../welcome.dart";
 

@@ -36,8 +36,8 @@ class TopFullscreenControls extends StatelessWidget {
       children: [
         // Кнопка для выхода из полноэкранного плеера.
         IconButton(
-          icon: Icon(
-            Icons.adaptive.arrow_back,
+          icon: const Icon(
+            Icons.arrow_downward,
           ),
           onPressed: () => closeFullscreenPlayer(context),
         ),

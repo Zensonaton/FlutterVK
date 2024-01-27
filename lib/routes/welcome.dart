@@ -4,7 +4,7 @@ import "package:styled_text/styled_text.dart";
 import "package:url_launcher/url_launcher.dart";
 
 import "../../consts.dart";
-import "../widgets/page_route.dart";
+import "../widgets/page_route_builders.dart";
 import "login.dart";
 
 /// Route, показываемый при первом входе в приложение.
