@@ -538,7 +538,7 @@ class VKMusicPlayer {
     if (playlist.audios!.isEmpty) return;
 
     _playlist = playlist;
-    _audiosQueue = playlist.audios!;
+    _audiosQueue = [...playlist.audios!];
     _queue = ConcatenatingAudioSource(
       children: [
         for (ExtendedVKAudio audio in playlist.audios!)
