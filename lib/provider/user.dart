@@ -20,6 +20,7 @@ import "../enums.dart";
 import "../main.dart";
 import "../services/cache_manager.dart";
 import "../services/logger.dart";
+import "../utils.dart";
 
 /// Класс, расширяющий обычный объект [AudioPlaylist] от API ВКонтакте, добавляющий информацию о треках в данном плейлисте.
 class ExtendedVKPlaylist extends AudioPlaylist {
@@ -121,6 +122,17 @@ class ExtendedVKAudio extends Audio {
   /// }
   /// ```
   bool isLiked;
+
+  String? _normalizedName;
+
+  /// Возвращает "чистое" название данного трека, в котором используется название трека и его исполнитель.
+  ///
+  /// В данной строке удалены диакритические символы благодаря вызову метода [cleanString]. Сравнивая строки, стоит воспользоваться именно методом [cleanString].
+  String get normalizedName {
+    _normalizedName ??= cleanString(title + artist);
+
+    return _normalizedName!;
+  }
 
   /// Возвращает данный объект как [MediaItem] для аудио плеера.
   MediaItem get asMediaItem => MediaItem(

@@ -2,6 +2,7 @@ import "dart:io";
 import "dart:math";
 import "dart:ui";
 
+import "package:diacritic/diacritic.dart";
 import "package:flutter/material.dart";
 
 /// Извлекает access-токен из строки.
@@ -171,6 +172,31 @@ class CustomTrackShape extends RoundedRectSliderTrackShape {
       trackHeight,
     );
   }
+}
+
+/// Делает входную строку [input] «чище», очищая лишние символы, делая строку lowercase, а так же заменяя диакритические символы.
+String cleanString(String input) {
+  const List<String> toRemove = [
+    " ",
+    "-",
+    ",",
+    ".",
+    "`",
+    "'",
+    "(",
+    ")",
+    "[",
+    "]",
+    "_"
+  ];
+
+  input = input.toLowerCase();
+
+  for (String char in toRemove) {
+    input = input.replaceAll(char, "");
+  }
+
+  return removeDiacritics(input);
 }
 
 extension RandomListItem<T> on List<T> {

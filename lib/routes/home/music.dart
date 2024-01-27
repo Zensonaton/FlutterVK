@@ -3,7 +3,6 @@ import "dart:async";
 import "package:cached_network_image/cached_network_image.dart";
 import "package:collection/collection.dart";
 import "package:declarative_refresh_indicator/declarative_refresh_indicator.dart";
-import "package:diacritic/diacritic.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
@@ -266,12 +265,7 @@ List<ExtendedVKAudio> filterByName(
   String query,
 ) {
   // Избавляемся от всех пробелов в запросе, а так же диакритические знаки.
-  query = removeDiacritics(
-    query.toLowerCase().replaceAll(
-          r" ",
-          "",
-        ),
-  );
+  query = cleanString(query);
 
   // Если запрос пустой, то просто возвращаем исходный массив.
   if (query.isEmpty) return audios;
@@ -279,12 +273,7 @@ List<ExtendedVKAudio> filterByName(
   // Возвращаем список тех треков, у которых совпадает название или исполнитель.
   return audios
       .where(
-        (ExtendedVKAudio audio) => removeDiacritics(
-          (("${audio.title}${audio.artist}").toLowerCase().replaceAll(
-                r" ",
-                "",
-              )),
-        ).contains(query),
+        (ExtendedVKAudio audio) => audio.normalizedName.contains(query),
       )
       .toList();
 }
