@@ -148,6 +148,11 @@ Future main() async {
 
         // Инициализируем иконку в трее.
         await initSystemTray();
+
+        // Убираем полноэкранный режим.
+        if (kDebugMode) {
+          await windowManager.setFullScreen(false);
+        }
       },
     );
   }
