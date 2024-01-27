@@ -95,7 +95,10 @@ Future<void> ensureUserAudioBasicInfo(
       count: response.response!.audioCount,
       audios: response.response!.audios
           .map(
-            (Audio audio) => ExtendedVKAudio.fromAudio(audio),
+            (Audio audio) => ExtendedVKAudio.fromAudio(
+              audio,
+              isLiked: true,
+            ),
           )
           .toList(),
     );
@@ -108,6 +111,7 @@ Future<void> ensureUserAudioBasicInfo(
       },
     );
 
+    user.resetFavoriteMediaKeys();
     user.markUpdated(false);
   } catch (e, stackTrace) {
     logger.e(
@@ -729,6 +733,7 @@ class _TrackInfoEditDialogState extends State<TrackInfoEditDialog> {
       url: widget.audio.url,
       date: widget.audio.date,
       album: widget.audio.album,
+      isLiked: widget.audio.isLiked,
     );
 
     return Dialog(

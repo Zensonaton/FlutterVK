@@ -10,8 +10,8 @@ LyricTimestamp _$LyricTimestampFromJson(Map<String, dynamic> json) =>
     LyricTimestamp(
       json['line'] as String?,
       interlude: json['interlude'] as bool? ?? false,
-      begin: json['begin'] as int? ?? 0,
-      end: json['end'] as int? ?? 0,
+      begin: json['begin'] as int?,
+      end: json['end'] as int?,
     );
 
 Map<String, dynamic> _$LyricTimestampToJson(LyricTimestamp instance) =>

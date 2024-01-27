@@ -10,6 +10,7 @@ import "package:responsive_builder/responsive_builder.dart";
 
 import "../api/audio/add.dart";
 import "../api/audio/delete.dart";
+import "../api/audio/restore.dart";
 import "../main.dart";
 import "../provider/color.dart";
 import "../provider/user.dart";
@@ -40,30 +41,61 @@ Future<void> toggleTrackLikeState(
   // Делаем API запрос, что бы либо удалить трек, либо добавить в лайкнутые.
   try {
     if (isFavorite) {
-      // Сохраняем трек как лайкнутый.
-      final APIAudioAddResponse response = await user.audioAdd(
-        audio.id,
-        audio.ownerID,
-      );
+      // Пользователь попытался лайкнуть трек.
+      // Здесь мы должны проверить, пытается ли пользователь восстановить ранее удалённый трек или нет.
+      final bool shouldRestore =
+          user.favoritesPlaylist!.audios!.contains(audio);
 
-      // Проверяем, что в ответе нет ошибок.
-      if (response.error != null) {
-        throw Exception(
-          "API error ${response.error!.errorCode}: ${response.error!.errorMessage}",
+      // Если пользователь пытается восстановить трек, то вызываем audio.restore,
+      // в ином случае просто добавляем его методом audio.add.
+      if (shouldRestore) {
+        // Восстанавливаем трек.
+        final APIAudioRestoreResponse response = await user.audioRestore(
+          audio.id,
+          ownerID: audio.ownerID,
         );
+
+        // Проверяем, что в ответе нет ошибок.
+        if (response.error != null) {
+          throw Exception(
+            "API error ${response.error!.errorCode}: ${response.error!.errorMessage}",
+          );
+        }
+      } else {
+        // Сохраняем трек как лайкнутый.
+        final APIAudioAddResponse response = await user.audioAdd(
+          audio.id,
+          audio.ownerID,
+        );
+
+        // Проверяем, что в ответе нет ошибок.
+        if (response.error != null) {
+          throw Exception(
+            "API error ${response.error!.errorCode}: ${response.error!.errorMessage}",
+          );
+        }
+
+        audio.oldID = audio.id;
+        audio.oldOwnerID = audio.ownerID;
+
+        audio.id = response.response!;
+        audio.ownerID = user.id!;
       }
 
-      // Всё ок. Обновляем ID трека в текущем плейлисте, что бы он отображался как лайкнутый.
-      // Так же, запоминаем его старый ID и ownerID, в случае, если пользователь захочет его удалить.
-      audio.oldID = audio.id;
-      audio.oldOwnerID = audio.ownerID;
-      audio.id = response.response!;
-      audio.ownerID = user.id!;
+      // Прекрасно, трек был добавлен либо восстановлён.
+      // Теперь нам нужно запомнить то, что трек лайкнут.
+      audio.isLiked = true;
 
       // Добавляем трек в список фаворитов.
       user.favoritesPlaylist!.count += 1;
-      user.favoritesPlaylist!.audios!.insert(0, audio);
+
+      // Убеждаемся, что трек не существует в списке.
+      if (!user.favoritesPlaylist!.audios!.contains(audio)) {
+        user.favoritesPlaylist!.audios!.insert(0, audio);
+      }
     } else {
+      // Пользователь пытается удалить трек.
+
       // Удаляем трек из лайкнутых.
       final APIAudioDeleteResponse response = await user.audioDelete(
         audio.id,
@@ -77,9 +109,9 @@ Future<void> toggleTrackLikeState(
         );
       }
 
-      // Всё ок. Удаляем трек из списка фаворитов.
+      // Всё ок, помечаем трек как не лайкнутый.
       user.favoritesPlaylist!.count -= 1;
-      user.favoritesPlaylist!.audios!.remove(audio);
+      audio.isLiked = false;
 
       // Если это возможно, то удаляем трек из кэша.
       try {
@@ -90,18 +122,10 @@ Future<void> toggleTrackLikeState(
           error: e,
         );
       }
-
-      // Если такая информация присутствует, то восстанавливаем старый ID и ownerID трека.
-      if (audio.oldID != null && audio.oldOwnerID != null) {
-        audio.id = audio.oldID!;
-        audio.ownerID = audio.oldOwnerID!;
-
-        audio.oldID = null;
-        audio.oldOwnerID = null;
-      }
     }
 
     // Посылаем обновления объекта пользователя.
+    user.resetFavoriteMediaKeys();
     user.markUpdated(false);
   } catch (e, stackTrace) {
     // ignore: use_build_context_synchronously

@@ -8,6 +8,7 @@ import "../api/audio/edit.dart";
 import "../api/audio/get.dart";
 import "../api/audio/get_lyrics.dart";
 import "../api/audio/get_playlists.dart";
+import "../api/audio/restore.dart";
 import "../api/catalog/get_audio.dart";
 import "../api/executeScripts/audio_get_data.dart";
 import "../api/executeScripts/mass_audio_albums.dart";
@@ -108,6 +109,18 @@ class ExtendedVKAudio extends Audio {
   /// Данное поле устанавливается приложением (оно не передаётся API ВКонтакте) при добавлении трека в списка "любимых треков", поскольку оригинальное поле [ownerID] заменяется значением ID владельца текущей страницы.
   int? oldOwnerID;
 
+  /// Указывает, что данный трек лайкнут (если находится в плейлисте "любимые треки").
+  ///
+  /// Данное поле может стать false только в том случае, если пользователь удалил трек, который ранее был лайкнутым.
+  ///
+  /// Если Вы проверяете, лайкнут ли трек по-настоящему, то стоит проверять это таким образом:
+  /// ```dart
+  /// if (isLiked && user.favoriteMediaKeys.contains(player.currentAudio!.mediaKey)) {
+  ///   ...
+  /// }
+  /// ```
+  bool isLiked;
+
   /// Возвращает данный объект как [MediaItem] для аудио плеера.
   MediaItem get asMediaItem => MediaItem(
         id: mediaKey,
@@ -148,12 +161,14 @@ class ExtendedVKAudio extends Audio {
     super.albumID,
     super.genreID,
     this.lyrics,
+    this.isLiked = false,
   });
 
   /// Возвращает instance данного класса из передаваемого объекта типа [Audio].
   static ExtendedVKAudio fromAudio(
     Audio audio, {
     Lyrics? lyrics,
+    bool? isLiked,
   }) =>
       ExtendedVKAudio(
         id: audio.id,
@@ -179,6 +194,7 @@ class ExtendedVKAudio extends Audio {
         albumID: audio.albumID,
         genreID: audio.genreID,
         lyrics: lyrics,
+        isLiked: isLiked ?? false,
       );
 }
 
@@ -286,13 +302,25 @@ class UserProvider extends ChangeNotifier {
   /// Тоже самое, что и `allPlaylists[0]`.
   ExtendedVKPlaylist? get favoritesPlaylist => allPlaylists[0];
 
+  List<String>? _favoriteMediaKeys;
+
   /// Список из [Audio.mediaKey] лайкнутых треков.
-  List<String> get favoriteMediaKeys =>
-      favoritesPlaylist != null && favoritesPlaylist!.audios != null
-          ? favoritesPlaylist!.audios!
-              .map((ExtendedVKAudio audio) => audio.mediaKey)
-              .toList()
-          : [];
+  List<String> get favoriteMediaKeys {
+    _favoriteMediaKeys ??=
+        favoritesPlaylist != null && favoritesPlaylist!.audios != null
+            ? favoritesPlaylist!.audios!
+                .where((ExtendedVKAudio audio) => audio.isLiked)
+                .map((ExtendedVKAudio audio) => audio.mediaKey)
+                .toList()
+            : [];
+
+    return _favoriteMediaKeys!;
+  }
+
+  /// Сбрасывает список из [Audio.mediaKey] у [favoriteMediaKeys].
+  ///
+  /// Данный вызов стоит совершать только если поменялся список лайкнутых треков.
+  void resetFavoriteMediaKeys() => _favoriteMediaKeys = null;
 
   /// Перечисление всех обычных плейлистов, которые были сделаны данным пользователем.
   List<ExtendedVKPlaylist> get regularPlaylists => allPlaylists.values
@@ -555,6 +583,19 @@ class UserProvider extends ChangeNotifier {
         mainToken!,
         audioID,
         ownerID,
+      );
+
+  /// Восстанавливает трек по его ID, после удаления, вызванного методом [audioDelete].
+  ///
+  /// API: `audio.restore`.
+  Future<APIAudioRestoreResponse> audioRestore(
+    int audioID, {
+    int? ownerID,
+  }) async =>
+      audio_restore(
+        mainToken!,
+        audioID,
+        ownerID ?? id!,
       );
 
   /// Модифицирует параметры трека: его название ([title]) и/ли исполнителя ([artist]).
