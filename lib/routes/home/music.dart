@@ -685,6 +685,9 @@ class _SearchDisplayDialogState extends State<SearchDisplayDialog> {
   /// FocusNode для фокуса поля поиска сразу после открытия данного диалога.
   final FocusNode focusNode = FocusNode();
 
+  /// Подписки на изменения состояния воспроизведения трека.
+  late final List<StreamSubscription> subscriptions;
+
   /// Debouncer для поиска.
   final debouncer = Debouncer<String>(
     const Duration(
@@ -701,6 +704,18 @@ class _SearchDisplayDialogState extends State<SearchDisplayDialog> {
     super.initState();
 
     final UserProvider user = Provider.of<UserProvider>(context, listen: false);
+
+    subscriptions = [
+      // Изменения состояния воспроизведения.
+      player.playingStream.listen(
+        (bool playing) => setState(() {}),
+      ),
+
+      // Изменения плейлиста.
+      player.sequenceStateStream.listen(
+        (SequenceState? state) => setState(() {}),
+      ),
+    ];
 
     // Обработчик печати.
     controller.addListener(
@@ -728,6 +743,15 @@ class _SearchDisplayDialogState extends State<SearchDisplayDialog> {
 
     // Если у пользователя ПК, то тогда устанавливаем фокус на поле поиска.
     if (isDesktop && widget.focusSearchBarOnOpen) focusNode.requestFocus();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+
+    for (StreamSubscription subscription in subscriptions) {
+      subscription.cancel();
+    }
   }
 
   @override

@@ -151,6 +151,16 @@ class ExtendedVKAudio extends Audio {
         ),
       );
 
+  @override
+  bool operator ==(covariant Audio other) {
+    if (identical(this, other)) return true;
+
+    return other.runtimeType == ExtendedVKAudio && other.mediaKey == mediaKey;
+  }
+
+  @override
+  int get hashCode => mediaKey.hashCode;
+
   ExtendedVKAudio({
     required super.id,
     required super.ownerID,
