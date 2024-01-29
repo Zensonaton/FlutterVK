@@ -2697,18 +2697,13 @@ class _HomeMusicPageState extends State<HomeMusicPage> {
                         ),
 
                         // Поиск.
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
+                        IconButton.filledTonal(
+                          onPressed: () => showDialog(
+                            context: context,
+                            builder: (context) => const SearchDisplayDialog(),
                           ),
-                          child: IconButton.filledTonal(
-                            onPressed: () => showDialog(
-                              context: context,
-                              builder: (context) => const SearchDisplayDialog(),
-                            ),
-                            icon: const Icon(
-                              Icons.search,
-                            ),
+                          icon: const Icon(
+                            Icons.search,
                           ),
                         ),
                       ],
