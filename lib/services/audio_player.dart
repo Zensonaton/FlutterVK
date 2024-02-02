@@ -356,6 +356,7 @@ class VKMusicPlayer {
               if (!_pausedExternally) return;
 
               await player.play();
+              _pausedExternally = false;
 
               break;
           }
