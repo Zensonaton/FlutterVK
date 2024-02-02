@@ -542,7 +542,7 @@ class VKMusicPlayer {
         .toList();
 
     // Обработка запуска пустого плейлиста.
-    if (playlist.audios!.isEmpty) return;
+    if (audios.isEmpty) return;
 
     _playlist = playlist;
     _audiosQueue = [...audios];
