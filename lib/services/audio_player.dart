@@ -751,13 +751,17 @@ class VKMusicPlayer {
     );
 
     // Превращаем наш PaletteGenerator в цветовые схемы.
-    final ColorScheme lightScheme = ColorScheme.fromSeed(
-      seedColor: palette.dominantColor?.color ?? Colors.grey,
-    );
-    final ColorScheme darkScheme = ColorScheme.fromSeed(
-      seedColor: palette.dominantColor?.color ?? Colors.grey,
-      brightness: Brightness.dark,
-    );
+    final ColorScheme lightScheme = palette.dominantColor != null
+        ? ColorScheme.fromSeed(
+            seedColor: palette.dominantColor!.color,
+          )
+        : fallbackLightColorScheme;
+    final ColorScheme darkScheme = palette.dominantColor != null
+        ? ColorScheme.fromSeed(
+            seedColor: palette.dominantColor!.color,
+            brightness: Brightness.dark,
+          )
+        : fallbackDarkColorScheme;
 
     imageColorSchemeCache[cacheKey] = (lightScheme, darkScheme);
 

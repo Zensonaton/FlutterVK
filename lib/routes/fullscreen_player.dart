@@ -519,11 +519,7 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
 
     return Theme(
       data: ThemeData(
-        colorScheme: colorScheme.darkColorScheme ??
-            ColorScheme.fromSeed(
-              seedColor: Colors.grey,
-              brightness: Brightness.dark,
-            ),
+        colorScheme: colorScheme.darkColorScheme ?? fallbackDarkColorScheme,
       ),
       child: Scaffold(
         body: CallbackShortcuts(

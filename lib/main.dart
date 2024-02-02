@@ -33,10 +33,12 @@ BuildContext? buildContext;
 /// Объект аудиоплеера.
 late final VKMusicPlayer player;
 
+/// [ColorScheme] яркости [Brightness.light], которая используется в случае, если по какой-то причине приложение не смогло получить цвета акцента, либо цвета музыкального плеера.
 final fallbackLightColorScheme = ColorScheme.fromSeed(
   seedColor: Colors.blueAccent,
 );
 
+/// [ColorScheme] яркости [Brightness.dark], которая используется в случае, если по какой-то причине приложение не смогло получить цвета акцента, либо цвета музыкального плеера.
 final fallbackDarkColorScheme = ColorScheme.fromSeed(
   seedColor: Colors.blueAccent,
   brightness: Brightness.dark,
