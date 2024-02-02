@@ -248,48 +248,53 @@ class _TrackLyricsBlockState extends State<TrackLyricsBlock> {
       onLyricLineChanged();
     }
 
-    return ListView.builder(
-      controller: controller,
-      itemCount: lyrics.length,
-      itemBuilder: (BuildContext context, int index) {
-        final LyricTimestamp lyric = lyrics[index];
-        final bool isSyncedLyric = lyric.begin != null;
+    return ScrollConfiguration(
+      behavior: ScrollConfiguration.of(context).copyWith(
+        scrollbars: false,
+      ),
+      child: ListView.builder(
+        controller: controller,
+        itemCount: lyrics.length,
+        itemBuilder: (BuildContext context, int index) {
+          final LyricTimestamp lyric = lyrics[index];
+          final bool isSyncedLyric = lyric.begin != null;
 
-        bool isActive = isSyncedLyric && currentLyricIndex != null
-            ? currentLyricIndex! == index
-            : false;
-        bool isOld = isSyncedLyric && currentLyricIndex != null
-            ? currentLyricIndex! > index
-            : true;
+          bool isActive = isSyncedLyric && currentLyricIndex != null
+              ? currentLyricIndex! == index
+              : false;
+          bool isOld = isSyncedLyric && currentLyricIndex != null
+              ? currentLyricIndex! > index
+              : true;
 
-        return AutoScrollTag(
-          key: ValueKey(index),
-          controller: controller,
-          index: index,
-          child: VisibilityDetector(
+          return AutoScrollTag(
             key: ValueKey(index),
-            onVisibilityChanged: (VisibilityInfo info) {
-              if (index != currentLyricIndex) return;
+            controller: controller,
+            index: index,
+            child: VisibilityDetector(
+              key: ValueKey(index),
+              onVisibilityChanged: (VisibilityInfo info) {
+                if (index != currentLyricIndex) return;
 
-              currentLyricIsVisible = info.visibleFraction > 0;
-            },
-            child: TrackLyric(
-              line: lyric.line,
-              isActive: isActive,
-              isOld: isOld,
-              centerText: isSyncedLyric,
-              onTap: isSyncedLyric
-                  ? () => player.seek(
-                        Duration(
-                          milliseconds: lyric.begin!,
-                        ),
-                        play: true,
-                      )
-                  : null,
+                currentLyricIsVisible = info.visibleFraction > 0;
+              },
+              child: TrackLyric(
+                line: lyric.line,
+                isActive: isActive,
+                isOld: isOld,
+                centerText: isSyncedLyric,
+                onTap: isSyncedLyric
+                    ? () => player.seek(
+                          Duration(
+                            milliseconds: lyric.begin!,
+                          ),
+                          play: true,
+                        )
+                    : null,
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }
