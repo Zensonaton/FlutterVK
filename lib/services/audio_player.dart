@@ -235,6 +235,9 @@ class VKMusicPlayer {
   ///
   /// Данный метод должен быть вызван лишь один раз, при инициализации плеера.
   Future<void> _initPlayer() async {
+    // Устанавливаем значение для LoopMode по-умолчанию.
+    await setLoop(LoopMode.all);
+
     // Слушаем события от SMTC, если приложение запущено на Windows.
     if (Platform.isWindows) {
       smtc = SMTCWindows(

@@ -463,11 +463,11 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                 stream: player.loopModeStream,
                 builder:
                     (BuildContext context, AsyncSnapshot<LoopMode> snapshot) {
-                  final LoopMode loopMode = snapshot.data ?? LoopMode.off;
+                  final LoopMode loopMode = snapshot.data ?? LoopMode.all;
 
                   return IconButton(
                     onPressed: () => player.setLoop(
-                      loopMode == LoopMode.one ? LoopMode.off : LoopMode.one,
+                      loopMode == LoopMode.one ? LoopMode.all : LoopMode.one,
                     ),
                     icon: Icon(
                       loopMode == LoopMode.one

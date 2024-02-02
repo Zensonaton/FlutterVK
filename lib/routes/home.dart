@@ -361,10 +361,12 @@ class _BottomMusicPlayerWidgetState extends State<BottomMusicPlayerWidget> {
         user.markUpdated();
       },
       onRepeatToggle: (bool enabled) => player.setLoop(
-        enabled ? LoopMode.one : LoopMode.off,
+        enabled ? LoopMode.one : LoopMode.all,
       ),
       onNextTrack: () => player.next(),
-      onPreviousTrack: () => player.previous(allowSeekToBeginning: true),
+      onPreviousTrack: () => player.previous(
+        allowSeekToBeginning: true,
+      ),
     );
   }
 }
