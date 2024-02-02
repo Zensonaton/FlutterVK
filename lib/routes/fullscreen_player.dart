@@ -517,60 +517,66 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
     final bool useMobileLayout =
         getDeviceType(MediaQuery.of(context).size) == DeviceScreenType.mobile;
 
-    return Theme(
-      data: ThemeData(
-        colorScheme: colorScheme.darkColorScheme ?? fallbackDarkColorScheme,
+    return AnnotatedRegion(
+      value: const SystemUiOverlayStyle(
+        statusBarBrightness: Brightness.light,
+        statusBarIconBrightness: Brightness.light,
       ),
-      child: Scaffold(
-        body: CallbackShortcuts(
-          bindings: {
-            const SingleActivator(
-              LogicalKeyboardKey.escape,
-            ): () => closeFullscreenPlayer(context),
-          },
-          child: Focus(
-            autofocus: true,
-            canRequestFocus: true,
-            child: AnimatedContainer(
-              duration: const Duration(
-                milliseconds: 500,
-              ),
-              curve: Curves.ease,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                  colors: [
-                    (colorScheme.darkColorScheme ??
-                            Theme.of(context).colorScheme)
-                        .primaryContainer,
-                    darkenColor(
+      child: Theme(
+        data: ThemeData(
+          colorScheme: colorScheme.darkColorScheme ?? fallbackDarkColorScheme,
+        ),
+        child: Scaffold(
+          body: CallbackShortcuts(
+            bindings: {
+              const SingleActivator(
+                LogicalKeyboardKey.escape,
+              ): () => closeFullscreenPlayer(context),
+            },
+            child: Focus(
+              autofocus: true,
+              canRequestFocus: true,
+              child: AnimatedContainer(
+                duration: const Duration(
+                  milliseconds: 500,
+                ),
+                curve: Curves.ease,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [
                       (colorScheme.darkColorScheme ??
                               Theme.of(context).colorScheme)
                           .primaryContainer,
-                      50,
+                      darkenColor(
+                        (colorScheme.darkColorScheme ??
+                                Theme.of(context).colorScheme)
+                            .primaryContainer,
+                        50,
+                      ),
+                    ],
+                  ),
+                ),
+                child: Stack(
+                  children: [
+                    // Размытое фоновое изображение.
+                    if (player.currentAudio?.album?.thumb != null &&
+                        user.settings.playerThumbAsBackground)
+                      SizedBox(
+                        width: MediaQuery.of(context).size.width,
+                        height: MediaQuery.of(context).size.height,
+                        child: const BlurredBackgroundImage(),
+                      ),
+
+                    // Внутреннее содержимое, зависящее от типа Layout'а.
+                    SafeArea(
+                      child: useMobileLayout
+                          ? const FullscreenPlayerMobileRoute()
+                          : const FullscreenPlayerDesktopRoute(),
                     ),
                   ],
                 ),
-              ),
-              child: Stack(
-                children: [
-                  // Размытое фоновое изображение.
-                  if (player.currentAudio?.album?.thumb != null &&
-                      user.settings.playerThumbAsBackground)
-                    SizedBox(
-                      width: MediaQuery.of(context).size.width,
-                      height: MediaQuery.of(context).size.height,
-                      child: const BlurredBackgroundImage(),
-                    ),
-
-                  // Внутреннее содержимое, зависящее от типа Layout'а.
-                  SafeArea(
-                    child: useMobileLayout
-                        ? const FullscreenPlayerMobileRoute()
-                        : const FullscreenPlayerDesktopRoute(),
-                  ),
-                ],
               ),
             ),
           ),
