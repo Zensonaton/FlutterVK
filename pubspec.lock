@@ -654,7 +654,7 @@ packages:
     source: hosted
     version: "0.5.0"
   media_kit:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: media_kit
       sha256: "3289062540e3b8b9746e5c50d95bd78a9289826b7227e253dff806d002b9e67a"

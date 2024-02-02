@@ -7,8 +7,8 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "package:flutter_localizations/flutter_localizations.dart";
+import "package:just_audio_media_kit/just_audio_media_kit.dart";
 import "package:local_notifier/local_notifier.dart";
-import "package:media_kit/media_kit.dart";
 import "package:provider/provider.dart";
 import "package:responsive_builder/responsive_builder.dart";
 import "package:system_tray/system_tray.dart";
@@ -118,8 +118,6 @@ Future main() async {
     SystemUiMode.edgeToEdge,
   );
 
-  MediaKit.ensureInitialized();
-
   // Инициализируем WindowManager на Desktop-платформах.
   if (isDesktop) {
     await windowManager.ensureInitialized();
@@ -166,6 +164,7 @@ Future main() async {
   );
 
   // Инициализируем плеер.
+  JustAudioMediaKit.title = "Flutter VK";
   player = VKMusicPlayer();
 
   // Регистрируем AudioHandler для управления музыки при помощи уведомлений.
