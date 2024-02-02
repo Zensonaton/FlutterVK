@@ -31,7 +31,6 @@ dependencies:
   intl: any
   json_annotation: ^4.8.1
   just_audio: ^0.9.36
-  just_audio_background: ^0.0.1-beta.11
   just_audio_media_kit: ^1.0.0
   logger: ^2.0.2+1
   material_color_utilities: ^0.5.0
@@ -59,6 +58,7 @@ dependencies:
   system_tray: ^2.0.3
   wakelock_plus: ^1.1.4
   debounce_throttle: ^2.0.0
+  audio_service: ^0.18.12
 
 dev_dependencies:
   flutter_test:

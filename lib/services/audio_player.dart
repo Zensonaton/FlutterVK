@@ -1,6 +1,7 @@
 import "dart:async";
 import "dart:io";
 
+import "package:audio_service/audio_service.dart";
 import "package:audio_session/audio_session.dart";
 import "package:cached_network_image/cached_network_image.dart";
 import "package:discord_rpc/discord_rpc.dart";
@@ -8,12 +9,14 @@ import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:just_audio/just_audio.dart";
 import "package:palette_generator/palette_generator.dart";
+import "package:provider/provider.dart";
 import "package:smtc_windows/smtc_windows.dart";
 
 import "../api/shared.dart";
 import "../consts.dart";
 import "../main.dart";
 import "../provider/user.dart";
+import "../routes/home.dart";
 import "../utils.dart";
 import "cache_manager.dart";
 import "logger.dart";
@@ -108,11 +111,28 @@ class VKMusicPlayer {
 
   /// Информация о том, играет ли что-то сейчас у плеера или нет.
   ///
+  /// Учтите, что это поле может быть true даже в том случае, если идёт буферизация (см. [buffering]).
+  ///
   /// Если Вы желаете узнать, запущен или остановлен ли плеер (т.е., состоянеи stopped), то тогда обратитесь к полю [loaded], которое всегда true после запуска воспроизведения любого трека, и false после вызова [stop].
   bool get playing => _player.playing;
 
   /// Stream, указывающий текущее состояние воспроизведения плеера.
   Stream<bool> get playingStream => _player.playingStream.asBroadcastStream();
+
+  /// Информация о том, идёт ли буферизация (или какая-либо другая загрузка, из-за которой воспроизведение может быть приостановлено).
+  bool get buffering => const [
+        ProcessingState.buffering,
+        ProcessingState.loading,
+      ].contains(
+        player.playerState.processingState,
+      );
+
+  /// Информация о том, насколько был загружен буфер трека.
+  Duration get bufferedPosition => _player.bufferedPosition;
+
+  /// Stream, возвращающий информацию о том, насколько был загружен буфер трека.
+  Stream<Duration> get bufferedPositionStream =>
+      _player.bufferedPositionStream.asBroadcastStream();
 
   /// Состояние громкости плеера. Возвращает процент, где 0.0 указывает выключенную громкость, а 1.0 - самая высокая громкость.
   double get volume => _player.volume;
@@ -125,8 +145,7 @@ class VKMusicPlayer {
   /// Возвращает null, если сейчас ничего не играет.
   ///
   /// Если Вам необходим Stream для отслеживания изменения данного поля, то воспользуйтесь [positionStream].
-  double get progress => _player.duration != null &&
-          _player.playerState.processingState != ProcessingState.buffering
+  double get progress => _player.duration != null && !buffering
       ? clampDouble(
           _player.position.inMilliseconds / _player.duration!.inMilliseconds,
           0.0,
@@ -518,7 +537,12 @@ class VKMusicPlayer {
 
   /// Включает или отключает случайное перемешивание треков в данном плейлисте, в зависимости от аргумента [shuffle].
   Future<void> setShuffle(bool shuffle) async {
-    await _player.setShuffleModeEnabled(shuffle);
+    return await _player.setShuffleModeEnabled(shuffle);
+  }
+
+  /// Переключает состояние shuffle.
+  Future<void> toggleShuffle() async {
+    return await setShuffle(!shuffleModeEnabled);
   }
 
   /// Меняет режим повтора текущего плейлиста/трека.
@@ -667,7 +691,7 @@ class VKMusicPlayer {
     if (Platform.isWindows) {
       PlaybackStatus status = PlaybackStatus.Stopped;
 
-      if (_player.playerState.processingState == ProcessingState.buffering) {
+      if (buffering) {
         status = PlaybackStatus.Changing;
       } else if (!loaded) {
         status = PlaybackStatus.Stopped;
@@ -777,4 +801,194 @@ class VKMusicPlayer {
 
     return imageColorSchemeCache[cacheKey];
   }
+}
+
+/// enum, перечисляющий действия в уведомлениях над треком.
+enum MediaNotificationAction {
+  /// Переключение состояния shuffle.
+  shuffle,
+
+  /// Переключение состояния "нравится" у трека.
+  favorite,
+}
+
+/// Расширение для класса [BaseAudioHandler], методы которого вызываются при взаимодействии с медиа-уведомлением.
+class AudioPlayerService extends BaseAudioHandler
+    with QueueHandler, SeekHandler {
+  final VKMusicPlayer _player;
+
+  AudioPlayerService(
+    this._player,
+  ) {
+    // События паузы/воспроизведения/...
+    _player.playerStateStream.listen((PlayerState state) async {
+      if (!player.playing) return;
+
+      await _updateEvent();
+    });
+
+    // События изменения позиции плеера.
+    _player.positionStream.listen((Duration position) async {
+      await _updateEvent();
+    });
+
+    // События изменения плейлиста.
+    _player.sequenceStateStream.listen((SequenceState? state) async {
+      if (state == null) return;
+
+      await _updateTrack();
+    });
+
+    // События остановки/первого запуска (загрузки) плеера.
+    _player.loadedStateStream.listen((bool loaded) async {
+      await _updateEvent();
+    });
+
+    // События изменения состояния shuffle.
+    _player.shuffleModeEnabledStream.listen((bool enabled) async {
+      await _updateEvent();
+    });
+  }
+
+  /// Отправляет изменения состояния воспроизведения в `audio_service`, обновляя информацию, отображаемую в уведомлении.
+  Future<void> _updateEvent() async {
+    if (!_player.loaded) {
+      if (playbackState.hasValue) await super.stop();
+
+      return;
+    }
+
+    playbackState.add(
+      PlaybackState(
+        controls: [
+          MediaControl.skipToPrevious,
+          _player.playing ? MediaControl.pause : MediaControl.play,
+          MediaControl.skipToNext,
+          MediaControl.custom(
+            androidIcon: _player.shuffleModeEnabled
+                ? "drawable/ic_shuffle_enabled"
+                : "drawable/ic_shuffle",
+            label: "Shuffle",
+            name: MediaNotificationAction.shuffle.name,
+          ),
+          MediaControl.custom(
+            androidIcon: _player.currentAudio!.isLiked
+                ? "drawable/ic_favorite"
+                : "drawable/ic_favorite_outline",
+            label: "Favorite",
+            name: MediaNotificationAction.favorite.name,
+          ),
+        ],
+        systemActions: {
+          MediaAction.seek,
+        },
+        androidCompactActionIndices: const [0, 1, 2],
+        playing: _player.playing,
+        updatePosition: _player.position,
+        bufferedPosition: _player.bufferedPosition,
+        shuffleMode: player.shuffleModeEnabled == true
+            ? AudioServiceShuffleMode.all
+            : AudioServiceShuffleMode.none,
+        repeatMode: _player.loopMode == LoopMode.one
+            ? AudioServiceRepeatMode.one
+            : AudioServiceRepeatMode.none,
+        processingState: _player.buffering
+            ? AudioProcessingState.loading
+            : AudioProcessingState.ready,
+      ),
+    );
+  }
+
+  /// Отправляет новый трек в уведомление.
+  Future<void> _updateTrack() async {
+    mediaItem.add(_player.currentAudio?.asMediaItem);
+  }
+
+  @override
+  Future<void> customAction(
+    String name, [
+    Map<String, dynamic>? extras,
+  ]) async {
+    final UserProvider user = Provider.of<UserProvider>(
+      buildContext!,
+      listen: false,
+    );
+
+    final MediaNotificationAction action =
+        MediaNotificationAction.values.firstWhere(
+      (action) => action.name == name,
+    );
+
+    switch (action) {
+      case (MediaNotificationAction.shuffle):
+        await _player.toggleShuffle();
+
+        user.settings.shuffleEnabled = _player.shuffleModeEnabled;
+        user.markUpdated(false);
+
+        break;
+
+      case (MediaNotificationAction.favorite):
+        await toggleTrackLike(
+          user,
+          _player.currentAudio!,
+          !_player.currentAudio!.isLiked,
+        );
+
+        await _updateEvent();
+        user.markUpdated(false);
+
+        break;
+    }
+  }
+
+  @override
+  Future<void> play() => _player.play();
+
+  @override
+  Future<void> pause() => _player.pause();
+
+  @override
+  Future<void> stop() => _player.stop();
+
+  @override
+  Future<void> onTaskRemoved() => _player.stop();
+
+  @override
+  Future<void> onNotificationDeleted() => _player.stop();
+
+  @override
+  Future<void> setShuffleMode(AudioServiceShuffleMode shuffleMode) async {
+    await super.setShuffleMode(shuffleMode);
+
+    await _player.setShuffle(
+      shuffleMode == AudioServiceShuffleMode.all,
+    );
+  }
+
+  @override
+  Future<void> setRepeatMode(AudioServiceRepeatMode repeatMode) async {
+    await super.setRepeatMode(repeatMode);
+
+    await _player.setLoop(
+      repeatMode == AudioServiceRepeatMode.one ? LoopMode.one : LoopMode.all,
+    );
+  }
+
+  @override
+  Future<void> skipToNext() async {
+    await _player.next();
+
+    await super.skipToNext();
+  }
+
+  @override
+  Future<void> skipToPrevious() async {
+    await _player.previous();
+
+    await super.skipToPrevious();
+  }
+
+  @override
+  Future<void> seek(Duration position) => _player.seek(position);
 }

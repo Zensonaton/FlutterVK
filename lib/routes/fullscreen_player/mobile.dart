@@ -255,8 +255,7 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
     final UserProvider user = Provider.of<UserProvider>(context);
 
     /// Указывает, сохранён ли этот трек в лайкнутых.
-    final bool isFavorite =
-        user.favoriteMediaKeys.contains(player.currentAudio!.mediaKey);
+    final bool isFavorite = player.currentAudio!.isLiked;
 
     return Column(
       children: [

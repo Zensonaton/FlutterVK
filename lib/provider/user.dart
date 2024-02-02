@@ -1,5 +1,5 @@
+import "package:audio_service/audio_service.dart";
 import "package:flutter/material.dart";
-import "package:just_audio_background/just_audio_background.dart";
 import "package:shared_preferences/shared_preferences.dart";
 
 import "../api/audio/add.dart";
@@ -115,13 +115,6 @@ class ExtendedVKAudio extends Audio {
   /// Указывает, что данный трек лайкнут (если находится в плейлисте "любимые треки").
   ///
   /// Данное поле может стать false только в том случае, если пользователь удалил трек, который ранее был лайкнутым.
-  ///
-  /// Если Вы проверяете, лайкнут ли трек по-настоящему, то стоит проверять это таким образом:
-  /// ```dart
-  /// if (isLiked && user.favoriteMediaKeys.contains(player.currentAudio!.mediaKey)) {
-  ///   ...
-  /// }
-  /// ```
   bool isLiked;
 
   String? _normalizedName;

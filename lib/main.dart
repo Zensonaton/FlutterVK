@@ -1,12 +1,12 @@
 import "dart:io";
 
+import "package:audio_service/audio_service.dart";
 import "package:dynamic_color/dynamic_color.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "package:flutter_localizations/flutter_localizations.dart";
-import "package:just_audio_background/just_audio_background.dart";
 import "package:local_notifier/local_notifier.dart";
 import "package:media_kit/media_kit.dart";
 import "package:provider/provider.dart";
@@ -20,6 +20,7 @@ import "provider/user.dart";
 import "routes/home.dart";
 import "routes/welcome.dart";
 import "services/audio_player.dart";
+import "services/cache_manager.dart";
 import "utils.dart";
 import "widgets/loading_overlay.dart";
 
@@ -168,14 +169,19 @@ Future main() async {
   player = VKMusicPlayer();
 
   // Регистрируем AudioHandler для управления музыки при помощи уведомлений.
-  await JustAudioBackground.init(
-    androidNotificationChannelName: "Flutter VK",
-    androidNotificationChannelId: "com.zensonaton.fluttervk",
-    androidNotificationIcon: "drawable/notification_icon",
-    androidNotificationOngoing: true,
-    preloadArtwork: true,
+  await AudioService.init(
+    builder: () => AudioPlayerService(player),
+    config: const AudioServiceConfig(
+      androidNotificationChannelName: "Flutter VK",
+      androidNotificationChannelId: "com.zensonaton.fluttervk",
+      androidNotificationIcon: "drawable/ic_music_note",
+      androidNotificationOngoing: true,
+      preloadArtwork: true,
+    ),
+    cacheManager: CachedNetworkImagesManager.instance,
   );
 
+  // Breakpoint'ы для разных размеров экранов.
   ResponsiveSizingConfig.instance.setCustomBreakpoints(
     const ScreenBreakpoints(
       desktop: 900,

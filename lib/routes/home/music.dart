@@ -302,9 +302,7 @@ Padding buildListTrackWidget(
     child: AudioTrackTile(
       selected: audio == player.currentAudio,
       currentlyPlaying: player.loaded && player.playing,
-      isLiked: user.favoriteMediaKeys.contains(
-        audio.mediaKey,
-      ),
+      isLiked: audio.isLiked,
       audio: audio,
       dragIndex: index,
       onAddToQueue: () async {
@@ -346,9 +344,7 @@ Padding buildListTrackWidget(
       onLikeToggle: (bool liked) => toggleTrackLikeState(
         context,
         audio,
-        !user.favoriteMediaKeys.contains(
-          audio.mediaKey,
-        ),
+        !audio.isLiked,
       ),
       onSecondaryAction: () => showModalBottomSheet(
         context: context,

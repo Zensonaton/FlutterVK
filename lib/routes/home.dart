@@ -74,102 +74,37 @@ class DuplicateWarningDialog extends StatelessWidget {
 
 /// Меняет состояние "лайка" у передаваемого трека.
 ///
-/// Учтите, что данный метод делает изменения в интерфейсе.
-/// Если [checkBeforeSaving] равен true, то в случае дубликата трека появится диалог, подтверждающий создание дубликата.
-Future<void> toggleTrackLikeState(
-  BuildContext context,
+/// В отличии от метода [toggleTrackLikeState], данный метод не делает никаких проверок на существование трека, а так же никаких изменений в интерфейсе не происходит.
+Future<void> toggleTrackLike(
+  UserProvider user,
   ExtendedVKAudio audio,
-  bool isFavorite, {
-  bool checkBeforeSaving = true,
-}) async {
-  final UserProvider user = Provider.of<UserProvider>(context, listen: false);
-  final AppLogger logger = getLogger("toggleTrackLikeState");
+  bool isFavorite,
+) async {
+  final AppLogger logger = getLogger("toggleTrackLike");
 
-  LoadingOverlay.of(context).show();
+  if (isFavorite) {
+    // Пользователь попытался лайкнуть трек.
+    // Здесь мы должны проверить, пытается ли пользователь восстановить ранее удалённый трек или нет.
+    final bool shouldRestore = user.favoritesPlaylist!.audios!.contains(audio);
 
-  // Делаем API запрос, что бы либо удалить трек, либо добавить в лайкнутые.
-  try {
-    if (isFavorite) {
-      // Пользователь попытался лайкнуть трек.
-      // Здесь мы должны проверить, пытается ли пользователь восстановить ранее удалённый трек или нет.
-      final bool shouldRestore =
-          user.favoritesPlaylist!.audios!.contains(audio);
+    // Если пользователь пытается восстановить трек, то вызываем audio.restore,
+    // в ином случае просто добавляем его методом audio.add.
+    if (shouldRestore) {
+      // Восстанавливаем трек.
+      final APIAudioRestoreResponse response = await user.audioRestore(
+        audio.id,
+        ownerID: audio.ownerID,
+      );
 
-      // Если пользователь пытается восстановить трек, то вызываем audio.restore,
-      // в ином случае просто добавляем его методом audio.add.
-      if (shouldRestore) {
-        // Восстанавливаем трек.
-        final APIAudioRestoreResponse response = await user.audioRestore(
-          audio.id,
-          ownerID: audio.ownerID,
+      // Проверяем, что в ответе нет ошибок.
+      if (response.error != null) {
+        throw Exception(
+          "API error ${response.error!.errorCode}: ${response.error!.errorMessage}",
         );
-
-        // Проверяем, что в ответе нет ошибок.
-        if (response.error != null) {
-          throw Exception(
-            "API error ${response.error!.errorCode}: ${response.error!.errorMessage}",
-          );
-        }
-      } else {
-        // Если это разрешено, то проверяем то, существует ли такой же трек.
-        if (checkBeforeSaving) {
-          bool isDuplicate = user.favoritesPlaylist!.audios!.any(
-            (favAudio) =>
-                favAudio.title == audio.title &&
-                favAudio.artist == audio.artist &&
-                favAudio.album == audio.album,
-          );
-
-          // Если это дубликат, то показываем предупреждение об этом.
-          if (isDuplicate) {
-            showDialog(
-              context: context,
-              builder: (BuildContext context) => DuplicateWarningDialog(
-                audio: audio,
-                playlist: user.favoritesPlaylist!,
-              ),
-            );
-
-            return;
-          }
-        }
-
-        // Сохраняем трек как лайкнутый.
-        final APIAudioAddResponse response = await user.audioAdd(
-          audio.id,
-          audio.ownerID,
-        );
-
-        // Проверяем, что в ответе нет ошибок.
-        if (response.error != null) {
-          throw Exception(
-            "API error ${response.error!.errorCode}: ${response.error!.errorMessage}",
-          );
-        }
-
-        audio.oldID = audio.id;
-        audio.oldOwnerID = audio.ownerID;
-
-        audio.id = response.response!;
-        audio.ownerID = user.id!;
-      }
-
-      // Прекрасно, трек был добавлен либо восстановлён.
-      // Теперь нам нужно запомнить то, что трек лайкнут.
-      audio.isLiked = true;
-
-      // Добавляем трек в список фаворитов.
-      user.favoritesPlaylist!.count += 1;
-
-      // Убеждаемся, что трек не существует в списке.
-      if (!user.favoritesPlaylist!.audios!.contains(audio)) {
-        user.favoritesPlaylist!.audios!.insert(0, audio);
       }
     } else {
-      // Пользователь пытается удалить трек.
-
-      // Удаляем трек из лайкнутых.
-      final APIAudioDeleteResponse response = await user.audioDelete(
+      // Сохраняем трек как лайкнутый.
+      final APIAudioAddResponse response = await user.audioAdd(
         audio.id,
         audio.ownerID,
       );
@@ -181,20 +116,101 @@ Future<void> toggleTrackLikeState(
         );
       }
 
-      // Всё ок, помечаем трек как не лайкнутый.
-      user.favoritesPlaylist!.count -= 1;
-      audio.isLiked = false;
+      audio.oldID = audio.id;
+      audio.oldOwnerID = audio.ownerID;
 
-      // Если это возможно, то удаляем трек из кэша.
-      try {
-        VKMusicCacheManager.instance.removeFile(audio.mediaKey);
-      } catch (e) {
-        logger.w(
-          "Не удалось удалить трек из кэша после удаления трека из лайкнутых: ",
-          error: e,
-        );
-      }
+      audio.id = response.response!;
+      audio.ownerID = user.id!;
     }
+
+    // Прекрасно, трек был добавлен либо восстановлён.
+    // Теперь нам нужно запомнить то, что трек лайкнут.
+    audio.isLiked = true;
+
+    // Добавляем трек в список фаворитов.
+    user.favoritesPlaylist!.count += 1;
+
+    // Убеждаемся, что трек не существует в списке.
+    if (!user.favoritesPlaylist!.audios!.contains(audio)) {
+      user.favoritesPlaylist!.audios!.insert(0, audio);
+    }
+  } else {
+    // Пользователь пытается удалить трек.
+
+    // Удаляем трек из лайкнутых.
+    final APIAudioDeleteResponse response = await user.audioDelete(
+      audio.id,
+      audio.ownerID,
+    );
+
+    // Проверяем, что в ответе нет ошибок.
+    if (response.error != null) {
+      throw Exception(
+        "API error ${response.error!.errorCode}: ${response.error!.errorMessage}",
+      );
+    }
+
+    // Всё ок, помечаем трек как не лайкнутый.
+    user.favoritesPlaylist!.count -= 1;
+    audio.isLiked = false;
+
+    // Если это возможно, то удаляем трек из кэша.
+    try {
+      VKMusicCacheManager.instance.removeFile(audio.mediaKey);
+    } catch (e) {
+      logger.w(
+        "Не удалось удалить трек из кэша после удаления трека из лайкнутых: ",
+        error: e,
+      );
+    }
+  }
+}
+
+/// Меняет состояние "лайка" у передаваемого трека.
+///
+/// Учтите, что данный метод делает изменения в интерфейсе.
+/// Если [checkBeforeSaving] равен true, то в случае дубликата трека появится диалог, подтверждающий создание дубликата.
+Future<void> toggleTrackLikeState(
+  BuildContext context,
+  ExtendedVKAudio audio,
+  bool isFavorite, {
+  bool checkBeforeSaving = true,
+}) async {
+  final UserProvider user = Provider.of<UserProvider>(context, listen: false);
+  final AppLogger logger = getLogger("toggleTrackLikeState");
+
+  // Если это разрешено, то проверяем, есть ли такой трек в лайкнутых.
+  if (checkBeforeSaving) {
+    bool isDuplicate = user.favoritesPlaylist!.audios!.any(
+      (favAudio) =>
+          favAudio.title == audio.title &&
+          favAudio.artist == audio.artist &&
+          favAudio.album == audio.album,
+    );
+
+    // Если это дубликат, то показываем предупреждение об этом.
+    if (isDuplicate) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) => DuplicateWarningDialog(
+          audio: audio,
+          playlist: user.favoritesPlaylist!,
+        ),
+      );
+
+      return;
+    }
+  }
+
+  LoadingOverlay.of(context).show();
+
+  try {
+    // Делаем API запросы для удаления/добавления трека.
+    await toggleTrackLike(
+      user,
+      audio,
+      isFavorite,
+    );
 
     // Посылаем обновления объекта пользователя.
     user.resetFavoriteMediaKeys();
@@ -326,16 +342,12 @@ class _BottomMusicPlayerWidgetState extends State<BottomMusicPlayerWidget> {
       nextAudio: player.nextAudio,
       scheme: colorScheme.colorScheme(Theme.of(context).brightness) ??
           Theme.of(context).colorScheme,
-      favoriteState: player.currentAudio != null
-          ? user.favoriteMediaKeys.contains(player.currentAudio!.mediaKey)
-          : false,
+      favoriteState:
+          player.currentAudio != null ? player.currentAudio!.isLiked : false,
       playbackState: player.playing,
       progress: player.progress,
       volume: player.volume,
-      isBuffering:
-          const [ProcessingState.buffering, ProcessingState.loading].contains(
-        player.playerState.processingState,
-      ),
+      isBuffering: player.buffering,
       isShuffleEnabled: player.shuffleModeEnabled,
       isRepeatEnabled: player.loopMode == LoopMode.one,
       pauseOnMuteEnabled: user.settings.pauseOnMuteEnabled,
@@ -343,9 +355,7 @@ class _BottomMusicPlayerWidgetState extends State<BottomMusicPlayerWidget> {
       onFavoriteStateToggle: (bool liked) => toggleTrackLikeState(
         context,
         player.currentAudio!,
-        !user.favoriteMediaKeys.contains(
-          player.currentAudio!.mediaKey,
-        ),
+        player.currentAudio!.isLiked,
       ),
       onPlayStateToggle: (bool enabled) => player.playOrPause(enabled),
       onVolumeChange: (double volume) => player.setVolume(volume),

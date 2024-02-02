@@ -393,8 +393,7 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
     final UserProvider user = Provider.of<UserProvider>(context);
 
     /// Указывает, сохранён ли этот трек в лайкнутых.
-    final bool isFavorite =
-        user.favoriteMediaKeys.contains(player.currentAudio!.mediaKey);
+    final bool isFavorite = player.currentAudio!.isLiked;
 
     /// Указывает, что используется более компактный интерфейс.
     final bool compactLayout = MediaQuery.of(context).size.width <= 900;
