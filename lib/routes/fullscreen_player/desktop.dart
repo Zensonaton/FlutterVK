@@ -376,6 +376,9 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
       player.sequenceStateStream.listen(
         (SequenceState? state) => setState(() {}),
       ),
+      player.playerStateStream.listen(
+        (PlayerState? state) => setState(() {}),
+      ),
     ];
   }
 
