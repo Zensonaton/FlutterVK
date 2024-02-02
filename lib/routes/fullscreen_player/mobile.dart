@@ -354,30 +354,46 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
           height: 10,
         ),
 
-        // Slider для отображения прогресса воспроизведения трека.
-        SliderTheme(
-          data: SliderThemeData(
-            trackShape: CustomTrackShape(),
-            overlayShape: SliderComponentShape.noOverlay,
-            activeTrackColor: Theme.of(context).colorScheme.primary,
-            inactiveTrackColor:
-                Theme.of(context).colorScheme.primary.withOpacity(0.5),
-          ),
-          child: RepaintBoundary(
-            child: StreamBuilder<Duration>(
-              stream: player.positionStream,
-              builder:
-                  (BuildContext context, AsyncSnapshot<Duration> snapshot) {
-                return ResponsiveSlider(
-                  value: player.progress,
-                  onChangeEnd: (double newProgress) => player.seekNormalized(
-                    newProgress,
-                  ),
-                );
-              },
+        // Индикатор буферизации.
+        if (player.buffering)
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              vertical: 8,
+            ),
+            child: LinearProgressIndicator(
+              borderRadius: BorderRadius.circular(
+                globalBorderRadius,
+              ),
+              backgroundColor:
+                  Theme.of(context).colorScheme.primary.withOpacity(0.5),
             ),
           ),
-        ),
+
+        // Slider для отображения прогресса воспроизведения трека.
+        if (!player.buffering)
+          SliderTheme(
+            data: SliderThemeData(
+              trackShape: CustomTrackShape(),
+              overlayShape: SliderComponentShape.noOverlay,
+              activeTrackColor: Theme.of(context).colorScheme.primary,
+              inactiveTrackColor:
+                  Theme.of(context).colorScheme.primary.withOpacity(0.5),
+            ),
+            child: RepaintBoundary(
+              child: StreamBuilder<Duration>(
+                stream: player.positionStream,
+                builder:
+                    (BuildContext context, AsyncSnapshot<Duration> snapshot) {
+                  return ResponsiveSlider(
+                    value: player.progress,
+                    onChangeEnd: (double newProgress) => player.seekNormalized(
+                      newProgress,
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
 
         // Кнопки управления воспроизведением.
         SizedBox(

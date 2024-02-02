@@ -526,28 +526,44 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
           height: 18,
         ),
 
-        // Slider для отображения прогресса воспроизведения трека.
-        SliderTheme(
-          data: SliderThemeData(
-            trackShape: CustomTrackShape(),
-            overlayShape: SliderComponentShape.noOverlay,
-            inactiveTrackColor:
-                Theme.of(context).colorScheme.primary.withOpacity(0.5),
-          ),
-          child: RepaintBoundary(
-            child: StreamBuilder(
-              stream: player.positionStream,
-              builder: (BuildContext context, AsyncSnapshot snapshot) {
-                return ResponsiveSlider(
-                  value: player.progress,
-                  onChangeEnd: (double newProgress) => player.seekNormalized(
-                    newProgress,
-                  ),
-                );
-              },
+        // Индикатор буферизации.
+        if (player.buffering)
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              vertical: 8,
+            ),
+            child: LinearProgressIndicator(
+              borderRadius: BorderRadius.circular(
+                globalBorderRadius,
+              ),
+              backgroundColor:
+                  Theme.of(context).colorScheme.primary.withOpacity(0.5),
             ),
           ),
-        ),
+
+        // Slider для отображения прогресса воспроизведения трека.
+        if (!player.buffering)
+          SliderTheme(
+            data: SliderThemeData(
+              trackShape: CustomTrackShape(),
+              overlayShape: SliderComponentShape.noOverlay,
+              inactiveTrackColor:
+                  Theme.of(context).colorScheme.primary.withOpacity(0.5),
+            ),
+            child: RepaintBoundary(
+              child: StreamBuilder(
+                stream: player.positionStream,
+                builder: (BuildContext context, AsyncSnapshot snapshot) {
+                  return ResponsiveSlider(
+                    value: player.progress,
+                    onChangeEnd: (double newProgress) => player.seekNormalized(
+                      newProgress,
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
         const SizedBox(
           height: 4,
         ),
