@@ -401,19 +401,25 @@ class _HomeRouteState extends State<HomeRoute> {
   /// Страницы навигации для [BottomNavigationBar].
   late List<NavigationPage> navigationPages;
 
+  /// Указывает, включён ли раздел с сообщениями.
+  ///
+  /// В данный момент он отключён за ненадобностью.
+  final bool messagesPageEnabled = false;
+
   @override
   void initState() {
     super.initState();
 
     navigationPages = [
-      NavigationPage(
-        label: AppLocalizations.of(buildContext!)!.home_messagesPageLabel,
-        icon: Icons.message_outlined,
-        selectedIcon: Icons.message,
-        route: const HomeMessagesPage(),
-        audioPlayerAlign: Alignment.bottomLeft,
-        allowBigAudioPlayer: false,
-      ),
+      if (messagesPageEnabled)
+        NavigationPage(
+          label: AppLocalizations.of(buildContext!)!.home_messagesPageLabel,
+          icon: Icons.message_outlined,
+          selectedIcon: Icons.message,
+          route: const HomeMessagesPage(),
+          audioPlayerAlign: Alignment.bottomLeft,
+          allowBigAudioPlayer: false,
+        ),
       NavigationPage(
         label: AppLocalizations.of(buildContext!)!.music_label,
         icon: Icons.my_library_music_outlined,
