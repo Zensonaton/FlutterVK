@@ -103,39 +103,42 @@ class TrackNameInfoWidget extends StatelessWidget {
                   child: SizedBox(
                     width: useBigLayout ? 60 : 50,
                     height: useBigLayout ? 60 : 50,
-                    child: Hero(
-                      tag: "image",
-                      child: Container(
-                        decoration: BoxDecoration(
-                          boxShadow: [
-                            BoxShadow(
-                              blurRadius: 5,
-                              spreadRadius: -1,
-                              color: scheme.tertiary,
-                              blurStyle: BlurStyle.outer,
-                            )
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(
-                            globalBorderRadius,
+                    child: InkWell(
+                      onTap: () => onFullscreen?.call(false),
+                      child: Hero(
+                        tag: "image",
+                        child: Container(
+                          decoration: BoxDecoration(
+                            boxShadow: [
+                              BoxShadow(
+                                blurRadius: 5,
+                                spreadRadius: -1,
+                                color: scheme.tertiary,
+                                blurStyle: BlurStyle.outer,
+                              )
+                            ],
                           ),
-                          child: AnimatedSwitcher(
-                            duration: const Duration(
-                              milliseconds: 500,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(
+                              globalBorderRadius,
                             ),
-                            child: SizedBox(
-                              key: ValueKey(
-                                audio?.mediaKey ?? "",
+                            child: AnimatedSwitcher(
+                              duration: const Duration(
+                                milliseconds: 500,
                               ),
-                              width: 60,
-                              height: 600,
-                              child: image != null
-                                  ? Image(
-                                      image: image!,
-                                      gaplessPlayback: true,
-                                    )
-                                  : const FallbackAudioAvatar(),
+                              child: SizedBox(
+                                key: ValueKey(
+                                  audio?.mediaKey ?? "",
+                                ),
+                                width: 60,
+                                height: 600,
+                                child: image != null
+                                    ? Image(
+                                        image: image!,
+                                        gaplessPlayback: true,
+                                      )
+                                    : const FallbackAudioAvatar(),
+                              ),
                             ),
                           ),
                         ),
