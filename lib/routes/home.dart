@@ -180,9 +180,10 @@ Future<void> toggleTrackLikeState(
   final AppLogger logger = getLogger("toggleTrackLikeState");
 
   // Если это разрешено, то проверяем, есть ли такой трек в лайкнутых.
-  if (checkBeforeSaving) {
+  if (isFavorite && checkBeforeSaving) {
     bool isDuplicate = user.favoritesPlaylist!.audios!.any(
       (favAudio) =>
+          favAudio.isLiked &&
           favAudio.title == audio.title &&
           favAudio.artist == audio.artist &&
           favAudio.album == audio.album,
@@ -355,7 +356,7 @@ class _BottomMusicPlayerWidgetState extends State<BottomMusicPlayerWidget> {
       onFavoriteStateToggle: (bool liked) => toggleTrackLikeState(
         context,
         player.currentAudio!,
-        player.currentAudio!.isLiked,
+        !player.currentAudio!.isLiked,
       ),
       onPlayStateToggle: (bool enabled) => player.playOrPause(enabled),
       onVolumeChange: (double volume) => player.setVolume(volume),
