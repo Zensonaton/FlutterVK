@@ -985,7 +985,9 @@ class AudioPlayerService extends BaseAudioHandler
 
   @override
   Future<void> skipToPrevious() async {
-    await _player.previous();
+    await _player.previous(
+      allowSeekToBeginning: true,
+    );
 
     await super.skipToPrevious();
   }
