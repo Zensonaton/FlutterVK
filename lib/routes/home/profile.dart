@@ -1,3 +1,5 @@
+import "dart:async";
+
 import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
@@ -136,6 +138,30 @@ class HomeProfilePage extends StatefulWidget {
 }
 
 class _HomeProfilePageState extends State<HomeProfilePage> {
+  /// Подписки на изменения состояния воспроизведения трека.
+  late final List<StreamSubscription> subscriptions;
+
+  @override
+  void initState() {
+    super.initState();
+
+    subscriptions = [
+      // Изменения запуска плеера.
+      player.loadedStateStream.listen(
+        (bool loaded) => setState(() {}),
+      ),
+    ];
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+
+    for (StreamSubscription subscription in subscriptions) {
+      subscription.cancel();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final UserProvider user = Provider.of<UserProvider>(context);
@@ -143,400 +169,412 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
     final bool isMobileLayout =
         getDeviceType(MediaQuery.of(context).size) == DeviceScreenType.mobile;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Expanded(
-          child: ListView(
-            children: [
-              // Информация о текущем пользователе.
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 18,
-                ),
-                child: Column(
-                  children: [
-                    if (user.photoMaxUrl != null)
-                      CachedNetworkImage(
-                        imageUrl: user.photoMaxUrl!,
-                        placeholder: (BuildContext context, String url) {
-                          return const SizedBox(
-                            height: 80,
+    return Scaffold(
+      appBar: isMobileLayout
+          ? AppBar(
+              title: Text(
+                AppLocalizations.of(context)!.home_profilePageLabel,
+              ),
+              centerTitle: true,
+            )
+          : null,
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Expanded(
+            child: ListView(
+              children: [
+                // Информация о текущем пользователе.
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 18,
+                  ),
+                  child: Column(
+                    children: [
+                      if (user.photoMaxUrl != null)
+                        CachedNetworkImage(
+                          imageUrl: user.photoMaxUrl!,
+                          placeholder: (BuildContext context, String url) {
+                            return const SizedBox(
+                              height: 80,
+                              width: 80,
+                            );
+                          },
+                          placeholderFadeInDuration: Duration.zero,
+                          fadeOutDuration: Duration.zero,
+                          imageBuilder: (context, imageProvider) => Container(
                             width: 80,
-                          );
-                        },
-                        placeholderFadeInDuration: Duration.zero,
-                        fadeOutDuration: Duration.zero,
-                        imageBuilder: (context, imageProvider) => Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            image: DecorationImage(
-                              image: imageProvider,
-                              fit: BoxFit.scaleDown,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              image: DecorationImage(
+                                image: imageProvider,
+                                fit: BoxFit.scaleDown,
+                              ),
                             ),
                           ),
+                          cacheManager: CachedNetworkImagesManager.instance,
                         ),
-                        cacheManager: CachedNetworkImagesManager.instance,
+                      if (user.photoMaxUrl != null)
+                        const SizedBox(
+                          height: 12,
+                        ),
+                      Text(
+                        user.fullName!,
+                        style: Theme.of(context).textTheme.titleMedium,
+                        textAlign: TextAlign.center,
                       ),
-                    if (user.photoMaxUrl != null)
-                      const SizedBox(
-                        height: 12,
+                      SelectableText(
+                        "ID ${user.id}",
+                        style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onBackground
+                                  .withOpacity(0.5),
+                            ),
+                        textAlign: TextAlign.center,
                       ),
-                    Text(
-                      user.fullName!,
-                      style: Theme.of(context).textTheme.titleMedium,
-                      textAlign: TextAlign.center,
+                    ],
+                  ),
+                ),
+
+                // Подключение рекомендаций.
+                if (user.recommendationsToken == null)
+                  ListTile(
+                    title: Text(
+                      AppLocalizations.of(context)!
+                          .music_connectRecommendationsChipTitle,
                     ),
-                    SelectableText(
-                      "ID ${user.id}",
-                      style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onBackground
-                                .withOpacity(0.5),
-                          ),
-                      textAlign: TextAlign.center,
+                    subtitle: Text(
+                      AppLocalizations.of(context)!
+                          .music_connectRecommendationsChipDescription,
                     ),
-                  ],
-                ),
-              ),
+                    leading: const Icon(
+                      Icons.auto_fix_high,
+                    ),
+                    onTap: () => showDialog(
+                      context: context,
+                      builder: (context) =>
+                          const ConnectRecommendationsDialog(),
+                    ),
+                  ),
 
-              // Подключение рекомендаций.
-              if (user.recommendationsToken == null)
-                ListTile(
-                  title: Text(
-                    AppLocalizations.of(context)!
-                        .music_connectRecommendationsChipTitle,
-                  ),
-                  subtitle: Text(
-                    AppLocalizations.of(context)!
-                        .music_connectRecommendationsChipDescription,
-                  ),
-                  leading: const Icon(
-                    Icons.auto_fix_high,
-                  ),
-                  onTap: () => showDialog(
-                    context: context,
-                    builder: (context) => const ConnectRecommendationsDialog(),
-                  ),
-                ),
+                // Discord Rich Presence.
+                if (isDesktop)
+                  SwitchListTile(
+                    secondary: const Icon(
+                      Icons.discord,
+                    ),
+                    title: Text(
+                      AppLocalizations.of(context)!.profile_discordRPCTitle,
+                    ),
+                    subtitle: Text(
+                      AppLocalizations.of(context)!
+                          .profile_discordRPCDescription,
+                    ),
+                    value: player.discordRPCEnabled,
+                    onChanged: (bool? enabled) async {
+                      if (enabled == null) return;
 
-              // Discord Rich Presence.
-              if (isDesktop)
-                SwitchListTile(
-                  secondary: const Icon(
-                    Icons.discord,
-                  ),
-                  title: Text(
-                    AppLocalizations.of(context)!.profile_discordRPCTitle,
-                  ),
-                  subtitle: Text(
-                    AppLocalizations.of(context)!.profile_discordRPCDescription,
-                  ),
-                  value: player.discordRPCEnabled,
-                  onChanged: (bool? enabled) async {
-                    if (enabled == null) return;
-
-                    user.settings.discordRPCEnabled = enabled;
-                    await player.setDiscordRPCEnabled(enabled);
-
-                    user.markUpdated();
-                  },
-                ),
-
-              // Действие при закрытии.
-              if (isDesktop)
-                ListTile(
-                  leading: const Icon(
-                    Icons.close,
-                  ),
-                  title: Text(
-                    AppLocalizations.of(context)!.profile_closeActionTitle,
-                  ),
-                  subtitle: Text(
-                    AppLocalizations.of(context)!
-                        .profile_closeActionDescription,
-                  ),
-                  trailing: DropdownButton(
-                    onChanged: (AppCloseBehavior? behavior) {
-                      if (behavior == null) return;
-
-                      user.settings.closeBehavior = behavior;
+                      user.settings.discordRPCEnabled = enabled;
+                      await player.setDiscordRPCEnabled(enabled);
 
                       user.markUpdated();
                     },
-                    value: user.settings.closeBehavior,
+                  ),
+
+                // Действие при закрытии.
+                if (isDesktop)
+                  ListTile(
+                    leading: const Icon(
+                      Icons.close,
+                    ),
+                    title: Text(
+                      AppLocalizations.of(context)!.profile_closeActionTitle,
+                    ),
+                    subtitle: Text(
+                      AppLocalizations.of(context)!
+                          .profile_closeActionDescription,
+                    ),
+                    trailing: DropdownButton(
+                      onChanged: (AppCloseBehavior? behavior) {
+                        if (behavior == null) return;
+
+                        user.settings.closeBehavior = behavior;
+
+                        user.markUpdated();
+                      },
+                      value: user.settings.closeBehavior,
+                      items: [
+                        DropdownMenuItem(
+                          value: AppCloseBehavior.close,
+                          child: Text(
+                            AppLocalizations.of(context)!
+                                .profile_closeActionClose,
+                          ),
+                        ),
+                        DropdownMenuItem(
+                          value: AppCloseBehavior.minimize,
+                          child: Text(
+                            AppLocalizations.of(context)!
+                                .profile_closeActionMinimize,
+                          ),
+                        ),
+                        DropdownMenuItem(
+                          value: AppCloseBehavior.minimizeIfPlaying,
+                          child: Text(
+                            AppLocalizations.of(context)!
+                                .profile_closeActionMinimizeIfPlaying,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                // Тема приложения.
+                ListTile(
+                  leading: const Icon(
+                    Icons.dark_mode,
+                  ),
+                  title: Text(
+                    AppLocalizations.of(context)!.profile_themeTitle,
+                  ),
+                  trailing: DropdownButton(
+                    onChanged: (ThemeMode? mode) {
+                      if (mode == null) return;
+
+                      user.settings.theme = mode;
+
+                      user.markUpdated();
+                    },
+                    value: user.settings.theme,
                     items: [
                       DropdownMenuItem(
-                        value: AppCloseBehavior.close,
+                        value: ThemeMode.system,
                         child: Text(
-                          AppLocalizations.of(context)!
-                              .profile_closeActionClose,
+                          AppLocalizations.of(context)!.profile_themeSystem,
                         ),
                       ),
                       DropdownMenuItem(
-                        value: AppCloseBehavior.minimize,
+                        value: ThemeMode.light,
                         child: Text(
-                          AppLocalizations.of(context)!
-                              .profile_closeActionMinimize,
+                          AppLocalizations.of(context)!.profile_themeLight,
                         ),
                       ),
                       DropdownMenuItem(
-                        value: AppCloseBehavior.minimizeIfPlaying,
+                        value: ThemeMode.dark,
                         child: Text(
-                          AppLocalizations.of(context)!
-                              .profile_closeActionMinimizeIfPlaying,
+                          AppLocalizations.of(context)!.profile_themeDark,
                         ),
                       ),
                     ],
                   ),
                 ),
 
-              // Тема приложения.
-              ListTile(
-                leading: const Icon(
-                  Icons.dark_mode,
-                ),
-                title: Text(
-                  AppLocalizations.of(context)!.profile_themeTitle,
-                ),
-                trailing: DropdownButton(
-                  onChanged: (ThemeMode? mode) {
-                    if (mode == null) return;
-
-                    user.settings.theme = mode;
-
-                    user.markUpdated();
-                  },
-                  value: user.settings.theme,
-                  items: [
-                    DropdownMenuItem(
-                      value: ThemeMode.system,
-                      child: Text(
-                        AppLocalizations.of(context)!.profile_themeSystem,
-                      ),
-                    ),
-                    DropdownMenuItem(
-                      value: ThemeMode.light,
-                      child: Text(
-                        AppLocalizations.of(context)!.profile_themeLight,
-                      ),
-                    ),
-                    DropdownMenuItem(
-                      value: ThemeMode.dark,
-                      child: Text(
-                        AppLocalizations.of(context)!.profile_themeDark,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Использование изображения трека для фона в полноэкранном плеере.
-              SwitchListTile(
-                secondary: const Icon(
-                  Icons.photo_filter,
-                ),
-                title: Text(
-                  AppLocalizations.of(context)!
-                      .profile_useThumbnailAsBackgroundTitle,
-                ),
-                subtitle: Text(
-                  AppLocalizations.of(context)!
-                      .profile_useThumbnailAsBackgroundDescription,
-                ),
-                value: user.settings.playerThumbAsBackground,
-                onChanged: (bool? enabled) async {
-                  if (enabled == null) return;
-
-                  user.settings.playerThumbAsBackground = enabled;
-
-                  user.markUpdated();
-                },
-              ),
-
-              // Использование цветов плеера по всему приложению.
-              SwitchListTile(
-                secondary: const Icon(
-                  Icons.color_lens,
-                ),
-                title: Text(
-                  AppLocalizations.of(context)!
-                      .profile_usePlayerColorsAppWideTitle,
-                ),
-                value: user.settings.playerColorsAppWide,
-                onChanged: (bool? enabled) async {
-                  if (enabled == null) return;
-
-                  user.settings.playerColorsAppWide = enabled;
-
-                  user.markUpdated();
-                },
-              ),
-
-              // Пауза воспроизведения при минимальной громкости.
-              if (isDesktop)
+                // Использование изображения трека для фона в полноэкранном плеере.
                 SwitchListTile(
                   secondary: const Icon(
-                    Icons.timer,
+                    Icons.photo_filter,
                   ),
                   title: Text(
-                    AppLocalizations.of(context)!.profile_pauseOnMuteTitle,
+                    AppLocalizations.of(context)!
+                        .profile_useThumbnailAsBackgroundTitle,
                   ),
                   subtitle: Text(
                     AppLocalizations.of(context)!
-                        .profile_pauseOnMuteDescription,
+                        .profile_useThumbnailAsBackgroundDescription,
                   ),
-                  value: user.settings.pauseOnMuteEnabled,
+                  value: user.settings.playerThumbAsBackground,
                   onChanged: (bool? enabled) async {
                     if (enabled == null) return;
 
-                    user.settings.pauseOnMuteEnabled = enabled;
+                    user.settings.playerThumbAsBackground = enabled;
 
                     user.markUpdated();
                   },
                 ),
 
-              // Предупреждение создание дубликата при сохранении.
-              SwitchListTile(
-                secondary: const Icon(
-                  Icons.copy,
-                ),
-                title: Text(
-                  AppLocalizations.of(context)!
-                      .profile_checkBeforeFavoriteTitle,
-                ),
-                subtitle: Text(
-                  AppLocalizations.of(context)!
-                      .profile_checkBeforeFavoriteDescription,
-                ),
-                value: user.settings.checkBeforeFavorite,
-                onChanged: (bool? enabled) async {
-                  if (enabled == null) return;
-
-                  user.settings.checkBeforeFavorite = enabled;
-
-                  user.markUpdated();
-                },
-              ),
-
-              // Экспорт списка треков.
-              ListTile(
-                leading: const Icon(
-                  Icons.my_library_music,
-                ),
-                title: Text(
-                  AppLocalizations.of(context)!.profile_exportMusicListTitle,
-                ),
-                onTap: () => showWipDialog(context),
-              ),
-
-              // Github.
-              ListTile(
-                leading: const Icon(
-                  Icons.source,
-                ),
-                title: Text(
-                  AppLocalizations.of(context)!.profile_githubTitle,
-                ),
-                subtitle: Text(
-                  AppLocalizations.of(context)!.profile_githubDescription,
-                ),
-                onTap: () => launchUrl(
-                  Uri.parse(
-                    repoURL,
+                // Использование цветов плеера по всему приложению.
+                SwitchListTile(
+                  secondary: const Icon(
+                    Icons.color_lens,
                   ),
-                ),
-              ),
+                  title: Text(
+                    AppLocalizations.of(context)!
+                        .profile_usePlayerColorsAppWideTitle,
+                  ),
+                  value: user.settings.playerColorsAppWide,
+                  onChanged: (bool? enabled) async {
+                    if (enabled == null) return;
 
-              // Debug-опции.
-              if (kDebugMode)
-                ListTile(
-                  leading: const Icon(
-                    Icons.key,
-                  ),
-                  title: const Text(
-                    "Скопировать Kate Mobile токен",
-                  ),
-                  subtitle: const Text(
-                    "Debug-режим",
-                  ),
-                  onTap: () {
-                    Clipboard.setData(
-                      ClipboardData(
-                        text: user.mainToken!,
-                      ),
-                    );
+                    user.settings.playerColorsAppWide = enabled;
 
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("OK."),
-                      ),
-                    );
-                  },
-                ),
-              if (kDebugMode && user.recommendationsToken != null)
-                ListTile(
-                  leading: const Icon(
-                    Icons.key,
-                  ),
-                  title: const Text(
-                    "Скопировать VK Admin токен",
-                  ),
-                  subtitle: const Text(
-                    "Debug-режим",
-                  ),
-                  onTap: () {
-                    Clipboard.setData(
-                      ClipboardData(
-                        text: user.recommendationsToken!,
-                      ),
-                    );
-
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("OK."),
-                      ),
-                    );
+                    user.markUpdated();
                   },
                 ),
 
-              // Выход из аккаунта.
-              ListTile(
-                leading: Icon(
-                  Icons.logout,
-                  color: Theme.of(context).colorScheme.error,
+                // Пауза воспроизведения при минимальной громкости.
+                if (isDesktop)
+                  SwitchListTile(
+                    secondary: const Icon(
+                      Icons.timer,
+                    ),
+                    title: Text(
+                      AppLocalizations.of(context)!.profile_pauseOnMuteTitle,
+                    ),
+                    subtitle: Text(
+                      AppLocalizations.of(context)!
+                          .profile_pauseOnMuteDescription,
+                    ),
+                    value: user.settings.pauseOnMuteEnabled,
+                    onChanged: (bool? enabled) async {
+                      if (enabled == null) return;
+
+                      user.settings.pauseOnMuteEnabled = enabled;
+
+                      user.markUpdated();
+                    },
+                  ),
+
+                // Предупреждение создание дубликата при сохранении.
+                SwitchListTile(
+                  secondary: const Icon(
+                    Icons.copy,
+                  ),
+                  title: Text(
+                    AppLocalizations.of(context)!
+                        .profile_checkBeforeFavoriteTitle,
+                  ),
+                  subtitle: Text(
+                    AppLocalizations.of(context)!
+                        .profile_checkBeforeFavoriteDescription,
+                  ),
+                  value: user.settings.checkBeforeFavorite,
+                  onChanged: (bool? enabled) async {
+                    if (enabled == null) return;
+
+                    user.settings.checkBeforeFavorite = enabled;
+
+                    user.markUpdated();
+                  },
                 ),
-                title: Text(
-                  AppLocalizations.of(context)!.home_profilePageLogout,
-                  style: TextStyle(
+
+                // Экспорт списка треков.
+                ListTile(
+                  leading: const Icon(
+                    Icons.my_library_music,
+                  ),
+                  title: Text(
+                    AppLocalizations.of(context)!.profile_exportMusicListTitle,
+                  ),
+                  onTap: () => showWipDialog(context),
+                ),
+
+                // Github.
+                ListTile(
+                  leading: const Icon(
+                    Icons.source,
+                  ),
+                  title: Text(
+                    AppLocalizations.of(context)!.profile_githubTitle,
+                  ),
+                  subtitle: Text(
+                    AppLocalizations.of(context)!.profile_githubDescription,
+                  ),
+                  onTap: () => launchUrl(
+                    Uri.parse(
+                      repoURL,
+                    ),
+                  ),
+                ),
+
+                // Debug-опции.
+                if (kDebugMode)
+                  ListTile(
+                    leading: const Icon(
+                      Icons.key,
+                    ),
+                    title: const Text(
+                      "Скопировать Kate Mobile токен",
+                    ),
+                    subtitle: const Text(
+                      "Debug-режим",
+                    ),
+                    onTap: () {
+                      Clipboard.setData(
+                        ClipboardData(
+                          text: user.mainToken!,
+                        ),
+                      );
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("OK."),
+                        ),
+                      );
+                    },
+                  ),
+                if (kDebugMode && user.recommendationsToken != null)
+                  ListTile(
+                    leading: const Icon(
+                      Icons.key,
+                    ),
+                    title: const Text(
+                      "Скопировать VK Admin токен",
+                    ),
+                    subtitle: const Text(
+                      "Debug-режим",
+                    ),
+                    onTap: () {
+                      Clipboard.setData(
+                        ClipboardData(
+                          text: user.recommendationsToken!,
+                        ),
+                      );
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("OK."),
+                        ),
+                      );
+                    },
+                  ),
+
+                // Выход из аккаунта.
+                ListTile(
+                  leading: Icon(
+                    Icons.logout,
                     color: Theme.of(context).colorScheme.error,
                   ),
+                  title: Text(
+                    AppLocalizations.of(context)!.home_profilePageLogout,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                  onTap: () => showDialog(
+                    context: context,
+                    builder: (context) => const ProfileLogoutExitDialog(),
+                  ),
                 ),
-                onTap: () => showDialog(
-                  context: context,
-                  builder: (context) => const ProfileLogoutExitDialog(),
-                ),
-              ),
 
-              // Данный SizedBox нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
-              if (player.loaded && isMobileLayout)
-                const SizedBox(
-                  height: 80,
-                ),
-            ],
+                // Данный SizedBox нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
+                if (player.loaded && isMobileLayout)
+                  const SizedBox(
+                    height: 80,
+                  ),
+              ],
+            ),
           ),
-        ),
 
-        // Данный SizedBox нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
-        // Мы его располагаем после ListView, что бы ScrollBar не был закрыт плеером.
-        if (player.loaded && !isMobileLayout)
-          const SizedBox(
-            height: 88,
-          ),
-      ],
+          // Данный SizedBox нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
+          // Мы его располагаем после ListView, что бы ScrollBar не был закрыт плеером.
+          if (player.loaded && !isMobileLayout)
+            const SizedBox(
+              height: 88,
+            ),
+        ],
+      ),
     );
   }
 }

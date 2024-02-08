@@ -1,7 +1,6 @@
 import "dart:async";
 
 import "package:cached_network_image/cached_network_image.dart";
-import "package:collection/collection.dart";
 import "package:debounce_throttle/debounce_throttle.dart";
 import "package:declarative_refresh_indicator/declarative_refresh_indicator.dart";
 import "package:flutter/foundation.dart";
@@ -30,7 +29,9 @@ import "../../widgets/adaptive_dialog.dart";
 import "../../widgets/dialogs.dart";
 import "../../widgets/fallback_audio_photo.dart";
 import "../../widgets/loading_overlay.dart";
+import "../../widgets/page_route_builders.dart";
 import "../home.dart";
+import "music/playlist.dart";
 import "profile.dart";
 
 /// Загружает всю информацию пользователя (плейлисты, треки, рекомендации) для раздела «музыка», присваивая её в объект [UserProvider]. Если таковая информация уже присутствует, то данный вызов будет проигнорирован.
@@ -261,403 +262,6 @@ Future<void> ensureUserAudioRecommendations(
   }
 }
 
-/// Возвращает только те [Audio], которые совпадают по названию [query].
-List<ExtendedVKAudio> filterByName(
-  List<ExtendedVKAudio> audios,
-  String query,
-) {
-  // Избавляемся от всех пробелов в запросе, а так же диакритические знаки.
-  query = cleanString(query);
-
-  // Если запрос пустой, то просто возвращаем исходный массив.
-  if (query.isEmpty) return audios;
-
-  // Возвращаем список тех треков, у которых совпадает название или исполнитель.
-  return audios
-      .where(
-        (ExtendedVKAudio audio) => audio.normalizedName.contains(query),
-      )
-      .toList();
-}
-
-/// Создаёт виджет типа [AudioTrackTile] для отображения в [ListView.builder].
-Padding buildListTrackWidget(
-  BuildContext context,
-  int index,
-  List<ExtendedVKAudio> audios,
-  UserProvider user, {
-  ExtendedVKPlaylist? playlist,
-}) {
-  final ExtendedVKAudio audio = audios[index];
-
-  return Padding(
-    key: ValueKey(
-      audio.mediaKey,
-    ),
-    padding: EdgeInsets.only(
-      bottom: index < audios.length - 1
-          ? 8
-          : 0, // Делаем Padding только в том случае, если это не последний элемент.
-    ),
-    child: AudioTrackTile(
-      selected: audio == player.currentAudio,
-      currentlyPlaying: player.loaded && player.playing,
-      isLiked: audio.isLiked,
-      audio: audio,
-      dragIndex: index,
-      onAddToQueue: () async {
-        await player.addNextToQueue(audio);
-
-        if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)!.general_addedToQueue,
-            ),
-            duration: const Duration(
-              seconds: 3,
-            ),
-          ),
-        );
-      },
-      onPlay: audio.isRestricted
-          ? () => showErrorDialog(
-                context,
-                title:
-                    AppLocalizations.of(context)!.music_trackUnavailableTitle,
-                description: AppLocalizations.of(context)!
-                    .music_trackUnavailableDescription,
-              )
-          : () => player.setPlaylist(
-                playlist ??
-                    ExtendedVKPlaylist(
-                      id: -1,
-                      ownerID: user.id!,
-                      count: 1,
-                      audios: audios,
-                      title: AppLocalizations.of(context)!
-                          .music_searchPlaylistTitle,
-                    ),
-                audio: audio,
-              ),
-      onPlayToggle: (bool enabled) => player.playOrPause(enabled),
-      onLikeToggle: (bool liked) => toggleTrackLikeState(
-        context,
-        audio,
-        !audio.isLiked,
-      ),
-      onSecondaryAction: () => showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        builder: (BuildContext context) => BottomAudioOptionsDialog(
-          audio: audio,
-        ),
-      ),
-    ),
-  );
-}
-
-/// Загружает информацию по указанному [playlist], заполняя его новыми значениями.
-Future<void> loadPlaylistData(
-  ExtendedVKPlaylist playlist,
-  UserProvider user, {
-  bool forceUpdate = false,
-}) async {
-  // Если информация уже загружена, то ничего не делаем.
-  if (!forceUpdate && playlist.audios != null) return;
-
-  final APIMassAudioGetResponse response =
-      await user.scriptMassAudioGetWithAlbums(
-    playlist.ownerID,
-    albumID: playlist.id,
-    accessKey: playlist.accessKey,
-  );
-
-  // Проверяем, что в ответе нет ошибок.
-  if (response.error != null) {
-    throw Exception(
-      "API error ${response.error!.errorCode}: ${response.error!.errorMessage}",
-    );
-  }
-
-  playlist.audios = response.response!.audios
-      .map(
-        (Audio audio) => ExtendedVKAudio.fromAudio(audio),
-      )
-      .toList();
-  playlist.count = response.response!.audioCount;
-}
-
-/// Диалог, показывающий содержимое плейлиста.
-///
-/// Пример использования:
-/// ```dart
-/// showDialog(
-/// 	context: context,
-/// 	builder: (context) => const PlaylistDisplayDialog(...)
-/// );
-/// ```
-class PlaylistDisplayDialog extends StatefulWidget {
-  /// Информация об открываемом плейлисте.
-  final ExtendedVKPlaylist playlist;
-
-  /// Если true, то сразу после открытия данного диалога фокус будет на [SearchBar].
-  final bool focusSearchBarOnOpen;
-
-  const PlaylistDisplayDialog({
-    super.key,
-    required this.playlist,
-    this.focusSearchBarOnOpen = true,
-  });
-
-  @override
-  State<PlaylistDisplayDialog> createState() => _PlaylistDisplayDialogState();
-}
-
-class _PlaylistDisplayDialogState extends State<PlaylistDisplayDialog> {
-  final AppLogger logger = getLogger("PlaylistDisplayDialog");
-
-  /// Контроллер, используемый для управления введённым в поле поиска текстом.
-  final TextEditingController controller = TextEditingController();
-
-  /// Подписки на изменения состояния воспроизведения трека.
-  late final List<StreamSubscription> subscriptions;
-
-  /// FocusNode для фокуса поля поиска сразу после открытия данного диалога.
-  final FocusNode focusNode = FocusNode();
-
-  /// Указывает, что в данный момент данные о плейлисте загружаются.
-  bool _loading = false;
-
-  /// Загрузка данных данного плейлиста.
-  Future<void> init() async {
-    final UserProvider user = Provider.of<UserProvider>(context, listen: false);
-
-    // Если информация по данному плейлисту не загружена, то загружаем её.
-    if (widget.playlist.audios == null) {
-      setState(() => _loading = true);
-
-      try {
-        await loadPlaylistData(
-          widget.playlist,
-          user,
-        );
-      } catch (e, stackTrace) {
-        // ignore: use_build_context_synchronously
-        showLogErrorDialog(
-          "Ошибка при открытии плейлиста: ",
-          e,
-          stackTrace,
-          logger,
-          context,
-        );
-      } finally {
-        if (context.mounted) setState(() => _loading = false);
-      }
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    init();
-
-    subscriptions = [
-      // Изменения состояния воспроизведения.
-      player.playingStream.listen(
-        (bool playing) => setState(() {}),
-      ),
-
-      // Изменения плейлиста.
-      player.sequenceStateStream.listen(
-        (SequenceState? state) => setState(() {}),
-      ),
-    ];
-
-    // Если мы запущены на Desktop'е, то тогда устанавливаем фокус на поле поиска.
-    if (isDesktop && widget.focusSearchBarOnOpen) focusNode.requestFocus();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-
-    for (StreamSubscription subscription in subscriptions) {
-      subscription.cancel();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final UserProvider user = Provider.of<UserProvider>(context);
-
-    final List<ExtendedVKAudio> playlistAudios = widget.playlist.audios ?? [];
-    final List<ExtendedVKAudio> filteredAudios =
-        filterByName(playlistAudios, controller.text);
-    final bool isMobileLayout =
-        getDeviceType(MediaQuery.of(context).size) == DeviceScreenType.mobile;
-
-    return AdaptiveDialog(
-      child: Container(
-        padding: isMobileLayout
-            ? const EdgeInsets.only(
-                top: 16,
-                left: 16,
-                right: 16,
-              )
-            : const EdgeInsets.all(
-                24,
-              ),
-        width: 650,
-        child: Column(
-          children: [
-            Padding(
-              padding: isMobileLayout
-                  ? EdgeInsets.zero
-                  : const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Кнопка "Назад".
-                  if (isMobileLayout)
-                    IconButton(
-                      icon: Icon(
-                        Icons.adaptive.arrow_back,
-                      ),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                  if (isMobileLayout)
-                    const SizedBox(
-                      width: 12,
-                    ),
-
-                  // Поиск.
-                  Expanded(
-                    child: SearchBar(
-                      focusNode: focusNode,
-                      controller: controller,
-                      hintText: AppLocalizations.of(context)!
-                          .music_searchTextInPlaylist(playlistAudios.length),
-                      elevation: MaterialStateProperty.all(
-                        1, // TODO: Сделать нормальный вид у поиска при наведении.
-                      ),
-                      onChanged: (String query) => setState(() {}),
-                      trailing: [
-                        if (controller.text.isNotEmpty)
-                          IconButton(
-                            icon: const Icon(
-                              Icons.close,
-                            ),
-                            onPressed: () => setState(() => controller.clear()),
-                          )
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(
-              height: 16,
-            ),
-
-            // У пользователя нет треков в данном плейлисте.
-            if (playlistAudios.isEmpty && !_loading)
-              Text(
-                AppLocalizations.of(context)!.music_playlistEmpty,
-              ),
-
-            // У пользователя есть треки, но поиск ничего не выдал.
-            if (playlistAudios.isNotEmpty &&
-                filteredAudios.isEmpty &&
-                !_loading)
-              StyledText(
-                text: AppLocalizations.of(context)!.music_zeroSearchResults,
-                tags: {
-                  "click": StyledTextActionTag(
-                    (String? text, Map<String?, String?> attrs) => setState(
-                      () => controller.clear(),
-                    ),
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                },
-              ),
-
-            // Информация по данному плейлисту ещё не была загружена.
-            if (_loading)
-              Expanded(
-                child: ListView.builder(
-                  itemCount: 50,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemBuilder: (BuildContext context, int index) {
-                    return Skeletonizer(
-                      child: Padding(
-                        padding: const EdgeInsets.only(
-                          bottom: 8,
-                        ),
-                        child: AudioTrackTile(
-                          audio: ExtendedVKAudio(
-                            id: -1,
-                            ownerID: -1,
-                            title:
-                                fakeTrackNames[index % fakeTrackNames.length],
-                            artist: fakeTrackNames[
-                                (index + 1) % fakeTrackNames.length],
-                            duration: 60 * 3,
-                            accessKey: "",
-                            url: "",
-                            date: 0,
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-
-            // Результаты поиска/отображение всех элементов.
-            if (filteredAudios.isNotEmpty)
-              Expanded(
-                child: ReorderableListView.builder(
-                  onReorder: (int oldIndex, int newIndex) {
-                    // Небольшие костыли ввиду странности работы метода onReorder у Flutter.
-                    if (newIndex > filteredAudios.length) {
-                      newIndex = filteredAudios.length;
-                    }
-                    if (oldIndex < newIndex) newIndex--;
-
-                    // Если индекс не поменялся, то ничего не делаем.
-                    if (oldIndex == newIndex) return;
-
-                    showWipDialog(
-                      context,
-                      title: "Изменение порядка трека с $oldIndex до $newIndex",
-                    );
-                  },
-                  buildDefaultDragHandles: false,
-                  itemCount: filteredAudios.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    return buildListTrackWidget(
-                      context,
-                      index,
-                      filteredAudios,
-                      user,
-                      playlist: widget.playlist,
-                    );
-                  },
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 /// Диалог, показывающий поле для глобального поиска через API ВКонтакте, а так же сами результаты поиска.
 class SearchDisplayDialog extends StatefulWidget {
   /// Если true, то сразу после открытия данного диалога фокус будет на [SearchBar].
@@ -828,6 +432,13 @@ class _SearchDisplayDialogState extends State<SearchDisplayDialog> {
                 future: searchFuture,
                 builder: (BuildContext context,
                     AsyncSnapshot<APIAudioSearchResponse> snapshot) {
+                  final List<ExtendedVKAudio>? audios =
+                      snapshot.data?.response?.items
+                          .map(
+                            (audio) => ExtendedVKAudio.fromAudio(audio),
+                          )
+                          .toList();
+
                   // Пользователь ещё ничего не ввёл.
                   if (snapshot.connectionState == ConnectionState.none) {
                     return Text(
@@ -890,17 +501,18 @@ class _SearchDisplayDialogState extends State<SearchDisplayDialog> {
 
                   // Отображаем данные.
                   return ListView.builder(
-                    itemCount: snapshot.data!.response!.items.length,
+                    itemCount: audios!.length,
                     itemBuilder: (BuildContext context, int index) {
                       return buildListTrackWidget(
                         context,
-                        index,
-                        snapshot.data!.response!.items
-                            .map(
-                              (audio) => ExtendedVKAudio.fromAudio(audio),
-                            )
-                            .toList(),
-                        user,
+                        audios[index],
+                        ExtendedVKPlaylist(
+                          id: -1,
+                          ownerID: user.id!,
+                          count: audios.length,
+                          title: AppLocalizations.of(context)!
+                              .music_searchPlaylistTitle,
+                        ),
                       );
                     },
                   );
@@ -1165,169 +777,178 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
   Widget build(BuildContext context) {
     final UserProvider user = Provider.of<UserProvider>(context);
 
-    return Container(
-      width: 500,
-      padding: const EdgeInsets.all(24),
-      child: ListView(
-        shrinkWrap: true,
-        children: [
-          AudioTrackTile(
-            audio: widget.audio,
-            showLikeButton: false,
-            selected: widget.audio == player.currentAudio,
-            currentlyPlaying: player.loaded && player.playing,
-          ),
-          const SizedBox(height: 8),
-          const Divider(),
-          const SizedBox(height: 8),
-
-          // Редактировать данные трека.
-          ListTile(
-            enabled:
-                widget.audio.album == null && widget.audio.ownerID == user.id!,
-            onTap: () {
-              Navigator.of(context).pop();
-
-              showDialog(
-                context: context,
-                builder: (BuildContext context) => TrackInfoEditDialog(
+    return DraggableScrollableSheet(
+      expand: false,
+      builder: (BuildContext context, ScrollController controller) {
+        return Container(
+          width: 500,
+          height: 300,
+          padding: const EdgeInsets.all(24),
+          child: SizedBox.expand(
+            child: ListView(
+              controller: controller,
+              children: [
+                AudioTrackTile(
                   audio: widget.audio,
+                  showLikeButton: false,
+                  selected: widget.audio == player.currentAudio,
+                  currentlyPlaying: player.loaded && player.playing,
                 ),
-              );
-            },
-            leading: const Icon(
-              Icons.edit,
-            ),
-            title: Text(
-              AppLocalizations.of(context)!.music_detailsEditTitle,
-            ),
-          ),
+                const SizedBox(height: 8),
+                const Divider(),
+                const SizedBox(height: 8),
 
-          // Удалить из текущего плейлиста.
-          ListTile(
-            onTap: () => showWipDialog(context),
-            leading: const Icon(
-              Icons.playlist_remove,
-            ),
-            title: Text(
-              AppLocalizations.of(context)!.music_detailsDeleteTrackTitle,
-            ),
-          ),
+                // Редактировать данные трека.
+                ListTile(
+                  enabled: widget.audio.album == null &&
+                      widget.audio.ownerID == user.id!,
+                  onTap: () {
+                    Navigator.of(context).pop();
 
-          // Добавить в другой плейлист.
-          ListTile(
-            onTap: () => showWipDialog(context),
-            leading: const Icon(
-              Icons.playlist_add,
-            ),
-            title: Text(
-              AppLocalizations.of(context)!
-                  .music_detailsAddToOtherPlaylistTitle,
-            ),
-          ),
-
-          // Добавить в очередь.
-          ListTile(
-            onTap: () async {
-              await player.addNextToQueue(
-                widget.audio,
-              );
-
-              if (!mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    AppLocalizations.of(context)!.general_addedToQueue,
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) => TrackInfoEditDialog(
+                        audio: widget.audio,
+                      ),
+                    );
+                  },
+                  leading: const Icon(
+                    Icons.edit,
                   ),
-                  duration: const Duration(
-                    seconds: 3,
+                  title: Text(
+                    AppLocalizations.of(context)!.music_detailsEditTitle,
                   ),
                 ),
-              );
 
-              Navigator.of(context).pop();
-            },
-            enabled: !widget.audio.isRestricted,
-            leading: const Icon(
-              Icons.queue_music,
-            ),
-            title: Text(
-              AppLocalizations.of(context)!.music_detailsPlayNextTitle,
-            ),
-          ),
-
-          // Установить обложку.
-          ListTile(
-            onTap: () => showWipDialog(context),
-            leading: const Icon(
-              Icons.photo_library,
-            ),
-            title: Text(
-              AppLocalizations.of(context)!.music_detailsSetThumbnailTitle,
-            ),
-            subtitle: Text(
-              AppLocalizations.of(context)!
-                  .music_detailsSetThumbnailDescription,
-            ),
-          ),
-
-          // Перезалить с Youtube.
-          ListTile(
-            onTap: () => showWipDialog(context),
-            leading: const Icon(
-              Icons.rotate_left,
-            ),
-            title: Text(
-              AppLocalizations.of(context)!
-                  .music_detailsReuploadFromYoutubeTitle,
-            ),
-            subtitle: Text(
-              AppLocalizations.of(context)!
-                  .music_detailsReuploadFromYoutubeDescription,
-            ),
-          ),
-
-          // Поделиться ссылкой на трек.
-          ListTile(
-            onTap: () {
-              Navigator.of(context).pop();
-
-              Share.share(
-                widget.audio.trackUrl,
-              );
-            },
-            leading: const Icon(
-              Icons.share,
-            ),
-            title: Text(
-              AppLocalizations.of(context)!.music_detailsShareTitle,
-            ),
-          ),
-
-          // Debug-опции.
-          if (kDebugMode)
-            ListTile(
-              onTap: () {
-                Clipboard.setData(
-                  ClipboardData(
-                    text: widget.audio.mediaKey,
+                // Удалить из текущего плейлиста.
+                ListTile(
+                  onTap: () => showWipDialog(context),
+                  leading: const Icon(
+                    Icons.playlist_remove,
                   ),
-                );
+                  title: Text(
+                    AppLocalizations.of(context)!.music_detailsDeleteTrackTitle,
+                  ),
+                ),
 
-                Navigator.of(context).pop();
-              },
-              leading: const Icon(
-                Icons.link,
-              ),
-              title: const Text(
-                "Скопировать ID трека",
-              ),
-              subtitle: const Text(
-                "Debug-режим",
-              ),
+                // Добавить в другой плейлист.
+                ListTile(
+                  onTap: () => showWipDialog(context),
+                  leading: const Icon(
+                    Icons.playlist_add,
+                  ),
+                  title: Text(
+                    AppLocalizations.of(context)!
+                        .music_detailsAddToOtherPlaylistTitle,
+                  ),
+                ),
+
+                // Добавить в очередь.
+                ListTile(
+                  onTap: () async {
+                    await player.addNextToQueue(
+                      widget.audio,
+                    );
+
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          AppLocalizations.of(context)!.general_addedToQueue,
+                        ),
+                        duration: const Duration(
+                          seconds: 3,
+                        ),
+                      ),
+                    );
+
+                    Navigator.of(context).pop();
+                  },
+                  enabled: !widget.audio.isRestricted,
+                  leading: const Icon(
+                    Icons.queue_music,
+                  ),
+                  title: Text(
+                    AppLocalizations.of(context)!.music_detailsPlayNextTitle,
+                  ),
+                ),
+
+                // Установить обложку.
+                ListTile(
+                  onTap: () => showWipDialog(context),
+                  leading: const Icon(
+                    Icons.photo_library,
+                  ),
+                  title: Text(
+                    AppLocalizations.of(context)!
+                        .music_detailsSetThumbnailTitle,
+                  ),
+                  subtitle: Text(
+                    AppLocalizations.of(context)!
+                        .music_detailsSetThumbnailDescription,
+                  ),
+                ),
+
+                // Перезалить с Youtube.
+                ListTile(
+                  onTap: () => showWipDialog(context),
+                  leading: const Icon(
+                    Icons.rotate_left,
+                  ),
+                  title: Text(
+                    AppLocalizations.of(context)!
+                        .music_detailsReuploadFromYoutubeTitle,
+                  ),
+                  subtitle: Text(
+                    AppLocalizations.of(context)!
+                        .music_detailsReuploadFromYoutubeDescription,
+                  ),
+                ),
+
+                // Поделиться ссылкой на трек.
+                ListTile(
+                  onTap: () {
+                    Navigator.of(context).pop();
+
+                    Share.share(
+                      widget.audio.trackUrl,
+                    );
+                  },
+                  leading: const Icon(
+                    Icons.share,
+                  ),
+                  title: Text(
+                    AppLocalizations.of(context)!.music_detailsShareTitle,
+                  ),
+                ),
+
+                // Debug-опции.
+                if (kDebugMode)
+                  ListTile(
+                    onTap: () {
+                      Clipboard.setData(
+                        ClipboardData(
+                          text: widget.audio.mediaKey,
+                        ),
+                      );
+
+                      Navigator.of(context).pop();
+                    },
+                    leading: const Icon(
+                      Icons.link,
+                    ),
+                    title: const Text(
+                      "Скопировать ID трека",
+                    ),
+                    subtitle: const Text(
+                      "Debug-режим",
+                    ),
+                  ),
+              ],
             ),
-        ],
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -1350,11 +971,6 @@ class AudioTrackTile extends StatefulWidget {
 
   /// Указывает, что кнопка для лайка должна быть показана.
   final bool showLikeButton;
-
-  /// Указывает индекс данного элемента для перетаскивания. Если не указан, то перетаскивание работать не будет.
-  ///
-  /// Для перетаскивания данный виджет обязан находиться внутри [ReorderableListView].
-  final int? dragIndex;
 
   /// Действие, вызываемое при переключения паузы/возобновления при нажатии по иконке трека.
   ///
@@ -1383,7 +999,6 @@ class AudioTrackTile extends StatefulWidget {
     this.currentlyPlaying = false,
     this.isLiked = false,
     this.showLikeButton = true,
-    this.dragIndex,
     required this.audio,
     this.onPlay,
     this.onPlayToggle,
@@ -1436,212 +1051,203 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
           ),
         ),
       ),
-      child: ReorderableDragStartListener(
-        index: widget.dragIndex ?? 0,
-        enabled: widget.dragIndex != null && isDesktop,
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: widget.onPlay,
-            onHover: widget.onPlay != null
-                ? (bool value) => setState(() => isHovered = value)
-                : null,
-            borderRadius: BorderRadius.circular(globalBorderRadius),
-            onLongPress: isMobile ? widget.onSecondaryAction : null,
-            onSecondaryTap: widget.onSecondaryAction,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Opacity(
-                  opacity: widget.audio.isRestricted ? 0.5 : 1,
-                  child: InkWell(
-                    onTap: widget.onPlayToggle != null || widget.onPlay != null
-                        ? () {
-                            // Если в данный момент играет именно этот трек, то вызываем onPlayToggle.
-                            if (widget.selected) {
-                              widget.onPlayToggle?.call(
-                                !selectedAndPlaying,
-                              );
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: widget.onPlay,
+          onHover: widget.onPlay != null
+              ? (bool value) => setState(() => isHovered = value)
+              : null,
+          borderRadius: BorderRadius.circular(globalBorderRadius),
+          onLongPress: isMobile ? widget.onSecondaryAction : null,
+          onSecondaryTap: widget.onSecondaryAction,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Opacity(
+                opacity: widget.audio.isRestricted ? 0.5 : 1,
+                child: InkWell(
+                  onTap: widget.onPlayToggle != null || widget.onPlay != null
+                      ? () {
+                          // Если в данный момент играет именно этот трек, то вызываем onPlayToggle.
+                          if (widget.selected) {
+                            widget.onPlayToggle?.call(
+                              !selectedAndPlaying,
+                            );
 
-                              return;
-                            }
-
-                            // В ином случае запускаем проигрывание этого трека.
-                            widget.onPlay?.call();
+                            return;
                           }
-                        : null,
-                    borderRadius: BorderRadius.circular(globalBorderRadius),
-                    child: ReorderableDragStartListener(
-                      index: widget.dragIndex ?? 0,
-                      enabled: widget.dragIndex != null && isMobile,
-                      child: SizedBox(
-                        width: 50,
-                        height: 50,
-                        child: Stack(
-                          children: [
-                            ClipRRect(
-                              borderRadius:
-                                  BorderRadius.circular(globalBorderRadius),
-                              child: imageUrl != null
-                                  ? CachedNetworkImage(
-                                      imageUrl: imageUrl,
-                                      cacheKey: "${widget.audio.mediaKey}68",
-                                      width: 50,
-                                      height: 50,
-                                      placeholder:
-                                          (BuildContext context, String url) =>
-                                              const FallbackAudioAvatar(),
-                                      cacheManager:
-                                          CachedNetworkImagesManager.instance,
-                                    )
-                                  : const FallbackAudioAvatar(),
-                            ),
-                            if (isHovered || widget.selected)
-                              Center(
-                                child: Container(
+
+                          // В ином случае запускаем проигрывание этого трека.
+                          widget.onPlay?.call();
+                        }
+                      : null,
+                  borderRadius: BorderRadius.circular(globalBorderRadius),
+                  child: SizedBox(
+                    width: 50,
+                    height: 50,
+                    child: Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius:
+                              BorderRadius.circular(globalBorderRadius),
+                          child: imageUrl != null
+                              ? CachedNetworkImage(
+                                  imageUrl: imageUrl,
+                                  cacheKey: "${widget.audio.mediaKey}68",
                                   width: 50,
                                   height: 50,
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .background
-                                        .withOpacity(0.5),
-                                    borderRadius: BorderRadius.circular(
-                                      globalBorderRadius,
-                                    ),
-                                  ),
-                                  child: !isHovered && selectedAndPlaying
-                                      ? Center(
-                                          child: RepaintBoundary(
-                                            child: Image.asset(
-                                              "assets/images/audioEqualizer.gif",
-                                              width: 18,
-                                              height: 18,
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .primary,
-                                            ),
-                                          ),
-                                        )
-                                      : Icon(
-                                          selectedAndPlaying
-                                              ? Icons.pause
-                                              : Icons.play_arrow,
+                                  placeholder:
+                                      (BuildContext context, String url) =>
+                                          const FallbackAudioAvatar(),
+                                  cacheManager:
+                                      CachedNetworkImagesManager.instance,
+                                )
+                              : const FallbackAudioAvatar(),
+                        ),
+                        if (isHovered || widget.selected)
+                          Center(
+                            child: Container(
+                              width: 50,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .background
+                                    .withOpacity(0.5),
+                                borderRadius: BorderRadius.circular(
+                                  globalBorderRadius,
+                                ),
+                              ),
+                              child: !isHovered && selectedAndPlaying
+                                  ? Center(
+                                      child: RepaintBoundary(
+                                        child: Image.asset(
+                                          "assets/images/audioEqualizer.gif",
+                                          width: 18,
+                                          height: 18,
                                           color: Theme.of(context)
                                               .colorScheme
                                               .primary,
                                         ),
-                                ),
-                              )
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  width: 8,
-                ),
-                Expanded(
-                  child: Opacity(
-                    opacity: widget.audio.isRestricted ? 0.5 : 1,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Flexible(
-                              child: Text(
-                                widget.audio.title,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                  color: widget.selected
-                                      ? Theme.of(context).colorScheme.primary
-                                      : Theme.of(context)
-                                          .colorScheme
-                                          .onBackground,
-                                ),
-                              ),
+                                      ),
+                                    )
+                                  : Icon(
+                                      selectedAndPlaying
+                                          ? Icons.pause
+                                          : Icons.play_arrow,
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                    ),
                             ),
-                            if (widget.audio.isExplicit)
-                              const SizedBox(
-                                width: 2,
-                              ),
-                            if (widget.audio.isExplicit)
-                              Icon(
-                                Icons.explicit,
-                                size: 16,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onBackground
-                                    .withOpacity(0.5),
-                              ),
-                            if (widget.audio.subtitle != null)
-                              const SizedBox(
-                                width: 6,
-                              ),
-                            if (widget.audio.subtitle != null)
-                              Flexible(
-                                child: Text(
-                                  widget.audio.subtitle!,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onBackground
-                                        .withOpacity(0.5),
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                        Text(
-                          widget.audio.artist,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: widget.selected
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context).colorScheme.onBackground,
-                          ),
-                        ),
+                          )
                       ],
                     ),
                   ),
                 ),
+              ),
+              const SizedBox(
+                width: 8,
+              ),
+              Expanded(
+                child: Opacity(
+                  opacity: widget.audio.isRestricted ? 0.5 : 1,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              widget.audio.title,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                                color: widget.selected
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Theme.of(context)
+                                        .colorScheme
+                                        .onBackground,
+                              ),
+                            ),
+                          ),
+                          if (widget.audio.isExplicit)
+                            const SizedBox(
+                              width: 2,
+                            ),
+                          if (widget.audio.isExplicit)
+                            Icon(
+                              Icons.explicit,
+                              size: 16,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onBackground
+                                  .withOpacity(0.5),
+                            ),
+                          if (widget.audio.subtitle != null)
+                            const SizedBox(
+                              width: 6,
+                            ),
+                          if (widget.audio.subtitle != null)
+                            Flexible(
+                              child: Text(
+                                widget.audio.subtitle!,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onBackground
+                                      .withOpacity(0.5),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      Text(
+                        widget.audio.artist,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: widget.selected
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.onBackground,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(
+                width: 8,
+              ),
+              Text(
+                secondsAsString(widget.audio.duration),
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onBackground
+                      .withOpacity(0.75),
+                ),
+              ),
+              if (widget.showLikeButton)
                 const SizedBox(
                   width: 8,
                 ),
-                Text(
-                  secondsAsString(widget.audio.duration),
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onBackground
-                        .withOpacity(0.75),
+              if (widget.showLikeButton)
+                IconButton(
+                  onPressed: () => widget.onLikeToggle?.call(
+                    !widget.isLiked,
+                  ),
+                  icon: Icon(
+                    widget.isLiked ? Icons.favorite : Icons.favorite_outline,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
-                if (widget.showLikeButton)
-                  const SizedBox(
-                    width: 8,
-                  ),
-                if (widget.showLikeButton)
-                  IconButton(
-                    onPressed: () => widget.onLikeToggle?.call(
-                      !widget.isLiked,
-                    ),
-                    icon: Icon(
-                      widget.isLiked ? Icons.favorite : Icons.favorite_outline,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-              ],
-            ),
+            ],
           ),
         ),
       ),
@@ -1653,6 +1259,9 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
 class AudioPlaylistWidget extends StatefulWidget {
   /// URL на изображение заднего фона.
   final String? backgroundUrl;
+
+  /// [ExtendedVKPlaylist.mediaKey], используемый как ключ для кэширования, а так же для [Hero]-анимации..
+  final String? mediaKey;
 
   /// Название данного плейлиста.
   final String name;
@@ -1684,6 +1293,7 @@ class AudioPlaylistWidget extends StatefulWidget {
   const AudioPlaylistWidget({
     super.key,
     this.backgroundUrl,
+    this.mediaKey,
     required this.name,
     this.useTextOnImageLayout = false,
     this.description,
@@ -1717,18 +1327,22 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
               height: 200,
               child: Stack(
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(globalBorderRadius),
-                    child: widget.backgroundUrl != null
-                        ? CachedNetworkImage(
-                            imageUrl: widget.backgroundUrl!,
-                            memCacheHeight: 200,
-                            memCacheWidth: 200,
-                            placeholder: (BuildContext context, String url) =>
-                                const FallbackAudioPlaylistAvatar(),
-                            cacheManager: CachedNetworkImagesManager.instance,
-                          )
-                        : const FallbackAudioPlaylistAvatar(),
+                  Hero(
+                    tag: widget.mediaKey ?? "",
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(globalBorderRadius),
+                      child: widget.backgroundUrl != null
+                          ? CachedNetworkImage(
+                              imageUrl: widget.backgroundUrl!,
+                              cacheKey: widget.mediaKey,
+                              memCacheHeight: 200,
+                              memCacheWidth: 200,
+                              placeholder: (BuildContext context, String url) =>
+                                  const FallbackAudioPlaylistAvatar(),
+                              cacheManager: CachedNetworkImagesManager.instance,
+                            )
+                          : const FallbackAudioPlaylistAvatar(),
+                    ),
                   ),
 
                   // Если это у нас рекомендательный плейлист, то текст должен находиться внутри изображения плейлиста.
@@ -2040,10 +1654,12 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
         ),
         FilledButton.tonalIcon(
           onPressed: user.favoritesPlaylist?.audios != null
-              ? () => showDialog(
-                    context: context,
-                    builder: (context) => PlaylistDisplayDialog(
-                      playlist: user.favoritesPlaylist!,
+              ? () => Navigator.push(
+                    context,
+                    Material3PageRoute(
+                      builder: (context) => PlaylistInfoRoute(
+                        playlist: user.favoritesPlaylist!,
+                      ),
                     ),
                   )
               : null,
@@ -2096,10 +1712,9 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
           for (int index = 0; index < clampedMusicCount; index++)
             buildListTrackWidget(
               context,
-              index,
-              user.favoritesPlaylist!.audios!.slice(0, clampedMusicCount),
-              user,
-              playlist: user.favoritesPlaylist!,
+              user.favoritesPlaylist!.audios![index],
+              user.favoritesPlaylist!,
+              addBottomPadding: index < clampedMusicCount - 1,
             ),
 
         // Skeleton loader.
@@ -2243,14 +1858,17 @@ class MyPlaylistsBlock extends StatelessWidget {
                   for (ExtendedVKPlaylist playlist in user.regularPlaylists)
                     AudioPlaylistWidget(
                       backgroundUrl: playlist.photo?.photo270,
+                      mediaKey: playlist.mediaKey,
                       name: playlist.title!,
                       description: playlist.subtitle,
                       selected: player.currentPlaylist == playlist,
                       currentlyPlaying: player.playing && player.loaded,
-                      onOpen: () => showDialog(
-                        context: context,
-                        builder: (context) => PlaylistDisplayDialog(
-                          playlist: playlist,
+                      onOpen: () => Navigator.push(
+                        context,
+                        Material3PageRoute(
+                          builder: (context) => PlaylistInfoRoute(
+                            playlist: playlist,
+                          ),
                         ),
                       ),
                       onPlayToggle: (bool playing) => onPlaylistPlayToggle(
@@ -2325,18 +1943,19 @@ class RecommendedPlaylistsBlock extends StatelessWidget {
                       in user.recommendationPlaylists)
                     AudioPlaylistWidget(
                       backgroundUrl: playlist.photo!.photo270!,
+                      mediaKey: playlist.mediaKey,
                       name: playlist.title!,
                       description: playlist.subtitle,
                       useTextOnImageLayout: true,
                       selected: player.currentPlaylist == playlist,
                       currentlyPlaying: player.playing && player.loaded,
-                      onOpen: () async => showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return PlaylistDisplayDialog(
+                      onOpen: () => Navigator.push(
+                        context,
+                        Material3PageRoute(
+                          builder: (context) => PlaylistInfoRoute(
                             playlist: playlist,
-                          );
-                        },
+                          ),
+                        ),
                       ),
                       onPlayToggle: (bool playing) => onPlaylistPlayToggle(
                         context,
@@ -2432,15 +2051,18 @@ class SimillarMusicBlock extends StatelessWidget {
                     in user.recommendationPlaylists)
                   AudioPlaylistWidget(
                     backgroundUrl: playlist.photo!.photo270!,
+                    mediaKey: playlist.mediaKey,
                     name: playlist.title!,
                     description: playlist.subtitle,
                     useTextOnImageLayout: true,
                     selected: player.currentPlaylist == playlist,
                     currentlyPlaying: player.playing && player.loaded,
-                    onOpen: () => showDialog(
-                      context: context,
-                      builder: (context) => PlaylistDisplayDialog(
-                        playlist: playlist,
+                    onOpen: () => Navigator.push(
+                      context,
+                      Material3PageRoute(
+                        builder: (context) => PlaylistInfoRoute(
+                          playlist: playlist,
+                        ),
                       ),
                     ),
                     onPlayToggle: (bool playing) => onPlaylistPlayToggle(
@@ -2497,13 +2119,16 @@ class ByVKPlaylistsBlock extends StatelessWidget {
                   for (ExtendedVKPlaylist playlist in user.madeByVKPlaylists)
                     AudioPlaylistWidget(
                       backgroundUrl: playlist.photo!.photo270!,
+                      mediaKey: playlist.mediaKey,
                       name: playlist.title!,
                       selected: player.currentPlaylist == playlist,
                       currentlyPlaying: player.playing && player.loaded,
-                      onOpen: () => showDialog(
-                        context: context,
-                        builder: (context) => PlaylistDisplayDialog(
-                          playlist: playlist,
+                      onOpen: () => Navigator.push(
+                        context,
+                        Material3PageRoute(
+                          builder: (context) => PlaylistInfoRoute(
+                            playlist: playlist,
+                          ),
                         ),
                       ),
                       onPlayToggle: (bool playing) => onPlaylistPlayToggle(
@@ -2651,151 +2276,179 @@ class _HomeMusicPageState extends State<HomeMusicPage> {
     /// Показывает [RefreshIndicator] во время загрузки данных с API ВКонтакте.
     void setLoading([bool value = true]) => setState(() => loadingData = value);
 
-    return DeclarativeRefreshIndicator(
-      onRefresh: () async {
-        setLoading();
-
-        await ensureUserAudioAllInformation(
-          context,
-          forceUpdate: true,
-        );
-        setLoading(false);
-      },
-      refreshing: loadingData,
-      child: CallbackShortcuts(
-        bindings: {
-          const SingleActivator(
-            LogicalKeyboardKey.f5,
-          ): () async {
-            setLoading();
-
-            await ensureUserAudioAllInformation(
-              context,
-              forceUpdate: true,
-            );
-            setLoading(false);
-          },
-          const SingleActivator(
-            LogicalKeyboardKey.keyF,
-            control: true,
-          ): user.favoritesPlaylist != null
-              ? () => showDialog(
+    return Scaffold(
+      appBar: isMobileLayout
+          ? AppBar(
+              title: Text(
+                AppLocalizations.of(context)!.music_label,
+              ),
+              centerTitle: true,
+              actions: [
+                IconButton(
+                  onPressed: () => showDialog(
                     context: context,
-                    builder: (context) => PlaylistDisplayDialog(
-                      playlist: user.favoritesPlaylist!,
-                    ),
-                  )
-              : () {},
-        },
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Expanded(
-              child: ListView(
-                padding: EdgeInsets.all(
-                  isMobileLayout ? 16 : 24,
-                ),
-                children: [
-                  // Часть интерфейса "Добро пожаловать", а так же кнопка поиска.
-                  if (!isMobileLayout)
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Текст "Добро пожаловать".
-                        Flexible(
-                          child: Text(
-                            AppLocalizations.of(context)!.music_welcomeTitle(
-                              user.firstName!,
-                            ),
-                            style: Theme.of(context)
-                                .textTheme
-                                .displayMedium!
-                                .copyWith(
-                                  fontWeight: FontWeight.w500,
-                                ),
-                          ),
-                        ),
-
-                        // Поиск.
-                        IconButton.filledTonal(
-                          onPressed: () => showDialog(
-                            context: context,
-                            builder: (context) => const SearchDisplayDialog(),
-                          ),
-                          icon: const Icon(
-                            Icons.search,
-                          ),
-                        ),
-                      ],
-                    ),
-                  if (!isMobileLayout)
-                    const SizedBox(
-                      height: 36,
-                    ),
-
-                  // Верхняя часть интерфейса с переключателями.
-                  const Focus(
-                    autofocus: true,
-                    skipTraversal: true,
-                    canRequestFocus: true,
-                    child: ChipFilters(),
+                    builder: (context) => const SearchDisplayDialog(),
                   ),
-                  const SizedBox(height: 8),
-                  const Divider(),
-                  const SizedBox(height: 2),
+                  icon: const Icon(
+                    Icons.search,
+                  ),
+                ),
+                const SizedBox(
+                  width: 18,
+                ),
+              ],
+            )
+          : null,
+      body: DeclarativeRefreshIndicator(
+        onRefresh: () async {
+          setLoading();
 
-                  // Раздел "Моя музыка".
-                  if (myMusicEnabled)
-                    MyMusicBlock(
-                      useTopButtons: isMobileLayout,
+          await ensureUserAudioAllInformation(
+            context,
+            forceUpdate: true,
+          );
+          setLoading(false);
+        },
+        refreshing: loadingData,
+        child: CallbackShortcuts(
+          bindings: {
+            const SingleActivator(
+              LogicalKeyboardKey.f5,
+            ): () async {
+              setLoading();
+
+              await ensureUserAudioAllInformation(
+                context,
+                forceUpdate: true,
+              );
+              setLoading(false);
+            },
+            const SingleActivator(
+              LogicalKeyboardKey.keyF,
+              control: true,
+            ): user.favoritesPlaylist != null
+                ? () => Navigator.push(
+                      context,
+                      Material3PageRoute(
+                        builder: (context) => PlaylistInfoRoute(
+                          playlist: user.favoritesPlaylist!,
+                        ),
+                      ),
+                    )
+                : () {},
+          },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Expanded(
+                child: ListView(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobileLayout ? 16 : 24,
+                    vertical: isMobileLayout ? 20 : 30,
+                  ),
+                  children: [
+                    // Часть интерфейса "Добро пожаловать", а так же кнопка поиска.
+                    if (!isMobileLayout)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Текст "Добро пожаловать".
+                          Flexible(
+                            child: Text(
+                              AppLocalizations.of(context)!.music_welcomeTitle(
+                                user.firstName!,
+                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .displayMedium!
+                                  .copyWith(
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                            ),
+                          ),
+
+                          // Поиск.
+                          IconButton.filledTonal(
+                            onPressed: () => showDialog(
+                              context: context,
+                              builder: (context) => const SearchDisplayDialog(),
+                            ),
+                            icon: const Icon(
+                              Icons.search,
+                            ),
+                          ),
+                        ],
+                      ),
+                    if (!isMobileLayout)
+                      const SizedBox(
+                        height: 36,
+                      ),
+
+                    // Верхняя часть интерфейса с переключателями.
+                    const Focus(
+                      autofocus: true,
+                      skipTraversal: true,
+                      canRequestFocus: true,
+                      child: ChipFilters(),
                     ),
-                  if (myMusicEnabled) const SizedBox(height: 12),
-                  if (myMusicEnabled) const Divider(),
-                  if (myMusicEnabled) const SizedBox(height: 4),
+                    const SizedBox(height: 8),
+                    const Divider(),
+                    const SizedBox(height: 2),
 
-                  // Раздел "Плейлисты".
-                  if (playlistsEnabled) MyPlaylistsBlock(),
-                  if (playlistsEnabled) const SizedBox(height: 12),
-                  if (playlistsEnabled) const Divider(),
-                  if (playlistsEnabled) const SizedBox(height: 4),
+                    // Раздел "Моя музыка".
+                    if (myMusicEnabled)
+                      MyMusicBlock(
+                        useTopButtons: isMobileLayout,
+                      ),
+                    if (myMusicEnabled) const SizedBox(height: 12),
+                    if (myMusicEnabled) const Divider(),
+                    if (myMusicEnabled) const SizedBox(height: 4),
 
-                  // Раздел "Плейлисты для Вас".
-                  if (recommendedPlaylistsEnabled) RecommendedPlaylistsBlock(),
-                  if (recommendedPlaylistsEnabled) const SizedBox(height: 12),
-                  if (recommendedPlaylistsEnabled) const Divider(),
-                  if (recommendedPlaylistsEnabled) const SizedBox(height: 4),
+                    // Раздел "Плейлисты".
+                    if (playlistsEnabled) MyPlaylistsBlock(),
+                    if (playlistsEnabled) const SizedBox(height: 12),
+                    if (playlistsEnabled) const Divider(),
+                    if (playlistsEnabled) const SizedBox(height: 4),
 
-                  // Раздел "Совпадения по вкусам".
-                  if (similarMusicChipEnabled) SimillarMusicBlock(),
-                  if (similarMusicChipEnabled) const SizedBox(height: 12),
-                  if (similarMusicChipEnabled) const Divider(),
-                  if (similarMusicChipEnabled) const SizedBox(height: 4),
+                    // Раздел "Плейлисты для Вас".
+                    if (recommendedPlaylistsEnabled)
+                      RecommendedPlaylistsBlock(),
+                    if (recommendedPlaylistsEnabled) const SizedBox(height: 12),
+                    if (recommendedPlaylistsEnabled) const Divider(),
+                    if (recommendedPlaylistsEnabled) const SizedBox(height: 4),
 
-                  // Раздел "Собрано редакцией".
-                  if (byVKChipEnabled) ByVKPlaylistsBlock(),
-                  if (byVKChipEnabled) const SizedBox(height: 12),
-                  if (byVKChipEnabled) const Divider(),
-                  if (byVKChipEnabled) const SizedBox(height: 4),
+                    // Раздел "Совпадения по вкусам".
+                    if (similarMusicChipEnabled) SimillarMusicBlock(),
+                    if (similarMusicChipEnabled) const SizedBox(height: 12),
+                    if (similarMusicChipEnabled) const Divider(),
+                    if (similarMusicChipEnabled) const SizedBox(height: 4),
 
-                  // Случай, если пользователь отключил все возможные разделы музыки.
-                  if (everythingIsDisabled) const EverythingIsDisabledBlock(),
+                    // Раздел "Собрано редакцией".
+                    if (byVKChipEnabled) ByVKPlaylistsBlock(),
+                    if (byVKChipEnabled) const SizedBox(height: 12),
+                    if (byVKChipEnabled) const Divider(),
+                    if (byVKChipEnabled) const SizedBox(height: 4),
 
-                  // Данный SizedBox нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
-                  if (player.loaded && isMobileLayout)
-                    const SizedBox(
-                      height: 80,
-                    ),
-                ],
+                    // Случай, если пользователь отключил все возможные разделы музыки.
+                    if (everythingIsDisabled) const EverythingIsDisabledBlock(),
+
+                    // Данный SizedBox нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
+                    if (player.loaded && isMobileLayout)
+                      const SizedBox(
+                        height: 80,
+                      ),
+                  ],
+                ),
               ),
-            ),
 
-            // Данный SizedBox нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
-            // Мы его располагаем после ListView, что бы ScrollBar не был закрыт плеером.
-            if (player.loaded && !isMobileLayout)
-              const SizedBox(
-                height: 88,
-              ),
-          ],
+              // Данный SizedBox нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
+              // Мы его располагаем после ListView, что бы ScrollBar не был закрыт плеером.
+              if (player.loaded && !isMobileLayout)
+                const SizedBox(
+                  height: 88,
+                ),
+            ],
+          ),
         ),
       ),
     );

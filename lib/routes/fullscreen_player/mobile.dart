@@ -76,10 +76,14 @@ class TopFullscreenControls extends StatelessWidget {
             ),
             onPressed: () => showModalBottomSheet(
               context: context,
+              useRootNavigator: true,
               isScrollControlled: true,
-              builder: (BuildContext context) => BottomAudioOptionsDialog(
-                audio: player.currentAudio!,
-              ),
+              useSafeArea: true,
+              builder: (BuildContext context) {
+                return BottomAudioOptionsDialog(
+                  audio: player.currentAudio!,
+                );
+              },
             ),
           ),
       ],

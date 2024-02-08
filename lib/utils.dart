@@ -24,7 +24,7 @@ String? extractAccessToken(String input) {
 ///
 /// Используется для простого mapping'а страниц, их иконок и названий.
 class NavigationPage {
-  /// Текст, используемый в [AppBar], а так же в [BottomNavigationBar].
+  /// Текст, используемый в [BottomNavigationBar].
   final String label;
 
   /// Иконка, которая используется на [BottomNavigationBar].
@@ -32,9 +32,6 @@ class NavigationPage {
 
   /// Иконка, которая используется при выборе элемента в [BottomNavigationBar]. Если не указано, то будет использоваться [icon].
   final IconData? selectedIcon;
-
-  /// Список из виджетов, которые будут расположены справа в [AppBar]'е.
-  final List<Widget> actions;
 
   /// Route (страница), которая будет отображена при выборе этого элемента в [BottomNavigationBar].
   final Widget route;
@@ -45,15 +42,19 @@ class NavigationPage {
   /// Если true, то аудиоплеер (в desktop-режиме) сможет быть "больших" размеров.
   final bool allowBigAudioPlayer;
 
-  const NavigationPage({
+  /// [GlobalKey] для [Navigator]'а, используемый для этого Route.
+  final GlobalKey<NavigatorState> navigatorKey;
+
+  NavigationPage({
     required this.label,
     required this.icon,
     this.selectedIcon,
-    this.actions = const [],
     required this.route,
     this.audioPlayerAlign = Alignment.bottomCenter,
     this.allowBigAudioPlayer = true,
-  });
+  }) : navigatorKey = GlobalKey<NavigatorState>(
+          debugLabel: label,
+        );
 }
 
 /// Понижает яркость цвета.

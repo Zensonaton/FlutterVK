@@ -65,12 +65,12 @@ class PlaylistTitleWidget extends StatelessWidget {
           width: 14,
         ),
 
-        // Текст следующим сыграет и название трека.
+        // Текст с названием плейлиста.
         Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // "Следующим сыграет".
+            // "Воспроизведение музыки".
             Text(
               AppLocalizations.of(context)!.music_fullscreenPlaylistNameTitle,
               overflow: TextOverflow.ellipsis,
@@ -82,7 +82,7 @@ class PlaylistTitleWidget extends StatelessWidget {
               ),
             ),
 
-            // Название трека.
+            // Название плейлиста.
             Text(
               player.currentPlaylist?.title ??
                   AppLocalizations.of(context)!

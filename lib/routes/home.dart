@@ -424,20 +424,6 @@ class _HomeRouteState extends State<HomeRoute> {
         label: AppLocalizations.of(buildContext!)!.music_label,
         icon: Icons.my_library_music_outlined,
         selectedIcon: Icons.my_library_music,
-        actions: [
-          IconButton(
-            onPressed: () => showDialog(
-              context: context,
-              builder: (context) => const SearchDisplayDialog(),
-            ),
-            icon: const Icon(
-              Icons.search,
-            ),
-          ),
-          const SizedBox(
-            width: 18,
-          ),
-        ],
         route: const HomeMusicPage(),
       ),
       NavigationPage(
@@ -475,21 +461,14 @@ class _HomeRouteState extends State<HomeRoute> {
         getDeviceType(MediaQuery.of(context).size) == DeviceScreenType.mobile;
 
     return Scaffold(
-      appBar: isMobileLayout
-          ? AppBar(
-              title: Text(
-                navigationPage.label,
-              ),
-              centerTitle: true,
-              actions: navigationPage.actions,
-            )
-          : null,
       resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
+          // Блок для навигации (при Desktop Layout'е), а так же содержимое экрана.
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Блок для навигации.
               if (!isMobileLayout)
                 NavigationRail(
                   selectedIndex: navigationScreenIndex,
@@ -509,16 +488,43 @@ class _HomeRouteState extends State<HomeRoute> {
                   ],
                 ),
               if (!isMobileLayout) const VerticalDivider(),
+
+              // Содержимое экрана.
               Expanded(
                 child: PageTransitionSwitcher(
-                  duration: const Duration(milliseconds: 400),
-                  transitionBuilder: (Widget child, Animation<double> animation,
-                      Animation<double> secondaryAnimation) {
-                    return SharedAxisTransition(
-                      transitionType: SharedAxisTransitionType.vertical,
-                      animation: animation,
-                      secondaryAnimation: secondaryAnimation,
-                      child: child,
+                  duration: const Duration(
+                    milliseconds: 400,
+                  ),
+                  transitionBuilder: (
+                    Widget child,
+                    Animation<double> animation,
+                    Animation<double> secondaryAnimation,
+                  ) {
+                    final GlobalKey<NavigatorState> navigatorKey =
+                        navigationPages
+                            .firstWhere(
+                              (page) => page.route == child,
+                            )
+                            .navigatorKey;
+
+                    return NavigatorPopHandler(
+                      onPop: () => navigatorKey.currentState!.pop(),
+                      child: Navigator(
+                        key: navigatorKey,
+                        onGenerateRoute: (RouteSettings settings) {
+                          return MaterialPageRoute(
+                            builder: (BuildContext context) {
+                              return SharedAxisTransition(
+                                transitionType:
+                                    SharedAxisTransitionType.vertical,
+                                animation: animation,
+                                secondaryAnimation: secondaryAnimation,
+                                child: child,
+                              );
+                            },
+                          );
+                        },
+                      ),
                     );
                   },
                   child: navigationPage.route,
@@ -526,6 +532,8 @@ class _HomeRouteState extends State<HomeRoute> {
               ),
             ],
           ),
+
+          // Маленький плеер снизу.
           AnimatedAlign(
             duration: const Duration(
               milliseconds: 500,

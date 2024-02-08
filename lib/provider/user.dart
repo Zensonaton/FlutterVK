@@ -40,6 +40,9 @@ class ExtendedVKPlaylist extends AudioPlaylist {
   /// Указывает, что данный плейлист является плейлистом от ВКонтакте (плейлист из раздела "Собрано редакцией")
   bool get isMadeByVKPlaylist => ownerID == vkMusicGroupID;
 
+  /// Указывает, пуст ли данный плейлист. Данный метод всегда возвращает true, если треки не были загружены.
+  bool get isEmpty => audios == null ? true : count == 0;
+
   /// Возвращает instance данного класса из передаваемого объекта типа [AudioPlaylist].
   static ExtendedVKPlaylist fromAudioPlaylist(
     AudioPlaylist playlist, {

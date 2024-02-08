@@ -36,20 +36,38 @@ class FallbackAudioAvatar extends StatelessWidget {
 
 /// Fallback-виджет, используемый в случае, если у плейлиста нет изображения.
 class FallbackAudioPlaylistAvatar extends StatelessWidget {
+  /// Указывает, что данный плейлист является плейлистом типа "Любимая музыка". Плейлисты такого вида имеют иконку сердца внутри, а так же небольшой градиент.
+  final bool favoritesPlaylist;
+
   const FallbackAudioPlaylistAvatar({
     super.key,
+    this.favoritesPlaylist = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Theme.of(context).colorScheme.surfaceVariant,
+      color: favoritesPlaylist
+          ? null
+          : Theme.of(context).colorScheme.surfaceVariant,
       width: 200,
       height: 200,
+      decoration: favoritesPlaylist
+          ? BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.bottomCenter,
+                end: Alignment.topCenter,
+                colors: [
+                  Theme.of(context).colorScheme.primaryContainer,
+                  Theme.of(context).colorScheme.secondaryContainer,
+                ],
+              ),
+            )
+          : null,
       child: Center(
         child: Skeleton.keep(
           child: Icon(
-            Icons.queue_music,
+            favoritesPlaylist ? Icons.favorite : Icons.queue_music,
             color:
                 Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
             size: 56,
