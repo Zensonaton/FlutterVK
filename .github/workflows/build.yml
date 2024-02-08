@@ -32,19 +32,13 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
+      - name: Sign Android release
+        run: |
+          echo '${{ secrets.ANDROID_KEYSTORE_FILE_BASE64 }}' | base64 --decode > android/app/upload-keystore.jks
+          echo '${{ secrets.ANDROID_KEY_PROPERTIES }}' > android/key.properties
+
       - name: Build Android release
         run: flutter build apk --release
-
-      - name: Sign Android release
-        uses: r0adkll/sign-android-release@v1
-        id: sign_app
-        with:
-          releaseDirectory: build/app/outputs/bundle/release/
-          signingKeyBase64: ${{ secrets.ANDROID_KEYSTORE_FILE_BASE64 }}
-          alias: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
-          keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-
-          keyPassword: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
 
       - name: Publish in Telegram
         run: curl -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendDocument -F chat_id="${{ secrets.TELEGRAM_TO }}" -F caption=' <b>🚧 Новый билд для Android</b>.' -F parse_mode='HTML' -F document=@'./build/app/outputs/flutter-apk/app-release.apk'
