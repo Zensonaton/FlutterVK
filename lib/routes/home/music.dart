@@ -1013,8 +1013,6 @@ class AudioTrackTile extends StatefulWidget {
 class _AudioTrackTileState extends State<AudioTrackTile> {
   bool isHovered = false;
 
-  // TODO: Сделать показ того, что данный трек играет более заметным.
-
   @override
   Widget build(BuildContext context) {
     final bool selectedAndPlaying = widget.selected && widget.currentlyPlaying;
@@ -1051,202 +1049,229 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
         ),
       ),
       child: Material(
+        // color: widget.selected
+        //     ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
+        //     : Colors.transparent,
         color: Colors.transparent,
         child: InkWell(
           onTap: widget.onPlay,
           onHover: widget.onPlay != null
               ? (bool value) => setState(() => isHovered = value)
               : null,
-          borderRadius: BorderRadius.circular(globalBorderRadius),
+          borderRadius: BorderRadius.circular(
+            globalBorderRadius,
+          ),
           onLongPress: isMobile ? widget.onSecondaryAction : null,
           onSecondaryTap: widget.onSecondaryAction,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Opacity(
-                opacity: widget.audio.isRestricted ? 0.5 : 1,
-                child: InkWell(
-                  onTap: widget.onPlayToggle != null || widget.onPlay != null
-                      ? () {
-                          // Если в данный момент играет именно этот трек, то вызываем onPlayToggle.
-                          if (widget.selected) {
-                            widget.onPlayToggle?.call(
-                              !selectedAndPlaying,
-                            );
+          child: AnimatedContainer(
+            duration: const Duration(
+              milliseconds: 500,
+            ),
+            curve: Curves.ease,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(
+                globalBorderRadius,
+              ),
+              gradient: widget.selected
+                  ? LinearGradient(
+                      colors: [
+                        Theme.of(context).colorScheme.primary.withOpacity(
+                              0.075,
+                            ),
+                        Colors.transparent,
+                      ],
+                    )
+                  : null,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Opacity(
+                  opacity: widget.audio.isRestricted ? 0.5 : 1.0,
+                  child: InkWell(
+                    onTap: widget.onPlayToggle != null || widget.onPlay != null
+                        ? () {
+                            // Если в данный момент играет именно этот трек, то вызываем onPlayToggle.
+                            if (widget.selected) {
+                              widget.onPlayToggle?.call(
+                                !selectedAndPlaying,
+                              );
 
-                            return;
+                              return;
+                            }
+
+                            // В ином случае запускаем проигрывание этого трека.
+                            widget.onPlay?.call();
                           }
-
-                          // В ином случае запускаем проигрывание этого трека.
-                          widget.onPlay?.call();
-                        }
-                      : null,
-                  borderRadius: BorderRadius.circular(globalBorderRadius),
-                  child: SizedBox(
-                    width: 50,
-                    height: 50,
-                    child: Stack(
+                        : null,
+                    borderRadius: BorderRadius.circular(globalBorderRadius),
+                    child: SizedBox(
+                      width: 50,
+                      height: 50,
+                      child: Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius:
+                                BorderRadius.circular(globalBorderRadius),
+                            child: imageUrl != null
+                                ? CachedNetworkImage(
+                                    imageUrl: imageUrl,
+                                    cacheKey: "${widget.audio.mediaKey}68",
+                                    width: 50,
+                                    height: 50,
+                                    placeholder:
+                                        (BuildContext context, String url) =>
+                                            const FallbackAudioAvatar(),
+                                    cacheManager:
+                                        CachedNetworkImagesManager.instance,
+                                  )
+                                : const FallbackAudioAvatar(),
+                          ),
+                          if (isHovered || widget.selected)
+                            Center(
+                              child: Container(
+                                width: 50,
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .background
+                                      .withOpacity(0.5),
+                                  borderRadius: BorderRadius.circular(
+                                    globalBorderRadius,
+                                  ),
+                                ),
+                                child: !isHovered && selectedAndPlaying
+                                    ? Center(
+                                        child: RepaintBoundary(
+                                          child: Image.asset(
+                                            "assets/images/audioEqualizer.gif",
+                                            width: 18,
+                                            height: 18,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary,
+                                          ),
+                                        ),
+                                      )
+                                    : Icon(
+                                        selectedAndPlaying
+                                            ? Icons.pause
+                                            : Icons.play_arrow,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                      ),
+                              ),
+                            )
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(
+                  width: 8,
+                ),
+                Expanded(
+                  child: Opacity(
+                    opacity: widget.audio.isRestricted ? 0.5 : 1,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        ClipRRect(
-                          borderRadius:
-                              BorderRadius.circular(globalBorderRadius),
-                          child: imageUrl != null
-                              ? CachedNetworkImage(
-                                  imageUrl: imageUrl,
-                                  cacheKey: "${widget.audio.mediaKey}68",
-                                  width: 50,
-                                  height: 50,
-                                  placeholder:
-                                      (BuildContext context, String url) =>
-                                          const FallbackAudioAvatar(),
-                                  cacheManager:
-                                      CachedNetworkImagesManager.instance,
-                                )
-                              : const FallbackAudioAvatar(),
-                        ),
-                        if (isHovered || widget.selected)
-                          Center(
-                            child: Container(
-                              width: 50,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .background
-                                    .withOpacity(0.5),
-                                borderRadius: BorderRadius.circular(
-                                  globalBorderRadius,
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                widget.audio.title,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  color: widget.selected
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Theme.of(context)
+                                          .colorScheme
+                                          .onBackground,
                                 ),
                               ),
-                              child: !isHovered && selectedAndPlaying
-                                  ? Center(
-                                      child: RepaintBoundary(
-                                        child: Image.asset(
-                                          "assets/images/audioEqualizer.gif",
-                                          width: 18,
-                                          height: 18,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .primary,
-                                        ),
-                                      ),
-                                    )
-                                  : Icon(
-                                      selectedAndPlaying
-                                          ? Icons.pause
-                                          : Icons.play_arrow,
-                                      color:
-                                          Theme.of(context).colorScheme.primary,
-                                    ),
                             ),
-                          )
+                            if (widget.audio.isExplicit)
+                              const SizedBox(
+                                width: 2,
+                              ),
+                            if (widget.audio.isExplicit)
+                              Icon(
+                                Icons.explicit,
+                                size: 16,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onBackground
+                                    .withOpacity(0.5),
+                              ),
+                            if (widget.audio.subtitle != null)
+                              const SizedBox(
+                                width: 6,
+                              ),
+                            if (widget.audio.subtitle != null)
+                              Flexible(
+                                child: Text(
+                                  widget.audio.subtitle!,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onBackground
+                                        .withOpacity(0.5),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        Text(
+                          widget.audio.artist,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: widget.selected
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.onBackground,
+                          ),
+                        ),
                       ],
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(
-                width: 8,
-              ),
-              Expanded(
-                child: Opacity(
-                  opacity: widget.audio.isRestricted ? 0.5 : 1,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              widget.audio.title,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                color: widget.selected
-                                    ? Theme.of(context).colorScheme.primary
-                                    : Theme.of(context)
-                                        .colorScheme
-                                        .onBackground,
-                              ),
-                            ),
-                          ),
-                          if (widget.audio.isExplicit)
-                            const SizedBox(
-                              width: 2,
-                            ),
-                          if (widget.audio.isExplicit)
-                            Icon(
-                              Icons.explicit,
-                              size: 16,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onBackground
-                                  .withOpacity(0.5),
-                            ),
-                          if (widget.audio.subtitle != null)
-                            const SizedBox(
-                              width: 6,
-                            ),
-                          if (widget.audio.subtitle != null)
-                            Flexible(
-                              child: Text(
-                                widget.audio.subtitle!,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onBackground
-                                      .withOpacity(0.5),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                      Text(
-                        widget.audio.artist,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: widget.selected
-                              ? Theme.of(context).colorScheme.primary
-                              : Theme.of(context).colorScheme.onBackground,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(
-                width: 8,
-              ),
-              Text(
-                secondsAsString(widget.audio.duration),
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onBackground
-                      .withOpacity(0.75),
-                ),
-              ),
-              if (widget.showLikeButton)
                 const SizedBox(
                   width: 8,
                 ),
-              if (widget.showLikeButton)
-                IconButton(
-                  onPressed: () => widget.onLikeToggle?.call(
-                    !widget.isLiked,
-                  ),
-                  icon: Icon(
-                    widget.isLiked ? Icons.favorite : Icons.favorite_outline,
-                    color: Theme.of(context).colorScheme.primary,
+                Text(
+                  secondsAsString(widget.audio.duration),
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onBackground
+                        .withOpacity(0.75),
                   ),
                 ),
-            ],
+                if (widget.showLikeButton)
+                  const SizedBox(
+                    width: 8,
+                  ),
+                if (widget.showLikeButton)
+                  IconButton(
+                    onPressed: () => widget.onLikeToggle?.call(
+                      !widget.isLiked,
+                    ),
+                    icon: Icon(
+                      widget.isLiked ? Icons.favorite : Icons.favorite_outline,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
