@@ -389,6 +389,11 @@ class VKMusicPlayer {
   /// }
   /// ```
   Future<void> play() async {
+    // Если ничего не загружено, то мы не должны запускать воспроизведение.
+    if (_queue == null) {
+      return;
+    }
+
     return await _player.play();
   }
 
