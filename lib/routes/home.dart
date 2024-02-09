@@ -1,6 +1,5 @@
 import "dart:async";
 
-import "package:animations/animations.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
@@ -491,43 +490,41 @@ class _HomeRouteState extends State<HomeRoute> {
 
               // Содержимое экрана.
               Expanded(
-                child: PageTransitionSwitcher(
+                child: AnimatedSwitcher(
                   duration: const Duration(
                     milliseconds: 400,
                   ),
-                  transitionBuilder: (
-                    Widget child,
-                    Animation<double> animation,
-                    Animation<double> secondaryAnimation,
+                  layoutBuilder: (
+                    Widget? currentChild,
+                    List<Widget> previousChildren,
                   ) {
-                    final GlobalKey<NavigatorState> navigatorKey =
-                        navigationPages
-                            .firstWhere(
-                              (page) => page.route == child,
-                            )
-                            .navigatorKey;
-
-                    return NavigatorPopHandler(
-                      onPop: () => navigatorKey.currentState!.pop(),
-                      child: Navigator(
-                        key: navigatorKey,
-                        onGenerateRoute: (RouteSettings settings) {
-                          return MaterialPageRoute(
-                            builder: (BuildContext context) {
-                              return SharedAxisTransition(
-                                transitionType:
-                                    SharedAxisTransitionType.vertical,
-                                animation: animation,
-                                secondaryAnimation: secondaryAnimation,
-                                child: child,
-                              );
-                            },
-                          );
-                        },
-                      ),
+                    return currentChild ?? Container();
+                  },
+                  transitionBuilder:
+                      (Widget child, Animation<double> animation) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: child,
                     );
                   },
-                  child: navigationPage.route,
+                  child: NavigatorPopHandler(
+                    key: ValueKey(
+                      navigationPage.label,
+                    ),
+                    onPop: navigationPage.navigatorKey.currentState?.pop,
+                    child: Navigator(
+                      key: navigationPage.navigatorKey,
+                      onGenerateRoute: (
+                        RouteSettings settings,
+                      ) {
+                        return MaterialPageRoute(
+                          builder: (BuildContext context) {
+                            return navigationPage.route;
+                          },
+                        );
+                      },
+                    ),
+                  ),
                 ),
               ),
             ],
