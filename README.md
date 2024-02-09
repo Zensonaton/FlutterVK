@@ -18,19 +18,49 @@
 > Приложение часто меняет свой облик, поэтому учтите, что приложение может немного отличаться от того, что показано на скриншотах.
 
 <div align="center">
-  <img src="assets/screenshots/Windows Music Page.png" alt="Скриншот Windows, страница «Музыка»" width=625>
-</div>
+  <i>Полноэкранный плеер:</i>
 
-<div align="center">
   <img src="assets/screenshots/Windows Fullscreen Player.png" alt="Скриншот Windows, полноэкранный плеер" width=625>
 </div>
 
+<br>
+
 <div align="center">
+  <i>Главная страница:</i>
+
+  <img src="assets/screenshots/Windows Music Page.png" alt="Скриншот Windows, страница «Музыка» (светлая и тёмная)" width=625>
+</div>
+
+<br>
+
+<div align="center">
+  <i>Страница «Любимая музыка»</i>
+
+  <img src="assets/screenshots/Windows Favorite Music Page.png" alt="Скриншот Windows, страница «Любимая музыка» (светлая и тёмная)" width=625>
+</div>
+
+<br>
+
+<div align="center">
+  <i>Цветовая схема приложения может меняться в зависимости от обложки текущего трека, если включена особая настройка:</i>
+
+  <img src="assets/screenshots/Android Colorful.png" alt="Скриншот Android, страница «Музыка» (тёмная, разные цвета)" width=310>
+</div>
+
+<br>
+
+<div align="center">
+  <i>Android, главный экран:</i>
+
   <img src="assets/screenshots/Android Music Page Light.png" alt="Скриншот Android, страница «Музыка» (светлая)" width=310>
   <img src="assets/screenshots/Android Music Page Dark.png" alt="Скриншот Android, страница «Музыка» (тёмная)" width=310>
 </div>
 
+<br>
+
 <div align="center">
+  <i>Android, полноэкранный плеер:</i>
+
   <img src="assets/screenshots/Android Fullscreen Player 1.png" alt="Скриншот Android, полноэкранный плеер" width=310>
   <img src="assets/screenshots/Android Fullscreen Player 2.png" alt="Скриншот Android, полноэкранный плеер (с тексом)" width=310>
 </div>
