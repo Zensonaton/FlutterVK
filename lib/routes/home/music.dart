@@ -1605,6 +1605,11 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
         (bool playing) => setState(() {}),
       ),
 
+      // Изменения состояния остановки/запуска плеера.
+      player.loadedStateStream.listen(
+        (bool loaded) => setState(() {}),
+      ),
+
       // Изменения плейлиста.
       player.sequenceStateStream.listen(
         (SequenceState? state) => setState(() {}),

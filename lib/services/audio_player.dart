@@ -492,7 +492,9 @@ class VKMusicPlayer {
   ///
   /// Данный метод стоит вызывать только в случае, когда пользователь остановил воспроизведение, к примеру, убив приложение или свернув уведомление. Для паузы стоит воспользоваться методом [pause].
   Future<void> stop() async {
+    await _player.pause();
     await _player.stop();
+    await updateMusicSession();
     await stopMusicSession();
 
     _playlist = null;
