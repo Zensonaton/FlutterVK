@@ -18,7 +18,6 @@ class TrackNameInfoWidget extends StatelessWidget {
   const TrackNameInfoWidget({
     super.key,
     required this.width,
-    this.image,
     required this.scheme,
     this.useBigLayout = false,
     this.audio,
@@ -36,9 +35,6 @@ class TrackNameInfoWidget extends StatelessWidget {
 
   /// Ширина для данного блока.
   final double width;
-
-  /// [ImageProvider], отображаемый как изображение данного трека.
-  final ImageProvider? image;
 
   /// Цветовая схема класса [ColorScheme].
   final ColorScheme scheme;
@@ -83,6 +79,9 @@ class TrackNameInfoWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String? imageUrl = audio?.album?.thumb?.photo68;
+    final double imageSize = useBigLayout ? 60 : 50;
+
     return MouseRegion(
       cursor:
           useBigLayout ? SystemMouseCursors.basic : SystemMouseCursors.click,
@@ -101,8 +100,8 @@ class TrackNameInfoWidget extends StatelessWidget {
               Flexible(
                 child: FittedBox(
                   child: SizedBox(
-                    width: useBigLayout ? 60 : 50,
-                    height: useBigLayout ? 60 : 50,
+                    width: imageSize,
+                    height: imageSize,
                     child: InkWell(
                       onTap: () => onFullscreen?.call(false),
                       child: Hero(
@@ -128,14 +127,21 @@ class TrackNameInfoWidget extends StatelessWidget {
                               ),
                               child: SizedBox(
                                 key: ValueKey(
-                                  audio?.mediaKey ?? "",
+                                  imageUrl != null ? audio?.mediaKey : null,
                                 ),
-                                width: 60,
-                                height: 600,
-                                child: image != null
-                                    ? Image(
-                                        image: image!,
-                                        gaplessPlayback: true,
+                                width: imageSize,
+                                height: imageSize,
+                                child: imageUrl != null
+                                    ? CachedNetworkImage(
+                                        imageUrl: imageUrl,
+                                        cacheKey: "${audio?.mediaKey}68",
+                                        memCacheHeight: imageSize.toInt(),
+                                        memCacheWidth: imageSize.toInt(),
+                                        placeholder: (BuildContext context,
+                                                String url) =>
+                                            const FallbackAudioAvatar(),
+                                        cacheManager:
+                                            CachedNetworkImagesManager.instance,
                                       )
                                     : const FallbackAudioAvatar(),
                               ),
@@ -411,8 +417,8 @@ class BottomMusicPlayer extends StatefulWidget {
     this.isShuffleEnabled = false,
     this.isRepeatEnabled = false,
     this.pauseOnMuteEnabled = false,
-    this.volume = 1,
-    this.progress = 0,
+    this.volume = 1.0,
+    this.progress = 0.0,
     this.onPlayStateToggle,
     this.onFavoriteStateToggle,
     this.onNextTrack,
@@ -432,9 +438,6 @@ class BottomMusicPlayer extends StatefulWidget {
 class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
   @override
   Widget build(BuildContext context) {
-    /// Url изображения данного трека.
-    final String? imageUrl = widget.audio?.album?.thumb?.photo68;
-
     /// Размеры блоков слева и справа (блок с названием и блок с управлением громкостью.)
     ///
     /// Данные блоки обязаны иметь одинаковый размер, поскольку в [Row] используется [MainAxisAlignment.spaceBetween].
@@ -511,13 +514,6 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                       width: sideBlocksSize,
                       scheme: widget.scheme,
                       audio: widget.audio,
-                      image: imageUrl != null
-                          ? CachedNetworkImageProvider(
-                              imageUrl,
-                              cacheKey: "${widget.audio!.mediaKey}68",
-                              cacheManager: CachedNetworkImagesManager.instance,
-                            )
-                          : null,
                       useBigLayout: widget.useBigLayout,
                       playbackState: widget.playbackState,
                       favoriteState: widget.favoriteState,
