@@ -509,6 +509,7 @@ class _SearchDisplayDialogState extends State<SearchDisplayDialog> {
                         ExtendedVKPlaylist(
                           id: -1,
                           ownerID: user.id!,
+                          audios: audios,
                           count: audios.length,
                           title: AppLocalizations.of(context)!
                               .music_searchPlaylistTitle,
