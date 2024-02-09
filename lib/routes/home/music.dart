@@ -649,8 +649,6 @@ class _TrackInfoEditDialogState extends State<TrackInfoEditDialog> {
                 setState(() => trackGenre = genreID);
               },
               initialSelection: widget.audio.genreID ?? 18, // Жанр "Other".
-              width:
-                  500 - 24 * 2, // Не очень красивое решение. Спасибо, Flutter.
               dropdownMenuEntries: [
                 for (MapEntry<int, String> genre in musicGenres.entries)
                   DropdownMenuEntry(
