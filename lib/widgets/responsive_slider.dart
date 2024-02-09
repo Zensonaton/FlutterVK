@@ -6,12 +6,12 @@ class ResponsiveSlider extends StatefulWidget {
   final double value;
 
   /// Callback-метод, вызываемый после окончания скроллинга.
-  final Function(double) onChangeEnd;
+  final Function(double)? onChangeEnd;
 
   const ResponsiveSlider({
     super.key,
     required this.value,
-    required this.onChangeEnd,
+    this.onChangeEnd,
   });
 
   @override
@@ -32,7 +32,9 @@ class _ResponsiveSliderState extends State<ResponsiveSlider> {
         setState(() => scrollValue = value);
       },
       onChangeEnd: (double value) async {
-        await widget.onChangeEnd(value);
+        if (widget.onChangeEnd != null) {
+          await widget.onChangeEnd!(value);
+        }
 
         scrollValue = null;
       },

@@ -320,6 +320,7 @@ class _BottomMusicPlayerWidgetState extends State<BottomMusicPlayerWidget> {
   @override
   Widget build(BuildContext context) {
     final UserProvider user = Provider.of<UserProvider>(context);
+
     final PlayerSchemeProvider colorScheme =
         Provider.of<PlayerSchemeProvider>(context, listen: false);
 
@@ -347,6 +348,8 @@ class _BottomMusicPlayerWidgetState extends State<BottomMusicPlayerWidget> {
       playbackState: player.playing,
       progress: player.progress,
       volume: player.volume,
+      position: player.position,
+      duration: player.duration ?? Duration.zero,
       isBuffering: player.buffering,
       isShuffleEnabled: player.shuffleModeEnabled,
       isRepeatEnabled: player.loopMode == LoopMode.one,
@@ -358,6 +361,7 @@ class _BottomMusicPlayerWidgetState extends State<BottomMusicPlayerWidget> {
         !player.currentAudio!.isLiked,
       ),
       onPlayStateToggle: (bool enabled) => player.playOrPause(enabled),
+      onProgressChange: (double progress) => player.seekNormalized(progress),
       onVolumeChange: (double volume) => player.setVolume(volume),
       onDismiss: () => player.stop(),
       onFullscreen: (bool viaSwipeUp) => openFullscreenPlayer(

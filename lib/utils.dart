@@ -89,7 +89,7 @@ Color lightenColor(Color color, double factor) {
 
 /// Преобразовывает передаваемое значение количества секунд в строку вида `MM:SS`
 String secondsAsString(int seconds) {
-  if (seconds <= 0) return "0";
+  if (seconds <= 0) return "00:00";
 
   final Duration duration = Duration(seconds: seconds);
   final String hrs = (duration.inHours).toString().padLeft(2, "0");

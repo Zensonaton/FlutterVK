@@ -144,7 +144,7 @@ class _ImageLyricsBlockState extends State<ImageLyricsBlock> {
         HeroMode(
           enabled: !lyricsLoadedAndShown,
           child: Hero(
-            tag: "image",
+            tag: player.currentAudio!.mediaKey,
             child: FittedBox(
               child: Padding(
                 padding: const EdgeInsets.all(

@@ -425,7 +425,7 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
               children: [
                 // Изображение трека.
                 Hero(
-                  tag: "image",
+                  tag: player.currentAudio!.mediaKey,
                   child: AnimatedSwitcher(
                     duration: const Duration(
                       milliseconds: 500,
