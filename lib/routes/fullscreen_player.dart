@@ -160,11 +160,16 @@ class _TrackLyricsBlockState extends State<TrackLyricsBlock> {
   /// Текст песни.
   late List<LyricTimestamp> lyrics;
 
+  /// Массив, содержащий в себе информацию о том, какие блоки текста песни видны/не видны на экране.
+  late List<bool>? visibilityIndexes;
+
   /// Указывает текущую активную строчку в тексте песни.
   int? currentLyricIndex;
 
-  /// Указывает, что виджет с текстом песни видим внутри ListView.
-  bool currentLyricIsVisible = false;
+  /// Указывает, что виджет с текстом песни виден внутри ListView.
+  bool get currentLyricIsVisible => visibilityIndexes != null
+      ? visibilityIndexes![currentLyricIndex ?? 0]
+      : false;
 
   @override
   void initState() {
@@ -182,10 +187,14 @@ class _TrackLyricsBlockState extends State<TrackLyricsBlock> {
     // Пытаемся найти текущий момент в тексте песни, если мы уже что-то воспроизвели.
     currentLyricIndex = getCurrentLyricIndex();
 
+    // Заполняем массив видимости строчек песни.
+    visibilityIndexes = List.generate(
+      lyrics.length,
+      (index) => index == currentLyricIndex,
+    );
+
     // Скроллим до этого момента в треке.
     if (currentLyricIndex != null) {
-      currentLyricIsVisible = true;
-
       scrollToIndex(
         currentLyricIndex!,
         checkVisibility: false,
@@ -274,9 +283,7 @@ class _TrackLyricsBlockState extends State<TrackLyricsBlock> {
             child: VisibilityDetector(
               key: ValueKey(index),
               onVisibilityChanged: (VisibilityInfo info) {
-                if (index != currentLyricIndex) return;
-
-                currentLyricIsVisible = info.visibleFraction > 0;
+                visibilityIndexes![index] = info.visibleFraction > 0;
               },
               child: TrackLyric(
                 line: lyric.line,
