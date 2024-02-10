@@ -1049,9 +1049,6 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
         ),
       ),
       child: Material(
-        // color: widget.selected
-        //     ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
-        //     : Colors.transparent,
         color: Colors.transparent,
         child: InkWell(
           onTap: widget.onPlay,

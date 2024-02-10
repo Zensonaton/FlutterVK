@@ -55,6 +55,8 @@ class VKMusicPlayer {
         (SequenceState? state) async {
           if (state == null || currentAudio == null) return;
 
+          _fakeCurrentTrackIndex = null;
+
           await updateMusicSessionTrack();
           await updateMusicSession();
         },
@@ -96,6 +98,9 @@ class VKMusicPlayer {
   bool get discordRPCEnabled => _discordRPCEnabled;
 
   bool _loaded = false;
+
+  /// Фейковый индекс трека, который играет в данный момент. Используется, что бы изменение трека после вызовов типа [next] или [previous] происходило мгновенно.
+  int? _fakeCurrentTrackIndex;
 
   /// Указывает, что аудио плеер загружен (т.е., был запущен хоть раз), и его стоит показать в интерфейсе.
   ///
@@ -145,13 +150,15 @@ class VKMusicPlayer {
   /// Возвращает null, если сейчас ничего не играет.
   ///
   /// Если Вам необходим Stream для отслеживания изменения данного поля, то воспользуйтесь [positionStream].
-  double get progress => _player.duration != null && !buffering
-      ? clampDouble(
-          _player.position.inMilliseconds / _player.duration!.inMilliseconds,
-          0.0,
-          1.0,
-        )
-      : 0.0;
+  double get progress =>
+      _player.duration != null && !buffering && _player.duration != null
+          ? clampDouble(
+              _player.position.inMilliseconds /
+                  _player.duration!.inMilliseconds,
+              0.0,
+              1.0,
+            )
+          : 0.0;
 
   /// Возвращает текущую позицию трека.
   ///
@@ -218,7 +225,40 @@ class VKMusicPlayer {
   /// Для получения объекта типа [Audio] можно воспользоваться getter'ом [nextAudio].
   int? get nextTrackIndex => _player.nextIndex;
 
-  /// Возвращает объект [Audio] для трека, который находится предыдущим в очереди. Если очередь пуста, либо это самый первый трек в очереди, то возвращает null.
+  /// Указывает индекс предыдущего трека в очереди.
+  ///
+  /// В отличии от [previousTrackIndex], данный метод возвращает трек в зависимости от значений [LoopMode]: если включён повтор плейлиста ([LoopMode.all]), то данный метод будет возвращать последний трек из очереди, если текущий трек самый первый.
+  ///
+  /// Для получения объекта типа [Audio] можно воспользоваться getter'ом [smartPreviousAudio].
+  int? get smartPreviousTrackIndex {
+    if (loopMode == LoopMode.one) {
+      return smartTrackIndex;
+    }
+
+    return previousTrackIndex ?? (_audiosQueue ?? []).length - 1;
+  }
+
+  /// Указывает индекс текущего трека в очереди.
+  ///
+  /// Для получения объекта типа [Audio] можно воспользоваться getter'ом [smartCurrentAudio].
+  int? get smartTrackIndex {
+    return _fakeCurrentTrackIndex ?? trackIndex;
+  }
+
+  /// Указывает индекс следующего трека в очереди.
+  ///
+  /// В отличии от [nextTrackIndex], данный метод возвращает трек в зависимости от значений [LoopMode]: если включён повтор плейлиста ([LoopMode.all]), то данный метод будет возвращать последний трек из очереди, если текущий трек самый первый.
+  ///
+  /// Для получения объекта типа [Audio] можно воспользоваться getter'ом [smartNextAudio].
+  int? get smartNextTrackIndex {
+    if (loopMode == LoopMode.one) {
+      return smartTrackIndex;
+    }
+
+    return nextTrackIndex ?? 0;
+  }
+
+  /// Возвращает объект [ExtendedVKAudio] для трека, который находится предыдущим в очереди. Если очередь пуста, либо это самый первый трек в очереди, то возвращает null.
   ///
   /// Для получения индекса этого трека можно воспользоваться getter'ом [previousTrackIndex].
   ExtendedVKAudio? get previousAudio {
@@ -227,7 +267,7 @@ class VKMusicPlayer {
     return _audiosQueue?[previousTrackIndex!];
   }
 
-  /// Возвращает объект [Audio] для трека, который находится предыдущим в очереди. Если очередь пуста, либо это самый первый трек в очереди, то возвращает null.
+  /// Возвращает объект [ExtendedVKAudio] для трека, который играет в данный момент. Если очередь пуста, то возвращает null.
   ///
   /// Для получения индекса этого трека можно воспользоваться getter'ом [trackIndex].
   ExtendedVKAudio? get currentAudio {
@@ -236,13 +276,40 @@ class VKMusicPlayer {
     return _audiosQueue?[trackIndex!];
   }
 
-  /// Возвращает объект [Audio] для трека, который находится предыдущим в очереди. Если очередь пуста, либо это самый первый трек в очереди, то возвращает null.
+  /// Возвращает объект [ExtendedVKAudio] для трека, который находится предыдущим в очереди. Если очередь пуста, либо это последний трек в очереди, то возвращает null.
   ///
   /// Для получения индекса этого трека можно воспользоваться getter'ом [nextTrackIndex].
   ExtendedVKAudio? get nextAudio {
     if (nextTrackIndex == null) return null;
 
     return _audiosQueue?[nextTrackIndex!];
+  }
+
+  /// Возвращает объект [ExtendedVKAudio] для трека, который находится предыдущим в очереди. Если очередь пуста, либо это самый первый трек в очереди, то возвращает null.
+  ///
+  /// Для получения индекса этого трека можно воспользоваться getter'ом [smartPreviousTrackIndex].
+  ExtendedVKAudio? get smartPreviousAudio {
+    if (smartPreviousTrackIndex == null) return null;
+
+    return _audiosQueue?[smartPreviousTrackIndex!];
+  }
+
+  /// Возвращает объект [ExtendedVKAudio] для трека, который играет в данный момент. Если очередь пуста, то возвращает null.
+  ///
+  /// Для получения индекса этого трека можно воспользоваться getter'ом [smartTrackIndex].
+  ExtendedVKAudio? get smartCurrentAudio {
+    if (smartTrackIndex == null) return null;
+
+    return _audiosQueue?[smartTrackIndex!];
+  }
+
+  /// Возвращает объект [ExtendedVKAudio] для трека, который находится предыдущим в очереди. Если очередь пуста, либо это последний трек в очереди, то возвращает null.
+  ///
+  /// Для получения индекса этого трека можно воспользоваться getter'ом [smartNextTrackIndex].
+  ExtendedVKAudio? get smartNextAudio {
+    if (smartNextTrackIndex == null) return null;
+
+    return _audiosQueue?[smartNextTrackIndex!];
   }
 
   /// Возвращает текущий плейлист.
@@ -471,10 +538,14 @@ class VKMusicPlayer {
   }
 
   /// Переключает на трек с указанным индексом.
-  Future<void> jump(int position) async {
+  Future<void> jump(
+    int index,
+  ) async {
+    _fakeCurrentTrackIndex = index;
+
     return await _player.seek(
       null,
-      index: position,
+      index: index,
     );
   }
 
@@ -523,7 +594,7 @@ class VKMusicPlayer {
 
   /// Запускает воспроизведение следующего трека. Если это последний трек в плейлисте, то ничего не делает.
   Future<void> next() async {
-    await _player.seekToNext();
+    await jump(nextTrackIndex!);
 
     if (!playing) await play();
   }
@@ -537,7 +608,7 @@ class VKMusicPlayer {
     if (allowSeekToBeginning && _player.position.inSeconds >= 5) {
       await seekToBeginning();
     } else {
-      await _player.seekToPrevious();
+      await jump(previousTrackIndex!);
     }
 
     if (!playing) await play();

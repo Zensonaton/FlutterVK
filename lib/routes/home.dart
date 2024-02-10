@@ -338,9 +338,9 @@ class _BottomMusicPlayerWidgetState extends State<BottomMusicPlayerWidget> {
     );
 
     return BottomMusicPlayer(
-      audio: player.currentAudio,
-      previousAudio: player.previousAudio,
-      nextAudio: player.nextAudio,
+      audio: player.smartCurrentAudio,
+      nextAudio: player.smartNextAudio,
+      previousAudio: player.smartPreviousAudio,
       scheme: colorScheme.colorScheme(Theme.of(context).brightness) ??
           Theme.of(context).colorScheme,
       favoriteState:

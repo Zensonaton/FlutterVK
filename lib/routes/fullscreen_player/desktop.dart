@@ -118,9 +118,12 @@ class _NextTrackInfoWidgetState extends State<NextTrackInfoWidget> {
     super.initState();
 
     subscriptions = [
+      // Изменения позиции плеера.
       player.positionStream.listen(
         (Duration? state) => setState(() {}),
       ),
+
+      // Изменение текущего трека.
       player.sequenceStateStream.listen(
         (SequenceState? state) => setState(() {}),
       ),
@@ -140,7 +143,7 @@ class _NextTrackInfoWidgetState extends State<NextTrackInfoWidget> {
   Widget build(BuildContext context) {
     /// Определяет по оставшейся длине трека то, стоит ли показывать надпись со следующим треком.
     final bool displayNextTrack =
-        (player.currentAudio != null && player.nextAudio != null)
+        (player.smartCurrentAudio != null && player.smartNextAudio != null)
             ? (player.progress >= nextPlayingTextProgress)
             : false;
 
@@ -172,9 +175,10 @@ class _NextTrackInfoWidgetState extends State<NextTrackInfoWidget> {
                 borderRadius: BorderRadius.circular(
                   globalBorderRadius,
                 ),
-                child: player.nextAudio!.album?.thumb != null
+                child: player.smartNextAudio!.album?.thumb != null
                     ? CachedNetworkImage(
-                        imageUrl: player.nextAudio!.album!.thumb!.photo600!,
+                        imageUrl:
+                            player.smartNextAudio!.album!.thumb!.photo600!,
                         cacheKey: "${player.nextAudio!.mediaKey}600",
                         width: 32,
                         height: 32,
@@ -209,7 +213,7 @@ class _NextTrackInfoWidgetState extends State<NextTrackInfoWidget> {
                     ),
                   ),
                   Text(
-                    "${player.nextAudio!.artist} • ${player.nextAudio!.title}",
+                    "${player.smartNextAudio!.artist} • ${player.smartNextAudio!.title}",
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontWeight: FontWeight.w500,
@@ -843,7 +847,7 @@ class _FullscreenPlayerDesktopRouteState
               const PlaylistTitleWidget(),
 
               // Надпись со следующим треком.
-              if (player.nextAudio != null) const NextTrackInfoWidget(),
+              if (player.smartNextAudio != null) const NextTrackInfoWidget(),
 
               // Информация по текущему треку и медиаплеер.
               const SizedBox(

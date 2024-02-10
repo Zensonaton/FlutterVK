@@ -10,14 +10,12 @@ import "../utils.dart";
 import "fallback_audio_photo.dart";
 import "responsive_slider.dart";
 import "scrollable_slider.dart";
-import "swipe_detector.dart";
 
 /// Виджет, расположенный поверх нижней части [BottomMusicPlayer], показывая прогресс прослушивания текущего трека.
 class BottomMusicProgressBar extends StatelessWidget {
   const BottomMusicProgressBar({
     super.key,
     required this.scheme,
-    this.useBigLayout = false,
     this.isBuffering = false,
     this.playbackState = false,
     this.progress = 0.0,
@@ -25,9 +23,6 @@ class BottomMusicProgressBar extends StatelessWidget {
 
   /// Цветовая схема класса [ColorScheme].
   final ColorScheme scheme;
-
-  /// Если [true], то тогда будет использоваться альтернативный вид плеера, который предназначен для desktop-интерфейса.
-  final bool useBigLayout;
 
   /// Указывает, что в данный момент происходит буферизация.
   final bool isBuffering;
@@ -45,8 +40,8 @@ class BottomMusicProgressBar extends StatelessWidget {
     return Align(
       alignment: Alignment.bottomLeft,
       child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: useBigLayout ? 0 : 18,
+        padding: const EdgeInsets.symmetric(
+          horizontal: 18,
         ),
         child: isBuffering
             ? LinearProgressIndicator(
@@ -122,6 +117,57 @@ class NextTrackInfoWidget extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Виджет, отображающий информацию по названию трека, а так же его исполнителю.
+class TrackTitleAndArtist extends StatelessWidget {
+  /// Название трека.
+  final String title;
+
+  /// Исполнитель трека.
+  final String artist;
+
+  /// Цветовая схема.
+  final ColorScheme scheme;
+
+  const TrackTitleAndArtist({
+    super.key,
+    required this.title,
+    required this.artist,
+    required this.scheme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Название трека.
+        Text(
+          title,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: scheme.onPrimaryContainer,
+          ),
+        ),
+
+        // Исполнитель.
+        Text(
+          artist,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 12,
+            color: scheme.onPrimaryContainer.withOpacity(
+              0.9,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -249,23 +295,39 @@ class BottomMusicPlayer extends StatefulWidget {
 }
 
 class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
+  /// Прогресс скроллинга блока с названием трека. Имеет значение от `-1.0` до `1.0`, где `0.0` олицетворяет то, что трек ещё не скроллился, `-1.0` - пользователь доскроллил до предыдущего трека, `1.0` - пользователь доскроллил до следующего трека.
+  double _dragProgress = 0.0;
+
   @override
   Widget build(BuildContext context) {
+    // Размер Padding'а для всех блоков внутри Stack'а.
     final double padding = widget.useBigLayout ? 14 : 8;
 
+    // Ширина проигрывателя.
     final double width = MediaQuery.of(context).size.width - padding * 2;
 
+    // Размер центрального блока, в котором производится управление музыкой в Desktop Layout'е.
     final double centerBlockSize = clampDouble(
       width / 2.5,
       100,
       600,
     );
 
+    // Размер блоков слева.
     final double leftAndRightBlocksSize =
         widget.useBigLayout ? (width - centerBlockSize) / 2 : width - 104;
 
+    /// Url на изображение трека.
     final String? imageUrl = widget.audio?.album?.thumb?.photo68;
+
+    /// Размер изображения трека.
     final double imageSize = widget.useBigLayout ? 60 : 50;
+
+    /// Чувствительность для скроллинга.
+    const scrollSensetivity = 200.0;
+
+    /// Ширина блока для скроллинга. При увеличении данного значения, предыдущий/следующий треки будут появляться на большем расстоянии.
+    const scrollWidth = 150.0;
 
     /// Определяет по оставшейся длине трека то, стоит ли показывать надпись со следующим треком.
     final bool displayNextTrack =
@@ -273,6 +335,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
             ? (widget.progress >= nextPlayingTextProgress)
             : false;
 
+    /// Кнопка для паузы и/ли воспроизведения музыки.
     final Widget playPauseButton = widget.useBigLayout
         ? IconButton(
             onPressed: () =>
@@ -331,19 +394,39 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                   cursor: widget.useBigLayout
                       ? SystemMouseCursors.basic
                       : SystemMouseCursors.click,
-                  child: SwipeDetector(
+                  child: GestureDetector(
                     behavior: HitTestBehavior.translucent,
-                    onTap: !widget.useBigLayout
-                        ? () => widget.onFullscreen?.call(false)
-                        : null,
-                    onSwipeUp: !widget.useBigLayout
-                        ? () => widget.onFullscreen?.call(true)
-                        : null,
-                    onSwipeDown: !widget.useBigLayout ? widget.onDismiss : null,
-                    onSwipeLeft:
-                        !widget.useBigLayout ? widget.onNextTrack : null,
-                    onSwipeRight:
-                        !widget.useBigLayout ? widget.onPreviousTrack : null,
+                    onTap: widget.useBigLayout
+                        ? null
+                        : () => widget.onFullscreen?.call(false),
+                    onHorizontalDragUpdate: widget.useBigLayout
+                        ? null
+                        : (DragUpdateDetails details) {
+                            _dragProgress = clampDouble(
+                              _dragProgress -
+                                  details.primaryDelta! / scrollSensetivity,
+                              -1.0,
+                              1.0,
+                            );
+
+                            setState(() {});
+                          },
+                    onHorizontalDragEnd: widget.useBigLayout
+                        ? null
+                        : (DragEndDetails details) {
+                            if (_dragProgress > 0.5) {
+                              // Запуск следующего трека.
+
+                              widget.onNextTrack?.call();
+                            } else if (_dragProgress < -0.5) {
+                              // Запуск предыдущего трека.
+
+                              widget.onPreviousTrack?.call();
+                            }
+
+                            _dragProgress = 0.0;
+                            setState(() {});
+                          },
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -411,33 +494,72 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
 
                         // Название и исполнитель трека.
                         Flexible(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          child: Stack(
+                            alignment: Alignment.centerLeft,
                             children: [
-                              // Название трека.
-                              Text(
-                                widget.audio?.title ?? "",
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: widget.scheme.onPrimaryContainer,
-                                ),
-                              ),
-
-                              // Исполнитель.
-                              Text(
-                                widget.audio?.artist ?? "",
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: widget.scheme.onPrimaryContainer
-                                      .withOpacity(
-                                    0.9,
+                              // Текущий трек.
+                              ClipRRect(
+                                child: Transform.translate(
+                                  offset: Offset(
+                                    _dragProgress * -scrollWidth,
+                                    0.0,
+                                  ),
+                                  child: Opacity(
+                                    opacity: 1.0 - _dragProgress.abs(),
+                                    child: SizedBox(
+                                      width: widget.useBigLayout
+                                          ? null
+                                          : double.infinity,
+                                      child: TrackTitleAndArtist(
+                                        title: widget.audio?.title ?? "",
+                                        artist: widget.audio?.artist ?? "",
+                                        scheme: widget.scheme,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
+
+                              // Другой трек.
+                              if (_dragProgress != 0.0)
+                                ClipRRect(
+                                  child: Transform.translate(
+                                    offset: Offset(
+                                      (_dragProgress > 0.0
+                                              ? scrollWidth
+                                              : -scrollWidth) -
+                                          _dragProgress * scrollWidth,
+                                      0.0,
+                                    ),
+                                    child: Opacity(
+                                      opacity: _dragProgress.abs(),
+                                      child: SizedBox(
+                                        width: widget.useBigLayout
+                                            ? null
+                                            : double.infinity,
+                                        child: _dragProgress > 0.0
+                                            ? TrackTitleAndArtist(
+                                                title:
+                                                    widget.nextAudio?.title ??
+                                                        "",
+                                                artist:
+                                                    widget.nextAudio?.artist ??
+                                                        "",
+                                                scheme: widget.scheme,
+                                              )
+                                            : TrackTitleAndArtist(
+                                                title: widget
+                                                        .previousAudio?.title ??
+                                                    "",
+                                                artist: widget.previousAudio
+                                                        ?.artist ??
+                                                    "",
+                                                scheme: widget.scheme,
+                                              ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
                             ],
                           ),
                         ),
@@ -717,7 +839,6 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
               isBuffering: widget.isBuffering,
               playbackState: widget.playbackState,
               progress: widget.progress,
-              useBigLayout: widget.useBigLayout,
             )
         ],
       ),
