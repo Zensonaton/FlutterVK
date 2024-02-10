@@ -361,9 +361,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                     BoxShadow(
                                       blurRadius: 5,
                                       spreadRadius: -1,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .tertiary,
+                                      color: widget.scheme.tertiary,
                                       blurStyle: BlurStyle.outer,
                                     )
                                   ],
@@ -424,9 +422,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onBackground,
+                                  color: widget.scheme.onPrimaryContainer,
                                 ),
                               ),
 
@@ -436,12 +432,10 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onBackground
+                                  color: widget.scheme.onPrimaryContainer
                                       .withOpacity(
-                                        0.9,
-                                      ),
+                                    0.9,
+                                  ),
                                 ),
                               ),
                             ],
@@ -461,9 +455,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                               widget.favoriteState
                                   ? Icons.favorite
                                   : Icons.favorite_outline,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onPrimaryContainer,
+                              color: widget.scheme.onPrimaryContainer,
                             ),
                           ),
                       ],
@@ -510,9 +502,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                               borderRadius: BorderRadius.circular(
                                 globalBorderRadius,
                               ),
-                              backgroundColor: Theme.of(context)
-                                  .colorScheme
-                                  .onPrimaryContainer
+                              backgroundColor: widget.scheme.onPrimaryContainer
                                   .withOpacity(0.5),
                             ),
                           ),
@@ -523,9 +513,11 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                             data: SliderThemeData(
                               trackShape: CustomTrackShape(),
                               overlayShape: SliderComponentShape.noOverlay,
-                              inactiveTrackColor: Theme.of(context)
-                                  .colorScheme
-                                  .onPrimaryContainer
+                              activeTrackColor:
+                                  widget.scheme.onPrimaryContainer,
+                              thumbColor: widget.scheme.onPrimaryContainer,
+                              inactiveTrackColor: widget
+                                  .scheme.onPrimaryContainer
                                   .withOpacity(0.5),
                             ),
                             child: ResponsiveSlider(
@@ -547,9 +539,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                     widget.position.inSeconds,
                                   ),
                                   style: TextStyle(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onPrimaryContainer
+                                    color: widget.scheme.onPrimaryContainer
                                         .withOpacity(0.75),
                                   ),
                                 ),
@@ -615,9 +605,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                     widget.duration.inSeconds,
                                   ),
                                   style: TextStyle(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onPrimaryContainer
+                                    color: widget.scheme.onPrimaryContainer
                                         .withOpacity(0.75),
                                   ),
                                 ),
