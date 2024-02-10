@@ -81,20 +81,20 @@ jobs:
           $telegramToken = $env:TELEGRAM_TOKEN
           $telegramTo = $env:TELEGRAM_TO
 
-          # Portable
-          Invoke-RestMethod -Uri "https://api.telegram.org/bot$telegramToken/sendDocument" -Method Post -Form @{
-              chat_id = $telegramTo
-              caption = '<b>🚧 Новый билд для #Windows #portable</b>.'
-              parse_mode = 'HTML'
-              document = Get-Item -Path './build/Flutter VK portable.7z'
-          }
-
           # Installer
           Invoke-RestMethod -Uri "https://api.telegram.org/bot$telegramToken/sendDocument" -Method Post -Form @{
               chat_id = $telegramTo
               caption = '<b>🚧 Новый билд для #Windows #installer</b>.'
               parse_mode = 'HTML'
               document = Get-Item -Path './build/Flutter VK installer.exe'
+          }
+
+          # Portable
+          Invoke-RestMethod -Uri "https://api.telegram.org/bot$telegramToken/sendDocument" -Method Post -Form @{
+              chat_id = $telegramTo
+              caption = '<b>🚧 Новый билд для #Windows #portable</b>.'
+              parse_mode = 'HTML'
+              document = Get-Item -Path './build/Flutter VK portable.7z'
           }
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
