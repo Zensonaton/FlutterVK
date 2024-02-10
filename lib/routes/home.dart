@@ -477,28 +477,25 @@ class _HomeRouteState extends State<HomeRoute> {
 
               // Содержимое экрана.
               Expanded(
-                child: AnimatedSwitcher(
-                  duration: const Duration(
-                    milliseconds: 400,
-                  ),
-                  layoutBuilder: (
-                    Widget? currentChild,
-                    List<Widget> previousChildren,
-                  ) {
-                    return currentChild ?? Container();
-                  },
-                  transitionBuilder:
-                      (Widget child, Animation<double> animation) {
-                    return FadeTransition(
-                      opacity: animation,
-                      child: child,
-                    );
-                  },
-                  child: NavigatorPopHandler(
-                    key: ValueKey(
-                      navigationPage.label,
+                child: NavigatorPopHandler(
+                  onPop: () => navigationPage.navigatorKey.currentState?.pop(),
+                  child: AnimatedSwitcher(
+                    duration: const Duration(
+                      milliseconds: 400,
                     ),
-                    onPop: navigationPage.navigatorKey.currentState?.pop,
+                    layoutBuilder: (
+                      Widget? currentChild,
+                      List<Widget> previousChildren,
+                    ) {
+                      return currentChild ?? Container();
+                    },
+                    transitionBuilder:
+                        (Widget child, Animation<double> animation) {
+                      return FadeTransition(
+                        opacity: animation,
+                        child: child,
+                      );
+                    },
                     child: Navigator(
                       key: navigationPage.navigatorKey,
                       onGenerateRoute: (
