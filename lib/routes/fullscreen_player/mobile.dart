@@ -204,10 +204,7 @@ class _ImageLyricsBlockState extends State<ImageLyricsBlock> {
           Align(
             alignment: Alignment.topCenter,
             child: AnimatedOpacity(
-              opacity: lyricsLoadedAndShown &&
-                      (ModalRoute.of(context)?.animation?.isCompleted ?? false)
-                  ? 1.0
-                  : 0.0,
+              opacity: lyricsLoadedAndShown ? 1.0 : 0.0,
               duration: const Duration(
                 milliseconds: 500,
               ),
