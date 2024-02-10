@@ -354,7 +354,7 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                   Row(
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
-                                      // Изображение плейлиста с кнопкой для выхода из этого экрана поверх него.
+                                      // Изображение плейлиста.
                                       ClipRRect(
                                         borderRadius: BorderRadius.circular(
                                             globalBorderRadius),
@@ -485,11 +485,14 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                         }
                                       : null,
                                   iconSize: 38,
+                                  color: Theme.of(context).colorScheme.primary,
                                   icon: Icon(
                                     player.currentPlaylist == widget.playlist &&
                                             player.playing
                                         ? Icons.pause
                                         : Icons.play_arrow,
+                                    color:
+                                        Theme.of(context).colorScheme.onPrimary,
                                   ),
                                 ),
                                 const SizedBox(
@@ -505,8 +508,11 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                           )
                                       : null,
                                   iconSize: 38,
-                                  icon: const Icon(
+                                  icon: Icon(
                                     Icons.arrow_circle_down,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onBackground,
                                   ),
                                 ),
                               ],
