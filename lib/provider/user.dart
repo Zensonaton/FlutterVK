@@ -389,7 +389,7 @@ class UserProvider extends ChangeNotifier {
   /// После данного вызова рекомендуется перекинуть пользователя на экран [WelcomeRoute].
   void logout() async {
     // Очищаем объект плеера.
-    player.dispose();
+    player.stop();
 
     // Очищаем все поля у пользователя.
     isAuthorized = false;
