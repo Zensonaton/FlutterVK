@@ -28,95 +28,107 @@ class _DesktopLoginWidgetState extends State<DesktopLoginWidget> {
 
   @override
   Widget build(BuildContext context) {
-    if (isMobile) {
-      return const Text(
-        "DesktopLoginWidget предназначен для работы на desktop-платформах.",
-      );
-    }
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          "Flutter VK",
+        ),
+        centerTitle: true,
+      ),
+      resizeToAvoidBottomInset: false,
+      body: Center(
+        child: Card(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: SizedBox(
+              width: 500,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Текст "Авторизация".
+                  Text(
+                    widget.useAlternateAuth
+                        ? AppLocalizations.of(context)!
+                            .login_desktopConnectRecommendationsTitle
+                        : AppLocalizations.of(context)!.login_desktopTitle,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(
+                    height: 12,
+                  ),
 
-    return Center(
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: SizedBox(
-            width: 500,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  widget.useAlternateAuth
-                      ? AppLocalizations.of(context)!
-                          .login_desktopConnectRecommendationsTitle
-                      : AppLocalizations.of(context)!.login_desktopTitle,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(
-                  height: 12,
-                ),
-                StyledText(
-                  text: widget.useAlternateAuth
-                      ? AppLocalizations.of(context)!
-                          .login_desktopConnectRecommendationsDescription
-                      : AppLocalizations.of(context)!.login_desktopDescription,
-                  style: Theme.of(context).textTheme.bodyLarge,
-                  tags: {
-                    "bold": StyledTextTag(
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    "link": StyledTextActionTag(
-                      (String? text, Map<String?, String?> attrs) => launchUrl(
-                        Uri.parse(
-                          widget.useAlternateAuth
-                              ? vkMusicRecommendationsOAuthURL
-                              : vkMainOAuthURL,
+                  // Описание авторизации.
+                  StyledText(
+                    text: widget.useAlternateAuth
+                        ? AppLocalizations.of(context)!
+                            .login_desktopConnectRecommendationsDescription
+                        : AppLocalizations.of(context)!
+                            .login_desktopDescription,
+                    style: Theme.of(context).textTheme.bodyLarge,
+                    tags: {
+                      "bold": StyledTextTag(
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                            color: Theme.of(context).colorScheme.primary,
+                      "link": StyledTextActionTag(
+                        (String? text, Map<String?, String?> attrs) =>
+                            launchUrl(
+                          Uri.parse(
+                            widget.useAlternateAuth
+                                ? vkMusicRecommendationsOAuthURL
+                                : vkMainOAuthURL,
                           ),
-                    ),
-                  },
-                ),
-                const SizedBox(
-                  height: 8,
-                ),
-                TextField(
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(
-                      Icons.key,
-                    ),
-                    hintText:
-                        "https://oauth.vk.com/blank.html#access_token=vk1...",
+                        ),
+                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                      ),
+                    },
                   ),
-                  onChanged: (String value) => setState(
-                    () => token = extractAccessToken(value),
+                  const SizedBox(
+                    height: 8,
                   ),
-                ),
-                const SizedBox(
-                  height: 36,
-                ),
-                Align(
-                  alignment: Alignment.bottomRight,
-                  child: FilledButton.icon(
-                    onPressed: token != null
-                        ? () => tryAuthorize(
-                              context,
-                              token!,
-                              widget.useAlternateAuth,
-                            )
-                        : null,
-                    icon: const Icon(
-                      Icons.arrow_forward_ios,
+
+                  // Поле для ввода токена.
+                  TextField(
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(
+                        Icons.key,
+                      ),
+                      hintText:
+                          "https://oauth.vk.com/blank.html#access_token=vk1...",
                     ),
-                    label: Text(
-                      AppLocalizations.of(context)!.login_desktopContinue,
+                    onChanged: (String value) => setState(
+                      () => token = extractAccessToken(value),
                     ),
                   ),
-                )
-              ],
+                  const SizedBox(
+                    height: 36,
+                  ),
+
+                  // Кнопки для продолжения авторизации.
+                  Align(
+                    alignment: Alignment.bottomRight,
+                    child: FilledButton.icon(
+                      onPressed: token != null
+                          ? () => tryAuthorize(
+                                context,
+                                token!,
+                                widget.useAlternateAuth,
+                              )
+                          : null,
+                      icon: const Icon(
+                        Icons.arrow_forward_ios,
+                      ),
+                      label: Text(
+                        AppLocalizations.of(context)!.login_desktopContinue,
+                      ),
+                    ),
+                  )
+                ],
+              ),
             ),
           ),
         ),

@@ -7,15 +7,24 @@ import "package:flutter/material.dart";
 
 /// Извлекает access-токен из строки.
 String? extractAccessToken(String input) {
-  Match? tokenMatch = RegExp(r"access_token=([^&]+)").firstMatch(input);
+  // Если строка начинается на vk1, то считаем, что это готовый access-токен.
+  if (input.startsWith("vk1")) {
+    return input;
+  }
+
+  Match? tokenMatch = RegExp(
+    r"access_token=([^&]+)",
+  ).firstMatch(
+    input,
+  );
 
   // Если ничего не найдено, то возвращаем null.
   if (tokenMatch == null) return null;
 
   String token = tokenMatch.group(1).toString();
 
-  // Если токен не начинается на `vk`, то возвращаем null.
-  if (!token.startsWith("vk")) return null;
+  // Если токен не начинается на `vk1`, то возвращаем null.
+  if (!token.startsWith("vk1")) return null;
 
   return token;
 }

@@ -14,6 +14,7 @@ import "package:share_plus/share_plus.dart";
 import "package:skeletonizer/skeletonizer.dart";
 import "package:styled_text/styled_text.dart";
 
+import "../../api/api.dart";
 import "../../api/audio/edit.dart";
 import "../../api/audio/search.dart";
 import "../../api/catalog/get_audio.dart";
@@ -79,13 +80,7 @@ Future<void> ensureUserAudioBasicInfo(
   try {
     final APIMassAudioGetResponse response =
         await user.scriptMassAudioGetWithAlbums(user.id!);
-
-    // Проверяем, что в ответе нет ошибок.
-    if (response.error != null) {
-      throw Exception(
-        "API error ${response.error!.errorCode}: ${response.error!.errorMessage}",
-      );
-    }
+    raiseOnAPIError(response);
 
     user.playlistsCount = response.response!.playlistsCount;
 
@@ -221,13 +216,7 @@ Future<void> ensureUserAudioRecommendations(
 
   try {
     final APICatalogGetAudioResponse response = await user.catalogGetAudio();
-
-    // Проверяем, что в ответе нет ошибок.
-    if (response.error != null) {
-      throw Exception(
-        "API error ${response.error!.errorCode}: ${response.error!.errorMessage}",
-      );
-    }
+    raiseOnAPIError(response);
 
     // Добавляем рекомендуемые плейлисты, а так же плейлисты из раздела "сделано редакцией ВКонтакте".
     user.allPlaylists.addAll(
@@ -675,13 +664,7 @@ class _TrackInfoEditDialogState extends State<TrackInfoEditDialog> {
                       artistController.text,
                       trackGenre,
                     );
-
-                    // Проверяем, что в ответе нет ошибок.
-                    if (response.error != null) {
-                      throw Exception(
-                        "API error ${response.error!.errorCode}: ${response.error!.errorMessage}",
-                      );
-                    }
+                    raiseOnAPIError(response);
 
                     // Обновляем данные о треке у пользователя.
                     widget.audio.title = titleController.text;

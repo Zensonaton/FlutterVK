@@ -6,6 +6,8 @@ import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "package:provider/provider.dart";
 import "package:styled_text/styled_text.dart";
 
+import "../api/api.dart";
+import "../api/catalog/get_audio.dart";
 import "../api/shared.dart";
 import "../api/users/get.dart";
 import "../provider/user.dart";
@@ -36,16 +38,25 @@ Future<bool> tryAuthorize(
 
   try {
     final APIUsersGetResponse response = await users_get(token);
+    raiseOnAPIError(response);
+
     if (!context.mounted) return false;
 
-    // Проверяем, что в ответе нет ошибок.
-    if (response.error != null) {
-      throw Exception(
-        "API error ${response.error!.errorCode}: ${response.error!.errorMessage}",
-      );
-    }
+    // Делаем ещё один запрос, благодаря которому можно проверить, есть ли доступ к каталогам рекомендаций или нет.
+    final bool musicCatalogAccess =
+        (await catalog_getAudio(token)).error == null;
+    if (!context.mounted) return false;
 
-    LoadingOverlay.of(context).hide();
+    // Если мы делаем обычную авторизацию, то доступа к каталогу быть не должно, в ином случае он должен быть.
+    if (useAlternateAuth != musicCatalogAccess) {
+      showErrorDialog(
+        context,
+        description:
+            AppLocalizations.of(context)!.login_noMusicAccessDescription,
+      );
+
+      return false;
+    }
 
     // Если мы проводим альтернативную авторизацию, то мы должны сохранить вторичный токен.
     if (useAlternateAuth) {
@@ -64,6 +75,8 @@ Future<bool> tryAuthorize(
 
       return true;
     }
+
+    LoadingOverlay.of(context).hide();
 
     User accountInfo = response.response![0];
 
@@ -91,7 +104,11 @@ Future<bool> tryAuthorize(
           );
         },
       );
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future.delayed(
+        const Duration(
+          milliseconds: 500,
+        ),
+      );
     }
 
     if (context.mounted) {
@@ -241,19 +258,14 @@ class LoginRoute extends StatefulWidget {
 class _LoginRouteState extends State<LoginRoute> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Flutter VK"),
-        centerTitle: true,
-      ),
-      resizeToAvoidBottomInset: false,
-      body: isMobile
-          ? MobileLoginWidget(
-              useAlternateAuth: widget.useAlternateAuth,
-            )
-          : DesktopLoginWidget(
-              useAlternateAuth: widget.useAlternateAuth,
-            ),
+    if (isMobile) {
+      return MobileLoginWidget(
+        useAlternateAuth: widget.useAlternateAuth,
+      );
+    }
+
+    return DesktopLoginWidget(
+      useAlternateAuth: widget.useAlternateAuth,
     );
   }
 }

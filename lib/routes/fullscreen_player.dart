@@ -14,6 +14,7 @@ import "package:styled_text/styled_text.dart";
 import "package:visibility_detector/visibility_detector.dart";
 import "package:wakelock_plus/wakelock_plus.dart";
 
+import "../api/api.dart";
 import "../api/audio/get_lyrics.dart";
 import "../consts.dart";
 import "../main.dart";
@@ -483,12 +484,7 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
 
       user.audioGetLyrics(player.currentAudio!.mediaKey).then(
         (APIAudioGetLyricsResponse response) {
-          // Проверяем, что в ответе нет ошибок.
-          if (response.error != null) {
-            throw Exception(
-              "API error ${response.error!.errorCode}: ${response.error!.errorMessage}",
-            );
-          }
+          raiseOnAPIError(response);
 
           // Сохраняем текст песни.
           player.currentAudio!.lyrics = response.response!.lyrics;

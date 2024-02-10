@@ -7,6 +7,7 @@ import "package:just_audio/just_audio.dart";
 import "package:provider/provider.dart";
 import "package:responsive_builder/responsive_builder.dart";
 
+import "../api/api.dart";
 import "../api/audio/add.dart";
 import "../api/audio/delete.dart";
 import "../api/audio/restore.dart";
@@ -94,26 +95,14 @@ Future<void> toggleTrackLike(
         audio.id,
         ownerID: audio.ownerID,
       );
-
-      // Проверяем, что в ответе нет ошибок.
-      if (response.error != null) {
-        throw Exception(
-          "API error ${response.error!.errorCode}: ${response.error!.errorMessage}",
-        );
-      }
+      raiseOnAPIError(response);
     } else {
       // Сохраняем трек как лайкнутый.
       final APIAudioAddResponse response = await user.audioAdd(
         audio.id,
         audio.ownerID,
       );
-
-      // Проверяем, что в ответе нет ошибок.
-      if (response.error != null) {
-        throw Exception(
-          "API error ${response.error!.errorCode}: ${response.error!.errorMessage}",
-        );
-      }
+      raiseOnAPIError(response);
 
       audio.oldID = audio.id;
       audio.oldOwnerID = audio.ownerID;
@@ -141,13 +130,7 @@ Future<void> toggleTrackLike(
       audio.id,
       audio.ownerID,
     );
-
-    // Проверяем, что в ответе нет ошибок.
-    if (response.error != null) {
-      throw Exception(
-        "API error ${response.error!.errorCode}: ${response.error!.errorMessage}",
-      );
-    }
+    raiseOnAPIError(response);
 
     // Всё ок, помечаем трек как не лайкнутый.
     user.favoritesPlaylist!.count -= 1;

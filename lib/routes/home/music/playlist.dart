@@ -13,6 +13,7 @@ import "package:skeletonizer/skeletonizer.dart";
 import "package:styled_text/tags/styled_text_tag_action.dart";
 import "package:styled_text/widgets/styled_text.dart";
 
+import "../../../api/api.dart";
 import "../../../api/executeScripts/mass_audio_get.dart";
 import "../../../api/shared.dart";
 import "../../../consts.dart";
@@ -41,13 +42,7 @@ Future<void> loadPlaylistData(
     albumID: playlist.id,
     accessKey: playlist.accessKey,
   );
-
-  // Проверяем, что в ответе нет ошибок.
-  if (response.error != null) {
-    throw Exception(
-      "API error ${response.error!.errorCode}: ${response.error!.errorMessage}",
-    );
-  }
+  raiseOnAPIError(response);
 
   playlist.audios = response.response!.audios
       .map(

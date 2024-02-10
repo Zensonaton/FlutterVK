@@ -26,7 +26,9 @@ Future<Response> apiPost(
   if (moreHeaders != null) headers.addAll(moreHeaders);
 
   // Избавляемся от null-полей.
-  body.removeWhere((String key, dynamic value) => value == null);
+  body.removeWhere(
+    (String key, dynamic value) => value == null,
+  );
 
   final response = await retry(
     () async {
@@ -89,5 +91,33 @@ Future<Response> vkAPIcall(
     body,
     moreHeaders: moreHeaders,
     retryHttpCodes: retryHttpCodes,
+  );
+}
+
+class VKAPIError implements Exception {
+  /// Код ошибки.
+  int? errorCode;
+
+  /// Текст ошибки.
+  String? message;
+
+  @override
+  String toString() => "VK API error $errorCode: $message";
+
+  VKAPIError(
+    this.errorCode,
+    this.message,
+  );
+}
+
+/// Проверяет передаваемый API-ответ от ВКонтакте на наличие поля `error`. Если таковое поле находится, то данный метод вызвает исключение.
+void raiseOnAPIError(
+  dynamic response,
+) {
+  if (response.error == null) return;
+
+  throw VKAPIError(
+    response.error.errorCode,
+    response.error.errorMessage,
   );
 }
