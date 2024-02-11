@@ -101,10 +101,10 @@ jobs:
 
           echo "Downloading & installing iscc..."
           curl -o "build/iscc-installer.exe" "https://files.jrsoftware.org/is/6/innosetup-6.2.0.exe"
-          ./build/iscc-installer.exe /verysilent /allusers /dir=build/iscc
+          powershell build\iscc-installer.exe /verysilent /allusers /dir=build\iscc
 
           echo "Creating installer"
-          ./build/iscc/iscc.exe windows-setup-creator.iss
+          powershell .\build\iscc\iscc.exe windows-setup-creator.iss
 
       - name: Publish in Telegram
         if: ${{ inputs.telegram }}
