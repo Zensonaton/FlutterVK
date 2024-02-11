@@ -9,14 +9,30 @@ on:
       - "pubspec.yaml"
   workflow_dispatch:
     inputs:
+      android:
+        type: boolean
+        description: 'Билд для Android.'
+        required: false
+        default: true
+      windows:
+        type: boolean
+        description: 'Билд для Windows.'
+        required: false
+        default: true
+      telegram:
+        type: boolean
+        description: 'Указывает, будет ли создаваться публикация в Telegram-канале.'
+        required: false
+        default: true
       debug:
         type: boolean
-        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        description: 'Запуск данного Action с SSH-подключением в случае, если билд оказался неудачным (https://github.com/marketplace/actions/debugging-with-tmate)'
         required: false
         default: false
 
 jobs:
   build_android:
+    if: ${{ inputs.android }}
     runs-on: ubuntu-latest
 
     steps:
@@ -48,6 +64,7 @@ jobs:
         run: flutter build apk --release
 
       - name: Publish in Telegram
+        if: ${{ inputs.telegram }}
         run: curl -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendDocument -F chat_id="${{ secrets.TELEGRAM_TO }}" -F caption=' <b>🚧 Новый билд для Android</b>.' -F parse_mode='HTML' -F document=@'./build/app/outputs/flutter-apk/app-release.apk'
 
       - name: Debug with SSH on fail
@@ -57,6 +74,7 @@ jobs:
           limit-access-to-actor: true
 
   build_windows:
+    if: ${{ inputs.windows }}
     needs: build_android
     runs-on: windows-latest
 
@@ -82,8 +100,13 @@ jobs:
           & "C:\Program Files\7-Zip\7z.exe" a -t7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on "./build/Flutter VK portable.7z" ./build/Windows/x64/runner/Release/
 
           Write-Output "Downloading & installing iscc..."
-          powershell "curl -o build\iscc-installer.exe http://files.jrsoftware.org/is/6/innosetup-6.2.0.exe; build\iscc-installer.exe /verysilent /allusers /dir=build\iscc; build\iscc\iscc.exe windows-setup-creator.iss"
+          curl -o build\iscc-installer.exe http://files.jrsoftware.org/is/6/innosetup-6.2.0.exe
+          ".\build\iscc-installer.exe" /verysilent /allusers /dir=build\iscc
+
+          Write-Output "Creating installer"
+          ".\build\iscc\iscc.exe" windows-setup-creator.iss
       - name: Publish in Telegram
+        if: ${{ inputs.telegram }}
         run: |
           $telegramToken = $env:TELEGRAM_TOKEN
           $telegramTo = $env:TELEGRAM_TO
