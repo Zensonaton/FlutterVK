@@ -100,10 +100,10 @@ jobs:
 
           Write-Output "Downloading & installing iscc..."
           curl -o build\iscc-installer.exe http://files.jrsoftware.org/is/6/innosetup-6.2.0.exe
-          ".\build\iscc-installer.exe" /verysilent /allusers /dir=build\iscc
+          & ".\build\iscc-installer.exe" /verysilent /allusers /dir=build\iscc
 
           Write-Output "Creating installer"
-          ".\build\iscc\iscc.exe" windows-setup-creator.iss
+          & ".\build\iscc\iscc.exe" windows-setup-creator.iss
       - name: Publish in Telegram
         if: ${{ inputs.telegram }}
         run: |
