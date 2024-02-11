@@ -99,8 +99,7 @@ jobs:
           & "C:\Program Files\7-Zip\7z.exe" a -t7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on "./build/Flutter VK portable.7z" ./build/Windows/x64/runner/Release/
 
           Write-Output "Downloading & installing iscc..."
-          curl -o build\iscc-installer.exe http://files.jrsoftware.org/is/6/innosetup-6.2.0.exe
-          & ".\build\iscc-installer.exe" /verysilent /allusers /dir=build\iscc
+          curl -o build\iscc-installer.exe http://files.jrsoftware.org/is/6/innosetup-6.2.0.exe; & ".\build\iscc-installer.exe" /verysilent /allusers /dir=build\iscc
 
           Write-Output "Creating installer"
           & ".\build\iscc\iscc.exe" windows-setup-creator.iss
