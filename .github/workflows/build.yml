@@ -7,6 +7,13 @@ on:
     paths:
       - "lib/**"
       - "pubspec.yaml"
+  workflow_dispatch:
+    inputs:
+      debug:
+        type: boolean
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        required: false
+        default: false
 
 jobs:
   build_android:
@@ -43,6 +50,11 @@ jobs:
       - name: Publish in Telegram
         run: curl -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendDocument -F chat_id="${{ secrets.TELEGRAM_TO }}" -F caption=' <b>🚧 Новый билд для Android</b>.' -F parse_mode='HTML' -F document=@'./build/app/outputs/flutter-apk/app-release.apk'
 
+      - name: Debug with SSH on fail
+        if: ${{ failure() && inputs.debug }}
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true
 
   build_windows:
     needs: build_android
@@ -94,3 +106,9 @@ jobs:
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_TO: ${{ secrets.TELEGRAM_TO }}
+
+      - name: Debug with SSH on fail
+        if: ${{ failure() && inputs.debug }}
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true
