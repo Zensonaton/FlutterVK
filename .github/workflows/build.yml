@@ -75,7 +75,6 @@ jobs:
 
   build_windows:
     if: ${{ inputs.windows }}
-    needs: build_android
     runs-on: windows-latest
 
     steps:
