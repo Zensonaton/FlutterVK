@@ -131,6 +131,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     if: ${{ inputs.create-release || inputs.telegram }}
+    needs: [build_android, build_windows]
 
     steps:
       - name: Download artifacts
