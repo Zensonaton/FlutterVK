@@ -90,6 +90,7 @@ Widget buildListTrackWidget(
     child: AudioTrackTile(
       selected: audio == player.currentAudio,
       currentlyPlaying: player.loaded && player.playing,
+      isLoading: player.buffering,
       isLiked: audio.isLiked,
       audio: audio,
       onAddToQueue: () async {
@@ -266,8 +267,8 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
       ),
 
       // Изменения состояния воспроизведения.
-      player.playingStream.listen(
-        (bool playing) => setState(() {}),
+      player.playerStateStream.listen(
+        (PlayerState state) => setState(() {}),
       ),
 
       // Изменения плейлиста.

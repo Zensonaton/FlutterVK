@@ -297,8 +297,8 @@ class _SearchDisplayDialogState extends State<SearchDisplayDialog> {
 
     subscriptions = [
       // Изменения состояния воспроизведения.
-      player.playingStream.listen(
-        (bool playing) => setState(() {}),
+      player.playerStateStream.listen(
+        (PlayerState state) => setState(() {}),
       ),
 
       // Изменения плейлиста.
@@ -949,6 +949,9 @@ class AudioTrackTile extends StatefulWidget {
   /// Указывает, что плеер в данный момент включён.
   final bool currentlyPlaying;
 
+  /// Указывает, что данный трек загружается перед тем, как начать его воспроизведение.
+  final bool isLoading;
+
   /// Указывает, что этот трек лайкнут.
   final bool isLiked;
 
@@ -979,6 +982,7 @@ class AudioTrackTile extends StatefulWidget {
   const AudioTrackTile({
     super.key,
     this.selected = false,
+    this.isLoading = false,
     this.currentlyPlaying = false,
     this.isLiked = false,
     this.showLikeButton = true,
@@ -1091,6 +1095,7 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
                       height: 50,
                       child: Stack(
                         children: [
+                          // Изображение трека.
                           ClipRRect(
                             borderRadius:
                                 BorderRadius.circular(globalBorderRadius),
@@ -1124,16 +1129,25 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
                                 ),
                                 child: !isHovered && selectedAndPlaying
                                     ? Center(
-                                        child: RepaintBoundary(
-                                          child: Image.asset(
-                                            "assets/images/audioEqualizer.gif",
-                                            width: 18,
-                                            height: 18,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .primary,
-                                          ),
-                                        ),
+                                        child: widget.isLoading
+                                            ? const SizedBox(
+                                                height: 25,
+                                                width: 25,
+                                                child:
+                                                    CircularProgressIndicator(
+                                                  strokeWidth: 2.5,
+                                                ),
+                                              )
+                                            : RepaintBoundary(
+                                                child: Image.asset(
+                                                  "assets/images/audioEqualizer.gif",
+                                                  width: 18,
+                                                  height: 18,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .primary,
+                                                ),
+                                              ),
                                       )
                                     : Icon(
                                         selectedAndPlaying
@@ -1606,8 +1620,8 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
 
     subscriptions = [
       // Изменения состояния воспроизведения.
-      player.playingStream.listen(
-        (bool playing) => setState(() {}),
+      player.playerStateStream.listen(
+        (PlayerState state) => setState(() {}),
       ),
 
       // Изменения состояния остановки/запуска плеера.
