@@ -117,9 +117,16 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          path: |
-            ./build/Flutter VK installer.exe
-            ./build/Flutter VK portable.7z
+          name: Flutter VK installer.exe
+          path: ./build/Flutter VK installer.exe
+
+          retention-days: 3
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Flutter VK portable.7z
+          path: ./build/Flutter VK portable.7z
+
           retention-days: 3
 
       - name: Debug with SSH on fail
@@ -134,6 +141,9 @@ jobs:
     needs: [build_android, build_windows]
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
       - id: read-version
         uses: NiklasLehnfeld/flutter-version-number-action@main
 
