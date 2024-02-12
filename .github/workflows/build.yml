@@ -67,7 +67,7 @@ jobs:
       - name: Build Android release
         run: |
           flutter build apk --release
-          mv ./build/app/outputs/flutter-apk/app-release.apk ./build/Flutter VK Android.apk
+          cp ./build/app/outputs/flutter-apk/app-release.apk "./build/Flutter VK Android.apk"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
