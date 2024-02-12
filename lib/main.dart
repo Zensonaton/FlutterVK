@@ -173,7 +173,9 @@ Future main() async {
 
   // Регистрируем AudioHandler для управления музыки при помощи уведомлений.
   await AudioService.init(
-    builder: () => AudioPlayerService(player),
+    builder: () => IsolatedAudioHandler(
+      AudioPlayerService(player),
+    ),
     config: const AudioServiceConfig(
       androidNotificationChannelName: "Flutter VK",
       androidNotificationChannelId: "com.zensonaton.fluttervk",
