@@ -4,8 +4,8 @@ import "dart:convert";
 
 import "package:json_annotation/json_annotation.dart";
 
-import "../../consts.dart";
 import "../api.dart";
+import "../consts.dart";
 import "../shared.dart";
 
 part "get.g.dart";

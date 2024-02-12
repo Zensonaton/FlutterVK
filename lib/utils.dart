@@ -137,6 +137,16 @@ bool boolFromInt(int value) => value == 1;
 /// Превращает входное значение [value] типа [bool] в [int].
 int intFromBool(bool value) => value ? 1 : 0;
 
+/// Превращает входную строку [value] типа [String] в [DateTime].
+DateTime? datetimeFromString(String? value) {
+  if (value == null) return null;
+
+  return DateTime.tryParse(value);
+}
+
+/// Превращает входную строку [value] типа [DateTime] в [String].
+String stringFromdatetime(DateTime value) => value.toIso8601String();
+
 /// Класс, заставляющий любые Scrollable-виджеты скроллиться даже на Desktop-плафтормах.
 class AlwaysScrollableScrollBehavior extends MaterialScrollBehavior {
   @override

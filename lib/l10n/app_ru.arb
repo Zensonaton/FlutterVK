@@ -243,6 +243,55 @@
 
 	"profile_exportMusicListTitle": "Экспорт списка треков",
 
+	"profile_updatesPolicyTitle": "Отображение новых обновлений",
+	"profile_updatesPolicyDescription": "Определяет, какой вид информирования будет о новых обновлениях после захода в приложение",
+	"profile_updatesPolicyDialog": "Диалог",
+	"profile_updatesPolicyPopup": "Надпись снизу",
+	"profile_updatesPolicyDisabled": "Отключено",
+
+	"profile_disableUpdatesWarningTitle": "Отключение обновлений",
+	"profile_disableUpdatesWarningDescription": "Похоже, что Вы пытаетесь отключить обновления приложения. Делать это не рекомендуется, поскольку в будущих версиях могут быть исправлены баги, а так же могут добавляться новые функции.\n\nЕсли Вас раздражает полноэкранный диалог, мешающий пользованию приложения, то попробуйте поменять эту настройку на значение \"Надпись снизу\": Такой вариант не будет мешать Вам.",
+	"profile_disableUpdatesWarningDisable": "Отключить",
+
+	"profile_updatesDisabledText": "Обновления приложения отключены. Вы можете проверять на наличие обновлений вручную, нажав на кнопку \"О приложении\" на странице профиля.",
+
+	"profile_updatesBranchTitle": "Канал обновлений",
+	"profile_updatesBranchDescription": "Указывает, какой канал для обновлений используется.\nБета-канал имеет более частые билды, однако они могут быть менее стабильными",
+	"profile_updatesBranchReleases": "Основные",
+	"profile_updatesBranchPrereleases": "Бета",
+
+	"updateAvailableTitle": "Доступно обновление Flutter VK",
+	"showUpdateDetails": "Подробности",
+	"installUpdate": "Установить",
+
+	"updateAvailableSnackbarTitle": "Доступно обновление Flutter VK до версии {version}.",
+	"@updateAvailableSnackbarTitle": {
+		"placeholders": {
+			"version": {
+				"description": "Новая версия приложения, до которой можно обновиться.",
+				"example": "v2.0.0"
+			}
+		}
+	},
+	"showUpdateSnackbarDetails": "Подробности",
+
+	"installPendingDescription": "Flutter VK начал загрузку обновления. Пожалуйста, дождитесь загрузки установщика обновления, и дальше проследуйте инструкциям на экране.",
+
+	"updateErrorTitle": "Ошибка при установке обновления",
+
+	"noUpdatesAvailableTitle": "Установлена актуальная версия приложения.",
+
 	"profile_githubTitle": "Github-репозиторий проекта",
-	"profile_githubDescription": "Дополнительная информация, исходный код, Github Issues расположены именно в репозитории Flutter VK"
+	"profile_githubDescription": "Дополнительная информация, исходный код, Github Issues расположены именно в репозитории Flutter VK",
+
+	"profile_appVersionTitle": "О приложении",
+	"profile_appVersionDescription": "Версия приложения: {version}. Нажмите сюда, что бы проверить на наличие новых обновлений",
+	"@profile_appVersionDescription": {
+		"placeholders": {
+			"version": {
+				"description": "Текущая версия приложения.",
+				"example": "v1.2.3"
+			}
+		}
+	}
 }

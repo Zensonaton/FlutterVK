@@ -7,15 +7,17 @@ import "package:just_audio/just_audio.dart";
 import "package:provider/provider.dart";
 import "package:responsive_builder/responsive_builder.dart";
 
-import "../api/api.dart";
-import "../api/audio/add.dart";
-import "../api/audio/delete.dart";
-import "../api/audio/restore.dart";
+import "../api/vk/api.dart";
+import "../api/vk/audio/add.dart";
+import "../api/vk/audio/delete.dart";
+import "../api/vk/audio/restore.dart";
+import "../enums.dart";
 import "../main.dart";
 import "../provider/color.dart";
 import "../provider/user.dart";
 import "../services/cache_manager.dart";
 import "../services/logger.dart";
+import "../services/updater.dart";
 import "../utils.dart";
 import "../widgets/audio_player.dart";
 import "../widgets/dialogs.dart";
@@ -419,6 +421,17 @@ class _HomeRouteState extends State<HomeRoute> {
         route: const HomeProfilePage(),
       ),
     ];
+
+    // Если это разрешено, то проверяем на наличие обновлений.
+    final UserProvider user = Provider.of<UserProvider>(context, listen: false);
+
+    if (user.settings.updatePolicy != UpdatePolicy.disabled) {
+      Updater.checkForUpdates(
+        context,
+        allowPre: user.settings.updateBranch == UpdateBranch.prereleases,
+        useSnackbarOnUpdate: user.settings.updatePolicy == UpdatePolicy.popup,
+      );
+    }
   }
 
   /// Изменяет выбранную страницу для [BottomNavigationBar] по передаваемому индексу страницы.

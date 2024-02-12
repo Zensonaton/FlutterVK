@@ -5,8 +5,8 @@ import "dart:io";
 import "package:http/http.dart";
 import "package:retry/retry.dart";
 
-import "../consts.dart";
-import "../services/logger.dart";
+import "../../services/logger.dart";
+import "consts.dart";
 
 /// Делает API-POST запрос.
 ///

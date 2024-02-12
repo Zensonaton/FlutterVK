@@ -13,9 +13,9 @@ import "package:skeletonizer/skeletonizer.dart";
 import "package:styled_text/tags/styled_text_tag_action.dart";
 import "package:styled_text/widgets/styled_text.dart";
 
-import "../../../api/api.dart";
-import "../../../api/executeScripts/mass_audio_get.dart";
-import "../../../api/shared.dart";
+import "../../../api/vk/api.dart";
+import "../../../api/vk/executeScripts/mass_audio_get.dart";
+import "../../../api/vk/shared.dart";
 import "../../../consts.dart";
 import "../../../main.dart";
 import "../../../provider/user.dart";

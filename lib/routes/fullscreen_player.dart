@@ -14,8 +14,8 @@ import "package:styled_text/styled_text.dart";
 import "package:visibility_detector/visibility_detector.dart";
 import "package:wakelock_plus/wakelock_plus.dart";
 
-import "../api/api.dart";
-import "../api/audio/get_lyrics.dart";
+import "../api/vk/api.dart";
+import "../api/vk/audio/get_lyrics.dart";
 import "../consts.dart";
 import "../main.dart";
 import "../provider/color.dart";

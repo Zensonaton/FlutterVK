@@ -2,7 +2,6 @@ import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 
-import "../api/shared.dart";
 import "../consts.dart";
 import "../provider/user.dart";
 import "../services/cache_manager.dart";

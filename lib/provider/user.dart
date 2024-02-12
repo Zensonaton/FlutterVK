@@ -2,21 +2,21 @@ import "package:audio_service/audio_service.dart";
 import "package:flutter/material.dart";
 import "package:shared_preferences/shared_preferences.dart";
 
-import "../api/audio/add.dart";
-import "../api/audio/delete.dart";
-import "../api/audio/edit.dart";
-import "../api/audio/get.dart";
-import "../api/audio/get_lyrics.dart";
-import "../api/audio/get_playlists.dart";
-import "../api/audio/restore.dart";
-import "../api/audio/search.dart";
-import "../api/catalog/get_audio.dart";
-import "../api/executeScripts/audio_get_data.dart";
-import "../api/executeScripts/mass_audio_albums.dart";
-import "../api/executeScripts/mass_audio_get.dart";
-import "../api/shared.dart";
-import "../api/users/get.dart";
-import "../consts.dart";
+import "../api/vk/audio/add.dart";
+import "../api/vk/audio/delete.dart";
+import "../api/vk/audio/edit.dart";
+import "../api/vk/audio/get.dart";
+import "../api/vk/audio/get_lyrics.dart";
+import "../api/vk/audio/get_playlists.dart";
+import "../api/vk/audio/restore.dart";
+import "../api/vk/audio/search.dart";
+import "../api/vk/catalog/get_audio.dart";
+import "../api/vk/consts.dart";
+import "../api/vk/executeScripts/audio_get_data.dart";
+import "../api/vk/executeScripts/mass_audio_albums.dart";
+import "../api/vk/executeScripts/mass_audio_get.dart";
+import "../api/vk/shared.dart";
+import "../api/vk/users/get.dart";
 import "../enums.dart";
 import "../main.dart";
 import "../services/cache_manager.dart";
@@ -261,6 +261,12 @@ class Settings {
 
   /// Указывает, что приложение показывает предупреждение при попытке сохранить уже лайкнутый трек.
   bool checkBeforeFavorite = true;
+
+  /// Указывает политику для автообновлений.
+  UpdatePolicy updatePolicy = UpdatePolicy.dialog;
+
+  /// Указывает ветку для автообновлений.
+  UpdateBranch updateBranch = UpdateBranch.releasesOnly;
 }
 
 /// Provider для получения объекта пользователя в контексте интерфейса приложения.
@@ -496,6 +502,14 @@ class UserProvider extends ChangeNotifier {
       "CheckBeforeFavorite",
       settings.checkBeforeFavorite,
     );
+    await prefs.setInt(
+      "UpdatePolicy",
+      settings.updatePolicy.index,
+    );
+    await prefs.setInt(
+      "UpdateBranch",
+      settings.updateBranch.index,
+    );
   }
 
   /// Загружает данный объект пользователя с диска.
@@ -537,6 +551,10 @@ class UserProvider extends ChangeNotifier {
     settings.closeBehavior =
         AppCloseBehavior.values[prefs.getInt("CloseBehavior") ?? 0];
     settings.checkBeforeFavorite = prefs.getBool("CheckBeforeFavorite") ?? true;
+    settings.updatePolicy =
+        UpdatePolicy.values[prefs.getInt("UpdatePolicy") ?? 0];
+    settings.updateBranch =
+        UpdateBranch.values[prefs.getInt("UpdateBranch") ?? 0];
 
     markUpdated(false);
 

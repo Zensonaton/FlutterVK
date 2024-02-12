@@ -14,6 +14,7 @@ import "../../enums.dart";
 import "../../main.dart";
 import "../../provider/user.dart";
 import "../../services/cache_manager.dart";
+import "../../services/updater.dart";
 import "../../utils.dart";
 import "../../widgets/dialogs.dart";
 
@@ -120,6 +121,47 @@ class ConnectRecommendationsDialog extends StatelessWidget {
           },
           child: Text(
             AppLocalizations.of(context)!.music_connectRecommendationsConnect,
+          ),
+        )
+      ],
+    );
+  }
+}
+
+/// Диалог, подтверждающий у пользователя действие отключения обновлений на экране [HomeMusicPage].
+///
+/// Пример использования:
+/// ```dart
+/// showDialog(
+/// 	context: context,
+/// 	builder: (context) => const ConnectRecommendationsDialog()
+/// );
+/// ```
+class DisableUpdatesDialog extends StatelessWidget {
+  const DisableUpdatesDialog({
+    Key? key,
+  }) : super(
+          key: key,
+        );
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialDialog(
+      icon: Icons.update_disabled,
+      title: AppLocalizations.of(context)!.profile_disableUpdatesWarningTitle,
+      text: AppLocalizations.of(context)!
+          .profile_disableUpdatesWarningDescription,
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: Text(
+            AppLocalizations.of(context)!.general_no,
+          ),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(true),
+          child: Text(
+            AppLocalizations.of(context)!.profile_disableUpdatesWarningDisable,
           ),
         )
       ],
@@ -485,6 +527,147 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                     Uri.parse(
                       repoURL,
                     ),
+                  ),
+                ),
+
+                // Политика для обновлений.
+                ListTile(
+                  leading: const Icon(
+                    Icons.update,
+                  ),
+                  title: Text(
+                    AppLocalizations.of(context)!.profile_updatesPolicyTitle,
+                  ),
+                  subtitle: Text(
+                    AppLocalizations.of(context)!
+                        .profile_updatesPolicyDescription,
+                  ),
+                  trailing: DropdownButton(
+                    onChanged: (UpdatePolicy? policy) async {
+                      if (policy == null) return;
+
+                      // Делаем небольшое предупреждение, если пользователь пытается отключить обновления.
+                      if (policy == UpdatePolicy.disabled) {
+                        final bool response = await showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return const DisableUpdatesDialog();
+                              },
+                            ) ??
+                            false;
+
+                        // Пользователь нажал на "Отключить", тогда мы должны выключить обновления.
+                        if (response && mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                AppLocalizations.of(context)!
+                                    .profile_updatesDisabledText,
+                              ),
+                              duration: const Duration(
+                                seconds: 8,
+                              ),
+                            ),
+                          );
+                        }
+
+                        // Пользователь отказался отключать уведомления, тогда ничего не меняем.
+                        if (!response) return;
+                      }
+
+                      user.settings.updatePolicy = policy;
+
+                      user.markUpdated();
+                    },
+                    value: user.settings.updatePolicy,
+                    items: [
+                      DropdownMenuItem(
+                        value: UpdatePolicy.dialog,
+                        child: Text(
+                          AppLocalizations.of(context)!
+                              .profile_updatesPolicyDialog,
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: UpdatePolicy.popup,
+                        child: Text(
+                          AppLocalizations.of(context)!
+                              .profile_updatesPolicyPopup,
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: UpdatePolicy.disabled,
+                        child: Text(
+                          AppLocalizations.of(context)!
+                              .profile_updatesPolicyDisabled,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Канал для автообновлений.
+                ListTile(
+                  enabled: user.settings.updatePolicy != UpdatePolicy.disabled,
+                  leading: const Icon(
+                    Icons.route,
+                  ),
+                  title: Text(
+                    AppLocalizations.of(context)!.profile_updatesBranchTitle,
+                  ),
+                  subtitle: Text(
+                    AppLocalizations.of(context)!
+                        .profile_updatesBranchDescription,
+                  ),
+                  trailing: DropdownButton(
+                    onChanged:
+                        user.settings.updatePolicy != UpdatePolicy.disabled
+                            ? (UpdateBranch? branch) {
+                                if (branch == null) return;
+
+                                user.settings.updateBranch = branch;
+
+                                user.markUpdated();
+                              }
+                            : null,
+                    value: user.settings.updateBranch,
+                    items: [
+                      DropdownMenuItem(
+                        value: UpdateBranch.releasesOnly,
+                        child: Text(
+                          AppLocalizations.of(context)!
+                              .profile_updatesBranchReleases,
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: UpdateBranch.prereleases,
+                        child: Text(
+                          AppLocalizations.of(context)!
+                              .profile_updatesBranchPrereleases,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Версия приложения.
+                ListTile(
+                  leading: const Icon(
+                    Icons.info,
+                  ),
+                  title: Text(
+                    AppLocalizations.of(context)!.profile_appVersionTitle,
+                  ),
+                  subtitle: Text(
+                    AppLocalizations.of(context)!
+                        .profile_appVersionDescription("v$appVersion"),
+                  ),
+                  onTap: () => Updater.checkForUpdates(
+                    context,
+                    allowPre:
+                        user.settings.updateBranch == UpdateBranch.prereleases,
+                    showLoadingOverlay: true,
+                    showMessageOnNoUpdates: true,
                   ),
                 ),
 

@@ -8,6 +8,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   fullscreen_window
   local_notifier
   media_kit_libs_windows_audio
+  permission_handler_windows
   screen_retriever
   share_plus
   system_tray

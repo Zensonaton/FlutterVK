@@ -48,7 +48,7 @@ android {
 
     defaultConfig {
         applicationId "com.zensonaton.fluttervk"
-        minSdkVersion flutter.minSdkVersion
+        minSdkVersion 21
         targetSdkVersion 34
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName

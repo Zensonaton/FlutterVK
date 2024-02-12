@@ -24,6 +24,16 @@ on:
         description: 'Указывает, будет ли создаваться публикация в Telegram-канале.'
         required: false
         default: true
+      create-release:
+        type: boolean
+        description: 'Указывает, что будет создаваться Github Release.'
+        required: false
+        default: true
+      pre-release:
+        type: boolean
+        description: 'Указывает, что создаваемый Github Release будет иметь плашку pre-release.'
+        required: false
+        default: true
       debug:
         type: boolean
         description: 'Запуск данного Action с SSH-подключением в случае, если билд оказался неудачным (https://github.com/marketplace/actions/debugging-with-tmate)'
@@ -61,11 +71,16 @@ jobs:
           echo '${{ secrets.ANDROID_KEY_PROPERTIES }}' > android/key.properties
 
       - name: Build Android release
-        run: flutter build apk --release
+        run: |
+          flutter build apk --release
+          mv ./build/app/outputs/flutter-apk/app-release.apk ./build/Flutter VK Android.apk
 
-      - name: Publish in Telegram
-        if: ${{ inputs.telegram }}
-        run: curl -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendDocument -F chat_id="${{ secrets.TELEGRAM_TO }}" -F caption=' <b>🚧 Новый билд для Android</b>.' -F parse_mode='HTML' -F document=@'./build/app/outputs/flutter-apk/app-release.apk'
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Flutter VK Android.apk
+          path: ./build/Flutter VK Android.apk
+          retention-days: 3
 
       - name: Debug with SSH on fail
         if: ${{ failure() && inputs.debug }}
@@ -105,30 +120,81 @@ jobs:
           echo "Creating Windows installer"
           make inno
 
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          path: |
+            ./build/Flutter VK installer.exe
+            ./build/Flutter VK portable.7z
+          retention-days: 3
+
+      - name: Debug with SSH on fail
+        if: ${{ failure() && inputs.debug }}
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true
+
+  publish:
+    runs-on: ubuntu-latest
+    if: ${{ inputs.create-release || inputs.telegram }}
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: build/
+          merge-multiple: true
+
       - name: Publish in Telegram
         if: ${{ inputs.telegram }}
+        shell: pwsh
         run: |
           $telegramToken = $env:TELEGRAM_TOKEN
           $telegramTo = $env:TELEGRAM_TO
 
-          # Installer
+          # Android
           Invoke-RestMethod -Uri "https://api.telegram.org/bot$telegramToken/sendDocument" -Method Post -Form @{
-              chat_id = $telegramTo
-              caption = '<b>🚧 Новый билд для #Windows #installer</b>.'
-              parse_mode = 'HTML'
-              document = Get-Item -Path './build/Flutter VK installer.exe'
+            chat_id = $telegramTo
+            caption = "<b>🚧 Новый билд для Android</b>.`n`n#Android"
+            parse_mode = 'HTML'
+            document = Get-Item -Path './build/Flutter VK Android.apk'
           }
 
-          # Portable
+          # Windows installer
           Invoke-RestMethod -Uri "https://api.telegram.org/bot$telegramToken/sendDocument" -Method Post -Form @{
-              chat_id = $telegramTo
-              caption = '<b>🚧 Новый билд для #Windows #portable</b>.'
-              parse_mode = 'HTML'
-              document = Get-Item -Path './build/Flutter VK portable.7z'
+            chat_id = $telegramTo
+            caption = "<b>🚧 Новый билд для Windows</b>.`n`n#Windows #installer"
+            parse_mode = 'HTML'
+            document = Get-Item -Path './build/Flutter VK installer.exe'
+          }
+
+          # Windows portable
+          Invoke-RestMethod -Uri "https://api.telegram.org/bot$telegramToken/sendDocument" -Method Post -Form @{
+            chat_id = $telegramTo
+            caption = "<b>🚧 Новый билд для Windows</b>.`n`n#Windows #portable"
+            parse_mode = 'HTML'
+            document = Get-Item -Path './build/Flutter VK portable.7z'
           }
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_TO: ${{ secrets.TELEGRAM_TO }}
+
+      - name: Create release
+        if: ${{ inputs.create-release }}
+        id: tag_version
+        uses: mathieudutour/github-tag-action@v6.1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create a GitHub release
+        if: ${{ inputs.create-release }}
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.tag_version.outputs.new_tag }}
+          name: Flutter VK v${{ steps.tag_version.outputs.new_tag }}
+          prerelease: ${{ inputs.pre-release }}
+          bodyFile: CHANGELOG.md
+          artifacts: "build/*.*"
 
       - name: Debug with SSH on fail
         if: ${{ failure() && inputs.debug }}

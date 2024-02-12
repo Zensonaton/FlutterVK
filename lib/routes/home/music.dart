@@ -14,12 +14,13 @@ import "package:share_plus/share_plus.dart";
 import "package:skeletonizer/skeletonizer.dart";
 import "package:styled_text/styled_text.dart";
 
-import "../../api/api.dart";
-import "../../api/audio/edit.dart";
-import "../../api/audio/search.dart";
-import "../../api/catalog/get_audio.dart";
-import "../../api/executeScripts/mass_audio_get.dart";
-import "../../api/shared.dart";
+import "../../api/vk/api.dart";
+import "../../api/vk/audio/edit.dart";
+import "../../api/vk/audio/search.dart";
+import "../../api/vk/catalog/get_audio.dart";
+import "../../api/vk/consts.dart";
+import "../../api/vk/executeScripts/mass_audio_get.dart";
+import "../../api/vk/shared.dart";
 import "../../consts.dart";
 import "../../main.dart";
 import "../../provider/user.dart";
@@ -706,7 +707,7 @@ class _TrackInfoEditDialogState extends State<TrackInfoEditDialog> {
 ///
 /// Пример использования:
 /// ```dart
-/// showBottomSheet(
+/// showModalBottomSheet(
 ///   context: context,
 ///   builder: (BuildContext context) => const BottomAudioOptionsDialog(...),
 /// ),

@@ -9,6 +9,7 @@ import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "package:flutter_localizations/flutter_localizations.dart";
 import "package:just_audio_media_kit/just_audio_media_kit.dart";
 import "package:local_notifier/local_notifier.dart";
+import "package:package_info_plus/package_info_plus.dart";
 import "package:provider/provider.dart";
 import "package:responsive_builder/responsive_builder.dart";
 import "package:system_tray/system_tray.dart";
@@ -44,6 +45,9 @@ final fallbackDarkColorScheme = ColorScheme.fromSeed(
   seedColor: Colors.blueAccent,
   brightness: Brightness.dark,
 );
+
+/// Версия приложения.
+late String appVersion;
 
 /// Инициализирует запись в системном трее Windows.
 Future<void> initSystemTray() async {
@@ -188,6 +192,9 @@ Future main() async {
       watch: 100,
     ),
   );
+
+  // Узнаём версию приложения.
+  appVersion = (await PackageInfo.fromPlatform()).version;
 
   runApp(
     MultiProvider(

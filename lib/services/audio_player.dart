@@ -12,7 +12,6 @@ import "package:palette_generator/palette_generator.dart";
 import "package:provider/provider.dart";
 import "package:smtc_windows/smtc_windows.dart";
 
-import "../api/shared.dart";
 import "../consts.dart";
 import "../main.dart";
 import "../provider/user.dart";

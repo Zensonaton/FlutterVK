@@ -6,10 +6,10 @@ import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "package:provider/provider.dart";
 import "package:styled_text/styled_text.dart";
 
-import "../api/api.dart";
-import "../api/catalog/get_audio.dart";
-import "../api/shared.dart";
-import "../api/users/get.dart";
+import "../api/vk/api.dart";
+import "../api/vk/catalog/get_audio.dart";
+import "../api/vk/shared.dart";
+import "../api/vk/users/get.dart";
 import "../provider/user.dart";
 import "../services/cache_manager.dart";
 import "../services/logger.dart";

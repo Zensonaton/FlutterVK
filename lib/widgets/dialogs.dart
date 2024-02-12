@@ -211,13 +211,15 @@ void showErrorDialog(
 /// [stackTrace] - стек, пришедший к ошибке.
 /// [logger] - объект типа [AppLogger].
 /// [context] - [BuildContext], в котором будет показан данный диалог. Если не указать, то диалоговое окно не будет показано.
+/// [title] - текст титульника для диалога с ошибкой.
 void showLogErrorDialog(
   String logText,
   Object error,
   StackTrace stackTrace,
   AppLogger logger,
-  BuildContext? context,
-) {
+  BuildContext? context, {
+  String? title,
+}) {
   logger.e(
     logText,
     error: error,
@@ -237,6 +239,7 @@ void showLogErrorDialog(
   showDialog(
     context: context,
     builder: (BuildContext context) => ErrorDialog(
+      title: title,
       description: error.toString(),
     ),
   );

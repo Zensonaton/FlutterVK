@@ -1,4 +1,4 @@
-import "../utils.dart";
+import "../../utils.dart";
 import "api.dart";
 import "executeScripts/mass_audio_get.dart" as api_scripts_mass_audio;
 import "executeScripts/mass_audio_albums.dart" as api_scripts_mass_audio_albums;

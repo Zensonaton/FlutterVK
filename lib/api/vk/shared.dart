@@ -1,6 +1,6 @@
 import "package:json_annotation/json_annotation.dart";
 
-import "../utils.dart";
+import "../../utils.dart";
 
 part "shared.g.dart";
 

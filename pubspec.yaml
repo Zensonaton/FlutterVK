@@ -58,6 +58,10 @@ dependencies:
   wakelock_plus: ^1.1.4
   debounce_throttle: ^2.0.0
   audio_service: ^0.18.12
+  package_info_plus: ^5.0.1
+  flutter_markdown: ^0.6.18+3
+  permission_handler: ^11.2.1
+  install_plugin: ^2.1.0
 
 dev_dependencies:
   flutter_test:
