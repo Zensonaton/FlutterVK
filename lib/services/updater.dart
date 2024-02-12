@@ -279,10 +279,10 @@ class Updater {
   static String? getFilenameByPlatform() {
     switch (Platform.operatingSystem) {
       case "android":
-        return "Flutter-VK-Android.apk";
+        return "Flutter.VK.Android.apk";
 
       case "windows":
-        return "Flutter-VK-installer.exe";
+        return "Flutter.VK.installer.exe";
     }
 
     return null;
