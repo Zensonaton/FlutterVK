@@ -1,12 +1,6 @@
 name: Windows & Android release
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "lib/**"
-      - "pubspec.yaml"
   workflow_dispatch:
     inputs:
       android:
