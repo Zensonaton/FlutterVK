@@ -393,7 +393,7 @@ class Updater {
 
     final File file = File(
       path.join(
-        (await getApplicationCacheDirectory()).path,
+        (await getApplicationSupportDirectory()).path,
         asset.name,
       ),
     );
