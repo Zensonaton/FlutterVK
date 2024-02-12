@@ -1336,7 +1336,9 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
     return InkWell(
       onTap: widget.onOpen,
       onSecondaryTap: widget.onOpen,
-      onHover: (bool value) => setState(() => isHovered = value),
+      onHover: (bool value) => setState(
+        () => isHovered = value,
+      ),
       child: SizedBox(
         width: 200,
         child: Column(
@@ -1346,22 +1348,20 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
               height: 200,
               child: Stack(
                 children: [
-                  Hero(
-                    tag: widget.mediaKey ?? "",
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(globalBorderRadius),
-                      child: widget.backgroundUrl != null
-                          ? CachedNetworkImage(
-                              imageUrl: widget.backgroundUrl!,
-                              cacheKey: widget.mediaKey,
-                              memCacheHeight: 200,
-                              memCacheWidth: 200,
-                              placeholder: (BuildContext context, String url) =>
-                                  const FallbackAudioPlaylistAvatar(),
-                              cacheManager: CachedNetworkImagesManager.instance,
-                            )
-                          : const FallbackAudioPlaylistAvatar(),
-                    ),
+                  // Изображение плейлиста.
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(globalBorderRadius),
+                    child: widget.backgroundUrl != null
+                        ? CachedNetworkImage(
+                            imageUrl: widget.backgroundUrl!,
+                            cacheKey: widget.mediaKey,
+                            memCacheHeight: 200,
+                            memCacheWidth: 200,
+                            placeholder: (BuildContext context, String url) =>
+                                const FallbackAudioPlaylistAvatar(),
+                            cacheManager: CachedNetworkImagesManager.instance,
+                          )
+                        : const FallbackAudioPlaylistAvatar(),
                   ),
 
                   // Если это у нас рекомендательный плейлист, то текст должен находиться внутри изображения плейлиста.
