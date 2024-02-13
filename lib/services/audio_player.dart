@@ -629,6 +629,25 @@ class VKMusicPlayer {
     return await _player.setLoopMode(loopMode);
   }
 
+  /// Возвращает объект [AudioSource] в зависимости от платформы, на которой запущено приложение.
+  ///
+  /// Используется как затычка.
+  AudioSource getAudioSource(
+    ExtendedVKAudio audio,
+  ) {
+    if (Platform.isWindows) {
+      return AudioSource.uri(
+        Uri.parse(audio.url),
+        tag: audio.asMediaItem,
+      );
+    }
+
+    return LockCachingAudioSource(
+      Uri.parse(audio.url),
+      tag: audio.asMediaItem,
+    );
+  }
+
   /// Устанавливает плейлист [playlist] для воспроизведения музыки, указывая при этом [index], начиная с которого будет запущено воспроизведение. Если [play] равен true, то при вызове данного метода плеер автоматически начнёт воспроизводить музыку.
   Future<void> setPlaylist(
     ExtendedVKPlaylist playlist, {
@@ -655,10 +674,7 @@ class VKMusicPlayer {
     _queue = ConcatenatingAudioSource(
       children: audios
           .map(
-            (audio) => AudioSource.uri(
-              Uri.parse(audio.url),
-              tag: audio.asMediaItem,
-            ),
+            (audio) => getAudioSource(audio),
           )
           .toList(),
     );
