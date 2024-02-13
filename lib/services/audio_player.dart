@@ -635,14 +635,9 @@ class VKMusicPlayer {
   AudioSource getAudioSource(
     ExtendedVKAudio audio,
   ) {
-    if (Platform.isWindows) {
-      return AudioSource.uri(
-        Uri.parse(audio.url),
-        tag: audio.asMediaItem,
-      );
-    }
+    // TODO: Использовать LockCachingAudioSource.
 
-    return LockCachingAudioSource(
+    return AudioSource.uri(
       Uri.parse(audio.url),
       tag: audio.asMediaItem,
     );
