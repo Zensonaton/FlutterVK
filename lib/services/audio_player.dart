@@ -150,15 +150,15 @@ class VKMusicPlayer {
   /// Возвращает null, если сейчас ничего не играет.
   ///
   /// Если Вам необходим Stream для отслеживания изменения данного поля, то воспользуйтесь [positionStream].
-  double get progress =>
-      _player.duration != null && !buffering && _player.duration != null
-          ? clampDouble(
-              _player.position.inMilliseconds /
-                  _player.duration!.inMilliseconds,
-              0.0,
-              1.0,
-            )
-          : 0.0;
+  double get progress => _player.duration != null &&
+          _player.duration != Duration.zero &&
+          !buffering
+      ? clampDouble(
+          _player.position.inMilliseconds / _player.duration!.inMilliseconds,
+          0.0,
+          1.0,
+        )
+      : 0.0;
 
   /// Возвращает текущую позицию трека.
   ///
