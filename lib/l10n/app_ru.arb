@@ -92,6 +92,8 @@
 		}
 	},
 
+	"music_filterChipsLabel": "Активные разделы",
+
 	"music_myMusicChip": "Моя музыка",
 	"music_myPlaylistsChip": "Ваши плейлисты",
 	"music_recommendedPlaylistsChip": "Плейлисты для Вас",

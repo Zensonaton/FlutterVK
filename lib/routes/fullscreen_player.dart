@@ -139,12 +139,12 @@ class TrackLyric extends StatelessWidget {
 
 /// Виджет, отображающий текст трека.
 class TrackLyricsBlock extends StatefulWidget {
-  final AppLogger logger = getLogger("TrackLyricsBlock");
+  static AppLogger logger = getLogger("TrackLyricsBlock");
 
   /// Отображаемый текст песни.
   final Lyrics lyrics;
 
-  TrackLyricsBlock({
+  const TrackLyricsBlock({
     super.key,
     required this.lyrics,
   });

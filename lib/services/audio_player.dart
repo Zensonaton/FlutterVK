@@ -22,6 +22,7 @@ import "logger.dart";
 
 /// Класс для работы с аудиоплеером.
 class VKMusicPlayer {
+  /// [AppLogger] для этого класса.
   static AppLogger logger = getLogger("VKMusicPlayer");
 
   final AudioPlayer _player = AudioPlayer(

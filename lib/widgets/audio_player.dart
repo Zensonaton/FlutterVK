@@ -820,9 +820,6 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                         color: widget.scheme.onPrimaryContainer,
                       ),
                     ),
-                    const SizedBox(
-                      width: 8,
-                    ),
 
                     // Кнопка паузы/возобновления.
                     playPauseButton,

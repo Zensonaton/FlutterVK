@@ -267,8 +267,6 @@ class SearchDisplayDialog extends StatefulWidget {
 }
 
 class _SearchDisplayDialogState extends State<SearchDisplayDialog> {
-  final AppLogger logger = getLogger("SearchDisplayDialog");
-
   /// Контроллер, используемый для управления введённым в поле поиска текстом.
   final TextEditingController controller = TextEditingController();
 
@@ -540,7 +538,7 @@ class TrackInfoEditDialog extends StatefulWidget {
 }
 
 class _TrackInfoEditDialogState extends State<TrackInfoEditDialog> {
-  final AppLogger logger = getLogger("TrackInfoEditDialog");
+  static AppLogger logger = getLogger("TrackInfoEditDialog");
 
   /// [TextEditingController] для поля ввода названия трека.
   final TextEditingController titleController = TextEditingController();
@@ -586,6 +584,7 @@ class _TrackInfoEditDialogState extends State<TrackInfoEditDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Открытый трек.
             AudioTrackTile(
               audio: audio,
               showLikeButton: false,
@@ -594,6 +593,8 @@ class _TrackInfoEditDialogState extends State<TrackInfoEditDialog> {
             ),
             const SizedBox(height: 8),
             const Divider(),
+
+            // Текстовое поле для изменения названия.
             TextField(
               controller: titleController,
               onChanged: (String _) => setState(() {}),
@@ -611,6 +612,8 @@ class _TrackInfoEditDialogState extends State<TrackInfoEditDialog> {
                 ),
               ),
             ),
+
+            // Текстовое поле для изменения исполнителя.
             TextField(
               controller: artistController,
               onChanged: (String _) => setState(() {}),
@@ -629,6 +632,8 @@ class _TrackInfoEditDialogState extends State<TrackInfoEditDialog> {
               ),
             ),
             const SizedBox(height: 28),
+
+            // Выпадающее меню с жанром.
             DropdownMenu(
               label: Text(
                 AppLocalizations.of(context)!.music_trackGenre,
@@ -648,6 +653,8 @@ class _TrackInfoEditDialogState extends State<TrackInfoEditDialog> {
               ],
             ),
             const SizedBox(height: 24),
+
+            // Кнопка для сохранения.
             Align(
               alignment: Alignment.bottomRight,
               child: FilledButton.icon(
@@ -958,6 +965,9 @@ class AudioTrackTile extends StatefulWidget {
   /// Указывает, что кнопка для лайка должна быть показана.
   final bool showLikeButton;
 
+  /// Указывает, что в случае, если [selected] равен true, то у данного виджета будет эффект "свечения".
+  final bool glowIfSelected;
+
   /// Действие, вызываемое при переключения паузы/возобновления при нажатии по иконке трека.
   ///
   /// В отличии от [onPlay], данный метод просто переключает то, находится трек на паузе или нет. Данный метод вызывается лишь в случае, если поле [selected] правдиво, в ином случае при нажатии на данный виджет будет вызываться событие [onPlay].
@@ -986,6 +996,7 @@ class AudioTrackTile extends StatefulWidget {
     this.currentlyPlaying = false,
     this.isLiked = false,
     this.showLikeButton = true,
+    this.glowIfSelected = false,
     required this.audio,
     this.onPlay,
     this.onPlayToggle,
@@ -1023,7 +1034,9 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
       background: Container(
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.primary,
-          borderRadius: BorderRadius.circular(globalBorderRadius),
+          borderRadius: BorderRadius.circular(
+            globalBorderRadius,
+          ),
         ),
         child: Align(
           alignment: Alignment.centerLeft,
@@ -1057,7 +1070,7 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
               borderRadius: BorderRadius.circular(
                 globalBorderRadius,
               ),
-              gradient: widget.selected
+              gradient: widget.selected && widget.glowIfSelected
                   ? LinearGradient(
                       colors: [
                         Theme.of(context).colorScheme.primary.withOpacity(
@@ -1089,7 +1102,9 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
                             widget.onPlay?.call();
                           }
                         : null,
-                    borderRadius: BorderRadius.circular(globalBorderRadius),
+                    borderRadius: BorderRadius.circular(
+                      globalBorderRadius,
+                    ),
                     child: SizedBox(
                       width: 50,
                       height: 50,
@@ -1097,8 +1112,9 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
                         children: [
                           // Изображение трека.
                           ClipRRect(
-                            borderRadius:
-                                BorderRadius.circular(globalBorderRadius),
+                            borderRadius: BorderRadius.circular(
+                              globalBorderRadius,
+                            ),
                             child: imageUrl != null
                                 ? CachedNetworkImage(
                                     imageUrl: imageUrl,
@@ -1339,6 +1355,9 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
       onHover: (bool value) => setState(
         () => isHovered = value,
       ),
+      borderRadius: BorderRadius.circular(
+        globalBorderRadius,
+      ),
       child: SizedBox(
         width: 200,
         child: Column(
@@ -1350,7 +1369,9 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
                 children: [
                   // Изображение плейлиста.
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(globalBorderRadius),
+                    borderRadius: BorderRadius.circular(
+                      globalBorderRadius,
+                    ),
                     child: widget.backgroundUrl != null
                         ? CachedNetworkImage(
                             imageUrl: widget.backgroundUrl!,
@@ -1412,7 +1433,9 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
                             .colorScheme
                             .background
                             .withOpacity(0.5),
-                        borderRadius: BorderRadius.circular(globalBorderRadius),
+                        borderRadius: BorderRadius.circular(
+                          globalBorderRadius,
+                        ),
                       ),
                       child: !isHovered && selectedAndPlaying
                           ? Center(
@@ -1494,103 +1517,128 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
 }
 
 /// Виджет, показывающий кучку переключателей-фильтров класса [FilterChip] для включения различных разделов "музыки".
-class ChipFilters extends StatefulWidget {
+class ChipFilters extends StatelessWidget {
+  /// Указывает, что над этим блоком будет надпись "Активные разделы".
+  final bool showLabel;
+
   const ChipFilters({
     super.key,
+    this.showLabel = true,
   });
 
-  @override
-  State<ChipFilters> createState() => _ChipFiltersState();
-}
-
-class _ChipFiltersState extends State<ChipFilters> {
   @override
   Widget build(BuildContext context) {
     final UserProvider user = Provider.of<UserProvider>(context);
 
+    /// Указывают, включены ли рекомендации.
     final bool hasRecommendations = user.recommendationsToken != null;
 
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        FilterChip(
-          onSelected: (bool value) => setState(
-            () {
-              user.settings.myMusicChipEnabled = value;
-              user.markUpdated();
-            },
+        // "Активные разделы".
+        if (showLabel)
+          Text(
+            AppLocalizations.of(context)!.music_filterChipsLabel,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.w500,
+            ),
           ),
-          selected: user.settings.myMusicChipEnabled,
-          label: Text(
-            AppLocalizations.of(context)!.music_myMusicChip,
+        if (showLabel)
+          const SizedBox(
+            height: 14,
           ),
+
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            // Подключение рекомендаций.
+            if (!hasRecommendations)
+              ActionChip(
+                avatar: const Icon(
+                  Icons.auto_fix_high,
+                ),
+                label: Text(
+                  AppLocalizations.of(context)!
+                      .music_connectRecommendationsChipTitle,
+                ),
+                onPressed: () => showDialog(
+                  context: context,
+                  builder: (context) => const ConnectRecommendationsDialog(),
+                ),
+              ),
+
+            // "Моя музыка".
+            FilterChip(
+              onSelected: (bool value) {
+                user.settings.myMusicChipEnabled = value;
+
+                user.markUpdated();
+              },
+              selected: user.settings.myMusicChipEnabled,
+              label: Text(
+                AppLocalizations.of(context)!.music_myMusicChip,
+              ),
+            ),
+
+            // "Ваши плейлисты".
+            FilterChip(
+              onSelected: (bool value) {
+                user.settings.playlistsChipEnabled = value;
+
+                user.markUpdated();
+              },
+              selected: user.settings.playlistsChipEnabled,
+              label: Text(
+                AppLocalizations.of(context)!.music_myPlaylistsChip,
+              ),
+            ),
+
+            // "Плейлисты для Вас".
+            if (hasRecommendations)
+              FilterChip(
+                onSelected: (bool value) {
+                  user.settings.recommendedPlaylistsChipEnabled = value;
+
+                  user.markUpdated();
+                },
+                selected: user.settings.recommendedPlaylistsChipEnabled,
+                label: Text(
+                  AppLocalizations.of(context)!.music_recommendedPlaylistsChip,
+                ),
+              ),
+
+            // "Совпадения по вкусам".
+            if (hasRecommendations)
+              FilterChip(
+                onSelected: (bool value) {
+                  user.settings.similarMusicChipEnabled = value;
+
+                  user.markUpdated();
+                },
+                selected: user.settings.similarMusicChipEnabled,
+                label: Text(
+                  AppLocalizations.of(context)!.music_similarMusicChip,
+                ),
+              ),
+
+            // "Собрано редакцией".
+            if (hasRecommendations)
+              FilterChip(
+                onSelected: (bool value) {
+                  user.settings.byVKChipEnabled = value;
+
+                  user.markUpdated();
+                },
+                selected: user.settings.byVKChipEnabled,
+                label: Text(
+                  AppLocalizations.of(context)!.music_byVKChip,
+                ),
+              ),
+          ],
         ),
-        FilterChip(
-          onSelected: (bool value) => setState(
-            () {
-              user.settings.playlistsChipEnabled = value;
-              user.markUpdated();
-            },
-          ),
-          selected: user.settings.playlistsChipEnabled,
-          label: Text(
-            AppLocalizations.of(context)!.music_myPlaylistsChip,
-          ),
-        ),
-        if (hasRecommendations)
-          FilterChip(
-            onSelected: (bool value) => setState(
-              () {
-                user.settings.recommendedPlaylistsChipEnabled = value;
-                user.markUpdated();
-              },
-            ),
-            selected: user.settings.recommendedPlaylistsChipEnabled,
-            label: Text(
-              AppLocalizations.of(context)!.music_recommendedPlaylistsChip,
-            ),
-          ),
-        if (hasRecommendations)
-          FilterChip(
-            onSelected: (bool value) => setState(
-              () {
-                user.settings.similarMusicChipEnabled = value;
-                user.markUpdated();
-              },
-            ),
-            selected: user.settings.similarMusicChipEnabled,
-            label: Text(
-              AppLocalizations.of(context)!.music_similarMusicChip,
-            ),
-          ),
-        if (hasRecommendations)
-          FilterChip(
-            onSelected: (bool value) => setState(
-              () {
-                user.settings.byVKChipEnabled = value;
-                user.markUpdated();
-              },
-            ),
-            selected: user.settings.byVKChipEnabled,
-            label: Text(
-              AppLocalizations.of(context)!.music_byVKChip,
-            ),
-          ),
-        if (!hasRecommendations)
-          ActionChip(
-            avatar: const Icon(
-              Icons.auto_fix_high,
-            ),
-            label: Text(
-              AppLocalizations.of(context)!
-                  .music_connectRecommendationsChipTitle,
-            ),
-            onPressed: () => showDialog(
-              context: context,
-              builder: (context) => const ConnectRecommendationsDialog(),
-            ),
-          ),
       ],
     );
   }
@@ -1826,9 +1874,9 @@ Future<void> onPlaylistPlayToggle(
 
 /// Виджет с разделом "Ваши плейлисты"
 class MyPlaylistsBlock extends StatelessWidget {
-  final AppLogger logger = getLogger("MyPlaylistsBlock");
+  static AppLogger logger = getLogger("MyPlaylistsBlock");
 
-  MyPlaylistsBlock({
+  const MyPlaylistsBlock({
     super.key,
   });
 
@@ -1841,6 +1889,7 @@ class MyPlaylistsBlock extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // "Ваши плейлисты".
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1869,16 +1918,20 @@ class MyPlaylistsBlock extends StatelessWidget {
           height: 14,
         ),
 
-        // Настоящие данные.
-        if (user.regularPlaylists.isNotEmpty)
-          ScrollConfiguration(
-            behavior: AlwaysScrollableScrollBehavior(),
-            child: SingleChildScrollView(
-              // TODO: ClipBehaviour.
-              scrollDirection: Axis.horizontal,
-              child: Wrap(
-                spacing: 8,
-                children: [
+        // Содержимое.
+        ScrollConfiguration(
+          behavior: AlwaysScrollableScrollBehavior(),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            clipBehavior: Clip.none,
+            physics: user.regularPlaylists.isEmpty
+                ? const NeverScrollableScrollPhysics()
+                : null,
+            child: Wrap(
+              spacing: 8,
+              children: [
+                // Настоящие данные.
+                if (user.regularPlaylists.isNotEmpty)
                   for (ExtendedVKPlaylist playlist in user.regularPlaylists)
                     AudioPlaylistWidget(
                       backgroundUrl: playlist.photo?.photo270,
@@ -1901,28 +1954,20 @@ class MyPlaylistsBlock extends StatelessWidget {
                         playing,
                       ),
                     ),
-                ],
-              ),
-            ),
-          ),
 
-        // Skeleton loader.
-        if (user.regularPlaylists.isEmpty)
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            physics: const NeverScrollableScrollPhysics(),
-            child: Skeletonizer(
-              child: Wrap(
-                spacing: 8,
-                children: [
+                // Skeleton loader.
+                if (user.regularPlaylists.isEmpty)
                   for (int index = 0; index < 10; index++)
-                    AudioPlaylistWidget(
-                      name: fakePlaylistNames[index % fakePlaylistNames.length],
+                    Skeletonizer(
+                      child: AudioPlaylistWidget(
+                        name:
+                            fakePlaylistNames[index % fakePlaylistNames.length],
+                      ),
                     ),
-                ],
-              ),
+              ],
             ),
           ),
+        ),
       ],
     );
   }
@@ -1930,9 +1975,9 @@ class MyPlaylistsBlock extends StatelessWidget {
 
 /// Виджет, показывающий раздел "Плейлисты для Вас".
 class RecommendedPlaylistsBlock extends StatelessWidget {
-  final AppLogger logger = getLogger("RecommendedPlaylistsBlock");
+  static AppLogger logger = getLogger("RecommendedPlaylistsBlock");
 
-  RecommendedPlaylistsBlock({
+  const RecommendedPlaylistsBlock({
     super.key,
   });
 
@@ -1943,6 +1988,7 @@ class RecommendedPlaylistsBlock extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // "Плейлисты для Вас".
         Text(
           AppLocalizations.of(context)!.music_recommendedPlaylistsChip,
           style: TextStyle(
@@ -1953,11 +1999,16 @@ class RecommendedPlaylistsBlock extends StatelessWidget {
         const SizedBox(
           height: 14,
         ),
+
+        // Содержимое.
         ScrollConfiguration(
           behavior: AlwaysScrollableScrollBehavior(),
           child: SingleChildScrollView(
-            // TODO: ClipBehaviour.
             scrollDirection: Axis.horizontal,
+            clipBehavior: Clip.none,
+            physics: user.recommendationPlaylists.isEmpty
+                ? const NeverScrollableScrollPhysics()
+                : null,
             child: Wrap(
               spacing: 8,
               children: [
@@ -1990,24 +2041,15 @@ class RecommendedPlaylistsBlock extends StatelessWidget {
 
                 // Skeleton loader.
                 if (user.recommendationPlaylists.isEmpty)
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    physics: const NeverScrollableScrollPhysics(),
-                    child: Skeletonizer(
-                      child: Wrap(
-                        spacing: 8,
-                        children: [
-                          for (int index = 0; index < 9; index++)
-                            AudioPlaylistWidget(
-                              name: fakePlaylistNames[
-                                  index % fakePlaylistNames.length],
-                              description: "Playlist description here",
-                              useTextOnImageLayout: true,
-                            ),
-                        ],
+                  for (int index = 0; index < 9; index++)
+                    Skeletonizer(
+                      child: AudioPlaylistWidget(
+                        name:
+                            fakePlaylistNames[index % fakePlaylistNames.length],
+                        description: "Playlist description here",
+                        useTextOnImageLayout: true,
                       ),
                     ),
-                  ),
               ],
             ),
           ),
@@ -2019,9 +2061,9 @@ class RecommendedPlaylistsBlock extends StatelessWidget {
 
 /// Виджет, показывающий раздел "Совпадения по вкусам".
 class SimillarMusicBlock extends StatelessWidget {
-  final AppLogger logger = getLogger("SimillarMusicBlock");
+  static AppLogger logger = getLogger("SimillarMusicBlock");
 
-  SimillarMusicBlock({
+  const SimillarMusicBlock({
     super.key,
   });
 
@@ -2031,43 +2073,27 @@ class SimillarMusicBlock extends StatelessWidget {
     // TODO: Доделать этот раздел.
     final UserProvider user = Provider.of<UserProvider>(context);
 
-    const int playlistsCount = 0;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              AppLocalizations.of(context)!.music_similarMusicChip,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.primary,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            if (playlistsCount > 0)
-              const SizedBox(
-                width: 8,
-              ),
-            if (playlistsCount > 0)
-              Text(
-                playlistsCount.toString(),
-                style: TextStyle(
-                  color:
-                      Theme.of(context).colorScheme.secondary.withOpacity(0.75),
-                ),
-              ),
-          ],
+        // "Совпадения по вкусам".
+        Text(
+          AppLocalizations.of(context)!.music_similarMusicChip,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.primary,
+            fontWeight: FontWeight.w500,
+          ),
         ),
         const SizedBox(
           height: 14,
         ),
+
+        // Содержимое.
         ScrollConfiguration(
           behavior: AlwaysScrollableScrollBehavior(),
           child: SingleChildScrollView(
-            // TODO: ClipBehaviour.
             scrollDirection: Axis.horizontal,
+            clipBehavior: Clip.none,
             child: Wrap(
               spacing: 8,
               children: [
@@ -2106,9 +2132,9 @@ class SimillarMusicBlock extends StatelessWidget {
 
 /// Виджет, показывающий раздел "Собрано редакцией".
 class ByVKPlaylistsBlock extends StatelessWidget {
-  final AppLogger logger = getLogger("ByVKPlaylistsBlock");
+  static AppLogger logger = getLogger("ByVKPlaylistsBlock");
 
-  ByVKPlaylistsBlock({
+  const ByVKPlaylistsBlock({
     super.key,
   });
 
@@ -2119,6 +2145,7 @@ class ByVKPlaylistsBlock extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // "Собрано редакцией".
         Text(
           AppLocalizations.of(context)!.music_byVKChip,
           style: TextStyle(
@@ -2130,16 +2157,20 @@ class ByVKPlaylistsBlock extends StatelessWidget {
           height: 14,
         ),
 
-        // Настоящие данные.
-        if (user.madeByVKPlaylists.isNotEmpty)
-          ScrollConfiguration(
-            behavior: AlwaysScrollableScrollBehavior(),
-            child: SingleChildScrollView(
-              // TODO: ClipBehaviour.
-              scrollDirection: Axis.horizontal,
-              child: Wrap(
-                spacing: 8,
-                children: [
+        // Содержимое.
+        ScrollConfiguration(
+          behavior: AlwaysScrollableScrollBehavior(),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            clipBehavior: Clip.none,
+            physics: user.madeByVKPlaylists.isEmpty
+                ? const NeverScrollableScrollPhysics()
+                : null,
+            child: Wrap(
+              spacing: 8,
+              children: [
+                // Настоящие данные.
+                if (user.madeByVKPlaylists.isNotEmpty)
                   for (ExtendedVKPlaylist playlist in user.madeByVKPlaylists)
                     AudioPlaylistWidget(
                       backgroundUrl: playlist.photo!.photo270!,
@@ -2161,28 +2192,20 @@ class ByVKPlaylistsBlock extends StatelessWidget {
                         playing,
                       ),
                     ),
-                ],
-              ),
-            ),
-          ),
 
-        // Skeleton loader.
-        if (user.madeByVKPlaylists.isEmpty)
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            physics: const NeverScrollableScrollPhysics(),
-            child: Skeletonizer(
-              child: Wrap(
-                spacing: 8,
-                children: [
+                // Skeleton loader.
+                if (user.madeByVKPlaylists.isEmpty)
                   for (int index = 0; index < 10; index++)
-                    AudioPlaylistWidget(
-                      name: fakePlaylistNames[index % fakePlaylistNames.length],
+                    Skeletonizer(
+                      child: AudioPlaylistWidget(
+                        name:
+                            fakePlaylistNames[index % fakePlaylistNames.length],
+                      ),
                     ),
-                ],
-              ),
+              ],
             ),
           ),
+        ),
       ],
     );
   }
@@ -2198,19 +2221,22 @@ class EverythingIsDisabledBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
+        // "Как пусто..."
         Text(
           AppLocalizations.of(context)!.music_allBlocksDisabledTitle,
-          style: Theme.of(context).textTheme.displayMedium!.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
+          style: const TextStyle(
+            fontWeight: FontWeight.w500,
+            fontSize: 18,
+          ),
           textAlign: TextAlign.center,
         ),
         const SizedBox(
-          height: 18,
+          height: 2,
         ),
+
+        // "Соскучились по музыке? ..."
         Text(
           AppLocalizations.of(context)!.music_allBlocksDisabledDescription,
-          style: Theme.of(context).textTheme.headlineSmall,
           textAlign: TextAlign.center,
         ),
       ],
@@ -2297,6 +2323,33 @@ class _HomeMusicPageState extends State<HomeMusicPage> {
       everythingIsDisabled = (!(myMusicEnabled || playlistsEnabled));
     }
 
+    /// [List], содержащий в себе список из виджетов/разделов на главном экране, которые доожны быть разделены [Divider]'ом.
+    final List<Widget> activeBlocks = [
+      // Раздел "Моя музыка".
+      if (myMusicEnabled)
+        MyMusicBlock(
+          useTopButtons: isMobileLayout,
+        ),
+
+      // Раздел "Ваши плейлисты".
+      if (playlistsEnabled) const MyPlaylistsBlock(),
+
+      // Раздел "Плейлисты для Вас".
+      if (recommendedPlaylistsEnabled) const RecommendedPlaylistsBlock(),
+
+      // Раздел "Совпадения по вкусам".
+      if (similarMusicChipEnabled) const SimillarMusicBlock(),
+
+      // Раздел "Собрано редакцией".
+      if (byVKChipEnabled) const ByVKPlaylistsBlock(),
+
+      // Нижняя часть интерфейса с переключателями при Mobile Layout'е.
+      if (isMobileLayout) const ChipFilters(),
+
+      // Случай, если пользователь отключил все возможные разделы музыки.
+      if (everythingIsDisabled) const EverythingIsDisabledBlock(),
+    ];
+
     /// Показывает [RefreshIndicator] во время загрузки данных с API ВКонтакте.
     void setLoading([bool value = true]) => setState(() => loadingData = value);
 
@@ -2366,100 +2419,92 @@ class _HomeMusicPageState extends State<HomeMusicPage> {
             children: [
               Expanded(
                 child: ListView(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isMobileLayout ? 16 : 24,
-                    vertical: isMobileLayout ? 20 : 30,
+                  padding: EdgeInsets.only(
+                    left: isMobileLayout ? 16 : 24,
+                    right: isMobileLayout ? 16 : 24,
+                    top: isMobileLayout ? 4 : 30,
+                    bottom: isMobileLayout ? 20 : 30,
                   ),
                   children: [
                     // Часть интерфейса "Добро пожаловать", а так же кнопка поиска.
                     if (!isMobileLayout)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          // Текст "Добро пожаловать".
-                          Flexible(
-                            child: Text(
-                              AppLocalizations.of(context)!.music_welcomeTitle(
-                                user.firstName!,
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          bottom: 36,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // Текст "Добро пожаловать".
+                            Flexible(
+                              child: Text(
+                                AppLocalizations.of(context)!
+                                    .music_welcomeTitle(
+                                  user.firstName!,
+                                ),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .displayMedium!
+                                    .copyWith(
+                                      fontWeight: FontWeight.w500,
+                                    ),
                               ),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .displayMedium!
-                                  .copyWith(
-                                    fontWeight: FontWeight.w500,
-                                  ),
                             ),
-                          ),
 
-                          // Поиск.
-                          IconButton.filledTonal(
-                            onPressed: () => showDialog(
-                              context: context,
-                              builder: (context) => const SearchDisplayDialog(),
+                            // Поиск.
+                            IconButton.filledTonal(
+                              onPressed: () => showDialog(
+                                context: context,
+                                builder: (context) =>
+                                    const SearchDisplayDialog(),
+                              ),
+                              icon: const Icon(
+                                Icons.search,
+                              ),
                             ),
-                            icon: const Icon(
-                              Icons.search,
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
+                      ),
+
+                    // Верхняя часть интерфейса с переключателями при Desktop Layout'е.
+                    if (!isMobileLayout)
+                      const Focus(
+                        autofocus: true,
+                        skipTraversal: true,
+                        canRequestFocus: true,
+                        child: ChipFilters(
+                          showLabel: false,
+                        ),
                       ),
                     if (!isMobileLayout)
-                      const SizedBox(
-                        height: 36,
+                      const Padding(
+                        padding: EdgeInsets.only(
+                          top: 8,
+                          bottom: 2,
+                        ),
+                        child: Divider(),
                       ),
 
-                    // Верхняя часть интерфейса с переключателями.
-                    const Focus(
-                      autofocus: true,
-                      skipTraversal: true,
-                      canRequestFocus: true,
-                      child: ChipFilters(),
-                    ),
-                    const SizedBox(height: 8),
-                    const Divider(),
-                    const SizedBox(height: 2),
+                    // Проходимся по всем активным разделам, создавая виджеты [Divider] и [SizedBox].
+                    for (int i = 0; i < activeBlocks.length; i++) ...[
+                      // Содержимое блока.
+                      activeBlocks[i],
 
-                    // Раздел "Моя музыка".
-                    if (myMusicEnabled)
-                      MyMusicBlock(
-                        useTopButtons: isMobileLayout,
-                      ),
-                    if (myMusicEnabled) const SizedBox(height: 12),
-                    if (myMusicEnabled) const Divider(),
-                    if (myMusicEnabled) const SizedBox(height: 4),
-
-                    // Раздел "Плейлисты".
-                    if (playlistsEnabled) MyPlaylistsBlock(),
-                    if (playlistsEnabled) const SizedBox(height: 12),
-                    if (playlistsEnabled) const Divider(),
-                    if (playlistsEnabled) const SizedBox(height: 4),
-
-                    // Раздел "Плейлисты для Вас".
-                    if (recommendedPlaylistsEnabled)
-                      RecommendedPlaylistsBlock(),
-                    if (recommendedPlaylistsEnabled) const SizedBox(height: 12),
-                    if (recommendedPlaylistsEnabled) const Divider(),
-                    if (recommendedPlaylistsEnabled) const SizedBox(height: 4),
-
-                    // Раздел "Совпадения по вкусам".
-                    if (similarMusicChipEnabled) SimillarMusicBlock(),
-                    if (similarMusicChipEnabled) const SizedBox(height: 12),
-                    if (similarMusicChipEnabled) const Divider(),
-                    if (similarMusicChipEnabled) const SizedBox(height: 4),
-
-                    // Раздел "Собрано редакцией".
-                    if (byVKChipEnabled) ByVKPlaylistsBlock(),
-                    if (byVKChipEnabled) const SizedBox(height: 12),
-                    if (byVKChipEnabled) const Divider(),
-                    if (byVKChipEnabled) const SizedBox(height: 4),
-
-                    // Случай, если пользователь отключил все возможные разделы музыки.
-                    if (everythingIsDisabled) const EverythingIsDisabledBlock(),
+                      // Divider в случае, если это не последний элемент.
+                      if (i < activeBlocks.length - 1)
+                        const Padding(
+                          padding: EdgeInsets.only(
+                            top: 12,
+                            bottom: 4,
+                          ),
+                          child: Divider(),
+                        ),
+                    ],
 
                     // Данный SizedBox нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
                     if (player.loaded && isMobileLayout)
                       const SizedBox(
-                        height: 80,
+                        height: 66,
                       ),
                   ],
                 ),

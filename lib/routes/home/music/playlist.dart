@@ -93,6 +93,7 @@ Widget buildListTrackWidget(
       isLoading: player.buffering,
       isLiked: audio.isLiked,
       audio: audio,
+      glowIfSelected: true,
       onAddToQueue: () async {
         await player.addNextToQueue(audio);
 
@@ -213,7 +214,7 @@ class PlaylistInfoRoute extends StatefulWidget {
 }
 
 class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
-  final AppLogger logger = getLogger("PlaylistInfoRoute");
+  static AppLogger logger = getLogger("PlaylistInfoRoute");
 
   /// Подписки на изменения состояния воспроизведения трека.
   late final List<StreamSubscription> subscriptions;
@@ -358,7 +359,8 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                       // Изображение плейлиста.
                                       ClipRRect(
                                         borderRadius: BorderRadius.circular(
-                                            globalBorderRadius),
+                                          globalBorderRadius,
+                                        ),
                                         child: widget.playlist.photo != null
                                             ? CachedNetworkImage(
                                                 imageUrl: widget
@@ -466,25 +468,26 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                             Row(
                               children: [
                                 IconButton.filled(
-                                  onPressed: !widget.playlist.isEmpty
-                                      ? () async {
-                                          // Если у нас уже запущен этот же плейлист, то переключаем паузу/воспроизведение.
-                                          if (player.currentPlaylist ==
-                                              widget.playlist) {
-                                            await player.togglePlay();
+                                  onPressed:
+                                      !widget.playlist.isEmpty && !_loading
+                                          ? () async {
+                                              // Если у нас уже запущен этот же плейлист, то переключаем паузу/воспроизведение.
+                                              if (player.currentPlaylist ==
+                                                  widget.playlist) {
+                                                await player.togglePlay();
 
-                                            return;
-                                          }
+                                                return;
+                                              }
 
-                                          await player.setShuffle(true);
+                                              await player.setShuffle(true);
 
-                                          await player.setPlaylist(
-                                            widget.playlist,
-                                            audio: widget.playlist.audios!
-                                                .randomItem(),
-                                          );
-                                        }
-                                      : null,
+                                              await player.setPlaylist(
+                                                widget.playlist,
+                                                audio: widget.playlist.audios!
+                                                    .randomItem(),
+                                              );
+                                            }
+                                          : null,
                                   iconSize: 38,
                                   color: Theme.of(context).colorScheme.primary,
                                   icon: Icon(
@@ -492,8 +495,11 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                             player.playing
                                         ? Icons.pause
                                         : Icons.play_arrow,
-                                    color:
-                                        Theme.of(context).colorScheme.onPrimary,
+                                    color: !widget.playlist.isEmpty && !_loading
+                                        ? Theme.of(context)
+                                            .colorScheme
+                                            .onPrimary
+                                        : null,
                                   ),
                                 ),
                                 const SizedBox(
@@ -502,18 +508,21 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
 
                                 // Кнопка для загрузки треков в кэш.
                                 IconButton(
-                                  onPressed: !widget.playlist.isEmpty
-                                      ? () => showWipDialog(
-                                            context,
-                                            title: "Кэширование треков",
-                                          )
-                                      : null,
+                                  onPressed:
+                                      !widget.playlist.isEmpty && !_loading
+                                          ? () => showWipDialog(
+                                                context,
+                                                title: "Кэширование треков",
+                                              )
+                                          : null,
                                   iconSize: 38,
                                   icon: Icon(
                                     Icons.arrow_circle_down,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onBackground,
+                                    color: !widget.playlist.isEmpty && !_loading
+                                        ? Theme.of(context)
+                                            .colorScheme
+                                            .onBackground
+                                        : null,
                                   ),
                                 ),
                               ],
@@ -622,7 +631,7 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                         // Данный SizedBox нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
                         return const SizedBox(
                           key: ValueKey(null),
-                          height: 80,
+                          height: 76,
                         );
                       }
 

@@ -816,19 +816,12 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
 /// Desktop Layout для полноэкранного плеера.
 ///
 /// [FullscreenPlayerRoute] автоматически определяет, должен отображаться Desktop или Mobile Layout.
-class FullscreenPlayerDesktopRoute extends StatefulWidget {
+class FullscreenPlayerDesktopRoute extends StatelessWidget {
+  static AppLogger logger = getLogger("FullscreenPlayerDesktopRoute");
+
   const FullscreenPlayerDesktopRoute({
     super.key,
   });
-
-  @override
-  State<FullscreenPlayerDesktopRoute> createState() =>
-      _FullscreenPlayerDesktopRouteState();
-}
-
-class _FullscreenPlayerDesktopRouteState
-    extends State<FullscreenPlayerDesktopRoute> {
-  final AppLogger logger = getLogger("FullscreenPlayerDesktopRoute");
 
   @override
   Widget build(BuildContext context) {

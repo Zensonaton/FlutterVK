@@ -287,7 +287,7 @@ class Settings {
 /// ```
 class UserProvider extends ChangeNotifier {
   /// Объект логгера для пользователя.
-  final AppLogger logger = getLogger("UserProvider");
+  static AppLogger logger = getLogger("UserProvider");
 
   /// Указывает, что данный пользователь авторизован в приложении при помощи основного токена (Kate Mobile).
   bool isAuthorized;

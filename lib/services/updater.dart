@@ -219,6 +219,9 @@ class UpdateAvailableDialog extends StatelessWidget {
 
 /// Класс для обработки обновлений приложения.
 class Updater {
+  /// [AppLogger] для этого класса.
+  static AppLogger logger = getLogger("Updater");
+
   /// Возвращает информацию по последнему Github Release репозитория данного приложения.
   ///
   /// Для получения списка из Release'ов воспользуйтесь методом [getReleases].
@@ -299,8 +302,6 @@ class Updater {
     bool showMessageOnNoUpdates = false,
     bool useSnackbarOnUpdate = false,
   }) async {
-    final AppLogger logger = getLogger("checkForUpdates");
-
     logger.d("Checking for app updates (current: $appVersion)");
 
     if (showLoadingOverlay) LoadingOverlay.of(context).show();
@@ -389,8 +390,6 @@ class Updater {
   static Future<File> downloadUpdate(
     ReleaseAsset asset,
   ) async {
-    final AppLogger logger = getLogger("downloadUpdate");
-
     final File file = File(
       path.join(
         (await getApplicationSupportDirectory()).path,
@@ -439,8 +438,6 @@ class Updater {
   static Future<void> installUpdate(
     File update,
   ) async {
-    final AppLogger logger = getLogger("installUpdate");
-
     logger.d("Installing update");
 
     if (Platform.isWindows) {
