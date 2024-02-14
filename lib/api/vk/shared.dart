@@ -536,16 +536,6 @@ class AudioThumbnails {
   @JsonKey(name: "photo_1200")
   final String? photo1200;
 
-  /// Возвращает самую большую фотографию альбома.
-  String? get photo =>
-      photo1200 ??
-      photo600 ??
-      photo300 ??
-      photo270 ??
-      photo135 ??
-      photo68 ??
-      photo34;
-
   AudioThumbnails(
     this.width,
     this.height,

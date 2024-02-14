@@ -1,3 +1,5 @@
+import "dart:io";
+
 import "package:audio_service/audio_service.dart";
 import "package:flutter/material.dart";
 import "package:shared_preferences/shared_preferences.dart";
@@ -19,6 +21,7 @@ import "../api/vk/shared.dart";
 import "../api/vk/users/get.dart";
 import "../enums.dart";
 import "../main.dart";
+import "../services/audio_player.dart";
 import "../services/cache_manager.dart";
 import "../services/logger.dart";
 import "../utils.dart";
@@ -139,7 +142,7 @@ class ExtendedVKAudio extends Audio {
         artist: artist,
         artUri: album?.thumb != null
             ? Uri.parse(
-                album!.thumb!.photo!,
+                album!.thumb!.photo1200!,
               )
             : null,
         duration: Duration(
@@ -416,9 +419,15 @@ class UserProvider extends ChangeNotifier {
     await prefs.clear();
     markUpdated(false);
 
-    // Очищаем кэш.
+    // Очищаем кэш изображений.
     await CachedNetworkImagesManager.instance.emptyCache();
-    await VKMusicCacheManager.instance.emptyCache();
+
+    // Удаляем кэшированные треки.
+    Directory(
+      await CachedStreamedAudio.getTrackStorageDirectory(),
+    ).deleteSync(
+      recursive: true,
+    );
   }
 
   /// Сохраняет важные поля пользователя на диск.

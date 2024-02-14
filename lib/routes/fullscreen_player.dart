@@ -349,8 +349,8 @@ class _BlurredBackgroundImageState extends State<BlurredBackgroundImage> {
           sigmaY: 50,
         ),
         child: CachedNetworkImage(
-          imageUrl: player.currentAudio!.album!.thumb!.photo600!,
-          cacheKey: "${player.currentAudio!.mediaKey}600",
+          imageUrl: player.currentAudio!.album!.thumb!.photo1200!,
+          cacheKey: "${player.currentAudio!.mediaKey}1200",
           fit: BoxFit.cover,
           cacheManager: CachedNetworkImagesManager.instance,
           color: Colors.black.withOpacity(0.55),

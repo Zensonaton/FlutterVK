@@ -366,7 +366,7 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                                 imageUrl: widget
                                                     .playlist.photo!.photo270!,
                                                 cacheKey:
-                                                    widget.playlist.mediaKey,
+                                                    "${widget.playlist.mediaKey}270",
                                                 memCacheHeight: 200,
                                                 memCacheWidth: 200,
                                                 placeholder: (BuildContext

@@ -37,25 +37,6 @@ class IOCacheManagerExtended extends IOFileSystem {
   }
 }
 
-/// Класс типа [CacheManager], который выполняет работу по кэшированию треков из ВКонтакте.
-class VKMusicCacheManager {
-  static const String key = "tracks";
-
-  static CacheManager instance = CacheManager(
-    Config(
-      key,
-      repo: JsonCacheInfoRepository(
-        databaseName: key,
-      ),
-      fileSystem: IOCacheManagerExtended(
-        key,
-      ),
-      fileService: HttpFileService(),
-      maxNrOfCacheObjects: 50000,
-    ),
-  );
-}
-
 /// Класс типа [CacheManager], который используется в [CachedNetworkImage].
 class CachedNetworkImagesManager {
   static const String key = "images";

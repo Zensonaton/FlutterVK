@@ -15,7 +15,7 @@ import "../enums.dart";
 import "../main.dart";
 import "../provider/color.dart";
 import "../provider/user.dart";
-import "../services/cache_manager.dart";
+import "../services/audio_player.dart";
 import "../services/logger.dart";
 import "../services/updater.dart";
 import "../utils.dart";
@@ -140,7 +140,9 @@ Future<void> toggleTrackLike(
 
     // Если это возможно, то удаляем трек из кэша.
     try {
-      VKMusicCacheManager.instance.removeFile(audio.mediaKey);
+      CachedStreamedAudio(
+        cacheKey: audio.mediaKey,
+      ).delete();
     } catch (e) {
       logger.w(
         "Не удалось удалить трек из кэша после удаления трека из лайкнутых: ",
