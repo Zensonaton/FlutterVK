@@ -635,7 +635,12 @@ class VKMusicPlayer {
   AudioSource getAudioSource(
     ExtendedVKAudio audio,
   ) {
-    // TODO: Использовать LockCachingAudioSource.
+    if (Platform.isAndroid) {
+      return LockCachingAudioSource(
+        Uri.parse(audio.url),
+        tag: audio.asMediaItem,
+      );
+    }
 
     return AudioSource.uri(
       Uri.parse(audio.url),
