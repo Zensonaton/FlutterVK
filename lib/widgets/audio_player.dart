@@ -314,7 +314,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
 
     // Размер блоков слева.
     final double leftAndRightBlocksSize =
-        widget.useBigLayout ? (width - centerBlockSize) / 2 : width - 104;
+        widget.useBigLayout ? (width - centerBlockSize) / 2 : width - 112;
 
     /// Url на изображение трека.
     final String? imageUrl = widget.audio?.album?.thumb?.photo68;
