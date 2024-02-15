@@ -52,10 +52,7 @@ class CachedStreamedAudio extends StreamAudioSource {
 
   /// Возвращает путь к корневой папке, хранящий в себе кэшированные треки.
   static Future<String> getTrackStorageDirectory() async => join(
-        (isDesktop
-                ? await getApplicationSupportDirectory()
-                : await getApplicationCacheDirectory())
-            .path,
+        (await getApplicationSupportDirectory()).path,
         "audios",
       );
 
