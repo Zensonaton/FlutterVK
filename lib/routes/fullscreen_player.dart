@@ -17,6 +17,7 @@ import "package:wakelock_plus/wakelock_plus.dart";
 import "../api/vk/api.dart";
 import "../api/vk/audio/get_lyrics.dart";
 import "../consts.dart";
+import "../intents.dart";
 import "../main.dart";
 import "../provider/color.dart";
 import "../provider/user.dart";
@@ -26,6 +27,11 @@ import "../utils.dart";
 import "fullscreen_player/desktop.dart";
 import "fullscreen_player/mobile.dart";
 
+/// Указывает, открыт ли полноэкранный плеер.
+///
+/// Для открытия или закрытия полноэкранного плеера воспользуйтесь методом [openFullscreenPlayer] или [closeFullscreenPlayer].
+bool isFullscreenPlayerOpen = false;
+
 /// Метод, который открывает музыкальный плеер на всё окно, либо на весь экран, если приложение запущено на Desktop-платформе. Если [fullscreenOnDesktop] правдив, и приложение запущено на Desktop ([isDesktop]), то тогда приложение перейдёт в полноэкранный режим.
 ///
 /// Для закрытия воспользуйтесь методом [closeFullscreenPlayer].
@@ -33,39 +39,70 @@ Future<void> openFullscreenPlayer(
   BuildContext context, {
   bool fullscreenOnDesktop = true,
 }) async {
+  // Если плеер уже открыт, то ничего не делаем.
+  if (isFullscreenPlayerOpen) {
+    return;
+  }
+
   // Если приложение запущено на Desktop, то нужно отобразить окно на весь экран.
   if (isDesktop && fullscreenOnDesktop) {
     await FullScreenWindow.setFullScreen(true);
   }
 
+  if (!context.mounted) return;
+
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => const FullscreenPlayerRoute(),
+    ),
+  );
+
+  isFullscreenPlayerOpen = true;
+
   // Делаем Wakelock, что бы экран не отключался во время открытого плеера.
   await WakelockPlus.enable();
-
-  if (context.mounted) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const FullscreenPlayerRoute(),
-      ),
-    );
-  }
 }
 
 /// Метод, закрывающий ранее открытый при помощи метода [openFullscreenPlayer] полноэкранный плеер.
 Future<void> closeFullscreenPlayer(
   BuildContext context,
 ) async {
+  // Если плеер не открыт, то ничего не делаем.
+  if (!isFullscreenPlayerOpen) {
+    return;
+  }
+
   // Если приложение запущено на Desktop, то нужно закрыть полноэкранный режим.
   if (isDesktop) {
     await FullScreenWindow.setFullScreen(false);
   }
 
+  if (!context.mounted) return;
+
+  Navigator.of(context).pop();
+
+  isFullscreenPlayerOpen = false;
+
   // Убираем Wakelock для защиты от отключения экрана.
   await WakelockPlus.disable();
+}
 
-  if (context.mounted) {
-    Navigator.of(context).pop();
+/// Вызывает [openFullscreenPlayer] или [closeFullscreenPlayer], в зависимости о того, открыт сейчас полноэкранный плеер или нет.
+Future<void> toggleFullscreenPlayer(
+  BuildContext context, {
+  bool fullscreenOnDesktop = true,
+}) async {
+  if (isFullscreenPlayerOpen) {
+    await closeFullscreenPlayer(context);
+
+    return;
   }
+
+  await openFullscreenPlayer(
+    context,
+    fullscreenOnDesktop: fullscreenOnDesktop,
+  );
 }
 
 /// Виджет, отображающий отдельную строчку линии в тексте трека. По нажатию по данной линии, плеер перемотается на начало данной линии.
@@ -538,51 +575,58 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
           BuildContext context,
         ) {
           return Scaffold(
-            body: CallbackShortcuts(
-              bindings: {
-                const SingleActivator(
-                  LogicalKeyboardKey.escape,
-                ): () => closeFullscreenPlayer(context),
+            body: Actions(
+              actions: {
+                FullscreenPlayerIntent: CallbackAction(
+                  onInvoke: (intent) => closeFullscreenPlayer(context),
+                ),
               },
-              child: Focus(
-                autofocus: true,
-                canRequestFocus: true,
-                child: AnimatedContainer(
-                  duration: const Duration(
-                    milliseconds: 500,
-                  ),
-                  curve: Curves.ease,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.bottomCenter,
-                      end: Alignment.topCenter,
-                      colors: [
-                        Theme.of(context).colorScheme.primaryContainer,
-                        darkenColor(
+              child: CallbackShortcuts(
+                bindings: {
+                  const SingleActivator(
+                    LogicalKeyboardKey.escape,
+                  ): () => closeFullscreenPlayer(context),
+                },
+                child: Focus(
+                  autofocus: true,
+                  canRequestFocus: true,
+                  child: AnimatedContainer(
+                    duration: const Duration(
+                      milliseconds: 500,
+                    ),
+                    curve: Curves.ease,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                        colors: [
                           Theme.of(context).colorScheme.primaryContainer,
-                          50,
+                          darkenColor(
+                            Theme.of(context).colorScheme.primaryContainer,
+                            50,
+                          ),
+                        ],
+                      ),
+                    ),
+                    child: Stack(
+                      children: [
+                        // Размытое фоновое изображение.
+                        if (player.currentAudio?.album?.thumb != null &&
+                            user.settings.playerThumbAsBackground)
+                          SizedBox(
+                            width: MediaQuery.of(context).size.width,
+                            height: MediaQuery.of(context).size.height,
+                            child: const BlurredBackgroundImage(),
+                          ),
+
+                        // Внутреннее содержимое, зависящее от типа Layout'а.
+                        SafeArea(
+                          child: useMobileLayout
+                              ? const FullscreenPlayerMobileRoute()
+                              : const FullscreenPlayerDesktopRoute(),
                         ),
                       ],
                     ),
-                  ),
-                  child: Stack(
-                    children: [
-                      // Размытое фоновое изображение.
-                      if (player.currentAudio?.album?.thumb != null &&
-                          user.settings.playerThumbAsBackground)
-                        SizedBox(
-                          width: MediaQuery.of(context).size.width,
-                          height: MediaQuery.of(context).size.height,
-                          child: const BlurredBackgroundImage(),
-                        ),
-
-                      // Внутреннее содержимое, зависящее от типа Layout'а.
-                      SafeArea(
-                        child: useMobileLayout
-                            ? const FullscreenPlayerMobileRoute()
-                            : const FullscreenPlayerDesktopRoute(),
-                      ),
-                    ],
                   ),
                 ),
               ),

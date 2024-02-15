@@ -12,6 +12,7 @@ import "../api/vk/audio/add.dart";
 import "../api/vk/audio/delete.dart";
 import "../api/vk/audio/restore.dart";
 import "../enums.dart";
+import "../intents.dart";
 import "../main.dart";
 import "../provider/color.dart";
 import "../provider/user.dart";
@@ -461,152 +462,161 @@ class _HomeRouteState extends State<HomeRoute> {
     final bool isMobileLayout =
         getDeviceType(MediaQuery.of(context).size) == DeviceScreenType.mobile;
 
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      body: Stack(
-        children: [
-          // Блок для навигации (при Desktop Layout'е), а так же содержимое экрана.
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Блок для навигации.
-              if (!isMobileLayout)
-                NavigationRail(
-                  selectedIndex: navigationScreenIndex,
-                  onDestinationSelected: setNavigationPage,
-                  labelType: NavigationRailLabelType.all,
-                  destinations: [
-                    for (NavigationPage page in navigationPages)
-                      NavigationRailDestination(
-                        icon: Icon(
-                          page.icon,
-                        ),
-                        label: Text(page.label),
-                        selectedIcon: Icon(
-                          page.selectedIcon ?? page.icon,
-                        ),
-                      )
-                  ],
-                ),
-              if (!isMobileLayout) const VerticalDivider(),
+    return Actions(
+      actions: {
+        FullscreenPlayerIntent: CallbackAction(
+          onInvoke: (intent) => openFullscreenPlayer(context),
+        ),
+      },
+      child: Scaffold(
+        resizeToAvoidBottomInset: false,
+        body: Stack(
+          children: [
+            // Блок для навигации (при Desktop Layout'е), а так же содержимое экрана.
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Блок для навигации.
+                if (!isMobileLayout)
+                  NavigationRail(
+                    selectedIndex: navigationScreenIndex,
+                    onDestinationSelected: setNavigationPage,
+                    labelType: NavigationRailLabelType.all,
+                    destinations: [
+                      for (NavigationPage page in navigationPages)
+                        NavigationRailDestination(
+                          icon: Icon(
+                            page.icon,
+                          ),
+                          label: Text(page.label),
+                          selectedIcon: Icon(
+                            page.selectedIcon ?? page.icon,
+                          ),
+                        )
+                    ],
+                  ),
+                if (!isMobileLayout) const VerticalDivider(),
 
-              // Содержимое экрана.
-              Expanded(
-                child: NavigatorPopHandler(
-                  onPop: () => navigationPage.navigatorKey.currentState?.pop(),
-                  child: AnimatedSwitcher(
-                    duration: const Duration(
-                      milliseconds: 400,
-                    ),
-                    layoutBuilder: (
-                      Widget? currentChild,
-                      List<Widget> previousChildren,
-                    ) {
-                      return currentChild ?? Container();
-                    },
-                    transitionBuilder:
-                        (Widget child, Animation<double> animation) {
-                      return FadeTransition(
-                        opacity: animation,
-                        child: child,
-                      );
-                    },
-                    child: Navigator(
-                      key: navigationPage.navigatorKey,
-                      onGenerateRoute: (
-                        RouteSettings settings,
+                // Содержимое экрана.
+                Expanded(
+                  child: NavigatorPopHandler(
+                    onPop: () =>
+                        navigationPage.navigatorKey.currentState?.pop(),
+                    child: AnimatedSwitcher(
+                      duration: const Duration(
+                        milliseconds: 400,
+                      ),
+                      layoutBuilder: (
+                        Widget? currentChild,
+                        List<Widget> previousChildren,
                       ) {
-                        return MaterialPageRoute(
-                          builder: (BuildContext context) {
-                            return navigationPage.route;
-                          },
+                        return currentChild ?? Container();
+                      },
+                      transitionBuilder:
+                          (Widget child, Animation<double> animation) {
+                        return FadeTransition(
+                          opacity: animation,
+                          child: child,
                         );
                       },
+                      child: Navigator(
+                        key: navigationPage.navigatorKey,
+                        onGenerateRoute: (
+                          RouteSettings settings,
+                        ) {
+                          return MaterialPageRoute(
+                            builder: (BuildContext context) {
+                              return navigationPage.route;
+                            },
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
-
-          // Маленький плеер снизу.
-          AnimatedAlign(
-            duration: const Duration(
-              milliseconds: 500,
+              ],
             ),
-            curve: Curves.ease,
-            alignment: navigationPage.audioPlayerAlign,
-            child: StreamBuilder<bool>(
-              stream: player.loadedStateStream,
-              builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
-                final bool playerLoaded = snapshot.data ?? false;
 
-                return AnimatedOpacity(
-                  opacity: playerLoaded ? 1.0 : 0.0,
-                  curve: Curves.ease,
-                  duration: const Duration(
-                    milliseconds: 500,
-                  ),
-                  child: AnimatedSlide(
-                    offset: Offset(
-                      0,
-                      playerLoaded ? 0.0 : 1.0,
-                    ),
+            // Маленький плеер снизу.
+            AnimatedAlign(
+              duration: const Duration(
+                milliseconds: 500,
+              ),
+              curve: Curves.ease,
+              alignment: navigationPage.audioPlayerAlign,
+              child: StreamBuilder<bool>(
+                stream: player.loadedStateStream,
+                builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
+                  final bool playerLoaded = snapshot.data ?? false;
+
+                  return AnimatedOpacity(
+                    opacity: playerLoaded ? 1.0 : 0.0,
+                    curve: Curves.ease,
                     duration: const Duration(
                       milliseconds: 500,
                     ),
-                    curve: Curves.ease,
-                    child: AnimatedContainer(
+                    child: AnimatedSlide(
+                      offset: Offset(
+                        0,
+                        playerLoaded ? 0.0 : 1.0,
+                      ),
                       duration: const Duration(
                         milliseconds: 500,
                       ),
-                      padding:
-                          !isMobileLayout && navigationPage.allowBigAudioPlayer
-                              ? null
-                              : const EdgeInsets.symmetric(
-                                  vertical: 8,
-                                  horizontal: 16,
-                                ),
                       curve: Curves.ease,
-                      width: isMobileLayout
-                          ? null
-                          : (navigationPage.allowBigAudioPlayer
-                              ? clampDouble(
-                                  MediaQuery.of(context).size.width,
-                                  500,
-                                  double.infinity,
-                                )
-                              : 360),
-                      child: BottomMusicPlayerWidget(
-                        isMobileLayout: isMobileLayout,
-                        allowBigAudioPlayer: navigationPage.allowBigAudioPlayer,
+                      child: AnimatedContainer(
+                        duration: const Duration(
+                          milliseconds: 500,
+                        ),
+                        padding: !isMobileLayout &&
+                                navigationPage.allowBigAudioPlayer
+                            ? null
+                            : const EdgeInsets.symmetric(
+                                vertical: 8,
+                                horizontal: 16,
+                              ),
+                        curve: Curves.ease,
+                        width: isMobileLayout
+                            ? null
+                            : (navigationPage.allowBigAudioPlayer
+                                ? clampDouble(
+                                    MediaQuery.of(context).size.width,
+                                    500,
+                                    double.infinity,
+                                  )
+                                : 360),
+                        child: BottomMusicPlayerWidget(
+                          isMobileLayout: isMobileLayout,
+                          allowBigAudioPlayer:
+                              navigationPage.allowBigAudioPlayer,
+                        ),
                       ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
+        bottomNavigationBar: isMobileLayout
+            ? NavigationBar(
+                onDestinationSelected: setNavigationPage,
+                selectedIndex: navigationScreenIndex,
+                destinations: [
+                  for (NavigationPage page in navigationPages)
+                    NavigationDestination(
+                      icon: Icon(
+                        page.icon,
+                      ),
+                      label: page.label,
+                      selectedIcon: Icon(
+                        page.selectedIcon ?? page.icon,
+                      ),
+                    )
+                ],
+              )
+            : null,
       ),
-      bottomNavigationBar: isMobileLayout
-          ? NavigationBar(
-              onDestinationSelected: setNavigationPage,
-              selectedIndex: navigationScreenIndex,
-              destinations: [
-                for (NavigationPage page in navigationPages)
-                  NavigationDestination(
-                    icon: Icon(
-                      page.icon,
-                    ),
-                    label: page.label,
-                    selectedIcon: Icon(
-                      page.selectedIcon ?? page.icon,
-                    ),
-                  )
-              ],
-            )
-          : null,
     );
   }
 }

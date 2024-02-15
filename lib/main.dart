@@ -16,6 +16,7 @@ import "package:system_tray/system_tray.dart";
 import "package:window_manager/window_manager.dart";
 
 import "enums.dart";
+import "intents.dart";
 import "provider/color.dart";
 import "provider/user.dart";
 import "routes/home.dart";
@@ -363,12 +364,20 @@ class _MainAppState extends State<MainApp> with WindowListener {
           GlobalCupertinoLocalizations.delegate,
         ],
         shortcuts: {
-          LogicalKeySet(LogicalKeyboardKey.space): const ActivateIntent(),
+          // Пауза.
+          LogicalKeySet(
+            LogicalKeyboardKey.space,
+          ): const PlayPauseIntent(),
+
+          // Полноэкранный плеер.
+          LogicalKeySet(
+            LogicalKeyboardKey.f11,
+          ): const FullscreenPlayerIntent(),
         },
         actions: {
-          ActivateIntent: CallbackAction<ActivateIntent>(
-            onInvoke: (ActivateIntent intent) => player.togglePlay(),
-          )
+          PlayPauseIntent: CallbackAction(
+            onInvoke: (intent) => player.togglePlay(),
+          ),
         },
         supportedLocales: const [
           Locale("ru"),

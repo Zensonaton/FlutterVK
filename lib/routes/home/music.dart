@@ -287,11 +287,60 @@ class _SearchDisplayDialogState extends State<SearchDisplayDialog> {
   /// Текущий Future по поиску через API ВКонтакте. Может отсутствовать, если ничего не было введено в поиск.
   Future<APIAudioSearchResponse>? searchFuture;
 
+  /// Метод, который вызывается при печати в поле поиска.
+  ///
+  /// Данный метод вызывается с учётом debouncing'а.
+  void onDebounce(String query) {
+    // Если мы вышли из текущего Route, то ничего не делаем.
+    if (!mounted) return;
+
+    final UserProvider user = Provider.of<UserProvider>(context, listen: false);
+
+    // Если ничего не введено, то делаем пустой Future.
+    if (query.isEmpty) {
+      if (searchFuture != null) {
+        setState(
+          () => searchFuture = null,
+        );
+      }
+
+      return;
+    }
+
+    searchFuture = user.audioSearchWithAlbums(query);
+    setState(() {});
+  }
+
+  /// Метод, который вызывается при нажатии на клавишу клавиатуры.
+  void keyboardListener(
+    RawKeyEvent key,
+  ) {
+    // Нажатие кнопки ESC.
+    if (key.isKeyPressed(LogicalKeyboardKey.escape)) {
+      // Если в поле поиска есть текст, и это поле находится в фокусе, то ничего не делаем.
+      // "Стирание" текста находится в TextField'е.
+      if (controller.text.isNotEmpty && focusNode.hasFocus || !mounted) return;
+
+      Navigator.of(context).pop();
+
+      return;
+    }
+
+    // Нажатие комбинации CTRL+F.
+    if (key.isControlPressed && key.isKeyPressed(LogicalKeyboardKey.keyF)) {
+      controller.selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: controller.text.length,
+      );
+      focusNode.requestFocus();
+
+      return;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-
-    final UserProvider user = Provider.of<UserProvider>(context, listen: false);
 
     subscriptions = [
       // Изменения состояния воспроизведения.
@@ -311,26 +360,13 @@ class _SearchDisplayDialogState extends State<SearchDisplayDialog> {
     );
 
     // Обработчик событий поиска, испускаемых Debouncer'ом, если пользователь остановил печать.
-    debouncer.values.listen(
-      (String query) {
-        // Если ничего не введено, то делаем пустой Future.
-        if (query.isEmpty) {
-          if (searchFuture != null) {
-            setState(
-              () => searchFuture = null,
-            );
-          }
-
-          return;
-        }
-
-        searchFuture = user.audioSearchWithAlbums(query);
-        setState(() {});
-      },
-    );
+    debouncer.values.listen(onDebounce);
 
     // Если у пользователя ПК, то тогда устанавливаем фокус на поле поиска.
     if (isDesktop && widget.focusSearchBarOnOpen) focusNode.requestFocus();
+
+    // Обработчик нажатия кнопок клавиатуры.
+    RawKeyboard.instance.addListener(keyboardListener);
   }
 
   @override
@@ -388,35 +424,43 @@ class _SearchDisplayDialogState extends State<SearchDisplayDialog> {
 
                   // Поиск.
                   Expanded(
-                    child: TextField(
-                      focusNode: focusNode,
-                      controller: controller,
-                      onChanged: (String query) => setState(() {}),
-                      decoration: InputDecoration(
-                        hintText:
-                            AppLocalizations.of(context)!.music_searchText,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(
-                            globalBorderRadius,
+                    child: CallbackShortcuts(
+                      bindings: {
+                        const SingleActivator(
+                          LogicalKeyboardKey.escape,
+                        ): () => controller.clear(),
+                      },
+                      child: TextField(
+                        focusNode: focusNode,
+                        controller: controller,
+                        onChanged: (String query) => setState(() {}),
+                        decoration: InputDecoration(
+                          hintText:
+                              AppLocalizations.of(context)!.music_searchText,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(
+                              globalBorderRadius,
+                            ),
                           ),
-                        ),
-                        prefixIcon: const Icon(
-                          Icons.search,
-                        ),
-                        suffixIcon: controller.text.isNotEmpty
-                            ? Padding(
-                                padding: const EdgeInsetsDirectional.only(
-                                  end: 12,
-                                ),
-                                child: IconButton(
-                                  icon: const Icon(
-                                    Icons.close,
+                          prefixIcon: const Icon(
+                            Icons.search,
+                          ),
+                          suffixIcon: controller.text.isNotEmpty
+                              ? Padding(
+                                  padding: const EdgeInsetsDirectional.only(
+                                    end: 12,
                                   ),
-                                  onPressed: () =>
-                                      setState(() => controller.clear()),
-                                ),
-                              )
-                            : null,
+                                  child: IconButton(
+                                    icon: const Icon(
+                                      Icons.close,
+                                    ),
+                                    onPressed: () => setState(
+                                      () => controller.clear(),
+                                    ),
+                                  ),
+                                )
+                              : null,
+                        ),
                       ),
                     ),
                   ),
@@ -2400,30 +2444,30 @@ class _HomeMusicPageState extends State<HomeMusicPage> {
         refreshing: loadingData,
         child: CallbackShortcuts(
           bindings: {
-            const SingleActivator(
-              LogicalKeyboardKey.f5,
-            ): () async {
-              setLoading();
+            if (user.favoritesPlaylist != null)
+              const SingleActivator(
+                LogicalKeyboardKey.f5,
+              ): () async {
+                setLoading();
 
-              await ensureUserAudioAllInformation(
-                context,
-                forceUpdate: true,
-              );
-              setLoading(false);
-            },
-            const SingleActivator(
-              LogicalKeyboardKey.keyF,
-              control: true,
-            ): user.favoritesPlaylist != null
-                ? () => Navigator.push(
-                      context,
-                      Material3PageRoute(
-                        builder: (context) => PlaylistInfoRoute(
-                          playlist: user.favoritesPlaylist!,
-                        ),
+                await ensureUserAudioAllInformation(
+                  context,
+                  forceUpdate: true,
+                );
+                setLoading(false);
+              },
+            if (user.favoritesPlaylist != null)
+              const SingleActivator(
+                LogicalKeyboardKey.keyF,
+                control: true,
+              ): () => Navigator.push(
+                    context,
+                    Material3PageRoute(
+                      builder: (context) => PlaylistInfoRoute(
+                        playlist: user.favoritesPlaylist!,
                       ),
-                    )
-                : () {},
+                    ),
+                  )
           },
           child: Column(
             mainAxisSize: MainAxisSize.min,

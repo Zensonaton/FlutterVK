@@ -5,6 +5,7 @@ import "dart:ui";
 import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
 import "package:flutter/rendering.dart";
+import "package:flutter/services.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "package:just_audio/just_audio.dart";
 import "package:provider/provider.dart";
@@ -256,6 +257,33 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
     }
   }
 
+  /// Метод, который вызывается при нажатии на клавишу клавиатуры.
+  void keyboardListener(
+    RawKeyEvent key,
+  ) {
+    // Нажатие кнопки ESC.
+    if (key.isKeyPressed(LogicalKeyboardKey.escape)) {
+      // Если в поле поиска есть текст, и это поле находится в фокусе, то ничего не делаем.
+      // "Стирание" текста находится в TextField'е.
+      if (controller.text.isNotEmpty && focusNode.hasFocus || !mounted) return;
+
+      Navigator.of(context).pop();
+
+      return;
+    }
+
+    // Нажатие комбинации CTRL+F.
+    if (key.isControlPressed && key.isKeyPressed(LogicalKeyboardKey.keyF)) {
+      controller.selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: controller.text.length,
+      );
+      focusNode.requestFocus();
+
+      return;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -280,6 +308,9 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
 
     // Если нам это разрешено, то устанавливаем фокус на поле поиска.
     if (widget.focusSearchBarOnOpen ?? isDesktop) focusNode.requestFocus();
+
+    // Обработчик нажатия кнопок клавиатуры.
+    RawKeyboard.instance.addListener(keyboardListener);
   }
 
   @override
@@ -289,6 +320,8 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
     for (StreamSubscription subscription in subscriptions) {
       subscription.cancel();
     }
+
+    RawKeyboard.instance.removeListener(keyboardListener);
   }
 
   @override
@@ -533,39 +566,66 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                             Flexible(
                               child: SizedBox(
                                 width: 300,
-                                child: TextField(
-                                  focusNode: focusNode,
-                                  controller: controller,
-                                  enabled: hasTracksLoaded,
-                                  onChanged: (String query) => setState(() {}),
-                                  decoration: InputDecoration(
-                                    hintText: AppLocalizations.of(context)!
-                                        .music_searchTextInPlaylist(
-                                      playlistAudios.length,
-                                    ),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(
-                                        globalBorderRadius,
+                                child: CallbackShortcuts(
+                                  bindings: {
+                                    const SingleActivator(
+                                      LogicalKeyboardKey.escape,
+                                    ): () => controller.clear(),
+                                    if (hasTracksLoaded)
+                                      const SingleActivator(
+                                        LogicalKeyboardKey.enter,
+                                      ): () async {
+                                        // Если у нас уже запущен этот же трек, то переключаем паузу/воспроизведение.
+                                        if (player.currentAudio ==
+                                            filteredAudios[0]) {
+                                          await player.togglePlay();
+
+                                          return;
+                                        }
+
+                                        await player.setPlaylist(
+                                          widget.playlist,
+                                          audio: filteredAudios[0],
+                                        );
+                                      },
+                                  },
+                                  child: TextField(
+                                    focusNode: focusNode,
+                                    controller: controller,
+                                    enabled: hasTracksLoaded,
+                                    onChanged: (String query) =>
+                                        setState(() {}),
+                                    decoration: InputDecoration(
+                                      hintText: AppLocalizations.of(context)!
+                                          .music_searchTextInPlaylist(
+                                        playlistAudios.length,
                                       ),
-                                    ),
-                                    prefixIcon: const Icon(
-                                      Icons.search,
-                                    ),
-                                    suffixIcon: controller.text.isNotEmpty
-                                        ? Padding(
-                                            padding: const EdgeInsetsDirectional
-                                                .only(
-                                              end: 12,
-                                            ),
-                                            child: IconButton(
-                                              icon: const Icon(
-                                                Icons.close,
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(
+                                          globalBorderRadius,
+                                        ),
+                                      ),
+                                      prefixIcon: const Icon(
+                                        Icons.search,
+                                      ),
+                                      suffixIcon: controller.text.isNotEmpty
+                                          ? Padding(
+                                              padding:
+                                                  const EdgeInsetsDirectional
+                                                      .only(
+                                                end: 12,
                                               ),
-                                              onPressed: () => setState(
-                                                  () => controller.clear()),
-                                            ),
-                                          )
-                                        : null,
+                                              child: IconButton(
+                                                icon: const Icon(
+                                                  Icons.close,
+                                                ),
+                                                onPressed: () => setState(
+                                                  () => controller.clear(),
+                                                ),
+                                              ),
+                                            )
+                                          : null,
+                                    ),
                                   ),
                                 ),
                               ),
