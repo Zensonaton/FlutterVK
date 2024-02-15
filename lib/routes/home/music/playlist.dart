@@ -9,6 +9,7 @@ import "package:flutter/services.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "package:just_audio/just_audio.dart";
 import "package:provider/provider.dart";
+import "package:relative_time/relative_time.dart";
 import "package:responsive_builder/responsive_builder.dart";
 import "package:skeletonizer/skeletonizer.dart";
 import "package:styled_text/tags/styled_text_tag_action.dart";
@@ -445,14 +446,29 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                               height: 4,
                                             ),
 
-                                            // Строка вида "100 треков • Ваш плейлист".
+                                            // Строка вида "100 треков • Ваш плейлист, 25 часов".
+                                            // TODO: Написать свою функцию для форматирования времени.
                                             Skeletonizer(
                                               enabled: _loading,
                                               child: Text(
                                                 AppLocalizations.of(context)!
-                                                    .music_playlistTracksCount(
+                                                    .music_bottomPlaylistInfo(
                                                   widget.playlist.count,
                                                   playlistType,
+                                                  RelativeTime.locale(
+                                                    Localizations.localeOf(
+                                                      context,
+                                                    ),
+                                                    timeUnits: [
+                                                      TimeUnit.hour,
+                                                      TimeUnit.minute,
+                                                    ],
+                                                    numeric: true,
+                                                  ).format(
+                                                    DateTime.now().add(
+                                                      widget.playlist.duration!,
+                                                    ),
+                                                  ),
                                                 ),
                                                 style: TextStyle(
                                                   color: Theme.of(context)

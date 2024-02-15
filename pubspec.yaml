@@ -63,6 +63,7 @@ dependencies:
   permission_handler: ^11.2.1
   install_plugin: ^2.1.0
   crypto: ^3.0.3
+  relative_time: ^5.0.0
 
 dev_dependencies:
   flutter_test:

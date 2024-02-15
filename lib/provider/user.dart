@@ -46,6 +46,24 @@ class ExtendedVKPlaylist extends AudioPlaylist {
   /// Указывает, пуст ли данный плейлист. Данный метод всегда возвращает true, если треки не были загружены.
   bool get isEmpty => audios == null ? true : count == 0;
 
+  /// Возвращает длительность всего плейлиста. Если список треков ещё не был получен, то возвращает null.
+  Duration? get duration {
+    if (audios == null) return null;
+
+    return audios!.fold<Duration>(
+      Duration.zero,
+      (
+        Duration totalDuration,
+        ExtendedVKAudio audio,
+      ) {
+        return totalDuration +
+            Duration(
+              seconds: audio.duration,
+            );
+      },
+    );
+  }
+
   /// Возвращает instance данного класса из передаваемого объекта типа [AudioPlaylist].
   static ExtendedVKPlaylist fromAudioPlaylist(
     AudioPlaylist playlist, {
