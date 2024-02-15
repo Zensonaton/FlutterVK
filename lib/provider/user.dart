@@ -152,6 +152,15 @@ class ExtendedVKAudio extends Audio {
     return _normalizedName!;
   }
 
+  String? _durationString;
+
+  /// Возвращает длительность данного трека в формате `01:23`.
+  String get durationString {
+    _durationString ??= secondsAsString(duration);
+
+    return _durationString!;
+  }
+
   /// Возвращает данный объект как [MediaItem] для аудио плеера.
   MediaItem get asMediaItem => MediaItem(
         id: mediaKey,

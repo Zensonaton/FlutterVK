@@ -1313,7 +1313,7 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
                   width: 8,
                 ),
                 Text(
-                  secondsAsString(widget.audio.duration),
+                  widget.audio.durationString,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: Theme.of(context)
