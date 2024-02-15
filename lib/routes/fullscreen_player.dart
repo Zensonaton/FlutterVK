@@ -66,8 +66,9 @@ Future<void> openFullscreenPlayer(
 
 /// Метод, закрывающий ранее открытый при помощи метода [openFullscreenPlayer] полноэкранный плеер.
 Future<void> closeFullscreenPlayer(
-  BuildContext context,
-) async {
+  BuildContext context, {
+  bool popRoute = true,
+}) async {
   // Если плеер не открыт, то ничего не делаем.
   if (!isFullscreenPlayerOpen) {
     return;
@@ -80,7 +81,7 @@ Future<void> closeFullscreenPlayer(
 
   if (!context.mounted) return;
 
-  Navigator.of(context).pop();
+  if (popRoute) Navigator.of(context).pop();
 
   isFullscreenPlayerOpen = false;
 
@@ -92,9 +93,13 @@ Future<void> closeFullscreenPlayer(
 Future<void> toggleFullscreenPlayer(
   BuildContext context, {
   bool fullscreenOnDesktop = true,
+  bool popRoute = true,
 }) async {
   if (isFullscreenPlayerOpen) {
-    await closeFullscreenPlayer(context);
+    await closeFullscreenPlayer(
+      context,
+      popRoute: popRoute,
+    );
 
     return;
   }
@@ -587,45 +592,55 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
                     LogicalKeyboardKey.escape,
                   ): () => closeFullscreenPlayer(context),
                 },
-                child: Focus(
-                  autofocus: true,
-                  canRequestFocus: true,
-                  child: AnimatedContainer(
-                    duration: const Duration(
-                      milliseconds: 500,
-                    ),
-                    curve: Curves.ease,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.bottomCenter,
-                        end: Alignment.topCenter,
-                        colors: [
-                          Theme.of(context).colorScheme.primaryContainer,
-                          darkenColor(
+                child: PopScope(
+                  onPopInvoked: (_) {
+                    closeFullscreenPlayer(
+                      context,
+                      popRoute: false,
+                    );
+
+                    return;
+                  },
+                  child: Focus(
+                    autofocus: true,
+                    canRequestFocus: true,
+                    child: AnimatedContainer(
+                      duration: const Duration(
+                        milliseconds: 500,
+                      ),
+                      curve: Curves.ease,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [
                             Theme.of(context).colorScheme.primaryContainer,
-                            50,
+                            darkenColor(
+                              Theme.of(context).colorScheme.primaryContainer,
+                              50,
+                            ),
+                          ],
+                        ),
+                      ),
+                      child: Stack(
+                        children: [
+                          // Размытое фоновое изображение.
+                          if (player.currentAudio?.album?.thumb != null &&
+                              user.settings.playerThumbAsBackground)
+                            SizedBox(
+                              width: MediaQuery.of(context).size.width,
+                              height: MediaQuery.of(context).size.height,
+                              child: const BlurredBackgroundImage(),
+                            ),
+
+                          // Внутреннее содержимое, зависящее от типа Layout'а.
+                          SafeArea(
+                            child: useMobileLayout
+                                ? const FullscreenPlayerMobileRoute()
+                                : const FullscreenPlayerDesktopRoute(),
                           ),
                         ],
                       ),
-                    ),
-                    child: Stack(
-                      children: [
-                        // Размытое фоновое изображение.
-                        if (player.currentAudio?.album?.thumb != null &&
-                            user.settings.playerThumbAsBackground)
-                          SizedBox(
-                            width: MediaQuery.of(context).size.width,
-                            height: MediaQuery.of(context).size.height,
-                            child: const BlurredBackgroundImage(),
-                          ),
-
-                        // Внутреннее содержимое, зависящее от типа Layout'а.
-                        SafeArea(
-                          child: useMobileLayout
-                              ? const FullscreenPlayerMobileRoute()
-                              : const FullscreenPlayerDesktopRoute(),
-                        ),
-                      ],
                     ),
                   ),
                 ),
