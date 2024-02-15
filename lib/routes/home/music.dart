@@ -388,25 +388,36 @@ class _SearchDisplayDialogState extends State<SearchDisplayDialog> {
 
                   // Поиск.
                   Expanded(
-                    child: SearchBar(
+                    child: TextField(
                       focusNode: focusNode,
                       controller: controller,
-                      hintText: AppLocalizations.of(context)!.music_searchText,
-                      elevation: MaterialStateProperty.all(
-                        1, // TODO: Сделать нормальный вид у поиска при наведении.
-                      ),
                       onChanged: (String query) => setState(() {}),
-                      trailing: [
-                        if (controller.text.isNotEmpty)
-                          IconButton(
-                            icon: const Icon(
-                              Icons.close,
-                            ),
-                            onPressed: () => setState(
-                              () => controller.clear(),
-                            ),
-                          )
-                      ],
+                      decoration: InputDecoration(
+                        hintText:
+                            AppLocalizations.of(context)!.music_searchText,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(
+                            globalBorderRadius,
+                          ),
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.search,
+                        ),
+                        suffixIcon: controller.text.isNotEmpty
+                            ? Padding(
+                                padding: const EdgeInsetsDirectional.only(
+                                  end: 12,
+                                ),
+                                child: IconButton(
+                                  icon: const Icon(
+                                    Icons.close,
+                                  ),
+                                  onPressed: () =>
+                                      setState(() => controller.clear()),
+                                ),
+                              )
+                            : null,
+                      ),
                     ),
                   ),
                 ],

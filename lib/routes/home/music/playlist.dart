@@ -313,6 +313,8 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
             ? AppLocalizations.of(context)!.music_ownedPlaylistTitle
             : AppLocalizations.of(context)!.music_savedPlaylistTitle;
 
+    final bool hasTracksLoaded = !widget.playlist.isEmpty && !_loading;
+
     return Column(
       children: [
         // Внутреннее содержимое.
@@ -495,7 +497,7 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                             player.playing
                                         ? Icons.pause
                                         : Icons.play_arrow,
-                                    color: !widget.playlist.isEmpty && !_loading
+                                    color: hasTracksLoaded
                                         ? Theme.of(context)
                                             .colorScheme
                                             .onPrimary
@@ -508,17 +510,16 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
 
                                 // Кнопка для загрузки треков в кэш.
                                 IconButton(
-                                  onPressed:
-                                      !widget.playlist.isEmpty && !_loading
-                                          ? () => showWipDialog(
-                                                context,
-                                                title: "Кэширование треков",
-                                              )
-                                          : null,
+                                  onPressed: hasTracksLoaded
+                                      ? () => showWipDialog(
+                                            context,
+                                            title: "Кэширование треков",
+                                          )
+                                      : null,
                                   iconSize: 38,
                                   icon: Icon(
                                     Icons.arrow_circle_down,
-                                    color: !widget.playlist.isEmpty && !_loading
+                                    color: hasTracksLoaded
                                         ? Theme.of(context)
                                             .colorScheme
                                             .onBackground
@@ -532,27 +533,40 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                             Flexible(
                               child: SizedBox(
                                 width: 300,
-                                child: SearchBar(
+                                child: TextField(
                                   focusNode: focusNode,
                                   controller: controller,
-                                  hintText: AppLocalizations.of(context)!
-                                      .music_searchTextInPlaylist(
-                                    playlistAudios.length,
-                                  ),
-                                  elevation: MaterialStateProperty.all(
-                                    1, // TODO: Сделать нормальный вид у поиска при наведении.
-                                  ),
+                                  enabled: hasTracksLoaded,
                                   onChanged: (String query) => setState(() {}),
-                                  trailing: [
-                                    if (controller.text.isNotEmpty)
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.close,
-                                        ),
-                                        onPressed: () =>
-                                            setState(() => controller.clear()),
-                                      )
-                                  ],
+                                  decoration: InputDecoration(
+                                    hintText: AppLocalizations.of(context)!
+                                        .music_searchTextInPlaylist(
+                                      playlistAudios.length,
+                                    ),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(
+                                        globalBorderRadius,
+                                      ),
+                                    ),
+                                    prefixIcon: const Icon(
+                                      Icons.search,
+                                    ),
+                                    suffixIcon: controller.text.isNotEmpty
+                                        ? Padding(
+                                            padding: const EdgeInsetsDirectional
+                                                .only(
+                                              end: 12,
+                                            ),
+                                            child: IconButton(
+                                              icon: const Icon(
+                                                Icons.close,
+                                              ),
+                                              onPressed: () => setState(
+                                                  () => controller.clear()),
+                                            ),
+                                          )
+                                        : null,
+                                  ),
                                 ),
                               ),
                             ),
