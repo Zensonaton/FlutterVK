@@ -132,7 +132,7 @@ String minimizeJS(String input) {
 }
 
 /// Превращает входное значение [value] типа [int] в [bool].
-bool boolFromInt(int value) => value == 1;
+bool boolFromInt(int value) => value != 0;
 
 /// Превращает входное значение [value] типа [bool] в [int].
 int intFromBool(bool value) => value ? 1 : 0;
