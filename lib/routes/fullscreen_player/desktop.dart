@@ -441,8 +441,8 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                       decoration: BoxDecoration(
                         boxShadow: [
                           BoxShadow(
-                            blurRadius: 20,
-                            spreadRadius: -1,
+                            blurRadius: 22,
+                            spreadRadius: -3,
                             color: Theme.of(context).colorScheme.tertiary,
                             blurStyle: BlurStyle.outer,
                           )

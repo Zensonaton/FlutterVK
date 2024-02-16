@@ -161,7 +161,7 @@ class _ImageLyricsBlockState extends State<ImageLyricsBlock> {
                     decoration: BoxDecoration(
                       boxShadow: [
                         BoxShadow(
-                          blurRadius: 15,
+                          blurRadius: 20,
                           spreadRadius: -3,
                           color: Theme.of(context).colorScheme.tertiary,
                           blurStyle: BlurStyle.outer,

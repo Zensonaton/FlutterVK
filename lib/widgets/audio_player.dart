@@ -441,8 +441,8 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                 decoration: BoxDecoration(
                                   boxShadow: [
                                     BoxShadow(
-                                      blurRadius: 5,
-                                      spreadRadius: -1,
+                                      blurRadius: 10,
+                                      spreadRadius: -3,
                                       color: widget.scheme.tertiary,
                                       blurStyle: BlurStyle.outer,
                                     )
