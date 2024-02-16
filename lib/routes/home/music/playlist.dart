@@ -624,6 +624,9 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                         : null,
                                   ),
                                 ),
+                                const SizedBox(
+                                  width: 6,
+                                ),
                               ],
                             ),
 
