@@ -33,7 +33,6 @@ dependencies:
   just_audio: ^0.9.36
   just_audio_media_kit: ^1.0.0
   logger: ^2.0.2+1
-  material_color_utilities: ^0.5.0
   media_kit_libs_audio: ^1.0.4
   palette_generator: ^0.3.3+3
   path: ^1.8.3
