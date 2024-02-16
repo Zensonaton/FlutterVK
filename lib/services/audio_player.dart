@@ -299,10 +299,9 @@ class VKMusicPlayer {
       _player.playerStateStream.listen(
         (PlayerState state) async {
           if (_player.playerState.playing && !_loaded) {
-            await startMusicSession();
-            _loaded = true;
+            _setPlayerLoaded(true);
 
-            _loadedStateController.add(_loaded);
+            await startMusicSession();
           }
 
           await updateMusicSession();
@@ -704,6 +703,16 @@ class VKMusicPlayer {
     }
   }
 
+  /// Указывает, загружен ли плеер.
+  void _setPlayerLoaded(
+    bool loaded,
+  ) {
+    if (loaded == _loaded) return;
+
+    _loaded = loaded;
+    _loadedStateController.add(_loaded);
+  }
+
   /// Возобновляет воспроизведение музыки у плеера, ранее остановленной при помощи метода [pause].
   ///
   /// Если Вы хотите поставить музыку на паузу или начать воспроизведение в зависимости от значения переменной, то воспользуйтесь методом [playOrPause], который работает следующим образом:
@@ -719,6 +728,8 @@ class VKMusicPlayer {
     if (_queue == null) {
       return;
     }
+
+    _setPlayerLoaded(true);
 
     return await _player.play();
   }
@@ -830,9 +841,8 @@ class VKMusicPlayer {
     _playlist = null;
     _queue = null;
     _audiosQueue = null;
-    _loaded = false;
 
-    _loadedStateController.add(_loaded);
+    _setPlayerLoaded(false);
   }
 
   /// Полностью освобождает ресурсы, занятые данным плеером.
@@ -926,11 +936,18 @@ class VKMusicPlayer {
           .toList(),
     );
 
+    // Указываем, что плеер загружен.
+    if (play) {
+      _setPlayerLoaded(true);
+    }
+
+    // Отправляем плееру очередь из треков.
     await _player.setAudioSource(
       _queue!,
       initialIndex: audios.contains(audio) ? audios.indexOf(audio!) : 0,
     );
 
+    // Если разрешено, сразу же запускаем воспроизведение.
     if (play) {
       await this.play();
     }
