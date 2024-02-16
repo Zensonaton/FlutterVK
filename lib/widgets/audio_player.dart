@@ -468,7 +468,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                           ? CachedNetworkImage(
                                               imageUrl: imageUrl,
                                               cacheKey:
-                                                  "${widget.audio!.mediaKey}68",
+                                                  "${widget.audio!.album!.id}68",
                                               memCacheHeight: imageSize.toInt(),
                                               memCacheWidth: imageSize.toInt(),
                                               placeholder: (BuildContext

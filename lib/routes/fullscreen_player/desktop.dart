@@ -179,7 +179,7 @@ class _NextTrackInfoWidgetState extends State<NextTrackInfoWidget> {
                     ? CachedNetworkImage(
                         imageUrl:
                             player.smartNextAudio!.album!.thumb!.photo1200!,
-                        cacheKey: "${player.nextAudio!.mediaKey}1200",
+                        cacheKey: "${player.nextAudio!.album!.id}1200",
                         width: 32,
                         height: 32,
                         memCacheWidth: 32,
@@ -457,7 +457,7 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                                 imageUrl: player
                                     .currentAudio!.album!.thumb!.photo1200!,
                                 cacheKey:
-                                    "${player.currentAudio!.mediaKey}1200",
+                                    "${player.currentAudio!.album!.id}1200",
                                 width: 130,
                                 height: 130,
                                 memCacheWidth: 200,

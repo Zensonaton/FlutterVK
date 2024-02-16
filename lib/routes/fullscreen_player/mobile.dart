@@ -176,7 +176,7 @@ class _ImageLyricsBlockState extends State<ImageLyricsBlock> {
                           ? CachedNetworkImage(
                               imageUrl:
                                   player.currentAudio!.album!.thumb!.photo1200!,
-                              cacheKey: "${player.currentAudio!.mediaKey}1200",
+                              cacheKey: "${player.currentAudio!.album!.id}1200",
                               width: _playerImageSize,
                               height: _playerImageSize,
                               fit: BoxFit.fill,

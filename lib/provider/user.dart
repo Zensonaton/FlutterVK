@@ -175,6 +175,9 @@ class ExtendedVKAudio extends Audio {
         duration: Duration(
           seconds: duration,
         ),
+        extras: {
+          "albumID": album?.id,
+        },
       );
 
   @override

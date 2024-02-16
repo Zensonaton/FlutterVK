@@ -1173,7 +1173,7 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
                             child: imageUrl != null
                                 ? CachedNetworkImage(
                                     imageUrl: imageUrl,
-                                    cacheKey: "${widget.audio.mediaKey}68",
+                                    cacheKey: "${widget.audio.album!.id}68",
                                     width: 50,
                                     height: 50,
                                     placeholder:

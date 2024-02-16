@@ -183,6 +183,7 @@ Future main() async {
       preloadArtwork: true,
     ),
     cacheManager: CachedNetworkImagesManager.instance,
+    cacheKeyResolver: (MediaItem item) => "${item.extras!["albumID"]!}1200",
   );
 
   // Breakpoint'ы для разных размеров экранов.

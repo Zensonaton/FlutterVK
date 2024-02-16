@@ -1,4 +1,5 @@
 import "dart:async";
+import "dart:collection";
 import "dart:convert";
 import "dart:io";
 
@@ -9,6 +10,7 @@ import "package:crypto/crypto.dart";
 import "package:discord_rpc/discord_rpc.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
+import "package:flutter_cache_manager/flutter_cache_manager.dart";
 import "package:just_audio/just_audio.dart";
 import "package:palette_generator/palette_generator.dart";
 import "package:path/path.dart";
@@ -25,13 +27,26 @@ import "../utils.dart";
 import "cache_manager.dart";
 import "logger.dart";
 
+/// enum, перечисляющий действия в уведомлениях над треком.
+enum MediaNotificationAction {
+  /// Переключение состояния shuffle.
+  shuffle,
+
+  /// Переключение состояния "нравится" у трека.
+  favorite,
+}
+
 /// Расширение [StreamAudioSource] для `just_audio`, который воспроизводит аудио по передаваемому [Uri], а после загрузки аудио сохраняет его в кэш.
 class CachedStreamedAudio extends StreamAudioSource {
   /// [AppLogger] для этого класса.
   static AppLogger logger = getLogger("CachedStreamedAudio");
 
   /// Map из [StreamSubscription], который защищает от повторной загрузки одного и того же трека.
-  static Map<String, StreamSubscription<List<int>>> downloadQueue = {};
+  static LinkedHashMap<String, StreamSubscription<List<int>>> downloadQueue =
+      LinkedHashMap();
+
+  /// Максимальное значение одновременных загрузок треков в фоне. При превышении этого порога, записи из [downloadQueue] будут отменяться.
+  static int maxConcurrentDownloads = 5;
 
   /// [Uri], введущий к треку.
   ///
@@ -41,13 +56,17 @@ class CachedStreamedAudio extends StreamAudioSource {
   /// Ключ, который будет использоваться для кэширования полностью загруженных треков. Если его не указать, то класс не будет пытаться найти трек в кэше.
   final String? cacheKey;
 
-  /// Обложки трека. Если не указывать, кэширование обложек происходить не будет.
+  /// Обложки трека. Если не указывать, кэширование обложек происходить не будет. Указывая это поле, [albumID] не может быть null;
   final AudioThumbnails? thumbnails;
+
+  /// ID альбома, который ассоциирован с данным треком.
+  final int? albumID;
 
   CachedStreamedAudio({
     this.cacheKey,
     this.uri,
     this.thumbnails,
+    this.albumID,
   });
 
   /// Возвращает путь к корневой папке, хранящий в себе кэшированные треки.
@@ -95,13 +114,22 @@ class CachedStreamedAudio extends StreamAudioSource {
     // Если обложки не даны, то ничего не делаем.
     if (thumbnails == null || cacheKey == null) return;
 
+    // Если файлы уже загружены, то ничего не делаем.
+    final FileInfo? cachedThumb =
+        await CachedNetworkImagesManager.instance.getFileFromCache(
+      "${albumID!}1200",
+    );
+
+    if (cachedThumb != null) return;
+
+    // Загружаем обложки.
     CachedNetworkImagesManager.instance.downloadFile(
       thumbnails!.photo68!,
-      key: "${cacheKey}68",
+      key: "${albumID!}68",
     );
     CachedNetworkImagesManager.instance.downloadFile(
       thumbnails!.photo1200!,
-      key: "${cacheKey}1200",
+      key: "${albumID!}1200",
     );
   }
 
@@ -114,6 +142,12 @@ class CachedStreamedAudio extends StreamAudioSource {
       uri != null || cacheKey != null,
       "uri or cacheKey should be set",
     );
+    if (thumbnails != null) {
+      assert(
+        albumID != null,
+        "thumbnails set, but albumID isn't given",
+      );
+    }
 
     final File? cacheFile = await getCacheFile();
 
@@ -124,6 +158,9 @@ class CachedStreamedAudio extends StreamAudioSource {
       );
 
       final int sourceLength = cacheFile.lengthSync();
+
+      // Запускаем фоновую задачу по получению обложек трека.
+      postDownloadTask();
 
       return StreamAudioResponse(
         sourceLength: start != null ? sourceLength : null,
@@ -163,51 +200,67 @@ class CachedStreamedAudio extends StreamAudioSource {
     final Stream<List<int>> responseStream = response.asBroadcastStream();
     final int sourceLength = response.contentLength;
 
-    // Если Stream по загрузке трека уже запущен, то останавливаем предыдущий.
-    if (cacheKey != null) downloadQueue[cacheKey]?.cancel();
+    // Если объектов в очереди загрузки слишком много, то прерываем загрузку самых "старых" записей.
+    while (downloadQueue.isNotEmpty &&
+        downloadQueue.length >= maxConcurrentDownloads) {
+      logger.d(
+        "Download queue is big enough (${downloadQueue.length}), cancelling old download for ${downloadQueue.keys.first}",
+      );
 
-    // Начинаем загрузку трека, что бы сохранить его в кэш.
-    final StreamSubscription<List<int>> subscription = responseStream.listen(
-      (List<int> data) {
-        trackBytes.addAll(data);
-      },
-      onDone: () async {
-        logger.d(
-          "Done downloading track $cacheKey, ${trackBytes.length} bytes",
+      downloadQueue.values.first.cancel();
+      downloadQueue.remove(downloadQueue.keys.first);
+    }
+
+    // Создаём задачу по загрузке данного трека, если таковой ещё не было.
+    StreamSubscription<List<int>>? subscription = downloadQueue[cacheKey] ??
+        responseStream.listen(
+          (List<int> data) {
+            trackBytes.addAll(data);
+          },
+          onDone: () async {
+            logger.d(
+              "Done downloading track $cacheKey, ${trackBytes.length} bytes",
+            );
+
+            // Проверяем длину полученного файла.
+            if (trackBytes.length != sourceLength) {
+              throw Exception(
+                "Download file $cacheKey size mismatch: expected $sourceLength, but got ${trackBytes.length} instead",
+              );
+            }
+
+            // Сохраняем трек на диск, если нам передан ключ для кэша.
+            if (cacheFile != null) {
+              cacheFile.createSync(recursive: true);
+              cacheFile.writeAsBytesSync(trackBytes);
+            }
+
+            downloadQueue.remove(cacheKey);
+
+            // Запускаем задачу по загрузке обложек.
+            await postDownloadTask();
+          },
+          onError: (Object e, StackTrace stackTrace) {
+            logger.e(
+              "Error while downloading/caching media $cacheKey",
+              error: e,
+              stackTrace: stackTrace,
+            );
+
+            downloadQueue.remove(cacheKey);
+          },
+          cancelOnError: true,
         );
 
-        // Проверяем длину полученного файла.
-        if (trackBytes.length != sourceLength) {
-          throw Exception(
-            "Download file $cacheKey size mismatch: expected $sourceLength, but got ${trackBytes.length} instead",
-          );
-        }
+    // Сохраняем текущий Stream, что бы в случае повторного запроса его можно было бы получить.
+    if (cacheKey != null) {
+      downloadQueue[cacheKey!] = subscription;
+    }
 
-        // Сохраняем трек на диск, если нам передан ключ для кэша.
-        if (cacheFile != null) {
-          cacheFile.createSync(recursive: true);
-          cacheFile.writeAsBytesSync(trackBytes);
-        }
-
-        downloadQueue.remove(cacheKey);
-
-        // Запускаем задачу по загрузке обложек.
-        await postDownloadTask();
-      },
-      onError: (Object e, StackTrace stackTrace) {
-        logger.e(
-          "Error while downloading/caching media $cacheKey",
-          error: e,
-          stackTrace: stackTrace,
-        );
-
-        downloadQueue.remove(cacheKey);
-      },
-      cancelOnError: true,
-    );
-
-    // Сохраняем текущий Stream, что бы в случае повторного запроса его можно было бы отменить.
-    if (cacheKey != null) downloadQueue[cacheKey!] = subscription;
+    // StreamAudioResponse глупенький: subscription.cancel() не отменяет запрос на стороне just_audio.
+    // Ввиду этого, загрузка треков может происходить по несколько раз.
+    //
+    // FIXME: Пофиксить повторные HTTP-запросы к трекам после вызова subscription.cancel().
 
     return StreamAudioResponse(
       sourceLength: start != null ? sourceLength : null,
@@ -226,6 +279,13 @@ class VKMusicPlayer {
 
   final AudioPlayer _player = AudioPlayer(
     handleInterruptions: false,
+    audioLoadConfiguration: const AudioLoadConfiguration(
+      androidLoadControl: AndroidLoadControl(
+        backBufferDuration: Duration(
+          seconds: 10,
+        ),
+      ),
+    ),
   );
   late final List<StreamSubscription> _subscriptions;
 
@@ -859,6 +919,8 @@ class VKMusicPlayer {
                   ? audio.mediaKey
                   : null,
               uri: Uri.parse(audio.url),
+              thumbnails: audio.album?.thumb,
+              albumID: audio.album?.id,
             ),
           )
           .toList(),
@@ -1036,7 +1098,7 @@ class VKMusicPlayer {
           player.currentAudio!.mediaKey,
         )) return null;
 
-    final String cacheKey = "${player.currentAudio!.mediaKey}68";
+    final String cacheKey = "${player.currentAudio!.album!.id}68";
 
     // Задача по созданию цветовой схемы не находится в очереди, поэтому помещаем задачу в очередь.
     _colorSchemeItemsQueue.add(cacheKey);
@@ -1081,15 +1143,6 @@ class VKMusicPlayer {
 
     return imageColorSchemeCache[cacheKey];
   }
-}
-
-/// enum, перечисляющий действия в уведомлениях над треком.
-enum MediaNotificationAction {
-  /// Переключение состояния shuffle.
-  shuffle,
-
-  /// Переключение состояния "нравится" у трека.
-  favorite,
 }
 
 /// Расширение для класса [BaseAudioHandler], методы которого вызываются при взаимодействии с медиа-уведомлением.
