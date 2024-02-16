@@ -569,6 +569,7 @@ class AudioPlaylist {
   final String? title;
 
   /// Описание плейлиста. Иногда пустует.
+  @JsonKey(fromJson: emptyStringAsNull)
   final String? description;
 
   /// Подпись плейлиста, обычно присутствует в плейлистах-рекомендациях.

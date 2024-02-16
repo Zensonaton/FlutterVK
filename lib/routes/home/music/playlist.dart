@@ -495,6 +495,24 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                               height: 4,
                                             ),
 
+                                            // Описание плейлиста, при наличии.
+                                            if (widget.playlist.description !=
+                                                null)
+                                              Text(
+                                                widget.playlist.description!,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: TextStyle(
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .onBackground,
+                                                ),
+                                              ),
+                                            if (widget.playlist.description !=
+                                                null)
+                                              const SizedBox(
+                                                height: 4,
+                                              ),
+
                                             // Строка вида "100 треков • Ваш плейлист, 25 часов".
                                             // TODO: Написать свою функцию для форматирования времени.
                                             Skeletonizer(
@@ -515,7 +533,9 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                                     numeric: true,
                                                   ).format(
                                                     DateTime.now().add(
-                                                      widget.playlist.duration!,
+                                                      widget.playlist
+                                                              .duration ??
+                                                          Duration.zero,
                                                     ),
                                                   ),
                                                 ),

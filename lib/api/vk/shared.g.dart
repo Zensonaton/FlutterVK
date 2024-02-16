@@ -232,7 +232,7 @@ AudioPlaylist _$AudioPlaylistFromJson(Map<String, dynamic> json) =>
       ownerID: json['owner_id'] as int,
       type: json['type'] as int? ?? 0,
       title: json['title'] as String?,
-      description: json['description'] as String?,
+      description: emptyStringAsNull(json['description'] as String?),
       count: json['count'] as int,
       accessKey: json['access_key'] as String?,
       followers: json['followers'] as int? ?? 0,

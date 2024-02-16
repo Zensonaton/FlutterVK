@@ -147,6 +147,13 @@ DateTime? datetimeFromString(String? value) {
 /// Превращает входную строку [value] типа [DateTime] в [String].
 String stringFromdatetime(DateTime value) => value.toIso8601String();
 
+/// Превращает пустую строку ([String.isEmpty]) в null, либо возвращает тот же объект строки.
+String? emptyStringAsNull(String? value) {
+  if (value == null || value.isEmpty) return null;
+
+  return value;
+}
+
 /// Класс, заставляющий любые Scrollable-виджеты скроллиться даже на Desktop-плафтормах.
 class AlwaysScrollableScrollBehavior extends MaterialScrollBehavior {
   @override

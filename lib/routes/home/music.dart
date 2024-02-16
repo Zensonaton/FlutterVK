@@ -1404,167 +1404,220 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
   Widget build(BuildContext context) {
     final bool selectedAndPlaying = widget.selected && widget.currentlyPlaying;
 
-    return InkWell(
-      onTap: widget.onOpen,
-      onSecondaryTap: widget.onOpen,
-      onHover: (bool value) => setState(
-        () => isHovered = value,
+    return Tooltip(
+      message: widget.description ?? "",
+      waitDuration: const Duration(
+        seconds: 1,
       ),
-      borderRadius: BorderRadius.circular(
-        globalBorderRadius,
-      ),
-      child: SizedBox(
-        width: 200,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              height: 200,
-              child: Stack(
-                children: [
-                  // Изображение плейлиста.
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(
-                      globalBorderRadius,
-                    ),
-                    child: widget.backgroundUrl != null
-                        ? CachedNetworkImage(
-                            imageUrl: widget.backgroundUrl!,
-                            cacheKey: widget.mediaKey,
-                            memCacheHeight: 200,
-                            memCacheWidth: 200,
-                            placeholder: (BuildContext context, String url) =>
-                                const FallbackAudioPlaylistAvatar(),
-                            cacheManager: CachedNetworkImagesManager.instance,
-                          )
-                        : const FallbackAudioPlaylistAvatar(),
-                  ),
-
-                  // Если это у нас рекомендательный плейлист, то текст должен находиться внутри изображения плейлиста.
-                  if (widget.useTextOnImageLayout)
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            widget.name,
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 2,
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineLarge!
-                                .copyWith(
-                                  fontWeight: FontWeight.w500,
-                                  color: widget.useTextOnImageLayout
-                                      ? Colors.white
-                                      : null,
-                                ),
-                          ),
-                          if (widget.description != null)
-                            Text(
-                              widget.description!,
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 3,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyLarge!
-                                  .copyWith(
-                                    color: widget.useTextOnImageLayout
-                                        ? Colors.white
-                                        : null,
-                                  ),
-                            ),
-                        ],
+      child: InkWell(
+        onTap: widget.onOpen,
+        onSecondaryTap: widget.onOpen,
+        onHover: (bool value) => setState(
+          () => isHovered = value,
+        ),
+        borderRadius: BorderRadius.circular(
+          globalBorderRadius,
+        ),
+        child: SizedBox(
+          width: 200,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(
+                  milliseconds: 500,
+                ),
+                curve: Curves.ease,
+                height: 200,
+                decoration: BoxDecoration(
+                  boxShadow: [
+                    if (widget.selected)
+                      BoxShadow(
+                        blurRadius: 15,
+                        spreadRadius: -3,
+                        color: Theme.of(context).colorScheme.tertiary,
+                        blurStyle: BlurStyle.outer,
                       ),
+                  ],
+                ),
+                child: Stack(
+                  children: [
+                    // Изображение плейлиста.
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(
+                        globalBorderRadius,
+                      ),
+                      child: widget.backgroundUrl != null
+                          ? CachedNetworkImage(
+                              imageUrl: widget.backgroundUrl!,
+                              cacheKey: widget.mediaKey,
+                              memCacheHeight: 200,
+                              memCacheWidth: 200,
+                              placeholder: (BuildContext context, String url) =>
+                                  const FallbackAudioPlaylistAvatar(),
+                              cacheManager: CachedNetworkImagesManager.instance,
+                            )
+                          : const FallbackAudioPlaylistAvatar(),
                     ),
-                  if (isHovered || widget.selected)
-                    Container(
-                      width: 200,
-                      height: 200,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .background
-                            .withOpacity(0.5),
-                        borderRadius: BorderRadius.circular(
-                          globalBorderRadius,
+
+                    // Затемнение у тех плейлистов, текст которых расположен поверх плейлистов.
+                    if (widget.useTextOnImageLayout)
+                      Container(
+                        width: 200,
+                        height: 200,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [
+                              Colors.black38,
+                              Colors.transparent,
+                            ],
+                            begin: Alignment.bottomCenter,
+                            end: Alignment.topCenter,
+                          ),
+                          borderRadius: BorderRadius.circular(
+                            globalBorderRadius,
+                          ),
                         ),
                       ),
-                      child: !isHovered && selectedAndPlaying
-                          ? Center(
-                              child: RepaintBoundary(
-                                child: Image.asset(
-                                  "assets/images/audioEqualizer.gif",
-                                  color: Theme.of(context).colorScheme.primary,
-                                  width: 32,
-                                  height: 32,
-                                  fit: BoxFit.fill,
-                                ),
+
+                    // Если это у нас рекомендательный плейлист, то текст должен находиться внутри изображения плейлиста.
+                    if (widget.useTextOnImageLayout)
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // Название плейлиста.
+                            Text(
+                              widget.name,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 2,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .headlineLarge!
+                                  .copyWith(
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.white,
+                                  ),
+                            ),
+
+                            // Описание плейлиста.
+                            if (widget.description != null)
+                              Text(
+                                widget.description!,
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 3,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyLarge!
+                                    .copyWith(
+                                      color: Colors.white,
+                                    ),
                               ),
-                            )
-                          : SizedBox(
-                              width: 50,
-                              height: 50,
-                              child: Center(
-                                child: InkWell(
-                                  onTap:
-                                      isDesktop && widget.onPlayToggle != null
-                                          ? () => widget.onPlayToggle?.call(
-                                                !selectedAndPlaying,
-                                              )
-                                          : null,
-                                  child: Icon(
-                                    selectedAndPlaying
-                                        ? Icons.pause
-                                        : Icons.play_arrow,
-                                    size: 56,
+                          ],
+                        ),
+                      ),
+
+                    // Затемнение, а так же иконка поверх плейлиста.
+                    if (isHovered || widget.selected)
+                      Container(
+                        width: 200,
+                        height: 200,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .background
+                              .withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(
+                            globalBorderRadius,
+                          ),
+                        ),
+                        child: !isHovered && selectedAndPlaying
+                            ? Center(
+                                child: RepaintBoundary(
+                                  child: Image.asset(
+                                    "assets/images/audioEqualizer.gif",
                                     color:
                                         Theme.of(context).colorScheme.primary,
+                                    width: 32,
+                                    height: 32,
+                                    fit: BoxFit.fill,
+                                  ),
+                                ),
+                              )
+                            : SizedBox(
+                                width: 50,
+                                height: 50,
+                                child: Center(
+                                  child: InkWell(
+                                    onTap:
+                                        isDesktop && widget.onPlayToggle != null
+                                            ? () => widget.onPlayToggle?.call(
+                                                  !selectedAndPlaying,
+                                                )
+                                            : null,
+                                    child: Icon(
+                                      selectedAndPlaying
+                                          ? Icons.pause
+                                          : Icons.play_arrow,
+                                      size: 56,
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                    )
-                ],
+                      )
+                  ],
+                ),
               ),
-            ),
 
-            // Если это обычный плейлист, то нам нужно показать его содержимое под изображением.
-            if (!widget.useTextOnImageLayout)
-              const SizedBox(
-                height: 2,
-              ),
-            if (!widget.useTextOnImageLayout)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Flexible(
-                    child: Text(
-                      widget.name,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 2,
-                      style:
-                          Theme.of(context).textTheme.headlineSmall!.copyWith(
+              // Если это обычный плейлист, то нам нужно показать его содержимое под изображением.
+              if (!widget.useTextOnImageLayout)
+                Padding(
+                  padding: const EdgeInsets.only(
+                    top: 4,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Название плейлиста.
+                      Flexible(
+                        child: Text(
+                          widget.name,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 2,
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineSmall!
+                              .copyWith(
                                 fontWeight: FontWeight.w500,
                               ),
-                    ),
-                  ),
-                  if (widget.description != null)
-                    Flexible(
-                      child: Text(
-                        widget.description!,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                              fontWeight: FontWeight.w400,
-                            ),
+                        ),
                       ),
-                    ),
-                ],
-              ),
-          ],
+
+                      // Описание плейлиста, при наличии.
+                      if (widget.description != null)
+                        Flexible(
+                          child: Padding(
+                            padding: const EdgeInsets.only(
+                              top: 2,
+                            ),
+                            child: Text(
+                              widget.description!,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 2,
+                              style: Theme.of(context).textTheme.bodyMedium!,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -1978,7 +2031,7 @@ class _MyPlaylistsBlockState extends State<MyPlaylistsBlock> {
                       backgroundUrl: playlist.photo?.photo270,
                       mediaKey: playlist.mediaKey,
                       name: playlist.title!,
-                      description: playlist.subtitle,
+                      description: playlist.description,
                       selected: player.currentPlaylist == playlist,
                       currentlyPlaying: player.playing && player.loaded,
                       onOpen: () => Navigator.push(
@@ -2320,6 +2373,7 @@ class _ByVKPlaylistsBlockState extends State<ByVKPlaylistsBlock> {
                       backgroundUrl: playlist.photo!.photo270!,
                       mediaKey: playlist.mediaKey,
                       name: playlist.title!,
+                      description: playlist.description,
                       selected: player.currentPlaylist == playlist,
                       currentlyPlaying: player.playing && player.loaded,
                       onOpen: () => Navigator.push(
