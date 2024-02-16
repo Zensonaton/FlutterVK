@@ -26,6 +26,7 @@ import "../../../services/logger.dart";
 import "../../../utils.dart";
 import "../../../widgets/dialogs.dart";
 import "../../../widgets/fallback_audio_photo.dart";
+import "../../../widgets/loading_overlay.dart";
 import "../../home.dart";
 import "../music.dart";
 
@@ -71,6 +72,54 @@ List<ExtendedVKAudio> filterAudiosByName(
         (ExtendedVKAudio audio) => audio.normalizedName.contains(query),
       )
       .toList();
+}
+
+/// Метод, вызываемый при нажатии по центру плейлиста. Данный метод либо ставит плейлист на паузу, либо загружает его информацию.
+Future<void> onPlaylistPlayToggle(
+  BuildContext context,
+  ExtendedVKPlaylist playlist,
+  bool playing,
+) async {
+  final UserProvider user = Provider.of<UserProvider>(context, listen: false);
+  final AppLogger logger = getLogger("onPlaylistPlayToggle");
+
+  // Если у нас играет этот же плейлист, то тогда мы попросту должны поставить на паузу/убрать паузу.
+  if (player.currentPlaylist == playlist) {
+    return await player.playOrPause(playing);
+  }
+
+  // Если информация по плейлисту не загружена, то мы должны её загрузить.
+  if (playlist.audios == null) {
+    LoadingOverlay.of(context).show();
+
+    try {
+      await loadPlaylistData(
+        playlist,
+        user,
+      );
+    } catch (e, stackTrace) {
+      // ignore: use_build_context_synchronously
+      showLogErrorDialog(
+        "Ошибка при загрузке информации по плейлисту для запуска трека: ",
+        e,
+        stackTrace,
+        logger,
+        context,
+      );
+
+      return;
+    } finally {
+      if (context.mounted) {
+        LoadingOverlay.of(context).hide();
+      }
+    }
+  }
+
+  // Всё ок, запускаем воспроизведение.
+  await player.setPlaylist(
+    playlist,
+    audio: playlist.audios?.randomItem(),
+  );
 }
 
 /// Создаёт виджет типа [AudioTrackTile] для отображения в [ListView.builder] или подобном.

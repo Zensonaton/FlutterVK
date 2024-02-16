@@ -1879,61 +1879,47 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
   }
 }
 
-/// Метод, вызываемый при нажатии по центру плейлиста. Данный метод либо ставит плейлист на паузу, либо загружает его информацию.
-Future<void> onPlaylistPlayToggle(
-  BuildContext context,
-  ExtendedVKPlaylist playlist,
-  bool playing,
-) async {
-  final UserProvider user = Provider.of<UserProvider>(context, listen: false);
-  final AppLogger logger = getLogger("onPlaylistPlayToggle");
-
-  // Если у нас играет этот же плейлист, то тогда мы попросту должны поставить на паузу/убрать паузу.
-  if (player.currentPlaylist == playlist) {
-    return await player.playOrPause(playing);
-  }
-
-  // Если информация по плейлисту не загружена, то мы должны её загрузить.
-  if (playlist.audios == null) {
-    LoadingOverlay.of(context).show();
-
-    try {
-      await loadPlaylistData(
-        playlist,
-        user,
-      );
-    } catch (e, stackTrace) {
-      // ignore: use_build_context_synchronously
-      showLogErrorDialog(
-        "Ошибка при загрузке информации по плейлисту для запуска трека: ",
-        e,
-        stackTrace,
-        logger,
-        context,
-      );
-
-      return;
-    } finally {
-      if (context.mounted) {
-        LoadingOverlay.of(context).hide();
-      }
-    }
-  }
-
-  // Всё ок, запускаем воспроизведение.
-  await player.setPlaylist(
-    playlist,
-    audio: playlist.audios?.randomItem(),
-  );
-}
-
 /// Виджет с разделом "Ваши плейлисты"
-class MyPlaylistsBlock extends StatelessWidget {
+class MyPlaylistsBlock extends StatefulWidget {
   static AppLogger logger = getLogger("MyPlaylistsBlock");
 
   const MyPlaylistsBlock({
     super.key,
   });
+
+  @override
+  State<MyPlaylistsBlock> createState() => _MyPlaylistsBlockState();
+}
+
+class _MyPlaylistsBlockState extends State<MyPlaylistsBlock> {
+  /// Подписки на изменения состояния воспроизведения трека.
+  late final List<StreamSubscription> subscriptions;
+
+  @override
+  void initState() {
+    super.initState();
+
+    subscriptions = [
+      // Изменения состояния воспроизведения.
+      player.playerStateStream.listen(
+        (PlayerState state) => setState(() {}),
+      ),
+
+      // Изменения состояния остановки/запуска плеера.
+      player.loadedStateStream.listen(
+        (bool loaded) => setState(() {}),
+      ),
+    ];
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+
+    for (StreamSubscription subscription in subscriptions) {
+      subscription.cancel();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -2029,12 +2015,47 @@ class MyPlaylistsBlock extends StatelessWidget {
 }
 
 /// Виджет, показывающий раздел "Плейлисты для Вас".
-class RecommendedPlaylistsBlock extends StatelessWidget {
+class RecommendedPlaylistsBlock extends StatefulWidget {
   static AppLogger logger = getLogger("RecommendedPlaylistsBlock");
 
   const RecommendedPlaylistsBlock({
     super.key,
   });
+
+  @override
+  State<RecommendedPlaylistsBlock> createState() =>
+      _RecommendedPlaylistsBlockState();
+}
+
+class _RecommendedPlaylistsBlockState extends State<RecommendedPlaylistsBlock> {
+  /// Подписки на изменения состояния воспроизведения трека.
+  late final List<StreamSubscription> subscriptions;
+
+  @override
+  void initState() {
+    super.initState();
+
+    subscriptions = [
+      // Изменения состояния воспроизведения.
+      player.playerStateStream.listen(
+        (PlayerState state) => setState(() {}),
+      ),
+
+      // Изменения состояния остановки/запуска плеера.
+      player.loadedStateStream.listen(
+        (bool loaded) => setState(() {}),
+      ),
+    ];
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+
+    for (StreamSubscription subscription in subscriptions) {
+      subscription.cancel();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -2115,12 +2136,46 @@ class RecommendedPlaylistsBlock extends StatelessWidget {
 }
 
 /// Виджет, показывающий раздел "Совпадения по вкусам".
-class SimillarMusicBlock extends StatelessWidget {
+class SimillarMusicBlock extends StatefulWidget {
   static AppLogger logger = getLogger("SimillarMusicBlock");
 
   const SimillarMusicBlock({
     super.key,
   });
+
+  @override
+  State<SimillarMusicBlock> createState() => _SimillarMusicBlockState();
+}
+
+class _SimillarMusicBlockState extends State<SimillarMusicBlock> {
+  /// Подписки на изменения состояния воспроизведения трека.
+  late final List<StreamSubscription> subscriptions;
+
+  @override
+  void initState() {
+    super.initState();
+
+    subscriptions = [
+      // Изменения состояния воспроизведения.
+      player.playerStateStream.listen(
+        (PlayerState state) => setState(() {}),
+      ),
+
+      // Изменения состояния остановки/запуска плеера.
+      player.loadedStateStream.listen(
+        (bool loaded) => setState(() {}),
+      ),
+    ];
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+
+    for (StreamSubscription subscription in subscriptions) {
+      subscription.cancel();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -2186,12 +2241,46 @@ class SimillarMusicBlock extends StatelessWidget {
 }
 
 /// Виджет, показывающий раздел "Собрано редакцией".
-class ByVKPlaylistsBlock extends StatelessWidget {
+class ByVKPlaylistsBlock extends StatefulWidget {
   static AppLogger logger = getLogger("ByVKPlaylistsBlock");
 
   const ByVKPlaylistsBlock({
     super.key,
   });
+
+  @override
+  State<ByVKPlaylistsBlock> createState() => _ByVKPlaylistsBlockState();
+}
+
+class _ByVKPlaylistsBlockState extends State<ByVKPlaylistsBlock> {
+  /// Подписки на изменения состояния воспроизведения трека.
+  late final List<StreamSubscription> subscriptions;
+
+  @override
+  void initState() {
+    super.initState();
+
+    subscriptions = [
+      // Изменения состояния воспроизведения.
+      player.playerStateStream.listen(
+        (PlayerState state) => setState(() {}),
+      ),
+
+      // Изменения состояния остановки/запуска плеера.
+      player.loadedStateStream.listen(
+        (bool loaded) => setState(() {}),
+      ),
+    ];
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+
+    for (StreamSubscription subscription in subscriptions) {
+      subscription.cancel();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
