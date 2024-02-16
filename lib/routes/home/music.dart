@@ -1588,12 +1588,15 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
                         child: Text(
                           widget.name,
                           overflow: TextOverflow.ellipsis,
-                          maxLines: 2,
+                          maxLines: 3,
                           style: Theme.of(context)
                               .textTheme
                               .headlineSmall!
                               .copyWith(
                                 fontWeight: FontWeight.w500,
+                                color: widget.selected
+                                    ? Theme.of(context).colorScheme.primary
+                                    : null,
                               ),
                         ),
                       ),
@@ -1609,7 +1612,14 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
                               widget.description!,
                               overflow: TextOverflow.ellipsis,
                               maxLines: 2,
-                              style: Theme.of(context).textTheme.bodyMedium!,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium!
+                                  .copyWith(
+                                    color: widget.selected
+                                        ? Theme.of(context).colorScheme.primary
+                                        : null,
+                                  ),
                             ),
                           ),
                         ),
