@@ -213,6 +213,14 @@ class _TrackLyricsBlockState extends State<TrackLyricsBlock> {
       ? visibilityIndexes![currentLyricIndex ?? 0]
       : false;
 
+  /// Указывает, производится ли скроллинг пользователем в [ListView.builder] или нет.
+  bool currentlyScrolling = false;
+
+  /// Вызывается при изменении состояния скроллинга у [ListView.builder].
+  void onScroll() =>
+      currentlyScrolling = controller.position.isScrollingNotifier.value &&
+          !controller.isAutoScrolling;
+
   @override
   void initState() {
     super.initState();
@@ -225,6 +233,11 @@ class _TrackLyricsBlockState extends State<TrackLyricsBlock> {
         return LyricTimestamp(item as String);
       },
     ).toList();
+
+    // Слушаем события скроллинга.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.position.isScrollingNotifier.addListener(onScroll);
+    });
 
     // Пытаемся найти текущий момент в тексте песни, если мы уже что-то воспроизвели.
     currentLyricIndex = getCurrentLyricIndex();
@@ -241,6 +254,15 @@ class _TrackLyricsBlockState extends State<TrackLyricsBlock> {
         currentLyricIndex!,
         checkVisibility: false,
       );
+    }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+
+    if (controller.hasClients) {
+      controller.position.isScrollingNotifier.removeListener(onScroll);
     }
   }
 
@@ -266,13 +288,17 @@ class _TrackLyricsBlockState extends State<TrackLyricsBlock> {
     return currentLyricIndex;
   }
 
-  /// Прокручивает [ListView] с текстом до указанного [index]. Если [checkVisibility] = true, то прокрутка произойдёт только в том случае, если виджет с текстом виден пользователю.
+  /// Прокручивает [ListView] с текстом до указанного [index]. Если [checkVisibility] = true, то прокрутка произойдёт только в том случае, если виджет с текстом виден пользователю. [checkScroll] указывает, что скроллинг не будет происходить, если пользователь сам скроллит.
   Future<void> scrollToIndex(
     int index, {
     bool checkVisibility = true,
+    bool checkScroll = true,
   }) async {
     // Проверяем на видимость.
     if (checkVisibility && !currentLyricIsVisible) return;
+
+    // Проверяем на то, скроллит ли пользователь в данный момент или нет.
+    if (checkScroll && currentlyScrolling) return;
 
     controller.scrollToIndex(
       currentLyricIndex!,
