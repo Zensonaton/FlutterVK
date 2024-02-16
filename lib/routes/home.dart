@@ -571,9 +571,8 @@ class _HomeRouteState extends State<HomeRoute> {
                         padding: !isMobileLayout &&
                                 navigationPage.allowBigAudioPlayer
                             ? null
-                            : const EdgeInsets.symmetric(
-                                vertical: 8,
-                                horizontal: 16,
+                            : const EdgeInsets.all(
+                                8,
                               ),
                         curve: Curves.ease,
                         width: isMobileLayout
