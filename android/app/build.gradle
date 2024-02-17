@@ -68,6 +68,14 @@ android {
             signingConfig signingConfigs.release
 			shrinkResources false
         }
+		profile {
+            signingConfig signingConfigs.release
+			shrinkResources false
+		}
+		debug {
+            signingConfig signingConfigs.release
+			shrinkResources false
+		}
     }
 }
 
