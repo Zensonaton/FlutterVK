@@ -701,6 +701,12 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                           globalBorderRadius,
                                         ),
                                       ),
+                                      prefixIconColor: Theme.of(context)
+                                          .colorScheme
+                                          .onBackground
+                                          .withOpacity(
+                                            hasTracksLoaded ? 1.0 : 0.5,
+                                          ),
                                       prefixIcon: const Icon(
                                         Icons.search,
                                       ),
