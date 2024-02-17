@@ -569,9 +569,6 @@ class _FullscreenPlayerMobileRouteState
   /// Подписки на изменения состояния воспроизведения трека.
   late final List<StreamSubscription> subscriptions;
 
-  // /// Указывает, есть ли наведение ли на плеере или нет.
-  // bool isHovered = false;
-
   @override
   void initState() {
     super.initState();

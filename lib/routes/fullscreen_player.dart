@@ -154,6 +154,7 @@ Future<void> openMiniPlayer(
         350,
       ),
     );
+    await windowManager.restore();
     await windowManager.setMaximizable(false);
     await windowManager.setAlwaysOnTop(true);
     await windowManager.setAlignment(Alignment.bottomRight);
