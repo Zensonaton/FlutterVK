@@ -39,33 +39,35 @@ class TopFullscreenControls extends StatelessWidget {
           icon: const Icon(
             Icons.arrow_downward,
           ),
-          onPressed: () => closeFullscreenPlayer(context),
+          onPressed: () => closePlayer(context),
         ),
 
         // Название плейлиста, из которого идёт воспроизведение.
-        Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              AppLocalizations.of(context)!.music_fullscreenPlaylistNameTitle,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: Theme.of(context)
-                    .colorScheme
-                    .onBackground
-                    .withOpacity(0.75),
+        Flexible(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                AppLocalizations.of(context)!.music_fullscreenPlaylistNameTitle,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onBackground
+                      .withOpacity(0.75),
+                ),
               ),
-            ),
-            Text(
-              player.currentPlaylist?.title ??
-                  AppLocalizations.of(context)!
-                      .music_fullscreenFavoritePlaylistName,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontWeight: FontWeight.w500,
+              Text(
+                player.currentPlaylist?.title ??
+                    AppLocalizations.of(context)!
+                        .music_fullscreenFavoritePlaylistName,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
 
         // Дополнительные действия над треком.
@@ -330,7 +332,7 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                     ],
                   ),
 
-                  // Иссполнитель трека.
+                  // Исполнитель трека.
                   Text(
                     player.currentAudio!.artist,
                     overflow: TextOverflow.ellipsis,
@@ -438,8 +440,10 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                   );
                 },
               ),
-              const SizedBox(
-                width: 8,
+              const Flexible(
+                child: SizedBox(
+                  width: 8,
+                ),
               ),
 
               // Запуск предыдущего трека.
@@ -452,8 +456,10 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                   color: Theme.of(context).colorScheme.primary,
                 ),
               ),
-              const SizedBox(
-                width: 8,
+              const Flexible(
+                child: SizedBox(
+                  width: 8,
+                ),
               ),
 
               // Кнопка паузы.
@@ -474,8 +480,10 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                   );
                 },
               ),
-              const SizedBox(
-                width: 8,
+              const Flexible(
+                child: SizedBox(
+                  width: 8,
+                ),
               ),
 
               // Запуск следующего трека.
@@ -486,8 +494,10 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                   color: Theme.of(context).colorScheme.primary,
                 ),
               ),
-              const SizedBox(
-                width: 8,
+              const Flexible(
+                child: SizedBox(
+                  width: 8,
+                ),
               ),
 
               // Повтор трека.
