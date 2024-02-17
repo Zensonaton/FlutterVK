@@ -459,7 +459,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                     child: SizedBox(
                                       key: ValueKey(
                                         imageUrl != null
-                                            ? widget.audio!.mediaKey
+                                            ? widget.audio!.album?.id
                                             : null,
                                       ),
                                       width: imageSize,

@@ -436,7 +436,7 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                     ),
                     child: Container(
                       key: ValueKey(
-                        player.currentAudio!.mediaKey,
+                        player.currentAudio!.album?.id,
                       ),
                       decoration: BoxDecoration(
                         boxShadow: [
