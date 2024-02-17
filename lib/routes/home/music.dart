@@ -2088,6 +2088,8 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
   Widget build(BuildContext context) {
     final UserProvider user = Provider.of<UserProvider>(context);
 
+    final bool selected = player.currentPlaylist == user.favoritesPlaylist;
+    final bool selectedAndPlaying = selected && player.playing;
     final int musicCount = user.favoritesPlaylist?.count ?? 0;
     final int clampedMusicCount = clampInt(
       musicCount,
@@ -2097,9 +2099,17 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
     final Widget controlButtonsRow = Wrap(
       spacing: 8,
       children: [
+        // "Перемешать".
         FilledButton.icon(
           onPressed: user.favoritesPlaylist?.audios != null
               ? () async {
+                  // Если данный плейлист уже играет, то просто ставим на паузу/воспроизведение.
+                  if (player.currentPlaylist == user.favoritesPlaylist) {
+                    await player.togglePlay();
+
+                    return;
+                  }
+
                   await player.setShuffle(true);
 
                   await player.setPlaylist(
@@ -2108,13 +2118,19 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
                   );
                 }
               : null,
-          icon: const Icon(
-            Icons.play_arrow,
+          icon: Icon(
+            selectedAndPlaying ? Icons.pause : Icons.play_arrow,
           ),
           label: Text(
-            AppLocalizations.of(context)!.music_shuffleAndPlay,
+            selected
+                ? player.playing
+                    ? AppLocalizations.of(context)!.music_shuffleAndPlayPause
+                    : AppLocalizations.of(context)!.music_shuffleAndPlayResume
+                : AppLocalizations.of(context)!.music_shuffleAndPlay,
           ),
         ),
+
+        // "Все треки".
         FilledButton.tonalIcon(
           onPressed: user.favoritesPlaylist?.audios != null
               ? () => Navigator.push(

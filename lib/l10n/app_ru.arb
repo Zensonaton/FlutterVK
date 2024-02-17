@@ -107,6 +107,8 @@
 	"music_connectRecommendationsConnect": "Подключить",
 
 	"music_shuffleAndPlay": "Перемешать",
+	"music_shuffleAndPlayPause": "Пауза",
+	"music_shuffleAndPlayResume": "Воспроизвести",
 	"music_showAllFavoriteTracks": "Все треки",
 
 	"music_trackUnavailableTitle": "Трек недоступен",
