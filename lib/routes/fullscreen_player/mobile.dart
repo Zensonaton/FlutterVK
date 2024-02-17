@@ -137,84 +137,94 @@ class _ImageLyricsBlockState extends State<ImageLyricsBlock> {
         player.currentAudio!.hasLyrics &&
         player.currentAudio!.lyrics != null;
 
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        // Изображение трека.
-        HeroMode(
-          enabled: !lyricsLoadedAndShown,
-          child: Hero(
-            tag: player.currentAudio!.mediaKey,
-            child: FittedBox(
-              child: Padding(
-                padding: const EdgeInsets.all(
-                  36,
-                ),
-                child: AnimatedOpacity(
-                  opacity: lyricsLoadedAndShown ? 0.0 : 1.0,
-                  duration: const Duration(
-                    milliseconds: 500,
-                  ),
-                  child: Container(
-                    width: _playerImageSize,
-                    height: _playerImageSize,
-                    decoration: BoxDecoration(
-                      boxShadow: [
-                        BoxShadow(
-                          blurRadius: 20,
-                          spreadRadius: -3,
-                          color: Theme.of(context).colorScheme.tertiary,
-                          blurStyle: BlurStyle.outer,
-                        )
-                      ],
+    return AnimatedSwitcher(
+      duration: const Duration(
+        milliseconds: 500,
+      ),
+      reverseDuration: const Duration(
+        milliseconds: 200,
+      ),
+      switchInCurve: Curves.ease,
+      switchOutCurve: Curves.ease,
+      child: !lyricsLoadedAndShown
+          ? HeroMode(
+              key: ValueKey(
+                player.currentAudio!.mediaKey,
+              ),
+              enabled: !lyricsLoadedAndShown,
+              child: Hero(
+                tag: player.currentAudio!.mediaKey,
+                child: FittedBox(
+                  child: Padding(
+                    padding: const EdgeInsets.all(
+                      36,
                     ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(
-                        globalBorderRadius,
+                    child: AnimatedOpacity(
+                      opacity: lyricsLoadedAndShown ? 0.0 : 1.0,
+                      duration: const Duration(
+                        milliseconds: 500,
                       ),
-                      child: player.currentAudio!.album?.thumb != null
-                          ? CachedNetworkImage(
-                              imageUrl:
-                                  player.currentAudio!.album!.thumb!.photo1200!,
-                              cacheKey: "${player.currentAudio!.album!.id}1200",
-                              width: _playerImageSize,
-                              height: _playerImageSize,
-                              fit: BoxFit.fill,
-                              placeholder: (BuildContext context, String url) =>
-                                  const FallbackAudioAvatar(),
-                              cacheManager: CachedNetworkImagesManager.instance,
-                              memCacheWidth: _playerImageSize.toInt(),
-                              memCacheHeight: _playerImageSize.toInt(),
+                      child: Container(
+                        width: _playerImageSize,
+                        height: _playerImageSize,
+                        decoration: BoxDecoration(
+                          boxShadow: [
+                            BoxShadow(
+                              blurRadius: 20,
+                              spreadRadius: -3,
+                              color: Theme.of(context).colorScheme.tertiary,
+                              blurStyle: BlurStyle.outer,
                             )
-                          : const FallbackAudioAvatar(
-                              width: _playerImageSize,
-                              height: _playerImageSize,
-                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(
+                            globalBorderRadius,
+                          ),
+                          child: player.currentAudio!.album?.thumb != null
+                              ? CachedNetworkImage(
+                                  imageUrl: player
+                                      .currentAudio!.album!.thumb!.photo1200!,
+                                  cacheKey:
+                                      "${player.currentAudio!.album!.id}1200",
+                                  width: _playerImageSize,
+                                  height: _playerImageSize,
+                                  fit: BoxFit.fill,
+                                  placeholder:
+                                      (BuildContext context, String url) =>
+                                          const FallbackAudioAvatar(),
+                                  cacheManager:
+                                      CachedNetworkImagesManager.instance,
+                                  memCacheWidth: _playerImageSize.toInt(),
+                                  memCacheHeight: _playerImageSize.toInt(),
+                                )
+                              : const FallbackAudioAvatar(
+                                  width: _playerImageSize,
+                                  height: _playerImageSize,
+                                ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ),
-        ),
-
-        // Текст песни данного трека.
-        if (player.currentAudio!.lyrics != null &&
-            user.settings.trackLyricsEnabled)
-          Align(
-            alignment: Alignment.topCenter,
-            child: AnimatedOpacity(
-              opacity: lyricsLoadedAndShown ? 1.0 : 0.0,
-              duration: const Duration(
-                milliseconds: 500,
+            )
+          : Align(
+              key: const ValueKey(
+                "lyrics",
               ),
-              curve: Curves.ease,
-              child: TrackLyricsBlock(
-                lyrics: player.currentAudio!.lyrics!,
+              alignment: Alignment.topCenter,
+              child: AnimatedOpacity(
+                opacity: lyricsLoadedAndShown ? 1.0 : 0.0,
+                duration: const Duration(
+                  milliseconds: 500,
+                ),
+                curve: Curves.ease,
+                child: TrackLyricsBlock(
+                  lyrics: player.currentAudio!.lyrics!,
+                ),
               ),
             ),
-          ),
-      ],
     );
   }
 }
