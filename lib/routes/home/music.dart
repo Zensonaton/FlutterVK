@@ -405,6 +405,8 @@ class _SearchDisplayDialogState extends State<SearchDisplayDialog> {
     for (StreamSubscription subscription in subscriptions) {
       subscription.cancel();
     }
+
+    RawKeyboard.instance.removeListener(keyboardListener);
   }
 
   @override
@@ -2778,6 +2780,46 @@ class _HomeMusicPageState extends State<HomeMusicPage> {
   /// Подписки на изменения состояния воспроизведения трека.
   late final List<StreamSubscription> subscriptions;
 
+  /// Показывает [RefreshIndicator] во время загрузки данных с API ВКонтакте.
+  void setLoading([bool value = true]) => setState(() => loadingData = value);
+
+  /// Метод, который вызывается при нажатии на клавишу клавиатуры.
+  void keyboardListener(
+    RawKeyEvent key,
+  ) async {
+    if (!context.mounted) return;
+
+    final UserProvider user = Provider.of<UserProvider>(context, listen: false);
+
+    // Нажатие F5.
+    if (user.favoritesPlaylist != null &&
+        key.isKeyPressed(LogicalKeyboardKey.f5)) {
+      setLoading();
+
+      await ensureUserAudioAllInformation(
+        context,
+        forceUpdate: true,
+      );
+      setLoading(false);
+
+      return;
+    }
+
+    // Нажатие комбинации CTRL+F.
+    if (key.isControlPressed && key.isKeyPressed(LogicalKeyboardKey.keyF)) {
+      Navigator.push(
+        context,
+        Material3PageRoute(
+          builder: (context) => PlaylistInfoRoute(
+            playlist: user.favoritesPlaylist!,
+          ),
+        ),
+      );
+
+      return;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -2794,7 +2836,11 @@ class _HomeMusicPageState extends State<HomeMusicPage> {
       ),
     ];
 
+    // Загружаем информацию о пользователе.
     ensureUserAudioAllInformation(context);
+
+    // Обработчик нажатия кнопок клавиатуры.
+    RawKeyboard.instance.addListener(keyboardListener);
   }
 
   @override
@@ -2804,6 +2850,8 @@ class _HomeMusicPageState extends State<HomeMusicPage> {
     for (StreamSubscription subscription in subscriptions) {
       subscription.cancel();
     }
+
+    RawKeyboard.instance.removeListener(keyboardListener);
   }
 
   /// Указывает, что в данный момент загружается информация.
@@ -2870,9 +2918,6 @@ class _HomeMusicPageState extends State<HomeMusicPage> {
       if (everythingIsDisabled) const EverythingIsDisabledBlock(),
     ];
 
-    /// Показывает [RefreshIndicator] во время загрузки данных с API ВКонтакте.
-    void setLoading([bool value = true]) => setState(() => loadingData = value);
-
     return Scaffold(
       appBar: isMobileLayout
           ? AppBar(
@@ -2907,137 +2952,102 @@ class _HomeMusicPageState extends State<HomeMusicPage> {
           setLoading(false);
         },
         refreshing: loadingData,
-        child: CallbackShortcuts(
-          bindings: {
-            if (user.favoritesPlaylist != null)
-              const SingleActivator(
-                LogicalKeyboardKey.f5,
-              ): () async {
-                setLoading();
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.only(
+                  left: isMobileLayout ? 16 : 24,
+                  right: isMobileLayout ? 16 : 24,
+                  top: isMobileLayout ? 4 : 30,
+                  bottom: isMobileLayout ? 20 : 30,
+                ),
+                children: [
+                  // Часть интерфейса "Добро пожаловать", а так же кнопка поиска.
+                  if (!isMobileLayout)
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        bottom: 36,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Текст "Добро пожаловать".
+                          Flexible(
+                            child: Text(
+                              AppLocalizations.of(context)!.music_welcomeTitle(
+                                user.firstName!,
+                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .displayMedium!
+                                  .copyWith(
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                            ),
+                          ),
 
-                await ensureUserAudioAllInformation(
-                  context,
-                  forceUpdate: true,
-                );
-                setLoading(false);
-              },
-            if (user.favoritesPlaylist != null)
-              const SingleActivator(
-                LogicalKeyboardKey.keyF,
-                control: true,
-              ): () => Navigator.push(
-                    context,
-                    Material3PageRoute(
-                      builder: (context) => PlaylistInfoRoute(
-                        playlist: user.favoritesPlaylist!,
+                          // Поиск.
+                          IconButton.filledTonal(
+                            onPressed: () => showDialog(
+                              context: context,
+                              builder: (context) => const SearchDisplayDialog(),
+                            ),
+                            icon: const Icon(
+                              Icons.search,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  )
-          },
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Expanded(
-                child: ListView(
-                  padding: EdgeInsets.only(
-                    left: isMobileLayout ? 16 : 24,
-                    right: isMobileLayout ? 16 : 24,
-                    top: isMobileLayout ? 4 : 30,
-                    bottom: isMobileLayout ? 20 : 30,
-                  ),
-                  children: [
-                    // Часть интерфейса "Добро пожаловать", а так же кнопка поиска.
-                    if (!isMobileLayout)
-                      Padding(
-                        padding: const EdgeInsets.only(
-                          bottom: 36,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            // Текст "Добро пожаловать".
-                            Flexible(
-                              child: Text(
-                                AppLocalizations.of(context)!
-                                    .music_welcomeTitle(
-                                  user.firstName!,
-                                ),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .displayMedium!
-                                    .copyWith(
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                              ),
-                            ),
 
-                            // Поиск.
-                            IconButton.filledTonal(
-                              onPressed: () => showDialog(
-                                context: context,
-                                builder: (context) =>
-                                    const SearchDisplayDialog(),
-                              ),
-                              icon: const Icon(
-                                Icons.search,
-                              ),
-                            ),
-                          ],
-                        ),
+                  // Верхняя часть интерфейса с переключателями при Desktop Layout'е.
+                  if (!isMobileLayout)
+                    const ChipFilters(
+                      showLabel: false,
+                    ),
+                  if (!isMobileLayout)
+                    const Padding(
+                      padding: EdgeInsets.only(
+                        top: 8,
+                        bottom: 2,
                       ),
+                      child: Divider(),
+                    ),
 
-                    // Верхняя часть интерфейса с переключателями при Desktop Layout'е.
-                    if (!isMobileLayout)
-                      const Focus(
-                        autofocus: true,
-                        skipTraversal: true,
-                        canRequestFocus: true,
-                        child: ChipFilters(
-                          showLabel: false,
-                        ),
-                      ),
-                    if (!isMobileLayout)
+                  // Проходимся по всем активным разделам, создавая виджеты [Divider] и [SizedBox].
+                  for (int i = 0; i < activeBlocks.length; i++) ...[
+                    // Содержимое блока.
+                    activeBlocks[i],
+
+                    // Divider в случае, если это не последний элемент.
+                    if (i < activeBlocks.length - 1)
                       const Padding(
                         padding: EdgeInsets.only(
-                          top: 8,
-                          bottom: 2,
+                          top: 12,
+                          bottom: 4,
                         ),
                         child: Divider(),
                       ),
-
-                    // Проходимся по всем активным разделам, создавая виджеты [Divider] и [SizedBox].
-                    for (int i = 0; i < activeBlocks.length; i++) ...[
-                      // Содержимое блока.
-                      activeBlocks[i],
-
-                      // Divider в случае, если это не последний элемент.
-                      if (i < activeBlocks.length - 1)
-                        const Padding(
-                          padding: EdgeInsets.only(
-                            top: 12,
-                            bottom: 4,
-                          ),
-                          child: Divider(),
-                        ),
-                    ],
-
-                    // Данный SizedBox нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
-                    if (player.loaded && isMobileLayout)
-                      const SizedBox(
-                        height: 66,
-                      ),
                   ],
-                ),
-              ),
 
-              // Данный SizedBox нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
-              // Мы его располагаем после ListView, что бы ScrollBar не был закрыт плеером.
-              if (player.loaded && !isMobileLayout)
-                const SizedBox(
-                  height: 88,
-                ),
-            ],
-          ),
+                  // Данный SizedBox нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
+                  if (player.loaded && isMobileLayout)
+                    const SizedBox(
+                      height: 66,
+                    ),
+                ],
+              ),
+            ),
+
+            // Данный SizedBox нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
+            // Мы его располагаем после ListView, что бы ScrollBar не был закрыт плеером.
+            if (player.loaded && !isMobileLayout)
+              const SizedBox(
+                height: 88,
+              ),
+          ],
         ),
       ),
     );
