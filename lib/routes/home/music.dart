@@ -2318,50 +2318,64 @@ class _MyPlaylistsBlockState extends State<MyPlaylistsBlock> {
         // Содержимое.
         ScrollConfiguration(
           behavior: AlwaysScrollableScrollBehavior(),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            clipBehavior: Clip.none,
-            physics: user.regularPlaylists.isEmpty
-                ? const NeverScrollableScrollPhysics()
-                : null,
-            child: Wrap(
-              spacing: 8,
-              children: [
-                // Настоящие данные.
-                if (user.regularPlaylists.isNotEmpty)
-                  for (ExtendedVKPlaylist playlist in user.regularPlaylists)
-                    AudioPlaylistWidget(
-                      backgroundUrl: playlist.photo?.photo270,
-                      mediaKey: playlist.mediaKey,
-                      name: playlist.title!,
-                      description: playlist.description,
-                      selected: player.currentPlaylist == playlist,
-                      currentlyPlaying: player.playing && player.loaded,
-                      onOpen: () => Navigator.push(
-                        context,
-                        Material3PageRoute(
-                          builder: (context) => PlaylistInfoRoute(
-                            playlist: playlist,
-                          ),
-                        ),
-                      ),
-                      onPlayToggle: (bool playing) => onPlaylistPlayToggle(
-                        context,
-                        playlist,
-                        playing,
-                      ),
-                    ),
-
+          child: SizedBox(
+            height: 310,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              clipBehavior: Clip.none,
+              physics: user.regularPlaylists.isEmpty
+                  ? const NeverScrollableScrollPhysics()
+                  : null,
+              itemCount: user.regularPlaylists.isNotEmpty
+                  ? user.regularPlaylists.length
+                  : null,
+              itemBuilder: (BuildContext context, int index) {
                 // Skeleton loader.
-                if (user.regularPlaylists.isEmpty)
-                  for (int index = 0; index < 10; index++)
-                    Skeletonizer(
+                if (user.regularPlaylists.isEmpty) {
+                  return Padding(
+                    padding: const EdgeInsets.only(
+                      right: 8,
+                    ),
+                    child: Skeletonizer(
                       child: AudioPlaylistWidget(
                         name:
                             fakePlaylistNames[index % fakePlaylistNames.length],
                       ),
                     ),
-              ],
+                  );
+                }
+
+                // Настоящие данные.
+                final ExtendedVKPlaylist playlist =
+                    user.regularPlaylists[index];
+
+                return Padding(
+                  padding: const EdgeInsets.only(
+                    right: 8,
+                  ),
+                  child: AudioPlaylistWidget(
+                    backgroundUrl: playlist.photo?.photo270,
+                    mediaKey: playlist.mediaKey,
+                    name: playlist.title!,
+                    description: playlist.description,
+                    selected: player.currentPlaylist == playlist,
+                    currentlyPlaying: player.playing && player.loaded,
+                    onOpen: () => Navigator.push(
+                      context,
+                      Material3PageRoute(
+                        builder: (context) => PlaylistInfoRoute(
+                          playlist: playlist,
+                        ),
+                      ),
+                    ),
+                    onPlayToggle: (bool playing) => onPlaylistPlayToggle(
+                      context,
+                      playlist,
+                      playing,
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ),
@@ -2435,46 +2449,25 @@ class _RecommendedPlaylistsBlockState extends State<RecommendedPlaylistsBlock> {
         // Содержимое.
         ScrollConfiguration(
           behavior: AlwaysScrollableScrollBehavior(),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            clipBehavior: Clip.none,
-            physics: user.recommendationPlaylists.isEmpty
-                ? const NeverScrollableScrollPhysics()
-                : null,
-            child: Wrap(
-              spacing: 8,
-              children: [
-                // Настоящие данные.
-                if (user.recommendationPlaylists.isNotEmpty)
-                  for (ExtendedVKPlaylist playlist
-                      in user.recommendationPlaylists)
-                    AudioPlaylistWidget(
-                      backgroundUrl: playlist.photo!.photo270!,
-                      mediaKey: playlist.mediaKey,
-                      name: playlist.title!,
-                      description: playlist.subtitle,
-                      useTextOnImageLayout: true,
-                      selected: player.currentPlaylist == playlist,
-                      currentlyPlaying: player.playing && player.loaded,
-                      onOpen: () => Navigator.push(
-                        context,
-                        Material3PageRoute(
-                          builder: (context) => PlaylistInfoRoute(
-                            playlist: playlist,
-                          ),
-                        ),
-                      ),
-                      onPlayToggle: (bool playing) => onPlaylistPlayToggle(
-                        context,
-                        playlist,
-                        playing,
-                      ),
-                    ),
-
+          child: SizedBox(
+            height: 200,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              clipBehavior: Clip.none,
+              physics: user.recommendationPlaylists.isEmpty
+                  ? const NeverScrollableScrollPhysics()
+                  : null,
+              itemCount: user.recommendationPlaylists.isNotEmpty
+                  ? user.recommendationPlaylists.length
+                  : null,
+              itemBuilder: (BuildContext context, int index) {
                 // Skeleton loader.
-                if (user.recommendationPlaylists.isEmpty)
-                  for (int index = 0; index < 9; index++)
-                    Skeletonizer(
+                if (user.recommendationPlaylists.isEmpty) {
+                  return Padding(
+                    padding: const EdgeInsets.only(
+                      right: 8,
+                    ),
+                    child: Skeletonizer(
                       child: AudioPlaylistWidget(
                         name:
                             fakePlaylistNames[index % fakePlaylistNames.length],
@@ -2482,7 +2475,41 @@ class _RecommendedPlaylistsBlockState extends State<RecommendedPlaylistsBlock> {
                         useTextOnImageLayout: true,
                       ),
                     ),
-              ],
+                  );
+                }
+
+                // Настоящие данные.
+                final ExtendedVKPlaylist playlist =
+                    user.recommendationPlaylists[index];
+
+                return Padding(
+                  padding: const EdgeInsets.only(
+                    right: 8,
+                  ),
+                  child: AudioPlaylistWidget(
+                    backgroundUrl: playlist.photo!.photo270!,
+                    mediaKey: playlist.mediaKey,
+                    name: playlist.title!,
+                    description: playlist.subtitle,
+                    useTextOnImageLayout: true,
+                    selected: player.currentPlaylist == playlist,
+                    currentlyPlaying: player.playing && player.loaded,
+                    onOpen: () => Navigator.push(
+                      context,
+                      Material3PageRoute(
+                        builder: (context) => PlaylistInfoRoute(
+                          playlist: playlist,
+                        ),
+                      ),
+                    ),
+                    onPlayToggle: (bool playing) => onPlaylistPlayToggle(
+                      context,
+                      playlist,
+                      playing,
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ),
@@ -2555,40 +2582,25 @@ class _SimillarMusicBlockState extends State<SimillarMusicBlock> {
         // Содержимое.
         ScrollConfiguration(
           behavior: AlwaysScrollableScrollBehavior(),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            clipBehavior: Clip.none,
-            child: Wrap(
-              spacing: 8,
-              children: [
-                if (user.simillarPlaylists.isNotEmpty)
-                  for (ExtendedVKPlaylist playlist in user.simillarPlaylists)
-                    SimillarMusicPlaylistWidget(
-                      name: playlist.title!,
-                      simillarity: playlist.simillarity!,
-                      color: HexColor.fromHex(playlist.color!),
-                      tracks: playlist.knownTracks!,
-                      selected: player.currentPlaylist == playlist,
-                      currentlyPlaying: player.playing && player.loaded,
-                      onOpen: () => Navigator.push(
-                        context,
-                        Material3PageRoute(
-                          builder: (context) => PlaylistInfoRoute(
-                            playlist: playlist,
-                          ),
-                        ),
-                      ),
-                      onPlayToggle: (bool playing) => onPlaylistPlayToggle(
-                        context,
-                        playlist,
-                        playing,
-                      ),
-                    ),
-
+          child: SizedBox(
+            height: 282,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              clipBehavior: Clip.none,
+              physics: user.simillarPlaylists.isEmpty
+                  ? const NeverScrollableScrollPhysics()
+                  : null,
+              itemCount: user.simillarPlaylists.isNotEmpty
+                  ? user.recommendationPlaylists.length
+                  : null,
+              itemBuilder: (BuildContext context, int index) {
                 // Skeleton loader.
-                if (user.simillarPlaylists.isEmpty)
-                  for (int index = 0; index < 9; index++)
-                    Skeletonizer(
+                if (user.simillarPlaylists.isEmpty) {
+                  return Padding(
+                    padding: const EdgeInsets.only(
+                      right: 8,
+                    ),
+                    child: Skeletonizer(
                       child: SimillarMusicPlaylistWidget(
                         name:
                             fakePlaylistNames[index % fakePlaylistNames.length],
@@ -2610,7 +2622,40 @@ class _SimillarMusicBlockState extends State<SimillarMusicBlock> {
                         ),
                       ),
                     ),
-              ],
+                  );
+                }
+
+                // Настоящие данные.
+                final ExtendedVKPlaylist playlist =
+                    user.simillarPlaylists[index];
+
+                return Padding(
+                  padding: const EdgeInsets.only(
+                    right: 8,
+                  ),
+                  child: SimillarMusicPlaylistWidget(
+                    name: playlist.title!,
+                    simillarity: playlist.simillarity!,
+                    color: HexColor.fromHex(playlist.color!),
+                    tracks: playlist.knownTracks!,
+                    selected: player.currentPlaylist == playlist,
+                    currentlyPlaying: player.playing && player.loaded,
+                    onOpen: () => Navigator.push(
+                      context,
+                      Material3PageRoute(
+                        builder: (context) => PlaylistInfoRoute(
+                          playlist: playlist,
+                        ),
+                      ),
+                    ),
+                    onPlayToggle: (bool playing) => onPlaylistPlayToggle(
+                      context,
+                      playlist,
+                      playing,
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ),
@@ -2683,19 +2728,42 @@ class _ByVKPlaylistsBlockState extends State<ByVKPlaylistsBlock> {
         // Содержимое.
         ScrollConfiguration(
           behavior: AlwaysScrollableScrollBehavior(),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            clipBehavior: Clip.none,
-            physics: user.madeByVKPlaylists.isEmpty
-                ? const NeverScrollableScrollPhysics()
-                : null,
-            child: Wrap(
-              spacing: 8,
-              children: [
-                // Настоящие данные.
-                if (user.madeByVKPlaylists.isNotEmpty)
-                  for (ExtendedVKPlaylist playlist in user.madeByVKPlaylists)
-                    AudioPlaylistWidget(
+          child: SizedBox(
+            height: 310,
+            child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                clipBehavior: Clip.none,
+                physics: user.madeByVKPlaylists.isEmpty
+                    ? const NeverScrollableScrollPhysics()
+                    : null,
+                itemCount: user.madeByVKPlaylists.isNotEmpty
+                    ? user.madeByVKPlaylists.length
+                    : null,
+                itemBuilder: (BuildContext context, int index) {
+                  // Skeleton loader.
+                  if (user.madeByVKPlaylists.isEmpty) {
+                    return Padding(
+                      padding: const EdgeInsets.only(
+                        right: 8,
+                      ),
+                      child: Skeletonizer(
+                        child: AudioPlaylistWidget(
+                          name: fakePlaylistNames[
+                              index % fakePlaylistNames.length],
+                        ),
+                      ),
+                    );
+                  }
+
+                  // Настоящие данные.
+                  final ExtendedVKPlaylist playlist =
+                      user.madeByVKPlaylists[index];
+
+                  return Padding(
+                    padding: const EdgeInsets.only(
+                      right: 8,
+                    ),
+                    child: AudioPlaylistWidget(
                       backgroundUrl: playlist.photo!.photo270!,
                       mediaKey: playlist.mediaKey,
                       name: playlist.title!,
@@ -2716,18 +2784,8 @@ class _ByVKPlaylistsBlockState extends State<ByVKPlaylistsBlock> {
                         playing,
                       ),
                     ),
-
-                // Skeleton loader.
-                if (user.madeByVKPlaylists.isEmpty)
-                  for (int index = 0; index < 10; index++)
-                    Skeletonizer(
-                      child: AudioPlaylistWidget(
-                        name:
-                            fakePlaylistNames[index % fakePlaylistNames.length],
-                      ),
-                    ),
-              ],
-            ),
+                  );
+                }),
           ),
         ),
       ],
