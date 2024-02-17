@@ -796,7 +796,7 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
 
                       // Выход из полноэкранного режима.
                       IconButton(
-                        onPressed: () => closeFullscreenPlayer(context),
+                        onPressed: () => closePlayer(context),
                         icon: Icon(
                           Icons.fullscreen_exit,
                           color: Theme.of(context).colorScheme.primary,

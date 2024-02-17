@@ -13,6 +13,7 @@ import "package:scroll_to_index/scroll_to_index.dart";
 import "package:styled_text/styled_text.dart";
 import "package:visibility_detector/visibility_detector.dart";
 import "package:wakelock_plus/wakelock_plus.dart";
+import "package:window_manager/window_manager.dart";
 
 import "../api/vk/api.dart";
 import "../api/vk/audio/get_lyrics.dart";
@@ -32,6 +33,11 @@ import "fullscreen_player/mobile.dart";
 /// Для открытия или закрытия полноэкранного плеера воспользуйтесь методом [openFullscreenPlayer] или [closeFullscreenPlayer].
 bool isFullscreenPlayerOpen = false;
 
+/// Указывает, открыт ли мини плеер.
+///
+/// Для открытия или закрытия мини плеера воспользуйтесь методом [openMiniPlayer] или [closeMiniPlayer].
+bool isMiniplayerOpen = false;
+
 /// Метод, который открывает музыкальный плеер на всё окно, либо на весь экран, если приложение запущено на Desktop-платформе. Если [fullscreenOnDesktop] правдив, и приложение запущено на Desktop ([isDesktop]), то тогда приложение перейдёт в полноэкранный режим.
 ///
 /// Для закрытия воспользуйтесь методом [closeFullscreenPlayer].
@@ -40,7 +46,7 @@ Future<void> openFullscreenPlayer(
   bool fullscreenOnDesktop = true,
 }) async {
   // Если плеер уже открыт, то ничего не делаем.
-  if (isFullscreenPlayerOpen) {
+  if (isFullscreenPlayerOpen || isMiniplayerOpen) {
     return;
   }
 
@@ -70,7 +76,7 @@ Future<void> closeFullscreenPlayer(
   bool popRoute = true,
 }) async {
   // Если плеер не открыт, то ничего не делаем.
-  if (!isFullscreenPlayerOpen) {
+  if (!isFullscreenPlayerOpen || isMiniplayerOpen) {
     return;
   }
 
@@ -108,6 +114,140 @@ Future<void> toggleFullscreenPlayer(
     context,
     fullscreenOnDesktop: fullscreenOnDesktop,
   );
+}
+
+/// Открывает мини плеер, создавая маленькое "окошко" приложения.
+Future<void> openMiniPlayer(
+  BuildContext context,
+) async {
+  // Если плеер уже открыт, то ничего не делаем.
+  if (isMiniplayerOpen || isFullscreenPlayerOpen) {
+    return;
+  }
+
+  if (!context.mounted) return;
+
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => const FullscreenPlayerRoute(),
+    ),
+  );
+
+  // Если приложение запущено на Desktop, то делаем окошко маленьким.
+  if (isDesktop) {
+    await windowManager.setMinimumSize(
+      const Size(
+        300,
+        150,
+      ),
+    );
+    await windowManager.setMaximumSize(
+      const Size(
+        300,
+        350,
+      ),
+    );
+    await windowManager.setSize(
+      const Size(
+        300,
+        350,
+      ),
+    );
+    await windowManager.setMaximizable(false);
+    await windowManager.setAlwaysOnTop(true);
+    await windowManager.setAlignment(Alignment.bottomRight);
+  }
+
+  isMiniplayerOpen = true;
+}
+
+/// Метод, закрывающий ранее открытый при помощи метода [openFullscreenPlayer] мини плеер.
+Future<void> closeMiniPlayer(
+  BuildContext context, {
+  bool popRoute = true,
+}) async {
+  // Если плеер не открыт, то ничего не делаем.
+  if (!isMiniplayerOpen || isFullscreenPlayerOpen) {
+    return;
+  }
+
+  if (popRoute && context.mounted) Navigator.of(context).pop();
+
+  // Если приложение запущено на Desktop, то делаем окошко маленьким.
+  if (isDesktop) {
+    await windowManager.setMinimumSize(
+      const Size(
+        400,
+        300,
+      ),
+    );
+    await windowManager.setMaximumSize(
+      const Size(
+        10000,
+        10000,
+      ),
+    );
+    await windowManager.setSize(
+      const Size(
+        1280,
+        720,
+      ),
+    );
+    await windowManager.setMaximizable(true);
+    await windowManager.setAlwaysOnTop(false);
+    await windowManager.setResizable(true);
+    await windowManager.center();
+  }
+
+  isMiniplayerOpen = false;
+}
+
+/// Вызывает [openMiniPlayer] или [closeMiniPlayer], в зависимости о того, открыт сейчас мини плеер или нет.
+Future<void> toggleMiniPlayer(
+  BuildContext context, {
+  bool popRoute = true,
+}) async {
+  if (isMiniplayerOpen) {
+    await closeMiniPlayer(
+      context,
+      popRoute: popRoute,
+    );
+
+    return;
+  }
+
+  await openMiniPlayer(
+    context,
+  );
+}
+
+/// Определяет, открыт сейчас мини плеер или полноэкранный плеер, и если открыт какой-то из них, вызывает [closeMiniPlayer] либо [closeFullscreenPlayer].
+Future<void> closePlayer(
+  BuildContext context, {
+  bool popRoute = true,
+}) async {
+  // Закрываем мини плеер.
+  if (isMiniplayerOpen) {
+    await closeMiniPlayer(
+      context,
+      popRoute: popRoute,
+    );
+
+    return;
+  }
+
+  // Закрываем полноэкранный плеер.
+  if (isFullscreenPlayerOpen) {
+    await closeFullscreenPlayer(
+      context,
+      popRoute: popRoute,
+    );
+
+    return;
+  }
+
+  // Ничего не открыто. Ничего не делаем.
 }
 
 /// Виджет, отображающий отдельную строчку линии в тексте трека. По нажатию по данной линии, плеер перемотается на начало данной линии.
@@ -510,7 +650,7 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
                   ),
                   "exit": StyledTextActionTag(
                     (String? text, Map<String?, String?> attrs) {
-                      closeFullscreenPlayer(context);
+                      closePlayer(context);
                     },
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.primary,
@@ -524,7 +664,7 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
 
               // Кнопка для выхода.
               FilledButton.icon(
-                onPressed: () => closeFullscreenPlayer(context),
+                onPressed: () => closePlayer(context),
                 icon: const Icon(
                   Icons.fullscreen_exit,
                 ),
@@ -609,18 +749,18 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
             body: Actions(
               actions: {
                 FullscreenPlayerIntent: CallbackAction(
-                  onInvoke: (intent) => closeFullscreenPlayer(context),
+                  onInvoke: (intent) => closePlayer(context),
                 ),
               },
               child: CallbackShortcuts(
                 bindings: {
                   const SingleActivator(
                     LogicalKeyboardKey.escape,
-                  ): () => closeFullscreenPlayer(context),
+                  ): () => closePlayer(context),
                 },
                 child: PopScope(
                   onPopInvoked: (_) {
-                    closeFullscreenPlayer(
+                    closePlayer(
                       context,
                       popRoute: false,
                     );

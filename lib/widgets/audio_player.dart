@@ -239,6 +239,9 @@ class BottomMusicPlayer extends StatefulWidget {
   /// Метод, вызываемый при переключении повтора трека.
   final ValueSetter<bool>? onRepeatToggle;
 
+  /// Метод, вызываемый при открытии мини плеера.
+  final VoidCallback? onMiniplayer;
+
   /// Метод, вызываемый при попытке открыть полноэкранный плеер свайпом вверх, либо по нажатию на плеер.
   ///
   /// Передаёт bool, обозначающий то, что плеер был открыт при помощи свайпа, а не обычного нажатия.
@@ -282,6 +285,7 @@ class BottomMusicPlayer extends StatefulWidget {
     this.onPreviousTrack,
     this.onShuffleToggle,
     this.onRepeatToggle,
+    this.onMiniplayer,
     this.onFullscreen,
     this.onDismiss,
     this.onProgressChange,
@@ -758,40 +762,55 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                       // Управление громкостью.
                       if (isDesktop)
                         Flexible(
-                          child: SizedBox(
-                            width: 150,
-                            child: ScrollableSlider(
-                              value: widget.volume,
-                              activeColor: widget.scheme.onPrimaryContainer,
-                              inactiveColor: widget.scheme.onPrimaryContainer
-                                  .withOpacity(0.5),
-                              onChanged: (double newVolume) {
-                                widget.onVolumeChange?.call(newVolume);
+                          child: Padding(
+                            padding: const EdgeInsets.only(
+                              right: 10,
+                            ),
+                            child: SizedBox(
+                              width: 150,
+                              child: ScrollableSlider(
+                                value: widget.volume,
+                                activeColor: widget.scheme.onPrimaryContainer,
+                                inactiveColor: widget.scheme.onPrimaryContainer
+                                    .withOpacity(0.5),
+                                onChanged: (double newVolume) {
+                                  widget.onVolumeChange?.call(newVolume);
 
-                                // Если пользователь установил минимальную громкость, а так же настройка "Пауза при отключении громкости" включена, то ставим плеер на паузу.
-                                if (newVolume == 0 &&
-                                    widget.pauseOnMuteEnabled) {
-                                  widget.onPlayStateToggle?.call(false);
-                                }
-                              },
+                                  // Если пользователь установил минимальную громкость, а так же настройка "Пауза при отключении громкости" включена, то ставим плеер на паузу.
+                                  if (newVolume == 0 &&
+                                      widget.pauseOnMuteEnabled) {
+                                    widget.onPlayStateToggle?.call(false);
+                                  }
+                                },
+                              ),
                             ),
                           ),
                         ),
+
+                      // Кнопка для перехода в мини плеер.
                       if (isDesktop)
-                        const Flexible(
-                          child: SizedBox(
-                            width: 8,
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            right: 2,
+                          ),
+                          child: IconButton(
+                            onPressed: widget.onMiniplayer,
+                            icon: Icon(
+                              Icons.picture_in_picture_alt,
+                              color: widget.scheme.onPrimaryContainer,
+                            ),
                           ),
                         ),
 
                       // Кнопка для перехода в полноэкранный режим.
-                      IconButton(
-                        onPressed: () => widget.onFullscreen?.call(false),
-                        icon: Icon(
-                          Icons.fullscreen,
-                          color: widget.scheme.onPrimaryContainer,
+                      if (isDesktop)
+                        IconButton(
+                          onPressed: () => widget.onFullscreen?.call(false),
+                          icon: Icon(
+                            Icons.fullscreen,
+                            color: widget.scheme.onPrimaryContainer,
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),

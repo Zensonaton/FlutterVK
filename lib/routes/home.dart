@@ -355,6 +355,7 @@ class _BottomMusicPlayerWidgetState extends State<BottomMusicPlayerWidget> {
         context,
         fullscreenOnDesktop: !widget.isMobileLayout,
       ),
+      onMiniplayer: () => openMiniPlayer(context),
       onShuffleToggle: (bool enabled) async {
         await player.setShuffle(enabled);
         user.settings.shuffleEnabled = enabled;

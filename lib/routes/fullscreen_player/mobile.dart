@@ -17,9 +17,6 @@ import "../fullscreen_player.dart";
 import "../home.dart";
 import "../home/music.dart";
 
-/// Размер Padding'а для полноэкранного плеера при Mobile Layout'е.
-const double _playerPadding = 20;
-
 /// Размер (ширина и высота) изображения по центру полноэкраннонного плеера при Mobile Layout'е.
 const double _playerImageSize = 400;
 
@@ -276,6 +273,12 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
     /// Указывает, сохранён ли этот трек в лайкнутых.
     final bool isFavorite = player.currentAudio!.isLiked;
 
+    /// Указывает, что будет использоваться очень маленький размер интерфейса.
+    final bool smallerLayout = MediaQuery.of(context).size.width <= 300;
+
+    /// Указывает, что блок с текстом песни будет показан.
+    final bool showLyricsBlock = MediaQuery.of(context).size.height > 150;
+
     return Column(
       children: [
         // Кнопки для лайка/дизлайка, а так же включения/отключения текста песни.
@@ -304,6 +307,7 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      // Название трека.
                       Flexible(
                         child: Text(
                           player.currentAudio!.title,
@@ -316,11 +320,13 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                           ),
                         ),
                       ),
-                      if (player.currentAudio!.isExplicit)
+
+                      // Плашка "Explicit".
+                      if (player.currentAudio!.isExplicit && !smallerLayout)
                         const SizedBox(
                           width: 4,
                         ),
-                      if (player.currentAudio!.isExplicit)
+                      if (player.currentAudio!.isExplicit && !smallerLayout)
                         Icon(
                           Icons.explicit,
                           color: Theme.of(context)
@@ -348,25 +354,36 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
             ),
 
             // Кнопка для включения/отключения показа текста песни.
-            IconButton(
-              onPressed: player.currentAudio!.hasLyrics
-                  ? () {
-                      user.settings.trackLyricsEnabled =
-                          !user.settings.trackLyricsEnabled;
+            if (showLyricsBlock)
+              IconButton(
+                onPressed: player.currentAudio!.hasLyrics
+                    ? () {
+                        user.settings.trackLyricsEnabled =
+                            !user.settings.trackLyricsEnabled;
 
-                      user.markUpdated();
-                    }
-                  : null,
-              icon: Icon(
-                user.settings.trackLyricsEnabled &&
-                        player.currentAudio!.hasLyrics
-                    ? Icons.lyrics
-                    : Icons.lyrics_outlined,
-                color: Theme.of(context).colorScheme.primary.withOpacity(
-                      player.currentAudio!.hasLyrics ? 1.0 : 0.5,
-                    ),
+                        user.markUpdated();
+                      }
+                    : null,
+                icon: Icon(
+                  user.settings.trackLyricsEnabled &&
+                          player.currentAudio!.hasLyrics
+                      ? Icons.lyrics
+                      : Icons.lyrics_outlined,
+                  color: Theme.of(context).colorScheme.primary.withOpacity(
+                        player.currentAudio!.hasLyrics ? 1.0 : 0.5,
+                      ),
+                ),
               ),
-            ),
+
+            // Кнопка для выхода из плеера.
+            if (!showLyricsBlock)
+              IconButton(
+                onPressed: () => closePlayer(context),
+                icon: Icon(
+                  Icons.picture_in_picture_alt,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
           ],
         ),
         const SizedBox(
@@ -374,7 +391,7 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
         ),
 
         // Индикатор буферизации.
-        if (player.buffering)
+        if (!smallerLayout && player.buffering)
           Padding(
             padding: const EdgeInsets.symmetric(
               vertical: 8,
@@ -389,7 +406,7 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
           ),
 
         // Slider для отображения прогресса воспроизведения трека.
-        if (!player.buffering)
+        if (!smallerLayout && !player.buffering)
           SliderTheme(
             data: SliderThemeData(
               trackShape: CustomTrackShape(),
@@ -416,9 +433,11 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
 
         // Кнопки управления воспроизведением.
         SizedBox(
-          height: 70,
+          height: smallerLayout ? null : 70,
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: smallerLayout
+                ? MainAxisAlignment.spaceBetween
+                : MainAxisAlignment.center,
             children: [
               // Shuffle.
               StreamBuilder<bool>(
@@ -473,10 +492,14 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                       !playing,
                     ),
                     icon: Icon(
-                      playing ? Icons.pause_circle : Icons.play_circle,
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      smallerLayout
+                          ? (playing ? Icons.pause : Icons.play_arrow)
+                          : (playing ? Icons.pause_circle : Icons.play_circle),
+                      color: smallerLayout
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.onPrimaryContainer,
                     ),
-                    iconSize: 50,
+                    iconSize: smallerLayout ? null : 50,
                   );
                 },
               ),
@@ -546,6 +569,9 @@ class _FullscreenPlayerMobileRouteState
   /// Подписки на изменения состояния воспроизведения трека.
   late final List<StreamSubscription> subscriptions;
 
+  // /// Указывает, есть ли наведение ли на плеере или нет.
+  // bool isHovered = false;
+
   @override
   void initState() {
     super.initState();
@@ -568,35 +594,75 @@ class _FullscreenPlayerMobileRouteState
 
   @override
   Widget build(BuildContext context) {
+    /// Указывает, что будет использоваться очень маленький размер интерфейса.
+    final bool smallerLayout = MediaQuery.of(context).size.width <= 300;
+
+    /// Размер Padding'а для полноэкранного плеера при Mobile Layout'е.
+    final double playerPadding = smallerLayout ? 10 : 20;
+
     /// Высота блока с текстом песни.
     final double lyricsBlockHeight = MediaQuery.of(context).size.height -
-        _playerPadding * 2 -
-        200 -
+        playerPadding * 2 -
+        (smallerLayout ? 95 : 200) -
         MediaQuery.of(context).systemGestureInsets.bottom -
         MediaQuery.of(context).systemGestureInsets.top;
 
+    /// Указывает, что блок с текстом песни будет показан.
+    final bool showLyricsBlock = MediaQuery.of(context).size.height > 150;
+
     return Padding(
-      padding: const EdgeInsets.all(
-        _playerPadding,
+      padding: EdgeInsets.all(
+        playerPadding,
+      ).copyWith(
+        top: smallerLayout ? 0 : null,
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // Кнопки управления полноэкранным плеером сверху.
-          const TopFullscreenControls(),
+          if (!smallerLayout) const TopFullscreenControls(),
 
           // Изображение трека, либо текст песни поверх него.
           SizedBox(
-            height: lyricsBlockHeight,
-            child: const ImageLyricsBlock(),
+            width: double.infinity,
+            child: Stack(
+              children: [
+                // Текст песни/изображение.
+                if (showLyricsBlock)
+                  Align(
+                    child: SizedBox(
+                      height: lyricsBlockHeight,
+                      child: const ImageLyricsBlock(),
+                    ),
+                  ),
+
+                // Кнопка для выхода из плеера при очень маленьком интерфейсе.
+                if (smallerLayout && showLyricsBlock)
+                  Align(
+                    alignment: Alignment.topLeft,
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        top: playerPadding,
+                        left: 2,
+                      ),
+                      child: IconButton.filledTonal(
+                        icon: const Icon(
+                          Icons.arrow_back,
+                        ),
+                        onPressed: () => closePlayer(context),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
 
           // Управление плеером, а так же информация по текущему треку.
-          const Padding(
+          Padding(
             padding: EdgeInsets.symmetric(
-              horizontal: 22,
+              horizontal: smallerLayout ? 2 : 22,
             ),
-            child: FullscreenMediaControls(),
+            child: const FullscreenMediaControls(),
           ),
         ],
       ),
