@@ -76,16 +76,9 @@ var audioCount = 1;
 var audioIndex = 0;
 while (audioIndex < audioCount) {
 	var resp = API.audio.get({'count': 200, 'offset': audioIndex, 'owner_id': ownerID, 'album_id': albumID, 'access_key': accessKey});
+
 	audioCount = resp.count;
-
-	var i = 0;
-	while (i < resp.items.length) {
-		var item = resp.items[i];
-
-		audios.push(item);
-
-		i = i + 1;
-	};
+  audios = audios + resp.items;
 
 	audioIndex = audioIndex + 200;
 };

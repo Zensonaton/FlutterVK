@@ -43,14 +43,7 @@ var audioAlbums = [];
 
 var mediaIndex = 0;
 while (mediaIndex < audioMediaIDs.length) {
-	var response = API.audio.getById({'audios': audioMediaIDs[mediaIndex]});
-
-	var i = 0;
-	while (i < response.length) {
-    audioAlbums.push(response[i]);
-
-		i = i + 1;
-	}
+  audioAlbums = audioAlbums + API.audio.getById({'audios': audioMediaIDs[mediaIndex]});
 
 	mediaIndex = mediaIndex + 1;
 };
