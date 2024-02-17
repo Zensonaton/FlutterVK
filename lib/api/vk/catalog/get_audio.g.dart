@@ -6,6 +6,25 @@ part of 'get_audio.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
+SimillarPlaylist _$SimillarPlaylistFromJson(Map<String, dynamic> json) =>
+    SimillarPlaylist(
+      id: json['id'] as int,
+      ownerID: json['owner_id'] as int,
+      percentage: (json['percentage'] as num).toDouble(),
+      audios:
+          (json['audios'] as List<dynamic>).map((e) => e as String).toList(),
+      color: json['color'] as String,
+    );
+
+Map<String, dynamic> _$SimillarPlaylistToJson(SimillarPlaylist instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'owner_id': instance.ownerID,
+      'percentage': instance.percentage,
+      'audios': instance.audios,
+      'color': instance.color,
+    };
+
 BlockAction _$BlockActionFromJson(Map<String, dynamic> json) => BlockAction(
       json['section_id'] as String?,
       json['title'] as String?,
@@ -94,6 +113,9 @@ APICatalogRealResponse _$APICatalogRealResponseFromJson(
           .map((e) => AudioPlaylist.fromJson(e as Map<String, dynamic>))
           .toList(),
       Catalog.fromJson(json['catalog'] as Map<String, dynamic>),
+      (json['recommended_playlists'] as List<dynamic>)
+          .map((e) => SimillarPlaylist.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
 
 Map<String, dynamic> _$APICatalogRealResponseToJson(
@@ -102,6 +124,7 @@ Map<String, dynamic> _$APICatalogRealResponseToJson(
       'audios': instance.audios,
       'playlists': instance.playlists,
       'catalog': instance.catalog,
+      'recommended_playlists': instance.recommendedPlaylists,
     };
 
 APICatalogGetAudioResponse _$APICatalogGetAudioResponseFromJson(

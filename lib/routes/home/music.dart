@@ -72,11 +72,6 @@ Future<void> ensureUserAudioBasicInfo(
 
   logger.d("Loading music information");
 
-  // Сбрасываем информацию у "рекомендованных" плейлистов.
-  user.allPlaylists.removeWhere(
-    (int _, ExtendedVKPlaylist playlist) => playlist.isRecommendationsPlaylist,
-  );
-
   // Получаем информацию по музыке, вместе с альбомами, если пользователь добавил токен от VK Admin.
   try {
     final APIMassAudioGetResponse response =
@@ -86,7 +81,7 @@ Future<void> ensureUserAudioBasicInfo(
     user.playlistsCount = response.response!.playlistsCount;
 
     // Создаём фейковый плейлист, где хранятся "любимые" треки пользователя.
-    user.allPlaylists[0] = ExtendedVKPlaylist(
+    user.allPlaylists["${user.id}_0"] = ExtendedVKPlaylist(
       id: 0,
       ownerID: user.id!,
       count: response.response!.audioCount,
@@ -104,11 +99,10 @@ Future<void> ensureUserAudioBasicInfo(
     user.allPlaylists.addAll(
       {
         for (var playlist in response.response!.playlists)
-          playlist.id: ExtendedVKPlaylist.fromAudioPlaylist(playlist)
+          playlist.mediaKey: ExtendedVKPlaylist.fromAudioPlaylist(playlist)
       },
     );
 
-    user.resetFavoriteMediaKeys();
     user.markUpdated(false);
   } catch (e, stackTrace) {
     logger.e(
@@ -172,6 +166,40 @@ Future<void> ensureUserAudioRecommendations(
         .toList();
   }
 
+  /// Парсит список из плейлистов, возвращая только список из плейлистов раздела "Совпадения по вкусам".
+  List<ExtendedVKPlaylist> parseSimillarPlaylists(
+    APICatalogGetAudioResponse response,
+  ) {
+    final List<ExtendedVKPlaylist> playlists = [];
+
+    // Проходимся по списку рекомендуемых плейлистов.
+    for (SimillarPlaylist playlist in response.response!.recommendedPlaylists) {
+      final fullPlaylist = response.response!.playlists.firstWhere(
+        (AudioPlaylist fullPlaylist) {
+          return fullPlaylist.mediaKey == playlist.mediaKey;
+        },
+      );
+
+      playlists.add(
+        ExtendedVKPlaylist.fromAudioPlaylist(
+          fullPlaylist,
+          simillarity: playlist.percentage,
+          color: playlist.color,
+          knownTracks: response.response!.audios
+              .where(
+                (Audio audio) => playlist.audios.contains(audio.mediaKey),
+              )
+              .map(
+                (Audio audio) => ExtendedVKAudio.fromAudio(audio),
+              )
+              .toList(),
+        ),
+      );
+    }
+
+    return playlists;
+  }
+
   /// Парсит список из плейлистов, возвращая только список из плейлистов раздела "Собрано редакцией".
   List<ExtendedVKPlaylist> parseMadeByVKPlaylists(
     APICatalogGetAudioResponse response,
@@ -224,9 +252,10 @@ Future<void> ensureUserAudioRecommendations(
       {
         for (ExtendedVKPlaylist playlist in {
           ...parseRecommendedPlaylists(response),
+          ...parseSimillarPlaylists(response),
           ...parseMadeByVKPlaylists(response),
         })
-          playlist.id: playlist
+          playlist.mediaKey: playlist
       },
     );
 
@@ -642,7 +671,6 @@ class _TrackInfoEditDialogState extends State<TrackInfoEditDialog> {
             // Открытый трек.
             AudioTrackTile(
               audio: audio,
-              showLikeButton: false,
               selected: audio == player.currentAudio,
               currentlyPlaying: player.loaded && player.playing,
             ),
@@ -835,7 +863,6 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
               children: [
                 AudioTrackTile(
                   audio: widget.audio,
-                  showLikeButton: false,
                   selected: widget.audio == player.currentAudio,
                   currentlyPlaying: player.loaded && player.playing,
                 ),
@@ -1015,10 +1042,9 @@ class AudioTrackTile extends StatefulWidget {
   final bool isLoading;
 
   /// Указывает, что этот трек лайкнут.
+  ///
+  /// Если [onLikeToggle] не указан, то кнопка для лайка будет отсутствовать.
   final bool isLiked;
-
-  /// Указывает, что кнопка для лайка должна быть показана.
-  final bool showLikeButton;
 
   /// Указывает, что в случае, если [selected] равен true, то у данного виджета будет эффект "свечения".
   final bool glowIfSelected;
@@ -1034,6 +1060,8 @@ class AudioTrackTile extends StatefulWidget {
   final VoidCallback? onPlay;
 
   /// Действие, вызываемое при переключении состояния "лайка" данного трека.
+  ///
+  /// Если не указано, то кнопка лайка не будет показана.
   final Function(bool)? onLikeToggle;
 
   /// Действие, вызываемое при выборе ПКМ (или зажатии) по данном элементу.
@@ -1050,7 +1078,6 @@ class AudioTrackTile extends StatefulWidget {
     this.isLoading = false,
     this.currentlyPlaying = false,
     this.isLiked = false,
-    this.showLikeButton = true,
     this.glowIfSelected = false,
     required this.audio,
     this.onPlay,
@@ -1235,6 +1262,8 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
                     ),
                   ),
                 ),
+
+                // Название и исполнитель трека.
                 const SizedBox(
                   width: 8,
                 ),
@@ -1245,9 +1274,11 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Ряд с названием трека, плашки Explicit и subtitle, при наличии.
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
+                            // Название трека.
                             Flexible(
                               child: Text(
                                 widget.audio.title,
@@ -1262,6 +1293,8 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
                                 ),
                               ),
                             ),
+
+                            // Плашка Explicit.
                             if (widget.audio.isExplicit)
                               const SizedBox(
                                 width: 2,
@@ -1275,6 +1308,8 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
                                     .onBackground
                                     .withOpacity(0.5),
                               ),
+
+                            // Подпись трека.
                             if (widget.audio.subtitle != null)
                               const SizedBox(
                                 width: 6,
@@ -1295,6 +1330,8 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
                               ),
                           ],
                         ),
+
+                        // Исполнитель.
                         Text(
                           widget.audio.artist,
                           overflow: TextOverflow.ellipsis,
@@ -1309,6 +1346,8 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
                     ),
                   ),
                 ),
+
+                // Длительность трека.
                 const SizedBox(
                   width: 8,
                 ),
@@ -1322,13 +1361,15 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
                         .withOpacity(0.75),
                   ),
                 ),
-                if (widget.showLikeButton)
+
+                // Кнопка для лайка.
+                if (widget.onLikeToggle != null)
                   const SizedBox(
                     width: 8,
                   ),
-                if (widget.showLikeButton)
+                if (widget.onLikeToggle != null)
                   IconButton(
-                    onPressed: () => widget.onLikeToggle?.call(
+                    onPressed: () => widget.onLikeToggle!(
                       !widget.isLiked,
                     ),
                     icon: Icon(
@@ -1629,6 +1670,238 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Виджет, отображающий несколько треков из плейлиста раздела "Совпадения по вкусам".
+class SimillarMusicPlaylistWidget extends StatefulWidget {
+  /// Название плейлиста.
+  final String name;
+
+  /// Число от `0.0` до `1.0`, показывающий процент того, насколько плейлист схож с музыкальным вкусом текущего пользователя.
+  final double simillarity;
+
+  /// Список со строго первыми тремя треками из этого плейлиста, которые будут отображены.
+  final List<ExtendedVKAudio> tracks;
+
+  /// Цвет данного блока.
+  ///
+  /// Если не указан, то будет использоваться значение [ColorScheme.primaryContainer].
+  final Color? color;
+
+  /// Указывает, что музыка играет из этого плейлиста.
+  final bool selected;
+
+  /// Указывает, что плеер сейчас воспроизводит музыку.
+  final bool currentlyPlaying;
+
+  /// Вызывается при открытии плейлиста во весь экран.
+  ///
+  /// Вызывается при нажатии не по центру плейлиста. При нажатии по центру плейлиста запускается воспроизведение музыки, либо же она ставится на паузу, если музыка играет из этого плейлиста.
+  final VoidCallback? onOpen;
+
+  /// Действие, вызываемое при переключения паузы/возобновления при нажатии по центру плейлиста.
+  ///
+  /// Если не указывать, то возможность нажать на центр плейлиста будет выключена.
+  final Function(bool)? onPlayToggle;
+
+  const SimillarMusicPlaylistWidget({
+    super.key,
+    required this.name,
+    required this.simillarity,
+    required this.tracks,
+    this.color,
+    this.selected = false,
+    this.currentlyPlaying = false,
+    this.onOpen,
+    this.onPlayToggle,
+  });
+
+  @override
+  State<SimillarMusicPlaylistWidget> createState() =>
+      _SimillarMusicPlaylistWidgetState();
+}
+
+class _SimillarMusicPlaylistWidgetState
+    extends State<SimillarMusicPlaylistWidget> {
+  bool isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    assert(
+      widget.tracks.length == 3,
+      "Expected tracks amount to be 3, but got ${widget.tracks.length} instead",
+    );
+
+    final Color topColor =
+        widget.color ?? Theme.of(context).colorScheme.primaryContainer;
+    final bool selectedAndPlaying = widget.selected && widget.currentlyPlaying;
+
+    return Container(
+      width: 250,
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outlineVariant,
+        ),
+        borderRadius: BorderRadius.circular(
+          globalBorderRadius * 2,
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Верхняя часть такового плейлиста, в которой отображается название плейлиста, а так же его "схожесть".
+          Tooltip(
+            message: widget.name,
+            waitDuration: const Duration(
+              seconds: 1,
+            ),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(
+                globalBorderRadius * 2,
+              ),
+              onTap: widget.onOpen,
+              onSecondaryTap: widget.onOpen,
+              onHover: (bool value) => setState(
+                () => isHovered = value,
+              ),
+              child: Stack(
+                children: [
+                  // Название и прочая информация.
+                  Container(
+                    height: 90,
+                    padding: const EdgeInsets.all(
+                      10,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          topColor,
+                          topColor.withOpacity(0.8),
+                        ],
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                      ),
+                      borderRadius: BorderRadius.circular(
+                        globalBorderRadius * 2,
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // "80% совпадения".
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // Процент.
+                            Text(
+                              "${(widget.simillarity * 100).truncate()}%",
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(
+                              width: 4,
+                            ),
+
+                            // "совпадения".
+                            Text(
+                              AppLocalizations.of(context)!
+                                  .music_simillarityPercentTitle,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        // Название плейлиста.
+                        Flexible(
+                          child: Text(
+                            widget.name,
+                            textAlign: TextAlign.center,
+                            overflow: TextOverflow.fade,
+                            maxLines: 2,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white,
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+
+                  // Кнопки для совершения действий над этим плейлистом при наведении.
+                  AnimatedOpacity(
+                    opacity: isHovered ? 1.0 : 0.0,
+                    duration: const Duration(
+                      milliseconds: 300,
+                    ),
+                    curve: Curves.ease,
+                    child: Container(
+                      height: 90,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.black38,
+                        borderRadius: BorderRadius.circular(
+                          globalBorderRadius * 2,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // Запуск воспроизведения.
+                          IconButton(
+                            icon: Icon(
+                              selectedAndPlaying
+                                  ? Icons.pause
+                                  : Icons.play_arrow,
+                              size: 32,
+                              color: Colors.white,
+                            ),
+                            onPressed: () => widget.onPlayToggle?.call(
+                              !selectedAndPlaying,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(
+            height: 12,
+          ),
+
+          // Отображение треков в этом плейлисте.
+          for (ExtendedVKAudio audio in widget.tracks)
+            Padding(
+              padding: const EdgeInsets.only(
+                left: 12,
+                right: 12,
+                bottom: 8,
+              ),
+              child: AudioTrackTile(
+                audio: audio,
+                selected: audio == player.currentAudio,
+                currentlyPlaying: player.loaded && player.playing,
+                isLoading: player.buffering,
+                glowIfSelected: true,
+              ),
+            ),
+          const SizedBox(
+            height: 4,
+          ),
+        ],
       ),
     );
   }
@@ -2242,8 +2515,6 @@ class _SimillarMusicBlockState extends State<SimillarMusicBlock> {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Skeleton loader.
-    // TODO: Доделать этот раздел.
     final UserProvider user = Provider.of<UserProvider>(context);
 
     return Column(
@@ -2270,30 +2541,55 @@ class _SimillarMusicBlockState extends State<SimillarMusicBlock> {
             child: Wrap(
               spacing: 8,
               children: [
-                for (ExtendedVKPlaylist playlist
-                    in user.recommendationPlaylists)
-                  AudioPlaylistWidget(
-                    backgroundUrl: playlist.photo!.photo270!,
-                    mediaKey: playlist.mediaKey,
-                    name: playlist.title!,
-                    description: playlist.subtitle,
-                    useTextOnImageLayout: true,
-                    selected: player.currentPlaylist == playlist,
-                    currentlyPlaying: player.playing && player.loaded,
-                    onOpen: () => Navigator.push(
-                      context,
-                      Material3PageRoute(
-                        builder: (context) => PlaylistInfoRoute(
-                          playlist: playlist,
+                if (user.simillarPlaylists.isNotEmpty)
+                  for (ExtendedVKPlaylist playlist in user.simillarPlaylists)
+                    SimillarMusicPlaylistWidget(
+                      name: playlist.title!,
+                      simillarity: playlist.simillarity!,
+                      color: HexColor.fromHex(playlist.color!),
+                      tracks: playlist.knownTracks!,
+                      selected: player.currentPlaylist == playlist,
+                      currentlyPlaying: player.playing && player.loaded,
+                      onOpen: () => Navigator.push(
+                        context,
+                        Material3PageRoute(
+                          builder: (context) => PlaylistInfoRoute(
+                            playlist: playlist,
+                          ),
+                        ),
+                      ),
+                      onPlayToggle: (bool playing) => onPlaylistPlayToggle(
+                        context,
+                        playlist,
+                        playing,
+                      ),
+                    ),
+
+                // Skeleton loader.
+                if (user.simillarPlaylists.isEmpty)
+                  for (int index = 0; index < 9; index++)
+                    Skeletonizer(
+                      child: SimillarMusicPlaylistWidget(
+                        name:
+                            fakePlaylistNames[index % fakePlaylistNames.length],
+                        simillarity: 0.9,
+                        tracks: List.generate(
+                          3,
+                          (int index) => ExtendedVKAudio(
+                            id: -1,
+                            ownerID: -1,
+                            title:
+                                fakeTrackNames[index % fakeTrackNames.length],
+                            artist: fakeTrackNames[
+                                (index + 1) % fakeTrackNames.length],
+                            duration: 60 * 3,
+                            accessKey: "",
+                            url: "",
+                            date: 0,
+                          ),
                         ),
                       ),
                     ),
-                    onPlayToggle: (bool playing) => onPlaylistPlayToggle(
-                      context,
-                      playlist,
-                      playing,
-                    ),
-                  ),
               ],
             ),
           ),

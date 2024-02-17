@@ -153,6 +153,11 @@
 	"music_allBlocksDisabledTitle": "Как пусто... 🕸",
 	"music_allBlocksDisabledDescription": "Соскучились по музыке? Включите что-то, нажав на нужный переключатель сверху.",
 
+	"music_simillarityPercentTitle": "совпадения с Вами",
+	"@music_simillarityPercentTitle": {
+		"description": "Используется в строке вида '[плейлист имеет] 95% совпадения с Вами'."
+	},
+
 	"music_bottomPlaylistInfo": "{type} • {count, plural, one{{count} трек} few{{count} трека} other{{count} треков}}, {duration}.",
 	"@music_bottomPlaylistInfo": {
 		"placeholders": {

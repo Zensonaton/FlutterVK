@@ -201,7 +201,6 @@ Future<void> toggleTrackLikeState(
     );
 
     // Посылаем обновления объекта пользователя.
-    user.resetFavoriteMediaKeys();
     user.markUpdated(false);
   } catch (e, stackTrace) {
     // ignore: use_build_context_synchronously

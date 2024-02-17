@@ -9,6 +9,41 @@ import "../shared.dart";
 
 part "get_audio.g.dart";
 
+/// Класс отдельного рекомендуемого плейлиста из раздела "совпадения по вкусам".
+@JsonSerializable()
+class SimillarPlaylist {
+  /// ID плейлиста.
+  final int id;
+
+  /// ID владельца плейлиста.
+  @JsonKey(name: "owner_id")
+  final int ownerID;
+
+  /// Число от `0.0` до `1.0`, показывающее процент "схожести" плейлиста по вкусу.
+  final double percentage;
+
+  /// Перечисление до трёх элементов типа [ExtendedVKAudio.mediaKey].
+  final List<String> audios;
+
+  /// Hex-код цвета данного плейлиста.
+  final String color;
+
+  /// Возвращает строку, которая используется как идентификатор пользователя и медиа.
+  String get mediaKey => "${ownerID}_$id";
+
+  SimillarPlaylist({
+    required this.id,
+    required this.ownerID,
+    required this.percentage,
+    required this.audios,
+    required this.color,
+  });
+
+  factory SimillarPlaylist.fromJson(Map<String, dynamic> json) =>
+      _$SimillarPlaylistFromJson(json);
+  Map<String, dynamic> toJson() => _$SimillarPlaylistToJson(this);
+}
+
 /// Класс действия у блока секции в аудиозаписях.
 @JsonSerializable()
 class BlockAction {
@@ -160,10 +195,15 @@ class APICatalogRealResponse {
   /// Информация о каталоге раздела "музыка".
   final Catalog catalog;
 
+  /// Перечисление плейлистов из раздела "совпадения по вкусам".
+  @JsonKey(name: "recommended_playlists")
+  final List<SimillarPlaylist> recommendedPlaylists;
+
   APICatalogRealResponse(
     this.audios,
     this.playlists,
     this.catalog,
+    this.recommendedPlaylists,
   );
 
   factory APICatalogRealResponse.fromJson(Map<String, dynamic> json) =>

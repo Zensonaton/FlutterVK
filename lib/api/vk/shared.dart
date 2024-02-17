@@ -604,7 +604,7 @@ class AudioPlaylist {
   final bool isFollowing;
 
   /// Фотография плейлиста.
-  final AudioThumbnails? photo;
+  AudioThumbnails? photo;
 
   /// Разрешения для данного плейлиста.
   final dynamic permissions;

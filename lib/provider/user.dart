@@ -35,10 +35,14 @@ class ExtendedVKPlaylist extends AudioPlaylist {
   bool get isFavoritesPlaylist => id == 0;
 
   /// Указывает, что данный плейлист является обычным плейлистом пользователя, который он либо создал либо сохранил.
-  bool get isRegularPlaylist => id > 0 && ownerID != vkMusicGroupID;
+  bool get isRegularPlaylist =>
+      id > 0 && ownerID != vkMusicGroupID && !isSimillarPlaylist;
 
   /// Указывает, что данный плейлист является плейлистом из рекомендаций.
   bool get isRecommendationsPlaylist => id < 0;
+
+  /// Указывает, что данный плейлист является плейлистом из раздела "Совпадения по вкусам".
+  bool get isSimillarPlaylist => simillarity != null;
 
   /// Указывает, что данный плейлист является плейлистом от ВКонтакте (плейлист из раздела "Собрано редакцией")
   bool get isMadeByVKPlaylist => ownerID == vkMusicGroupID;
@@ -64,11 +68,23 @@ class ExtendedVKPlaylist extends AudioPlaylist {
     );
   }
 
+  /// Указывает процент "схожести" данного плейлиста. Данное поле не-null только для плейлистов из раздела "совпадения по вкусам".
+  final double? simillarity;
+
+  /// Указывает Hex-цвет для данного плейлиста. Данное поле не-null только для плейлистов из раздела "совпадения по вкусам".
+  final String? color;
+
+  /// Указывает первые 3 известных трека для данного плейлиста. Данное поле не-null только для плейлистов из раздела "совпадения по вкусам".
+  final List<ExtendedVKAudio>? knownTracks;
+
   /// Возвращает instance данного класса из передаваемого объекта типа [AudioPlaylist].
   static ExtendedVKPlaylist fromAudioPlaylist(
     AudioPlaylist playlist, {
     List<ExtendedVKAudio>? audios,
     int? totalAudios,
+    double? simillarity,
+    String? color,
+    List<ExtendedVKAudio>? knownTracks,
   }) =>
       ExtendedVKPlaylist(
         id: playlist.id,
@@ -93,6 +109,9 @@ class ExtendedVKPlaylist extends AudioPlaylist {
         permissions: playlist.permissions,
         meta: playlist.meta,
         audios: audios,
+        simillarity: simillarity,
+        color: color,
+        knownTracks: knownTracks,
       );
 
   ExtendedVKPlaylist({
@@ -118,6 +137,9 @@ class ExtendedVKPlaylist extends AudioPlaylist {
     super.permissions,
     super.meta,
     this.audios,
+    this.simillarity,
+    this.color,
+    this.knownTracks,
   });
 }
 
@@ -357,32 +379,10 @@ class UserProvider extends ChangeNotifier {
   String? photoMaxOrigUrl;
 
   /// Объект, перечисляющий все плейлисты пользователя.
-  Map<int, ExtendedVKPlaylist> allPlaylists = {};
+  Map<String, ExtendedVKPlaylist> allPlaylists = {};
 
-  /// Плейлист с "лайкнутыми" треками пользователя.
-  ///
-  /// Тоже самое, что и `allPlaylists[0]`.
-  ExtendedVKPlaylist? get favoritesPlaylist => allPlaylists[0];
-
-  List<String>? _favoriteMediaKeys;
-
-  /// Список из [Audio.mediaKey] лайкнутых треков.
-  List<String> get favoriteMediaKeys {
-    _favoriteMediaKeys ??=
-        favoritesPlaylist != null && favoritesPlaylist!.audios != null
-            ? favoritesPlaylist!.audios!
-                .where((ExtendedVKAudio audio) => audio.isLiked)
-                .map((ExtendedVKAudio audio) => audio.mediaKey)
-                .toList()
-            : [];
-
-    return _favoriteMediaKeys!;
-  }
-
-  /// Сбрасывает список из [Audio.mediaKey] у [favoriteMediaKeys].
-  ///
-  /// Данный вызов стоит совершать только если поменялся список лайкнутых треков.
-  void resetFavoriteMediaKeys() => _favoriteMediaKeys = null;
+  /// Фейковый плейлист с "лайкнутыми" треками пользователя.
+  ExtendedVKPlaylist? get favoritesPlaylist => allPlaylists["${id!}_0"];
 
   /// Перечисление всех обычных плейлистов, которые были сделаны данным пользователем.
   List<ExtendedVKPlaylist> get regularPlaylists => allPlaylists.values
@@ -395,6 +395,13 @@ class UserProvider extends ChangeNotifier {
   List<ExtendedVKPlaylist> get recommendationPlaylists => allPlaylists.values
       .where(
         (ExtendedVKPlaylist playlist) => playlist.isRecommendationsPlaylist,
+      )
+      .toList();
+
+  /// Перечисление всех плейлистов из раздела "Совпадения по вкусам".
+  List<ExtendedVKPlaylist> get simillarPlaylists => allPlaylists.values
+      .where(
+        (ExtendedVKPlaylist playlist) => playlist.isSimillarPlaylist,
       )
       .toList();
 

@@ -90,7 +90,7 @@ while (audioIndex < audioCount) {
 	audioIndex = audioIndex + 200;
 };
 
-var playlistsResp = API.audio.getPlaylists({'owner_id': ownerID});
+var playlistsResp = API.audio.getPlaylists({'owner_id': ownerID, 'count': 50});
 
 return {'audioCount': audioCount, 'audios': audios, 'playlistsCount': playlistsResp.count, 'playlists': playlistsResp.items};""";
 

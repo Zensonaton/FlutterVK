@@ -53,6 +53,14 @@ Future<void> loadPlaylistData(
       )
       .toList();
   playlist.count = response.response!.audioCount;
+  playlist.photo ??= response.response!.playlists
+      .firstWhere(
+        (item) => item.mediaKey == playlist.mediaKey,
+        orElse: () => throw AssertionError(
+          "Не было найдено фото для плейлиста",
+        ),
+      )
+      .photo;
 }
 
 /// Возвращает только те [Audio], которые совпадают по названию [query].
