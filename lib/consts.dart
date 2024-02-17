@@ -27,6 +27,9 @@ const double globalBorderRadius = 6;
 /// Олицетворяет приложение "Flutter VK".
 const int discordAppID = 1195224178996027412;
 
+/// Название README-файла в папке с кэшом треков.
+const String tracksCacheReadmeFileName = "Abc_123_README.txt";
+
 /// Случайные названия треков, используемые в Skeleton Loader'ах.
 const List<String> fakeTrackNames = [
   "Track",

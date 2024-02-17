@@ -10,11 +10,13 @@ import "package:flutter_localizations/flutter_localizations.dart";
 import "package:just_audio_media_kit/just_audio_media_kit.dart";
 import "package:local_notifier/local_notifier.dart";
 import "package:package_info_plus/package_info_plus.dart";
+import "package:path/path.dart" as path;
 import "package:provider/provider.dart";
 import "package:responsive_builder/responsive_builder.dart";
 import "package:system_tray/system_tray.dart";
 import "package:window_manager/window_manager.dart";
 
+import "consts.dart";
 import "enums.dart";
 import "intents.dart";
 import "provider/color.dart";
@@ -249,6 +251,23 @@ class _MainAppState extends State<MainApp> with WindowListener {
     // Переключаем состояние Discord Rich Presence.
     if (user.settings.discordRPCEnabled && isDesktop) {
       await player.setDiscordRPCEnabled(true);
+    }
+
+    // На Desktop-платформах, создаём README-файл в папке кэша треков, если он не существует.
+    final File readmeFile = File(
+      path.join(
+        await CachedStreamedAudio.getTrackStorageDirectory(),
+        tracksCacheReadmeFileName,
+      ),
+    );
+    if (!readmeFile.existsSync()) {
+      readmeFile.createSync(
+        recursive: true,
+      );
+      readmeFile.writeAsStringSync(
+        // ignore: use_build_context_synchronously
+        AppLocalizations.of(buildContext!)!.general_musicReadmeFileContents,
+      );
     }
 
     user.markUpdated(false);
