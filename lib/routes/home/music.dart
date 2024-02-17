@@ -1868,9 +1868,11 @@ class _SimillarMusicPlaylistWidgetState
                               size: 32,
                               color: Colors.white,
                             ),
-                            onPressed: () => widget.onPlayToggle?.call(
-                              !selectedAndPlaying,
-                            ),
+                            onPressed: isHovered
+                                ? () => widget.onPlayToggle?.call(
+                                      !selectedAndPlaying,
+                                    )
+                                : null,
                           ),
                         ],
                       ),
