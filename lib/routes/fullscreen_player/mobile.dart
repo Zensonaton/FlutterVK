@@ -1,4 +1,5 @@
 import "dart:async";
+import "dart:ui";
 
 import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
@@ -104,6 +105,9 @@ class _ImageLyricsBlockState extends State<ImageLyricsBlock> {
   /// Подписки на изменения состояния воспроизведения трека.
   late final List<StreamSubscription> subscriptions;
 
+  /// Прогресс скроллинга изображения трека. Имеет значение от `-1.0` до `1.0`, где `0.0` олицетворяет то, что трек ещё не скроллился, `-1.0` - пользователь доскроллил до предыдущего трека, `1.0` - пользователь доскроллил до следующего трека.
+  double dragProgress = 0.0;
+
   @override
   void initState() {
     super.initState();
@@ -131,10 +135,64 @@ class _ImageLyricsBlockState extends State<ImageLyricsBlock> {
   Widget build(BuildContext context) {
     final UserProvider user = Provider.of<UserProvider>(context);
 
+    /// Ширина блока для скроллинга. При увеличении данного значения, предыдущий/следующий треки будут появляться на большем расстоянии.
+    const scrollWidth = _playerImageSize + 50;
+
     /// Указывает, что пользователь включил показа текста песни, а так же текст существует и он загружен.
     final bool lyricsLoadedAndShown = user.settings.trackLyricsEnabled &&
         player.currentAudio!.hasLyrics &&
         player.currentAudio!.lyrics != null;
+
+    // Создаёт виджет для отображения изображения трека.
+    Widget buildImageWidget(
+      ExtendedVKAudio audio,
+    ) {
+      // TODO: Избавиться от этого метода, сделать вместо этого отдельный виджет.
+
+      return FittedBox(
+        child: Padding(
+          padding: const EdgeInsets.all(
+            36,
+          ),
+          child: Container(
+            width: _playerImageSize,
+            height: _playerImageSize,
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  blurRadius: 20,
+                  spreadRadius: -3,
+                  color: Theme.of(context).colorScheme.tertiary,
+                  blurStyle: BlurStyle.outer,
+                )
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(
+                globalBorderRadius,
+              ),
+              child: audio.album?.thumb != null
+                  ? CachedNetworkImage(
+                      imageUrl: audio.album!.thumb!.photo1200!,
+                      cacheKey: "${audio.album!.id}1200",
+                      width: _playerImageSize,
+                      height: _playerImageSize,
+                      fit: BoxFit.fill,
+                      placeholder: (BuildContext context, String url) =>
+                          const FallbackAudioAvatar(),
+                      cacheManager: CachedNetworkImagesManager.instance,
+                      memCacheWidth: _playerImageSize.toInt(),
+                      memCacheHeight: _playerImageSize.toInt(),
+                    )
+                  : const FallbackAudioAvatar(
+                      width: _playerImageSize,
+                      height: _playerImageSize,
+                    ),
+            ),
+          ),
+        ),
+      );
+    }
 
     return AnimatedSwitcher(
       duration: const Duration(
@@ -146,62 +204,78 @@ class _ImageLyricsBlockState extends State<ImageLyricsBlock> {
       switchInCurve: Curves.ease,
       switchOutCurve: Curves.ease,
       child: !lyricsLoadedAndShown
-          ? HeroMode(
+          ? MouseRegion(
               key: ValueKey(
-                player.currentAudio!.mediaKey,
+                player.smartCurrentAudio!.mediaKey,
               ),
-              enabled: !lyricsLoadedAndShown,
-              child: Hero(
-                tag: player.currentAudio!.mediaKey,
-                child: FittedBox(
-                  child: Padding(
-                    padding: const EdgeInsets.all(
-                      36,
-                    ),
-                    child: AnimatedOpacity(
-                      opacity: lyricsLoadedAndShown ? 0.0 : 1.0,
-                      duration: const Duration(
-                        milliseconds: 500,
-                      ),
-                      child: Container(
-                        width: _playerImageSize,
-                        height: _playerImageSize,
-                        decoration: BoxDecoration(
-                          boxShadow: [
-                            BoxShadow(
-                              blurRadius: 20,
-                              spreadRadius: -3,
-                              color: Theme.of(context).colorScheme.tertiary,
-                              blurStyle: BlurStyle.outer,
-                            )
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(
-                            globalBorderRadius,
+              cursor: SystemMouseCursors.click,
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onHorizontalDragUpdate: (DragUpdateDetails details) {
+                  dragProgress = clampDouble(
+                    dragProgress - details.primaryDelta! / scrollWidth,
+                    -1.0,
+                    1.0,
+                  );
+
+                  setState(() {});
+                },
+                onHorizontalDragEnd: (DragEndDetails details) {
+                  if (dragProgress > 0.5) {
+                    // Запуск следующего трека.
+
+                    player.next();
+                  } else if (dragProgress < -0.5) {
+                    // Запуск предыдущего трека.
+
+                    player.previous();
+                  }
+
+                  dragProgress = 0.0;
+                  setState(() {});
+                },
+                child: HeroMode(
+                  enabled: !lyricsLoadedAndShown,
+                  child: Hero(
+                    tag: player.currentAudio!.mediaKey,
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // Текущий трек.
+                          Transform.translate(
+                            offset: Offset(
+                              dragProgress * -scrollWidth,
+                              0.0,
+                            ),
+                            child: Opacity(
+                              opacity: 1.0 - dragProgress.abs(),
+                              child:
+                                  buildImageWidget(player.smartCurrentAudio!),
+                            ),
                           ),
-                          child: player.currentAudio!.album?.thumb != null
-                              ? CachedNetworkImage(
-                                  imageUrl: player
-                                      .currentAudio!.album!.thumb!.photo1200!,
-                                  cacheKey:
-                                      "${player.currentAudio!.album!.id}1200",
-                                  width: _playerImageSize,
-                                  height: _playerImageSize,
-                                  fit: BoxFit.fill,
-                                  placeholder:
-                                      (BuildContext context, String url) =>
-                                          const FallbackAudioAvatar(),
-                                  cacheManager:
-                                      CachedNetworkImagesManager.instance,
-                                  memCacheWidth: _playerImageSize.toInt(),
-                                  memCacheHeight: _playerImageSize.toInt(),
-                                )
-                              : const FallbackAudioAvatar(
-                                  width: _playerImageSize,
-                                  height: _playerImageSize,
+
+                          // Другой трек.
+                          if (!lyricsLoadedAndShown && dragProgress != 0.0)
+                            Transform.translate(
+                              offset: Offset(
+                                (dragProgress > 0.0
+                                        ? scrollWidth
+                                        : -scrollWidth) -
+                                    dragProgress * scrollWidth,
+                                0.0,
+                              ),
+                              child: Opacity(
+                                opacity: dragProgress.abs(),
+                                child: buildImageWidget(
+                                  dragProgress > 0.0
+                                      ? player.nextAudio!
+                                      : player.previousAudio!,
                                 ),
-                        ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   ),
@@ -282,109 +356,114 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
     return Column(
       children: [
         // Кнопки для лайка/дизлайка, а так же включения/отключения текста песни.
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Кнопка для дизлайка/лайка трека.
-            IconButton(
-              onPressed: () => toggleTrackLikeState(
-                context,
-                player.currentAudio!,
-                !isFavorite,
-              ),
-              icon: Icon(
-                isFavorite ? Icons.favorite : Icons.favorite_border,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            ),
-
-            // Информация по текущему треку: его исполнителю и названию.
-            Expanded(
-              child: Column(
-                children: [
-                  // Название трека (и иконка explicit).
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Название трека.
-                      Flexible(
-                        child: Text(
-                          player.currentAudio!.title,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onPrimaryContainer,
-                          ),
-                        ),
-                      ),
-
-                      // Плашка "Explicit".
-                      if (player.currentAudio!.isExplicit && !smallerLayout)
-                        const SizedBox(
-                          width: 4,
-                        ),
-                      if (player.currentAudio!.isExplicit && !smallerLayout)
-                        Icon(
-                          Icons.explicit,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onBackground
-                              .withOpacity(0.5),
-                          size: 12,
-                        ),
-                    ],
-                  ),
-
-                  // Исполнитель трека.
-                  Text(
-                    player.currentAudio!.artist,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onPrimaryContainer
-                          .withOpacity(0.75),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Кнопка для включения/отключения показа текста песни.
-            if (showLyricsBlock)
+        Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: smallerLayout ? 0 : 20,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Кнопка для дизлайка/лайка трека.
               IconButton(
-                onPressed: player.currentAudio!.hasLyrics
-                    ? () {
-                        user.settings.trackLyricsEnabled =
-                            !user.settings.trackLyricsEnabled;
-
-                        user.markUpdated();
-                      }
-                    : null,
-                icon: Icon(
-                  user.settings.trackLyricsEnabled &&
-                          player.currentAudio!.hasLyrics
-                      ? Icons.lyrics
-                      : Icons.lyrics_outlined,
-                  color: Theme.of(context).colorScheme.primary.withOpacity(
-                        player.currentAudio!.hasLyrics ? 1.0 : 0.5,
-                      ),
+                onPressed: () => toggleTrackLikeState(
+                  context,
+                  player.currentAudio!,
+                  !isFavorite,
                 ),
-              ),
-
-            // Кнопка для выхода из плеера.
-            if (!showLyricsBlock)
-              IconButton(
-                onPressed: () => closePlayer(context),
                 icon: Icon(
-                  Icons.picture_in_picture_alt,
+                  isFavorite ? Icons.favorite : Icons.favorite_border,
                   color: Theme.of(context).colorScheme.primary,
                 ),
               ),
-          ],
+
+              // Информация по текущему треку: его исполнителю и названию.
+              Expanded(
+                child: Column(
+                  children: [
+                    // Название трека (и иконка explicit).
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Название трека.
+                        Flexible(
+                          child: Text(
+                            player.currentAudio!.title,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w500,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onPrimaryContainer,
+                            ),
+                          ),
+                        ),
+
+                        // Плашка "Explicit".
+                        if (player.currentAudio!.isExplicit && !smallerLayout)
+                          const SizedBox(
+                            width: 4,
+                          ),
+                        if (player.currentAudio!.isExplicit && !smallerLayout)
+                          Icon(
+                            Icons.explicit,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onBackground
+                                .withOpacity(0.5),
+                            size: 12,
+                          ),
+                      ],
+                    ),
+
+                    // Исполнитель трека.
+                    Text(
+                      player.currentAudio!.artist,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onPrimaryContainer
+                            .withOpacity(0.75),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Кнопка для включения/отключения показа текста песни.
+              if (showLyricsBlock)
+                IconButton(
+                  onPressed: player.currentAudio!.hasLyrics
+                      ? () {
+                          user.settings.trackLyricsEnabled =
+                              !user.settings.trackLyricsEnabled;
+
+                          user.markUpdated();
+                        }
+                      : null,
+                  icon: Icon(
+                    user.settings.trackLyricsEnabled &&
+                            player.currentAudio!.hasLyrics
+                        ? Icons.lyrics
+                        : Icons.lyrics_outlined,
+                    color: Theme.of(context).colorScheme.primary.withOpacity(
+                          player.currentAudio!.hasLyrics ? 1.0 : 0.5,
+                        ),
+                  ),
+                ),
+
+              // Кнопка для выхода из плеера.
+              if (!showLyricsBlock)
+                IconButton(
+                  onPressed: () => closePlayer(context),
+                  icon: Icon(
+                    Icons.picture_in_picture_alt,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+            ],
+          ),
         ),
         const SizedBox(
           height: 10,
@@ -394,6 +473,7 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
         if (!smallerLayout && player.buffering)
           Padding(
             padding: const EdgeInsets.symmetric(
+              horizontal: 20,
               vertical: 8,
             ),
             child: LinearProgressIndicator(
@@ -407,26 +487,32 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
 
         // Slider для отображения прогресса воспроизведения трека.
         if (!smallerLayout && !player.buffering)
-          SliderTheme(
-            data: SliderThemeData(
-              trackShape: CustomTrackShape(),
-              overlayShape: SliderComponentShape.noOverlay,
-              activeTrackColor: Theme.of(context).colorScheme.primary,
-              inactiveTrackColor:
-                  Theme.of(context).colorScheme.primary.withOpacity(0.5),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20,
             ),
-            child: RepaintBoundary(
-              child: StreamBuilder<Duration>(
-                stream: player.positionStream,
-                builder:
-                    (BuildContext context, AsyncSnapshot<Duration> snapshot) {
-                  return ResponsiveSlider(
-                    value: player.progress,
-                    onChangeEnd: (double newProgress) => player.seekNormalized(
-                      newProgress,
-                    ),
-                  );
-                },
+            child: SliderTheme(
+              data: SliderThemeData(
+                trackShape: CustomTrackShape(),
+                overlayShape: SliderComponentShape.noOverlay,
+                activeTrackColor: Theme.of(context).colorScheme.primary,
+                inactiveTrackColor:
+                    Theme.of(context).colorScheme.primary.withOpacity(0.5),
+              ),
+              child: RepaintBoundary(
+                child: StreamBuilder<Duration>(
+                  stream: player.positionStream,
+                  builder:
+                      (BuildContext context, AsyncSnapshot<Duration> snapshot) {
+                    return ResponsiveSlider(
+                      value: player.progress,
+                      onChangeEnd: (double newProgress) =>
+                          player.seekNormalized(
+                        newProgress,
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
           ),
@@ -600,69 +686,74 @@ class _FullscreenPlayerMobileRouteState
     /// Высота блока с текстом песни.
     final double lyricsBlockHeight = MediaQuery.of(context).size.height -
         playerPadding * 2 -
-        (smallerLayout ? 95 : 200) -
+        (smallerLayout ? 95 : 220) -
         MediaQuery.of(context).systemGestureInsets.bottom -
         MediaQuery.of(context).systemGestureInsets.top;
 
     /// Указывает, что блок с текстом песни будет показан.
     final bool showLyricsBlock = MediaQuery.of(context).size.height > 150;
 
-    return Padding(
-      padding: EdgeInsets.all(
-        playerPadding,
-      ).copyWith(
-        top: smallerLayout ? 0 : null,
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // Кнопки управления полноэкранным плеером сверху.
-          if (!smallerLayout) const TopFullscreenControls(),
+    /// [Padding] для всех элементов на данном Route.
+    final EdgeInsets padding = EdgeInsets.all(
+      playerPadding,
+    ).copyWith(
+      top: smallerLayout ? 0 : null,
+    );
 
-          // Изображение трека, либо текст песни поверх него.
-          SizedBox(
-            width: double.infinity,
-            child: Stack(
-              children: [
-                // Текст песни/изображение.
-                if (showLyricsBlock)
-                  Align(
-                    child: SizedBox(
-                      height: lyricsBlockHeight,
-                      child: const ImageLyricsBlock(),
-                    ),
-                  ),
-
-                // Кнопка для выхода из плеера при очень маленьком интерфейсе.
-                if (smallerLayout && showLyricsBlock)
-                  Align(
-                    alignment: Alignment.topLeft,
-                    child: Padding(
-                      padding: EdgeInsets.only(
-                        top: playerPadding,
-                        left: 2,
-                      ),
-                      child: IconButton.filledTonal(
-                        icon: const Icon(
-                          Icons.arrow_back,
-                        ),
-                        onPressed: () => closePlayer(context),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-
-          // Управление плеером, а так же информация по текущему треку.
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        // Кнопки управления полноэкранным плеером сверху.
+        if (!smallerLayout)
           Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: smallerLayout ? 2 : 22,
-            ),
-            child: const FullscreenMediaControls(),
+            padding: padding,
+            child: const TopFullscreenControls(),
           ),
-        ],
-      ),
+
+        // Изображение трека, либо текст песни поверх него.
+        SizedBox(
+          width: double.infinity,
+          child: Stack(
+            children: [
+              // Текст песни/изображение.
+              if (showLyricsBlock)
+                Align(
+                  child: SizedBox(
+                    height: lyricsBlockHeight,
+                    child: const ImageLyricsBlock(),
+                  ),
+                ),
+
+              // Кнопка для выхода из плеера при очень маленьком интерфейсе.
+              if (smallerLayout && showLyricsBlock)
+                Align(
+                  alignment: Alignment.topLeft,
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      top: playerPadding,
+                      left: 2,
+                    ),
+                    child: IconButton.filledTonal(
+                      icon: const Icon(
+                        Icons.arrow_back,
+                      ),
+                      onPressed: () => closePlayer(context),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+
+        // Управление плеером, а так же информация по текущему треку.
+        Padding(
+          padding: padding.copyWith(
+            left: smallerLayout ? 2 : 22,
+            right: smallerLayout ? 2 : 22,
+          ),
+          child: const FullscreenMediaControls(),
+        ),
+      ],
     );
   }
 }
