@@ -13,7 +13,8 @@ Future<Release> get_latest(
 ) async {
   var response = await get(
     Uri.parse(
-        "https://api.github.com/repos/$owner/$repository/releases/latest"),
+      "https://api.github.com/repos/$owner/$repository/releases/latest",
+    ),
   );
 
   return Release.fromJson(jsonDecode(response.body));

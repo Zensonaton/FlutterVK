@@ -1,10 +1,13 @@
 import "package:json_annotation/json_annotation.dart";
 
+import "../../db/schemas/playlists.dart";
 import "../../utils.dart";
 
 part "shared.g.dart";
 
 /// Объект ошибки API ВКонтакте.
+///
+/// Не следует путать с [VKAPIError].
 @JsonSerializable()
 class APIError {
   /// Код ошибки.
@@ -27,13 +30,16 @@ class APIError {
   @JsonKey(name: "captcha_img")
   final String? captchaUrl;
 
-  APIError(
-    this.errorCode,
-    this.errorMessage,
-    this.requestParams,
+  @override
+  String toString() => "API Error $errorCode: $errorMessage";
+
+  APIError({
+    required this.errorCode,
+    required this.errorMessage,
+    required this.requestParams,
     this.captchaSID,
     this.captchaUrl,
-  );
+  });
 
   factory APIError.fromJson(Map<String, dynamic> json) =>
       _$APIErrorFromJson(json);
@@ -75,55 +81,35 @@ class User {
   final String? bdate;
 
   /// Информация о том, находится ли текущий пользователь в черном списке. Возможные значения:
-  ///
-  /// `1` - находится.
-  /// `0` - не находится.
-  final int? blacklisted;
+  @JsonKey(fromJson: boolFromInt)
+  final bool? blacklisted;
 
   /// Информация о том, находится ли пользователь в черном списке у текущего пользователя. Возможные значения:
-  ///
-  /// `1` - находится.
-  /// `0 - не находится.
-  @JsonKey(name: "blacklisted_by_me")
-  final int? blacklistedByMe;
+  @JsonKey(name: "blacklisted_by_me", fromJson: boolFromInt)
+  final bool? blacklistedByMe;
 
   /// Содержимое поля «Любимые книги» из профиля пользователя.
   final String? books;
 
   /// Информация о том, может ли текущий пользователь оставлять записи на стене. Возможные значения:
-  ///
-  /// `1` - может.
-  /// `0` - не может.
-  @JsonKey(name: "can_post")
-  final int? canPost;
+  @JsonKey(name: "can_post", fromJson: boolFromInt)
+  final bool? canPost;
 
   /// Информация о том, может ли текущий пользователь видеть чужие записи на стене. Возможные значения:
-  ///
-  /// `1` - может.
-  /// `0` - не может.
-  @JsonKey(name: "can_see_all_posts")
-  final int? canSeeAllPosts;
+  @JsonKey(name: "can_see_all_posts", fromJson: boolFromInt)
+  final bool? canSeeAllPosts;
 
   /// Информация о том, может ли текущий пользователь видеть аудиозаписи. Возможные значения:
-  ///
-  /// `1` - может.
-  /// `0` - не может.
-  @JsonKey(name: "can_see_audio")
-  final int? canSeeAudio;
+  @JsonKey(name: "can_see_audio", fromJson: boolFromInt)
+  final bool? canSeeAudio;
 
   /// Информация о том, будет ли отправлено уведомление пользователю о заявке в друзья от текущего пользователя. Возможные значения:
-  ///
-  /// `1` - уведомление будет отправлено.
-  /// `0` - уведомление не будет отправлено.
-  @JsonKey(name: "can_send_friend_request")
-  final int? canSendFriendRequest;
+  @JsonKey(name: "can_send_friend_request", fromJson: boolFromInt)
+  final bool? canSendFriendRequest;
 
   /// Информация о том, может ли текущий пользователь отправить личное сообщение. Возможные значения:
-  ///
-  /// `1` - может.
-  /// `0` - не может.
-  @JsonKey(name: "can_write_private_message")
-  final int? canWritePrivateMessage;
+  @JsonKey(name: "can_write_private_message", fromJson: boolFromInt)
+  final bool? canWritePrivateMessage;
 
   /// Информация о карьере пользователя. Объект, содержащий следующие поля:
   final dynamic career;
@@ -209,20 +195,12 @@ class User {
   final String? games;
 
   /// Информация о том, известен ли номер мобильного телефона пользователя.
-  ///
-  /// Возможные значения:
-  /// `1` - известен.
-  /// `0` - не известен.
-  @JsonKey(name: "has_mobile")
-  final int? hasMobile;
+  @JsonKey(name: "has_mobile", fromJson: boolFromInt)
+  final bool? hasMobile;
 
   /// Информация о том, установил ли пользователь фотографию для профиля.
-  ///
-  /// Возможные значения:
-  /// `1` - установил.
-  /// `0` - не установил.
-  @JsonKey(name: "has_photo")
-  final int? hasPhoto;
+  @JsonKey(name: "has_photo", fromJson: boolFromInt)
+  final bool? hasPhoto;
 
   /// Название родного города.
   @JsonKey(name: "home_town")
@@ -232,36 +210,20 @@ class User {
   final String? interests;
 
   /// Информация о том, есть ли пользователь в закладках у текущего пользователя.
-  ///
-  /// Возможные значения:
-  /// `1` - есть.
-  /// `0` - нет.
-  @JsonKey(name: "is_favorite")
-  final int? isFavorite;
+  @JsonKey(name: "is_favorite", fromJson: boolFromInt)
+  final bool? isFavorite;
 
   /// Информация о том, является ли пользователь другом текущего пользователя.
-  ///
-  /// Возможные значения:
-  /// `1` - да.
-  /// `0` - нет.
-  @JsonKey(name: "is_friend")
-  final int? isFriend;
+  @JsonKey(name: "is_friend", fromJson: boolFromInt)
+  final bool? isFriend;
 
   /// Информация о том, скрыт ли пользователь из ленты новостей текущего пользователя.
-  ///
-  /// Возможные значения:
-  /// `1` - да.
-  /// `0` - нет.
-  @JsonKey(name: "is_hidden_from_feed")
-  final int? isHiddenFromFeed;
+  @JsonKey(name: "is_hidden_from_feed", fromJson: boolFromInt)
+  final bool? isHiddenFromFeed;
 
   /// Индексируется ли профиль поисковыми сайтами.
-  ///
-  /// Возможные значения:
-  /// `1` - профиль скрыт от поисковых сайтов.
-  /// `0` - профиль доступен поисковым сайтам.
-  @JsonKey(name: "is_no_index")
-  final int? isNoIndex;
+  @JsonKey(name: "is_no_index", fromJson: boolFromInt)
+  final bool? isNoIndex;
 
   /// Фамилия пользователя в именительном падеже.
   @JsonKey(name: "last_name_nom")
@@ -411,13 +373,16 @@ class User {
   @JsonKey(name: "wall_default")
   final String? wallDefault;
 
-  User(
-    this.id,
-    this.firstName,
-    this.lastName,
+  @override
+  String toString() => "VK user $id $firstName $lastName";
+
+  User({
+    required this.id,
+    required this.firstName,
+    required this.lastName,
     this.deactivated,
-    this.isClosed,
-    this.canAccessClosed,
+    required this.isClosed,
+    required this.canAccessClosed,
     this.about,
     this.activities,
     this.bdate,
@@ -493,20 +458,20 @@ class User {
     this.universities,
     this.verified,
     this.wallDefault,
-  );
+  });
 
   factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
   Map<String, dynamic> toJson() => _$UserToJson(this);
 }
 
-/// Объект, олицетворяющий изображения альбома аудиозаписи ВКонтакте.
+/// Объект, олицетворяющий изображения плейлиста или альбома аудиозаписи ВКонтакте.
 @JsonSerializable()
-class AudioThumbnails {
+class Thumbnails {
   /// Ширина изображения альбома.
-  final int width;
+  final int? width;
 
   /// Высота изображения альбома.
-  final int height;
+  final int? height;
 
   /// URL на изображение альбома в размере `34`.
   @JsonKey(name: "photo_34")
@@ -536,7 +501,29 @@ class AudioThumbnails {
   @JsonKey(name: "photo_1200")
   final String? photo1200;
 
-  AudioThumbnails(
+  /// Создаёт из передаваемого объекта [DBThumbnails] объект данного класа.
+  static Thumbnails fromDBThumbnails(
+    DBThumbnails thumbnails,
+  ) =>
+      Thumbnails(
+        width: thumbnails.width,
+        height: thumbnails.height,
+        photo34: thumbnails.photo34,
+        photo68: thumbnails.photo68,
+        photo135: thumbnails.photo135,
+        photo270: thumbnails.photo270,
+        photo300: thumbnails.photo300,
+        photo600: thumbnails.photo600,
+        photo1200: thumbnails.photo1200,
+      );
+
+  /// Возвращает копию данного класса в виде объекта [DBThumbnails].
+  DBThumbnails get asDBThumbnails => DBThumbnails.fromAPIPhoto(this);
+
+  @override
+  String toString() => "Thumbnails $width*$height";
+
+  Thumbnails({
     this.width,
     this.height,
     this.photo34,
@@ -546,16 +533,16 @@ class AudioThumbnails {
     this.photo300,
     this.photo600,
     this.photo1200,
-  );
+  });
 
-  factory AudioThumbnails.fromJson(Map<String, dynamic> json) =>
-      _$AudioThumbnailsFromJson(json);
-  Map<String, dynamic> toJson() => _$AudioThumbnailsToJson(this);
+  factory Thumbnails.fromJson(Map<String, dynamic> json) =>
+      _$ThumbnailsFromJson(json);
+  Map<String, dynamic> toJson() => _$ThumbnailsToJson(this);
 }
 
 /// Объект, олицетворяющий плейлист ВКонтакте.
 @JsonSerializable()
-class AudioPlaylist {
+class Playlist {
   /// ID плейлиста.
   final int id;
 
@@ -568,14 +555,17 @@ class AudioPlaylist {
   /// Название плейлиста.
   final String? title;
 
-  /// Описание плейлиста. Иногда пустует.
+  /// Описание плейлиста. Пустые описания плейлистов (т.е., [String.isEmpty]) будут восприниматься как null.
   @JsonKey(fromJson: emptyStringAsNull)
   final String? description;
 
-  /// Подпись плейлиста, обычно присутствует в плейлистах-рекомендациях.
+  /// Подпись плейлиста, обычно присутствует в плейлистах-рекомендациях. Пустые подписи (т.е., [String.isEmpty]) будут восприниматься как null.
+  @JsonKey(fromJson: emptyStringAsNull)
   final String? subtitle;
 
   /// Количество аудиозаписей в данном плейлисте.
+  ///
+  /// Это значение возвращает общее количество треков в плейлисте, вне зависимости от того, загружен ли был список треков или нет.
   int count;
 
   /// Ключ доступа.
@@ -604,7 +594,7 @@ class AudioPlaylist {
   final bool isFollowing;
 
   /// Фотография плейлиста.
-  AudioThumbnails? photo;
+  Thumbnails? photo;
 
   /// Разрешения для данного плейлиста.
   final dynamic permissions;
@@ -628,16 +618,19 @@ class AudioPlaylist {
   String get mediaKey => "${ownerID}_$id";
 
   @override
-  bool operator ==(covariant AudioPlaylist other) {
+  String toString() => "Playlist $mediaKey with $count tracks";
+
+  @override
+  bool operator ==(covariant Playlist other) {
     if (identical(this, other)) return true;
 
-    return other.runtimeType == AudioPlaylist && other.mediaKey == mediaKey;
+    return other.runtimeType == Playlist && other.mediaKey == mediaKey;
   }
 
   @override
   int get hashCode => mediaKey.hashCode;
 
-  AudioPlaylist({
+  Playlist({
     required this.id,
     required this.ownerID,
     this.type = 0,
@@ -661,14 +654,14 @@ class AudioPlaylist {
     this.meta,
   });
 
-  factory AudioPlaylist.fromJson(Map<String, dynamic> json) =>
-      _$AudioPlaylistFromJson(json);
-  Map<String, dynamic> toJson() => _$AudioPlaylistToJson(this);
+  factory Playlist.fromJson(Map<String, dynamic> json) =>
+      _$PlaylistFromJson(json);
+  Map<String, dynamic> toJson() => _$PlaylistToJson(this);
 }
 
 /// Объект, олицетворяющий альбом аудиозаписи ВКонтакте.
 @JsonSerializable()
-class AudioAlbum {
+class Album {
   /// ID альбома.
   final int id;
 
@@ -684,32 +677,47 @@ class AudioAlbum {
   final String accessKey;
 
   /// Изображения альбома.
-  final AudioThumbnails? thumb;
+  @JsonKey(name: "thumb")
+  final Thumbnails? thumbnails;
 
   /// Возвращает строку, которая используется как идентификатор пользователя и медиа.
   String get mediaKey => "${ownerID}_$id";
 
   @override
-  bool operator ==(covariant AudioAlbum other) {
+  String toString() => "Album $mediaKey \"$title\"";
+
+  @override
+  bool operator ==(covariant Album other) {
     if (identical(this, other)) return true;
 
-    return other.runtimeType == AudioAlbum && other.mediaKey == mediaKey;
+    return other.runtimeType == Album && other.mediaKey == mediaKey;
   }
 
   @override
   int get hashCode => mediaKey.hashCode;
 
-  AudioAlbum(
-    this.id,
-    this.title,
-    this.ownerID,
-    this.accessKey,
-    this.thumb,
-  );
+  /// Создаёт из передаваемого объекта [DBAlbum] объект данного класа.
+  static Album fromDBAlbum(DBAlbum album) => Album(
+        id: album.id!,
+        title: album.title!,
+        ownerID: album.ownerID!,
+        accessKey: album.accessKey!,
+        thumbnails: album.thumb?.asThumbnails,
+      );
 
-  factory AudioAlbum.fromJson(Map<String, dynamic> json) =>
-      _$AudioAlbumFromJson(json);
-  Map<String, dynamic> toJson() => _$AudioAlbumToJson(this);
+  /// Возвращает копию данного класса в виде объекта [DBAlbum].
+  DBAlbum get asDBAlbum => DBAlbum.fromAudioAlbum(this);
+
+  Album({
+    required this.id,
+    required this.title,
+    required this.ownerID,
+    required this.accessKey,
+    this.thumbnails,
+  });
+
+  factory Album.fromJson(Map<String, dynamic> json) => _$AlbumFromJson(json);
+  Map<String, dynamic> toJson() => _$AlbumToJson(this);
 }
 
 /// Объект, олицетворяющий аудиозапись ВКонтакте.
@@ -779,13 +787,14 @@ class Audio {
   /// URL на `mp3` данной аудиозаписи.
   ///
   /// Очень часто он отсутствует, выдавая пустую строку.
-  final String url;
+  @JsonKey(fromJson: emptyStringAsNull)
+  final String? url;
 
   /// Timestamp добавления аудиозаписи.
   final int date;
 
   /// Информация об альбоме данной аудиозаписи.
-  AudioAlbum? album;
+  Album? album;
 
   /// Указывает наличие текста песни.
   @JsonKey(name: "has_lyrics")
@@ -800,12 +809,10 @@ class Audio {
   int? genreID;
 
   /// Возвращает строку, которая используется как идентификатор пользователя и медиа.
-  ///
-  /// Выглядит как `123456_123456789`.
   String get mediaKey => "${ownerID}_$id";
 
-  /// Возвращает URL данного трека, который используется при нажатии на кнопку "поделиться".
-  String get trackUrl => "https://vk.com/audio${ownerID}_${id}_$accessKey";
+  @override
+  String toString() => "Audio $mediaKey \"$artist - $title\"";
 
   @override
   bool operator ==(covariant Audio other) {

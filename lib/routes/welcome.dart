@@ -77,7 +77,7 @@ class WelcomeRoute extends StatelessWidget {
                         AppLocalizations.of(context)!.welcome_welcomeContinue,
                       ),
                     ),
-                  )
+                  ),
                 ],
               ),
             ),

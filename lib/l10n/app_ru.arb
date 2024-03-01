@@ -134,6 +134,13 @@
 		"description": "<click>...</click> очищает результаты поиска."
 	},
 
+	"music_disableTrackCachingTitle": "Отключение кэширования треков",
+	"music_disableTrackCachingDescription": "Продолжив, Вы отключите кэширование треков в этом плейлисте, а все треки, которые были кэшированы здесь будут удалены с Вашего устройства. После этого действия Вы не сможете слушать музыку из этого плейлиста оффлайн.",
+	"music_disableTrackCachingButton": "Отключить",
+
+	"music_disableTrackCachingUnavailableTitle": "Невозможно удалить кэш сейчас",
+	"music_disableTrackCachingUnavailableDescription": "Вы не можете удалить кэш треков из воспроизводимого в данный момент плейлиста.\nОстановите воспроизведение, либо включите другой плейлист, что бы очистить кэш.",
+
 	"music_searchText": "Поиск музыки ВКонтакте",
 
 	"music_typeToSearchText": "Введите название песни сверху что бы начать поиск.",
@@ -151,7 +158,6 @@
 	"music_detailsSetThumbnailDescription": "Это изменение будет видно только на этом устройстве",
 	"music_detailsReuploadFromYoutubeTitle": "Перезалить с Youtube",
 	"music_detailsReuploadFromYoutubeDescription": "Заменит этот трек другой версией с Youtube для обхода «недоступности» трека",
-	"music_detailsShareTitle": "Поделиться ссылкой на трек",
 
 	"music_trackTitle": "Название",
 	"music_trackArtist": "Исполнитель",

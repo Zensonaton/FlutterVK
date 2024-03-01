@@ -64,8 +64,11 @@ class SlideFromBottomPageRoute<T> extends PageRouteBuilder<T> {
   SlideFromBottomPageRoute({
     required this.builder,
   }) : super(
-          pageBuilder: (BuildContext context, Animation animation,
-              Animation secondaryAnimation) {
+          pageBuilder: (
+            BuildContext context,
+            Animation animation,
+            Animation secondaryAnimation,
+          ) {
             return builder(context);
           },
           transitionDuration: const Duration(

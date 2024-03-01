@@ -7,11 +7,11 @@ part of 'shared.dart';
 // **************************************************************************
 
 ReleaseAsset _$ReleaseAssetFromJson(Map<String, dynamic> json) => ReleaseAsset(
-      json['name'] as String,
-      json['size'] as int,
-      datetimeFromString(json['created_at'] as String?),
-      datetimeFromString(json['updated_at'] as String?),
-      json['browser_download_url'] as String,
+      name: json['name'] as String,
+      size: json['size'] as int,
+      createdAt: datetimeFromString(json['created_at'] as String?),
+      updatedAt: datetimeFromString(json['updated_at'] as String?),
+      browserDownloadUrl: json['browser_download_url'] as String,
     );
 
 Map<String, dynamic> _$ReleaseAssetToJson(ReleaseAsset instance) =>
@@ -24,14 +24,14 @@ Map<String, dynamic> _$ReleaseAssetToJson(ReleaseAsset instance) =>
     };
 
 Release _$ReleaseFromJson(Map<String, dynamic> json) => Release(
-      json['html_url'] as String,
-      json['body'] as String,
-      json['id'] as int,
-      json['tag_name'] as String,
-      json['prerelease'] as bool,
-      datetimeFromString(json['created_at'] as String?),
-      datetimeFromString(json['published_at'] as String?),
-      (json['assets'] as List<dynamic>)
+      htmlUrl: json['html_url'] as String,
+      body: json['body'] as String,
+      id: json['id'] as int,
+      tagName: json['tag_name'] as String,
+      prerelease: json['prerelease'] as bool,
+      createdAt: datetimeFromString(json['created_at'] as String?),
+      publishedAt: datetimeFromString(json['published_at'] as String?),
+      assets: (json['assets'] as List<dynamic>)
           .map((e) => ReleaseAsset.fromJson(e as Map<String, dynamic>))
           .toList(),
     );

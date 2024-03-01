@@ -22,7 +22,7 @@ class SimillarPlaylist {
   /// Число от `0.0` до `1.0`, показывающее процент "схожести" плейлиста по вкусу.
   final double percentage;
 
-  /// Перечисление до трёх элементов типа [ExtendedVKAudio.mediaKey].
+  /// Перечисление до трёх элементов типа [ExtendedAudio.mediaKey].
   final List<String> audios;
 
   /// Hex-код цвета данного плейлиста.
@@ -65,13 +65,13 @@ class BlockAction {
   @JsonKey(name: "ref_data_type")
   final String? refDataType;
 
-  BlockAction(
+  BlockAction({
     this.sectionID,
     this.title,
     this.refItemsCount,
     this.refLayoutName,
     this.refDataType,
-  );
+  });
 
   factory BlockAction.fromJson(Map<String, dynamic> json) =>
       _$BlockActionFromJson(json);
@@ -94,7 +94,7 @@ class SectionBlock {
   /// - `music_playlists`: Указывается в блоках с плейлистами.
   /// - `music_recommended_playlists`: Блок с рекомендуемыми плейлистами других пользователей.
   @JsonKey(name: "data_type")
-  final String dataType;
+  final String? dataType;
 
   final dynamic layout;
 
@@ -109,15 +109,15 @@ class SectionBlock {
   @JsonKey(name: "playlists_ids")
   final List<String>? playlistIDs;
 
-  SectionBlock(
-    this.id,
+  SectionBlock({
+    required this.id,
     this.title,
-    this.dataType,
+    this.dataType = "none",
     this.layout,
     this.actions,
     this.audioIDs,
     this.playlistIDs,
-  );
+  });
 
   factory SectionBlock.fromJson(Map<String, dynamic> json) =>
       _$SectionBlockFromJson(json);
@@ -142,13 +142,13 @@ class Section {
   /// Список действий в данном блоке.
   final List<dynamic>? actions;
 
-  Section(
-    this.id,
-    this.title,
-    this.url,
+  Section({
+    required this.id,
+    required this.title,
+    required this.url,
     this.blocks,
     this.actions,
-  );
+  });
 
   factory Section.fromJson(Map<String, dynamic> json) =>
       _$SectionFromJson(json);
@@ -171,13 +171,13 @@ class Catalog {
   @JsonKey(name: "pinned_section")
   final String? pinnedSection;
 
-  Catalog(
-    this.defaultSection,
-    this.sections,
+  Catalog({
+    required this.defaultSection,
+    required this.sections,
     this.header,
     this.buttons,
     this.pinnedSection,
-  );
+  });
 
   factory Catalog.fromJson(Map<String, dynamic> json) =>
       _$CatalogFromJson(json);
@@ -190,7 +190,7 @@ class APICatalogRealResponse {
   final List<Audio> audios;
 
   /// Информация о плейлистах.
-  final List<AudioPlaylist> playlists;
+  final List<Playlist> playlists;
 
   /// Информация о каталоге раздела "музыка".
   final Catalog catalog;
@@ -199,12 +199,12 @@ class APICatalogRealResponse {
   @JsonKey(name: "recommended_playlists")
   final List<SimillarPlaylist> recommendedPlaylists;
 
-  APICatalogRealResponse(
-    this.audios,
-    this.playlists,
-    this.catalog,
-    this.recommendedPlaylists,
-  );
+  APICatalogRealResponse({
+    required this.audios,
+    required this.playlists,
+    required this.catalog,
+    required this.recommendedPlaylists,
+  });
 
   factory APICatalogRealResponse.fromJson(Map<String, dynamic> json) =>
       _$APICatalogRealResponseFromJson(json);
@@ -220,10 +220,10 @@ class APICatalogGetAudioResponse {
   /// Объект ошибки.
   final APIError? error;
 
-  APICatalogGetAudioResponse(
+  APICatalogGetAudioResponse({
     this.response,
     this.error,
-  );
+  });
 
   factory APICatalogGetAudioResponse.fromJson(Map<String, dynamic> json) =>
       _$APICatalogGetAudioResponseFromJson(json);

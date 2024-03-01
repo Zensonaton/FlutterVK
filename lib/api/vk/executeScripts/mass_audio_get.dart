@@ -22,14 +22,14 @@ class APIMassAudioGetRealResponse {
   final int playlistsCount;
 
   /// Плейлисты.
-  final List<AudioPlaylist> playlists;
+  final List<Playlist> playlists;
 
-  APIMassAudioGetRealResponse(
-    this.audioCount,
-    this.audios,
-    this.playlistsCount,
-    this.playlists,
-  );
+  APIMassAudioGetRealResponse({
+    required this.audioCount,
+    required this.audios,
+    required this.playlistsCount,
+    required this.playlists,
+  });
 
   factory APIMassAudioGetRealResponse.fromJson(Map<String, dynamic> json) =>
       _$APIMassAudioGetRealResponseFromJson(json);
@@ -45,10 +45,10 @@ class APIMassAudioGetResponse {
   /// Объект ошибки.
   final APIError? error;
 
-  APIMassAudioGetResponse(
+  APIMassAudioGetResponse({
     this.response,
     this.error,
-  );
+  });
 
   factory APIMassAudioGetResponse.fromJson(Map<String, dynamic> json) =>
       _$APIMassAudioGetResponseFromJson(json);

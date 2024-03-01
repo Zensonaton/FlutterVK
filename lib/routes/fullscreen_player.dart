@@ -18,6 +18,7 @@ import "package:window_manager/window_manager.dart";
 import "../api/vk/api.dart";
 import "../api/vk/audio/get_lyrics.dart";
 import "../consts.dart";
+import "../extensions.dart";
 import "../intents.dart";
 import "../main.dart";
 import "../provider/color.dart";
@@ -371,7 +372,9 @@ class _TrackLyricsBlockState extends State<TrackLyricsBlock> {
       (dynamic item) {
         if (item is LyricTimestamp) return item;
 
-        return LyricTimestamp(item as String);
+        return LyricTimestamp(
+          line: item as String,
+        );
       },
     ).toList();
 
@@ -558,7 +561,7 @@ class _BlurredBackgroundImageState extends State<BlurredBackgroundImage> {
           sigmaY: 50,
         ),
         child: CachedNetworkImage(
-          imageUrl: player.currentAudio!.album!.thumb!.photo1200!,
+          imageUrl: player.currentAudio!.album!.thumbnails!.photo1200!,
           cacheKey: "${player.currentAudio!.album!.id}1200",
           fit: BoxFit.cover,
           cacheManager: CachedNetworkImagesManager.instance,
@@ -672,7 +675,7 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
                 label: Text(
                   AppLocalizations.of(context)!.music_fullscreenNoAudioButton,
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -705,6 +708,7 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
           // Сохраняем текст песни.
           player.currentAudio!.lyrics = response.response!.lyrics;
 
+          user.updatePlaylist(player.currentPlaylist!);
           user.markUpdated(false);
         },
       ).onError(
@@ -743,78 +747,81 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
         data: ThemeData(
           colorScheme: colorScheme.darkColorScheme ?? fallbackDarkColorScheme,
         ),
-        child: Builder(builder: (
-          BuildContext context,
-        ) {
-          return Scaffold(
-            body: Actions(
-              actions: {
-                FullscreenPlayerIntent: CallbackAction(
-                  onInvoke: (intent) => closePlayer(context),
-                ),
-              },
-              child: CallbackShortcuts(
-                bindings: {
-                  const SingleActivator(
-                    LogicalKeyboardKey.escape,
-                  ): () => closePlayer(context),
+        child: Builder(
+          builder: (
+            BuildContext context,
+          ) {
+            return Scaffold(
+              body: Actions(
+                actions: {
+                  FullscreenPlayerIntent: CallbackAction(
+                    onInvoke: (intent) => closePlayer(context),
+                  ),
                 },
-                child: PopScope(
-                  onPopInvoked: (_) {
-                    closePlayer(
-                      context,
-                      popRoute: false,
-                    );
-
-                    return;
+                child: CallbackShortcuts(
+                  bindings: {
+                    const SingleActivator(
+                      LogicalKeyboardKey.escape,
+                    ): () => closePlayer(context),
                   },
-                  child: Focus(
-                    autofocus: true,
-                    canRequestFocus: true,
-                    child: AnimatedContainer(
-                      duration: const Duration(
-                        milliseconds: 500,
-                      ),
-                      curve: Curves.ease,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.bottomCenter,
-                          end: Alignment.topCenter,
-                          colors: [
-                            Theme.of(context).colorScheme.primaryContainer,
-                            darkenColor(
+                  child: PopScope(
+                    onPopInvoked: (_) {
+                      closePlayer(
+                        context,
+                        popRoute: false,
+                      );
+
+                      return;
+                    },
+                    child: Focus(
+                      autofocus: true,
+                      canRequestFocus: true,
+                      child: AnimatedContainer(
+                        duration: const Duration(
+                          milliseconds: 500,
+                        ),
+                        curve: Curves.ease,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.bottomCenter,
+                            end: Alignment.topCenter,
+                            colors: [
                               Theme.of(context).colorScheme.primaryContainer,
-                              50,
+                              Theme.of(context)
+                                  .colorScheme
+                                  .primaryContainer
+                                  .darken(0.5),
+                            ],
+                          ),
+                        ),
+                        child: Stack(
+                          children: [
+                            // Размытое фоновое изображение.
+                            if (player.currentAudio?.album?.thumbnails !=
+                                    null &&
+                                user.settings.playerThumbAsBackground)
+                              SizedBox(
+                                width: MediaQuery.of(context).size.width,
+                                height: MediaQuery.of(context).size.height,
+                                child: const BlurredBackgroundImage(),
+                              ),
+
+                            // Внутреннее содержимое, зависящее от типа Layout'а.
+                            SafeArea(
+                              child: useMobileLayout
+                                  ? const FullscreenPlayerMobileRoute()
+                                  : const FullscreenPlayerDesktopRoute(),
                             ),
                           ],
                         ),
-                      ),
-                      child: Stack(
-                        children: [
-                          // Размытое фоновое изображение.
-                          if (player.currentAudio?.album?.thumb != null &&
-                              user.settings.playerThumbAsBackground)
-                            SizedBox(
-                              width: MediaQuery.of(context).size.width,
-                              height: MediaQuery.of(context).size.height,
-                              child: const BlurredBackgroundImage(),
-                            ),
-
-                          // Внутреннее содержимое, зависящее от типа Layout'а.
-                          SafeArea(
-                            child: useMobileLayout
-                                ? const FullscreenPlayerMobileRoute()
-                                : const FullscreenPlayerDesktopRoute(),
-                          ),
-                        ],
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-          );
-        }),
+            );
+          },
+        ),
       ),
     );
   }

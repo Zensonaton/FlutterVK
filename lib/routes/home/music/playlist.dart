@@ -3,6 +3,7 @@ import "dart:math";
 import "dart:ui";
 
 import "package:cached_network_image/cached_network_image.dart";
+import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:flutter/rendering.dart";
 import "package:flutter/services.dart";
@@ -19,6 +20,7 @@ import "../../../api/vk/api.dart";
 import "../../../api/vk/executeScripts/mass_audio_get.dart";
 import "../../../api/vk/shared.dart";
 import "../../../consts.dart";
+import "../../../extensions.dart";
 import "../../../main.dart";
 import "../../../provider/user.dart";
 import "../../../services/cache_manager.dart";
@@ -30,14 +32,38 @@ import "../../../widgets/loading_overlay.dart";
 import "../../home.dart";
 import "../music.dart";
 
-/// Загружает информацию по указанному [playlist], заполняя его новыми значениями.
-Future<void> loadPlaylistData(
-  ExtendedVKPlaylist playlist,
+/// Загружает информацию по указанному [playlist], возвращая новую копию плейлиста с заполненными значениями.
+Future<ExtendedPlaylist> loadPlaylistData(
+  ExtendedPlaylist playlist,
   UserProvider user, {
   bool forceUpdate = false,
 }) async {
   // Если информация уже загружена, то ничего не делаем.
-  if (!forceUpdate && playlist.audios != null) return;
+  if (!forceUpdate && (playlist.audios != null && playlist.isLiveData)) {
+    return playlist;
+  }
+
+  final ExtendedPlaylist newPlaylist = ExtendedPlaylist(
+    id: playlist.id,
+    ownerID: playlist.ownerID,
+    title: playlist.title,
+    description: playlist.description,
+    count: playlist.count,
+    accessKey: playlist.accessKey,
+    followers: playlist.followers,
+    plays: playlist.plays,
+    createTime: playlist.createTime,
+    updateTime: playlist.updateTime,
+    isFollowing: playlist.isFollowing,
+    subtitle: playlist.subtitle,
+    photo: playlist.photo,
+    audios: playlist.audios,
+    simillarity: playlist.simillarity,
+    color: playlist.color,
+    knownTracks: playlist.knownTracks,
+    isLiveData: true,
+    cacheTracks: playlist.cacheTracks,
+  );
 
   final APIMassAudioGetResponse response =
       await user.scriptMassAudioGetWithAlbums(
@@ -47,25 +73,24 @@ Future<void> loadPlaylistData(
   );
   raiseOnAPIError(response);
 
-  playlist.audios = response.response!.audios
+  newPlaylist.audios = response.response!.audios
       .map(
-        (Audio audio) => ExtendedVKAudio.fromAudio(audio),
+        (Audio audio) => ExtendedAudio.fromAudio(audio),
       )
-      .toList();
-  playlist.count = response.response!.audioCount;
-  playlist.photo ??= response.response!.playlists
-      .firstWhere(
-        (item) => item.mediaKey == playlist.mediaKey,
-        orElse: () => throw AssertionError(
-          "Не было найдено фото для плейлиста",
-        ),
+      .toSet();
+  newPlaylist.count = response.response!.audioCount;
+  newPlaylist.photo ??= response.response!.playlists
+      .firstWhereOrNull(
+        (item) => item.mediaKey == newPlaylist.mediaKey,
       )
-      .photo;
+      ?.photo;
+
+  return newPlaylist;
 }
 
 /// Возвращает только те [Audio], которые совпадают по названию [query].
-List<ExtendedVKAudio> filterAudiosByName(
-  List<ExtendedVKAudio> audios,
+Set<ExtendedAudio> filterAudiosByName(
+  Set<ExtendedAudio> audios,
   String query,
 ) {
   // Избавляемся от всех пробелов в запросе, а так же диакритические знаки.
@@ -77,15 +102,15 @@ List<ExtendedVKAudio> filterAudiosByName(
   // Возвращаем список тех треков, у которых совпадает название или исполнитель.
   return audios
       .where(
-        (ExtendedVKAudio audio) => audio.normalizedName.contains(query),
+        (ExtendedAudio audio) => audio.normalizedName.contains(query),
       )
-      .toList();
+      .toSet();
 }
 
 /// Метод, вызываемый при нажатии по центру плейлиста. Данный метод либо ставит плейлист на паузу, либо загружает его информацию.
 Future<void> onPlaylistPlayToggle(
   BuildContext context,
-  ExtendedVKPlaylist playlist,
+  ExtendedPlaylist playlist,
   bool playing,
 ) async {
   final UserProvider user = Provider.of<UserProvider>(context, listen: false);
@@ -97,14 +122,16 @@ Future<void> onPlaylistPlayToggle(
   }
 
   // Если информация по плейлисту не загружена, то мы должны её загрузить.
-  if (playlist.audios == null) {
+  if (playlist.audios == null || playlist.isCached) {
     LoadingOverlay.of(context).show();
 
     try {
-      await loadPlaylistData(
+      final ExtendedPlaylist newPlaylist = await loadPlaylistData(
         playlist,
         user,
       );
+
+      user.updatePlaylist(newPlaylist);
     } catch (e, stackTrace) {
       // ignore: use_build_context_synchronously
       showLogErrorDialog(
@@ -132,12 +159,13 @@ Future<void> onPlaylistPlayToggle(
 
 /// Создаёт виджет типа [AudioTrackTile] для отображения в [ListView.builder] или подобном.
 ///
-/// [playlist] указывает, из какого [ExtendedVKPlaylist] должно запуститься воспроизведение треков при нажатии по созданному виджету трека.
+/// [playlist] указывает, из какого [ExtendedPlaylist] должно запуститься воспроизведение треков при нажатии по созданному виджету трека.
 Widget buildListTrackWidget(
   BuildContext context,
-  ExtendedVKAudio audio,
-  ExtendedVKPlaylist playlist, {
+  ExtendedAudio audio,
+  ExtendedPlaylist playlist, {
   bool addBottomPadding = true,
+  bool showCachedIcon = false,
 }) {
   return Padding(
     key: ValueKey(
@@ -150,9 +178,9 @@ Widget buildListTrackWidget(
       selected: audio == player.currentAudio,
       currentlyPlaying: player.loaded && player.playing,
       isLoading: player.buffering,
-      isLiked: audio.isLiked,
       audio: audio,
       glowIfSelected: true,
+      showCachedIcon: showCachedIcon,
       onAddToQueue: () async {
         await player.addNextToQueue(audio);
 
@@ -199,6 +227,36 @@ Widget buildListTrackWidget(
       ),
     ),
   );
+}
+
+/// Диалог, предупреждающий пользователя о том, что при отключении кэширования треков будет полностью удалёно всё содержимое плейлиста с памяти устройства.
+class CacheDisableWarningDialog extends StatelessWidget {
+  const CacheDisableWarningDialog({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialDialog(
+      icon: Icons.file_download_off,
+      title: AppLocalizations.of(context)!.music_disableTrackCachingTitle,
+      text: AppLocalizations.of(context)!.music_disableTrackCachingDescription,
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: Text(
+            AppLocalizations.of(context)!.general_no,
+          ),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(true),
+          child: Text(
+            AppLocalizations.of(context)!.music_disableTrackCachingButton,
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 /// Расширение для [SliverPersistentHeaderDelegate], предоставляющий возможность указать минимальную и максимальную высоту для Sliver'ов.
@@ -255,7 +313,7 @@ class SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
 /// Route, отображающий информацию о плейлисте: его название, треки, и прочую информацию.
 class PlaylistInfoRoute extends StatefulWidget {
   /// Плейлист, информация о котором будет отображена.
-  final ExtendedVKPlaylist playlist;
+  final ExtendedPlaylist playlist;
 
   /// Если true, то сразу после открытия данного диалога фокус будет на [SearchBar].
   ///
@@ -291,15 +349,22 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
   Future<void> init() async {
     final UserProvider user = Provider.of<UserProvider>(context, listen: false);
 
+    logger.d("Open ${widget.playlist}");
+
     // Если информация по данному плейлисту не загружена, то загружаем её.
-    if (widget.playlist.audios == null) {
-      setState(() => _loading = true);
+    if (widget.playlist.audios == null || widget.playlist.isCached) {
+      // Отображаем анимацию загрузки лишь в случае, если список треков пустой, т.е., он не был загружен с кэша.
+      if (widget.playlist.audios == null) {
+        setState(() => _loading = true);
+      }
 
       try {
-        await loadPlaylistData(
+        final ExtendedPlaylist newPlaylist = await loadPlaylistData(
           widget.playlist,
           user,
         );
+
+        user.updatePlaylist(newPlaylist);
       } catch (e, stackTrace) {
         // ignore: use_build_context_synchronously
         showLogErrorDialog(
@@ -310,7 +375,9 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
           context,
         );
       } finally {
-        if (context.mounted) setState(() => _loading = false);
+        if (context.mounted) {
+          setState(() => _loading = false);
+        }
       }
     }
   }
@@ -386,8 +453,8 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
   Widget build(BuildContext context) {
     final UserProvider user = Provider.of<UserProvider>(context);
 
-    final List<ExtendedVKAudio> playlistAudios = widget.playlist.audios ?? [];
-    final List<ExtendedVKAudio> filteredAudios =
+    final Set<ExtendedAudio> playlistAudios = widget.playlist.audios ?? {};
+    final Set<ExtendedAudio> filteredAudios =
         filterAudiosByName(playlistAudios, controller.text);
 
     final bool isMobileLayout =
@@ -462,9 +529,10 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                                     "${widget.playlist.mediaKey}270",
                                                 memCacheHeight: 200,
                                                 memCacheWidth: 200,
-                                                placeholder: (BuildContext
-                                                            context,
-                                                        String url) =>
+                                                placeholder: (
+                                                  BuildContext context,
+                                                  String url,
+                                                ) =>
                                                     const FallbackAudioPlaylistAvatar(),
                                                 cacheManager:
                                                     CachedNetworkImagesManager
@@ -637,18 +705,99 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                 // Кнопка для загрузки треков в кэш.
                                 IconButton(
                                   onPressed: hasTracksLoaded
-                                      ? () => showWipDialog(
-                                            context,
-                                            title: "Кэширование треков",
-                                          )
+                                      ? () async {
+                                          // Если кэширование уже включено, то спрашиваем у пользователя, хочет ли он отменить его и удалить треки.
+                                          if (widget.playlist.cacheTracks ??
+                                              false) {
+                                            // Если плеер воспроизводит этот же плейлист, то мы не должны позволить пользователю удалить кэш.
+                                            if (player.currentPlaylist ==
+                                                widget.playlist) {
+                                              showErrorDialog(
+                                                context,
+                                                title: AppLocalizations.of(
+                                                  context,
+                                                )!
+                                                    .music_disableTrackCachingUnavailableTitle,
+                                                description: AppLocalizations
+                                                        .of(context)!
+                                                    .music_disableTrackCachingUnavailableDescription,
+                                              );
+
+                                              return;
+                                            }
+
+                                            // Спрашимаем у пользователя, хочет ли он отключить кэширование.
+                                            final bool dialogResult =
+                                                await showDialog(
+                                                      context: context,
+                                                      builder: (
+                                                        BuildContext context,
+                                                      ) {
+                                                        return const CacheDisableWarningDialog();
+                                                      },
+                                                    ) ??
+                                                    false;
+
+                                            if (!dialogResult) return;
+                                          }
+
+                                          // Включаем или отключаем кэширование.
+                                          widget.playlist.cacheTracks =
+                                              !(widget.playlist.cacheTracks ??
+                                                  false);
+
+                                          user.markUpdated(false);
+                                          await appStorage.savePlaylist(
+                                            widget.playlist.asDBPlaylist,
+                                          );
+
+                                          // Запускаем задачу по загрузке плейлиста.
+                                          if (!widget.playlist.cacheTracks! &&
+                                              context.mounted) {
+                                            LoadingOverlay.of(context).show();
+                                          }
+
+                                          try {
+                                            await downloadManager.cachePlaylist(
+                                              widget.playlist,
+                                              user: user,
+                                              cache:
+                                                  widget.playlist.cacheTracks ??
+                                                      false,
+                                              onTrackCached:
+                                                  (ExtendedAudio audio) {
+                                                if (!context.mounted) return;
+
+                                                user.markUpdated(false);
+                                              },
+                                            );
+                                          } catch (e, stackTrace) {
+                                            logger.e(
+                                              "Ошибка при кэшировании плейлиста: ",
+                                              error: e,
+                                              stackTrace: stackTrace,
+                                            );
+                                          } finally {
+                                            if (!(widget.playlist.cacheTracks ??
+                                                    false) &&
+                                                context.mounted) {
+                                              LoadingOverlay.of(context).hide();
+                                            }
+                                          }
+                                        }
                                       : null,
                                   iconSize: 38,
                                   icon: Icon(
                                     Icons.arrow_circle_down,
                                     color: hasTracksLoaded
-                                        ? Theme.of(context)
-                                            .colorScheme
-                                            .onBackground
+                                        ? ((widget.playlist.cacheTracks ??
+                                                false)
+                                            ? Theme.of(context)
+                                                .colorScheme
+                                                .primary
+                                            : Theme.of(context)
+                                                .colorScheme
+                                                .onBackground)
                                         : null,
                                   ),
                                 ),
@@ -673,7 +822,7 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                       ): () async {
                                         // Если у нас уже запущен этот же трек, то переключаем паузу/воспроизведение.
                                         if (player.currentAudio ==
-                                            filteredAudios[0]) {
+                                            filteredAudios.first) {
                                           await player.togglePlay();
 
                                           return;
@@ -681,7 +830,7 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
 
                                         await player.setPlaylist(
                                           widget.playlist,
-                                          audio: filteredAudios[0],
+                                          audio: filteredAudios.first,
                                         );
                                       },
                                   },
@@ -786,7 +935,7 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                               bottom: 8,
                             ),
                             child: AudioTrackTile(
-                              audio: ExtendedVKAudio(
+                              audio: ExtendedAudio(
                                 id: -1,
                                 ownerID: -1,
                                 title: fakeTrackNames[
@@ -813,8 +962,9 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
 
                       return buildListTrackWidget(
                         context,
-                        filteredAudios[index],
+                        filteredAudios.elementAt(index),
                         widget.playlist,
+                        showCachedIcon: true,
                       );
                     },
                     childCount: _loading

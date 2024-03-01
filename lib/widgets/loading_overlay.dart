@@ -38,7 +38,8 @@ class LoadingOverlay extends StatelessWidget {
   /// });
   /// ```
   Future<dynamic> doWithLoadingOverlay(
-      Future<dynamic> Function() action) async {
+    Future<dynamic> Function() action,
+  ) async {
     try {
       show();
 

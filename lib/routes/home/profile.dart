@@ -70,7 +70,7 @@ class ProfileLogoutExitDialog extends StatelessWidget {
           child: Text(
             AppLocalizations.of(context)!.general_yes,
           ),
-        )
+        ),
       ],
     );
   }
@@ -122,7 +122,7 @@ class ConnectRecommendationsDialog extends StatelessWidget {
           child: Text(
             AppLocalizations.of(context)!.music_connectRecommendationsConnect,
           ),
-        )
+        ),
       ],
     );
   }
@@ -163,7 +163,7 @@ class DisableUpdatesDialog extends StatelessWidget {
           child: Text(
             AppLocalizations.of(context)!.profile_disableUpdatesWarningDisable,
           ),
-        )
+        ),
       ],
     );
   }

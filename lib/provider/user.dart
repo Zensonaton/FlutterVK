@@ -1,6 +1,7 @@
 import "dart:io";
 
 import "package:audio_service/audio_service.dart";
+import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:shared_preferences/shared_preferences.dart";
 
@@ -19,6 +20,7 @@ import "../api/vk/executeScripts/mass_audio_albums.dart";
 import "../api/vk/executeScripts/mass_audio_get.dart";
 import "../api/vk/shared.dart";
 import "../api/vk/users/get.dart";
+import "../db/schemas/playlists.dart";
 import "../enums.dart";
 import "../main.dart";
 import "../services/audio_player.dart";
@@ -26,10 +28,51 @@ import "../services/cache_manager.dart";
 import "../services/logger.dart";
 import "../utils.dart";
 
-/// Класс, расширяющий обычный объект [AudioPlaylist] от API ВКонтакте, добавляющий информацию о треках в данном плейлисте.
-class ExtendedVKPlaylist extends AudioPlaylist {
+/// Класс, копирующий поля из класса [Playlist] от API ВКонтакте, добавляющий информацию о треках в данном плейлисте.
+class ExtendedPlaylist {
+  /// ID плейлиста.
+  int id;
+
+  /// ID владельца плейлиста.
+  int ownerID;
+
+  /// Название плейлиста.
+  String? title;
+
+  /// Описание плейлиста. Пустые описания плейлистов (т.е., [String.isEmpty]) будут восприниматься как null.
+  String? description;
+
+  /// Подпись плейлиста, обычно присутствует в плейлистах-рекомендациях. Пустые подписи (т.е., [String.isEmpty]) будут восприниматься как null.
+  String? subtitle;
+
+  /// Количество аудиозаписей в данном плейлисте.
+  ///
+  /// Это значение возвращает общее количество треков в плейлисте, вне зависимости от количества треков в [audios].
+  int count;
+
+  /// Ключ доступа.
+  String? accessKey;
+
+  /// Количество подписчиков плейлиста.
+  int followers;
+
+  /// Количество проигрываний плейлиста.
+  int plays;
+
+  /// Timestamp создания плейлиста.
+  int? createTime;
+
+  /// Timestamp последнего обновления плейлиста.
+  int? updateTime;
+
+  /// Указывает, подписан ли данный пользователь на данный плейлист или нет.
+  bool isFollowing;
+
+  /// Фотография плейлиста.
+  Thumbnails? photo;
+
   /// Список из аудио в данном плейлисте.
-  List<ExtendedVKAudio>? audios;
+  Set<ExtendedAudio>? audios;
 
   /// Указывает, что данный плейлист является плейлистом с "любимыми" треками пользователя.
   bool get isFavoritesPlaylist => id == 0;
@@ -50,6 +93,26 @@ class ExtendedVKPlaylist extends AudioPlaylist {
   /// Указывает, пуст ли данный плейлист. Данный метод всегда возвращает true, если треки не были загружены.
   bool get isEmpty => audios == null ? true : count == 0;
 
+  /// Указывает процент "схожести" данного плейлиста. Данное поле не-null только для плейлистов из раздела "совпадения по вкусам".
+  final double? simillarity;
+
+  /// Указывает Hex-цвет для данного плейлиста. Данное поле не-null только для плейлистов из раздела "совпадения по вкусам".
+  final String? color;
+
+  /// Указывает первые 3 известных трека для данного плейлиста. Данное поле не-null только для плейлистов из раздела "совпадения по вкусам".
+  final List<ExtendedAudio>? knownTracks;
+
+  /// Указывает, что данный плейлист был загружен с API ВКонтакте. Если данное поле false, то это значит, что все данные из этого плейлиста являются кешированными (т.е., загружены из БД Isar).
+  bool isLiveData;
+
+  /// Указывает, что данный плейлист был загружен с БД Isar, т.е., данные этого плейлиста являются кэшированными.
+  ///
+  /// Данное поле является противоположностью поля [isLiveData].
+  bool get isCached => !isLiveData;
+
+  /// Указывает, что в данном плейлисте разрешено кэширование треков.
+  bool? cacheTracks;
+
   /// Возвращает длительность всего плейлиста. Если список треков ещё не был получен, то возвращает null.
   Duration? get duration {
     if (audios == null) return null;
@@ -58,7 +121,7 @@ class ExtendedVKPlaylist extends AudioPlaylist {
       Duration.zero,
       (
         Duration totalDuration,
-        ExtendedVKAudio audio,
+        ExtendedAudio audio,
       ) {
         return totalDuration +
             Duration(
@@ -68,28 +131,19 @@ class ExtendedVKPlaylist extends AudioPlaylist {
     );
   }
 
-  /// Указывает процент "схожести" данного плейлиста. Данное поле не-null только для плейлистов из раздела "совпадения по вкусам".
-  final double? simillarity;
-
-  /// Указывает Hex-цвет для данного плейлиста. Данное поле не-null только для плейлистов из раздела "совпадения по вкусам".
-  final String? color;
-
-  /// Указывает первые 3 известных трека для данного плейлиста. Данное поле не-null только для плейлистов из раздела "совпадения по вкусам".
-  final List<ExtendedVKAudio>? knownTracks;
-
-  /// Возвращает instance данного класса из передаваемого объекта типа [AudioPlaylist].
-  static ExtendedVKPlaylist fromAudioPlaylist(
-    AudioPlaylist playlist, {
-    List<ExtendedVKAudio>? audios,
+  /// Создаёт из передаваемого объекта [Playlist] объект данного класа.
+  static ExtendedPlaylist fromAudioPlaylist(
+    Playlist playlist, {
+    Set<ExtendedAudio>? audios,
     int? totalAudios,
     double? simillarity,
     String? color,
-    List<ExtendedVKAudio>? knownTracks,
+    List<ExtendedAudio>? knownTracks,
+    bool isLiveData = true,
   }) =>
-      ExtendedVKPlaylist(
+      ExtendedPlaylist(
         id: playlist.id,
         ownerID: playlist.ownerID,
-        type: playlist.type,
         title: playlist.title,
         description: playlist.description,
         count: playlist.count,
@@ -99,52 +153,143 @@ class ExtendedVKPlaylist extends AudioPlaylist {
         createTime: playlist.createTime,
         updateTime: playlist.updateTime,
         isFollowing: playlist.isFollowing,
-        subtitleBadge: playlist.subtitleBadge,
-        playButton: playlist.playButton,
-        albumType: playlist.albumType,
-        exclusive: playlist.exclusive,
         subtitle: playlist.subtitle,
-        genres: playlist.genres,
         photo: playlist.photo,
-        permissions: playlist.permissions,
-        meta: playlist.meta,
         audios: audios,
         simillarity: simillarity,
         color: color,
         knownTracks: knownTracks,
+        isLiveData: isLiveData,
       );
 
-  ExtendedVKPlaylist({
-    required super.id,
-    required super.ownerID,
-    super.type,
-    super.title,
-    super.description,
-    required super.count,
-    super.accessKey,
-    super.followers,
-    super.plays,
-    super.createTime,
-    super.updateTime,
-    super.isFollowing,
-    super.subtitleBadge,
-    super.playButton,
-    super.albumType,
-    super.exclusive,
-    super.subtitle,
-    super.genres,
-    super.photo,
-    super.permissions,
-    super.meta,
+  /// Создаёт из передаваемого объекта [DBPlaylist] объект данного класа.
+  static ExtendedPlaylist fromDBPlaylist(
+    DBPlaylist playlist,
+  ) =>
+      ExtendedPlaylist(
+        id: playlist.id,
+        ownerID: playlist.ownerID,
+        title: playlist.title,
+        description: playlist.description,
+        count: playlist.count,
+        accessKey: playlist.accessKey,
+        followers: playlist.followers,
+        plays: playlist.plays,
+        createTime: playlist.createTime,
+        updateTime: playlist.updateTime,
+        isFollowing: playlist.isFollowing ?? false,
+        subtitle: playlist.subtitle,
+        photo: playlist.photo?.asThumbnails,
+        audios: playlist.audios
+            ?.map(
+              (DBAudio audio) => ExtendedAudio.fromDBAudio(
+                audio,
+                isLiked: playlist.id == 0,
+              ),
+            )
+            .toSet(),
+        simillarity: playlist.simillarity,
+        color: playlist.color,
+        knownTracks: playlist.knownTracks
+            ?.map(
+              (DBAudio audio) => ExtendedAudio.fromDBAudio(
+                audio,
+                isLiked: playlist.id == 0,
+              ),
+            )
+            .toList(),
+        cacheTracks: playlist.isCachingAllowed,
+      );
+
+  /// Возвращает копию данного класса в виде объекта [DBPlaylist].
+  DBPlaylist get asDBPlaylist => DBPlaylist.fromExtendedPlaylist(this);
+
+  /// Возвращает строку, которая используется как идентификатор пользователя и медиа.
+  String get mediaKey => "${ownerID}_$id";
+
+  @override
+  String toString() =>
+      "ExtendedPlaylist $mediaKey with ${audios?.length}/$count tracks ${isCached ? '(cached)' : ''}";
+
+  @override
+  bool operator ==(covariant ExtendedPlaylist other) {
+    if (identical(this, other)) return true;
+
+    return other.runtimeType == ExtendedPlaylist && other.mediaKey == mediaKey;
+  }
+
+  @override
+  int get hashCode => mediaKey.hashCode;
+
+  ExtendedPlaylist({
+    required this.id,
+    required this.ownerID,
+    this.title,
+    this.description,
+    required this.count,
+    this.accessKey,
+    this.followers = 0,
+    this.plays = 0,
+    this.createTime,
+    this.updateTime,
+    this.isFollowing = false,
+    this.subtitle,
+    this.photo,
     this.audios,
     this.simillarity,
     this.color,
     this.knownTracks,
+    this.isLiveData = false,
+    this.cacheTracks,
   });
 }
 
-/// Класс, расширяющий объект [Audio] от API ВКонтакте, добавляя некоторые новые поля.
-class ExtendedVKAudio extends Audio {
+/// Класс, копирующий поля объекта [Audio] от API ВКонтакте, добавляя некоторые новые поля.
+class ExtendedAudio {
+  /// ID аудиозаписи.
+  int id;
+
+  /// ID владельца аудиозаписи.
+  int ownerID;
+
+  /// Имя исполнителя.
+  String artist;
+
+  /// Название аудиозаписи.
+  String title;
+
+  /// Длительность аудиозаписи в секундах.
+  final int duration;
+
+  /// Подпись трека.
+  final String? subtitle;
+
+  /// Ключ доступа.
+  String accessKey;
+
+  /// Указывает, если это Explicit-аудиозапись.
+  final bool isExplicit;
+
+  /// Указывает, что данный трек ограничен.
+  final bool isRestricted;
+
+  /// URL на `mp3` данной аудиозаписи.
+  ///
+  /// Очень часто он отсутствует, выдавая пустую строку.
+  String? url;
+
+  /// Timestamp добавления аудиозаписи.
+  final int date;
+
+  /// Информация об альбоме данной аудиозаписи.
+  Album? album;
+
+  /// Указывает наличие текста песни.
+  final bool hasLyrics;
+
+  /// ID жанра аудиозаписи. Список жанров описан [здесь](https://dev.vk.com/ru/reference/objects/audio-genres).
+  int? genreID;
+
   /// Информация о тексте песни.
   Lyrics? lyrics;
 
@@ -183,15 +328,23 @@ class ExtendedVKAudio extends Audio {
     return _durationString!;
   }
 
+  /// Указывает, кэширован ли данный трек.
+  bool? isCached;
+
+  /// [ValueNotifier] для указания прогресса загрузки трека этого трека.
+  ///
+  /// Указывает значение от 0.0 до 1.0.
+  final ValueNotifier<double> downloadProgress = ValueNotifier(0.0);
+
   /// Возвращает данный объект как [MediaItem] для аудио плеера.
   MediaItem get asMediaItem => MediaItem(
         id: mediaKey,
         title: title,
         album: album?.title,
         artist: artist,
-        artUri: album?.thumb != null
+        artUri: album?.thumbnails != null
             ? Uri.parse(
-                album!.thumb!.photo1200!,
+                album!.thumbnails!.photo1200!,
               )
             : null,
         duration: Duration(
@@ -202,50 +355,13 @@ class ExtendedVKAudio extends Audio {
         },
       );
 
-  @override
-  bool operator ==(covariant Audio other) {
-    if (identical(this, other)) return true;
-
-    return other.runtimeType == ExtendedVKAudio && other.mediaKey == mediaKey;
-  }
-
-  @override
-  int get hashCode => mediaKey.hashCode;
-
-  ExtendedVKAudio({
-    required super.id,
-    required super.ownerID,
-    required super.artist,
-    required super.title,
-    required super.duration,
-    super.subtitle,
-    required super.accessKey,
-    super.ads,
-    super.isExplicit = false,
-    super.isFocusTrack,
-    super.isLicensed,
-    super.isRestricted = false,
-    super.shortVideosAllowed,
-    super.storiesAllowed,
-    super.storiesCoverAllowed,
-    super.trackCode,
-    required super.url,
-    required super.date,
-    super.album,
-    super.hasLyrics,
-    super.albumID,
-    super.genreID,
-    this.lyrics,
-    this.isLiked = false,
-  });
-
-  /// Возвращает instance данного класса из передаваемого объекта типа [Audio].
-  static ExtendedVKAudio fromAudio(
+  /// Создаёт из передаваемого объекта [Audio] объект данного класа.
+  static ExtendedAudio fromAudio(
     Audio audio, {
     Lyrics? lyrics,
     bool? isLiked,
   }) =>
-      ExtendedVKAudio(
+      ExtendedAudio(
         id: audio.id,
         ownerID: audio.ownerID,
         artist: audio.artist,
@@ -253,24 +369,79 @@ class ExtendedVKAudio extends Audio {
         duration: audio.duration,
         subtitle: audio.subtitle,
         accessKey: audio.accessKey,
-        ads: audio.ads,
         isExplicit: audio.isExplicit,
-        isFocusTrack: audio.isFocusTrack,
-        isLicensed: audio.isLicensed,
         isRestricted: audio.isRestricted,
-        shortVideosAllowed: audio.shortVideosAllowed,
-        storiesAllowed: audio.storiesAllowed,
-        storiesCoverAllowed: audio.storiesCoverAllowed,
-        trackCode: audio.trackCode,
         url: audio.url,
         date: audio.date,
         album: audio.album,
         hasLyrics: audio.hasLyrics,
-        albumID: audio.albumID,
         genreID: audio.genreID,
         lyrics: lyrics,
         isLiked: isLiked ?? false,
       );
+
+  /// Создаёт из передаваемого объекта [DBAudio] объект данного класа.
+  static ExtendedAudio fromDBAudio(
+    DBAudio audio, {
+    bool isLiked = false,
+  }) =>
+      ExtendedAudio(
+        id: audio.id!,
+        ownerID: audio.ownerID!,
+        artist: audio.artist!,
+        title: audio.title!,
+        duration: audio.duration!,
+        subtitle: audio.subtitle,
+        accessKey: audio.accessKey!,
+        isExplicit: audio.isExplicit!,
+        isRestricted: audio.isRestricted!,
+        date: audio.date!,
+        album: audio.album?.asAudioAlbum,
+        hasLyrics: audio.hasLyrics!,
+        genreID: audio.genreID ?? 18,
+        lyrics: audio.lyrics?.asLyrics,
+        isLiked: isLiked,
+        isCached: audio.isCached ?? false,
+      );
+
+  /// Возвращает копию данного класса в виде объекта [DBAudio].
+  DBAudio get asDBAudio => DBAudio.fromExtendedAudio(this);
+
+  /// Возвращает строку, которая используется как идентификатор пользователя и медиа.
+  String get mediaKey => "${ownerID}_$id";
+
+  @override
+  String toString() => "ExtendedAudio $mediaKey $artist - $title";
+
+  @override
+  bool operator ==(covariant ExtendedAudio other) {
+    if (identical(this, other)) return true;
+
+    return other.runtimeType == ExtendedAudio && other.mediaKey == mediaKey;
+  }
+
+  @override
+  int get hashCode => mediaKey.hashCode;
+
+  ExtendedAudio({
+    required this.id,
+    required this.ownerID,
+    required this.artist,
+    required this.title,
+    required this.duration,
+    this.subtitle,
+    required this.accessKey,
+    this.isExplicit = false,
+    this.isRestricted = false,
+    this.url,
+    required this.date,
+    this.album,
+    this.hasLyrics = false,
+    this.genreID,
+    this.lyrics,
+    this.isLiked = false,
+    this.isCached,
+  });
 }
 
 /// Класс с настройками пользователя.
@@ -379,36 +550,36 @@ class UserProvider extends ChangeNotifier {
   String? photoMaxOrigUrl;
 
   /// Объект, перечисляющий все плейлисты пользователя.
-  Map<String, ExtendedVKPlaylist> allPlaylists = {};
+  Map<String, ExtendedPlaylist> allPlaylists = {};
 
   /// Фейковый плейлист с "лайкнутыми" треками пользователя.
-  ExtendedVKPlaylist? get favoritesPlaylist => allPlaylists["${id!}_0"];
+  ExtendedPlaylist? get favoritesPlaylist => allPlaylists["${id!}_0"];
 
   /// Перечисление всех обычных плейлистов, которые были сделаны данным пользователем.
-  List<ExtendedVKPlaylist> get regularPlaylists => allPlaylists.values
+  List<ExtendedPlaylist> get regularPlaylists => allPlaylists.values
       .where(
-        (ExtendedVKPlaylist playlist) => playlist.isRegularPlaylist,
+        (ExtendedPlaylist playlist) => playlist.isRegularPlaylist,
       )
       .toList();
 
   /// Перечисление всех "рекомендованных" плейлистов.
-  List<ExtendedVKPlaylist> get recommendationPlaylists => allPlaylists.values
+  List<ExtendedPlaylist> get recommendationPlaylists => allPlaylists.values
       .where(
-        (ExtendedVKPlaylist playlist) => playlist.isRecommendationsPlaylist,
+        (ExtendedPlaylist playlist) => playlist.isRecommendationsPlaylist,
       )
       .toList();
 
   /// Перечисление всех плейлистов из раздела "Совпадения по вкусам".
-  List<ExtendedVKPlaylist> get simillarPlaylists => allPlaylists.values
+  List<ExtendedPlaylist> get simillarPlaylists => allPlaylists.values
       .where(
-        (ExtendedVKPlaylist playlist) => playlist.isSimillarPlaylist,
+        (ExtendedPlaylist playlist) => playlist.isSimillarPlaylist,
       )
       .toList();
 
   /// Перечисление всех плейлистов, которые были сделаны ВКонтакте (раздел "Собрано редакцией").
-  List<ExtendedVKPlaylist> get madeByVKPlaylists => allPlaylists.values
+  List<ExtendedPlaylist> get madeByVKPlaylists => allPlaylists.values
       .where(
-        (ExtendedVKPlaylist playlist) => playlist.isMadeByVKPlaylist,
+        (ExtendedPlaylist playlist) => playlist.isMadeByVKPlaylist,
       )
       .toList();
 
@@ -618,6 +789,107 @@ class UserProvider extends ChangeNotifier {
     if (dumpData) saveToDisk();
   }
 
+  /// Вставляет в [allPlaylists] указанный плейлист [playlists], объеденяя старые и новые поля. Если плейлист не существовал ранее, то он будет создан. [saveToDB] указывает, будет ли изменение сохранено в БД Isar.
+  void updatePlaylist(
+    ExtendedPlaylist playlist, {
+    bool saveToDB = true,
+  }) async {
+    ExtendedPlaylist? existingPlaylist = allPlaylists[playlist.mediaKey];
+
+    if (existingPlaylist == null) {
+      // Ранее такового плейлиста не было, просто сохраняем и ничего не делаем.
+
+      existingPlaylist = playlist;
+    } else {
+      // Мы должны сделать объединение полей из старого и нового плейлиста.
+
+      existingPlaylist.count = playlist.count;
+      existingPlaylist.title = playlist.title;
+      existingPlaylist.description = playlist.description;
+      existingPlaylist.subtitle = playlist.subtitle;
+      existingPlaylist.cacheTracks =
+          playlist.cacheTracks ?? existingPlaylist.cacheTracks;
+      existingPlaylist.createTime = playlist.createTime;
+      existingPlaylist.updateTime = playlist.updateTime;
+      existingPlaylist.followers = playlist.followers;
+      existingPlaylist.isLiveData = playlist.isLiveData;
+
+      // Проходимся по новому списку треков, если он вообще был передан.
+      if (playlist.audios != null) {
+        final Set<ExtendedAudio> oldAudios = existingPlaylist.audios ?? {};
+        existingPlaylist.audios = {};
+
+        for (ExtendedAudio audio in playlist.audios!) {
+          ExtendedAudio newAudio =
+              oldAudios.firstWhereOrNull((oldAudio) => oldAudio == audio) ??
+                  audio;
+
+          newAudio.url ??= audio.url;
+          newAudio.isCached = audio.isCached ?? newAudio.isCached;
+
+          existingPlaylist.audios!.add(newAudio);
+        }
+
+        // Проходимся по тому списку треков, которые кэшированы, но больше нет в плейлисте.
+        final Set<ExtendedAudio> removedAudios = oldAudios
+            .where(
+              (audio) =>
+                  (audio.isCached ?? false) &&
+                  !existingPlaylist!.audios!.contains(audio),
+            )
+            .toSet();
+
+        for (ExtendedAudio audio in removedAudios) {
+          logger.d("Audio $audio will be deleted");
+
+          // Удаляем трек из кэша.
+          try {
+            CachedStreamedAudio(cacheKey: audio.mediaKey).delete();
+
+            audio.isCached = false;
+          } catch (e) {
+            // No-op.
+          }
+        }
+      }
+    }
+
+    allPlaylists[playlist.mediaKey] = existingPlaylist;
+
+    if (saveToDB) {
+      await appStorage.savePlaylists(
+        allPlaylists.values
+            .map(
+              (playlist) => playlist.asDBPlaylist,
+            )
+            .toList(),
+      );
+    }
+  }
+
+  /// Вставляет в [allPlaylists] указанный список из плейлистов [playlists], объеденяя старые и новые поля. Если какой то из плейлистов [playlists] не существовал ранее, то он будет создан. [saveToDB] указывает, будет ли изменение сохранено в БД Isar.
+  void updatePlaylists(
+    List<ExtendedPlaylist> playlists, {
+    bool saveToDB = true,
+  }) async {
+    for (ExtendedPlaylist playlist in playlists) {
+      updatePlaylist(
+        playlist,
+        saveToDB: false,
+      );
+    }
+
+    if (saveToDB) {
+      await appStorage.savePlaylists(
+        allPlaylists.values
+            .map(
+              (playlist) => playlist.asDBPlaylist,
+            )
+            .toList(),
+      );
+    }
+  }
+
   /// Получает публичную информацию о пользователях с передаваемым ID, либо же о владельце текущей страницы, если ID не передаётся.
   Future<APIUsersGetResponse> usersGet({
     List<int>? userIDs,
@@ -783,8 +1055,8 @@ class UserProvider extends ChangeNotifier {
       if (massAlbums.error != null) {
         // В случае ошибки создаём копию ответа от первого шага, изменяя там поле error.
         return APIAudioSearchResponse(
-          response.response,
-          massAlbums.error,
+          response: response.response,
+          error: massAlbums.error,
         );
       }
 
@@ -795,7 +1067,7 @@ class UserProvider extends ChangeNotifier {
       // Использовать массив - идея плохая, поскольку ВКонтакте не возвращает информацию по "недоступным" трекам,
       // ввиду чего происходит смещение, что не очень-то и хорошо.
       Map<String, Audio> albumsData = {
-        for (var album in massAlbums.response!) album.mediaKey: album
+        for (var album in massAlbums.response!) album.mediaKey: album,
       };
 
       // Мы получили список альбомов, обновляем существующий массив треков.
@@ -904,8 +1176,8 @@ class UserProvider extends ChangeNotifier {
         if (massAlbums.error != null) {
           // В случае ошибки создаём копию ответа от первого шага, изменяя там поле error.
           return APIMassAudioGetResponse(
-            massAudios.response,
-            massAlbums.error,
+            response: massAudios.response,
+            error: massAlbums.error,
           );
         }
 
@@ -916,7 +1188,7 @@ class UserProvider extends ChangeNotifier {
         // Использовать массив - идея плохая, поскольку ВКонтакте не возвращает информацию по "недоступным" трекам,
         // ввиду чего происходит смещение, что не очень-то и хорошо.
         Map<String, Audio> albumsData = {
-          for (var album in massAlbums.response!) album.mediaKey: album
+          for (var album in massAlbums.response!) album.mediaKey: album,
         };
 
         // Мы получили список альбомов, обновляем существующий массив треков.

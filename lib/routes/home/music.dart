@@ -1,4 +1,5 @@
 import "dart:async";
+import "dart:io";
 
 import "package:cached_network_image/cached_network_image.dart";
 import "package:debounce_throttle/debounce_throttle.dart";
@@ -10,7 +11,6 @@ import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "package:just_audio/just_audio.dart";
 import "package:provider/provider.dart";
 import "package:responsive_builder/responsive_builder.dart";
-import "package:share_plus/share_plus.dart";
 import "package:skeletonizer/skeletonizer.dart";
 import "package:styled_text/styled_text.dart";
 
@@ -22,8 +22,11 @@ import "../../api/vk/consts.dart";
 import "../../api/vk/executeScripts/mass_audio_get.dart";
 import "../../api/vk/shared.dart";
 import "../../consts.dart";
+import "../../db/schemas/playlists.dart";
+import "../../extensions.dart";
 import "../../main.dart";
 import "../../provider/user.dart";
+import "../../services/audio_player.dart";
 import "../../services/cache_manager.dart";
 import "../../services/logger.dart";
 import "../../utils.dart";
@@ -43,32 +46,88 @@ Future<void> ensureUserAudioAllInformation(
   BuildContext context, {
   bool forceUpdate = false,
 }) async {
+  // Загружаем плейлисты из БД.
+  await loadDBUserPlaylists(
+    context,
+  );
+
+  if (!context.mounted) return;
+
+  // Делаем API-запросы, получаем список плейлистов из ВКонтакте.
   await Future.wait([
+    // Список фаворитных треков (со списком треков), а так же плейлисты пользователя (без списка треков).
     ensureUserAudioBasicInfo(
       context,
       forceUpdate: forceUpdate,
     ),
+
+    // Рекомендации.
     ensureUserAudioRecommendations(
       context,
       forceUpdate: forceUpdate,
-    )
+    ),
   ]);
+
+  if (!context.mounted) return;
+
+  // После полной загрузки, делаем загрузку остальных данных.
+  await loadCachedTracksInformation(
+    context,
+    forceUpdate: forceUpdate,
+  );
 
   return;
 }
 
-/// Загружает информацию (плейлисты, треки) для раздела «музыка», присваивая её в объект [UserProvider]. Если таковая информация уже присутствует, то данный вызов будет проигнорирован.
+/// Загружает информацию по плейлистам, их трекам и рекомендованным плейлистам из базы данных Isar. Ничего не делает, если данные уже были загружены.
+Future<void> loadDBUserPlaylists(
+  BuildContext context,
+) async {
+  final UserProvider user = Provider.of<UserProvider>(context, listen: false);
+  final AppLogger logger = getLogger("loadDBUserPlaylists");
+
+  // Если информация с БД уже загружена, то ничего не делаем.
+  if (user.favoritesPlaylist?.audios != null) return;
+
+  logger.d("Loading playlists and track list from Isar DB");
+
+  // Получаем список плейлистов.
+  final List<DBPlaylist?> playlists = await appStorage.getPlaylists();
+
+  // Добавляем плейлисты.
+  for (DBPlaylist? playlist in playlists) {
+    if (playlist == null) {
+      logger.e(
+        "Found null playlist: $playlist",
+      );
+
+      continue;
+    }
+
+    user.updatePlaylist(
+      playlist.asExtendedPlaylist,
+      saveToDB: false,
+    );
+  }
+
+  user.markUpdated(false);
+}
+
+/// Загружает информацию (плейлисты, треки) для раздела «музыка», присваивая её в объект [UserProvider], после чего сохраняет всё в базу данных приложения, если [saveToDB] равен true.
 ///
-/// Если [forceUpdate] = true, то данный метод загрузит информацию для раздела музыки даже если в [UserProvider] таковая информация уже есть.
+/// Если информация о плейлистах и треках уже присутствует, то данный вызов будет проигнорирован. [forceUpdate] отключает проверку на присутствие данных.
 Future<void> ensureUserAudioBasicInfo(
   BuildContext context, {
+  bool saveToDB = true,
   bool forceUpdate = false,
 }) async {
   final UserProvider user = Provider.of<UserProvider>(context, listen: false);
   final AppLogger logger = getLogger("ensureUserAudioInfo");
 
   // Если информация уже загружена, то ничего не делаем.
-  if (!forceUpdate && user.favoritesPlaylist?.audios != null) return;
+  if (!forceUpdate &&
+      (user.favoritesPlaylist?.audios != null &&
+          (user.favoritesPlaylist?.isLiveData ?? false))) return;
 
   logger.d("Loading music information");
 
@@ -80,28 +139,44 @@ Future<void> ensureUserAudioBasicInfo(
 
     user.playlistsCount = response.response!.playlistsCount;
 
-    // Создаём фейковый плейлист, где хранятся "любимые" треки пользователя.
-    user.allPlaylists["${user.id}_0"] = ExtendedVKPlaylist(
-      id: 0,
-      ownerID: user.id!,
-      count: response.response!.audioCount,
-      audios: response.response!.audios
-          .map(
-            (Audio audio) => ExtendedVKAudio.fromAudio(
-              audio,
-              isLiked: true,
-            ),
-          )
-          .toList(),
+    // Создаём список из плейлистов пользователя, а так же добавляем их в память.
+    user.updatePlaylists(
+      [
+        // Фейковый плейлист для лайкнутых треков.
+        ExtendedPlaylist(
+          id: 0,
+          ownerID: user.id!,
+          count: response.response!.audioCount,
+          audios: response.response!.audios
+              .map(
+                (Audio audio) => ExtendedAudio.fromAudio(
+                  audio,
+                  isLiked: true,
+                ),
+              )
+              .toSet(),
+          isLiveData: true,
+        ),
+
+        // Все остальные плейлисты пользователя.
+        // Мы помечаем что плейлисты являются кэшированными.
+        ...response.response!.playlists
+            .map(
+              (playlist) => ExtendedPlaylist.fromAudioPlaylist(
+                playlist,
+                isLiveData: false,
+              ),
+            )
+            .toSet(),
+      ],
+      saveToDB: saveToDB,
     );
 
-    // Создаём объекты плейлистов у пользователя.
-    user.allPlaylists.addAll(
-      {
-        for (var playlist in response.response!.playlists)
-          playlist.mediaKey: ExtendedVKPlaylist.fromAudioPlaylist(playlist)
-      },
-    );
+    // Запускаем задачу по кэшированию плейлиста с фаворитными треками.
+    //
+    // Запуск кэширования у других плейлистов происходит в ином месте:
+    // Данный метод НЕ загружает содержимое у других плейлистов.
+    downloadManager.cachePlaylist(user.favoritesPlaylist!);
 
     user.markUpdated(false);
   } catch (e, stackTrace) {
@@ -125,17 +200,18 @@ Future<void> ensureUserAudioBasicInfo(
   }
 }
 
-/// Загружает информацию по рекомендациям для раздела «музыка», присваивая её в объект [UserProvider]. Если таковая информация уже присутствует, то данный вызов будет проигнорирован.
+/// Загружает информацию по рекомендациям для раздела «музыка», присваивая её в объект [UserProvider], после чего сохраняет всё в базу данных приложения, если [saveToDB] равен true.
 ///
 /// Данный метод работает лишь в том случае, если у пользователя есть присвоенный токен рекомендаций (т.е., токен приложения VK Admin). Если [UserProvider] не имеет данного токена, то вызов будет проигнорирован.
 ///
-/// Если [forceUpdate] = true, то данный метод загрузит информацию для раздела музыки даже если в [UserProvider] таковая информация уже есть.
+/// Если информация о рекомендациях уже присутствует, то данный вызов будет проигнорирован. [forceUpdate] отключает проверку на присутствие данных.
 Future<void> ensureUserAudioRecommendations(
   BuildContext context, {
+  bool saveToDB = true,
   bool forceUpdate = false,
 }) async {
   /// Парсит список из плейлистов, возвращая только список из рекомендуемых плейлистов ("Для вас" и подобные).
-  List<ExtendedVKPlaylist> parseRecommendedPlaylists(
+  List<ExtendedPlaylist> parseRecommendedPlaylists(
     APICatalogGetAudioResponse response,
   ) {
     final Section mainSection = response.response!.catalog.sections[0];
@@ -153,44 +229,48 @@ Future<void> ensureUserAudioRecommendations(
         recommendedPlaylistsBlock.playlistIDs!;
 
     // Достаём те плейлисты, которые рекомендуются нами ВКонтакте.
-    // Превращаем объекты типа AudioPlaylist в ExtendedVKPlaylist.
+    // Превращаем объекты типа AudioPlaylist в ExtendedPlaylist.
     return response.response!.playlists
-        .where((AudioPlaylist playlist) => recommendedPlaylistIDs.contains(
-              playlist.mediaKey,
-            ))
+        .where(
+          (Playlist playlist) => recommendedPlaylistIDs.contains(
+            playlist.mediaKey,
+          ),
+        )
         .map(
-          (AudioPlaylist playlist) => ExtendedVKPlaylist.fromAudioPlaylist(
+          (Playlist playlist) => ExtendedPlaylist.fromAudioPlaylist(
             playlist,
+            isLiveData: false,
           ),
         )
         .toList();
   }
 
   /// Парсит список из плейлистов, возвращая только список из плейлистов раздела "Совпадения по вкусам".
-  List<ExtendedVKPlaylist> parseSimillarPlaylists(
+  List<ExtendedPlaylist> parseSimillarPlaylists(
     APICatalogGetAudioResponse response,
   ) {
-    final List<ExtendedVKPlaylist> playlists = [];
+    final List<ExtendedPlaylist> playlists = [];
 
     // Проходимся по списку рекомендуемых плейлистов.
     for (SimillarPlaylist playlist in response.response!.recommendedPlaylists) {
       final fullPlaylist = response.response!.playlists.firstWhere(
-        (AudioPlaylist fullPlaylist) {
+        (Playlist fullPlaylist) {
           return fullPlaylist.mediaKey == playlist.mediaKey;
         },
       );
 
       playlists.add(
-        ExtendedVKPlaylist.fromAudioPlaylist(
+        ExtendedPlaylist.fromAudioPlaylist(
           fullPlaylist,
           simillarity: playlist.percentage,
           color: playlist.color,
+          isLiveData: false,
           knownTracks: response.response!.audios
               .where(
                 (Audio audio) => playlist.audios.contains(audio.mediaKey),
               )
               .map(
-                (Audio audio) => ExtendedVKAudio.fromAudio(audio),
+                (Audio audio) => ExtendedAudio.fromAudio(audio),
               )
               .toList(),
         ),
@@ -201,7 +281,7 @@ Future<void> ensureUserAudioRecommendations(
   }
 
   /// Парсит список из плейлистов, возвращая только список из плейлистов раздела "Собрано редакцией".
-  List<ExtendedVKPlaylist> parseMadeByVKPlaylists(
+  List<ExtendedPlaylist> parseMadeByVKPlaylists(
     APICatalogGetAudioResponse response,
   ) {
     final Section mainSection = response.response!.catalog.sections[0];
@@ -219,14 +299,17 @@ Future<void> ensureUserAudioRecommendations(
         recommendedPlaylistsBlock.playlistIDs!;
 
     // Достаём те плейлисты, которые рекомендуются нами ВКонтакте.
-    // Превращаем объекты типа AudioPlaylist в ExtendedVKPlaylist.
+    // Превращаем объекты типа AudioPlaylist в ExtendedPlaylist.
     return response.response!.playlists
-        .where((AudioPlaylist playlist) => recommendedPlaylistIDs.contains(
-              playlist.mediaKey,
-            ))
+        .where(
+          (Playlist playlist) => recommendedPlaylistIDs.contains(
+            playlist.mediaKey,
+          ),
+        )
         .map(
-          (AudioPlaylist playlist) => ExtendedVKPlaylist.fromAudioPlaylist(
+          (Playlist playlist) => ExtendedPlaylist.fromAudioPlaylist(
             playlist,
+            isLiveData: false,
           ),
         )
         .toList();
@@ -236,7 +319,8 @@ Future<void> ensureUserAudioRecommendations(
   final AppLogger logger = getLogger("ensureUserAudioRecommendations");
 
   // Если информация уже загружена, то ничего не делаем.
-  if (!forceUpdate && user.recommendationPlaylists.isNotEmpty) return;
+  if (!forceUpdate &&
+      (user.recommendationPlaylists.firstOrNull?.isLiveData ?? false)) return;
 
   // Если у пользователя нет второго токена, то ничего не делаем.
   if (user.recommendationsToken == null) return;
@@ -247,16 +331,14 @@ Future<void> ensureUserAudioRecommendations(
     final APICatalogGetAudioResponse response = await user.catalogGetAudio();
     raiseOnAPIError(response);
 
-    // Добавляем рекомендуемые плейлисты, а так же плейлисты из раздела "сделано редакцией ВКонтакте".
-    user.allPlaylists.addAll(
-      {
-        for (ExtendedVKPlaylist playlist in {
-          ...parseRecommendedPlaylists(response),
-          ...parseSimillarPlaylists(response),
-          ...parseMadeByVKPlaylists(response),
-        })
-          playlist.mediaKey: playlist
-      },
+    // Создаём список из всех рекомендуемых плейлистов, а так же добавляем их в память.
+    user.updatePlaylists(
+      [
+        ...parseRecommendedPlaylists(response),
+        ...parseSimillarPlaylists(response),
+        ...parseMadeByVKPlaylists(response),
+      ],
+      saveToDB: saveToDB,
     );
 
     user.markUpdated(false);
@@ -278,6 +360,43 @@ Future<void> ensureUserAudioRecommendations(
         ),
       );
     }
+  }
+}
+
+/// Загружает полную информацию по всем плейлистам, у которых ранее было включено кэширование, загружая список их треков, и после чего запускает процесс кэширования.
+Future<void> loadCachedTracksInformation(
+  BuildContext context, {
+  bool saveToDB = true,
+  bool forceUpdate = false,
+}) async {
+  final UserProvider user = Provider.of<UserProvider>(context, listen: false);
+  final AppLogger logger = getLogger("loadCachedTracksInformation");
+
+  // Извлекаем список треков у тех плейлистов, у которых включено кэширование.
+  for (ExtendedPlaylist playlist in user.allPlaylists.values) {
+    // Уже загруженные плейлисты должны быть пропущены.
+    if (playlist.isLiveData) continue;
+
+    // Плейлисты с отключенным кэшированием пропускаем.
+    if (!(playlist.cacheTracks ?? false)) continue;
+
+    logger.d("Found $playlist with enabled caching, downloading full data");
+
+    // Загружаем информацию по данному плейлисту.
+    final ExtendedPlaylist newPlaylist = await loadPlaylistData(
+      playlist,
+      user,
+    );
+
+    user.updatePlaylist(
+      newPlaylist,
+      saveToDB: saveToDB,
+    );
+
+    // Запускаем задачу по кэшированию этого плейлиста.
+    downloadManager.cachePlaylist(newPlaylist);
+
+    user.markUpdated(false);
   }
 }
 
@@ -504,14 +623,16 @@ class _SearchDisplayDialogState extends State<SearchDisplayDialog> {
             Expanded(
               child: FutureBuilder(
                 future: searchFuture,
-                builder: (BuildContext context,
-                    AsyncSnapshot<APIAudioSearchResponse> snapshot) {
-                  final List<ExtendedVKAudio>? audios =
+                builder: (
+                  BuildContext context,
+                  AsyncSnapshot<APIAudioSearchResponse> snapshot,
+                ) {
+                  final Set<ExtendedAudio>? audios =
                       snapshot.data?.response?.items
                           .map(
-                            (audio) => ExtendedVKAudio.fromAudio(audio),
+                            (audio) => ExtendedAudio.fromAudio(audio),
                           )
-                          .toList();
+                          .toSet();
 
                   // Пользователь ещё ничего не ввёл.
                   if (snapshot.connectionState == ConnectionState.none) {
@@ -534,7 +655,7 @@ class _SearchDisplayDialogState extends State<SearchDisplayDialog> {
                               bottom: 8,
                             ),
                             child: AudioTrackTile(
-                              audio: ExtendedVKAudio(
+                              audio: ExtendedAudio(
                                 id: -1,
                                 ownerID: -1,
                                 title: fakeTrackNames[
@@ -579,14 +700,15 @@ class _SearchDisplayDialogState extends State<SearchDisplayDialog> {
                     itemBuilder: (BuildContext context, int index) {
                       return buildListTrackWidget(
                         context,
-                        audios[index],
-                        ExtendedVKPlaylist(
+                        audios.elementAt(index),
+                        ExtendedPlaylist(
                           id: -1,
                           ownerID: user.id!,
                           audios: audios,
                           count: audios.length,
                           title: AppLocalizations.of(context)!
                               .music_searchPlaylistTitle,
+                          isLiveData: true,
                         ),
                       );
                     },
@@ -612,7 +734,7 @@ class _SearchDisplayDialogState extends State<SearchDisplayDialog> {
 /// ```
 class TrackInfoEditDialog extends StatefulWidget {
   /// Трек, данные которого будут изменяться.
-  final ExtendedVKAudio audio;
+  final ExtendedAudio audio;
 
   const TrackInfoEditDialog({
     super.key,
@@ -649,7 +771,7 @@ class _TrackInfoEditDialogState extends State<TrackInfoEditDialog> {
     final UserProvider user = Provider.of<UserProvider>(context);
 
     // Создаём копию трека, засовывая в неё новые значения с новым именем трека и прочим.
-    final ExtendedVKAudio audio = ExtendedVKAudio(
+    final ExtendedAudio audio = ExtendedAudio(
       title: titleController.text,
       artist: artistController.text,
       id: widget.audio.id,
@@ -805,8 +927,8 @@ class _TrackInfoEditDialogState extends State<TrackInfoEditDialog> {
 /// ),
 /// ```
 class BottomAudioOptionsDialog extends StatefulWidget {
-  /// Трек типа [ExtendedVKAudio], над которым производится манипуляция.
-  final ExtendedVKAudio audio;
+  /// Трек типа [ExtendedAudio], над которым производится манипуляция.
+  final ExtendedAudio audio;
 
   const BottomAudioOptionsDialog({
     super.key,
@@ -979,25 +1101,8 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
                   ),
                 ),
 
-                // Поделиться ссылкой на трек.
-                ListTile(
-                  onTap: () {
-                    Navigator.of(context).pop();
-
-                    Share.share(
-                      widget.audio.trackUrl,
-                    );
-                  },
-                  leading: const Icon(
-                    Icons.share,
-                  ),
-                  title: Text(
-                    AppLocalizations.of(context)!.music_detailsShareTitle,
-                  ),
-                ),
-
                 // Debug-опции.
-                if (kDebugMode)
+                if (kDebugMode) ...[
                   ListTile(
                     onTap: () {
                       Clipboard.setData(
@@ -1018,6 +1123,32 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
                       "Debug-режим",
                     ),
                   ),
+                  if (Platform.isWindows)
+                    ListTile(
+                      onTap: () async {
+                        Navigator.of(context).pop();
+
+                        final File path =
+                            await CachedStreamedAudio.getCachedAudioByKey(
+                          widget.audio.mediaKey,
+                        );
+                        await Process.run(
+                          "explorer.exe",
+                          ["/select,", path.path],
+                        );
+                      },
+                      enabled: widget.audio.isCached ?? false,
+                      leading: const Icon(
+                        Icons.folder_open,
+                      ),
+                      title: const Text(
+                        "Открыть папку с треком",
+                      ),
+                      subtitle: const Text(
+                        "Debug-режим",
+                      ),
+                    ),
+                ],
               ],
             ),
           ),
@@ -1029,8 +1160,8 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
 
 /// Виджет, олицетворяющий отдельный трек в списке треков.
 class AudioTrackTile extends StatefulWidget {
-  /// Объект типа [ExtendedVKAudio], олицетворяющий данный трек.
-  final ExtendedVKAudio audio;
+  /// Объект типа [ExtendedAudio], олицетворяющий данный трек.
+  final ExtendedAudio audio;
 
   /// Указывает, что этот трек сейчас выбран.
   ///
@@ -1043,13 +1174,11 @@ class AudioTrackTile extends StatefulWidget {
   /// Указывает, что данный трек загружается перед тем, как начать его воспроизведение.
   final bool isLoading;
 
-  /// Указывает, что этот трек лайкнут.
-  ///
-  /// Если [onLikeToggle] не указан, то кнопка для лайка будет отсутствовать.
-  final bool isLiked;
-
   /// Указывает, что в случае, если [selected] равен true, то у данного виджета будет эффект "свечения".
   final bool glowIfSelected;
+
+  /// Указывает, что в случае, если трек кэширован ([ExtendedAudio.isCached]), то будет показана соответствующая иконка.
+  final bool showCachedIcon;
 
   /// Действие, вызываемое при переключения паузы/возобновления при нажатии по иконке трека.
   ///
@@ -1079,8 +1208,8 @@ class AudioTrackTile extends StatefulWidget {
     this.selected = false,
     this.isLoading = false,
     this.currentlyPlaying = false,
-    this.isLiked = false,
     this.glowIfSelected = false,
+    this.showCachedIcon = true,
     required this.audio,
     this.onPlay,
     this.onPlayToggle,
@@ -1101,7 +1230,7 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
     final bool selectedAndPlaying = widget.selected && widget.currentlyPlaying;
 
     /// Url на изображение данного трека.
-    final String? imageUrl = widget.audio.album?.thumb?.photo68;
+    final String? imageUrl = widget.audio.album?.thumbnails?.photo68;
 
     return Dismissible(
       key: ValueKey(
@@ -1258,7 +1387,7 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
                                             .primary,
                                       ),
                               ),
-                            )
+                            ),
                         ],
                       ),
                     ),
@@ -1266,117 +1395,181 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
                 ),
 
                 // Название и исполнитель трека.
-                const SizedBox(
-                  width: 8,
-                ),
                 Expanded(
-                  child: Opacity(
-                    opacity: widget.audio.isRestricted ? 0.5 : 1,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Ряд с названием трека, плашки Explicit и subtitle, при наличии.
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // Название трека.
-                            Flexible(
-                              child: Text(
-                                widget.audio.title,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                  color: widget.selected
-                                      ? Theme.of(context).colorScheme.primary
-                                      : Theme.of(context)
-                                          .colorScheme
-                                          .onBackground,
-                                ),
-                              ),
-                            ),
-
-                            // Плашка Explicit.
-                            if (widget.audio.isExplicit)
-                              const SizedBox(
-                                width: 2,
-                              ),
-                            if (widget.audio.isExplicit)
-                              Icon(
-                                Icons.explicit,
-                                size: 16,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onBackground
-                                    .withOpacity(0.5),
-                              ),
-
-                            // Подпись трека.
-                            if (widget.audio.subtitle != null)
-                              const SizedBox(
-                                width: 6,
-                              ),
-                            if (widget.audio.subtitle != null)
+                  child: Padding(
+                    padding: const EdgeInsets.only(
+                      left: 8,
+                    ),
+                    child: Opacity(
+                      opacity: widget.audio.isRestricted ? 0.5 : 1,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Ряд с названием трека, плашки Explicit и иконки кэша, и subtitle, при наличии.
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Название трека.
                               Flexible(
                                 child: Text(
-                                  widget.audio.subtitle!,
+                                  widget.audio.title,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
-                                    fontSize: 10,
+                                    fontWeight: FontWeight.w500,
+                                    color: widget.selected
+                                        ? Theme.of(context).colorScheme.primary
+                                        : Theme.of(context)
+                                            .colorScheme
+                                            .onBackground,
+                                  ),
+                                ),
+                              ),
+
+                              // Плашка Explicit.
+                              if (widget.audio.isExplicit)
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    left: 4,
+                                  ),
+                                  child: Icon(
+                                    Icons.explicit,
+                                    size: 16,
                                     color: Theme.of(context)
                                         .colorScheme
                                         .onBackground
                                         .withOpacity(0.5),
                                   ),
                                 ),
-                              ),
-                          ],
-                        ),
 
-                        // Исполнитель.
-                        Text(
-                          widget.audio.artist,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: widget.selected
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context).colorScheme.onBackground,
+                              // Иконка кэшированного трека.
+                              if (widget.showCachedIcon &&
+                                  (widget.audio.isCached ?? false))
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    left: 4,
+                                  ),
+                                  child: Icon(
+                                    Icons.arrow_downward,
+                                    size: 16,
+                                    color: widget.selected
+                                        ? Theme.of(context).colorScheme.primary
+                                        : Theme.of(context)
+                                            .colorScheme
+                                            .onBackground
+                                            .withOpacity(0.5),
+                                  ),
+                                ),
+
+                              // Прогресс загрузки трека.
+                              if (widget.showCachedIcon &&
+                                  !(widget.audio.isCached ?? false) &&
+                                  widget.audio.downloadProgress.value > 0.0)
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    left: 4,
+                                  ),
+                                  child: SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: ValueListenableBuilder(
+                                      valueListenable:
+                                          widget.audio.downloadProgress,
+                                      builder: (
+                                        BuildContext context,
+                                        double value,
+                                        Widget? child,
+                                      ) {
+                                        return CircularProgressIndicator(
+                                          value: value,
+                                          strokeWidth: 2,
+                                          color: widget.selected
+                                              ? Theme.of(context)
+                                                  .colorScheme
+                                                  .primary
+                                              : Theme.of(context)
+                                                  .colorScheme
+                                                  .onBackground
+                                                  .withOpacity(0.5),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+
+                              // Подпись трека.
+                              if (widget.audio.subtitle != null)
+                                Flexible(
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(
+                                      left: 6,
+                                    ),
+                                    child: Text(
+                                      widget.audio.subtitle!,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onBackground
+                                            .withOpacity(0.5),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
-                        ),
-                      ],
+
+                          // Исполнитель.
+                          Text(
+                            widget.audio.artist,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: widget.selected
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(context).colorScheme.onBackground,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
 
                 // Длительность трека.
-                const SizedBox(
-                  width: 8,
-                ),
-                Text(
-                  widget.audio.durationString,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onBackground
-                        .withOpacity(0.75),
+                Padding(
+                  padding: const EdgeInsets.only(
+                    left: 8,
+                  ),
+                  child: Text(
+                    widget.audio.durationString,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onBackground
+                          .withOpacity(0.75),
+                    ),
                   ),
                 ),
 
-                // Кнопка для лайка.
+                // Кнопка для лайка, если её нужно показывать.
                 if (widget.onLikeToggle != null)
-                  const SizedBox(
-                    width: 8,
-                  ),
-                if (widget.onLikeToggle != null)
-                  IconButton(
-                    onPressed: () => widget.onLikeToggle!(
-                      !widget.isLiked,
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      left: 8,
                     ),
-                    icon: Icon(
-                      widget.isLiked ? Icons.favorite : Icons.favorite_outline,
-                      color: Theme.of(context).colorScheme.primary,
+                    child: IconButton(
+                      onPressed: () => widget.onLikeToggle!(
+                        !widget.audio.isLiked,
+                      ),
+                      icon: Icon(
+                        widget.audio.isLiked
+                            ? Icons.favorite
+                            : Icons.favorite_outline,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                     ),
                   ),
               ],
@@ -1393,7 +1586,7 @@ class AudioPlaylistWidget extends StatefulWidget {
   /// URL на изображение заднего фона.
   final String? backgroundUrl;
 
-  /// [ExtendedVKPlaylist.mediaKey], используемый как ключ для кэширования, а так же для [Hero]-анимации..
+  /// [ExtendedPlaylist.mediaKey], используемый как ключ для кэширования, а так же для [Hero]-анимации..
   final String? mediaKey;
 
   /// Название данного плейлиста.
@@ -1611,7 +1804,7 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
                                   ),
                                 ),
                               ),
-                      )
+                      ),
                   ],
                 ),
               ),
@@ -1686,7 +1879,7 @@ class SimillarMusicPlaylistWidget extends StatefulWidget {
   final double simillarity;
 
   /// Список со строго первыми тремя треками из этого плейлиста, которые будут отображены.
-  final List<ExtendedVKAudio> tracks;
+  final List<ExtendedAudio> tracks;
 
   /// Цвет данного блока.
   ///
@@ -1835,7 +2028,7 @@ class _SimillarMusicPlaylistWidgetState
                               color: Colors.white,
                             ),
                           ),
-                        )
+                        ),
                       ],
                     ),
                   ),
@@ -1877,7 +2070,7 @@ class _SimillarMusicPlaylistWidgetState
                         ],
                       ),
                     ),
-                  )
+                  ),
                 ],
               ),
             ),
@@ -1887,7 +2080,7 @@ class _SimillarMusicPlaylistWidgetState
           ),
 
           // Отображение треков в этом плейлисте.
-          for (ExtendedVKAudio audio in widget.tracks)
+          for (ExtendedAudio audio in widget.tracks)
             Padding(
               padding: const EdgeInsets.only(
                 left: 12,
@@ -2195,7 +2388,7 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
           for (int index = 0; index < clampedMusicCount; index++)
             buildListTrackWidget(
               context,
-              user.favoritesPlaylist!.audios![index],
+              user.favoritesPlaylist!.audios!.elementAt(index),
               user.favoritesPlaylist!,
               addBottomPadding: index < clampedMusicCount - 1,
             ),
@@ -2209,14 +2402,13 @@ class _MyMusicBlockState extends State<MyMusicBlock> {
                   bottom: index + 1 != 10 ? 8 : 0,
                 ),
                 child: AudioTrackTile(
-                  audio: ExtendedVKAudio(
+                  audio: ExtendedAudio(
                     id: -1,
                     ownerID: -1,
                     title: fakeTrackNames[index % fakeTrackNames.length],
                     artist: fakeTrackNames[(index + 1) % fakeTrackNames.length],
                     duration: 60 * 3,
                     accessKey: "",
-                    url: "",
                     date: 0,
                   ),
                 ),
@@ -2346,8 +2538,7 @@ class _MyPlaylistsBlockState extends State<MyPlaylistsBlock> {
                 }
 
                 // Настоящие данные.
-                final ExtendedVKPlaylist playlist =
-                    user.regularPlaylists[index];
+                final ExtendedPlaylist playlist = user.regularPlaylists[index];
 
                 return Padding(
                   padding: const EdgeInsets.only(
@@ -2479,7 +2670,7 @@ class _RecommendedPlaylistsBlockState extends State<RecommendedPlaylistsBlock> {
                 }
 
                 // Настоящие данные.
-                final ExtendedVKPlaylist playlist =
+                final ExtendedPlaylist playlist =
                     user.recommendationPlaylists[index];
 
                 return Padding(
@@ -2607,7 +2798,7 @@ class _SimillarMusicBlockState extends State<SimillarMusicBlock> {
                         simillarity: 0.9,
                         tracks: List.generate(
                           3,
-                          (int index) => ExtendedVKAudio(
+                          (int index) => ExtendedAudio(
                             id: -1,
                             ownerID: -1,
                             title:
@@ -2626,8 +2817,7 @@ class _SimillarMusicBlockState extends State<SimillarMusicBlock> {
                 }
 
                 // Настоящие данные.
-                final ExtendedVKPlaylist playlist =
-                    user.simillarPlaylists[index];
+                final ExtendedPlaylist playlist = user.simillarPlaylists[index];
 
                 return Padding(
                   padding: const EdgeInsets.only(
@@ -2731,61 +2921,61 @@ class _ByVKPlaylistsBlockState extends State<ByVKPlaylistsBlock> {
           child: SizedBox(
             height: 310,
             child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                clipBehavior: Clip.none,
-                physics: user.madeByVKPlaylists.isEmpty
-                    ? const NeverScrollableScrollPhysics()
-                    : null,
-                itemCount: user.madeByVKPlaylists.isNotEmpty
-                    ? user.madeByVKPlaylists.length
-                    : null,
-                itemBuilder: (BuildContext context, int index) {
-                  // Skeleton loader.
-                  if (user.madeByVKPlaylists.isEmpty) {
-                    return Padding(
-                      padding: const EdgeInsets.only(
-                        right: 8,
-                      ),
-                      child: Skeletonizer(
-                        child: AudioPlaylistWidget(
-                          name: fakePlaylistNames[
-                              index % fakePlaylistNames.length],
-                        ),
-                      ),
-                    );
-                  }
-
-                  // Настоящие данные.
-                  final ExtendedVKPlaylist playlist =
-                      user.madeByVKPlaylists[index];
-
+              scrollDirection: Axis.horizontal,
+              clipBehavior: Clip.none,
+              physics: user.madeByVKPlaylists.isEmpty
+                  ? const NeverScrollableScrollPhysics()
+                  : null,
+              itemCount: user.madeByVKPlaylists.isNotEmpty
+                  ? user.madeByVKPlaylists.length
+                  : null,
+              itemBuilder: (BuildContext context, int index) {
+                // Skeleton loader.
+                if (user.madeByVKPlaylists.isEmpty) {
                   return Padding(
                     padding: const EdgeInsets.only(
                       right: 8,
                     ),
-                    child: AudioPlaylistWidget(
-                      backgroundUrl: playlist.photo!.photo270!,
-                      mediaKey: playlist.mediaKey,
-                      name: playlist.title!,
-                      description: playlist.description,
-                      selected: player.currentPlaylist == playlist,
-                      currentlyPlaying: player.playing && player.loaded,
-                      onOpen: () => Navigator.push(
-                        context,
-                        Material3PageRoute(
-                          builder: (context) => PlaylistInfoRoute(
-                            playlist: playlist,
-                          ),
-                        ),
-                      ),
-                      onPlayToggle: (bool playing) => onPlaylistPlayToggle(
-                        context,
-                        playlist,
-                        playing,
+                    child: Skeletonizer(
+                      child: AudioPlaylistWidget(
+                        name:
+                            fakePlaylistNames[index % fakePlaylistNames.length],
                       ),
                     ),
                   );
-                }),
+                }
+
+                // Настоящие данные.
+                final ExtendedPlaylist playlist = user.madeByVKPlaylists[index];
+
+                return Padding(
+                  padding: const EdgeInsets.only(
+                    right: 8,
+                  ),
+                  child: AudioPlaylistWidget(
+                    backgroundUrl: playlist.photo!.photo270!,
+                    mediaKey: playlist.mediaKey,
+                    name: playlist.title!,
+                    description: playlist.description,
+                    selected: player.currentPlaylist == playlist,
+                    currentlyPlaying: player.playing && player.loaded,
+                    onOpen: () => Navigator.push(
+                      context,
+                      Material3PageRoute(
+                        builder: (context) => PlaylistInfoRoute(
+                          playlist: playlist,
+                        ),
+                      ),
+                    ),
+                    onPlayToggle: (bool playing) => onPlaylistPlayToggle(
+                      context,
+                      playlist,
+                      playing,
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ],

@@ -145,7 +145,7 @@ class _ImageLyricsBlockState extends State<ImageLyricsBlock> {
 
     // Создаёт виджет для отображения изображения трека.
     Widget buildImageWidget(
-      ExtendedVKAudio audio,
+      ExtendedAudio audio,
     ) {
       // TODO: Избавиться от этого метода, сделать вместо этого отдельный виджет.
 
@@ -164,16 +164,16 @@ class _ImageLyricsBlockState extends State<ImageLyricsBlock> {
                   spreadRadius: -3,
                   color: Theme.of(context).colorScheme.tertiary,
                   blurStyle: BlurStyle.outer,
-                )
+                ),
               ],
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(
                 globalBorderRadius,
               ),
-              child: audio.album?.thumb != null
+              child: audio.album?.thumbnails != null
                   ? CachedNetworkImage(
-                      imageUrl: audio.album!.thumb!.photo1200!,
+                      imageUrl: audio.album!.thumbnails!.photo1200!,
                       cacheKey: "${audio.album!.id}1200",
                       width: _playerImageSize,
                       height: _playerImageSize,

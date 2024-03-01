@@ -9,8 +9,8 @@ part of 'search.dart';
 APIAudioSearchRealResponse _$APIAudioSearchRealResponseFromJson(
         Map<String, dynamic> json) =>
     APIAudioSearchRealResponse(
-      json['count'] as int,
-      (json['items'] as List<dynamic>)
+      count: json['count'] as int,
+      items: (json['items'] as List<dynamic>)
           .map((e) => Audio.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
@@ -25,11 +25,11 @@ Map<String, dynamic> _$APIAudioSearchRealResponseToJson(
 APIAudioSearchResponse _$APIAudioSearchResponseFromJson(
         Map<String, dynamic> json) =>
     APIAudioSearchResponse(
-      json['response'] == null
+      response: json['response'] == null
           ? null
           : APIAudioSearchRealResponse.fromJson(
               json['response'] as Map<String, dynamic>),
-      json['error'] == null
+      error: json['error'] == null
           ? null
           : APIError.fromJson(json['error'] as Map<String, dynamic>),
     );

@@ -17,10 +17,10 @@ class APIAudioGetRealResponse {
   /// Информация о треках.
   final List<Audio> items;
 
-  APIAudioGetRealResponse(
-    this.count,
-    this.items,
-  );
+  APIAudioGetRealResponse({
+    required this.count,
+    required this.items,
+  });
 
   factory APIAudioGetRealResponse.fromJson(Map<String, dynamic> json) =>
       _$APIAudioGetRealResponseFromJson(json);
@@ -36,10 +36,10 @@ class APIAudioGetResponse {
   /// Объект ошибки.
   final APIError? error;
 
-  APIAudioGetResponse(
+  APIAudioGetResponse({
     this.response,
     this.error,
-  );
+  });
 
   factory APIAudioGetResponse.fromJson(Map<String, dynamic> json) =>
       _$APIAudioGetResponseFromJson(json);

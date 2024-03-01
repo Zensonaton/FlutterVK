@@ -11,16 +11,18 @@ part "search.g.dart";
 
 @JsonSerializable()
 class APIAudioSearchRealResponse {
-  /// Количество треков.
+  /// Общее количество треков, которое было найдено при помощи поиска.
+  ///
+  /// Данное количество не всегда совпадает с значением [items].
   final int count;
 
   /// Информация о треках.
   final List<Audio> items;
 
-  APIAudioSearchRealResponse(
-    this.count,
-    this.items,
-  );
+  APIAudioSearchRealResponse({
+    required this.count,
+    required this.items,
+  });
 
   factory APIAudioSearchRealResponse.fromJson(Map<String, dynamic> json) =>
       _$APIAudioSearchRealResponseFromJson(json);
@@ -36,10 +38,10 @@ class APIAudioSearchResponse {
   /// Объект ошибки.
   final APIError? error;
 
-  APIAudioSearchResponse(
+  APIAudioSearchResponse({
     this.response,
     this.error,
-  );
+  });
 
   factory APIAudioSearchResponse.fromJson(Map<String, dynamic> json) =>
       _$APIAudioSearchResponseFromJson(json);

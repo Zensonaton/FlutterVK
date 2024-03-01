@@ -4,6 +4,7 @@ import "dart:convert";
 
 import "package:json_annotation/json_annotation.dart";
 
+import "../../../db/schemas/playlists.dart";
 import "../api.dart";
 import "../shared.dart";
 
@@ -20,17 +21,33 @@ class LyricTimestamp {
   /// Указывает, что здесь находится "заполнитель".
   ///
   /// Чаще всего в интерфейсе он отображается символом ноты.
-  @JsonKey(defaultValue: false)
   final bool interlude;
 
   /// Время начала данной линии в тексте песни в миллисекундах.
   final int? begin;
 
-  /// Время окончания данной линиий в тексте песни в миллисекундах.
+  /// Время окончания данной линии в тексте песни в миллисекундах.
   final int? end;
 
-  LyricTimestamp(
-    this.line, {
+  /// Создаёт из передаваемого объекта [DBLyricTimestamp] объект данного класа.
+  static LyricTimestamp fromDBLyricTimestamp(DBLyricTimestamp timestamp) =>
+      LyricTimestamp(
+        line: timestamp.line,
+        interlude: timestamp.interlude,
+        begin: timestamp.begin,
+        end: timestamp.end,
+      );
+
+  /// Возвращает копию данного класса в виде объекта [DBLyricTimestamp].
+  DBLyricTimestamp get asDBTimestamp =>
+      DBLyricTimestamp.fromLyricTimestamp(this);
+
+  @override
+  String toString() =>
+      "LyricTimestamp \"${interlude ? "** interlude **" : line}\"";
+
+  LyricTimestamp({
+    this.line,
     this.interlude = false,
     this.begin,
     this.end,
@@ -57,11 +74,32 @@ class Lyrics {
   /// Список всех линий в тексте песни. Может отсутствовать в пользу [timestamps].
   final List<String>? text;
 
-  Lyrics(
+  /// Создаёт из передаваемого объекта [DBLyrics] объект данного класа.
+  static Lyrics fromDBLyrics(
+    DBLyrics lyrics,
+  ) =>
+      Lyrics(
+        language: lyrics.language,
+        timestamps: lyrics.timestamps
+            ?.map(
+              (timestamp) => timestamp.asLyricTimestamp,
+            )
+            .toList(),
+        text: lyrics.text,
+      );
+
+  /// Возвращает копию данного класса в виде объекта [DBLyrics].
+  DBLyrics get asDBLyrics => DBLyrics.fromLyrics(this);
+
+  @override
+  String toString() =>
+      "Lyrics $language with ${timestamps != null ? "${timestamps!.length} sync lyrics" : "text lyrics"}";
+
+  Lyrics({
     this.language,
     this.timestamps,
     this.text,
-  );
+  });
 
   factory Lyrics.fromJson(Map<String, dynamic> json) => _$LyricsFromJson(json);
   Map<String, dynamic> toJson() => _$LyricsToJson(this);
@@ -77,11 +115,11 @@ class APIAudioGetLyricsRealResponse {
   /// MD5-строка.
   final String md5;
 
-  APIAudioGetLyricsRealResponse(
-    this.credits,
-    this.lyrics,
-    this.md5,
-  );
+  APIAudioGetLyricsRealResponse({
+    required this.credits,
+    required this.lyrics,
+    required this.md5,
+  });
 
   factory APIAudioGetLyricsRealResponse.fromJson(Map<String, dynamic> json) =>
       _$APIAudioGetLyricsRealResponseFromJson(json);

@@ -126,7 +126,7 @@ class _DesktopLoginWidgetState extends State<DesktopLoginWidget> {
                         AppLocalizations.of(context)!.login_desktopContinue,
                       ),
                     ),
-                  )
+                  ),
                 ],
               ),
             ),

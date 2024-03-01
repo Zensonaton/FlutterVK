@@ -18,17 +18,17 @@ class APIAudioAddResponse {
   /// Объект ошибки.
   final APIError? error;
 
-  APIAudioAddResponse(
+  APIAudioAddResponse({
     this.response,
     this.error,
-  );
+  });
 
   factory APIAudioAddResponse.fromJson(Map<String, dynamic> json) =>
       _$APIAudioAddResponseFromJson(json);
   Map<String, dynamic> toJson() => _$APIAudioAddResponseToJson(this);
 }
 
-/// Копирует трек с указанным ID к данному пользователю, передавая относительный для данного пользователя сохранённый ID трека.
+/// Копирует трек с указанным ID к данному пользователю, передавая относительный для данного пользователя сохранённый ID трека. После добавления трека, его можно удалить методом [audio_delete].
 ///
 /// API: `audio.add`.
 Future<APIAudioAddResponse> audio_add(

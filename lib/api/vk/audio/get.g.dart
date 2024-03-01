@@ -9,8 +9,8 @@ part of 'get.dart';
 APIAudioGetRealResponse _$APIAudioGetRealResponseFromJson(
         Map<String, dynamic> json) =>
     APIAudioGetRealResponse(
-      json['count'] as int,
-      (json['items'] as List<dynamic>)
+      count: json['count'] as int,
+      items: (json['items'] as List<dynamic>)
           .map((e) => Audio.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
@@ -24,11 +24,11 @@ Map<String, dynamic> _$APIAudioGetRealResponseToJson(
 
 APIAudioGetResponse _$APIAudioGetResponseFromJson(Map<String, dynamic> json) =>
     APIAudioGetResponse(
-      json['response'] == null
+      response: json['response'] == null
           ? null
           : APIAudioGetRealResponse.fromJson(
               json['response'] as Map<String, dynamic>),
-      json['error'] == null
+      error: json['error'] == null
           ? null
           : APIError.fromJson(json['error'] as Map<String, dynamic>),
     );

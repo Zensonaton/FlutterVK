@@ -75,7 +75,7 @@ class DesktopLayout extends StatelessWidget {
         ),
         const Text(
           "Диалог с пользователем будет отображён здесь. Да, это placeholder :)",
-        )
+        ),
       ],
     );
   }

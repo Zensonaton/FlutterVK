@@ -8,7 +8,7 @@ part of 'get_lyrics.dart';
 
 LyricTimestamp _$LyricTimestampFromJson(Map<String, dynamic> json) =>
     LyricTimestamp(
-      json['line'] as String?,
+      line: json['line'] as String?,
       interlude: json['interlude'] as bool? ?? false,
       begin: json['begin'] as int?,
       end: json['end'] as int?,
@@ -23,11 +23,11 @@ Map<String, dynamic> _$LyricTimestampToJson(LyricTimestamp instance) =>
     };
 
 Lyrics _$LyricsFromJson(Map<String, dynamic> json) => Lyrics(
-      json['language'] as String?,
-      (json['timestamps'] as List<dynamic>?)
+      language: json['language'] as String?,
+      timestamps: (json['timestamps'] as List<dynamic>?)
           ?.map((e) => LyricTimestamp.fromJson(e as Map<String, dynamic>))
           .toList(),
-      (json['text'] as List<dynamic>?)?.map((e) => e as String).toList(),
+      text: (json['text'] as List<dynamic>?)?.map((e) => e as String).toList(),
     );
 
 Map<String, dynamic> _$LyricsToJson(Lyrics instance) => <String, dynamic>{
@@ -39,9 +39,9 @@ Map<String, dynamic> _$LyricsToJson(Lyrics instance) => <String, dynamic>{
 APIAudioGetLyricsRealResponse _$APIAudioGetLyricsRealResponseFromJson(
         Map<String, dynamic> json) =>
     APIAudioGetLyricsRealResponse(
-      json['credits'] as String,
-      Lyrics.fromJson(json['lyrics'] as Map<String, dynamic>),
-      json['md5'] as String,
+      credits: json['credits'] as String,
+      lyrics: Lyrics.fromJson(json['lyrics'] as Map<String, dynamic>),
+      md5: json['md5'] as String,
     );
 
 Map<String, dynamic> _$APIAudioGetLyricsRealResponseToJson(

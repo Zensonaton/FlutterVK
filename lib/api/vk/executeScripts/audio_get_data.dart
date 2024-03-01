@@ -21,14 +21,14 @@ class APIAudioGetDataRealResponse {
   final int playlistsCount;
 
   /// Плейлисты.
-  final List<AudioPlaylist> playlists;
+  final List<Playlist> playlists;
 
-  APIAudioGetDataRealResponse(
-    this.audioCount,
-    this.audios,
-    this.playlistsCount,
-    this.playlists,
-  );
+  APIAudioGetDataRealResponse({
+    required this.audioCount,
+    required this.audios,
+    required this.playlistsCount,
+    required this.playlists,
+  });
 
   factory APIAudioGetDataRealResponse.fromJson(Map<String, dynamic> json) =>
       _$APIAudioGetDataRealResponseFromJson(json);
@@ -44,10 +44,10 @@ class APIAudioGetDataResponse {
   /// Объект ошибки.
   final APIError? error;
 
-  APIAudioGetDataResponse(
+  APIAudioGetDataResponse({
     this.response,
     this.error,
-  );
+  });
 
   factory APIAudioGetDataResponse.fromJson(Map<String, dynamic> json) =>
       _$APIAudioGetDataResponseFromJson(json);

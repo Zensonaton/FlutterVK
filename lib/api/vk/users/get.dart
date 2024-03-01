@@ -19,10 +19,10 @@ class APIUsersGetResponse {
   /// Объект ошибки.
   final APIError? error;
 
-  APIUsersGetResponse(
+  APIUsersGetResponse({
     this.response,
     this.error,
-  );
+  });
 
   factory APIUsersGetResponse.fromJson(Map<String, dynamic> json) =>
       _$APIUsersGetResponseFromJson(json);

@@ -9,7 +9,7 @@ part of 'delete.dart';
 APIAudioDeleteResponse _$APIAudioDeleteResponseFromJson(
         Map<String, dynamic> json) =>
     APIAudioDeleteResponse(
-      json['response'] as int?,
+      json['response'] == null ? false : boolFromInt(json['response'] as int),
       json['error'] == null
           ? null
           : APIError.fromJson(json['error'] as Map<String, dynamic>),

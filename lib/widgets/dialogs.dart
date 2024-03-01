@@ -95,7 +95,7 @@ class MaterialDialog extends StatelessWidget {
                           child: Text(
                             AppLocalizations.of(context)!.general_close,
                           ),
-                        )
+                        ),
                       ],
                 ),
               ),

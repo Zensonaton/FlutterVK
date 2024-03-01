@@ -51,6 +51,7 @@ class CachedNetworkImagesManager {
         key,
       ),
       fileService: HttpFileService(),
+      maxNrOfCacheObjects: 3000,
     ),
   );
 }

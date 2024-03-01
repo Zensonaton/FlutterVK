@@ -1,53 +1,303 @@
-import "package:http/http.dart";
+import "dart:async";
+import "dart:io";
+
+import "package:collection/collection.dart";
 import "package:queue/queue.dart";
 
-/// Класс-менеджер загрузок.
-class DownloadManager {
-  /// Очередь загрузок.
-  final Queue _queue;
+import "../api/vk/api.dart";
+import "../api/vk/audio/get_lyrics.dart";
+import "../main.dart";
+import "../provider/user.dart";
+import "audio_player.dart";
+import "logger.dart";
 
-  /// [Map], где в роли ключа выступает поле cacheKey, а значение - Future с загрузкой.
+/// Класс, используемый в [DownloadManager], хранящий задачу по загрузке/удаления плейлиста.
+class CacheItem {
+  static AppLogger logger = getLogger("DownloadItem");
+
+  /// Плейлист типа [ExtendedPlaylist], список треков которого будет загружаться и кэшироваться, либо удаляться.
+  final ExtendedPlaylist playlist;
+
+  /// Указывает, что данный плейлист будет именно кэшироваться, а не удаляться из памяти устройства.
+  final bool cache;
+
+  /// Объект пользователя, благодаря чему будет извлекаться текст песни.
+  final UserProvider? user;
+
+  /// Очередь по кэшированию треков.
   ///
-  /// Используется для предотвращения случайной загрузки одного и того же файла несколько раз, если передаётся cacheKey.
-  final Map<String, Future<Response>> _queueItems;
+  /// Значение переменной устанавливается только после вызова метода [startCaching].
+  Queue? _queue;
 
-  int get parallelDownloads => _queue.parallel;
-  set parallelDownloads(int count) => _queue.parallel = count;
+  /// Callback-метод, вызываемый при успешной полной загрузке трека.
+  Future<void> _onTrackDownloaded(
+    ExtendedAudio audio,
+    List<int> trackBytes,
+    File trackFile,
+  ) async {
+    // Сохраняем трек на диск.
+    trackFile.createSync(
+      recursive: true,
+    );
+    trackFile.writeAsBytesSync(trackBytes);
 
-  DownloadManager({
-    int parralelDownloads = 1,
-  })  : _queue = Queue(
-          parallel: parralelDownloads,
-        ),
-        _queueItems = {};
-
-  /// Загружает файл по указанному [url].
-  ///
-  /// Указав [cacheKey], загрузчик не позволит загружать один и тот же элемент несколько раз, возвращая уже загруженный файл. Если будет повторный вызов этого метода, пока [cacheKey] уже находится в очереди на загрузку, то тогда данный метод преждевременно вернёт null вместо [Response].
-  Future<Response?> download(
-    String url, {
-    String? cacheKey,
-  }) async {
-    // Проверяем, нет ли уже существующего Future с загрузкой данного элемента.
-    if (cacheKey != null && _queueItems.containsKey(cacheKey)) {
-      return null;
-    }
-
-    // Создаём Future для загрузки данного файла, и потом помещаем его в _queueItems.
-    Future<Response> future = _queue.add(
-      () => get(
-        Uri.parse(url),
-      ),
+    // Загружаем обложки трека.
+    await CachedStreamedAudio.downloadThumbnails(
+      albumID: audio.album?.id,
+      thumbnails: audio.album?.thumbnails,
     );
 
-    if (cacheKey != null) _queueItems[cacheKey] = future;
+    // Загружаем текст трека, если таковой есть.
+    if (audio.hasLyrics && user != null) {
+      final APIAudioGetLyricsResponse response =
+          await user!.audioGetLyrics(audio.mediaKey);
+      raiseOnAPIError(response);
 
-    // Дожидаемся результата.
-    final Response response = await future;
+      audio.lyrics = response.response!.lyrics;
+    }
 
-    // Удаляем запись.
-    _queueItems.remove(cacheKey);
+    // Запоминаем то, что трек кэширован.
+    audio.isCached = true;
+    audio.downloadProgress.value = 0.0;
+  }
 
-    return response;
+  /// Внутренняя задача по кэшированию отдельного трека в плейлисте.
+  Future<void> _cacheTrack(ExtendedAudio audio) async {
+    final File trackFile =
+        await CachedStreamedAudio.getCachedAudioByKey(audio.mediaKey);
+    final bool trackFileExists = trackFile.existsSync();
+
+    if (!cache) {
+      // Если нам нужно удалить трек из памяти устройства, то делаем это.
+
+      logger.d("Deleting $audio from cache");
+      if (trackFileExists) {
+        trackFile.deleteSync();
+      }
+
+      // Запоминаем то, что трек удалён из кэша.
+      audio.isCached = false;
+      audio.downloadProgress.value = 0.0;
+
+      return;
+    }
+
+    // Если трек уже загружен, то запоминаем это.
+    if (trackFileExists) {
+      // Запоминаем то, что трек кэширован.
+      audio.isCached = true;
+      audio.downloadProgress.value = 0.0;
+
+      return;
+    }
+
+    // Трек не существует, загружаем его.
+    logger.d("Downloading $audio");
+
+    final Completer<void> completer = Completer();
+
+    final HttpClient httpClient = HttpClient();
+    final HttpClientRequest request =
+        (await httpClient.getUrl(Uri.parse(audio.url!)));
+    final List<int> trackBytes = [];
+    int trackLength = 0;
+
+    final response = await request.close();
+    if (response.statusCode != 200) {
+      httpClient.close();
+
+      throw Exception("HTTP Status Error: ${response.statusCode}");
+    }
+
+    final int trackFullLength = response.contentLength;
+
+    // Начинаем загрузку трека.
+    response.asBroadcastStream().listen(
+      (List<int> data) {
+        trackBytes.addAll(data);
+        trackLength += data.length;
+
+        audio.downloadProgress.value = trackLength / trackFullLength;
+      },
+      onDone: () async {
+        logger.d(
+          "Done downloading $audio, ${trackBytes.length} bytes",
+        );
+
+        // Проверяем длину полученного файла.
+        if (trackBytes.length != trackFullLength) {
+          throw Exception(
+            "Download file $audio size mismatch: expected $trackFullLength, but got ${trackBytes.length} instead",
+          );
+        }
+
+        // Трек успешно загружен, вызываем callback-метод.
+        await _onTrackDownloaded(audio, trackBytes, trackFile);
+
+        completer.complete();
+      },
+      onError: (Object e, StackTrace stackTrace) {
+        logger.e(
+          "Error while downloading/caching media $audio:",
+          error: e,
+          stackTrace: stackTrace,
+        );
+
+        audio.downloadProgress.value = 0.0;
+
+        completer.complete();
+      },
+      cancelOnError: true,
+    );
+
+    // Дожидаемся конца загрузки.
+    return await completer.future;
+  }
+
+  /// Начинает задачу по загрузке/удалению плейлиста.
+  ///
+  /// После вызова, можно отменить задачу по загрузке методом [cancelCaching].
+  ///
+  /// [onTrackCached] - callback метод, вызываемый при завершении процесса кэширования отдельного трека. Вызывается лишь в случае, если [cache] равен true.
+  Future<void> startCaching({
+    bool saveInDB = true,
+    Function(ExtendedAudio)? onTrackCached,
+  }) async {
+    logger.d("Called startCaching for $this");
+
+    assert(
+      playlist.audios != null,
+      "ExtendedPlaylist audios are null",
+    );
+
+    // Если уже запущена задача, то ничего не делаем.
+    if (_queue != null) return;
+
+    // Создаём очередь и помещаем задачи по загрузке.
+    _queue = Queue(
+      parallel: 3,
+    );
+    int queueItems = 0;
+
+    for (ExtendedAudio audio in playlist.audios!) {
+      if (audio.isCached == cache) continue;
+
+      if (cache && audio.url == null) continue;
+
+      _queue!.add(() => _cacheTrack(audio)).then((_) async {
+        // Если мы загружаем треки, то после каждой загрузки сохраняем изменени в БД.
+        if (!cache) return;
+
+        // Сохраняем изменения в БД.
+        if (saveInDB) {
+          await appStorage.savePlaylist(
+            playlist.asDBPlaylist,
+          );
+        }
+
+        await onTrackCached?.call(audio);
+      }).onError((
+        error,
+        stackTrace,
+      ) {
+        if (error is QueueCancelledException) return;
+
+        logger.e(
+          "Cache/download error:",
+          error: error,
+          stackTrace: stackTrace,
+        );
+      });
+      queueItems += 1;
+    }
+
+    // К сожалению, метод Queue.onComplete будет висеть бесконечно, если очередь пустая.
+    // Именно поэтому здесь и есть проверка перед тем, как запустить .onComplete.
+    if (queueItems > 0) {
+      logger.d("startCaching will work with $queueItems items");
+
+      await _queue!.onComplete;
+    }
+
+    logger.d("Completed startCaching for $this with $queueItems items");
+  }
+
+  /// Отменяет задачу по загрузке.
+  ///
+  /// Если вызвать данный метод до вызова метода [startCaching], то произойдёт исключение.
+  Future<void> cancelCaching() async {
+    logger.d("Called cancelCaching for $this");
+
+    assert(
+      _queue != null,
+      "Called cancelCaching before calling download",
+    );
+
+    // Задача по загрузке ещё идёт, поэтому нам нужно её отменить и дождаться окончания.
+    _queue!.cancel();
+    await _queue!.onComplete;
+  }
+
+  @override
+  String toString() =>
+      "CacheItem ${playlist.mediaKey} ${cache ? 'download' : 'delete'} task";
+
+  CacheItem({
+    required this.playlist,
+    this.cache = true,
+    this.user,
+  });
+}
+
+/// Класс-менеджер загрузок, используемый для загрузки и кэширования плейлистов ВКонтакте.
+class DownloadManager {
+  static AppLogger logger = getLogger("DownloadManager");
+
+  /// List, содержащий в себе задачи по кэшированию плейлистов.
+  final List<CacheItem> _tasks = [];
+
+  /// Запускает задачу по кэшированию плейлиста [playlist]. Если данный метод вызвать несколько раз, то ничего не будет происходить лишь в случае, если [cache] не менялся. [cache] указывает, что треки в плейлисте будут кэшироваться, а не удаляться из памяти устройства.
+  Future<void> cachePlaylist(
+    ExtendedPlaylist playlist, {
+    bool cache = true,
+    bool saveInDB = true,
+    UserProvider? user,
+    Function(ExtendedAudio)? onTrackCached,
+  }) async {
+    final CacheItem? pendingItem = _tasks.firstWhereOrNull(
+      (item) => item.playlist == playlist,
+    );
+
+    assert(
+      playlist.audios != null,
+      "ExtendedPlaylist audios are null",
+    );
+
+    // Если такая задача уже есть, и переменная cache отличается, то мы должны отменить предыдущую задачу.
+    if (pendingItem != null && pendingItem.cache != cache) {
+      logger.d("Force cancelling task $pendingItem");
+
+      await pendingItem.cancelCaching();
+      _tasks.remove(pendingItem);
+    } else if (pendingItem != null) {
+      // Такая задача с такими же параметрами уже есть, так что ничего не делаем.
+      return;
+    }
+
+    // Создаём новую задачу по кэшированию, и запускаем её.
+    final CacheItem cacheTask = CacheItem(
+      playlist: playlist,
+      cache: cache,
+      user: user,
+    );
+
+    _tasks.add(cacheTask);
+    await cacheTask.startCaching(
+      saveInDB: saveInDB,
+      onTrackCached: onTrackCached,
+    );
+
+    // Дожидаемся, когда задача завершится, после чего удаляем её.
+    _tasks.remove(cacheTask);
   }
 }

@@ -6,6 +6,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   discord_rpc
   dynamic_color
   fullscreen_window
+  isar_flutter_libs
   local_notifier
   media_kit_libs_windows_audio
   permission_handler_windows

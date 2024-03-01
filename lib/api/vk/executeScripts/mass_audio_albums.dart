@@ -19,10 +19,10 @@ class APIMassAudioAlbumsResponse {
   /// Объект ошибки.
   final APIError? error;
 
-  APIMassAudioAlbumsResponse(
+  APIMassAudioAlbumsResponse({
     this.response,
     this.error,
-  );
+  });
 
   factory APIMassAudioAlbumsResponse.fromJson(Map<String, dynamic> json) =>
       _$APIMassAudioAlbumsResponseFromJson(json);

@@ -57,7 +57,7 @@ class CachedStreamedAudio extends StreamAudioSource {
   final String? cacheKey;
 
   /// Обложки трека. Если не указывать, кэширование обложек происходить не будет. Указывая это поле, [albumID] не может быть null;
-  final AudioThumbnails? thumbnails;
+  final Thumbnails? thumbnails;
 
   /// ID альбома, который ассоциирован с данным треком.
   final int? albumID;
@@ -75,13 +75,11 @@ class CachedStreamedAudio extends StreamAudioSource {
         "audios",
       );
 
-  /// Возвращает объект типа [File], либо null, если [cacheKey] не указан.
-  Future<File?> getCacheFile() async {
-    if (cacheKey == null) return null;
-
+  /// Возвращает объект типа [File] по передаваемому [ExtendedAudio.mediaKey].
+  static Future<File> getCachedAudioByKey(String mediaKey) async {
     final String hash = sha512
         .convert(
-          utf8.encode(cacheKey!),
+          utf8.encode(mediaKey),
         )
         .toString();
 
@@ -94,11 +92,18 @@ class CachedStreamedAudio extends StreamAudioSource {
     );
   }
 
+  /// Возвращает объект типа [File], либо null, если [cacheKey] не указан.
+  Future<File?> getCachedAudio() async {
+    if (cacheKey == null) return null;
+
+    return await getCachedAudioByKey(cacheKey!);
+  }
+
   /// Удаляет кэшированный трек из кэша.
   Future<void> delete() async {
     if (cacheKey == null) return;
 
-    final File cacheFile = (await getCacheFile())!;
+    final File cacheFile = (await getCachedAudio())!;
 
     try {
       cacheFile.deleteSync();
@@ -107,30 +112,40 @@ class CachedStreamedAudio extends StreamAudioSource {
     }
   }
 
-  /// Метод, вызываемый после успешной загрузки кэшированного трека.
+  /// Загружает обложки и прочую информацию о треке.
   ///
-  /// Данный метод загружает изображения треков разных размеров, помещая их в [CachedNetworkImagesManager].
-  Future<void> postDownloadTask() async {
-    // Если обложки не даны, то ничего не делаем.
-    if (thumbnails == null || cacheKey == null) return;
+  /// Данный метод обычно вызывается после загрузки самого трека. Данный метод загружает изображения треков разных размеров, помещая их в [CachedNetworkImagesManager].
+  static Future<void> downloadThumbnails({
+    int? albumID,
+    Thumbnails? thumbnails,
+  }) async {
+    final List<Future> tasks = [];
 
-    // Если файлы уже загружены, то ничего не делаем.
-    final FileInfo? cachedThumb =
-        await CachedNetworkImagesManager.instance.getFileFromCache(
-      "${albumID!}1200",
-    );
+    // Если файлы обложек уже загружены, то ничего не делаем.
+    if (albumID != null && thumbnails != null) {
+      final FileInfo? cachedThumb =
+          await CachedNetworkImagesManager.instance.getFileFromCache(
+        "${albumID}1200",
+      );
 
-    if (cachedThumb != null) return;
+      if (cachedThumb == null) {
+        // Загружаем обложки.
+        tasks.add(
+          CachedNetworkImagesManager.instance.downloadFile(
+            thumbnails.photo68!,
+            key: "${albumID}68",
+          ),
+        );
+        tasks.add(
+          CachedNetworkImagesManager.instance.downloadFile(
+            thumbnails.photo1200!,
+            key: "${albumID}1200",
+          ),
+        );
+      }
+    }
 
-    // Загружаем обложки.
-    CachedNetworkImagesManager.instance.downloadFile(
-      thumbnails!.photo68!,
-      key: "${albumID!}68",
-    );
-    CachedNetworkImagesManager.instance.downloadFile(
-      thumbnails!.photo1200!,
-      key: "${albumID!}1200",
-    );
+    await Future.wait(tasks);
   }
 
   @override
@@ -149,7 +164,7 @@ class CachedStreamedAudio extends StreamAudioSource {
       );
     }
 
-    final File? cacheFile = await getCacheFile();
+    final File? cacheFile = await getCachedAudio();
 
     // Если файл кэша уже существует, то мы должны вернуть его, не делая никаких запросов.
     if (cacheFile != null && cacheFile.existsSync()) {
@@ -160,7 +175,10 @@ class CachedStreamedAudio extends StreamAudioSource {
       final int sourceLength = cacheFile.lengthSync();
 
       // Запускаем фоновую задачу по получению обложек трека.
-      postDownloadTask();
+      downloadThumbnails(
+        albumID: albumID,
+        thumbnails: thumbnails,
+      );
 
       return StreamAudioResponse(
         sourceLength: start != null ? sourceLength : null,
@@ -238,7 +256,10 @@ class CachedStreamedAudio extends StreamAudioSource {
             downloadQueue.remove(cacheKey);
 
             // Запускаем задачу по загрузке обложек.
-            await postDownloadTask();
+            await downloadThumbnails(
+              albumID: albumID,
+              thumbnails: thumbnails,
+            );
           },
           onError: (Object e, StackTrace stackTrace) {
             logger.e(
@@ -289,9 +310,9 @@ class VKMusicPlayer {
   );
   late final List<StreamSubscription> _subscriptions;
 
-  ExtendedVKPlaylist? _playlist;
+  ExtendedPlaylist? _playlist;
   ConcatenatingAudioSource? _queue;
-  List<ExtendedVKAudio>? _audiosQueue;
+  List<ExtendedAudio>? _audiosQueue;
 
   VKMusicPlayer() {
     _subscriptions = [
@@ -516,55 +537,55 @@ class VKMusicPlayer {
     return nextTrackIndex ?? 0;
   }
 
-  /// Возвращает объект [ExtendedVKAudio] для трека, который находится предыдущим в очереди. Если очередь пуста, либо это самый первый трек в очереди, то возвращает null.
+  /// Возвращает объект [ExtendedAudio] для трека, который находится предыдущим в очереди. Если очередь пуста, либо это самый первый трек в очереди, то возвращает null.
   ///
   /// Для получения индекса этого трека можно воспользоваться getter'ом [previousTrackIndex].
-  ExtendedVKAudio? get previousAudio {
+  ExtendedAudio? get previousAudio {
     if (previousTrackIndex == null) return null;
 
     return _audiosQueue?[previousTrackIndex!];
   }
 
-  /// Возвращает объект [ExtendedVKAudio] для трека, который играет в данный момент. Если очередь пуста, то возвращает null.
+  /// Возвращает объект [ExtendedAudio] для трека, который играет в данный момент. Если очередь пуста, то возвращает null.
   ///
   /// Для получения индекса этого трека можно воспользоваться getter'ом [trackIndex].
-  ExtendedVKAudio? get currentAudio {
+  ExtendedAudio? get currentAudio {
     if (trackIndex == null) return null;
 
     return _audiosQueue?[trackIndex!];
   }
 
-  /// Возвращает объект [ExtendedVKAudio] для трека, который находится предыдущим в очереди. Если очередь пуста, либо это последний трек в очереди, то возвращает null.
+  /// Возвращает объект [ExtendedAudio] для трека, который находится предыдущим в очереди. Если очередь пуста, либо это последний трек в очереди, то возвращает null.
   ///
   /// Для получения индекса этого трека можно воспользоваться getter'ом [nextTrackIndex].
-  ExtendedVKAudio? get nextAudio {
+  ExtendedAudio? get nextAudio {
     if (nextTrackIndex == null) return null;
 
     return _audiosQueue?[nextTrackIndex!];
   }
 
-  /// Возвращает объект [ExtendedVKAudio] для трека, который находится предыдущим в очереди. Если очередь пуста, либо это самый первый трек в очереди, то возвращает null.
+  /// Возвращает объект [ExtendedAudio] для трека, который находится предыдущим в очереди. Если очередь пуста, либо это самый первый трек в очереди, то возвращает null.
   ///
   /// Для получения индекса этого трека можно воспользоваться getter'ом [smartPreviousTrackIndex].
-  ExtendedVKAudio? get smartPreviousAudio {
+  ExtendedAudio? get smartPreviousAudio {
     if (smartPreviousTrackIndex == null) return null;
 
     return _audiosQueue?[smartPreviousTrackIndex!];
   }
 
-  /// Возвращает объект [ExtendedVKAudio] для трека, который играет в данный момент. Если очередь пуста, то возвращает null.
+  /// Возвращает объект [ExtendedAudio] для трека, который играет в данный момент. Если очередь пуста, то возвращает null.
   ///
   /// Для получения индекса этого трека можно воспользоваться getter'ом [smartTrackIndex].
-  ExtendedVKAudio? get smartCurrentAudio {
+  ExtendedAudio? get smartCurrentAudio {
     if (smartTrackIndex == null) return null;
 
     return _audiosQueue?[smartTrackIndex!];
   }
 
-  /// Возвращает объект [ExtendedVKAudio] для трека, который находится предыдущим в очереди. Если очередь пуста, либо это последний трек в очереди, то возвращает null.
+  /// Возвращает объект [ExtendedAudio] для трека, который находится предыдущим в очереди. Если очередь пуста, либо это последний трек в очереди, то возвращает null.
   ///
   /// Для получения индекса этого трека можно воспользоваться getter'ом [smartNextTrackIndex].
-  ExtendedVKAudio? get smartNextAudio {
+  ExtendedAudio? get smartNextAudio {
     if (smartNextTrackIndex == null) return null;
 
     return _audiosQueue?[smartNextTrackIndex!];
@@ -573,7 +594,7 @@ class VKMusicPlayer {
   /// Возвращает текущий плейлист.
   ///
   /// Учтите, что список треков в этом плейлисте не меняется в зависимости от shuffle или вызова метода [addNextToQueue].
-  ExtendedVKPlaylist? get currentPlaylist => _playlist;
+  ExtendedPlaylist? get currentPlaylist => _playlist;
 
   /// Инициализирует некоторые компоненты данного плеера.
   ///
@@ -900,17 +921,17 @@ class VKMusicPlayer {
 
   /// Устанавливает плейлист [playlist] для воспроизведения музыки, указывая при этом [index], начиная с которого будет запущено воспроизведение. Если [play] равен true, то при вызове данного метода плеер автоматически начнёт воспроизводить музыку.
   Future<void> setPlaylist(
-    ExtendedVKPlaylist playlist, {
+    ExtendedPlaylist playlist, {
     bool play = true,
-    ExtendedVKAudio? audio,
+    ExtendedAudio? audio,
   }) async {
     assert(
       playlist.audios != null,
-      "audios of ExtendedVKPlaylist is null",
+      "audios of ExtendedPlaylist is null",
     );
 
     // Создаём список из треков в плейлисте, которые можно воспроизвести.
-    final List<ExtendedVKAudio> audios = playlist.audios!
+    final List<ExtendedAudio> audios = playlist.audios!
         .where(
           (audio) => !audio.isRestricted,
         )
@@ -928,8 +949,12 @@ class VKMusicPlayer {
               cacheKey: playlist.isFavoritesPlaylist && audio.isLiked
                   ? audio.mediaKey
                   : null,
-              uri: Uri.parse(audio.url),
-              thumbnails: audio.album?.thumb,
+              uri: audio.url != null
+                  ? Uri.parse(
+                      audio.url!,
+                    )
+                  : null,
+              thumbnails: audio.album?.thumbnails,
               albumID: audio.album?.id,
             ),
           )
@@ -955,7 +980,7 @@ class VKMusicPlayer {
 
   /// Добавляет указанный трек как следующий для воспроизведения.
   Future<void> addNextToQueue(
-    ExtendedVKAudio audio,
+    ExtendedAudio audio,
   ) async {
     // На случай, если очередь пустая.
     _queue ??= ConcatenatingAudioSource(
@@ -965,9 +990,17 @@ class VKMusicPlayer {
 
     _queue!.insert(
       nextTrackIndex ?? 0,
-      AudioSource.uri(
-        Uri.parse(audio.url),
-        tag: audio.asMediaItem,
+      CachedStreamedAudio(
+        cacheKey: player.currentPlaylist!.isFavoritesPlaylist && audio.isLiked
+            ? audio.mediaKey
+            : null,
+        uri: audio.url != null
+            ? Uri.parse(
+                audio.url!,
+              )
+            : null,
+        thumbnails: audio.album?.thumbnails,
+        albumID: audio.album?.id,
       ),
     );
     _audiosQueue!.insert(
@@ -1031,7 +1064,7 @@ class VKMusicPlayer {
           artist: currentAudio!.artist,
           albumArtist: currentAudio!.artist,
           album: currentAudio!.album?.title,
-          thumbnail: currentAudio!.album?.thumb?.photo1200,
+          thumbnail: currentAudio!.album?.thumbnails?.photo1200,
         ),
       );
     }
@@ -1110,7 +1143,7 @@ class VKMusicPlayer {
     final Stopwatch watch = Stopwatch()..start();
 
     // Если у изображения трека нету фотографии, либо задача уже запущена, то возвращаем null.
-    if (player.currentAudio?.album?.thumb == null ||
+    if (player.currentAudio?.album?.thumbnails == null ||
         _colorSchemeItemsQueue.contains(
           player.currentAudio!.mediaKey,
         )) return null;
@@ -1130,7 +1163,7 @@ class VKMusicPlayer {
     // Извлекаем цвета из изображения, делая объект PaletteGenerator.
     final PaletteGenerator palette = await PaletteGenerator.fromImageProvider(
       CachedNetworkImageProvider(
-        player.currentAudio!.album!.thumb!.photo68!,
+        player.currentAudio!.album!.thumbnails!.photo68!,
         cacheKey: cacheKey,
         cacheManager: CachedNetworkImagesManager.instance,
       ),
@@ -1286,6 +1319,8 @@ class AudioPlayerService extends BaseAudioHandler
         );
 
         await _updateEvent();
+
+        user.updatePlaylist(player.currentPlaylist!);
         user.markUpdated(false);
 
         break;

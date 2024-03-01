@@ -9,13 +9,13 @@ part of 'audio_get_data.dart';
 APIAudioGetDataRealResponse _$APIAudioGetDataRealResponseFromJson(
         Map<String, dynamic> json) =>
     APIAudioGetDataRealResponse(
-      json['audioCount'] as int,
-      (json['audios'] as List<dynamic>)
+      audioCount: json['audioCount'] as int,
+      audios: (json['audios'] as List<dynamic>)
           .map((e) => Audio.fromJson(e as Map<String, dynamic>))
           .toList(),
-      json['playlistsCount'] as int,
-      (json['playlists'] as List<dynamic>)
-          .map((e) => AudioPlaylist.fromJson(e as Map<String, dynamic>))
+      playlistsCount: json['playlistsCount'] as int,
+      playlists: (json['playlists'] as List<dynamic>)
+          .map((e) => Playlist.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
 
@@ -31,11 +31,11 @@ Map<String, dynamic> _$APIAudioGetDataRealResponseToJson(
 APIAudioGetDataResponse _$APIAudioGetDataResponseFromJson(
         Map<String, dynamic> json) =>
     APIAudioGetDataResponse(
-      json['response'] == null
+      response: json['response'] == null
           ? null
           : APIAudioGetDataRealResponse.fromJson(
               json['response'] as Map<String, dynamic>),
-      json['error'] == null
+      error: json['error'] == null
           ? null
           : APIError.fromJson(json['error'] as Map<String, dynamic>),
     );

@@ -9,10 +9,10 @@ part of 'mass_audio_albums.dart';
 APIMassAudioAlbumsResponse _$APIMassAudioAlbumsResponseFromJson(
         Map<String, dynamic> json) =>
     APIMassAudioAlbumsResponse(
-      (json['response'] as List<dynamic>?)
+      response: (json['response'] as List<dynamic>?)
           ?.map((e) => Audio.fromJson(e as Map<String, dynamic>))
           .toList(),
-      json['error'] == null
+      error: json['error'] == null
           ? null
           : APIError.fromJson(json['error'] as Map<String, dynamic>),
     );

@@ -90,7 +90,7 @@ class _MobileLoginWidgetState extends State<MobileLoginWidget> {
                     AppLocalizations.of(context)!
                         .login_mobileAlternateAuthTitle,
                   ),
-                )
+                ),
               ];
             },
           ),

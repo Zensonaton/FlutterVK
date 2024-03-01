@@ -9,13 +9,13 @@ part of 'mass_audio_get.dart';
 APIMassAudioGetRealResponse _$APIMassAudioGetRealResponseFromJson(
         Map<String, dynamic> json) =>
     APIMassAudioGetRealResponse(
-      json['audioCount'] as int,
-      (json['audios'] as List<dynamic>)
+      audioCount: json['audioCount'] as int,
+      audios: (json['audios'] as List<dynamic>)
           .map((e) => Audio.fromJson(e as Map<String, dynamic>))
           .toList(),
-      json['playlistsCount'] as int,
-      (json['playlists'] as List<dynamic>)
-          .map((e) => AudioPlaylist.fromJson(e as Map<String, dynamic>))
+      playlistsCount: json['playlistsCount'] as int,
+      playlists: (json['playlists'] as List<dynamic>)
+          .map((e) => Playlist.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
 
@@ -31,11 +31,11 @@ Map<String, dynamic> _$APIMassAudioGetRealResponseToJson(
 APIMassAudioGetResponse _$APIMassAudioGetResponseFromJson(
         Map<String, dynamic> json) =>
     APIMassAudioGetResponse(
-      json['response'] == null
+      response: json['response'] == null
           ? null
           : APIMassAudioGetRealResponse.fromJson(
               json['response'] as Map<String, dynamic>),
-      json['error'] == null
+      error: json['error'] == null
           ? null
           : APIError.fromJson(json['error'] as Map<String, dynamic>),
     );

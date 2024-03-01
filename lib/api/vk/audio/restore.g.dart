@@ -9,10 +9,10 @@ part of 'restore.dart';
 APIAudioRestoreResponse _$APIAudioRestoreResponseFromJson(
         Map<String, dynamic> json) =>
     APIAudioRestoreResponse(
-      json['response'] == null
+      response: json['response'] == null
           ? null
           : Audio.fromJson(json['response'] as Map<String, dynamic>),
-      json['error'] == null
+      error: json['error'] == null
           ? null
           : APIError.fromJson(json['error'] as Map<String, dynamic>),
     );

@@ -1,13 +1,47 @@
 import "dart:io";
-import "dart:math";
 import "dart:ui";
 
 import "package:diacritic/diacritic.dart";
 import "package:flutter/material.dart";
 
-/// Извлекает access-токен из строки.
+/// Класс для отображения Route'ов в [BottomNavigationBar], вместе с их названиями, а так же иконками.
+class NavigationPage {
+  /// Текст, используемый в [BottomNavigationBar].
+  final String label;
+
+  /// Иконка, которая используется на [BottomNavigationBar].
+  final IconData icon;
+
+  /// Иконка, которая используется при выборе элемента в [BottomNavigationBar]. Если не указано, то будет использоваться [icon].
+  final IconData? selectedIcon;
+
+  /// Route (страница), которая будет отображена при выборе этого элемента в [BottomNavigationBar].
+  final Widget route;
+
+  /// Указывает, в какой части экрана должен находиться аудиоплеер (в desktop-режиме) при выборе данного элемента.
+  final Alignment audioPlayerAlign;
+
+  /// Если true, то аудиоплеер (в Desktop Layout'е) сможет быть "больших" размеров.
+  final bool allowBigAudioPlayer;
+
+  /// [GlobalKey] для [Navigator]'а, используемый для этого Route.
+  final GlobalKey<NavigatorState> navigatorKey;
+
+  NavigationPage({
+    required this.label,
+    required this.icon,
+    this.selectedIcon,
+    required this.route,
+    this.audioPlayerAlign = Alignment.bottomCenter,
+    this.allowBigAudioPlayer = true,
+  }) : navigatorKey = GlobalKey<NavigatorState>(
+          debugLabel: label,
+        );
+}
+
+/// Извлекает Access токен ВКонтакте из передаваемой строки [input].
 String? extractAccessToken(String input) {
-  // Если строка начинается на vk1, то считаем, что это готовый access-токен.
+  // Если строка начинается на vk1, то считаем, что это готовый Access токен.
   if (input.startsWith("vk1")) {
     return input;
   }
@@ -29,74 +63,12 @@ String? extractAccessToken(String input) {
   return token;
 }
 
-/// Класс для отображения страницы с навигацией.
+/// Преобразовывает передаваемое значение количества секунд в строку вида `MM:SS`.
 ///
-/// Используется для простого mapping'а страниц, их иконок и названий.
-class NavigationPage {
-  /// Текст, используемый в [BottomNavigationBar].
-  final String label;
-
-  /// Иконка, которая используется на [BottomNavigationBar].
-  final IconData icon;
-
-  /// Иконка, которая используется при выборе элемента в [BottomNavigationBar]. Если не указано, то будет использоваться [icon].
-  final IconData? selectedIcon;
-
-  /// Route (страница), которая будет отображена при выборе этого элемента в [BottomNavigationBar].
-  final Widget route;
-
-  /// Указывает, в какой части экрана должен находиться аудиоплеер (в desktop-режиме) при выборе данного элемента.
-  final Alignment audioPlayerAlign;
-
-  /// Если true, то аудиоплеер (в desktop-режиме) сможет быть "больших" размеров.
-  final bool allowBigAudioPlayer;
-
-  /// [GlobalKey] для [Navigator]'а, используемый для этого Route.
-  final GlobalKey<NavigatorState> navigatorKey;
-
-  NavigationPage({
-    required this.label,
-    required this.icon,
-    this.selectedIcon,
-    required this.route,
-    this.audioPlayerAlign = Alignment.bottomCenter,
-    this.allowBigAudioPlayer = true,
-  }) : navigatorKey = GlobalKey<NavigatorState>(
-          debugLabel: label,
-        );
-}
-
-/// Понижает яркость цвета.
-Color darkenColor(Color color, double factor) {
-  factor = 1.0 - (factor / 100.0); // convert percentage to fraction
-
-  int red = (color.red * factor).round();
-  int green = (color.green * factor).round();
-  int blue = (color.blue * factor).round();
-
-  red = max(0, red);
-  green = max(0, green);
-  blue = max(0, blue);
-
-  return Color.fromARGB(color.alpha, red, green, blue);
-}
-
-/// Повышает яркость цвета.
-Color lightenColor(Color color, double factor) {
-  factor = 1.0 + (factor / 100.0); // convert percentage to fraction
-
-  int red = (color.red * factor).round();
-  int green = (color.green * factor).round();
-  int blue = (color.blue * factor).round();
-
-  red = min(255, red);
-  green = min(255, green);
-  blue = min(255, blue);
-
-  return Color.fromARGB(color.alpha, red, green, blue);
-}
-
-/// Преобразовывает передаваемое значение количества секунд в строку вида `MM:SS`
+/// Примеры:
+/// - 0 -> `00:00`
+/// - 5 -> `00:05`
+/// - 61 -> `01:01`
 String secondsAsString(int seconds) {
   if (seconds <= 0) return "00:00";
 
@@ -110,19 +82,22 @@ String secondsAsString(int seconds) {
   return "$mins:$scnds";
 }
 
-int clampInt(int x, int min, int max) {
-  if (x < min) return min;
-  if (x > max) return max;
+/// Ограничивает передавамое значение [value] в пределах от [min] до [max].
+int clampInt(int value, int min, int max) {
+  if (value < min) return min;
+  if (value > max) return max;
 
-  return x;
+  return value;
 }
 
 /// Минимизирует JavaScript-код.
+///
+/// Данный метод удаляет комментарии, символы пробелов и табуляции, а так же удаляет символы перехода строк.
 String minimizeJS(String input) {
   // Удаляем комментарии.
   input = input.replaceAll(RegExp(r"\/\/[^\n]*"), "");
 
-  // Удаляем пробелы а так же переходы строк.
+  // Удаляем табуляцию/пробелы.
   input = input.replaceAll(RegExp(r"\s+"), " ");
 
   // Удаляем лишние переходы строк.
@@ -157,17 +132,27 @@ String? emptyStringAsNull(String? value) {
 /// Класс, заставляющий любые Scrollable-виджеты скроллиться даже на Desktop-плафтормах.
 class AlwaysScrollableScrollBehavior extends MaterialScrollBehavior {
   @override
-  Set<PointerDeviceKind> get dragDevices => {
-        PointerDeviceKind.touch,
-        PointerDeviceKind.mouse,
-      };
+  Set<PointerDeviceKind> get dragDevices {
+    return {
+      PointerDeviceKind.touch,
+      PointerDeviceKind.mouse,
+    };
+  }
 }
 
 /// Указывает, что приложение запущено на Desktop-платформе.
+///
+/// ```dart
+/// Platform.isWindows || Platform.isLinux || Platform.isMacOS
+/// ```
 bool get isDesktop =>
     Platform.isWindows || Platform.isLinux || Platform.isMacOS;
 
 /// Указывает, что приложение запущено на мобильной платформе.
+///
+/// ```dart
+/// Platform.isAndroid || Platform.isIOS
+/// ```
 bool get isMobile => Platform.isAndroid || Platform.isIOS;
 
 /// Небольшой класс для создания виджетов класса [Slider] без Padding'ов.
@@ -206,6 +191,8 @@ class CustomTrackShape extends RoundedRectSliderTrackShape {
 }
 
 /// Делает входную строку [input] «чище», очищая лишние символы, делая строку lowercase, а так же заменяя диакритические символы.
+///
+/// Используется для поиска треков.
 String cleanString(String input) {
   const List<String> toRemove = [
     " ",
@@ -218,7 +205,7 @@ String cleanString(String input) {
     ")",
     "[",
     "]",
-    "_"
+    "_",
   ];
 
   input = input.toLowerCase();
@@ -230,38 +217,22 @@ String cleanString(String input) {
   return removeDiacritics(input);
 }
 
-extension RandomListItem<T> on List<T> {
-  /// Возвращает случайный элемент из данного [List].
-  T randomItem() {
-    return this[Random().nextInt(length)];
-  }
-}
+/// 64-битный FNV-1a алгоритм для хэширования [String] в виде [int].
+///
+/// Используется как поле ID в БД Isar.
+///
+/// [Взято из документации Isar](https://isar.dev/recipes/string_ids.html#fast-hash-function).
+int fastHash(String input) {
+  var hash = 0xcbf29ce484222325;
 
-extension HexColor on Color {
-  // Taken from:
-  // https://stackoverflow.com/a/50081214/15227244
-
-  /// String is in the format "aabbcc" or "ffaabbcc" with an optional leading "#".
-  static Color fromHex(
-    String hexString,
-  ) {
-    final buffer = StringBuffer();
-
-    if (hexString.length == 6 || hexString.length == 7) buffer.write("ff");
-    buffer.write(hexString.replaceFirst("#", ""));
-
-    return Color(
-      int.parse(buffer.toString(), radix: 16),
-    );
+  var i = 0;
+  while (i < input.length) {
+    final codeUnit = input.codeUnitAt(i++);
+    hash ^= codeUnit >> 8;
+    hash *= 0x100000001b3;
+    hash ^= codeUnit & 0xFF;
+    hash *= 0x100000001b3;
   }
 
-  /// Prefixes a hash sign if [leadingHashSign] is set to `true` (default is `true`).
-  String toHex({
-    bool leadingHashSign = true,
-  }) =>
-      "${leadingHashSign ? "#" : ""}"
-      '${alpha.toRadixString(16).padLeft(2, "0")}'
-      '${red.toRadixString(16).padLeft(2, "0")}'
-      '${green.toRadixString(16).padLeft(2, "0")}'
-      '${blue.toRadixString(16).padLeft(2, "0")}';
+  return hash;
 }

@@ -14,30 +14,27 @@ class ReleaseAsset {
   final int size;
 
   /// Время загрузки данного файла.
-  @JsonKey(
-    name: "created_at",
-    fromJson: datetimeFromString,
-  )
+  @JsonKey(name: "created_at", fromJson: datetimeFromString)
   final DateTime? createdAt;
 
   /// Время обновления данного файла, если хоть раз таковое было.
-  @JsonKey(
-    name: "updated_at",
-    fromJson: datetimeFromString,
-  )
+  @JsonKey(name: "updated_at", fromJson: datetimeFromString)
   final DateTime? updatedAt;
 
   /// Url для загрузки данного файла.
   @JsonKey(name: "browser_download_url")
   final String browserDownloadUrl;
 
-  ReleaseAsset(
-    this.name,
-    this.size,
+  @override
+  String toString() => "Release asset $name, $size bytes";
+
+  ReleaseAsset({
+    required this.name,
+    required this.size,
     this.createdAt,
     this.updatedAt,
-    this.browserDownloadUrl,
-  );
+    required this.browserDownloadUrl,
+  });
 
   factory ReleaseAsset.fromJson(Map<String, dynamic> json) =>
       _$ReleaseAssetFromJson(json);
@@ -65,32 +62,29 @@ class Release {
   final bool prerelease;
 
   /// Время создания Release.
-  @JsonKey(
-    name: "created_at",
-    fromJson: datetimeFromString,
-  )
+  @JsonKey(name: "created_at", fromJson: datetimeFromString)
   final DateTime? createdAt;
 
   /// Время публикации Release.
-  @JsonKey(
-    name: "published_at",
-    fromJson: datetimeFromString,
-  )
+  @JsonKey(name: "published_at", fromJson: datetimeFromString)
   final DateTime? publishedAt;
 
   /// Файлы, находящиеся в данном Release.
   final List<ReleaseAsset> assets;
 
-  Release(
-    this.htmlUrl,
-    this.body,
-    this.id,
-    this.tagName,
-    this.prerelease,
+  @override
+  String toString() => "Release $tagName";
+
+  Release({
+    required this.htmlUrl,
+    required this.body,
+    required this.id,
+    required this.tagName,
+    required this.prerelease,
     this.createdAt,
     this.publishedAt,
-    this.assets,
-  );
+    required this.assets,
+  });
 
   factory Release.fromJson(Map<String, dynamic> json) =>
       _$ReleaseFromJson(json);

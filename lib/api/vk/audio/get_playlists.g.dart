@@ -9,9 +9,9 @@ part of 'get_playlists.dart';
 APIAudioGetPlaylistsRealResponse _$APIAudioGetPlaylistsRealResponseFromJson(
         Map<String, dynamic> json) =>
     APIAudioGetPlaylistsRealResponse(
-      json['count'] as int,
-      (json['items'] as List<dynamic>)
-          .map((e) => AudioPlaylist.fromJson(e as Map<String, dynamic>))
+      count: json['count'] as int,
+      items: (json['items'] as List<dynamic>)
+          .map((e) => Playlist.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
 
@@ -25,11 +25,11 @@ Map<String, dynamic> _$APIAudioGetPlaylistsRealResponseToJson(
 APIAudioGetPlaylistsResponse _$APIAudioGetPlaylistsResponseFromJson(
         Map<String, dynamic> json) =>
     APIAudioGetPlaylistsResponse(
-      json['response'] == null
+      response: json['response'] == null
           ? null
           : APIAudioGetPlaylistsRealResponse.fromJson(
               json['response'] as Map<String, dynamic>),
-      json['error'] == null
+      error: json['error'] == null
           ? null
           : APIError.fromJson(json['error'] as Map<String, dynamic>),
     );

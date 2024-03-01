@@ -7,13 +7,13 @@ part of 'shared.dart';
 // **************************************************************************
 
 APIError _$APIErrorFromJson(Map<String, dynamic> json) => APIError(
-      json['error_code'] as int,
-      json['error_msg'] as String,
-      (json['request_params'] as List<dynamic>)
+      errorCode: json['error_code'] as int,
+      errorMessage: json['error_msg'] as String,
+      requestParams: (json['request_params'] as List<dynamic>)
           .map((e) => Map<String, String>.from(e as Map))
           .toList(),
-      json['captcha_sid'] as String?,
-      json['captcha_img'] as String?,
+      captchaSID: json['captcha_sid'] as String?,
+      captchaUrl: json['captcha_img'] as String?,
     );
 
 Map<String, dynamic> _$APIErrorToJson(APIError instance) => <String, dynamic>{
@@ -25,87 +25,88 @@ Map<String, dynamic> _$APIErrorToJson(APIError instance) => <String, dynamic>{
     };
 
 User _$UserFromJson(Map<String, dynamic> json) => User(
-      json['id'] as int,
-      json['first_name'] as String,
-      json['last_name'] as String,
-      json['deactivated'] as String?,
-      json['is_closed'] as bool,
-      json['can_access_closed'] as bool,
-      json['about'] as String?,
-      json['activities'] as String?,
-      json['bdate'] as String?,
-      json['blacklisted'] as int?,
-      json['blacklisted_by_me'] as int?,
-      json['books'] as String?,
-      json['can_post'] as int?,
-      json['can_see_all_posts'] as int?,
-      json['can_see_audio'] as int?,
-      json['can_send_friend_request'] as int?,
-      json['can_write_private_message'] as int?,
-      json['career'],
-      json['city'],
-      json['common_count'] as int?,
-      json['contacts'],
-      json['country'],
-      json['crop_photo'],
-      json['domain'] as String?,
-      json['education'],
-      json['exports'],
-      json['first_name_nom'] as String?,
-      json['first_name_gen'] as String?,
-      json['first_name_dat'] as String?,
-      json['first_name_acc'] as String?,
-      json['first_name_ins'] as String?,
-      json['first_name_abl'] as String?,
-      json['followers_count'] as int?,
-      json['friend_status'] as int?,
-      json['games'] as String?,
-      json['has_mobile'] as int?,
-      json['has_photo'] as int?,
-      json['home_town'] as String?,
-      json['interests'] as String?,
-      json['is_favorite'] as int?,
-      json['is_friend'] as int?,
-      json['is_hidden_from_feed'] as int?,
-      json['is_no_index'] as int?,
-      json['last_name_nom'] as String?,
-      json['last_name_gen'] as String?,
-      json['last_name_dat'] as String?,
-      json['last_name_acc'] as String?,
-      json['last_name_ins'] as String?,
-      json['last_name_abl'] as String?,
-      json['last_seen'],
-      json['lists'] as String?,
-      json['maiden_name'] as String?,
-      json['military'],
-      json['movies'] as String?,
-      json['music'] as String?,
-      json['nickname'] as String?,
-      json['occupation'],
-      json['online'] as int?,
-      json['personal'],
-      json['photo_50'] as String?,
-      json['photo_100'] as String?,
-      json['photo_200_orig'] as String?,
-      json['photo_200'] as String?,
-      json['photo_400_orig'] as String?,
-      json['photo_id'] as String?,
-      json['photo_max'] as String?,
-      json['photo_max_orig'] as String?,
-      json['quoutes'] as String?,
-      json['relatives'],
-      json['relation'] as int?,
-      json['schools'],
-      json['screen_name'] as String?,
-      json['sex'] as int?,
-      json['site'] as String?,
-      json['status'] as String?,
-      json['timezone'] as num?,
-      json['trending'] as int?,
-      json['tv'] as String?,
-      json['universities'],
-      json['verified'] as int?,
-      json['wall_default'] as String?,
+      id: json['id'] as int,
+      firstName: json['first_name'] as String,
+      lastName: json['last_name'] as String,
+      deactivated: json['deactivated'] as String?,
+      isClosed: json['is_closed'] as bool,
+      canAccessClosed: json['can_access_closed'] as bool,
+      about: json['about'] as String?,
+      activities: json['activities'] as String?,
+      bdate: json['bdate'] as String?,
+      blacklisted: boolFromInt(json['blacklisted'] as int),
+      blacklistedByMe: boolFromInt(json['blacklisted_by_me'] as int),
+      books: json['books'] as String?,
+      canPost: boolFromInt(json['can_post'] as int),
+      canSeeAllPosts: boolFromInt(json['can_see_all_posts'] as int),
+      canSeeAudio: boolFromInt(json['can_see_audio'] as int),
+      canSendFriendRequest: boolFromInt(json['can_send_friend_request'] as int),
+      canWritePrivateMessage:
+          boolFromInt(json['can_write_private_message'] as int),
+      career: json['career'],
+      city: json['city'],
+      commonCount: json['common_count'] as int?,
+      contacts: json['contacts'],
+      country: json['country'],
+      cropPhoto: json['crop_photo'],
+      domain: json['domain'] as String?,
+      education: json['education'],
+      exports: json['exports'],
+      firstNameNom: json['first_name_nom'] as String?,
+      firstNameGen: json['first_name_gen'] as String?,
+      firstNameDat: json['first_name_dat'] as String?,
+      firstNameAcc: json['first_name_acc'] as String?,
+      firstNameIns: json['first_name_ins'] as String?,
+      firstNameAbl: json['first_name_abl'] as String?,
+      followersCount: json['followers_count'] as int?,
+      friendStatus: json['friend_status'] as int?,
+      games: json['games'] as String?,
+      hasMobile: boolFromInt(json['has_mobile'] as int),
+      hasPhoto: boolFromInt(json['has_photo'] as int),
+      homeTown: json['home_town'] as String?,
+      interests: json['interests'] as String?,
+      isFavorite: boolFromInt(json['is_favorite'] as int),
+      isFriend: boolFromInt(json['is_friend'] as int),
+      isHiddenFromFeed: boolFromInt(json['is_hidden_from_feed'] as int),
+      isNoIndex: boolFromInt(json['is_no_index'] as int),
+      lastNameNom: json['last_name_nom'] as String?,
+      lastNameGen: json['last_name_gen'] as String?,
+      lastNameDat: json['last_name_dat'] as String?,
+      lastNameAcc: json['last_name_acc'] as String?,
+      lastNameIns: json['last_name_ins'] as String?,
+      lastNameAbl: json['last_name_abl'] as String?,
+      lastSeen: json['last_seen'],
+      lists: json['lists'] as String?,
+      maidenName: json['maiden_name'] as String?,
+      military: json['military'],
+      movies: json['movies'] as String?,
+      music: json['music'] as String?,
+      nickname: json['nickname'] as String?,
+      occupation: json['occupation'],
+      online: json['online'] as int?,
+      personal: json['personal'],
+      photo50: json['photo_50'] as String?,
+      photo100: json['photo_100'] as String?,
+      photo200orig: json['photo_200_orig'] as String?,
+      photo200: json['photo_200'] as String?,
+      photo400orig: json['photo_400_orig'] as String?,
+      photoID: json['photo_id'] as String?,
+      photoMax: json['photo_max'] as String?,
+      photoMaxOrig: json['photo_max_orig'] as String?,
+      quoutes: json['quoutes'] as String?,
+      relatives: json['relatives'],
+      relation: json['relation'] as int?,
+      schools: json['schools'],
+      screenName: json['screen_name'] as String?,
+      sex: json['sex'] as int?,
+      site: json['site'] as String?,
+      status: json['status'] as String?,
+      timezone: json['timezone'] as num?,
+      trending: json['trending'] as int?,
+      tv: json['tv'] as String?,
+      universities: json['universities'],
+      verified: json['verified'] as int?,
+      wallDefault: json['wall_default'] as String?,
     )
       ..connections = (json['connections'] as Map<String, dynamic>?)?.map(
         (k, e) => MapEntry(k, e as String),
@@ -200,20 +201,19 @@ Map<String, dynamic> _$UserToJson(User instance) => <String, dynamic>{
       'wall_default': instance.wallDefault,
     };
 
-AudioThumbnails _$AudioThumbnailsFromJson(Map<String, dynamic> json) =>
-    AudioThumbnails(
-      json['width'] as int,
-      json['height'] as int,
-      json['photo_34'] as String?,
-      json['photo_68'] as String?,
-      json['photo_135'] as String?,
-      json['photo_270'] as String?,
-      json['photo_300'] as String?,
-      json['photo_600'] as String?,
-      json['photo_1200'] as String?,
+Thumbnails _$ThumbnailsFromJson(Map<String, dynamic> json) => Thumbnails(
+      width: json['width'] as int?,
+      height: json['height'] as int?,
+      photo34: json['photo_34'] as String?,
+      photo68: json['photo_68'] as String?,
+      photo135: json['photo_135'] as String?,
+      photo270: json['photo_270'] as String?,
+      photo300: json['photo_300'] as String?,
+      photo600: json['photo_600'] as String?,
+      photo1200: json['photo_1200'] as String?,
     );
 
-Map<String, dynamic> _$AudioThumbnailsToJson(AudioThumbnails instance) =>
+Map<String, dynamic> _$ThumbnailsToJson(Thumbnails instance) =>
     <String, dynamic>{
       'width': instance.width,
       'height': instance.height,
@@ -226,8 +226,7 @@ Map<String, dynamic> _$AudioThumbnailsToJson(AudioThumbnails instance) =>
       'photo_1200': instance.photo1200,
     };
 
-AudioPlaylist _$AudioPlaylistFromJson(Map<String, dynamic> json) =>
-    AudioPlaylist(
+Playlist _$PlaylistFromJson(Map<String, dynamic> json) => Playlist(
       id: json['id'] as int,
       ownerID: json['owner_id'] as int,
       type: json['type'] as int? ?? 0,
@@ -244,17 +243,16 @@ AudioPlaylist _$AudioPlaylistFromJson(Map<String, dynamic> json) =>
       playButton: json['play_button'] as bool? ?? false,
       albumType: json['album_type'] as String? ?? "playlist",
       exclusive: json['exclusive'] as bool? ?? false,
-      subtitle: json['subtitle'] as String?,
+      subtitle: emptyStringAsNull(json['subtitle'] as String?),
       genres: json['genres'],
       photo: json['photo'] == null
           ? null
-          : AudioThumbnails.fromJson(json['photo'] as Map<String, dynamic>),
+          : Thumbnails.fromJson(json['photo'] as Map<String, dynamic>),
       permissions: json['permissions'],
       meta: json['meta'],
     );
 
-Map<String, dynamic> _$AudioPlaylistToJson(AudioPlaylist instance) =>
-    <String, dynamic>{
+Map<String, dynamic> _$PlaylistToJson(Playlist instance) => <String, dynamic>{
       'id': instance.id,
       'owner_id': instance.ownerID,
       'type': instance.type,
@@ -278,23 +276,22 @@ Map<String, dynamic> _$AudioPlaylistToJson(AudioPlaylist instance) =>
       'exclusive': instance.exclusive,
     };
 
-AudioAlbum _$AudioAlbumFromJson(Map<String, dynamic> json) => AudioAlbum(
-      json['id'] as int,
-      json['title'] as String,
-      json['owner_id'] as int,
-      json['access_key'] as String,
-      json['thumb'] == null
+Album _$AlbumFromJson(Map<String, dynamic> json) => Album(
+      id: json['id'] as int,
+      title: json['title'] as String,
+      ownerID: json['owner_id'] as int,
+      accessKey: json['access_key'] as String,
+      thumbnails: json['thumb'] == null
           ? null
-          : AudioThumbnails.fromJson(json['thumb'] as Map<String, dynamic>),
+          : Thumbnails.fromJson(json['thumb'] as Map<String, dynamic>),
     );
 
-Map<String, dynamic> _$AudioAlbumToJson(AudioAlbum instance) =>
-    <String, dynamic>{
+Map<String, dynamic> _$AlbumToJson(Album instance) => <String, dynamic>{
       'id': instance.id,
       'title': instance.title,
       'owner_id': instance.ownerID,
       'access_key': instance.accessKey,
-      'thumb': instance.thumb,
+      'thumb': instance.thumbnails,
     };
 
 Audio _$AudioFromJson(Map<String, dynamic> json) => Audio(
@@ -316,11 +313,11 @@ Audio _$AudioFromJson(Map<String, dynamic> json) => Audio(
       storiesAllowed: json['stories_allowed'] as bool?,
       storiesCoverAllowed: json['stories_cover_allowed'] as bool?,
       trackCode: json['track_code'] as String?,
-      url: json['url'] as String,
+      url: emptyStringAsNull(json['url'] as String?),
       date: json['date'] as int,
       album: json['album'] == null
           ? null
-          : AudioAlbum.fromJson(json['album'] as Map<String, dynamic>),
+          : Album.fromJson(json['album'] as Map<String, dynamic>),
       hasLyrics: json['has_lyrics'] as bool? ?? false,
       albumID: json['album_id'] as int?,
       genreID: json['genre_id'] as int?,

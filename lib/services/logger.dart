@@ -108,12 +108,14 @@ class _AppLogPrinter extends LogPrinter {
     String message = _getColoredMessage(event.message, event.level);
 
     List<String> outputList = [
-      "$time | $level | ${this.owner != null ? '$owner - ' : ''}$message"
+      "$time | $level | ${this.owner != null ? '$owner - ' : ''}$message",
     ];
     if (event.error != null) {
-      outputList.add(_getColoredError(
-        event.error.toString(),
-      ));
+      outputList.add(
+        _getColoredError(
+          event.error.toString(),
+        ),
+      );
     }
 
     return outputList;

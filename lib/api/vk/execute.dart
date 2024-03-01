@@ -39,5 +39,7 @@ class VKExecuteAPI {
     List<String> audioMediaIDs,
   ) async =>
       await api_scripts_mass_audio_albums.scripts_massAlbumsGet(
-          token, audioMediaIDs);
+        token,
+        audioMediaIDs,
+      );
 }

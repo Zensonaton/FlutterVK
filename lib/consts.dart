@@ -50,7 +50,7 @@ const List<String> fakePlaylistNames = [
   "My playlist",
   "Wow",
   "My play",
-  "Suuuuper long playlist name used for something!"
+  "Suuuuper long playlist name used for something!",
 ];
 
 /// Случайные строчки текстов песен, используемые в Skeleton Loader'ах.

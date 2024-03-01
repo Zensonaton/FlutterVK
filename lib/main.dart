@@ -17,6 +17,7 @@ import "package:system_tray/system_tray.dart";
 import "package:window_manager/window_manager.dart";
 
 import "consts.dart";
+import "db/db.dart";
 import "enums.dart";
 import "intents.dart";
 import "provider/color.dart";
@@ -25,6 +26,7 @@ import "routes/home.dart";
 import "routes/welcome.dart";
 import "services/audio_player.dart";
 import "services/cache_manager.dart";
+import "services/download_manager.dart";
 import "utils.dart";
 import "widgets/loading_overlay.dart";
 
@@ -35,8 +37,14 @@ import "widgets/loading_overlay.dart";
 /// Источник: https://christopher.khawand.dev/posts/flutter-internationalization-without-buildcontext
 BuildContext? buildContext;
 
+/// Объект базы данных приложения.
+late final AppStorage appStorage;
+
 /// Объект аудиоплеера.
 late final VKMusicPlayer player;
+
+/// Менеджер загрузок плейлистов.
+late final DownloadManager downloadManager;
 
 /// [ColorScheme] яркости [Brightness.light], которая используется в случае, если по какой-то причине приложение не смогло получить цвета акцента, либо цвета музыкального плеера.
 final fallbackLightColorScheme = ColorScheme.fromSeed(
@@ -117,10 +125,12 @@ Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Делаем панель навигации прозрачной.
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    systemNavigationBarColor: Colors.transparent,
-    systemNavigationBarDividerColor: Colors.transparent,
-  ));
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarDividerColor: Colors.transparent,
+    ),
+  );
   SystemChrome.setEnabledSystemUIMode(
     SystemUiMode.edgeToEdge,
   );
@@ -161,6 +171,11 @@ Future main() async {
         if (kDebugMode) {
           await windowManager.setFullScreen(false);
         }
+
+        // Делаем название окна в debug-режиме.
+        if (kDebugMode) {
+          await windowManager.setTitle("Flutter VK (DEBUG)");
+        }
       },
     );
   }
@@ -169,6 +184,12 @@ Future main() async {
   await localNotifier.setup(
     appName: "Flutter VK",
   );
+
+  // Загружаем базу данных Isar.
+  appStorage = AppStorage();
+
+  // Создаём менеджер загрузок.
+  downloadManager = DownloadManager();
 
   // Инициализируем плеер.
   JustAudioMediaKit.title = "Flutter VK";
@@ -225,11 +246,6 @@ class MainApp extends StatefulWidget {
 }
 
 class _MainAppState extends State<MainApp> with WindowListener {
-  ThemeData buildTheme(ColorScheme colorScheme) => ThemeData(
-        useMaterial3: true,
-        colorScheme: colorScheme,
-      );
-
   /// Виджет, который будет хранить в себе "главную" страницу, с которой и начнётся изначальная навигация пользователем.
   Widget? home;
 
@@ -254,20 +270,22 @@ class _MainAppState extends State<MainApp> with WindowListener {
     }
 
     // На Desktop-платформах, создаём README-файл в папке кэша треков, если он не существует.
-    final File readmeFile = File(
-      path.join(
-        await CachedStreamedAudio.getTrackStorageDirectory(),
-        tracksCacheReadmeFileName,
-      ),
-    );
-    if (!readmeFile.existsSync()) {
-      readmeFile.createSync(
-        recursive: true,
+    if (isDesktop) {
+      final File readmeFile = File(
+        path.join(
+          await CachedStreamedAudio.getTrackStorageDirectory(),
+          tracksCacheReadmeFileName,
+        ),
       );
-      readmeFile.writeAsStringSync(
-        // ignore: use_build_context_synchronously
-        AppLocalizations.of(buildContext!)!.general_musicReadmeFileContents,
-      );
+      if (!readmeFile.existsSync()) {
+        readmeFile.createSync(
+          recursive: true,
+        );
+        readmeFile.writeAsStringSync(
+          // ignore: use_build_context_synchronously
+          AppLocalizations.of(buildContext!)!.general_musicReadmeFileContents,
+        );
+      }
     }
 
     user.markUpdated(false);
@@ -345,66 +363,69 @@ class _MainAppState extends State<MainApp> with WindowListener {
     }
 
     return DynamicColorBuilder(
-        builder: (ColorScheme? lightColorScheme, ColorScheme? darkColorScheme) {
-      final playerLightColorScheme = user.settings.playerColorsAppWide
-          ? colorScheme.lightColorScheme
-          : null;
-      final playerDarkColorScheme = user.settings.playerColorsAppWide
-          ? colorScheme.darkColorScheme
-          : null;
+      builder: (ColorScheme? lightColorScheme, ColorScheme? darkColorScheme) {
+        final playerLightColorScheme = user.settings.playerColorsAppWide
+            ? colorScheme.lightColorScheme
+            : null;
+        final playerDarkColorScheme = user.settings.playerColorsAppWide
+            ? colorScheme.darkColorScheme
+            : null;
 
-      return MaterialApp(
-        theme: buildTheme(
-          playerLightColorScheme ??
-              lightColorScheme ??
-              fallbackLightColorScheme,
-        ),
-        darkTheme: buildTheme(
-          playerDarkColorScheme ?? darkColorScheme ?? fallbackDarkColorScheme,
-        ),
-        themeMode: user.settings.theme,
-        themeAnimationDuration: const Duration(
-          milliseconds: 500,
-        ),
-        themeAnimationCurve: Curves.ease,
-        builder: (BuildContext context, Widget? child) {
-          return LoadingOverlay(
-            child: child!,
-          );
-        },
-        onGenerateTitle: (BuildContext context) {
-          buildContext = context;
-
-          return "Flutter VK";
-        },
-        localizationsDelegates: const [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        shortcuts: {
-          // Пауза.
-          LogicalKeySet(
-            LogicalKeyboardKey.space,
-          ): const PlayPauseIntent(),
-
-          // Полноэкранный плеер.
-          LogicalKeySet(
-            LogicalKeyboardKey.f11,
-          ): const FullscreenPlayerIntent(),
-        },
-        actions: {
-          PlayPauseIntent: CallbackAction(
-            onInvoke: (intent) => player.togglePlay(),
+        return MaterialApp(
+          theme: ThemeData(
+            colorScheme: playerLightColorScheme ??
+                lightColorScheme ??
+                fallbackLightColorScheme,
           ),
-        },
-        supportedLocales: const [
-          Locale("ru"),
-          Locale("en"),
-        ],
-        home: home,
-      );
-    });
+          darkTheme: ThemeData(
+            colorScheme: playerDarkColorScheme ??
+                darkColorScheme ??
+                fallbackDarkColorScheme,
+          ),
+          themeMode: user.settings.theme,
+          themeAnimationDuration: const Duration(
+            milliseconds: 500,
+          ),
+          themeAnimationCurve: Curves.ease,
+          builder: (BuildContext context, Widget? child) {
+            return LoadingOverlay(
+              child: child!,
+            );
+          },
+          onGenerateTitle: (BuildContext context) {
+            buildContext = context;
+
+            return "Flutter VK";
+          },
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          shortcuts: {
+            // Пауза.
+            LogicalKeySet(
+              LogicalKeyboardKey.space,
+            ): const PlayPauseIntent(),
+
+            // Полноэкранный плеер.
+            LogicalKeySet(
+              LogicalKeyboardKey.f11,
+            ): const FullscreenPlayerIntent(),
+          },
+          actions: {
+            PlayPauseIntent: CallbackAction(
+              onInvoke: (intent) => player.togglePlay(),
+            ),
+          },
+          supportedLocales: const [
+            Locale("ru"),
+            Locale("en"),
+          ],
+          home: home,
+        );
+      },
+    );
   }
 }

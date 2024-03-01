@@ -8,10 +8,10 @@ part of 'get.dart';
 
 APIUsersGetResponse _$APIUsersGetResponseFromJson(Map<String, dynamic> json) =>
     APIUsersGetResponse(
-      (json['response'] as List<dynamic>?)
+      response: (json['response'] as List<dynamic>?)
           ?.map((e) => User.fromJson(e as Map<String, dynamic>))
           .toList(),
-      json['error'] == null
+      error: json['error'] == null
           ? null
           : APIError.fromJson(json['error'] as Map<String, dynamic>),
     );

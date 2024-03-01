@@ -31,10 +31,10 @@ import "home/profile.dart";
 /// Диалог, предупреждающий о том, что трек уже сохранён.
 class DuplicateWarningDialog extends StatelessWidget {
   /// Аудио, которое пользователь попытался лайкнуть.
-  final ExtendedVKAudio audio;
+  final ExtendedAudio audio;
 
   /// Плейлист с лайкнутыми треками.
-  final ExtendedVKPlaylist playlist;
+  final ExtendedPlaylist playlist;
 
   const DuplicateWarningDialog({
     super.key,
@@ -69,7 +69,7 @@ class DuplicateWarningDialog extends StatelessWidget {
           child: Text(
             AppLocalizations.of(context)!.general_yes,
           ),
-        )
+        ),
       ],
     );
   }
@@ -80,7 +80,7 @@ class DuplicateWarningDialog extends StatelessWidget {
 /// В отличии от метода [toggleTrackLikeState], данный метод не делает никаких проверок на существование трека, а так же никаких изменений в интерфейсе не происходит.
 Future<void> toggleTrackLike(
   UserProvider user,
-  ExtendedVKAudio audio,
+  ExtendedAudio audio,
   bool isFavorite,
 ) async {
   final AppLogger logger = getLogger("toggleTrackLike");
@@ -123,8 +123,10 @@ Future<void> toggleTrackLike(
 
     // Убеждаемся, что трек не существует в списке.
     if (!user.favoritesPlaylist!.audios!.contains(audio)) {
-      user.favoritesPlaylist!.audios!.insert(0, audio);
+      user.favoritesPlaylist!.audios!.add(audio);
     }
+
+    user.markUpdated(false);
   } else {
     // Пользователь пытается удалить трек.
 
@@ -141,9 +143,9 @@ Future<void> toggleTrackLike(
 
     // Если это возможно, то удаляем трек из кэша.
     try {
-      CachedStreamedAudio(
-        cacheKey: audio.mediaKey,
-      ).delete();
+      CachedStreamedAudio(cacheKey: audio.mediaKey).delete();
+
+      audio.isCached = false;
     } catch (e) {
       logger.w(
         "Не удалось удалить трек из кэша после удаления трека из лайкнутых: ",
@@ -159,7 +161,7 @@ Future<void> toggleTrackLike(
 /// Если [checkBeforeSaving] равен true, то в случае дубликата трека появится диалог, подтверждающий создание дубликата.
 Future<void> toggleTrackLikeState(
   BuildContext context,
-  ExtendedVKAudio audio,
+  ExtendedAudio audio,
   bool isFavorite, {
   bool checkBeforeSaving = true,
 }) async {
@@ -291,7 +293,7 @@ class _BottomMusicPlayerWidgetState extends State<BottomMusicPlayerWidget> {
             );
           }
         },
-      )
+      ),
     ];
   }
 
@@ -439,7 +441,10 @@ class _HomeRouteState extends State<HomeRoute> {
 
   /// Изменяет выбранную страницу для [BottomNavigationBar] по передаваемому индексу страницы.
   void setNavigationPage(int pageIndex) {
-    assert(pageIndex >= 0 && pageIndex < navigationPages.length);
+    assert(
+      pageIndex >= 0 && pageIndex < navigationPages.length,
+      "Expected pageIndex to be in range of 0 to ${navigationPages.length}, but got $pageIndex instead",
+    );
 
     setState(() => navigationScreenIndex = pageIndex);
   }
@@ -492,7 +497,7 @@ class _HomeRouteState extends State<HomeRoute> {
                           selectedIcon: Icon(
                             page.selectedIcon ?? page.icon,
                           ),
-                        )
+                        ),
                     ],
                   ),
                 if (!isMobileLayout) const VerticalDivider(),
@@ -611,7 +616,7 @@ class _HomeRouteState extends State<HomeRoute> {
                       selectedIcon: Icon(
                         page.selectedIcon ?? page.icon,
                       ),
-                    )
+                    ),
                 ],
               )
             : null,

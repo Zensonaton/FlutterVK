@@ -18,10 +18,10 @@ class APIAudioRestoreResponse {
   /// Объект ошибки.
   final APIError? error;
 
-  APIAudioRestoreResponse(
+  APIAudioRestoreResponse({
     this.response,
     this.error,
-  );
+  });
 
   factory APIAudioRestoreResponse.fromJson(Map<String, dynamic> json) =>
       _$APIAudioRestoreResponseFromJson(json);

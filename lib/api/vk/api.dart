@@ -94,6 +94,7 @@ Future<Response> vkAPIcall(
   );
 }
 
+/// Класс, расширяющий [Exception], олицетворяющий ошибку API ВКонтакте.
 class VKAPIError implements Exception {
   /// Код ошибки.
   int? errorCode;
@@ -104,10 +105,10 @@ class VKAPIError implements Exception {
   @override
   String toString() => "VK API error $errorCode: $message";
 
-  VKAPIError(
+  VKAPIError({
     this.errorCode,
     this.message,
-  );
+  });
 }
 
 /// Проверяет передаваемый API-ответ от ВКонтакте на наличие поля `error`. Если таковое поле находится, то данный метод вызвает исключение.
@@ -117,7 +118,7 @@ void raiseOnAPIError(
   if (response.error == null) return;
 
   throw VKAPIError(
-    response.error.errorCode,
-    response.error.errorMessage,
+    errorCode: response.error.errorCode,
+    message: response.error.errorMessage,
   );
 }

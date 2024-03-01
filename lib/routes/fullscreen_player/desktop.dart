@@ -175,10 +175,10 @@ class _NextTrackInfoWidgetState extends State<NextTrackInfoWidget> {
                 borderRadius: BorderRadius.circular(
                   globalBorderRadius,
                 ),
-                child: player.smartNextAudio!.album?.thumb != null
+                child: player.smartNextAudio!.album?.thumbnails != null
                     ? CachedNetworkImage(
-                        imageUrl:
-                            player.smartNextAudio!.album!.thumb!.photo1200!,
+                        imageUrl: player
+                            .smartNextAudio!.album!.thumbnails!.photo1200!,
                         cacheKey: "${player.nextAudio!.album!.id}1200",
                         width: 32,
                         height: 32,
@@ -445,17 +445,17 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                             spreadRadius: -3,
                             color: Theme.of(context).colorScheme.tertiary,
                             blurStyle: BlurStyle.outer,
-                          )
+                          ),
                         ],
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(
                           globalBorderRadius,
                         ),
-                        child: player.currentAudio!.album?.thumb != null
+                        child: player.currentAudio!.album?.thumbnails != null
                             ? CachedNetworkImage(
-                                imageUrl: player
-                                    .currentAudio!.album!.thumb!.photo1200!,
+                                imageUrl: player.currentAudio!.album!
+                                    .thumbnails!.photo1200!,
                                 cacheKey:
                                     "${player.currentAudio!.album!.id}1200",
                                 width: 130,
@@ -631,8 +631,10 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                       // Переключение shuffle.
                       StreamBuilder<bool>(
                         stream: player.shuffleModeEnabledStream,
-                        builder: (BuildContext context,
-                            AsyncSnapshot<bool> snapshot) {
+                        builder: (
+                          BuildContext context,
+                          AsyncSnapshot<bool> snapshot,
+                        ) {
                           final bool enabled = snapshot.data ?? false;
 
                           return IconButton(
@@ -672,8 +674,10 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                       // Пауза/воспроизведение.
                       StreamBuilder<PlayerState>(
                         stream: player.playerStateStream,
-                        builder: (BuildContext context,
-                            AsyncSnapshot<PlayerState> snapshot) {
+                        builder: (
+                          BuildContext context,
+                          AsyncSnapshot<PlayerState> snapshot,
+                        ) {
                           return IconButton(
                             onPressed: () => player.togglePlay(),
                             icon: Icon(
@@ -707,8 +711,10 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                       // Повтор трека.
                       StreamBuilder<LoopMode>(
                         stream: player.loopModeStream,
-                        builder: (BuildContext context,
-                            AsyncSnapshot<LoopMode> snapshot) {
+                        builder: (
+                          BuildContext context,
+                          AsyncSnapshot<LoopMode> snapshot,
+                        ) {
                           final bool enabled =
                               (snapshot.data ?? LoopMode.all) == LoopMode.one;
 
@@ -742,8 +748,10 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                       if (isDesktop)
                         StreamBuilder<double>(
                           stream: player.volumeStream,
-                          builder: (BuildContext context,
-                              AsyncSnapshot<double> snapshot) {
+                          builder: (
+                            BuildContext context,
+                            AsyncSnapshot<double> snapshot,
+                          ) {
                             return ScrollableSlider(
                               value: snapshot.data ?? 1.0,
                               activeColor:

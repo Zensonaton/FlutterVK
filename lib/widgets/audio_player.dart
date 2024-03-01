@@ -3,6 +3,7 @@ import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 
 import "../consts.dart";
+import "../extensions.dart";
 import "../provider/user.dart";
 import "../services/cache_manager.dart";
 import "../utils.dart";
@@ -81,7 +82,7 @@ class NextTrackInfoWidget extends StatelessWidget {
   final ColorScheme scheme;
 
   /// Объект [Audio], олицетворяющий следующий трек в плейлисте.
-  final ExtendedVKAudio nextAudio;
+  final ExtendedAudio nextAudio;
 
   @override
   Widget build(BuildContext context) {
@@ -112,7 +113,7 @@ class NextTrackInfoWidget extends StatelessWidget {
               style: TextStyle(
                 color: scheme.primary,
               ),
-            )
+            ),
           ],
         ),
       ),
@@ -173,16 +174,16 @@ class TrackTitleAndArtist extends StatelessWidget {
 
 /// Виджет плеера, отображаемый внизу экрана, отображающий информацию по текущему треку [audio], а так же дающий возможность делать базовые действия с плеером и треком.
 class BottomMusicPlayer extends StatefulWidget {
-  /// Объект [ExtendedVKAudio], который играет в данный момент.
-  final ExtendedVKAudio? audio;
+  /// Объект [ExtendedAudio], который играет в данный момент.
+  final ExtendedAudio? audio;
 
-  /// Объект [ExtendedVKAudio], олицетворяющий предыдущий трек в плейлисте, на который плеер сможет переключиться.
-  final ExtendedVKAudio? previousAudio;
+  /// Объект [ExtendedAudio], олицетворяющий предыдущий трек в плейлисте, на который плеер сможет переключиться.
+  final ExtendedAudio? previousAudio;
 
-  /// Объект [ExtendedVKAudio], олицетворяющий следующий трек в плейлисте.
+  /// Объект [ExtendedAudio], олицетворяющий следующий трек в плейлисте.
   ///
   /// Если данное поле оставить как null, то надпись, показывающая следующий трек перед завершением текущего (при [useBigLayout] = true) отображаться не будет.
-  final ExtendedVKAudio? nextAudio;
+  final ExtendedAudio? nextAudio;
 
   /// Указывает цветовую схему для плеера.
   final ColorScheme scheme;
@@ -321,7 +322,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
         widget.useBigLayout ? (width - centerBlockSize) / 2 : width - 112;
 
     /// Url на изображение трека.
-    final String? imageUrl = widget.audio?.album?.thumb?.photo68;
+    final String? imageUrl = widget.audio?.album?.thumbnails?.photo68;
 
     /// Размер изображения трека.
     final double imageSize = widget.useBigLayout ? 60 : 50;
@@ -365,10 +366,8 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
         milliseconds: 400,
       ),
       decoration: BoxDecoration(
-        color: darkenColor(
-          widget.scheme.primaryContainer,
-          widget.playbackState ? 0 : 15,
-        ),
+        color: widget.scheme.primaryContainer
+            .darken(widget.playbackState ? 0 : 0.15),
         borderRadius: widget.useBigLayout
             ? null
             : BorderRadius.circular(
@@ -449,7 +448,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                       spreadRadius: -3,
                                       color: widget.scheme.tertiary,
                                       blurStyle: BlurStyle.outer,
-                                    )
+                                    ),
                                   ],
                                 ),
                                 child: ClipRRect(
@@ -475,9 +474,10 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                                   "${widget.audio!.album!.id}68",
                                               memCacheHeight: imageSize.toInt(),
                                               memCacheWidth: imageSize.toInt(),
-                                              placeholder: (BuildContext
-                                                          context,
-                                                      String url) =>
+                                              placeholder: (
+                                                BuildContext context,
+                                                String url,
+                                              ) =>
                                                   const FallbackAudioAvatar(),
                                               cacheManager:
                                                   CachedNetworkImagesManager
@@ -737,7 +737,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                               ),
                             ),
                           ],
-                        )
+                        ),
                       ],
                     ),
                   ),
@@ -854,7 +854,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
               isBuffering: widget.isBuffering,
               playbackState: widget.playbackState,
               progress: widget.progress,
-            )
+            ),
         ],
       ),
     );

@@ -42,6 +42,16 @@ linter:
     leading_newlines_in_multiline_strings: true
     slash_for_doc_comments: true
     prefer_relative_imports: true
+    only_throw_errors: true
+    prefer_const_constructors_in_immutables: true
+    prefer_const_declarations: true
+    prefer_const_constructors: true
+    require_trailing_commas: true
+    sort_pub_dependencies: true
+    sized_box_shrink_expand: true
+    prefer_asserts_with_message: true
+    prefer_initializing_formals: true
+    sort_unnamed_constructors_first: true
 
 
 # Additional information about this file can be found at
