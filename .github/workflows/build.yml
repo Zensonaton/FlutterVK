@@ -91,15 +91,13 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@v2.12.0
         with:
           channel: "stable"
           cache: true
 
       - name: Get dependencies
         run: flutter pub get
-        env:
-          PUB_CACHE: "%LOCALAPPDATA%\\Pub\\Cache"
 
       - name: Build Windows release
         run: flutter build windows --release
