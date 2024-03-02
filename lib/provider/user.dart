@@ -816,10 +816,12 @@ class UserProvider extends ChangeNotifier {
 
       // Проходимся по новому списку треков, если он вообще был передан.
       if (playlist.audios != null) {
+        // Создаём отдельный List с shadow copy списка треков.
+        final List<ExtendedAudio> newAudios = [...playlist.audios!];
         final Set<ExtendedAudio> oldAudios = existingPlaylist.audios ?? {};
         existingPlaylist.audios = {};
 
-        for (ExtendedAudio audio in playlist.audios!) {
+        for (ExtendedAudio audio in newAudios) {
           ExtendedAudio newAudio =
               oldAudios.firstWhereOrNull((oldAudio) => oldAudio == audio) ??
                   audio;
