@@ -629,6 +629,7 @@ class UserProvider extends ChangeNotifier {
 
     // Очищаем кэш изображений.
     await CachedNetworkImagesManager.instance.emptyCache();
+    await CachedAlbumImagesManager.instance.emptyCache();
 
     // Удаляем кэшированные треки.
     Directory(

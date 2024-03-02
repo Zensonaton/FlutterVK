@@ -99,8 +99,9 @@ Future<bool> tryAuthorize(
         builder: (BuildContext context) {
           return WelcomeDialog(
             name: "${accountInfo.firstName} ${accountInfo.lastName}",
-            avatarURL:
-                (accountInfo.hasPhoto ?? 0) == 1 ? accountInfo.photoMax : null,
+            userID: accountInfo.id,
+            avatarUrl:
+                (accountInfo.hasPhoto ?? false) ? accountInfo.photoMax : null,
           );
         },
       );
@@ -144,7 +145,10 @@ class WelcomeDialog extends StatefulWidget {
   final String name;
 
   /// URL на аватарку пользователя.
-  final String? avatarURL;
+  final String? avatarUrl;
+
+  /// ID пользователя, который авторизовался. Важно указать это поле, если [avatarUrl] не null.
+  final int? userID;
 
   /// Время, после которого данный виджет автоматически закроется. Если указать null, то автоматическое закрытие происходить не будет.
   final Duration? duration;
@@ -152,7 +156,8 @@ class WelcomeDialog extends StatefulWidget {
   const WelcomeDialog({
     super.key,
     required this.name,
-    this.avatarURL,
+    this.avatarUrl,
+    this.userID,
     this.duration = const Duration(seconds: 5),
   });
 
@@ -190,34 +195,34 @@ class _WelcomeDialogState extends State<WelcomeDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (widget.avatarURL != null)
-              CachedNetworkImage(
-                imageUrl: widget.avatarURL!,
-                placeholder: (BuildContext context, String url) {
-                  return const SizedBox(
-                    height: 80,
-                    width: 80,
-                  );
-                },
-                placeholderFadeInDuration: Duration.zero,
-                fadeOutDuration: Duration.zero,
-                imageBuilder: (context, imageProvider) => Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    image: DecorationImage(
-                      image: imageProvider,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
+            // Изображение пользователя.
+            if (widget.avatarUrl != null)
+              Padding(
+                padding: const EdgeInsets.only(
+                  bottom: 18,
                 ),
-                cacheManager: CachedNetworkImagesManager.instance,
+                child: CachedNetworkImage(
+                  imageUrl: widget.avatarUrl!,
+                  cacheKey: "${widget.userID}400",
+                  imageBuilder:
+                      (BuildContext context, ImageProvider imageProvider) {
+                    return Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        image: DecorationImage(
+                          image: imageProvider,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    );
+                  },
+                  cacheManager: CachedNetworkImagesManager.instance,
+                ),
               ),
-            if (widget.avatarURL != null)
-              const SizedBox(
-                height: 18,
-              ),
+
+            // "Добро пожаловать, Имя!".
             StyledText(
               text:
                   AppLocalizations.of(context)!.login_welcomeTitle(widget.name),

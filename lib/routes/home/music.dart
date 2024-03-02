@@ -1340,7 +1340,7 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
                                         (BuildContext context, String url) =>
                                             const FallbackAudioAvatar(),
                                     cacheManager:
-                                        CachedNetworkImagesManager.instance,
+                                        CachedAlbumImagesManager.instance,
                                   )
                                 : const FallbackAudioAvatar(),
                           ),

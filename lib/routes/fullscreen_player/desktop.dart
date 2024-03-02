@@ -186,7 +186,7 @@ class _NextTrackInfoWidgetState extends State<NextTrackInfoWidget> {
                         memCacheHeight: 32,
                         placeholder: (BuildContext context, String url) =>
                             const FallbackAudioAvatar(),
-                        cacheManager: CachedNetworkImagesManager.instance,
+                        cacheManager: CachedAlbumImagesManager.instance,
                       )
                     : const FallbackAudioAvatar(
                         width: 32,
@@ -466,8 +466,7 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                                 placeholder:
                                     (BuildContext context, String url) =>
                                         const FallbackAudioAvatar(),
-                                cacheManager:
-                                    CachedNetworkImagesManager.instance,
+                                cacheManager: CachedAlbumImagesManager.instance,
                               )
                             : const FallbackAudioAvatar(
                                 width: 130,

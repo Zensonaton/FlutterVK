@@ -207,7 +207,7 @@ Future main() async {
       androidNotificationOngoing: true,
       preloadArtwork: true,
     ),
-    cacheManager: CachedNetworkImagesManager.instance,
+    cacheManager: CachedAlbumImagesManager.instance,
     cacheKeyResolver: (MediaItem item) => "${item.extras!["albumID"]!}1200",
   );
 

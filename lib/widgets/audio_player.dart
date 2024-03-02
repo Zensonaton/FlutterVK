@@ -480,7 +480,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                               ) =>
                                                   const FallbackAudioAvatar(),
                                               cacheManager:
-                                                  CachedNetworkImagesManager
+                                                  CachedAlbumImagesManager
                                                       .instance,
                                             )
                                           : const FallbackAudioAvatar(),

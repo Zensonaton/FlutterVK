@@ -180,7 +180,7 @@ class _ImageLyricsBlockState extends State<ImageLyricsBlock> {
                       fit: BoxFit.fill,
                       placeholder: (BuildContext context, String url) =>
                           const FallbackAudioAvatar(),
-                      cacheManager: CachedNetworkImagesManager.instance,
+                      cacheManager: CachedAlbumImagesManager.instance,
                       memCacheWidth: _playerImageSize.toInt(),
                       memCacheHeight: _playerImageSize.toInt(),
                     )

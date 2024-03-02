@@ -124,20 +124,20 @@ class CachedStreamedAudio extends StreamAudioSource {
     // Если файлы обложек уже загружены, то ничего не делаем.
     if (albumID != null && thumbnails != null) {
       final FileInfo? cachedThumb =
-          await CachedNetworkImagesManager.instance.getFileFromCache(
+          await CachedAlbumImagesManager.instance.getFileFromCache(
         "${albumID}1200",
       );
 
       if (cachedThumb == null) {
         // Загружаем обложки.
         tasks.add(
-          CachedNetworkImagesManager.instance.downloadFile(
+          CachedAlbumImagesManager.instance.downloadFile(
             thumbnails.photo68!,
             key: "${albumID}68",
           ),
         );
         tasks.add(
-          CachedNetworkImagesManager.instance.downloadFile(
+          CachedAlbumImagesManager.instance.downloadFile(
             thumbnails.photo1200!,
             key: "${albumID}1200",
           ),
