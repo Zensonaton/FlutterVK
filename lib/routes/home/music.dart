@@ -176,7 +176,9 @@ Future<void> ensureUserAudioBasicInfo(
     //
     // Запуск кэширования у других плейлистов происходит в ином месте:
     // Данный метод НЕ загружает содержимое у других плейлистов.
-    downloadManager.cachePlaylist(user.favoritesPlaylist!);
+    if (user.favoritesPlaylist!.cacheTracks ?? false) {
+      downloadManager.cachePlaylist(user.favoritesPlaylist!);
+    }
 
     user.markUpdated(false);
   } catch (e, stackTrace) {
