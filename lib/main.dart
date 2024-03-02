@@ -193,6 +193,8 @@ Future main() async {
 
   // Инициализируем плеер.
   JustAudioMediaKit.title = "Flutter VK";
+  JustAudioMediaKit.ensureInitialized();
+
   player = VKMusicPlayer();
 
   // Регистрируем AudioHandler для управления музыки при помощи уведомлений.
