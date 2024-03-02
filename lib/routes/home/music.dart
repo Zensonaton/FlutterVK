@@ -2,6 +2,7 @@ import "dart:async";
 import "dart:io";
 
 import "package:cached_network_image/cached_network_image.dart";
+import "package:collection/collection.dart";
 import "package:debounce_throttle/debounce_throttle.dart";
 import "package:declarative_refresh_indicator/declarative_refresh_indicator.dart";
 import "package:flutter/foundation.dart";
@@ -2647,8 +2648,12 @@ class _RecommendedPlaylistsBlockState extends State<RecommendedPlaylistsBlock> {
                   ? user.recommendationPlaylists.length
                   : null,
               itemBuilder: (BuildContext context, int index) {
+                final List<ExtendedPlaylist> recommendationPlaylists = user
+                    .recommendationPlaylists
+                    .sorted((a, b) => b.id.compareTo(a.id));
+
                 // Skeleton loader.
-                if (user.recommendationPlaylists.isEmpty) {
+                if (recommendationPlaylists.isEmpty) {
                   return Padding(
                     padding: const EdgeInsets.only(
                       right: 8,
@@ -2666,7 +2671,7 @@ class _RecommendedPlaylistsBlockState extends State<RecommendedPlaylistsBlock> {
 
                 // Настоящие данные.
                 final ExtendedPlaylist playlist =
-                    user.recommendationPlaylists[index];
+                    recommendationPlaylists[index];
 
                 return Padding(
                   padding: const EdgeInsets.only(
@@ -2780,8 +2785,12 @@ class _SimillarMusicBlockState extends State<SimillarMusicBlock> {
                   ? user.recommendationPlaylists.length
                   : null,
               itemBuilder: (BuildContext context, int index) {
+                final List<ExtendedPlaylist> simillarPlaylists = user
+                    .simillarPlaylists
+                    .sorted((a, b) => b.simillarity!.compareTo(a.simillarity!));
+
                 // Skeleton loader.
-                if (user.simillarPlaylists.isEmpty) {
+                if (simillarPlaylists.isEmpty) {
                   return Padding(
                     padding: const EdgeInsets.only(
                       right: 8,
@@ -2812,7 +2821,7 @@ class _SimillarMusicBlockState extends State<SimillarMusicBlock> {
                 }
 
                 // Настоящие данные.
-                final ExtendedPlaylist playlist = user.simillarPlaylists[index];
+                final ExtendedPlaylist playlist = simillarPlaylists[index];
 
                 return Padding(
                   padding: const EdgeInsets.only(
