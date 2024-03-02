@@ -96,6 +96,12 @@ jobs:
           channel: "stable"
 
       - name: Get dependencies
+        if: always()
+        run: flutter pub get
+
+      # Второй вызов flutter pub get, поскольку происходит странная ошибка с библиотекой audio_service.
+      - name: Second get dependencies (workaround)
+        if: always()
         run: flutter pub get
 
       - name: Build Windows release
