@@ -16,7 +16,7 @@ AppLogger getLogger<T>(
 }
 
 /// Возвращает файл, в котором хранятся логи ошибок.
-Future<File> _getLogFile() async {
+Future<File> getLogFile() async {
   final String dir = (await getApplicationSupportDirectory()).path;
 
   final file = File(path.join(dir, "fluttervk.log"));
@@ -35,12 +35,24 @@ class _AppLogFilter extends DevelopmentFilter {
 }
 
 class _AppLogOutput extends LogOutput {
+  /// Текстовый файл, в котором хранится лог приложения.
+  File? _logFile;
+
   @override
   void output(
     OutputEvent event,
   ) async {
     // ignore: avoid_print
     event.lines.forEach(print);
+
+    if (event.level != Level.debug) {
+      _logFile ??= await getLogFile();
+
+      _logFile!.writeAsString(
+        "${event.lines}\n",
+        mode: FileMode.writeOnlyAppend,
+      );
+    }
   }
 }
 
