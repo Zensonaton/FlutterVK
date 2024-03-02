@@ -129,7 +129,7 @@ Future<void> ensureUserAudioBasicInfo(
       (user.favoritesPlaylist?.audios != null &&
           (user.favoritesPlaylist?.isLiveData ?? false))) return;
 
-  logger.d("Loading music information");
+  logger.d("Loading music information (force: $forceUpdate)");
 
   // Получаем информацию по музыке, вместе с альбомами, если пользователь добавил токен от VK Admin.
   try {
@@ -164,7 +164,6 @@ Future<void> ensureUserAudioBasicInfo(
             .map(
               (playlist) => ExtendedPlaylist.fromAudioPlaylist(
                 playlist,
-                isLiveData: false,
               ),
             )
             .toSet(),
@@ -234,15 +233,11 @@ Future<void> ensureUserAudioRecommendations(
     // Превращаем объекты типа AudioPlaylist в ExtendedPlaylist.
     return response.response!.playlists
         .where(
-          (Playlist playlist) => recommendedPlaylistIDs.contains(
-            playlist.mediaKey,
-          ),
+          (Playlist playlist) =>
+              recommendedPlaylistIDs.contains(playlist.mediaKey),
         )
         .map(
-          (Playlist playlist) => ExtendedPlaylist.fromAudioPlaylist(
-            playlist,
-            isLiveData: false,
-          ),
+          (Playlist playlist) => ExtendedPlaylist.fromAudioPlaylist(playlist),
         )
         .toList();
   }
@@ -304,15 +299,11 @@ Future<void> ensureUserAudioRecommendations(
     // Превращаем объекты типа AudioPlaylist в ExtendedPlaylist.
     return response.response!.playlists
         .where(
-          (Playlist playlist) => recommendedPlaylistIDs.contains(
-            playlist.mediaKey,
-          ),
+          (Playlist playlist) =>
+              recommendedPlaylistIDs.contains(playlist.mediaKey),
         )
         .map(
-          (Playlist playlist) => ExtendedPlaylist.fromAudioPlaylist(
-            playlist,
-            isLiveData: false,
-          ),
+          (Playlist playlist) => ExtendedPlaylist.fromAudioPlaylist(playlist),
         )
         .toList();
   }
@@ -321,13 +312,15 @@ Future<void> ensureUserAudioRecommendations(
   final AppLogger logger = getLogger("ensureUserAudioRecommendations");
 
   // Если информация уже загружена, то ничего не делаем.
-  if (!forceUpdate &&
-      (user.recommendationPlaylists.firstOrNull?.isLiveData ?? false)) return;
+  final ExtendedPlaylist? playlist = user.recommendationPlaylists.firstOrNull;
+  if (!forceUpdate && playlist != null && playlist.isLiveData) {
+    return;
+  }
 
   // Если у пользователя нет второго токена, то ничего не делаем.
   if (user.recommendationsToken == null) return;
 
-  logger.d("Loading music recommendations");
+  logger.d("Loading music recommendations (force: $forceUpdate)");
 
   try {
     final APICatalogGetAudioResponse response = await user.catalogGetAudio();
