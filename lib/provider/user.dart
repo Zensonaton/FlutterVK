@@ -829,6 +829,7 @@ class UserProvider extends ChangeNotifier {
 
           newAudio.url ??= audio.url;
           newAudio.isCached = audio.isCached ?? newAudio.isCached;
+          newAudio.album ??= audio.album;
 
           existingPlaylist.audios!.add(newAudio);
         }
