@@ -293,8 +293,13 @@ class _ImageLyricsBlockState extends State<ImageLyricsBlock> {
                   milliseconds: 500,
                 ),
                 curve: Curves.ease,
-                child: TrackLyricsBlock(
-                  lyrics: player.currentAudio!.lyrics!,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                  ),
+                  child: TrackLyricsBlock(
+                    lyrics: player.currentAudio!.lyrics!,
+                  ),
                 ),
               ),
             ),
