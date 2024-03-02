@@ -2,9 +2,12 @@ import "package:flutter/material.dart";
 
 /// Класс-оверлей, показывающий индикатор загрузки на весь экран.
 class LoadingOverlay extends StatelessWidget {
-  final ValueNotifier<bool> _loadingNotifier;
+  final ValueNotifier<bool> _loadingNotifier = ValueNotifier(false);
 
+  /// [Widget], располагаемый под этим [LoadingOverlay].
   final Widget child;
+
+  /// Опциональная задержка, через которую будет отображён данный виджет.
   final Duration? delay;
 
   static LoadingOverlay of(BuildContext context) {
@@ -50,34 +53,34 @@ class LoadingOverlay extends StatelessWidget {
   }
 
   LoadingOverlay({
-    Key? key,
+    super.key,
     required this.child,
     this.delay,
-  })  : _loadingNotifier = ValueNotifier(false),
-        super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<bool>(
       valueListenable: _loadingNotifier,
       child: child,
-      builder: (BuildContext context, bool value, Widget? child) {
+      builder: (BuildContext context, bool enabled, Widget? child) {
+        if (!enabled) return child!;
+
         return Stack(
           children: [
             child!,
-            if (value)
-              Container(
-                color: Theme.of(context).colorScheme.scrim.withOpacity(0.5),
-                child: Center(
-                  child: FutureBuilder(
-                    future: Future.delayed(delay ?? Duration.zero),
-                    builder: (BuildContext context, AsyncSnapshot snapshot) =>
-                        snapshot.connectionState == ConnectionState.done
-                            ? const CircularProgressIndicator.adaptive()
-                            : const SizedBox(),
-                  ),
+            Container(
+              color: Theme.of(context).colorScheme.scrim.withOpacity(0.5),
+              child: Center(
+                child: FutureBuilder(
+                  future: Future.delayed(delay ?? Duration.zero),
+                  builder: (BuildContext context, AsyncSnapshot snapshot) =>
+                      snapshot.connectionState == ConnectionState.done
+                          ? const CircularProgressIndicator.adaptive()
+                          : const SizedBox(),
                 ),
               ),
+            ),
           ],
         );
       },

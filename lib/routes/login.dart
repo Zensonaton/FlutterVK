@@ -150,13 +150,11 @@ class WelcomeDialog extends StatefulWidget {
   final Duration? duration;
 
   const WelcomeDialog({
-    Key? key,
+    super.key,
     required this.name,
     this.avatarURL,
     this.duration = const Duration(seconds: 5),
-  }) : super(
-          key: key,
-        );
+  });
 
   @override
   createState() => _WelcomeDialogState();

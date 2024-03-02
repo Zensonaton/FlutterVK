@@ -33,10 +33,8 @@ import "../welcome.dart";
 /// ```
 class ProfileLogoutExitDialog extends StatelessWidget {
   const ProfileLogoutExitDialog({
-    Key? key,
-  }) : super(
-          key: key,
-        );
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -87,10 +85,8 @@ class ProfileLogoutExitDialog extends StatelessWidget {
 /// ```
 class ConnectRecommendationsDialog extends StatelessWidget {
   const ConnectRecommendationsDialog({
-    Key? key,
-  }) : super(
-          key: key,
-        );
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -139,10 +135,8 @@ class ConnectRecommendationsDialog extends StatelessWidget {
 /// ```
 class DisableUpdatesDialog extends StatelessWidget {
   const DisableUpdatesDialog({
-    Key? key,
-  }) : super(
-          key: key,
-        );
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
