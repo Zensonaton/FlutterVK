@@ -34,15 +34,16 @@ User _$UserFromJson(Map<String, dynamic> json) => User(
       about: json['about'] as String?,
       activities: json['activities'] as String?,
       bdate: json['bdate'] as String?,
-      blacklisted: boolFromInt(json['blacklisted'] as int),
-      blacklistedByMe: boolFromInt(json['blacklisted_by_me'] as int),
+      blacklisted: boolFromInt(json['blacklisted'] as int?),
+      blacklistedByMe: boolFromInt(json['blacklisted_by_me'] as int?),
       books: json['books'] as String?,
-      canPost: boolFromInt(json['can_post'] as int),
-      canSeeAllPosts: boolFromInt(json['can_see_all_posts'] as int),
-      canSeeAudio: boolFromInt(json['can_see_audio'] as int),
-      canSendFriendRequest: boolFromInt(json['can_send_friend_request'] as int),
+      canPost: boolFromInt(json['can_post'] as int?),
+      canSeeAllPosts: boolFromInt(json['can_see_all_posts'] as int?),
+      canSeeAudio: boolFromInt(json['can_see_audio'] as int?),
+      canSendFriendRequest:
+          boolFromInt(json['can_send_friend_request'] as int?),
       canWritePrivateMessage:
-          boolFromInt(json['can_write_private_message'] as int),
+          boolFromInt(json['can_write_private_message'] as int?),
       career: json['career'],
       city: json['city'],
       commonCount: json['common_count'] as int?,
@@ -61,14 +62,22 @@ User _$UserFromJson(Map<String, dynamic> json) => User(
       followersCount: json['followers_count'] as int?,
       friendStatus: json['friend_status'] as int?,
       games: json['games'] as String?,
-      hasMobile: boolFromInt(json['has_mobile'] as int),
-      hasPhoto: boolFromInt(json['has_photo'] as int),
+      hasMobile: boolFromInt(json['has_mobile'] as int?),
+      hasPhoto: boolFromInt(json['has_photo'] as int?),
       homeTown: json['home_town'] as String?,
       interests: json['interests'] as String?,
-      isFavorite: boolFromInt(json['is_favorite'] as int),
-      isFriend: boolFromInt(json['is_friend'] as int),
-      isHiddenFromFeed: boolFromInt(json['is_hidden_from_feed'] as int),
-      isNoIndex: boolFromInt(json['is_no_index'] as int),
+      isFavorite: json['is_favorite'] == null
+          ? false
+          : boolFromInt(json['is_favorite'] as int?),
+      isFriend: json['is_friend'] == null
+          ? false
+          : boolFromInt(json['is_friend'] as int?),
+      isHiddenFromFeed: json['is_hidden_from_feed'] == null
+          ? false
+          : boolFromInt(json['is_hidden_from_feed'] as int?),
+      isNoIndex: json['is_no_index'] == null
+          ? false
+          : boolFromInt(json['is_no_index'] as int?),
       lastNameNom: json['last_name_nom'] as String?,
       lastNameGen: json['last_name_gen'] as String?,
       lastNameDat: json['last_name_dat'] as String?,
@@ -308,7 +317,7 @@ Audio _$AudioFromJson(Map<String, dynamic> json) => Audio(
       isLicensed: json['is_licensed'] as bool?,
       isRestricted: json['content_restricted'] == null
           ? false
-          : boolFromInt(json['content_restricted'] as int),
+          : boolFromInt(json['content_restricted'] as int?),
       shortVideosAllowed: json['short_videos_allowed'] as bool?,
       storiesAllowed: json['stories_allowed'] as bool?,
       storiesCoverAllowed: json['stories_cover_allowed'] as bool?,

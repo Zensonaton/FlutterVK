@@ -210,19 +210,23 @@ class User {
   final String? interests;
 
   /// Информация о том, есть ли пользователь в закладках у текущего пользователя.
-  @JsonKey(name: "is_favorite", fromJson: boolFromInt)
-  final bool? isFavorite;
+  @JsonKey(name: "is_favorite", fromJson: boolFromInt, defaultValue: false)
+  final bool isFavorite;
 
   /// Информация о том, является ли пользователь другом текущего пользователя.
-  @JsonKey(name: "is_friend", fromJson: boolFromInt)
-  final bool? isFriend;
+  @JsonKey(name: "is_friend", fromJson: boolFromInt, defaultValue: false)
+  final bool isFriend;
 
   /// Информация о том, скрыт ли пользователь из ленты новостей текущего пользователя.
-  @JsonKey(name: "is_hidden_from_feed", fromJson: boolFromInt)
-  final bool? isHiddenFromFeed;
+  @JsonKey(
+    name: "is_hidden_from_feed",
+    fromJson: boolFromInt,
+    defaultValue: false,
+  )
+  final bool isHiddenFromFeed;
 
   /// Индексируется ли профиль поисковыми сайтами.
-  @JsonKey(name: "is_no_index", fromJson: boolFromInt)
+  @JsonKey(name: "is_no_index", fromJson: boolFromInt, defaultValue: false)
   final bool? isNoIndex;
 
   /// Фамилия пользователя в именительном падеже.
@@ -416,9 +420,9 @@ class User {
     this.hasPhoto,
     this.homeTown,
     this.interests,
-    this.isFavorite,
-    this.isFriend,
-    this.isHiddenFromFeed,
+    this.isFavorite = false,
+    this.isFriend = false,
+    this.isHiddenFromFeed = false,
     this.isNoIndex,
     this.lastNameNom,
     this.lastNameGen,
