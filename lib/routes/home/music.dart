@@ -2545,7 +2545,7 @@ class _MyPlaylistsBlockState extends State<MyPlaylistsBlock> {
                   ),
                   child: AudioPlaylistWidget(
                     backgroundUrl: playlist.photo?.photo270,
-                    mediaKey: playlist.mediaKey,
+                    mediaKey: "${playlist.mediaKey}270",
                     name: playlist.title!,
                     description: playlist.description,
                     selected: player.currentPlaylist == playlist,
@@ -2682,7 +2682,7 @@ class _RecommendedPlaylistsBlockState extends State<RecommendedPlaylistsBlock> {
                   ),
                   child: AudioPlaylistWidget(
                     backgroundUrl: playlist.photo!.photo270!,
-                    mediaKey: playlist.mediaKey,
+                    mediaKey: "${playlist.mediaKey}270",
                     name: playlist.title!,
                     description: playlist.subtitle,
                     useTextOnImageLayout: true,
@@ -2961,7 +2961,7 @@ class _ByVKPlaylistsBlockState extends State<ByVKPlaylistsBlock> {
                   ),
                   child: AudioPlaylistWidget(
                     backgroundUrl: playlist.photo!.photo270!,
-                    mediaKey: playlist.mediaKey,
+                    mediaKey: "${playlist.mediaKey}270",
                     name: playlist.title!,
                     description: playlist.description,
                     selected: player.currentPlaylist == playlist,
