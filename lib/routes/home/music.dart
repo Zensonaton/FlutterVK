@@ -128,7 +128,7 @@ Future<void> ensureUserAudioBasicInfo(
   // Если информация уже загружена, то ничего не делаем.
   if (!forceUpdate &&
       (user.favoritesPlaylist?.audios != null &&
-          (user.favoritesPlaylist?.isLiveData ?? false))) return;
+          (user.favoritesPlaylist?.areTracksLive ?? false))) return;
 
   logger.d("Loading music information (force: $forceUpdate)");
 
@@ -157,6 +157,7 @@ Future<void> ensureUserAudioBasicInfo(
               )
               .toSet(),
           isLiveData: true,
+          areTracksLive: true,
         ),
 
         // Все остальные плейлисты пользователя.
@@ -705,6 +706,7 @@ class _SearchDisplayDialogState extends State<SearchDisplayDialog> {
                           title: AppLocalizations.of(context)!
                               .music_searchPlaylistTitle,
                           isLiveData: true,
+                          areTracksLive: true,
                         ),
                       );
                     },

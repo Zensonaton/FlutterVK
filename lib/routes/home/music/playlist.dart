@@ -39,7 +39,10 @@ Future<ExtendedPlaylist> loadPlaylistData(
   bool forceUpdate = false,
 }) async {
   // Если информация уже загружена, то ничего не делаем.
-  if (!forceUpdate && (playlist.audios != null && playlist.isLiveData)) {
+  if (!forceUpdate &&
+      (playlist.audios != null &&
+          playlist.isLiveData &&
+          playlist.areTracksLive)) {
     return playlist;
   }
 
@@ -62,6 +65,7 @@ Future<ExtendedPlaylist> loadPlaylistData(
     color: playlist.color,
     knownTracks: playlist.knownTracks,
     isLiveData: true,
+    areTracksLive: true,
     cacheTracks: playlist.cacheTracks,
   );
 
@@ -122,7 +126,7 @@ Future<void> onPlaylistPlayToggle(
   }
 
   // Если информация по плейлисту не загружена, то мы должны её загрузить.
-  if (playlist.audios == null || playlist.isCached) {
+  if (playlist.audios == null || playlist.isDataCached) {
     LoadingOverlay.of(context).show();
 
     try {
@@ -352,7 +356,9 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
     logger.d("Open ${widget.playlist}");
 
     // Если информация по данному плейлисту не загружена, то загружаем её.
-    if (widget.playlist.audios == null || widget.playlist.isCached) {
+    if (widget.playlist.audios == null ||
+        widget.playlist.isDataCached ||
+        widget.playlist.areTracksCached) {
       // Отображаем анимацию загрузки лишь в случае, если список треков пустой, т.е., он не был загружен с кэша.
       if (widget.playlist.audios == null) {
         setState(() => _loading = true);

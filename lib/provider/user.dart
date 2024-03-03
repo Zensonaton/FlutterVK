@@ -103,12 +103,24 @@ class ExtendedPlaylist {
   final List<ExtendedAudio>? knownTracks;
 
   /// Указывает, что данный плейлист был загружен с API ВКонтакте. Если данное поле false, то это значит, что все данные из этого плейлиста являются кешированными (т.е., загружены из БД Isar).
+  ///
+  /// Не стоит путать с [areTracksLive], данное поле указывает только то, что основная информация о плейлисте (его количество прослушиваний, изображение, ...) была загружена с API ВКонтакте, данное поле не отображает состояние загрузки треков в данном плейлисте.
   bool isLiveData;
 
   /// Указывает, что данный плейлист был загружен с БД Isar, т.е., данные этого плейлиста являются кэшированными.
   ///
   /// Данное поле является противоположностью поля [isLiveData].
-  bool get isCached => !isLiveData;
+  bool get isDataCached => !isLiveData;
+
+  /// Указывает, что треки данного плейлиста были загружены с API ВКонтакте. Если данное поле false, то это значит, что все треки из этого плейлиста являются кешированными (т.е., загружены из БД Isar).
+  ///
+  /// Не стоит путать с [isLiveData], данное поле указывает только то, что треки в данном плейлисте были загружены с API ВКонтакте, данное поле не отображает состояние загруженности данных о самом плейлисте.
+  bool areTracksLive;
+
+  /// Указывает, что треки данного плейлиста были загружены с БД Isar, т.е., данные этого плейлиста являются кэшированными.
+  ///
+  /// Данное поле является противоположностью поля [areTracksLive].
+  bool get areTracksCached => !areTracksLive;
 
   /// Указывает, что в данном плейлисте разрешено кэширование треков.
   bool? cacheTracks;
@@ -140,6 +152,7 @@ class ExtendedPlaylist {
     String? color,
     List<ExtendedAudio>? knownTracks,
     bool isLiveData = true,
+    bool areTracksLive = false,
   }) =>
       ExtendedPlaylist(
         id: playlist.id,
@@ -160,6 +173,7 @@ class ExtendedPlaylist {
         color: color,
         knownTracks: knownTracks,
         isLiveData: isLiveData,
+        areTracksLive: areTracksLive,
       );
 
   /// Создаёт из передаваемого объекта [DBPlaylist] объект данного класа.
@@ -209,7 +223,7 @@ class ExtendedPlaylist {
 
   @override
   String toString() =>
-      "ExtendedPlaylist $mediaKey with ${audios?.length}/$count tracks ${isCached ? '(cached)' : ''}";
+      "ExtendedPlaylist $mediaKey with ${audios?.length}/$count tracks ${isDataCached ? '(cached data)' : ''} ${areTracksCached ? '(cached tracks)' : ''}";
 
   @override
   bool operator ==(covariant ExtendedPlaylist other) {
@@ -240,6 +254,7 @@ class ExtendedPlaylist {
     this.color,
     this.knownTracks,
     this.isLiveData = false,
+    this.areTracksLive = false,
     this.cacheTracks,
   });
 }
@@ -814,6 +829,7 @@ class UserProvider extends ChangeNotifier {
       existingPlaylist.updateTime = playlist.updateTime;
       existingPlaylist.followers = playlist.followers;
       existingPlaylist.isLiveData = playlist.isLiveData;
+      existingPlaylist.areTracksLive = playlist.areTracksLive;
 
       // Проходимся по новому списку треков, если он вообще был передан.
       if (playlist.audios != null) {
