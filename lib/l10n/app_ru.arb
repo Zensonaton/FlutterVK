@@ -263,6 +263,9 @@
 	"profile_pauseOnMuteTitle": "Пауза при отключении громкости",
 	"profile_pauseOnMuteDescription": "Данная опция указывает, будет ли плеер ставиться на паузу при установке минимальной громкости в плеере",
 
+	"profile_stopOnLongPauseTitle": "Остановка при неактивности",
+	"profile_stopOnLongPauseDescription": "Включив эту опцию, сессия воспроизведения будет автоматически завершаться в случае установки паузы у плеера",
+
 	"profile_checkBeforeFavoriteTitle": "Предупреждение при сохранении лайкнутого трека",
 	"profile_checkBeforeFavoriteDescription": "Если включено, то при сохранении уже лайкнутого трека приложение отобразит предупреждение, подтверждающее создание дубликата",
 	"checkBeforeFavoriteWarningTitle": "Обнаружен дубликат трека",

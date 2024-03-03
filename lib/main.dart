@@ -263,6 +263,11 @@ class _MainAppState extends State<MainApp> with WindowListener {
       await player.setDiscordRPCEnabled(true);
     }
 
+    // Восстанавливаем значение настройки "остановка при неактивности".
+    if (user.settings.stopOnPauseEnabled) {
+      player.setStopOnPauseEnabled(true);
+    }
+
     // На Desktop-платформах, создаём README-файл в папке кэша треков, если он не существует.
     if (isDesktop) {
       final File readmeFile = File(

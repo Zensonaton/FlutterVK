@@ -485,6 +485,9 @@ class Settings {
   /// Указывает, что настройка "пауза при минимальной громкости" включена.
   bool pauseOnMuteEnabled = false;
 
+  /// Указывает, что при установке плеера на паузу, воспроизведение музыки будет автоматически остановлено ([VKMusicPlayer.stop]) через некоторое время.
+  bool stopOnPauseEnabled = true;
+
   /// Указывает, что полноэкранный плеер использует изображение трека в качестве фона.
   bool playerThumbAsBackground = true;
 
@@ -715,6 +718,10 @@ class UserProvider extends ChangeNotifier {
       settings.pauseOnMuteEnabled,
     );
     await prefs.setBool(
+      "StopOnPauseEnabled",
+      settings.stopOnPauseEnabled,
+    );
+    await prefs.setBool(
       "PlayerThumbAsBackground",
       settings.playerThumbAsBackground,
     );
@@ -782,6 +789,7 @@ class UserProvider extends ChangeNotifier {
     settings.shuffleEnabled = prefs.getBool("ShuffleEnabled") ?? false;
     settings.discordRPCEnabled = prefs.getBool("DiscordRPCEnabled") ?? true;
     settings.pauseOnMuteEnabled = prefs.getBool("PauseOnMuteEnabled") ?? false;
+    settings.stopOnPauseEnabled = prefs.getBool("StopOnPauseEnabled") ?? true;
     settings.playerThumbAsBackground =
         prefs.getBool("PlayerThumbAsBackground") ?? true;
     settings.trackLyricsEnabled = prefs.getBool("TrackLyricsEnabled") ?? true;

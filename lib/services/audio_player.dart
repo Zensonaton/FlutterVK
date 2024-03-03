@@ -316,20 +316,21 @@ class VKMusicPlayer {
 
   VKMusicPlayer() {
     _subscriptions = [
-      // Слушаем события запуска воспроизведения.
-      _player.playerStateStream.listen(
-        (PlayerState state) async {
-          if (_player.playerState.playing && !_loaded) {
+      // События паузы/воспроизведения.
+      _player.playingStream.listen(
+        (bool playing) async {
+          if (playing && !_loaded) {
             _setPlayerLoaded(true);
 
             await startMusicSession();
           }
 
+          // Обновляем состояние воспроизведения.
           await updateMusicSession();
         },
       ),
 
-      // // Обработчик изменения текущего трека.
+      // Обработчик изменения текущего трека.
       sequenceStateStream.listen(
         (SequenceState? state) async {
           if (state == null || currentAudio == null) return;
@@ -377,6 +378,17 @@ class VKMusicPlayer {
   bool get discordRPCEnabled => _discordRPCEnabled;
 
   bool _loaded = false;
+
+  /// [Duration], указывающий, через какое время будет вызван метод [stop], если пользователь не взаимодействовал с плеером указанное время.
+  static Duration stopOnPauseTimerDuration = const Duration(minutes: 10);
+
+  /// Указывает, будет ли плеер вызывать метод [stop], если после вызова [pause] не происходило никаких других взаимодействий с плеером.
+  bool get allowStopOnPause => _allowStopOnPause;
+
+  bool _allowStopOnPause = true;
+
+  /// [Timer], используемый если [allowStopOnPause] не равен false, создаваемый после вызова [pause], и удаляемый после вызова [play].
+  Timer? _pauseStopTimer;
 
   /// Фейковый индекс трека, который играет в данный момент. Используется, что бы изменение трека после вызовов типа [next] или [previous] происходило мгновенно.
   int? _fakeCurrentTrackIndex;
@@ -734,6 +746,15 @@ class VKMusicPlayer {
     _loadedStateController.add(_loaded);
   }
 
+  /// Метод, вызываемый в случае, если плеер был неактивен [stopOnPauseTimerDuration], и [allowStopOnPause] равен true.
+  void _stopOnPauseCallback() async {
+    logger.d(
+      "Forcibly calling stop, because player has been inactive for $stopOnPauseTimerDuration",
+    );
+
+    await stop();
+  }
+
   /// Возобновляет воспроизведение музыки у плеера, ранее остановленной при помощи метода [pause].
   ///
   /// Если Вы хотите поставить музыку на паузу или начать воспроизведение в зависимости от значения переменной, то воспользуйтесь методом [playOrPause], который работает следующим образом:
@@ -854,16 +875,15 @@ class VKMusicPlayer {
   ///
   /// Данный метод стоит вызывать только в случае, когда пользователь остановил воспроизведение, к примеру, убив приложение или свернув уведомление. Для паузы стоит воспользоваться методом [pause].
   Future<void> stop() async {
+    _setPlayerLoaded(false);
+
     await _player.pause();
     await _player.stop();
-    await updateMusicSession();
     await stopMusicSession();
 
     _playlist = null;
     _queue = null;
     _audiosQueue = null;
-
-    _setPlayerLoaded(false);
   }
 
   /// Полностью освобождает ресурсы, занятые данным плеером.
@@ -1030,6 +1050,18 @@ class VKMusicPlayer {
     }
   }
 
+  /// Включает или отключает автоматический вызов метода [stop] после неактивности плеера ([pause] на длительное время).
+  ///
+  /// Время, через которое будет вызван [stop] в случае неактивности - [stopOnPauseTimerDuration].
+  void setStopOnPauseEnabled(bool enabled) {
+    logger.d("Called setStopOnPauseEnabled($enabled)");
+
+    if (enabled == _allowStopOnPause) return;
+    _allowStopOnPause = enabled;
+
+    _pauseStopTimer?.cancel();
+  }
+
   /// Запускает музыкальную сессию. При вызове данного метода, плеер активирует различные системы, по типу SMTC для Windows, Discord Rich Presence и прочие.
   ///
   /// Данный метод нужно вызвать после первого запуска плеера. После завершения музыкальной сессии, рекомендуется вызвать метод [stopMusicSession].
@@ -1115,6 +1147,14 @@ class VKMusicPlayer {
         ),
       );
     }
+
+    // Запускаем таймер паузы, если установлена пауза.
+    _pauseStopTimer?.cancel();
+
+    if (!playing && _loaded && _allowStopOnPause) {
+      // Запускаем таймер.
+      _pauseStopTimer = Timer(stopOnPauseTimerDuration, _stopOnPauseCallback);
+    }
   }
 
   /// Останавливает текущую музыкальную сессию, ранее начатую вызовом метода [startMusicSession].
@@ -1122,8 +1162,6 @@ class VKMusicPlayer {
   /// Данный метод стоит вызывать только после остановки музыкальной сессии, т.е., после вызова метода [stop].
   Future<void> stopMusicSession() async {
     logger.d("Called stopMusicSession");
-
-    if (!loaded) return;
 
     if (Platform.isWindows) {
       await smtc?.disableSmtc();
@@ -1133,6 +1171,8 @@ class VKMusicPlayer {
     if (discordRPCEnabled) {
       discordRPC?.clearPresence();
     }
+
+    _pauseStopTimer?.cancel();
   }
 
   /// Создаёт две цветовых схемы из цветов плеера: [Brightness.light] и [Brightness.dark].

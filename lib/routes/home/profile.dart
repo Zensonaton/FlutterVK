@@ -485,7 +485,7 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                 if (isDesktop)
                   SwitchListTile(
                     secondary: const Icon(
-                      Icons.timer,
+                      Icons.volume_off,
                     ),
                     title: Text(
                       AppLocalizations.of(context)!.profile_pauseOnMuteTitle,
@@ -503,6 +503,29 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                       user.markUpdated();
                     },
                   ),
+
+                // Остановка плеера при неактивности.
+                SwitchListTile(
+                  secondary: const Icon(
+                    Icons.timer,
+                  ),
+                  title: Text(
+                    AppLocalizations.of(context)!.profile_stopOnLongPauseTitle,
+                  ),
+                  subtitle: Text(
+                    AppLocalizations.of(context)!
+                        .profile_stopOnLongPauseDescription,
+                  ),
+                  value: user.settings.stopOnPauseEnabled,
+                  onChanged: (bool? enabled) async {
+                    if (enabled == null) return;
+
+                    user.settings.stopOnPauseEnabled = enabled;
+                    player.setStopOnPauseEnabled(enabled);
+
+                    user.markUpdated();
+                  },
+                ),
 
                 // Предупреждение создание дубликата при сохранении.
                 SwitchListTile(
