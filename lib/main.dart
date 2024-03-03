@@ -125,17 +125,6 @@ Future<void> initSystemTray() async {
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Делаем панель навигации прозрачной.
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      systemNavigationBarColor: Colors.transparent,
-      systemNavigationBarDividerColor: Colors.transparent,
-    ),
-  );
-  SystemChrome.setEnabledSystemUIMode(
-    SystemUiMode.edgeToEdge,
-  );
-
   // Инициализируем WindowManager на Desktop-платформах.
   if (isDesktop) {
     await windowManager.ensureInitialized();
@@ -294,6 +283,17 @@ class _MainAppState extends State<MainApp> with WindowListener {
     }
 
     user.markUpdated(false);
+
+    // Делаем панель навигации прозрачной.
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarDividerColor: Colors.transparent,
+      ),
+    );
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.edgeToEdge,
+    );
   }
 
   @override
