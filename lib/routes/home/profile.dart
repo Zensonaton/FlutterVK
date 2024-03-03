@@ -1,4 +1,5 @@
 import "dart:async";
+import "dart:io";
 
 import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/foundation.dart";
@@ -7,6 +8,7 @@ import "package:flutter/services.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "package:provider/provider.dart";
 import "package:responsive_builder/responsive_builder.dart";
+import "package:share_plus/share_plus.dart";
 import "package:url_launcher/url_launcher.dart";
 
 import "../../consts.dart";
@@ -14,6 +16,7 @@ import "../../enums.dart";
 import "../../main.dart";
 import "../../provider/user.dart";
 import "../../services/cache_manager.dart";
+import "../../services/logger.dart";
 import "../../services/updater.dart";
 import "../../utils.dart";
 import "../../widgets/dialogs.dart";
@@ -177,6 +180,16 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
   /// Подписки на изменения состояния воспроизведения трека.
   late final List<StreamSubscription> subscriptions;
 
+  /// Future, отображающий информацию о том, существует ли файл с логом.
+  late final Future<bool> logExistsFuture;
+
+  /// Future, возвращающий информацию о том, существует ли файл с логом.
+  Future<bool> _logFileExists() async {
+    final File file = await logFilePath();
+
+    return file.existsSync();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -187,6 +200,8 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
         (bool loaded) => setState(() {}),
       ),
     ];
+
+    logExistsFuture = _logFileExists();
   }
 
   @override
@@ -503,6 +518,37 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                     AppLocalizations.of(context)!.profile_exportMusicListTitle,
                   ),
                   onTap: () => showWipDialog(context),
+                ),
+
+                // Поделиться логами.
+                FutureBuilder<bool>(
+                  future: logExistsFuture,
+                  builder:
+                      (BuildContext context, AsyncSnapshot<bool> snapshot) {
+                    final bool exists = snapshot.data ?? false;
+
+                    return ListTile(
+                      leading: const Icon(
+                        Icons.bug_report,
+                      ),
+                      title: Text(
+                        AppLocalizations.of(context)!.profile_shareLogsTitle,
+                      ),
+                      enabled: exists,
+                      subtitle: Text(
+                        exists
+                            ? AppLocalizations.of(context)!
+                                .profile_shareLogsDescription
+                            : AppLocalizations.of(context)!
+                                .profile_shareLogsNoLogsDescription,
+                      ),
+                      onTap: () async => Share.shareXFiles(
+                        [
+                          XFile((await logFilePath()).path),
+                        ],
+                      ),
+                    );
+                  },
                 ),
 
                 // Github.

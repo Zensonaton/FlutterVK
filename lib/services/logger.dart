@@ -15,11 +15,17 @@ AppLogger getLogger<T>(
   return AppLogger(owner: ownerStr);
 }
 
-/// Возвращает файл, в котором хранятся логи ошибок.
-Future<File> getLogFile() async {
+/// Возвращает путь к файлу, в котором хранятся логи приложения. Данный метод не создаёт файл в случае его отсутствия.
+Future<File> logFilePath() async {
   final String dir = (await getApplicationSupportDirectory()).path;
 
-  final file = File(path.join(dir, "fluttervk.log"));
+  return File(path.join(dir, "fluttervk.log"));
+}
+
+/// Возвращает файл, в котором хранятся логи приложения. Если такового файла нет, то он будет создан.
+Future<File> createLogFile() async {
+  final File file = await logFilePath();
+
   if (!file.existsSync()) await file.create();
 
   return file;
@@ -46,7 +52,7 @@ class _AppLogOutput extends LogOutput {
     event.lines.forEach(print);
 
     if (event.level != Level.debug) {
-      _logFile ??= await getLogFile();
+      _logFile ??= await createLogFile();
 
       _logFile!.writeAsString(
         "${event.lines}\n",
