@@ -431,6 +431,11 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
         (PlayerState state) => setState(() {}),
       ),
 
+      // Пауза/воспроизведение.
+      player.playingStream.listen(
+        (bool playing) => setState(() {}),
+      ),
+
       // Изменения плейлиста.
       player.sequenceStateStream.listen(
         (SequenceState? state) => setState(() {}),

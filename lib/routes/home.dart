@@ -269,6 +269,11 @@ class _BottomMusicPlayerWidgetState extends State<BottomMusicPlayerWidget> {
         (Duration position) => setState(() {}),
       ),
 
+      // Пауза/воспроизведение.
+      player.playingStream.listen(
+        (bool playing) => setState(() {}),
+      ),
+
       // Изменения плейлиста и текущего трека.
       player.sequenceStateStream.listen(
         (SequenceState? state) => setState(() {}),
