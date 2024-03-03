@@ -375,14 +375,22 @@ class _MainAppState extends State<MainApp> with WindowListener {
 
         return MaterialApp(
           theme: ThemeData(
-            colorScheme: playerLightColorScheme ??
-                lightColorScheme ??
-                fallbackLightColorScheme,
+            colorScheme: (playerLightColorScheme ??
+                    lightColorScheme ??
+                    fallbackLightColorScheme)
+                .copyWith(
+              background: user.settings.oledTheme ? Colors.black : null,
+              surface: user.settings.oledTheme ? Colors.black : null,
+            ),
           ),
           darkTheme: ThemeData(
-            colorScheme: playerDarkColorScheme ??
-                darkColorScheme ??
-                fallbackDarkColorScheme,
+            colorScheme: (playerDarkColorScheme ??
+                    darkColorScheme ??
+                    fallbackDarkColorScheme)
+                .copyWith(
+              background: user.settings.oledTheme ? Colors.black : null,
+              surface: user.settings.oledTheme ? Colors.black : null,
+            ),
           ),
           themeMode: user.settings.theme,
           themeAnimationDuration: const Duration(

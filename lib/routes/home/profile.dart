@@ -421,6 +421,24 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                   ),
                 ),
 
+                // OLED тема.
+                SwitchListTile(
+                  secondary: const Icon(
+                    Icons.mode_night,
+                  ),
+                  title: Text(
+                    AppLocalizations.of(context)!.profile_oledThemeTitle,
+                  ),
+                  value: user.settings.oledTheme,
+                  onChanged: (bool? enabled) async {
+                    if (enabled == null) return;
+
+                    user.settings.oledTheme = enabled;
+
+                    user.markUpdated();
+                  },
+                ),
+
                 // Использование изображения трека для фона в полноэкранном плеере.
                 SwitchListTile(
                   secondary: const Icon(

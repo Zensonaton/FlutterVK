@@ -497,6 +497,9 @@ class Settings {
   /// Указывает, какая тема приложения используется.
   ThemeMode theme = ThemeMode.system;
 
+  /// Указывает, что включена OLED тема приложения.
+  bool oledTheme = false;
+
   /// Указывает поведение в случае закрытия приложения.
   AppCloseBehavior closeBehavior = AppCloseBehavior.close;
 
@@ -727,6 +730,10 @@ class UserProvider extends ChangeNotifier {
       "Theme",
       settings.theme.index,
     );
+    await prefs.setBool(
+      "OLEDTheme",
+      settings.oledTheme,
+    );
     await prefs.setInt(
       "CloseBehavior",
       settings.closeBehavior.index,
@@ -781,6 +788,7 @@ class UserProvider extends ChangeNotifier {
     settings.playerColorsAppWide =
         prefs.getBool("PlayerColorsAppWide") ?? false;
     settings.theme = ThemeMode.values[prefs.getInt("Theme") ?? 0];
+    settings.oledTheme = prefs.getBool("OLEDTheme") ?? false;
     settings.closeBehavior =
         AppCloseBehavior.values[prefs.getInt("CloseBehavior") ?? 0];
     settings.checkBeforeFavorite = prefs.getBool("CheckBeforeFavorite") ?? true;

@@ -253,6 +253,8 @@
 	"profile_themeLight": "Светлая",
 	"profile_themeDark": "Тёмная",
 
+	"profile_oledThemeTitle": "OLED тема",
+
 	"profile_useThumbnailAsBackgroundTitle": "Изображение трека как фон",
 	"profile_useThumbnailAsBackgroundDescription": "Работает в полноэкранном плеере",
 
