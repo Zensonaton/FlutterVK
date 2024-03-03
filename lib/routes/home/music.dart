@@ -1809,20 +1809,19 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
 
               // Если это обычный плейлист, то нам нужно показать его содержимое под изображением.
               if (!widget.useTextOnImageLayout)
-                Padding(
-                  padding: const EdgeInsets.only(
-                    top: 4,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Название плейлиста.
-                      Flexible(
-                        child: Text(
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(
+                      top: 4,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Название плейлиста.
+                        Text(
                           widget.name,
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          maxLines: 3,
                           style: Theme.of(context)
                               .textTheme
                               .headlineSmall!
@@ -1833,31 +1832,33 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
                                     : null,
                               ),
                         ),
-                      ),
 
-                      // Описание плейлиста, при наличии.
-                      if (widget.description != null)
-                        Flexible(
-                          child: Padding(
-                            padding: const EdgeInsets.only(
-                              top: 2,
-                            ),
-                            child: Text(
-                              widget.description!,
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 2,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium!
-                                  .copyWith(
-                                    color: widget.selected
-                                        ? Theme.of(context).colorScheme.primary
-                                        : null,
-                                  ),
+                        // Описание плейлиста, при наличии.
+                        if (widget.description != null)
+                          Flexible(
+                            child: Padding(
+                              padding: const EdgeInsets.only(
+                                top: 2,
+                              ),
+                              child: Text(
+                                widget.description!,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium!
+                                    .copyWith(
+                                      color: widget.selected
+                                          ? Theme.of(context)
+                                              .colorScheme
+                                              .primary
+                                          : null,
+                                    ),
+                              ),
                             ),
                           ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
             ],
