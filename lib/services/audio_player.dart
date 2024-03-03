@@ -1150,13 +1150,13 @@ class VKMusicPlayer {
 
     final String cacheKey = "${player.currentAudio!.album!.id}68";
 
-    // Задача по созданию цветовой схемы не находится в очереди, поэтому помещаем задачу в очередь.
-    _colorSchemeItemsQueue.add(cacheKey);
-
     // Пытаемся извлечь значение цветовых схем из кэша.
     if (imageColorSchemeCache.containsKey(cacheKey)) {
       return imageColorSchemeCache[cacheKey];
     }
+
+    // Задача по созданию цветовой схемы не находится в очереди, поэтому помещаем задачу в очередь.
+    _colorSchemeItemsQueue.add(cacheKey);
 
     logger.d("Creating ColorScheme for $cacheKey");
 
@@ -1184,9 +1184,7 @@ class VKMusicPlayer {
 
     imageColorSchemeCache[cacheKey] = (lightScheme, darkScheme);
 
-    logger.d(
-      "Done building ColorScheme for $cacheKey, took ${watch.elapsed}",
-    );
+    logger.d("Done building ColorScheme for $cacheKey, took ${watch.elapsed}");
 
     // Удаляем из очереди.
     _colorSchemeItemsQueue.remove(cacheKey);
