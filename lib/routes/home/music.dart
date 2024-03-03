@@ -371,8 +371,8 @@ Future<void> loadCachedTracksInformation(
 
   // Извлекаем список треков у тех плейлистов, у которых включено кэширование.
   for (ExtendedPlaylist playlist in user.allPlaylists.values) {
-    // Уже загруженные плейлисты должны быть пропущены.
-    if (playlist.isLiveData) continue;
+    // Плейлисты, у которых уже загружен список треков должны быть пропущены.
+    if (playlist.areTracksLive) continue;
 
     // Плейлисты с отключенным кэшированием пропускаем.
     if (!(playlist.cacheTracks ?? false)) continue;
