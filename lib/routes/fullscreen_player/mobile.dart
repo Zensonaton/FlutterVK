@@ -206,7 +206,7 @@ class _ImageLyricsBlockState extends State<ImageLyricsBlock> {
       child: !lyricsLoadedAndShown
           ? MouseRegion(
               key: ValueKey(
-                player.smartCurrentAudio!.mediaKey,
+                player.smartCurrentAudio!.album?.id,
               ),
               cursor: SystemMouseCursors.click,
               child: GestureDetector(
