@@ -2,6 +2,7 @@ import "dart:async";
 
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "package:just_audio/just_audio.dart";
 import "package:provider/provider.dart";
@@ -355,7 +356,9 @@ class _BottomMusicPlayerWidgetState extends State<BottomMusicPlayerWidget> {
       onDismiss: () => player.stop(),
       onFullscreen: (bool viaSwipeUp) => openFullscreenPlayer(
         context,
-        fullscreenOnDesktop: !widget.isMobileLayout,
+        fullscreenOnDesktop: !widget.isMobileLayout &&
+            !RawKeyboard.instance.keysPressed
+                .contains(LogicalKeyboardKey.shiftLeft),
       ),
       onMiniplayer: () => openMiniPlayer(context),
       onShuffleToggle: (bool enabled) async {
@@ -470,7 +473,10 @@ class _HomeRouteState extends State<HomeRoute> {
     return Actions(
       actions: {
         FullscreenPlayerIntent: CallbackAction(
-          onInvoke: (intent) => openFullscreenPlayer(context),
+          onInvoke: (intent) => openFullscreenPlayer(
+            context,
+            fullscreenOnDesktop: !isMobileLayout,
+          ),
         ),
       },
       child: Scaffold(
