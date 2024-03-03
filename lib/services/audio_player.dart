@@ -1241,9 +1241,16 @@ class AudioPlayerService extends BaseAudioHandler
   AudioPlayerService(
     this._player,
   ) {
-    // События паузы/воспроизведения/...
+    // События состояния плеера.
     _player.playerStateStream.listen((PlayerState state) async {
       if (!player.playing) return;
+
+      await _updateEvent();
+    });
+
+    // События паузы/воспроизведения/...
+    _player.playingStream.listen((bool playing) async {
+      if (!playing) return;
 
       await _updateEvent();
     });
@@ -1273,12 +1280,6 @@ class AudioPlayerService extends BaseAudioHandler
 
   /// Отправляет изменения состояния воспроизведения в `audio_service`, обновляя информацию, отображаемую в уведомлении.
   Future<void> _updateEvent() async {
-    if (!_player.loaded) {
-      if (playbackState.hasValue) await super.stop();
-
-      return;
-    }
-
     playbackState.add(
       PlaybackState(
         controls: [
@@ -1313,15 +1314,19 @@ class AudioPlayerService extends BaseAudioHandler
         repeatMode: _player.loopMode == LoopMode.one
             ? AudioServiceRepeatMode.one
             : AudioServiceRepeatMode.none,
-        processingState: _player.buffering
-            ? AudioProcessingState.loading
-            : AudioProcessingState.ready,
+        processingState: _player.loaded
+            ? _player.buffering
+                ? AudioProcessingState.loading
+                : AudioProcessingState.ready
+            : AudioProcessingState.idle,
       ),
     );
   }
 
   /// Отправляет новый трек в уведомление.
   Future<void> _updateTrack() async {
+    if (!_player.loaded) return;
+
     mediaItem.add(_player.currentAudio?.asMediaItem);
   }
 
