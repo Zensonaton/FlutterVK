@@ -841,6 +841,7 @@ class UserProvider extends ChangeNotifier {
       existingPlaylist.subtitle = playlist.subtitle;
       existingPlaylist.cacheTracks =
           playlist.cacheTracks ?? existingPlaylist.cacheTracks;
+      existingPlaylist.photo = playlist.photo;
       existingPlaylist.createTime = playlist.createTime;
       existingPlaylist.updateTime = playlist.updateTime;
       existingPlaylist.followers = playlist.followers;
