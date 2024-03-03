@@ -27,6 +27,7 @@ import "routes/welcome.dart";
 import "services/audio_player.dart";
 import "services/cache_manager.dart";
 import "services/download_manager.dart";
+import "services/logger.dart";
 import "utils.dart";
 import "widgets/loading_overlay.dart";
 
@@ -222,6 +223,8 @@ Future main() async {
 
   // Узнаём версию приложения.
   appVersion = (await PackageInfo.fromPlatform()).version;
+
+  getLogger("main").i("Running Flutter VK v$appVersion");
 
   runApp(
     MultiProvider(
