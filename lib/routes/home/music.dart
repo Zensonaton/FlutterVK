@@ -54,28 +54,32 @@ Future<void> ensureUserAudioAllInformation(
 
   if (!context.mounted) return;
 
-  // Делаем API-запросы, получаем список плейлистов из ВКонтакте.
-  await Future.wait([
-    // Список фаворитных треков (со списком треков), а так же плейлисты пользователя (без списка треков).
-    ensureUserAudioBasicInfo(
-      context,
-      forceUpdate: forceUpdate,
-    ),
+  // Делаем API-запросы, получаем список плейлистов из ВКонтакте, если есть доступ к интернету.
+  if (connectivityManager.hasConnection) {
+    await Future.wait([
+      // Список фаворитных треков (со списком треков), а так же плейлисты пользователя (без списка треков).
+      ensureUserAudioBasicInfo(
+        context,
+        forceUpdate: forceUpdate,
+      ),
 
-    // Рекомендации.
-    ensureUserAudioRecommendations(
-      context,
-      forceUpdate: forceUpdate,
-    ),
-  ]);
+      // Рекомендации.
+      ensureUserAudioRecommendations(
+        context,
+        forceUpdate: forceUpdate,
+      ),
+    ]);
+  }
 
   if (!context.mounted) return;
 
   // После полной загрузки, делаем загрузку остальных данных.
-  await loadCachedTracksInformation(
-    context,
-    forceUpdate: forceUpdate,
-  );
+  if (connectivityManager.hasConnection) {
+    await loadCachedTracksInformation(
+      context,
+      forceUpdate: forceUpdate,
+    );
+  }
 
   return;
 }
@@ -438,6 +442,9 @@ class _SearchDisplayDialogState extends State<SearchDisplayDialog> {
   void onDebounce(String query) {
     // Если мы вышли из текущего Route, то ничего не делаем.
     if (!mounted) return;
+
+    // Проверяем наличие интернета.
+    if (!networkRequiredDialog(context)) return;
 
     final UserProvider user = Provider.of<UserProvider>(context, listen: false);
 
@@ -1058,7 +1065,7 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
 
                     Navigator.of(context).pop();
                   },
-                  enabled: !widget.audio.isRestricted,
+                  enabled: widget.audio.canPlay,
                   leading: const Icon(
                     Icons.queue_music,
                   ),
@@ -1178,6 +1185,9 @@ class AudioTrackTile extends StatefulWidget {
   /// Указывает, что в случае, если трек кэширован ([ExtendedAudio.isCached]), то будет показана соответствующая иконка.
   final bool showCachedIcon;
 
+  /// Если true, то данный виджет будет не будет иметь эффект прозрачности даже если [ExtendedAudio.canPlay] равен false.
+  final bool forceAvailable;
+
   /// Действие, вызываемое при переключения паузы/возобновления при нажатии по иконке трека.
   ///
   /// В отличии от [onPlay], данный метод просто переключает то, находится трек на паузе или нет. Данный метод вызывается лишь в случае, если поле [selected] правдиво, в ином случае при нажатии на данный виджет будет вызываться событие [onPlay].
@@ -1208,6 +1218,7 @@ class AudioTrackTile extends StatefulWidget {
     this.currentlyPlaying = false,
     this.glowIfSelected = false,
     this.showCachedIcon = true,
+    this.forceAvailable = false,
     required this.audio,
     this.onPlay,
     this.onPlayToggle,
@@ -1296,7 +1307,8 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Opacity(
-                  opacity: widget.audio.isRestricted ? 0.5 : 1.0,
+                  opacity:
+                      widget.forceAvailable || widget.audio.canPlay ? 1.0 : 0.5,
                   child: InkWell(
                     onTap: widget.onPlayToggle != null || widget.onPlay != null
                         ? () {
@@ -1399,7 +1411,9 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
                       left: 8,
                     ),
                     child: Opacity(
-                      opacity: widget.audio.isRestricted ? 0.5 : 1,
+                      opacity: widget.forceAvailable || widget.audio.canPlay
+                          ? 1.0
+                          : 0.5,
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2092,6 +2106,7 @@ class _SimillarMusicPlaylistWidgetState
                 currentlyPlaying: player.loaded && player.playing,
                 isLoading: player.buffering,
                 glowIfSelected: true,
+                forceAvailable: true,
               ),
             ),
           const SizedBox(
@@ -3091,9 +3106,19 @@ class _HomeMusicPageState extends State<HomeMusicPage> {
       player.sequenceStateStream.listen(
         (SequenceState? state) => setState(() {}),
       ),
+
+      // Слушаем события подключения к интернету, что бы начать загрузку треков после появления интернета.
+      connectivityManager.connectionChange.listen((bool isConnected) async {
+        if (!isConnected) return;
+
+        await ensureUserAudioAllInformation(
+          context,
+          forceUpdate: true,
+        );
+      }),
     ];
 
-    // Загружаем информацию о пользователе.
+    // Загружаем информацию о плейлистах и треках.\
     ensureUserAudioAllInformation(context);
 
     // Обработчик нажатия кнопок клавиатуры.
@@ -3178,16 +3203,29 @@ class _HomeMusicPageState extends State<HomeMusicPage> {
     return Scaffold(
       appBar: isMobileLayout
           ? AppBar(
-              title: Text(
-                AppLocalizations.of(context)!.music_label,
+              title: StreamBuilder<bool>(
+                stream: connectivityManager.connectionChange,
+                builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
+                  final bool isConnected = connectivityManager.hasConnection;
+
+                  return Text(
+                    isConnected
+                        ? AppLocalizations.of(context)!.music_label
+                        : AppLocalizations.of(context)!.music_labelOffline,
+                  );
+                },
               ),
               centerTitle: true,
               actions: [
                 IconButton(
-                  onPressed: () => showDialog(
-                    context: context,
-                    builder: (context) => const SearchDisplayDialog(),
-                  ),
+                  onPressed: () {
+                    if (!networkRequiredDialog(context)) return;
+
+                    showDialog(
+                      context: context,
+                      builder: (context) => const SearchDisplayDialog(),
+                    );
+                  },
                   icon: const Icon(
                     Icons.search,
                   ),
@@ -3202,10 +3240,14 @@ class _HomeMusicPageState extends State<HomeMusicPage> {
         onRefresh: () async {
           setLoading();
 
-          await ensureUserAudioAllInformation(
-            context,
-            forceUpdate: true,
-          );
+          if (networkRequiredDialog(context)) {
+            await ensureUserAudioAllInformation(
+              context,
+              forceUpdate: true,
+            );
+          } else {
+            await Future.delayed(Duration.zero);
+          }
           setLoading(false);
         },
         refreshing: loadingData,
@@ -3247,10 +3289,15 @@ class _HomeMusicPageState extends State<HomeMusicPage> {
 
                           // Поиск.
                           IconButton.filledTonal(
-                            onPressed: () => showDialog(
-                              context: context,
-                              builder: (context) => const SearchDisplayDialog(),
-                            ),
+                            onPressed: () {
+                              if (!networkRequiredDialog(context)) return;
+
+                              showDialog(
+                                context: context,
+                                builder: (context) =>
+                                    const SearchDisplayDialog(),
+                              );
+                            },
                             icon: const Icon(
                               Icons.search,
                             ),

@@ -200,7 +200,7 @@ Widget buildListTrackWidget(
           ),
         );
       },
-      onPlay: audio.isRestricted
+      onPlay: !audio.canPlay
           ? () => showErrorDialog(
                 context,
                 title:
@@ -213,11 +213,15 @@ Widget buildListTrackWidget(
                 audio: audio,
               ),
       onPlayToggle: (bool enabled) => player.playOrPause(enabled),
-      onLikeToggle: (bool liked) => toggleTrackLikeState(
-        context,
-        audio,
-        !audio.isLiked,
-      ),
+      onLikeToggle: (bool liked) {
+        if (!networkRequiredDialog(context)) return false;
+
+        return toggleTrackLikeState(
+          context,
+          audio,
+          !audio.isLiked,
+        );
+      },
       onSecondaryAction: () => showModalBottomSheet(
         context: context,
         useRootNavigator: true,
@@ -349,19 +353,20 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
   /// Указывает, что в данный момент данные о плейлисте загружаются.
   bool _loading = false;
 
-  /// Загрузка данных данного плейлиста.
-  Future<void> init() async {
-    final UserProvider user = Provider.of<UserProvider>(context, listen: false);
+  /// Показывает [RefreshIndicator] во время загрузки данных с API ВКонтакте.
+  void setLoading([bool value = true]) => setState(() => _loading = value);
 
-    logger.d("Open ${widget.playlist}");
+  /// Загрузка данных данного плейлиста.
+  Future<void> loadPlaylist() async {
+    final UserProvider user = Provider.of<UserProvider>(context, listen: false);
 
     // Если информация по данному плейлисту не загружена, то загружаем её.
     if (widget.playlist.audios == null ||
         widget.playlist.isDataCached ||
-        widget.playlist.areTracksCached) {
+        widget.playlist.areTracksCached && connectivityManager.hasConnection) {
       // Отображаем анимацию загрузки лишь в случае, если список треков пустой, т.е., он не был загружен с кэша.
       if (widget.playlist.audios == null) {
-        setState(() => _loading = true);
+        setLoading();
       }
 
       try {
@@ -382,7 +387,7 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
         );
       } finally {
         if (context.mounted) {
-          setState(() => _loading = false);
+          setLoading(false);
         }
       }
     }
@@ -417,8 +422,14 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
 
   @override
   void initState() {
+    logger.d("Open ${widget.playlist}");
+
     super.initState();
-    init();
+
+    // Загружаем данные о плейлисте, если есть доступ к интернету.
+    if (connectivityManager.hasConnection) {
+      loadPlaylist();
+    }
 
     subscriptions = [
       // Изменения запуска плеера.
@@ -440,6 +451,16 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
       player.sequenceStateStream.listen(
         (SequenceState? state) => setState(() {}),
       ),
+
+      // Слушаем события подключения к интернету, что бы начать загрузку треков после появления интернета.
+      connectivityManager.connectionChange.listen((bool isConnected) async {
+        if (!isConnected) return;
+
+        setLoading();
+
+        await loadPlaylist();
+        setLoading(false);
+      }),
     ];
 
     // Если нам это разрешено, то устанавливаем фокус на поле поиска.
@@ -717,6 +738,13 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                 IconButton(
                                   onPressed: hasTracksLoaded
                                       ? () async {
+                                          // Пользователь пытается включить кэширование с выключенным интернетом, запрещаем ему такое.
+                                          if (!(widget.playlist.cacheTracks ??
+                                                  false) &&
+                                              !networkRequiredDialog(
+                                                context,
+                                              )) return;
+
                                           // Если кэширование уже включено, то спрашиваем у пользователя, хочет ли он отменить его и удалить треки.
                                           if (widget.playlist.cacheTracks ??
                                               false) {

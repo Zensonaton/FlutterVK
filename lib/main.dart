@@ -26,6 +26,7 @@ import "routes/home.dart";
 import "routes/welcome.dart";
 import "services/audio_player.dart";
 import "services/cache_manager.dart";
+import "services/connectivity_manager.dart";
 import "services/download_manager.dart";
 import "services/logger.dart";
 import "utils.dart";
@@ -46,6 +47,9 @@ late final VKMusicPlayer player;
 
 /// Менеджер загрузок плейлистов.
 late final DownloadManager downloadManager;
+
+/// Менеджер интернет соедининия.
+late final ConnectivityManager connectivityManager;
 
 /// [ColorScheme] яркости [Brightness.light], которая используется в случае, если по какой-то причине приложение не смогло получить цвета акцента, либо цвета музыкального плеера.
 final fallbackLightColorScheme = ColorScheme.fromSeed(
@@ -181,6 +185,10 @@ Future main() async {
   // Создаём менеджер загрузок.
   downloadManager = DownloadManager();
 
+  // Создаём менеджер интернет соединения.
+  connectivityManager = ConnectivityManager();
+  await connectivityManager.initialize();
+
   // Инициализируем плеер.
   JustAudioMediaKit.title = "Flutter VK";
   JustAudioMediaKit.ensureInitialized();
@@ -240,6 +248,8 @@ class MainApp extends StatefulWidget {
 }
 
 class _MainAppState extends State<MainApp> with WindowListener {
+  final AppLogger logger = getLogger("MainApp");
+
   /// Виджет, который будет хранить в себе "главную" страницу, с которой и начнётся изначальная навигация пользователем.
   Widget? home;
 

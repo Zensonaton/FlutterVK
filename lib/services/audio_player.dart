@@ -54,7 +54,7 @@ class CachedStreamedAudio extends StreamAudioSource {
   final Uri? uri;
 
   /// Ключ, который будет использоваться для кэширования полностью загруженных треков. Если его не указать, то класс не будет пытаться найти трек в кэше.
-  final String? cacheKey;
+  final String cacheKey;
 
   /// Обложки трека. Если не указывать, кэширование обложек происходить не будет. Указывая это поле, [albumID] не может быть null;
   final Thumbnails? thumbnails;
@@ -62,11 +62,15 @@ class CachedStreamedAudio extends StreamAudioSource {
   /// ID альбома, который ассоциирован с данным треком.
   final int? albumID;
 
+  /// Указывает, будет ли данный трек кэшироваться.
+  final bool cacheTrack;
+
   CachedStreamedAudio({
-    this.cacheKey,
+    required this.cacheKey,
     this.uri,
     this.thumbnails,
     this.albumID,
+    this.cacheTrack = false,
   });
 
   /// Возвращает путь к корневой папке, хранящий в себе кэшированные треки.
@@ -93,16 +97,10 @@ class CachedStreamedAudio extends StreamAudioSource {
   }
 
   /// Возвращает объект типа [File], либо null, если [cacheKey] не указан.
-  Future<File?> getCachedAudio() async {
-    if (cacheKey == null) return null;
-
-    return await getCachedAudioByKey(cacheKey!);
-  }
+  Future<File?> getCachedAudio() => getCachedAudioByKey(cacheKey);
 
   /// Удаляет кэшированный трек из кэша.
   Future<void> delete() async {
-    if (cacheKey == null) return;
-
     final File cacheFile = (await getCachedAudio())!;
 
     try {
@@ -153,10 +151,6 @@ class CachedStreamedAudio extends StreamAudioSource {
     int? start,
     int? end,
   ]) async {
-    assert(
-      uri != null || cacheKey != null,
-      "uri or cacheKey should be set",
-    );
     if (thumbnails != null) {
       assert(
         albumID != null,
@@ -274,9 +268,7 @@ class CachedStreamedAudio extends StreamAudioSource {
         );
 
     // Сохраняем текущий Stream, что бы в случае повторного запроса его можно было бы получить.
-    if (cacheKey != null) {
-      downloadQueue[cacheKey!] = subscription;
-    }
+    downloadQueue[cacheKey] = subscription;
 
     // StreamAudioResponse глупенький: subscription.cancel() не отменяет запрос на стороне just_audio.
     // Ввиду этого, загрузка треков может происходить по несколько раз.
@@ -953,7 +945,7 @@ class VKMusicPlayer {
     // Создаём список из треков в плейлисте, которые можно воспроизвести.
     final List<ExtendedAudio> audios = playlist.audios!
         .where(
-          (audio) => !audio.isRestricted,
+          (audio) => audio.canPlay,
         )
         .toList();
 
@@ -966,9 +958,7 @@ class VKMusicPlayer {
       children: audios
           .map(
             (audio) => CachedStreamedAudio(
-              cacheKey: playlist.isFavoritesPlaylist && audio.isLiked
-                  ? audio.mediaKey
-                  : null,
+              cacheKey: audio.mediaKey,
               uri: audio.url != null
                   ? Uri.parse(
                       audio.url!,
@@ -976,6 +966,7 @@ class VKMusicPlayer {
                   : null,
               thumbnails: audio.album?.thumbnails,
               albumID: audio.album?.id,
+              cacheTrack: playlist.cacheTracks ?? false,
             ),
           )
           .toList(),
@@ -1011,9 +1002,7 @@ class VKMusicPlayer {
     _queue!.insert(
       nextTrackIndex ?? 0,
       CachedStreamedAudio(
-        cacheKey: player.currentPlaylist!.isFavoritesPlaylist && audio.isLiked
-            ? audio.mediaKey
-            : null,
+        cacheKey: audio.mediaKey,
         uri: audio.url != null
             ? Uri.parse(
                 audio.url!,
@@ -1355,6 +1344,8 @@ class AudioPlayerService extends BaseAudioHandler
         break;
 
       case (MediaNotificationAction.favorite):
+        if (!connectivityManager.hasConnection) return;
+
         await toggleTrackLike(
           user,
           _player.currentAudio!,

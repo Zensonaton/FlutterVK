@@ -17,6 +17,7 @@ dependencies:
   audio_session: ^0.1.18
   cached_network_image: ^3.3.1
   collection: ^1.17.2
+  connectivity_plus: ^5.0.2
   crypto: ^3.0.3
   debounce_throttle: ^2.0.0
   declarative_refresh_indicator: ^0.1.0

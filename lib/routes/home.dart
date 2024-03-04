@@ -58,6 +58,9 @@ class DuplicateWarningDialog extends StatelessWidget {
         ),
         TextButton(
           onPressed: () async {
+            // Проверяем наличие интернета.
+            if (!networkRequiredDialog(context)) return;
+
             Navigator.of(context).pop();
 
             await toggleTrackLikeState(
@@ -350,11 +353,15 @@ class _BottomMusicPlayerWidgetState extends State<BottomMusicPlayerWidget> {
       isRepeatEnabled: player.loopMode == LoopMode.one,
       pauseOnMuteEnabled: user.settings.pauseOnMuteEnabled,
       useBigLayout: !widget.isMobileLayout && widget.allowBigAudioPlayer,
-      onFavoriteStateToggle: (bool liked) => toggleTrackLikeState(
-        context,
-        player.currentAudio!,
-        !player.currentAudio!.isLiked,
-      ),
+      onFavoriteStateToggle: (bool liked) {
+        if (!networkRequiredDialog(context)) return;
+
+        toggleTrackLikeState(
+          context,
+          player.currentAudio!,
+          !player.currentAudio!.isLiked,
+        );
+      },
       onPlayStateToggle: (bool enabled) => player.playOrPause(enabled),
       onProgressChange: (double progress) => player.seekNormalized(progress),
       onVolumeChange: (double volume) => player.setVolume(volume),
@@ -407,6 +414,22 @@ class _HomeRouteState extends State<HomeRoute> {
   /// В данный момент он отключён за ненадобностью.
   final bool messagesPageEnabled = false;
 
+  /// Проверяет на наличие обновлений, и дальше предлагает пользователю обновиться, если есть новое обновление.
+  void checkForUpdates() {
+    final UserProvider user = Provider.of<UserProvider>(context, listen: false);
+
+    // Проверяем, есть ли разрешение на обновления, а так же работу интернета.
+    if (user.settings.updatePolicy == UpdatePolicy.disabled ||
+        !connectivityManager.hasConnection) return;
+
+    // Проверяем на наличие обновлений.
+    Updater.checkForUpdates(
+      context,
+      allowPre: user.settings.updateBranch == UpdateBranch.prereleases,
+      useSnackbarOnUpdate: user.settings.updatePolicy == UpdatePolicy.popup,
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -435,16 +458,30 @@ class _HomeRouteState extends State<HomeRoute> {
       ),
     ];
 
-    // Если это разрешено, то проверяем на наличие обновлений.
-    final UserProvider user = Provider.of<UserProvider>(context, listen: false);
+    // Проверяем на наличие обновлений.
+    checkForUpdates();
 
-    if (user.settings.updatePolicy != UpdatePolicy.disabled) {
-      Updater.checkForUpdates(
-        context,
-        allowPre: user.settings.updateBranch == UpdateBranch.prereleases,
-        useSnackbarOnUpdate: user.settings.updatePolicy == UpdatePolicy.popup,
+    // Слушаем события подключения к интернету.
+    connectivityManager.connectionChange.listen((bool isConnected) {
+      logger.d("Network connectivity state: $isConnected");
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          duration: Duration(
+            seconds: isConnected ? 2 : 6,
+          ),
+          content: Text(
+            isConnected
+                ? AppLocalizations.of(context)!
+                    .internetConnectionRestoredDescription
+                : AppLocalizations.of(context)!.noInternetConnectionDescription,
+          ),
+        ),
       );
-    }
+
+      // Проверяем на наличие обновлений.
+      checkForUpdates();
+    });
   }
 
   /// Изменяет выбранную страницу для [BottomNavigationBar] по передаваемому индексу страницы.

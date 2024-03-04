@@ -223,8 +223,18 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
     return Scaffold(
       appBar: isMobileLayout
           ? AppBar(
-              title: Text(
-                AppLocalizations.of(context)!.home_profilePageLabel,
+              title: StreamBuilder<bool>(
+                stream: connectivityManager.connectionChange,
+                builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
+                  final bool isConnected = connectivityManager.hasConnection;
+
+                  return Text(
+                    isConnected
+                        ? AppLocalizations.of(context)!.home_profilePageLabel
+                        : AppLocalizations.of(context)!
+                            .home_profilePageLabelOffline,
+                  );
+                },
               ),
               centerTitle: true,
             )
@@ -730,7 +740,7 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                   ),
                 ),
 
-                // Версия приложения.
+                // Версия приложения (и проверка текущей версии).
                 ListTile(
                   leading: const Icon(
                     Icons.info,
@@ -742,13 +752,17 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                     AppLocalizations.of(context)!
                         .profile_appVersionDescription("v$appVersion"),
                   ),
-                  onTap: () => Updater.checkForUpdates(
-                    context,
-                    allowPre:
-                        user.settings.updateBranch == UpdateBranch.prereleases,
-                    showLoadingOverlay: true,
-                    showMessageOnNoUpdates: true,
-                  ),
+                  onTap: () {
+                    if (!networkRequiredDialog(context)) return;
+
+                    Updater.checkForUpdates(
+                      context,
+                      allowPre: user.settings.updateBranch ==
+                          UpdateBranch.prereleases,
+                      showLoadingOverlay: true,
+                      showMessageOnNoUpdates: true,
+                    );
+                  },
                 ),
 
                 // Debug-опции.

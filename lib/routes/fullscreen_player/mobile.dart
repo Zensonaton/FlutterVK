@@ -12,6 +12,7 @@ import "../../main.dart";
 import "../../provider/user.dart";
 import "../../services/cache_manager.dart";
 import "../../utils.dart";
+import "../../widgets/dialogs.dart";
 import "../../widgets/fallback_audio_photo.dart";
 import "../../widgets/responsive_slider.dart";
 import "../fullscreen_player.dart";
@@ -370,11 +371,15 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
             children: [
               // Кнопка для дизлайка/лайка трека.
               IconButton(
-                onPressed: () => toggleTrackLikeState(
-                  context,
-                  player.currentAudio!,
-                  !isFavorite,
-                ),
+                onPressed: () {
+                  if (!networkRequiredDialog(context)) return;
+
+                  toggleTrackLikeState(
+                    context,
+                    player.currentAudio!,
+                    !isFavorite,
+                  );
+                },
                 icon: Icon(
                   isFavorite ? Icons.favorite : Icons.favorite_border,
                   color: Theme.of(context).colorScheme.primary,

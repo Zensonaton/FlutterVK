@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
 
+import "../main.dart";
 import "../services/logger.dart";
 
 /// Класс для простого создания виджетов типа [Dialog], которые соответствуют дизайну Material 3 диалогам.
@@ -202,6 +203,36 @@ void showErrorDialog(
       description: description,
     ),
   );
+}
+
+/// Показывает диалог, показывающий информацию о том, что данное действие невозможно выполнить, если нет доступа к интернету.
+///
+/// В качестве параметров принимает [context] - контекст.
+void showInternetRequiredDialog(BuildContext context) {
+  showErrorDialog(
+    context,
+    title: AppLocalizations.of(context)!.internetConnectionRequiredTitle,
+    description:
+        AppLocalizations.of(context)!.internetConnectionRequiredDescription,
+  );
+}
+
+/// В случае, если нет доступа к интернету ([ConnectivityManager.hasConnection]), возвращает false, а так же вызывает [showInternetRequiredDialog], показывая сообщение об ошибке.
+///
+/// Пример использования данного метода:
+/// ```dart
+/// if (!networkRequiredDialog(context)) return;
+///
+/// var response = await get("google.com");
+/// ```
+bool networkRequiredDialog(BuildContext context) {
+  if (connectivityManager.hasConnection) {
+    return true;
+  }
+
+  showInternetRequiredDialog(context);
+
+  return false;
 }
 
 /// Логирует информацию о произошедшей ошибке, а так же показывает диалоговое окно, говорящее пользователю о произошедшей ошибке.
