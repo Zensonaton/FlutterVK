@@ -11,6 +11,7 @@ import "package:just_audio_media_kit/just_audio_media_kit.dart";
 import "package:local_notifier/local_notifier.dart";
 import "package:package_info_plus/package_info_plus.dart";
 import "package:path/path.dart" as path;
+import "package:path_provider/path_provider.dart";
 import "package:provider/provider.dart";
 import "package:responsive_builder/responsive_builder.dart";
 import "package:system_tray/system_tray.dart";
@@ -29,6 +30,7 @@ import "services/cache_manager.dart";
 import "services/connectivity_manager.dart";
 import "services/download_manager.dart";
 import "services/logger.dart";
+import "services/updater.dart";
 import "utils.dart";
 import "widgets/loading_overlay.dart";
 
@@ -295,6 +297,17 @@ class _MainAppState extends State<MainApp> with WindowListener {
           AppLocalizations.of(buildContext!)!.general_musicReadmeFileContents,
         );
       }
+    }
+
+    // Удаляем файл обновления, если таковой существует.
+    final File updaterInstaller = File(
+      path.join(
+        (await getApplicationSupportDirectory()).path,
+        Updater.getFilenameByPlatform(),
+      ),
+    );
+    if (updaterInstaller.existsSync()) {
+      updaterInstaller.deleteSync();
     }
 
     user.markUpdated(false);
