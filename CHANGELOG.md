@@ -1,8 +1,6 @@
 <!-- markdownlint-disable MD033 -->
 
-# Flutter VK vTODO
-
-## Изменения
+# Flutter VK v0.3.4
 
 ## Фиксы
 
