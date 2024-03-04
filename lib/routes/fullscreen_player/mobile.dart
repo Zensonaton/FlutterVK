@@ -141,7 +141,7 @@ class _ImageLyricsBlockState extends State<ImageLyricsBlock> {
 
     /// Указывает, что пользователь включил показа текста песни, а так же текст существует и он загружен.
     final bool lyricsLoadedAndShown = user.settings.trackLyricsEnabled &&
-        player.currentAudio!.hasLyrics &&
+        (player.currentAudio!.hasLyrics ?? false) &&
         player.currentAudio!.lyrics != null;
 
     // Создаёт виджет для отображения изображения трека.
@@ -444,7 +444,7 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
               // Кнопка для включения/отключения показа текста песни.
               if (showLyricsBlock)
                 IconButton(
-                  onPressed: player.currentAudio!.hasLyrics
+                  onPressed: player.currentAudio!.hasLyrics ?? false
                       ? () {
                           user.settings.trackLyricsEnabled =
                               !user.settings.trackLyricsEnabled;
@@ -454,11 +454,11 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                       : null,
                   icon: Icon(
                     user.settings.trackLyricsEnabled &&
-                            player.currentAudio!.hasLyrics
+                            (player.currentAudio!.hasLyrics ?? false)
                         ? Icons.lyrics
                         : Icons.lyrics_outlined,
                     color: Theme.of(context).colorScheme.primary.withOpacity(
-                          player.currentAudio!.hasLyrics ? 1.0 : 0.5,
+                          player.currentAudio!.hasLyrics ?? false ? 1.0 : 0.5,
                         ),
                   ),
                 ),

@@ -300,7 +300,7 @@ class ExtendedAudio {
   Album? album;
 
   /// Указывает наличие текста песни.
-  final bool hasLyrics;
+  bool? hasLyrics;
 
   /// ID жанра аудиозаписи. Список жанров описан [здесь](https://dev.vk.com/ru/reference/objects/audio-genres).
   int? genreID;
@@ -867,6 +867,8 @@ class UserProvider extends ChangeNotifier {
           newAudio.url ??= audio.url;
           newAudio.isCached = audio.isCached ?? newAudio.isCached;
           newAudio.album ??= audio.album;
+          newAudio.hasLyrics ??= audio.hasLyrics;
+          newAudio.lyrics ??= audio.lyrics;
 
           existingPlaylist.audios!.add(newAudio);
         }

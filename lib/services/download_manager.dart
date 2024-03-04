@@ -48,7 +48,7 @@ class CacheItem {
     );
 
     // Загружаем текст трека, если таковой есть.
-    if (audio.hasLyrics && user != null) {
+    if ((audio.hasLyrics ?? false) && user != null) {
       final APIAudioGetLyricsResponse response =
           await user!.audioGetLyrics(audio.mediaKey);
       raiseOnAPIError(response);

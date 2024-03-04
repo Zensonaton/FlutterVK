@@ -700,7 +700,7 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
 
     // Если известно, что у трека есть текст песни, то пытаемся его загрузить.
     if (connectivityManager.hasConnection &&
-        player.currentAudio!.hasLyrics &&
+        (player.currentAudio!.hasLyrics ?? false) &&
         player.currentAudio!.lyrics == null &&
         !lyricsQueue.contains(player.currentAudio!.mediaKey)) {
       lyricsQueue.add(player.currentAudio!.mediaKey);

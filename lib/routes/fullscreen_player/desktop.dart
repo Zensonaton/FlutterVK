@@ -286,7 +286,7 @@ class _LyricsBlockWidgetState extends State<LyricsBlockWidget> {
             duration: const Duration(
               milliseconds: 500,
             ),
-            child: player.currentAudio!.hasLyrics
+            child: (player.currentAudio!.hasLyrics ?? false)
                 ? player.currentAudio!.lyrics != null
                     ? TrackLyricsBlock(
                         key: ValueKey(
@@ -420,7 +420,7 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
           ),
           width: MediaQuery.of(context).size.width -
               _playerPadding * 2 -
-              ((player.currentAudio!.hasLyrics &&
+              (((player.currentAudio!.hasLyrics ?? false) &&
                       user.settings.trackLyricsEnabled)
                   ? _lyricsWidth
                   : 0) -
@@ -786,7 +786,7 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
 
                       // Показ текста песни.
                       IconButton(
-                        onPressed: player.currentAudio!.hasLyrics
+                        onPressed: player.currentAudio!.hasLyrics ?? false
                             ? () {
                                 user.settings.trackLyricsEnabled =
                                     !user.settings.trackLyricsEnabled;
@@ -796,12 +796,14 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                             : null,
                         icon: Icon(
                           user.settings.trackLyricsEnabled &&
-                                  player.currentAudio!.hasLyrics
+                                  (player.currentAudio!.hasLyrics ?? false)
                               ? Icons.lyrics
                               : Icons.lyrics_outlined,
                           color:
                               Theme.of(context).colorScheme.primary.withOpacity(
-                                    player.currentAudio!.hasLyrics ? 1.0 : 0.5,
+                                    player.currentAudio!.hasLyrics ?? false
+                                        ? 1.0
+                                        : 0.5,
                                   ),
                         ),
                       ),
