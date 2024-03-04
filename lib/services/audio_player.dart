@@ -1294,7 +1294,7 @@ class AudioPlayerService extends BaseAudioHandler
             name: MediaNotificationAction.shuffle.name,
           ),
           MediaControl.custom(
-            androidIcon: _player.currentAudio!.isLiked
+            androidIcon: _player.currentAudio?.isLiked ?? false
                 ? "drawable/ic_favorite"
                 : "drawable/ic_favorite_outline",
             label: "Favorite",
