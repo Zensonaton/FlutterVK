@@ -29,6 +29,7 @@ import "../../main.dart";
 import "../../provider/user.dart";
 import "../../services/audio_player.dart";
 import "../../services/cache_manager.dart";
+import "../../services/download_manager.dart";
 import "../../services/logger.dart";
 import "../../utils.dart";
 import "../../widgets/adaptive_dialog.dart";
@@ -977,6 +978,7 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final AppLogger logger = getLogger("BottomAudioOptionsDialog");
     final UserProvider user = Provider.of<UserProvider>(context);
 
     return DraggableScrollableSheet(
@@ -1004,6 +1006,8 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
                   enabled: widget.audio.album == null &&
                       widget.audio.ownerID == user.id!,
                   onTap: () {
+                    if (!networkRequiredDialog(context)) return;
+
                     Navigator.of(context).pop();
 
                     showDialog(
@@ -1023,7 +1027,11 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
 
                 // Удалить из текущего плейлиста.
                 ListTile(
-                  onTap: () => showWipDialog(context),
+                  onTap: () {
+                    if (!networkRequiredDialog(context)) return;
+
+                    showWipDialog(context);
+                  },
                   leading: const Icon(
                     Icons.playlist_remove,
                   ),
@@ -1034,7 +1042,11 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
 
                 // Добавить в другой плейлист.
                 ListTile(
-                  onTap: () => showWipDialog(context),
+                  onTap: () {
+                    if (!networkRequiredDialog(context)) return;
+
+                    showWipDialog(context);
+                  },
                   leading: const Icon(
                     Icons.playlist_add,
                   ),
@@ -1074,25 +1086,58 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
                   ),
                 ),
 
-                // Установить обложку.
+                // Кэшировать этот трек.
                 ListTile(
-                  onTap: () => showWipDialog(context),
+                  onTap: () async {
+                    if (!networkRequiredDialog(context)) return;
+
+                    Navigator.of(context).pop();
+
+                    // Загружаем трек.
+                    try {
+                      await CacheItem.cacheTrack(
+                        widget.audio,
+                        true,
+                        user: user,
+                      );
+                    } catch (error, stackTrace) {
+                      // ignore: use_build_context_synchronously
+                      showLogErrorDialog(
+                        "Ошибка при принудительном кэшировании отдельного трека: ",
+                        error,
+                        stackTrace,
+                        logger,
+                        context,
+                      );
+
+                      return;
+                    }
+
+                    if (!context.mounted) return;
+
+                    user.markUpdated();
+                  },
+                  enabled: !widget.audio.isRestricted &&
+                      !(widget.audio.isCached ?? false),
                   leading: const Icon(
-                    Icons.photo_library,
+                    Icons.download,
                   ),
                   title: Text(
-                    AppLocalizations.of(context)!
-                        .music_detailsSetThumbnailTitle,
+                    AppLocalizations.of(context)!.music_detailsCacheTrackTitle,
                   ),
                   subtitle: Text(
                     AppLocalizations.of(context)!
-                        .music_detailsSetThumbnailDescription,
+                        .music_detailsCacheTrackDescription,
                   ),
                 ),
 
                 // Перезалить с Youtube.
                 ListTile(
-                  onTap: () => showWipDialog(context),
+                  onTap: () {
+                    if (!networkRequiredDialog(context)) return;
+
+                    showWipDialog(context);
+                  },
                   leading: const Icon(
                     Icons.rotate_left,
                   ),

@@ -30,11 +30,12 @@ class CacheItem {
   Queue? _queue;
 
   /// Callback-метод, вызываемый при успешной полной загрузке трека.
-  Future<void> _onTrackDownloaded(
+  static Future<void> _onTrackDownloaded(
     ExtendedAudio audio,
     List<int> trackBytes,
-    File trackFile,
-  ) async {
+    File trackFile, {
+    UserProvider? user,
+  }) async {
     // Сохраняем трек на диск.
     trackFile.createSync(
       recursive: true,
@@ -50,7 +51,7 @@ class CacheItem {
     // Загружаем текст трека, если таковой есть.
     if ((audio.hasLyrics ?? false) && user != null) {
       final APIAudioGetLyricsResponse response =
-          await user!.audioGetLyrics(audio.mediaKey);
+          await user.audioGetLyrics(audio.mediaKey);
       raiseOnAPIError(response);
 
       audio.lyrics = response.response!.lyrics;
@@ -61,8 +62,12 @@ class CacheItem {
     audio.downloadProgress.value = 0.0;
   }
 
-  /// Внутренняя задача по кэшированию отдельного трека в плейлисте.
-  Future<void> _cacheTrack(ExtendedAudio audio) async {
+  /// Внутренняя задача по кэшированию отдельного трека в плейлисте. [cache] указывает, что трек будет именно кэширован, вместо его удаления.
+  static Future<void> cacheTrack(
+    ExtendedAudio audio,
+    bool cache, {
+    UserProvider? user,
+  }) async {
     final File trackFile =
         await CachedStreamedAudio.getCachedAudioByKey(audio.mediaKey);
     final bool trackFileExists = trackFile.existsSync();
@@ -132,7 +137,12 @@ class CacheItem {
         }
 
         // Трек успешно загружен, вызываем callback-метод.
-        await _onTrackDownloaded(audio, trackBytes, trackFile);
+        await _onTrackDownloaded(
+          audio,
+          trackBytes,
+          trackFile,
+          user: user,
+        );
 
         completer.complete();
       },
@@ -184,7 +194,7 @@ class CacheItem {
 
       if (cache && audio.url == null) continue;
 
-      _queue!.add(() => _cacheTrack(audio)).then((_) async {
+      _queue!.add(() => cacheTrack(audio, cache, user: user)).then((_) async {
         // Если мы загружаем треки, то после каждой загрузки сохраняем изменени в БД.
         if (!cache) return;
 
