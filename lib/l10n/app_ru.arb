@@ -142,6 +142,42 @@
 		"description": "<click>...</click> очищает результаты поиска."
 	},
 
+	"music_enableTrackCachingTitle": "Включение кэширования треков",
+	"music_enableTrackCachingDescription": "Включив кэширование, Flutter VK будет автоматически загружать все треки в данном плейлисте, делая их доступных для прослушивания даже оффлайн, а так же после удаления правообладателем.\n\nПродолжив, будет {count, plural, one{загружен {count} трек} few{загружено {count} трека} other{загружено {count} треков}}, что потребует ~{downloadSize} интернет трафика.\nПожалуйста, не запускайте кэширование, если у Вас лимитированный интернет.",
+	"music_enableTrackCachingButton": "Включить",
+	"@music_enableTrackCachingDescription": {
+		"placeholders": {
+			"count": {
+				"type": "int",
+				"description": "Количество треков в данном плейлисте."
+			},
+			"downloadSize": {
+				"type": "String",
+				"description": "Примерный размер всех треков из данного плейлиста после их загрузки.",
+				"example": "3,5 ГБ"
+			}
+		}
+	},
+	"trackSizeMB": "{value} МБ",
+	"@trackSizeMB": {
+		"placeholders":  {
+			"value": {
+				"description": "Размер файла в мегабайтах.",
+				"type": "int"
+			}
+		}
+	},
+	"trackSizeGB": "{value} ГБ",
+	"@trackSizeGB": {
+		"placeholders":  {
+			"value": {
+				"description": "Размер файла в гигабайтах.",
+				"type": "double",
+				"format": "compact"
+			}
+		}
+	},
+
 	"music_disableTrackCachingTitle": "Отключение кэширования треков",
 	"music_disableTrackCachingDescription": "Продолжив, Вы отключите кэширование треков в этом плейлисте, а все треки, которые были кэшированы здесь будут удалены с Вашего устройства. После этого действия Вы не сможете слушать музыку из этого плейлиста оффлайн.",
 	"music_disableTrackCachingButton": "Отключить",

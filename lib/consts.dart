@@ -30,6 +30,9 @@ const int discordAppID = 1195224178996027412;
 /// Название README-файла в папке с кэшом треков.
 const String tracksCacheReadmeFileName = "Abc_123_README.txt";
 
+/// Магическая константа, характеризующая размер в мегабайтах у одной минуты `mp3`-трека.
+const double trackSizePerMin = 2.4;
+
 /// Случайные названия треков, используемые в Skeleton Loader'ах.
 const List<String> fakeTrackNames = [
   "Track",

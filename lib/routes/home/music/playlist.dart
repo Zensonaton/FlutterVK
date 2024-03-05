@@ -237,6 +237,49 @@ Widget buildListTrackWidget(
   );
 }
 
+/// Диалог, спрашивающий у пользователя разрешения на запуск кэширования плейлиста.
+class EnableCacheDialog extends StatelessWidget {
+  /// Плейлист, кэширование треков в котором пытаются включить.
+  final ExtendedPlaylist playlist;
+
+  const EnableCacheDialog({
+    super.key,
+    required this.playlist,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final int aproxSizeMB =
+        ((playlist.duration ?? Duration.zero).inMinutes * trackSizePerMin)
+            .round();
+
+    final aproxSizeString = aproxSizeMB >= 500
+        ? AppLocalizations.of(context)!.trackSizeGB(aproxSizeMB / 500)
+        : AppLocalizations.of(context)!.trackSizeMB(aproxSizeMB);
+
+    return MaterialDialog(
+      icon: Icons.file_download,
+      title: AppLocalizations.of(context)!.music_enableTrackCachingTitle,
+      text: AppLocalizations.of(context)!
+          .music_enableTrackCachingDescription(playlist.count, aproxSizeString),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: Text(
+            AppLocalizations.of(context)!.general_no,
+          ),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(true),
+          child: Text(
+            AppLocalizations.of(context)!.music_enableTrackCachingButton,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 /// Диалог, предупреждающий пользователя о том, что при отключении кэширования треков будет полностью удалёно всё содержимое плейлиста с памяти устройства.
 class CacheDisableWarningDialog extends StatelessWidget {
   const CacheDisableWarningDialog({
@@ -738,16 +781,39 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                 IconButton(
                                   onPressed: hasTracksLoaded
                                       ? () async {
+                                          final bool cacheTracks =
+                                              widget.playlist.cacheTracks ??
+                                                  false;
+
                                           // Пользователь пытается включить кэширование с выключенным интернетом, запрещаем ему такое.
-                                          if (!(widget.playlist.cacheTracks ??
-                                                  false) &&
+                                          if (!cacheTracks &&
                                               !networkRequiredDialog(
                                                 context,
                                               )) return;
 
+                                          // Пользователь пытается включить кэширование, спрашиваем, уверен ли он в своих намерениях.
+                                          if (!cacheTracks) {
+                                            final bool dialogResult =
+                                                await showDialog(
+                                                      context: context,
+                                                      builder: (
+                                                        BuildContext context,
+                                                      ) {
+                                                        return EnableCacheDialog(
+                                                          playlist:
+                                                              widget.playlist,
+                                                        );
+                                                      },
+                                                    ) ??
+                                                    false;
+
+                                            // Если пользователь нажал на "нет", то выходим.
+                                            if (!dialogResult ||
+                                                !context.mounted) return;
+                                          }
+
                                           // Если кэширование уже включено, то спрашиваем у пользователя, хочет ли он отменить его и удалить треки.
-                                          if (widget.playlist.cacheTracks ??
-                                              false) {
+                                          if (cacheTracks) {
                                             // Если плеер воспроизводит этот же плейлист, то мы не должны позволить пользователю удалить кэш.
                                             if (player.currentPlaylist ==
                                                 widget.playlist) {
