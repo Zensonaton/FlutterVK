@@ -285,6 +285,7 @@ class DBAudio {
         isRestricted: audio.isRestricted,
         date: audio.date,
         hasLyrics: audio.hasLyrics,
+        lyrics: audio.lyrics?.asDBLyrics,
         genreID: audio.genreID,
         album: audio.album?.asDBAlbum,
         isCached: audio.isCached,
