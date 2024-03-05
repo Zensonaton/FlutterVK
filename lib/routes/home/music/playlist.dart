@@ -922,22 +922,34 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                                       .hide();
                                                 }
                                               }
+
+                                              setState(() {});
                                             }
                                           : null,
                                       iconSize: 38,
-                                      icon: Icon(
-                                        Icons.arrow_circle_down,
-                                        color: hasTracksLoaded
-                                            ? ((widget.playlist.cacheTracks ??
-                                                    false)
-                                                ? Theme.of(context)
-                                                    .colorScheme
-                                                    .primary
-                                                : Theme.of(context)
-                                                    .colorScheme
-                                                    .onBackground)
-                                            : null,
-                                      ),
+                                      icon: downloadManager
+                                              .isTaskRunningFor(widget.playlist)
+                                          ? const SizedBox(
+                                              width: 28,
+                                              height: 28,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 3.5,
+                                              ),
+                                            )
+                                          : Icon(
+                                              Icons.arrow_circle_down,
+                                              color: hasTracksLoaded
+                                                  ? ((widget.playlist
+                                                              .cacheTracks ??
+                                                          false)
+                                                      ? Theme.of(context)
+                                                          .colorScheme
+                                                          .primary
+                                                      : Theme.of(context)
+                                                          .colorScheme
+                                                          .onBackground)
+                                                  : null,
+                                            ),
                                     ),
                                     const SizedBox(
                                       width: 6,

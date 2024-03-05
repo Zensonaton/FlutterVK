@@ -266,6 +266,15 @@ class DownloadManager {
   /// List, содержащий в себе задачи по кэшированию плейлистов.
   final List<CacheItem> _tasks = [];
 
+  /// Указывает, запущена ли задача по кэшированию передаваемого [playlist].
+  bool isTaskRunningFor(ExtendedPlaylist playlist) {
+    final CacheItem? pendingItem = _tasks.firstWhereOrNull(
+      (item) => item.playlist == playlist,
+    );
+
+    return pendingItem != null;
+  }
+
   /// Запускает задачу по кэшированию плейлиста [playlist]. Если данный метод вызвать несколько раз, то ничего не будет происходить лишь в случае, если [cache] не менялся. [cache] указывает, что треки в плейлисте будут кэшироваться, а не удаляться из памяти устройства.
   Future<void> cachePlaylist(
     ExtendedPlaylist playlist, {
