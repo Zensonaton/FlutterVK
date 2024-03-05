@@ -65,12 +65,16 @@ class CachedStreamedAudio extends StreamAudioSource {
   /// Указывает, будет ли данный трек кэшироваться.
   final bool cacheTrack;
 
+  /// Callback-метод, вызываемый после успешного кэширования этого трека (т.е., сохранения его на диск). Рекомендуется использовать этот метод для сохранения информации о кэшированности на диск.
+  final VoidCallback? onCached;
+
   CachedStreamedAudio({
     required this.cacheKey,
     this.uri,
     this.thumbnails,
     this.albumID,
     this.cacheTrack = false,
+    this.onCached,
   });
 
   /// Возвращает путь к корневой папке, хранящий в себе кэшированные треки.
@@ -254,6 +258,9 @@ class CachedStreamedAudio extends StreamAudioSource {
               albumID: albumID,
               thumbnails: thumbnails,
             );
+
+            // Трек был успешно полностью кэширован.
+            onCached?.call();
           },
           onError: (Object e, StackTrace stackTrace) {
             logger.e(
@@ -931,6 +938,17 @@ class VKMusicPlayer {
     return await _player.setLoopMode(loopMode);
   }
 
+  /// Callback-метод, сохраняющий информацию о том, что трек был кэширован.
+  void _onTrackCached(ExtendedAudio audio, ExtendedPlaylist playlist) {
+    audio.isCached = true;
+
+    final UserProvider user =
+        Provider.of<UserProvider>(buildContext!, listen: false);
+
+    user.updatePlaylist(playlist);
+    user.markUpdated(false);
+  }
+
   /// Устанавливает плейлист [playlist] для воспроизведения музыки, указывая при этом [index], начиная с которого будет запущено воспроизведение. Если [play] равен true, то при вызове данного метода плеер автоматически начнёт воспроизводить музыку.
   Future<void> setPlaylist(
     ExtendedPlaylist playlist, {
@@ -967,6 +985,7 @@ class VKMusicPlayer {
               thumbnails: audio.album?.thumbnails,
               albumID: audio.album?.id,
               cacheTrack: playlist.cacheTracks ?? false,
+              onCached: () => _onTrackCached(audio, playlist),
             ),
           )
           .toList(),
@@ -1010,6 +1029,7 @@ class VKMusicPlayer {
             : null,
         thumbnails: audio.album?.thumbnails,
         albumID: audio.album?.id,
+        onCached: () => _onTrackCached(audio, player.currentPlaylist!),
       ),
     );
     _audiosQueue!.insert(
