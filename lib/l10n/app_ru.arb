@@ -178,9 +178,10 @@
 		}
 	},
 
-	"music_disableTrackCachingTitle": "Отключение кэширования треков",
+	"music_disableTrackCachingTitle": "Удаление кэша треков",
 	"music_disableTrackCachingDescription": "Продолжив, Вы отключите кэширование треков в этом плейлисте, а все треки, которые были кэшированы здесь будут удалены с Вашего устройства. После этого действия Вы не сможете слушать музыку из этого плейлиста оффлайн.",
-	"music_disableTrackCachingButton": "Отключить",
+	"music_stopTrackCachingButton": "Остановить",
+	"music_disableTrackCachingButton": "Удалить",
 
 	"music_disableTrackCachingUnavailableTitle": "Невозможно удалить кэш сейчас",
 	"music_disableTrackCachingUnavailableDescription": "Вы не можете удалить кэш треков из воспроизводимого в данный момент плейлиста.\nОстановите воспроизведение, либо включите другой плейлист, что бы очистить кэш.",

@@ -266,14 +266,14 @@ class DownloadManager {
   /// List, содержащий в себе задачи по кэшированию плейлистов.
   final List<CacheItem> _tasks = [];
 
-  /// Указывает, запущена ли задача по кэшированию передаваемого [playlist].
-  bool isTaskRunningFor(ExtendedPlaylist playlist) {
-    final CacheItem? pendingItem = _tasks.firstWhereOrNull(
-      (item) => item.playlist == playlist,
-    );
+  /// Возвращает [CacheItem] по передаваемому [playlist]. Возвращает null, если ничего не было найдено.
+  CacheItem? getCacheTask(ExtendedPlaylist playlist) => _tasks.firstWhereOrNull(
+        (item) => item.playlist == playlist,
+      );
 
-    return pendingItem != null;
-  }
+  /// Указывает, запущена ли задача по кэшированию передаваемого [playlist].
+  bool isTaskRunningFor(ExtendedPlaylist playlist) =>
+      getCacheTask(playlist) != null;
 
   /// Запускает задачу по кэшированию плейлиста [playlist]. Если данный метод вызвать несколько раз, то ничего не будет происходить лишь в случае, если [cache] не менялся. [cache] указывает, что треки в плейлисте будут кэшироваться, а не удаляться из памяти устройства.
   Future<void> cachePlaylist(
@@ -283,9 +283,7 @@ class DownloadManager {
     UserProvider? user,
     Function(ExtendedAudio)? onTrackCached,
   }) async {
-    final CacheItem? pendingItem = _tasks.firstWhereOrNull(
-      (item) => item.playlist == playlist,
-    );
+    final CacheItem? pendingItem = getCacheTask(playlist);
 
     assert(
       playlist.audios != null,
