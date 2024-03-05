@@ -497,7 +497,11 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
 
       // Слушаем события подключения к интернету, что бы начать загрузку треков после появления интернета.
       connectivityManager.connectionChange.listen((bool isConnected) async {
+        // Если доступа к интернету нет, то ничего не делаем.
         if (!isConnected) return;
+
+        // Если данный плейлист является плейлистом "лайкнутые треки", то его обновлять не нужно (он обновится в другом месте).
+        if (widget.playlist.isFavoritesPlaylist) return;
 
         setLoading();
 
