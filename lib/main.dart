@@ -310,6 +310,18 @@ class _MainAppState extends State<MainApp> with WindowListener {
       updaterInstaller.deleteSync();
     }
 
+    // Удаляем папку со старым кэшем треков, если таковой существует.
+    // Сейчас, для кэша треков используется папка audios, однако раньше использовалась папка tracks.
+    final Directory oldCacheDirectory = Directory(
+      path.join(
+        (await getApplicationSupportDirectory()).path,
+        "tracks",
+      ),
+    );
+    if (oldCacheDirectory.existsSync()) {
+      oldCacheDirectory.deleteSync(recursive: true);
+    }
+
     user.markUpdated(false);
 
     // Делаем панель навигации прозрачной.
