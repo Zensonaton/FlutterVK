@@ -552,199 +552,216 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
 
     final bool hasTracksLoaded = !widget.playlist.isEmpty && !_loading;
 
+    final bool selected = player.currentPlaylist == widget.playlist;
+
     return Column(
       children: [
         // Внутреннее содержимое.
         Expanded(
-          child: CustomScrollView(
-            slivers: [
-              // AppBar, дополнительно содержащий информацию о данном плейлисте.
-              SliverLayoutBuilder(
-                builder: (
-                  BuildContext context,
-                  SliverConstraints constraints,
-                ) {
-                  final isExpanded =
-                      constraints.scrollOffset < 280 && !isMobileLayout;
+          child: Stack(
+            children: [
+              // Само содержимое плейлиста.
+              CustomScrollView(
+                slivers: [
+                  // AppBar, дополнительно содержащий информацию о данном плейлисте.
+                  SliverLayoutBuilder(
+                    builder: (
+                      BuildContext context,
+                      SliverConstraints constraints,
+                    ) {
+                      final isExpanded =
+                          constraints.scrollOffset < 280 && !isMobileLayout;
 
-                  return SliverAppBar(
-                    pinned: true,
-                    expandedHeight: isMobileLayout ? null : 260,
-                    elevation: 0,
-                    title: isExpanded
-                        ? null
-                        : Text(
-                            widget.playlist.title ??
-                                AppLocalizations.of(context)!
-                                    .music_fullscreenFavoritePlaylistName,
-                          ),
-                    centerTitle: true,
-                    flexibleSpace: isMobileLayout
-                        ? null
-                        : FlexibleSpaceBar(
-                            background: Padding(
-                              padding: EdgeInsets.only(
-                                left: horizontalPadding,
-                                right: horizontalPadding,
-                                top: verticalPadding + 30,
+                      return SliverAppBar(
+                        pinned: true,
+                        expandedHeight: isMobileLayout ? null : 260,
+                        elevation: 0,
+                        title: isExpanded
+                            ? null
+                            : Text(
+                                widget.playlist.title ??
+                                    AppLocalizations.of(context)!
+                                        .music_fullscreenFavoritePlaylistName,
                               ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Информация о плейлисте в Desktop Layout'е.
-                                  Row(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
+                        centerTitle: true,
+                        flexibleSpace: isMobileLayout
+                            ? null
+                            : FlexibleSpaceBar(
+                                background: Padding(
+                                  padding: EdgeInsets.only(
+                                    left: horizontalPadding,
+                                    right: horizontalPadding,
+                                    top: verticalPadding + 30,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      // Изображение плейлиста.
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(
-                                          globalBorderRadius,
-                                        ),
-                                        child: widget.playlist.photo != null
-                                            ? CachedNetworkImage(
-                                                imageUrl: widget
-                                                    .playlist.photo!.photo270!,
-                                                cacheKey:
-                                                    "${widget.playlist.mediaKey}270",
-                                                memCacheHeight: 200,
-                                                memCacheWidth: 200,
-                                                placeholder: (
-                                                  BuildContext context,
-                                                  String url,
-                                                ) =>
-                                                    const FallbackAudioPlaylistAvatar(),
-                                                cacheManager:
-                                                    CachedNetworkImagesManager
-                                                        .instance,
-                                              )
-                                            : FallbackAudioPlaylistAvatar(
-                                                favoritesPlaylist: widget
-                                                    .playlist
-                                                    .isFavoritesPlaylist,
-                                              ),
-                                      ),
-                                      const SizedBox(
-                                        width: 24,
-                                      ),
-
-                                      // Название плейлиста, количество треков в нём.
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            // Название плейлиста.
-                                            Text(
-                                              widget.playlist.title ??
-                                                  AppLocalizations.of(context)!
-                                                      .music_fullscreenFavoritePlaylistName,
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .displayLarge!
-                                                  .copyWith(
-                                                    fontWeight: FontWeight.w500,
+                                      // Информация о плейлисте в Desktop Layout'е.
+                                      Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
+                                        children: [
+                                          // Изображение плейлиста.
+                                          ClipRRect(
+                                            borderRadius: BorderRadius.circular(
+                                              globalBorderRadius,
+                                            ),
+                                            child: widget.playlist.photo != null
+                                                ? CachedNetworkImage(
+                                                    imageUrl: widget.playlist
+                                                        .photo!.photo270!,
+                                                    cacheKey:
+                                                        "${widget.playlist.mediaKey}270",
+                                                    memCacheHeight: 200,
+                                                    memCacheWidth: 200,
+                                                    placeholder: (
+                                                      BuildContext context,
+                                                      String url,
+                                                    ) =>
+                                                        const FallbackAudioPlaylistAvatar(),
+                                                    cacheManager:
+                                                        CachedNetworkImagesManager
+                                                            .instance,
+                                                  )
+                                                : FallbackAudioPlaylistAvatar(
+                                                    favoritesPlaylist: widget
+                                                        .playlist
+                                                        .isFavoritesPlaylist,
                                                   ),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                            const SizedBox(
-                                              height: 4,
-                                            ),
+                                          ),
+                                          const SizedBox(
+                                            width: 24,
+                                          ),
 
-                                            // Описание плейлиста, при наличии.
-                                            if (widget.playlist.description !=
-                                                null)
-                                              Text(
-                                                widget.playlist.description!,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: TextStyle(
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .onBackground,
+                                          // Название плейлиста, количество треков в нём.
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                // Название плейлиста.
+                                                Text(
+                                                  widget.playlist.title ??
+                                                      AppLocalizations.of(
+                                                        context,
+                                                      )!
+                                                          .music_fullscreenFavoritePlaylistName,
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .displayLarge!
+                                                      .copyWith(
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                      ),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                 ),
-                                              ),
-                                            if (widget.playlist.description !=
-                                                null)
-                                              const SizedBox(
-                                                height: 4,
-                                              ),
+                                                const SizedBox(
+                                                  height: 4,
+                                                ),
 
-                                            // Строка вида "100 треков • Ваш плейлист, 25 часов".
-                                            // TODO: Написать свою функцию для форматирования времени.
-                                            Skeletonizer(
-                                              enabled: _loading,
-                                              child: Text(
-                                                AppLocalizations.of(context)!
-                                                    .music_bottomPlaylistInfo(
-                                                  widget.playlist.count,
-                                                  playlistType,
-                                                  RelativeTime.locale(
-                                                    Localizations.localeOf(
+                                                // Описание плейлиста, при наличии.
+                                                if (widget
+                                                        .playlist.description !=
+                                                    null)
+                                                  Text(
+                                                    widget
+                                                        .playlist.description!,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: TextStyle(
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .onBackground,
+                                                    ),
+                                                  ),
+                                                if (widget
+                                                        .playlist.description !=
+                                                    null)
+                                                  const SizedBox(
+                                                    height: 4,
+                                                  ),
+
+                                                // Строка вида "100 треков • Ваш плейлист, 25 часов".
+                                                // TODO: Написать свою функцию для форматирования времени.
+                                                Skeletonizer(
+                                                  enabled: _loading,
+                                                  child: Text(
+                                                    AppLocalizations.of(
                                                       context,
+                                                    )!
+                                                        .music_bottomPlaylistInfo(
+                                                      widget.playlist.count,
+                                                      playlistType,
+                                                      RelativeTime.locale(
+                                                        Localizations.localeOf(
+                                                          context,
+                                                        ),
+                                                        timeUnits: [
+                                                          TimeUnit.hour,
+                                                          TimeUnit.minute,
+                                                        ],
+                                                        numeric: true,
+                                                      ).format(
+                                                        DateTime.now().add(
+                                                          widget.playlist
+                                                                  .duration ??
+                                                              Duration.zero,
+                                                        ),
+                                                      ),
                                                     ),
-                                                    timeUnits: [
-                                                      TimeUnit.hour,
-                                                      TimeUnit.minute,
-                                                    ],
-                                                    numeric: true,
-                                                  ).format(
-                                                    DateTime.now().add(
-                                                      widget.playlist
-                                                              .duration ??
-                                                          Duration.zero,
+                                                    style: TextStyle(
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .onBackground
+                                                          .withOpacity(0.75),
                                                     ),
                                                   ),
                                                 ),
-                                                style: TextStyle(
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .onBackground
-                                                      .withOpacity(0.75),
-                                                ),
-                                              ),
+                                              ],
                                             ),
-                                          ],
-                                        ),
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
-                                ],
+                                ),
                               ),
-                            ),
-                          ),
-                  );
-                },
-              ),
-
-              // Row с действиями с данным плейлистом.
-              SliverPadding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: horizontalPadding,
-                  vertical: clampDouble(
-                    verticalPadding - 8 * 2,
-                    0,
-                    100,
+                      );
+                    },
                   ),
-                ),
-                sliver: SliverPersistentHeader(
-                  pinned: true,
-                  delegate: SliverAppBarDelegate(
-                    minHeight: 54 + 8 * 2,
-                    maxHeight: 54 + 8 * 2,
-                    builder: (BuildContext context, double shrinkOffset) {
-                      return Container(
-                        color: Theme.of(context).colorScheme.background,
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 8,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            // Кнопка запуска воспроизведения треков из плейлиста.
-                            Row(
+
+                  // Row с действиями с данным плейлистом.
+                  SliverPadding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: horizontalPadding,
+                      vertical: clampDouble(
+                        verticalPadding - 8 * 2,
+                        0,
+                        100,
+                      ),
+                    ),
+                    sliver: SliverPersistentHeader(
+                      pinned: true,
+                      delegate: SliverAppBarDelegate(
+                        minHeight: 54 + 8 * 2,
+                        maxHeight: 54 + 8 * 2,
+                        builder: (BuildContext context, double shrinkOffset) {
+                          return Container(
+                            color: Theme.of(context).colorScheme.background,
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 8,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                IconButton.filled(
-                                  onPressed:
-                                      !widget.playlist.isEmpty && !_loading
+                                // Кнопка запуска воспроизведения треков из плейлиста.
+                                Row(
+                                  children: [
+                                    IconButton.filled(
+                                      onPressed: !widget.playlist.isEmpty &&
+                                              !_loading
                                           ? () async {
                                               // Если у нас уже запущен этот же плейлист, то переключаем паузу/воспроизведение.
                                               if (player.currentPlaylist ==
@@ -763,326 +780,388 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                               );
                                             }
                                           : null,
-                                  iconSize: 38,
-                                  color: Theme.of(context).colorScheme.primary,
-                                  icon: Icon(
-                                    player.currentPlaylist == widget.playlist &&
-                                            player.playing
-                                        ? Icons.pause
-                                        : Icons.play_arrow,
-                                    color: hasTracksLoaded
-                                        ? Theme.of(context)
-                                            .colorScheme
-                                            .onPrimary
-                                        : null,
-                                  ),
-                                ),
-                                const SizedBox(
-                                  width: 6,
-                                ),
+                                      iconSize: 38,
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                      icon: Icon(
+                                        player.currentPlaylist ==
+                                                    widget.playlist &&
+                                                player.playing
+                                            ? Icons.pause
+                                            : Icons.play_arrow,
+                                        color: hasTracksLoaded
+                                            ? Theme.of(context)
+                                                .colorScheme
+                                                .onPrimary
+                                            : null,
+                                      ),
+                                    ),
+                                    const SizedBox(
+                                      width: 6,
+                                    ),
 
-                                // Кнопка для загрузки треков в кэш.
-                                IconButton(
-                                  onPressed: hasTracksLoaded
-                                      ? () async {
-                                          final bool cacheTracks =
-                                              widget.playlist.cacheTracks ??
-                                                  false;
+                                    // Кнопка для загрузки треков в кэш.
+                                    IconButton(
+                                      onPressed: hasTracksLoaded
+                                          ? () async {
+                                              final bool cacheTracks =
+                                                  widget.playlist.cacheTracks ??
+                                                      false;
 
-                                          // Пользователь пытается включить кэширование с выключенным интернетом, запрещаем ему такое.
-                                          if (!cacheTracks &&
-                                              !networkRequiredDialog(
-                                                context,
-                                              )) return;
+                                              // Пользователь пытается включить кэширование с выключенным интернетом, запрещаем ему такое.
+                                              if (!cacheTracks &&
+                                                  !networkRequiredDialog(
+                                                    context,
+                                                  )) return;
 
-                                          // Пользователь пытается включить кэширование, спрашиваем, уверен ли он в своих намерениях.
-                                          if (!cacheTracks) {
-                                            final bool dialogResult =
-                                                await showDialog(
-                                                      context: context,
-                                                      builder: (
-                                                        BuildContext context,
-                                                      ) {
-                                                        return EnableCacheDialog(
-                                                          playlist:
-                                                              widget.playlist,
-                                                        );
-                                                      },
-                                                    ) ??
-                                                    false;
+                                              // Пользователь пытается включить кэширование, спрашиваем, уверен ли он в своих намерениях.
+                                              if (!cacheTracks) {
+                                                final bool dialogResult =
+                                                    await showDialog(
+                                                          context: context,
+                                                          builder: (
+                                                            BuildContext
+                                                                context,
+                                                          ) {
+                                                            return EnableCacheDialog(
+                                                              playlist: widget
+                                                                  .playlist,
+                                                            );
+                                                          },
+                                                        ) ??
+                                                        false;
 
-                                            // Если пользователь нажал на "нет", то выходим.
-                                            if (!dialogResult ||
-                                                !context.mounted) return;
-                                          }
+                                                // Если пользователь нажал на "нет", то выходим.
+                                                if (!dialogResult ||
+                                                    !context.mounted) return;
+                                              }
 
-                                          // Если кэширование уже включено, то спрашиваем у пользователя, хочет ли он отменить его и удалить треки.
-                                          if (cacheTracks) {
-                                            // Если плеер воспроизводит этот же плейлист, то мы не должны позволить пользователю удалить кэш.
-                                            if (player.currentPlaylist ==
-                                                widget.playlist) {
-                                              showErrorDialog(
-                                                context,
-                                                title: AppLocalizations.of(
-                                                  context,
-                                                )!
-                                                    .music_disableTrackCachingUnavailableTitle,
-                                                description: AppLocalizations
-                                                        .of(context)!
-                                                    .music_disableTrackCachingUnavailableDescription,
+                                              // Если кэширование уже включено, то спрашиваем у пользователя, хочет ли он отменить его и удалить треки.
+                                              if (cacheTracks) {
+                                                // Если плеер воспроизводит этот же плейлист, то мы не должны позволить пользователю удалить кэш.
+                                                if (player.currentPlaylist ==
+                                                    widget.playlist) {
+                                                  showErrorDialog(
+                                                    context,
+                                                    title: AppLocalizations.of(
+                                                      context,
+                                                    )!
+                                                        .music_disableTrackCachingUnavailableTitle,
+                                                    description: AppLocalizations
+                                                            .of(context)!
+                                                        .music_disableTrackCachingUnavailableDescription,
+                                                  );
+
+                                                  return;
+                                                }
+
+                                                // Спрашимаем у пользователя, хочет ли он отключить кэширование.
+                                                final bool dialogResult =
+                                                    await showDialog(
+                                                          context: context,
+                                                          builder: (
+                                                            BuildContext
+                                                                context,
+                                                          ) {
+                                                            return const CacheDisableWarningDialog();
+                                                          },
+                                                        ) ??
+                                                        false;
+
+                                                if (!dialogResult) return;
+                                              }
+
+                                              // Включаем или отключаем кэширование.
+                                              widget.playlist.cacheTracks =
+                                                  !(widget.playlist
+                                                          .cacheTracks ??
+                                                      false);
+
+                                              user.markUpdated(false);
+                                              await appStorage.savePlaylist(
+                                                widget.playlist.asDBPlaylist,
                                               );
+
+                                              // Запускаем задачу по загрузке плейлиста.
+                                              if (!widget
+                                                      .playlist.cacheTracks! &&
+                                                  context.mounted) {
+                                                LoadingOverlay.of(context)
+                                                    .show();
+                                              }
+
+                                              try {
+                                                await downloadManager
+                                                    .cachePlaylist(
+                                                  widget.playlist,
+                                                  user: user,
+                                                  cache: widget.playlist
+                                                          .cacheTracks ??
+                                                      false,
+                                                  onTrackCached:
+                                                      (ExtendedAudio audio) {
+                                                    if (!context.mounted) {
+                                                      return;
+                                                    }
+
+                                                    user.markUpdated(false);
+                                                  },
+                                                );
+                                              } catch (e, stackTrace) {
+                                                logger.e(
+                                                  "Ошибка при кэшировании плейлиста: ",
+                                                  error: e,
+                                                  stackTrace: stackTrace,
+                                                );
+                                              } finally {
+                                                if (!(widget.playlist
+                                                            .cacheTracks ??
+                                                        false) &&
+                                                    context.mounted) {
+                                                  LoadingOverlay.of(context)
+                                                      .hide();
+                                                }
+                                              }
+                                            }
+                                          : null,
+                                      iconSize: 38,
+                                      icon: Icon(
+                                        Icons.arrow_circle_down,
+                                        color: hasTracksLoaded
+                                            ? ((widget.playlist.cacheTracks ??
+                                                    false)
+                                                ? Theme.of(context)
+                                                    .colorScheme
+                                                    .primary
+                                                : Theme.of(context)
+                                                    .colorScheme
+                                                    .onBackground)
+                                            : null,
+                                      ),
+                                    ),
+                                    const SizedBox(
+                                      width: 6,
+                                    ),
+                                  ],
+                                ),
+
+                                // Поиск.
+                                Flexible(
+                                  child: SizedBox(
+                                    width: 300,
+                                    child: CallbackShortcuts(
+                                      bindings: {
+                                        const SingleActivator(
+                                          LogicalKeyboardKey.escape,
+                                        ): () => controller.clear(),
+                                        if (hasTracksLoaded)
+                                          const SingleActivator(
+                                            LogicalKeyboardKey.enter,
+                                          ): () async {
+                                            // Если у нас уже запущен этот же трек, то переключаем паузу/воспроизведение.
+                                            if (player.currentAudio ==
+                                                filteredAudios.first) {
+                                              await player.togglePlay();
 
                                               return;
                                             }
 
-                                            // Спрашимаем у пользователя, хочет ли он отключить кэширование.
-                                            final bool dialogResult =
-                                                await showDialog(
-                                                      context: context,
-                                                      builder: (
-                                                        BuildContext context,
-                                                      ) {
-                                                        return const CacheDisableWarningDialog();
-                                                      },
-                                                    ) ??
-                                                    false;
-
-                                            if (!dialogResult) return;
-                                          }
-
-                                          // Включаем или отключаем кэширование.
-                                          widget.playlist.cacheTracks =
-                                              !(widget.playlist.cacheTracks ??
-                                                  false);
-
-                                          user.markUpdated(false);
-                                          await appStorage.savePlaylist(
-                                            widget.playlist.asDBPlaylist,
-                                          );
-
-                                          // Запускаем задачу по загрузке плейлиста.
-                                          if (!widget.playlist.cacheTracks! &&
-                                              context.mounted) {
-                                            LoadingOverlay.of(context).show();
-                                          }
-
-                                          try {
-                                            await downloadManager.cachePlaylist(
+                                            await player.setPlaylist(
                                               widget.playlist,
-                                              user: user,
-                                              cache:
-                                                  widget.playlist.cacheTracks ??
-                                                      false,
-                                              onTrackCached:
-                                                  (ExtendedAudio audio) {
-                                                if (!context.mounted) return;
-
-                                                user.markUpdated(false);
-                                              },
+                                              audio: filteredAudios.first,
                                             );
-                                          } catch (e, stackTrace) {
-                                            logger.e(
-                                              "Ошибка при кэшировании плейлиста: ",
-                                              error: e,
-                                              stackTrace: stackTrace,
-                                            );
-                                          } finally {
-                                            if (!(widget.playlist.cacheTracks ??
-                                                    false) &&
-                                                context.mounted) {
-                                              LoadingOverlay.of(context).hide();
-                                            }
-                                          }
-                                        }
-                                      : null,
-                                  iconSize: 38,
-                                  icon: Icon(
-                                    Icons.arrow_circle_down,
-                                    color: hasTracksLoaded
-                                        ? ((widget.playlist.cacheTracks ??
-                                                false)
-                                            ? Theme.of(context)
-                                                .colorScheme
-                                                .primary
-                                            : Theme.of(context)
-                                                .colorScheme
-                                                .onBackground)
-                                        : null,
-                                  ),
-                                ),
-                                const SizedBox(
-                                  width: 6,
-                                ),
-                              ],
-                            ),
-
-                            // Поиск.
-                            Flexible(
-                              child: SizedBox(
-                                width: 300,
-                                child: CallbackShortcuts(
-                                  bindings: {
-                                    const SingleActivator(
-                                      LogicalKeyboardKey.escape,
-                                    ): () => controller.clear(),
-                                    if (hasTracksLoaded)
-                                      const SingleActivator(
-                                        LogicalKeyboardKey.enter,
-                                      ): () async {
-                                        // Если у нас уже запущен этот же трек, то переключаем паузу/воспроизведение.
-                                        if (player.currentAudio ==
-                                            filteredAudios.first) {
-                                          await player.togglePlay();
-
-                                          return;
-                                        }
-
-                                        await player.setPlaylist(
-                                          widget.playlist,
-                                          audio: filteredAudios.first,
-                                        );
+                                          },
                                       },
-                                  },
-                                  child: TextField(
-                                    focusNode: focusNode,
-                                    controller: controller,
-                                    enabled: hasTracksLoaded,
-                                    onChanged: (String query) =>
-                                        setState(() {}),
-                                    decoration: InputDecoration(
-                                      hintText: AppLocalizations.of(context)!
-                                          .music_searchTextInPlaylist(
-                                        playlistAudios.length,
-                                      ),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(
-                                          globalBorderRadius,
+                                      child: TextField(
+                                        focusNode: focusNode,
+                                        controller: controller,
+                                        enabled: hasTracksLoaded,
+                                        onChanged: (String query) =>
+                                            setState(() {}),
+                                        decoration: InputDecoration(
+                                          hintText:
+                                              AppLocalizations.of(context)!
+                                                  .music_searchTextInPlaylist(
+                                            playlistAudios.length,
+                                          ),
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              globalBorderRadius,
+                                            ),
+                                          ),
+                                          prefixIconColor: Theme.of(context)
+                                              .colorScheme
+                                              .onBackground
+                                              .withOpacity(
+                                                hasTracksLoaded ? 1.0 : 0.5,
+                                              ),
+                                          prefixIcon: const Icon(
+                                            Icons.search,
+                                          ),
+                                          suffixIcon: controller.text.isNotEmpty
+                                              ? Padding(
+                                                  padding:
+                                                      const EdgeInsetsDirectional
+                                                          .only(
+                                                    end: 12,
+                                                  ),
+                                                  child: IconButton(
+                                                    icon: const Icon(
+                                                      Icons.close,
+                                                    ),
+                                                    onPressed: () => setState(
+                                                      () => controller.clear(),
+                                                    ),
+                                                  ),
+                                                )
+                                              : null,
                                         ),
                                       ),
-                                      prefixIconColor: Theme.of(context)
-                                          .colorScheme
-                                          .onBackground
-                                          .withOpacity(
-                                            hasTracksLoaded ? 1.0 : 0.5,
-                                          ),
-                                      prefixIcon: const Icon(
-                                        Icons.search,
-                                      ),
-                                      suffixIcon: controller.text.isNotEmpty
-                                          ? Padding(
-                                              padding:
-                                                  const EdgeInsetsDirectional
-                                                      .only(
-                                                end: 12,
-                                              ),
-                                              child: IconButton(
-                                                icon: const Icon(
-                                                  Icons.close,
-                                                ),
-                                                onPressed: () => setState(
-                                                  () => controller.clear(),
-                                                ),
-                                              ),
-                                            )
-                                          : null,
                                     ),
                                   ),
                                 ),
-                              ),
+                              ],
                             ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-
-              // У пользователя нет треков в данном плейлисте.
-              if (playlistAudios.isEmpty && !_loading)
-                SliverToBoxAdapter(
-                  child: Text(
-                    AppLocalizations.of(context)!.music_playlistEmpty,
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-
-              // У пользователя есть треки, но поиск ничего не выдал.
-              if (playlistAudios.isNotEmpty &&
-                  filteredAudios.isEmpty &&
-                  !_loading)
-                SliverToBoxAdapter(
-                  child: StyledText(
-                    text: AppLocalizations.of(context)!.music_zeroSearchResults,
-                    textAlign: TextAlign.center,
-                    tags: {
-                      "click": StyledTextActionTag(
-                        (String? text, Map<String?, String?> attrs) => setState(
-                          () => controller.clear(),
-                        ),
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
+                          );
+                        },
                       ),
-                    },
+                    ),
                   ),
-                ),
 
-              // Содержимое плейлиста.
-              SliverPadding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: horizontalPadding,
-                ),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (BuildContext context, int index) {
-                      // Если ничего не загружено, то отображаем Skeleton Loader вместо реального трека.
-                      if (_loading) {
-                        return Skeletonizer(
-                          child: Padding(
-                            padding: const EdgeInsets.only(
-                              bottom: 8,
+                  // У пользователя нет треков в данном плейлисте.
+                  if (playlistAudios.isEmpty && !_loading)
+                    SliverToBoxAdapter(
+                      child: Text(
+                        AppLocalizations.of(context)!.music_playlistEmpty,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+
+                  // У пользователя есть треки, но поиск ничего не выдал.
+                  if (playlistAudios.isNotEmpty &&
+                      filteredAudios.isEmpty &&
+                      !_loading)
+                    SliverToBoxAdapter(
+                      child: StyledText(
+                        text: AppLocalizations.of(context)!
+                            .music_zeroSearchResults,
+                        textAlign: TextAlign.center,
+                        tags: {
+                          "click": StyledTextActionTag(
+                            (String? text, Map<String?, String?> attrs) =>
+                                setState(
+                              () => controller.clear(),
                             ),
-                            child: AudioTrackTile(
-                              audio: ExtendedAudio(
-                                id: -1,
-                                ownerID: -1,
-                                title: fakeTrackNames[
-                                    index % fakeTrackNames.length],
-                                artist: fakeTrackNames[
-                                    (index + 1) % fakeTrackNames.length],
-                                duration: 60 * 3,
-                                accessKey: "",
-                                url: "",
-                                date: 0,
-                              ),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
                             ),
                           ),
-                        );
-                      }
+                        },
+                      ),
+                    ),
 
-                      if (index == filteredAudios.length) {
-                        // Данный SizedBox нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
-                        return const SizedBox(
-                          key: ValueKey(null),
-                          height: 76,
-                        );
-                      }
+                  // Содержимое плейлиста.
+                  SliverPadding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: horizontalPadding,
+                    ),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (BuildContext context, int index) {
+                          // Если ничего не загружено, то отображаем Skeleton Loader вместо реального трека.
+                          if (_loading) {
+                            return Skeletonizer(
+                              child: Padding(
+                                padding: const EdgeInsets.only(
+                                  bottom: 8,
+                                ),
+                                child: AudioTrackTile(
+                                  audio: ExtendedAudio(
+                                    id: -1,
+                                    ownerID: -1,
+                                    title: fakeTrackNames[
+                                        index % fakeTrackNames.length],
+                                    artist: fakeTrackNames[
+                                        (index + 1) % fakeTrackNames.length],
+                                    duration: 60 * 3,
+                                    accessKey: "",
+                                    url: "",
+                                    date: 0,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
 
-                      return buildListTrackWidget(
-                        context,
-                        filteredAudios.elementAt(index),
-                        widget.playlist,
-                        showCachedIcon: true,
-                      );
-                    },
-                    childCount: _loading
-                        ? widget.playlist.count
-                        : filteredAudios.length +
-                            (isMobileLayout && player.loaded ? 1 : 0),
+                          if (index == filteredAudios.length) {
+                            // Данный SizedBox нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
+                            return const SizedBox(
+                              key: ValueKey(null),
+                              height: 76,
+                            );
+                          }
+
+                          return buildListTrackWidget(
+                            context,
+                            filteredAudios.elementAt(index),
+                            widget.playlist,
+                            showCachedIcon: true,
+                          );
+                        },
+                        childCount: _loading
+                            ? widget.playlist.count
+                            : filteredAudios.length +
+                                (isMobileLayout && player.loaded ? 1 : 0),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              // FAB, располагаемый поверх всего интерфейса при Mobile Layout'е.
+              if (isMobileLayout)
+                Align(
+                  alignment: Alignment.bottomRight,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8).copyWith(
+                      bottom: player.loaded ? 84 : null,
+                    ),
+                    child: FloatingActionButton.extended(
+                      onPressed: () async {
+                        // Если данный плейлист уже играет, то просто ставим на паузу/воспроизведение.
+                        if (player.currentPlaylist == widget.playlist) {
+                          await player.togglePlay();
+
+                          return;
+                        }
+
+                        await player.setShuffle(true);
+
+                        await player.setPlaylist(
+                          widget.playlist,
+                          audio: widget.playlist.audios!.randomItem(),
+                        );
+                      },
+                      label: Text(
+                        selected
+                            ? player.playing
+                                ? AppLocalizations.of(context)!
+                                    .music_shuffleAndPlayPause
+                                : AppLocalizations.of(context)!
+                                    .music_shuffleAndPlayResume
+                            : AppLocalizations.of(context)!
+                                .music_shuffleAndPlay,
+                      ),
+                      icon: Icon(
+                        selected
+                            ? player.playing
+                                ? Icons.pause
+                                : Icons.play_arrow
+                            : Icons.shuffle,
+                      ),
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
         ),
