@@ -1164,7 +1164,7 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                 ],
               ),
 
-              // FAB, располагаемый поверх всего интерфейса при Mobile Layout'е.
+              // FAB, располагаемый поверх всего интерфейса при Mobile Layout'е, если играет не этот плейлист.
               if (isMobileLayout)
                 Align(
                   alignment: Alignment.bottomRight,
@@ -1172,40 +1172,35 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                     padding: const EdgeInsets.all(8).copyWith(
                       bottom: player.loaded ? 84 : null,
                     ),
-                    child: FloatingActionButton.extended(
-                      onPressed: () async {
-                        // Если данный плейлист уже играет, то просто ставим на паузу/воспроизведение.
-                        if (player.currentPlaylist == widget.playlist) {
-                          await player.togglePlay();
+                    child: player.currentPlaylist != widget.playlist
+                        ? FloatingActionButton.extended(
+                            onPressed: () async {
+                              await player.setShuffle(true);
 
-                          return;
-                        }
-
-                        await player.setShuffle(true);
-
-                        await player.setPlaylist(
-                          widget.playlist,
-                          audio: widget.playlist.audios!.randomItem(),
-                        );
-                      },
-                      label: Text(
-                        selected
-                            ? player.playing
-                                ? AppLocalizations.of(context)!
-                                    .music_shuffleAndPlayPause
-                                : AppLocalizations.of(context)!
-                                    .music_shuffleAndPlayResume
-                            : AppLocalizations.of(context)!
-                                .music_shuffleAndPlay,
-                      ),
-                      icon: Icon(
-                        selected
-                            ? player.playing
-                                ? Icons.pause
-                                : Icons.play_arrow
-                            : Icons.shuffle,
-                      ),
-                    ),
+                              await player.setPlaylist(
+                                widget.playlist,
+                                audio: widget.playlist.audios!.randomItem(),
+                              );
+                            },
+                            label: Text(
+                              selected
+                                  ? player.playing
+                                      ? AppLocalizations.of(context)!
+                                          .music_shuffleAndPlayPause
+                                      : AppLocalizations.of(context)!
+                                          .music_shuffleAndPlayResume
+                                  : AppLocalizations.of(context)!
+                                      .music_shuffleAndPlay,
+                            ),
+                            icon: Icon(
+                              selected
+                                  ? player.playing
+                                      ? Icons.pause
+                                      : Icons.play_arrow
+                                  : Icons.shuffle,
+                            ),
+                          )
+                        : null,
                   ),
                 ),
             ],
