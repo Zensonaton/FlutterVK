@@ -166,6 +166,262 @@ class DisableUpdatesDialog extends StatelessWidget {
   }
 }
 
+/// Диалог, помогающий пользователю поменять настройку "Поведение при закрытии".
+///
+/// Пример использования:
+/// ```dart
+/// showDialog(
+/// 	context: context,
+/// 	builder: (context) => const CloseActionDialog()
+/// );
+/// ```
+class CloseActionDialog extends StatelessWidget {
+  const CloseActionDialog({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final UserProvider user = Provider.of<UserProvider>(context);
+
+    assert(isDesktop, "CloseActionDialog can only be called on desktop");
+
+    void onValueChanged(AppCloseBehavior? behavior) {
+      if (behavior == null) return;
+
+      user.settings.closeBehavior = behavior;
+      user.markUpdated();
+    }
+
+    return MaterialDialog(
+      icon: Icons.close,
+      title: AppLocalizations.of(context)!.profile_closeActionTitle,
+      contents: [
+        RadioListTile.adaptive(
+          title: Text(
+            AppLocalizations.of(context)!.profile_closeActionClose,
+          ),
+          value: AppCloseBehavior.close,
+          groupValue: user.settings.closeBehavior,
+          onChanged: onValueChanged,
+        ),
+        RadioListTile.adaptive(
+          title: Text(
+            AppLocalizations.of(context)!.profile_closeActionMinimize,
+          ),
+          value: AppCloseBehavior.minimize,
+          groupValue: user.settings.closeBehavior,
+          onChanged: onValueChanged,
+        ),
+        RadioListTile.adaptive(
+          title: Text(
+            AppLocalizations.of(context)!.profile_closeActionMinimizeIfPlaying,
+          ),
+          value: AppCloseBehavior.minimizeIfPlaying,
+          groupValue: user.settings.closeBehavior,
+          onChanged: onValueChanged,
+        ),
+      ],
+    );
+  }
+}
+
+/// Диалог, помогающий пользователю поменять настройку "Тема".
+///
+/// Пример использования:
+/// ```dart
+/// showDialog(
+/// 	context: context,
+/// 	builder: (context) => const ThemeActionDialog()
+/// );
+/// ```
+class ThemeActionDialog extends StatelessWidget {
+  const ThemeActionDialog({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final UserProvider user = Provider.of<UserProvider>(context);
+
+    void onValueChanged(ThemeMode? mode) {
+      if (mode == null) return;
+
+      user.settings.theme = mode;
+      user.markUpdated();
+    }
+
+    return MaterialDialog(
+      icon: Icons.dark_mode,
+      title: AppLocalizations.of(context)!.profile_themeTitle,
+      contents: [
+        RadioListTile.adaptive(
+          title: Text(
+            AppLocalizations.of(context)!.profile_themeSystem,
+          ),
+          value: ThemeMode.system,
+          groupValue: user.settings.theme,
+          onChanged: onValueChanged,
+        ),
+        RadioListTile.adaptive(
+          title: Text(
+            AppLocalizations.of(context)!.profile_themeLight,
+          ),
+          value: ThemeMode.light,
+          groupValue: user.settings.theme,
+          onChanged: onValueChanged,
+        ),
+        RadioListTile.adaptive(
+          title: Text(
+            AppLocalizations.of(context)!.profile_themeDark,
+          ),
+          value: ThemeMode.dark,
+          groupValue: user.settings.theme,
+          onChanged: onValueChanged,
+        ),
+      ],
+    );
+  }
+}
+
+/// Диалог, помогающий пользователю поменять настройку "Отображение новых обновлений".
+///
+/// Пример использования:
+/// ```dart
+/// showDialog(
+/// 	context: context,
+/// 	builder: (context) => const UpdatesDialogTypeActionDialog()
+/// );
+/// ```
+class UpdatesDialogTypeActionDialog extends StatelessWidget {
+  const UpdatesDialogTypeActionDialog({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final UserProvider user = Provider.of<UserProvider>(context);
+
+    void onValueChanged(UpdatePolicy? policy) async {
+      if (policy == null) return;
+
+      // Делаем небольшое предупреждение, если пользователь пытается отключить обновления.
+      if (policy == UpdatePolicy.disabled) {
+        final bool response = await showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return const DisableUpdatesDialog();
+              },
+            ) ??
+            false;
+
+        // Пользователь нажал на "Отключить", тогда мы должны выключить обновления.
+        if (response && context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                AppLocalizations.of(context)!.profile_updatesDisabledText,
+              ),
+              duration: const Duration(
+                seconds: 8,
+              ),
+            ),
+          );
+        }
+
+        // Пользователь отказался отключать уведомления, тогда ничего не меняем.
+        if (!response) return;
+      }
+
+      user.settings.updatePolicy = policy;
+
+      user.markUpdated();
+    }
+
+    return MaterialDialog(
+      icon: Icons.update,
+      title: AppLocalizations.of(context)!.profile_updatesPolicyTitle,
+      contents: [
+        RadioListTile.adaptive(
+          title: Text(
+            AppLocalizations.of(context)!.profile_updatesPolicyDialog,
+          ),
+          value: UpdatePolicy.dialog,
+          groupValue: user.settings.updatePolicy,
+          onChanged: onValueChanged,
+        ),
+        RadioListTile.adaptive(
+          title: Text(
+            AppLocalizations.of(context)!.profile_updatesPolicyPopup,
+          ),
+          value: UpdatePolicy.popup,
+          groupValue: user.settings.updatePolicy,
+          onChanged: onValueChanged,
+        ),
+        RadioListTile.adaptive(
+          title: Text(
+            AppLocalizations.of(context)!.profile_updatesPolicyDisabled,
+          ),
+          value: UpdatePolicy.disabled,
+          groupValue: user.settings.updatePolicy,
+          onChanged: onValueChanged,
+        ),
+      ],
+    );
+  }
+}
+
+/// Диалог, помогающий пользователю поменять настройку "Канал обновлений".
+///
+/// Пример использования:
+/// ```dart
+/// showDialog(
+/// 	context: context,
+/// 	builder: (context) => const UpdatesChannelDialog()
+/// );
+/// ```
+class UpdatesChannelDialog extends StatelessWidget {
+  const UpdatesChannelDialog({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final UserProvider user = Provider.of<UserProvider>(context);
+
+    void onValueChanged(UpdateBranch? branch) {
+      if (branch == null) return;
+
+      user.settings.updateBranch = branch;
+
+      user.markUpdated();
+    }
+
+    return MaterialDialog(
+      icon: Icons.update,
+      title: AppLocalizations.of(context)!.profile_updatesBranchTitle,
+      contents: [
+        RadioListTile.adaptive(
+          title: Text(
+            AppLocalizations.of(context)!.profile_updatesBranchReleases,
+          ),
+          value: UpdateBranch.releasesOnly,
+          groupValue: user.settings.updateBranch,
+          onChanged: onValueChanged,
+        ),
+        RadioListTile.adaptive(
+          title: Text(
+            AppLocalizations.of(context)!.profile_updatesBranchPrereleases,
+          ),
+          value: UpdateBranch.prereleases,
+          groupValue: user.settings.updateBranch,
+          onChanged: onValueChanged,
+        ),
+      ],
+    );
+  }
+}
+
 /// Страница для [HomeRoute] для просмотра собственного профиля.
 class HomeProfilePage extends StatefulWidget {
   const HomeProfilePage({
@@ -252,47 +508,73 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                   ),
                   child: Column(
                     children: [
+                      // Аватар пользователя, при наличии.
                       if (user.photoMaxUrl != null)
-                        CachedNetworkImage(
-                          imageUrl: user.photoMaxUrl!,
-                          cacheKey: "${user.id!}400",
-                          placeholder: (BuildContext context, String url) {
-                            return const SizedBox(
-                              height: 80,
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: 12,
+                          ),
+                          child: CachedNetworkImage(
+                            imageUrl: user.photoMaxUrl!,
+                            cacheKey: "${user.id!}400",
+                            placeholder: (BuildContext context, String url) {
+                              return const SizedBox(
+                                height: 80,
+                                width: 80,
+                              );
+                            },
+                            imageBuilder: (context, imageProvider) => Container(
                               width: 80,
-                            );
-                          },
-                          imageBuilder: (context, imageProvider) => Container(
-                            width: 80,
-                            height: 80,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              image: DecorationImage(
-                                image: imageProvider,
-                                fit: BoxFit.scaleDown,
+                              height: 80,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                image: DecorationImage(
+                                  image: imageProvider,
+                                  fit: BoxFit.scaleDown,
+                                ),
                               ),
                             ),
+                            cacheManager: CachedNetworkImagesManager.instance,
                           ),
-                          cacheManager: CachedNetworkImagesManager.instance,
                         ),
-                      if (user.photoMaxUrl != null)
-                        const SizedBox(
-                          height: 12,
-                        ),
+
+                      // Имя пользователя.
                       Text(
                         user.fullName!,
                         style: Theme.of(context).textTheme.titleMedium,
                         textAlign: TextAlign.center,
                       ),
-                      SelectableText(
-                        "ID ${user.id}",
-                        style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onBackground
-                                  .withOpacity(0.5),
-                            ),
-                        textAlign: TextAlign.center,
+
+                      // ID ВКонтакте.
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          bottom: 16,
+                        ),
+                        child: SelectableText(
+                          "ID ${user.id}",
+                          style:
+                              Theme.of(context).textTheme.titleSmall!.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onBackground
+                                        .withOpacity(0.5),
+                                  ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+
+                      // Выход из аккаунта.
+                      FilledButton.tonalIcon(
+                        onPressed: () => showDialog(
+                          context: context,
+                          builder: (context) => const ProfileLogoutExitDialog(),
+                        ),
+                        icon: const Icon(
+                          Icons.logout,
+                        ),
+                        label: Text(
+                          AppLocalizations.of(context)!.home_profilePageLogout,
+                        ),
                       ),
                     ],
                   ),
@@ -300,545 +582,782 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
 
                 // Подключение рекомендаций.
                 if (user.recommendationsToken == null)
-                  ListTile(
-                    title: Text(
-                      AppLocalizations.of(context)!
-                          .music_connectRecommendationsChipTitle,
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      bottom: 10,
                     ),
-                    subtitle: Text(
-                      AppLocalizations.of(context)!
-                          .music_connectRecommendationsChipDescription,
-                    ),
-                    leading: const Icon(
-                      Icons.auto_fix_high,
-                    ),
-                    onTap: () => showDialog(
-                      context: context,
-                      builder: (context) =>
-                          const ConnectRecommendationsDialog(),
-                    ),
-                  ),
-
-                // Discord Rich Presence.
-                if (isDesktop)
-                  SwitchListTile(
-                    secondary: const Icon(
-                      Icons.discord,
-                    ),
-                    title: Text(
-                      AppLocalizations.of(context)!.profile_discordRPCTitle,
-                    ),
-                    subtitle: Text(
-                      AppLocalizations.of(context)!
-                          .profile_discordRPCDescription,
-                    ),
-                    value: player.discordRPCEnabled,
-                    onChanged: (bool? enabled) async {
-                      if (enabled == null) return;
-
-                      user.settings.discordRPCEnabled = enabled;
-                      await player.setDiscordRPCEnabled(enabled);
-
-                      user.markUpdated();
-                    },
-                  ),
-
-                // Действие при закрытии.
-                if (isDesktop)
-                  ListTile(
-                    leading: const Icon(
-                      Icons.close,
-                    ),
-                    title: Text(
-                      AppLocalizations.of(context)!.profile_closeActionTitle,
-                    ),
-                    subtitle: Text(
-                      AppLocalizations.of(context)!
-                          .profile_closeActionDescription,
-                    ),
-                    trailing: DropdownButton(
-                      onChanged: (AppCloseBehavior? behavior) {
-                        if (behavior == null) return;
-
-                        user.settings.closeBehavior = behavior;
-
-                        user.markUpdated();
-                      },
-                      value: user.settings.closeBehavior,
-                      items: [
-                        DropdownMenuItem(
-                          value: AppCloseBehavior.close,
-                          child: Text(
-                            AppLocalizations.of(context)!
-                                .profile_closeActionClose,
-                          ),
-                        ),
-                        DropdownMenuItem(
-                          value: AppCloseBehavior.minimize,
-                          child: Text(
-                            AppLocalizations.of(context)!
-                                .profile_closeActionMinimize,
-                          ),
-                        ),
-                        DropdownMenuItem(
-                          value: AppCloseBehavior.minimizeIfPlaying,
-                          child: Text(
-                            AppLocalizations.of(context)!
-                                .profile_closeActionMinimizeIfPlaying,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                // Тема приложения.
-                ListTile(
-                  leading: const Icon(
-                    Icons.dark_mode,
-                  ),
-                  title: Text(
-                    AppLocalizations.of(context)!.profile_themeTitle,
-                  ),
-                  trailing: DropdownButton(
-                    onChanged: (ThemeMode? mode) {
-                      if (mode == null) return;
-
-                      user.settings.theme = mode;
-
-                      user.markUpdated();
-                    },
-                    value: user.settings.theme,
-                    items: [
-                      DropdownMenuItem(
-                        value: ThemeMode.system,
-                        child: Text(
-                          AppLocalizations.of(context)!.profile_themeSystem,
-                        ),
-                      ),
-                      DropdownMenuItem(
-                        value: ThemeMode.light,
-                        child: Text(
-                          AppLocalizations.of(context)!.profile_themeLight,
-                        ),
-                      ),
-                      DropdownMenuItem(
-                        value: ThemeMode.dark,
-                        child: Text(
-                          AppLocalizations.of(context)!.profile_themeDark,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // OLED тема.
-                SwitchListTile(
-                  secondary: const Icon(
-                    Icons.mode_night,
-                  ),
-                  title: Text(
-                    AppLocalizations.of(context)!.profile_oledThemeTitle,
-                  ),
-                  value: user.settings.oledTheme,
-                  onChanged: (bool? enabled) async {
-                    if (enabled == null) return;
-
-                    user.settings.oledTheme = enabled;
-
-                    user.markUpdated();
-                  },
-                ),
-
-                // Использование изображения трека для фона в полноэкранном плеере.
-                SwitchListTile(
-                  secondary: const Icon(
-                    Icons.photo_filter,
-                  ),
-                  title: Text(
-                    AppLocalizations.of(context)!
-                        .profile_useThumbnailAsBackgroundTitle,
-                  ),
-                  subtitle: Text(
-                    AppLocalizations.of(context)!
-                        .profile_useThumbnailAsBackgroundDescription,
-                  ),
-                  value: user.settings.playerThumbAsBackground,
-                  onChanged: (bool? enabled) async {
-                    if (enabled == null) return;
-
-                    user.settings.playerThumbAsBackground = enabled;
-
-                    user.markUpdated();
-                  },
-                ),
-
-                // Использование цветов плеера по всему приложению.
-                SwitchListTile(
-                  secondary: const Icon(
-                    Icons.color_lens,
-                  ),
-                  title: Text(
-                    AppLocalizations.of(context)!
-                        .profile_usePlayerColorsAppWideTitle,
-                  ),
-                  value: user.settings.playerColorsAppWide,
-                  onChanged: (bool? enabled) async {
-                    if (enabled == null) return;
-
-                    user.settings.playerColorsAppWide = enabled;
-
-                    user.markUpdated();
-                  },
-                ),
-
-                // Пауза воспроизведения при минимальной громкости.
-                if (isDesktop)
-                  SwitchListTile(
-                    secondary: const Icon(
-                      Icons.volume_off,
-                    ),
-                    title: Text(
-                      AppLocalizations.of(context)!.profile_pauseOnMuteTitle,
-                    ),
-                    subtitle: Text(
-                      AppLocalizations.of(context)!
-                          .profile_pauseOnMuteDescription,
-                    ),
-                    value: user.settings.pauseOnMuteEnabled,
-                    onChanged: (bool? enabled) async {
-                      if (enabled == null) return;
-
-                      user.settings.pauseOnMuteEnabled = enabled;
-
-                      user.markUpdated();
-                    },
-                  ),
-
-                // Остановка плеера при неактивности.
-                SwitchListTile(
-                  secondary: const Icon(
-                    Icons.timer,
-                  ),
-                  title: Text(
-                    AppLocalizations.of(context)!.profile_stopOnLongPauseTitle,
-                  ),
-                  subtitle: Text(
-                    AppLocalizations.of(context)!
-                        .profile_stopOnLongPauseDescription,
-                  ),
-                  value: user.settings.stopOnPauseEnabled,
-                  onChanged: (bool? enabled) async {
-                    if (enabled == null) return;
-
-                    user.settings.stopOnPauseEnabled = enabled;
-                    player.setStopOnPauseEnabled(enabled);
-
-                    user.markUpdated();
-                  },
-                ),
-
-                // Предупреждение создание дубликата при сохранении.
-                SwitchListTile(
-                  secondary: const Icon(
-                    Icons.copy,
-                  ),
-                  title: Text(
-                    AppLocalizations.of(context)!
-                        .profile_checkBeforeFavoriteTitle,
-                  ),
-                  subtitle: Text(
-                    AppLocalizations.of(context)!
-                        .profile_checkBeforeFavoriteDescription,
-                  ),
-                  value: user.settings.checkBeforeFavorite,
-                  onChanged: (bool? enabled) async {
-                    if (enabled == null) return;
-
-                    user.settings.checkBeforeFavorite = enabled;
-
-                    user.markUpdated();
-                  },
-                ),
-
-                // Экспорт списка треков.
-                ListTile(
-                  leading: const Icon(
-                    Icons.my_library_music,
-                  ),
-                  title: Text(
-                    AppLocalizations.of(context)!.profile_exportMusicListTitle,
-                  ),
-                  onTap: () => showWipDialog(context),
-                ),
-
-                // Поделиться логами.
-                FutureBuilder<bool>(
-                  future: logExistsFuture,
-                  builder:
-                      (BuildContext context, AsyncSnapshot<bool> snapshot) {
-                    final bool exists = snapshot.data ?? false;
-
-                    return ListTile(
-                      leading: const Icon(
-                        Icons.bug_report,
-                      ),
+                    child: ListTile(
                       title: Text(
-                        AppLocalizations.of(context)!.profile_shareLogsTitle,
+                        AppLocalizations.of(context)!
+                            .music_connectRecommendationsChipTitle,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
                       ),
-                      enabled: exists,
                       subtitle: Text(
-                        exists
-                            ? AppLocalizations.of(context)!
-                                .profile_shareLogsDescription
-                            : AppLocalizations.of(context)!
-                                .profile_shareLogsNoLogsDescription,
+                        AppLocalizations.of(context)!
+                            .music_connectRecommendationsChipDescription,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
                       ),
-                      onTap: () async => Share.shareXFiles(
-                        [
-                          XFile((await logFilePath()).path),
-                        ],
+                      leading: Icon(
+                        Icons.auto_fix_high,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
-                    );
-                  },
-                ),
-
-                // Github.
-                ListTile(
-                  leading: const Icon(
-                    Icons.source,
-                  ),
-                  title: Text(
-                    AppLocalizations.of(context)!.profile_githubTitle,
-                  ),
-                  subtitle: Text(
-                    AppLocalizations.of(context)!.profile_githubDescription,
-                  ),
-                  onTap: () => launchUrl(
-                    Uri.parse(
-                      repoURL,
+                      onTap: () => showDialog(
+                        context: context,
+                        builder: (context) =>
+                            const ConnectRecommendationsDialog(),
+                      ),
                     ),
                   ),
-                ),
 
-                // Политика для обновлений.
-                ListTile(
-                  leading: const Icon(
-                    Icons.update,
+                // Музыкальный плеер.
+                Padding(
+                  padding: EdgeInsets.only(
+                    bottom: 16,
+                    left: !isMobileLayout ? 10 : 0,
+                    right: !isMobileLayout ? 18 : 0,
                   ),
-                  title: Text(
-                    AppLocalizations.of(context)!.profile_updatesPolicyTitle,
-                  ),
-                  subtitle: Text(
-                    AppLocalizations.of(context)!
-                        .profile_updatesPolicyDescription,
-                  ),
-                  trailing: DropdownButton(
-                    onChanged: (UpdatePolicy? policy) async {
-                      if (policy == null) return;
-
-                      // Делаем небольшое предупреждение, если пользователь пытается отключить обновления.
-                      if (policy == UpdatePolicy.disabled) {
-                        final bool response = await showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return const DisableUpdatesDialog();
-                              },
-                            ) ??
-                            false;
-
-                        // Пользователь нажал на "Отключить", тогда мы должны выключить обновления.
-                        if (response && mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                AppLocalizations.of(context)!
-                                    .profile_updatesDisabledText,
-                              ),
-                              duration: const Duration(
-                                seconds: 8,
-                              ),
+                  child: Card(
+                    margin: EdgeInsets.zero,
+                    child: Padding(
+                      padding: const EdgeInsets.all(
+                        4,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              top: 10,
+                              bottom: 6,
+                              left: 17,
                             ),
-                          );
-                        }
+                            child: Row(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    right: 11,
+                                  ),
+                                  child: Icon(
+                                    Icons.music_note,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                  ),
+                                ),
+                                Text(
+                                  AppLocalizations.of(context)!
+                                      .profile_musicPlayerTitle,
+                                  style: TextStyle(
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
 
-                        // Пользователь отказался отключать уведомления, тогда ничего не меняем.
-                        if (!response) return;
-                      }
+                          // Discord Rich Presence.
+                          if (isDesktop)
+                            SwitchListTile(
+                              secondary: const Icon(
+                                Icons.discord,
+                              ),
+                              title: Text(
+                                AppLocalizations.of(context)!
+                                    .profile_discordRPCTitle,
+                              ),
+                              subtitle: Text(
+                                AppLocalizations.of(context)!
+                                    .profile_discordRPCDescription,
+                              ),
+                              value: player.discordRPCEnabled,
+                              onChanged: (bool? enabled) async {
+                                if (enabled == null) return;
 
-                      user.settings.updatePolicy = policy;
-
-                      user.markUpdated();
-                    },
-                    value: user.settings.updatePolicy,
-                    items: [
-                      DropdownMenuItem(
-                        value: UpdatePolicy.dialog,
-                        child: Text(
-                          AppLocalizations.of(context)!
-                              .profile_updatesPolicyDialog,
-                        ),
-                      ),
-                      DropdownMenuItem(
-                        value: UpdatePolicy.popup,
-                        child: Text(
-                          AppLocalizations.of(context)!
-                              .profile_updatesPolicyPopup,
-                        ),
-                      ),
-                      DropdownMenuItem(
-                        value: UpdatePolicy.disabled,
-                        child: Text(
-                          AppLocalizations.of(context)!
-                              .profile_updatesPolicyDisabled,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Канал для автообновлений.
-                ListTile(
-                  enabled: user.settings.updatePolicy != UpdatePolicy.disabled,
-                  leading: const Icon(
-                    Icons.route,
-                  ),
-                  title: Text(
-                    AppLocalizations.of(context)!.profile_updatesBranchTitle,
-                  ),
-                  subtitle: Text(
-                    AppLocalizations.of(context)!
-                        .profile_updatesBranchDescription,
-                  ),
-                  trailing: DropdownButton(
-                    onChanged:
-                        user.settings.updatePolicy != UpdatePolicy.disabled
-                            ? (UpdateBranch? branch) {
-                                if (branch == null) return;
-
-                                user.settings.updateBranch = branch;
+                                user.settings.discordRPCEnabled = enabled;
+                                await player.setDiscordRPCEnabled(enabled);
 
                                 user.markUpdated();
-                              }
-                            : null,
-                    value: user.settings.updateBranch,
-                    items: [
-                      DropdownMenuItem(
-                        value: UpdateBranch.releasesOnly,
-                        child: Text(
-                          AppLocalizations.of(context)!
-                              .profile_updatesBranchReleases,
-                        ),
+                              },
+                            ),
+
+                          // Действие при закрытии.
+                          if (isDesktop)
+                            ListTile(
+                              leading: const Icon(
+                                Icons.close,
+                              ),
+                              title: Text(
+                                AppLocalizations.of(context)!
+                                    .profile_closeActionTitle,
+                              ),
+                              subtitle: Text(
+                                AppLocalizations.of(context)!
+                                    .profile_closeActionDescription,
+                              ),
+                              onTap: () => showDialog(
+                                context: context,
+                                builder: (BuildContext context) =>
+                                    const CloseActionDialog(),
+                              ),
+                              trailing: !isMobileLayout
+                                  ? FilledButton(
+                                      onPressed: () => showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) =>
+                                            const CloseActionDialog(),
+                                      ),
+                                      child: Text(
+                                        {
+                                          AppCloseBehavior.close:
+                                              AppLocalizations.of(context)!
+                                                  .profile_closeActionClose,
+                                          AppCloseBehavior.minimize:
+                                              AppLocalizations.of(context)!
+                                                  .profile_closeActionMinimize,
+                                          AppCloseBehavior
+                                              .minimizeIfPlaying: AppLocalizations
+                                                  .of(
+                                            context,
+                                          )!
+                                              .profile_closeActionMinimizeIfPlaying,
+                                        }[user.settings.closeBehavior]!,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    )
+                                  : null,
+                            ),
+
+                          // Пауза воспроизведения при минимальной громкости.
+                          if (isDesktop)
+                            SwitchListTile(
+                              secondary: const Icon(
+                                Icons.volume_off,
+                              ),
+                              title: Text(
+                                AppLocalizations.of(context)!
+                                    .profile_pauseOnMuteTitle,
+                              ),
+                              subtitle: Text(
+                                AppLocalizations.of(context)!
+                                    .profile_pauseOnMuteDescription,
+                              ),
+                              value: user.settings.pauseOnMuteEnabled,
+                              onChanged: (bool? enabled) async {
+                                if (enabled == null) return;
+
+                                user.settings.pauseOnMuteEnabled = enabled;
+
+                                user.markUpdated();
+                              },
+                            ),
+
+                          // Остановка плеера при неактивности.
+                          SwitchListTile(
+                            secondary: const Icon(
+                              Icons.timer,
+                            ),
+                            title: Text(
+                              AppLocalizations.of(context)!
+                                  .profile_stopOnLongPauseTitle,
+                            ),
+                            subtitle: Text(
+                              AppLocalizations.of(context)!
+                                  .profile_stopOnLongPauseDescription,
+                            ),
+                            value: user.settings.stopOnPauseEnabled,
+                            onChanged: (bool? enabled) async {
+                              if (enabled == null) return;
+
+                              user.settings.stopOnPauseEnabled = enabled;
+                              player.setStopOnPauseEnabled(enabled);
+
+                              user.markUpdated();
+                            },
+                          ),
+
+                          // Предупреждение создание дубликата при сохранении.
+                          SwitchListTile(
+                            secondary: const Icon(
+                              Icons.copy,
+                            ),
+                            title: Text(
+                              AppLocalizations.of(context)!
+                                  .profile_checkBeforeFavoriteTitle,
+                            ),
+                            subtitle: Text(
+                              AppLocalizations.of(context)!
+                                  .profile_checkBeforeFavoriteDescription,
+                            ),
+                            value: user.settings.checkBeforeFavorite,
+                            onChanged: (bool? enabled) async {
+                              if (enabled == null) return;
+
+                              user.settings.checkBeforeFavorite = enabled;
+
+                              user.markUpdated();
+                            },
+                          ),
+                        ],
                       ),
-                      DropdownMenuItem(
-                        value: UpdateBranch.prereleases,
-                        child: Text(
-                          AppLocalizations.of(context)!
-                              .profile_updatesBranchPrereleases,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
 
-                // Версия приложения (и проверка текущей версии).
-                ListTile(
-                  leading: const Icon(
-                    Icons.info,
+                // Визуал.
+                Padding(
+                  padding: EdgeInsets.only(
+                    bottom: 16,
+                    left: !isMobileLayout ? 10 : 0,
+                    right: !isMobileLayout ? 18 : 0,
                   ),
-                  title: Text(
-                    AppLocalizations.of(context)!.profile_appVersionTitle,
-                  ),
-                  subtitle: Text(
-                    AppLocalizations.of(context)!
-                        .profile_appVersionDescription("v$appVersion"),
-                  ),
-                  onTap: () {
-                    if (!networkRequiredDialog(context)) return;
+                  child: Card(
+                    margin: EdgeInsets.zero,
+                    child: Padding(
+                      padding: const EdgeInsets.all(
+                        4,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              top: 10,
+                              bottom: 6,
+                              left: 17,
+                            ),
+                            child: Row(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    right: 11,
+                                  ),
+                                  child: Icon(
+                                    Icons.color_lens,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                  ),
+                                ),
+                                Text(
+                                  AppLocalizations.of(context)!
+                                      .profile_visualTitle,
+                                  style: TextStyle(
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
 
-                    Updater.checkForUpdates(
-                      context,
-                      allowPre: user.settings.updateBranch ==
-                          UpdateBranch.prereleases,
-                      showLoadingOverlay: true,
-                      showMessageOnNoUpdates: true,
-                    );
-                  },
+                          // Тема приложения.
+                          ListTile(
+                            leading: const Icon(
+                              Icons.dark_mode,
+                            ),
+                            title: Text(
+                              AppLocalizations.of(context)!.profile_themeTitle,
+                            ),
+                            onTap: () => showDialog(
+                              context: context,
+                              builder: (BuildContext context) =>
+                                  const ThemeActionDialog(),
+                            ),
+                            trailing: !isMobileLayout
+                                ? FilledButton(
+                                    onPressed: () => showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) =>
+                                          const ThemeActionDialog(),
+                                    ),
+                                    child: Text(
+                                      {
+                                        ThemeMode.system:
+                                            AppLocalizations.of(context)!
+                                                .profile_themeSystem,
+                                        ThemeMode.light:
+                                            AppLocalizations.of(context)!
+                                                .profile_themeLight,
+                                        ThemeMode.dark: AppLocalizations.of(
+                                          context,
+                                        )!
+                                            .profile_themeDark,
+                                      }[user.settings.theme]!,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  )
+                                : null,
+                          ),
+
+                          // OLED тема.
+                          SwitchListTile(
+                            secondary: const Icon(
+                              Icons.mode_night,
+                            ),
+                            title: Text(
+                              AppLocalizations.of(context)!
+                                  .profile_oledThemeTitle,
+                            ),
+                            subtitle: Text(
+                              AppLocalizations.of(context)!
+                                  .profile_oledThemeDescription,
+                            ),
+                            value: user.settings.oledTheme,
+                            onChanged: (bool? enabled) async {
+                              if (enabled == null) return;
+
+                              user.settings.oledTheme = enabled;
+
+                              user.markUpdated();
+                            },
+                          ),
+
+                          // Использование изображения трека для фона в полноэкранном плеере.
+                          SwitchListTile(
+                            secondary: const Icon(
+                              Icons.photo_filter,
+                            ),
+                            title: Text(
+                              AppLocalizations.of(context)!
+                                  .profile_useThumbnailAsBackgroundTitle,
+                            ),
+                            subtitle: Text(
+                              AppLocalizations.of(context)!
+                                  .profile_useThumbnailAsBackgroundDescription,
+                            ),
+                            value: user.settings.playerThumbAsBackground,
+                            onChanged: (bool? enabled) async {
+                              if (enabled == null) return;
+
+                              user.settings.playerThumbAsBackground = enabled;
+
+                              user.markUpdated();
+                            },
+                          ),
+
+                          // Использование цветов плеера по всему приложению.
+                          SwitchListTile(
+                            secondary: const Icon(
+                              Icons.color_lens,
+                            ),
+                            title: Text(
+                              AppLocalizations.of(context)!
+                                  .profile_usePlayerColorsAppWideTitle,
+                            ),
+                            value: user.settings.playerColorsAppWide,
+                            onChanged: (bool? enabled) async {
+                              if (enabled == null) return;
+
+                              user.settings.playerColorsAppWide = enabled;
+
+                              user.markUpdated();
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Экспериментальные функции.
+                Padding(
+                  padding: EdgeInsets.only(
+                    bottom: 16,
+                    left: !isMobileLayout ? 10 : 0,
+                    right: !isMobileLayout ? 18 : 0,
+                  ),
+                  child: Card(
+                    margin: EdgeInsets.zero,
+                    child: Padding(
+                      padding: const EdgeInsets.all(
+                        4,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              top: 10,
+                              bottom: 6,
+                              left: 17,
+                            ),
+                            child: Row(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    right: 11,
+                                  ),
+                                  child: Icon(
+                                    Icons.bug_report,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                  ),
+                                ),
+                                Text(
+                                  AppLocalizations.of(context)!
+                                      .profile_experimentalTitle,
+                                  style: TextStyle(
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          // Экспорт списка треков.
+                          ListTile(
+                            leading: const Icon(
+                              Icons.my_library_music,
+                            ),
+                            title: Text(
+                              AppLocalizations.of(context)!
+                                  .profile_exportMusicListTitle,
+                            ),
+                            onTap: () => showWipDialog(context),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+                // О приложении.
+                Padding(
+                  padding: EdgeInsets.only(
+                    bottom: 16,
+                    left: !isMobileLayout ? 10 : 0,
+                    right: !isMobileLayout ? 18 : 0,
+                  ),
+                  child: Card(
+                    margin: EdgeInsets.zero,
+                    child: Padding(
+                      padding: const EdgeInsets.all(
+                        4,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              top: 10,
+                              bottom: 6,
+                              left: 17,
+                            ),
+                            child: Row(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    right: 11,
+                                  ),
+                                  child: Icon(
+                                    Icons.info,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                  ),
+                                ),
+                                Text(
+                                  AppLocalizations.of(context)!
+                                      .profile_aboutTitle,
+                                  style: TextStyle(
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          // Поделиться логами.
+                          FutureBuilder<bool>(
+                            future: logExistsFuture,
+                            builder: (
+                              BuildContext context,
+                              AsyncSnapshot<bool> snapshot,
+                            ) {
+                              final bool exists = snapshot.data ?? false;
+
+                              return ListTile(
+                                leading: const Icon(
+                                  Icons.bug_report,
+                                ),
+                                title: Text(
+                                  AppLocalizations.of(context)!
+                                      .profile_shareLogsTitle,
+                                ),
+                                enabled: exists,
+                                subtitle: Text(
+                                  exists
+                                      ? AppLocalizations.of(context)!
+                                          .profile_shareLogsDescription
+                                      : AppLocalizations.of(context)!
+                                          .profile_shareLogsNoLogsDescription,
+                                ),
+                                onTap: () async => Share.shareXFiles(
+                                  [
+                                    XFile((await logFilePath()).path),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+
+                          // Github.
+                          ListTile(
+                            leading: const Icon(
+                              Icons.source,
+                            ),
+                            title: Text(
+                              AppLocalizations.of(context)!.profile_githubTitle,
+                            ),
+                            subtitle: Text(
+                              AppLocalizations.of(context)!
+                                  .profile_githubDescription,
+                            ),
+                            onTap: () => launchUrl(
+                              Uri.parse(
+                                repoURL,
+                              ),
+                            ),
+                          ),
+
+                          // Политика для обновлений.
+                          ListTile(
+                            leading: const Icon(
+                              Icons.update,
+                            ),
+                            title: Text(
+                              AppLocalizations.of(context)!
+                                  .profile_updatesPolicyTitle,
+                            ),
+                            subtitle: Text(
+                              AppLocalizations.of(context)!
+                                  .profile_updatesPolicyDescription,
+                            ),
+                            onTap: () => showDialog(
+                              context: context,
+                              builder: (BuildContext context) =>
+                                  const UpdatesDialogTypeActionDialog(),
+                            ),
+                            trailing: !isMobileLayout
+                                ? FilledButton(
+                                    onPressed: () => showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) =>
+                                          const UpdatesDialogTypeActionDialog(),
+                                    ),
+                                    child: Text(
+                                      {
+                                        UpdatePolicy.dialog:
+                                            AppLocalizations.of(context)!
+                                                .profile_updatesPolicyDialog,
+                                        UpdatePolicy.popup:
+                                            AppLocalizations.of(context)!
+                                                .profile_updatesPolicyPopup,
+                                        UpdatePolicy.disabled:
+                                            AppLocalizations.of(
+                                          context,
+                                        )!
+                                                .profile_updatesPolicyDisabled,
+                                      }[user.settings.updatePolicy]!,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  )
+                                : null,
+                          ),
+
+                          // Канал для автообновлений.
+                          ListTile(
+                            enabled: user.settings.updatePolicy !=
+                                UpdatePolicy.disabled,
+                            leading: const Icon(
+                              Icons.route,
+                            ),
+                            title: Text(
+                              AppLocalizations.of(context)!
+                                  .profile_updatesBranchTitle,
+                            ),
+                            subtitle: Text(
+                              AppLocalizations.of(context)!
+                                  .profile_updatesBranchDescription,
+                            ),
+                            onTap: () => showDialog(
+                              context: context,
+                              builder: (BuildContext context) =>
+                                  const UpdatesChannelDialog(),
+                            ),
+                            trailing: !isMobileLayout
+                                ? FilledButton(
+                                    onPressed: () => showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) =>
+                                          const UpdatesChannelDialog(),
+                                    ),
+                                    child: Text(
+                                      {
+                                        UpdateBranch.releasesOnly:
+                                            AppLocalizations.of(context)!
+                                                .profile_updatesBranchReleases,
+                                        UpdateBranch
+                                            .prereleases: AppLocalizations.of(
+                                          context,
+                                        )!
+                                            .profile_updatesBranchPrereleases,
+                                      }[user.settings.updateBranch]!,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  )
+                                : null,
+                          ),
+
+                          // Версия приложения (и проверка текущей версии).
+                          ListTile(
+                            leading: const Icon(
+                              Icons.info,
+                            ),
+                            title: Text(
+                              AppLocalizations.of(context)!
+                                  .profile_appVersionTitle,
+                            ),
+                            subtitle: Text(
+                              AppLocalizations.of(context)!
+                                  .profile_appVersionDescription(
+                                "v$appVersion",
+                              ),
+                            ),
+                            onTap: () {
+                              if (!networkRequiredDialog(context)) return;
+
+                              Updater.checkForUpdates(
+                                context,
+                                allowPre: user.settings.updateBranch ==
+                                    UpdateBranch.prereleases,
+                                showLoadingOverlay: true,
+                                showMessageOnNoUpdates: true,
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
 
                 // Debug-опции.
                 if (kDebugMode)
-                  ListTile(
-                    leading: const Icon(
-                      Icons.key,
+                  Padding(
+                    padding: EdgeInsets.only(
+                      bottom: 10,
+                      left: !isMobileLayout ? 10 : 0,
+                      right: !isMobileLayout ? 18 : 0,
                     ),
-                    title: const Text(
-                      "Скопировать Kate Mobile токен",
-                    ),
-                    subtitle: const Text(
-                      "Debug-режим",
-                    ),
-                    onTap: () {
-                      Clipboard.setData(
-                        ClipboardData(
-                          text: user.mainToken!,
+                    child: Card(
+                      margin: EdgeInsets.zero,
+                      child: Padding(
+                        padding: const EdgeInsets.all(
+                          4,
                         ),
-                      );
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                top: 10,
+                                bottom: 6,
+                                left: 17,
+                              ),
+                              child: Row(
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                      right: 11,
+                                    ),
+                                    child: Icon(
+                                      Icons.logo_dev,
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                    ),
+                                  ),
+                                  Text(
+                                    "Debug",
+                                    style: TextStyle(
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
 
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("OK."),
-                        ),
-                      );
-                    },
-                  ),
-                if (kDebugMode && user.recommendationsToken != null)
-                  ListTile(
-                    leading: const Icon(
-                      Icons.key,
-                    ),
-                    title: const Text(
-                      "Скопировать VK Admin токен",
-                    ),
-                    subtitle: const Text(
-                      "Debug-режим",
-                    ),
-                    onTap: () {
-                      Clipboard.setData(
-                        ClipboardData(
-                          text: user.recommendationsToken!,
-                        ),
-                      );
+                            // Кнопка для копирования Kate Mobile токена.
+                            ListTile(
+                              leading: const Icon(
+                                Icons.key,
+                              ),
+                              title: const Text(
+                                "Скопировать Kate Mobile токен",
+                              ),
+                              onTap: () {
+                                Clipboard.setData(
+                                  ClipboardData(
+                                    text: user.mainToken!,
+                                  ),
+                                );
 
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("OK."),
-                        ),
-                      );
-                    },
-                  ),
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text("OK."),
+                                  ),
+                                );
+                              },
+                            ),
 
-                // Выход из аккаунта.
-                ListTile(
-                  leading: Icon(
-                    Icons.logout,
-                    color: Theme.of(context).colorScheme.error,
-                  ),
-                  title: Text(
-                    AppLocalizations.of(context)!.home_profilePageLogout,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
+                            // Кнопка для копирования рекомендационного токена (VK Admin).
+                            ListTile(
+                              leading: const Icon(
+                                Icons.key,
+                              ),
+                              title: const Text(
+                                "Скопировать VK Admin токен",
+                              ),
+                              enabled: user.recommendationsToken != null,
+                              onTap: () {
+                                Clipboard.setData(
+                                  ClipboardData(
+                                    text: user.recommendationsToken!,
+                                  ),
+                                );
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text("OK."),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                  onTap: () => showDialog(
-                    context: context,
-                    builder: (context) => const ProfileLogoutExitDialog(),
-                  ),
-                ),
 
                 // Данный SizedBox нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
                 if (player.loaded && isMobileLayout)
                   const SizedBox(
-                    height: 80,
+                    height: 70,
                   ),
               ],
             ),

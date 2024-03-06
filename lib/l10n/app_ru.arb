@@ -270,7 +270,7 @@
 
 
 
-	"home_profilePageLogout": "Выйти из аккаунта",
+	"home_profilePageLogout": "Выйти",
 	"home_profilePageLogoutTitle": "Выход",
 	"home_profilePageLogoutDescription": "Вы уверены, что хотите выйти из аккаунта {name} приложения Flutter VK?",
 	"@home_profilePageLogoutDescription": {
@@ -284,26 +284,16 @@
 	},
 
 
+	"profile_musicPlayerTitle": "Музыкальный плеер",
+
 	"profile_discordRPCTitle": "Discord Rich Presence",
 	"profile_discordRPCDescription": "Включает трансляцию текущего трека в Discord",
 
-	"profile_closeActionTitle": "Поведении при закрытии",
+	"profile_closeActionTitle": "Поведение при закрытии",
 	"profile_closeActionDescription": "Определяет то, как поведёт себя приложение в случае нажатия на «крестик» для закрытия окна",
 	"profile_closeActionClose": "Закрыться",
 	"profile_closeActionMinimize": "Свернуться",
 	"profile_closeActionMinimizeIfPlaying": "Свернуться, если играет музыка",
-
-	"profile_themeTitle": "Тема",
-	"profile_themeSystem": "Системная",
-	"profile_themeLight": "Светлая",
-	"profile_themeDark": "Тёмная",
-
-	"profile_oledThemeTitle": "OLED тема",
-
-	"profile_useThumbnailAsBackgroundTitle": "Изображение трека как фон",
-	"profile_useThumbnailAsBackgroundDescription": "Работает в полноэкранном плеере",
-
-	"profile_usePlayerColorsAppWideTitle": "Использование цветов плеера по всему приложению",
 
 	"profile_pauseOnMuteTitle": "Пауза при отключении громкости",
 	"profile_pauseOnMuteDescription": "Данная опция указывает, будет ли плеер ставиться на паузу при установке минимальной громкости в плеере",
@@ -316,7 +306,29 @@
 	"checkBeforeFavoriteWarningTitle": "Обнаружен дубликат трека",
 	"checkBeforeFavoriteWarningDescription": "Похоже, что этот трек уже лайкнут Вами. Сохранив этот трек, у Вас будет ещё одна копия этого трека.\nВы уверены, что хотите сделать дубликат данного трека?",
 
+
+	"profile_visualTitle": "Визуал",
+
+	"profile_themeTitle": "Тема",
+	"profile_themeSystem": "Системная",
+	"profile_themeLight": "Светлая",
+	"profile_themeDark": "Тёмная",
+
+	"profile_oledThemeTitle": "OLED тема",
+	"profile_oledThemeDescription": "Работает только если включена тёмная тема. Помогает сохранить заряд аккумулятора на устройствах с OLED-дисплеями",
+
+	"profile_useThumbnailAsBackgroundTitle": "Изображение трека как фон",
+	"profile_useThumbnailAsBackgroundDescription": "Работает в полноэкранном плеере",
+
+	"profile_usePlayerColorsAppWideTitle": "Использование цветов плеера по всему приложению",
+
+
+	"profile_experimentalTitle": "Экспериментальные функции",
+
 	"profile_exportMusicListTitle": "Экспорт списка треков",
+
+
+	"profile_aboutTitle": "О приложении",
 
 	"profile_shareLogsTitle": "Поделиться файлом логов",
 	"profile_shareLogsDescription": "Содержит техническую информацию для отладки ошибок приложения",

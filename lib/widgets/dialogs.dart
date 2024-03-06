@@ -15,8 +15,15 @@ class MaterialDialog extends StatelessWidget {
   /// Текст, отображаемый после [icon], располагаемый по центру диалога.
   final String? title;
 
-  /// Содержимое данного диалога.
-  final String text;
+  /// Текстовое содержимое данного диалога.
+  ///
+  /// Данное поле либо [contents] не должно быть null.
+  final String? text;
+
+  /// [List] из [Widget], который расположен по центру данного диалога.
+  ///
+  /// Данное поле либо [text] не должно быть null.
+  final List<Widget>? contents;
 
   /// Массив из кнопок (чаще всего используется [IconButton]), располагаемый в правом нижнем углу.
   ///
@@ -28,12 +35,18 @@ class MaterialDialog extends StatelessWidget {
     this.icon,
     this.iconColor,
     this.title,
-    required this.text,
+    this.text,
+    this.contents,
     this.actions,
   });
 
   @override
   Widget build(BuildContext context) {
+    assert(
+      text != null || contents != null,
+      "Expected text or contents to be specified",
+    );
+
     return Dialog(
       child: Container(
         padding: const EdgeInsets.all(24),
@@ -44,60 +57,73 @@ class MaterialDialog extends StatelessWidget {
           children: [
             // Иконка.
             if (icon != null)
-              Center(
-                child: Icon(
-                  icon,
-                  color: iconColor ?? Theme.of(context).colorScheme.primary,
+              Padding(
+                padding: const EdgeInsets.only(
+                  bottom: 12,
                 ),
-              ),
-            if (icon != null)
-              const SizedBox(
-                height: 12,
+                child: Center(
+                  child: Icon(
+                    icon,
+                    color: iconColor ?? Theme.of(context).colorScheme.primary,
+                  ),
+                ),
               ),
 
             // Title диалога.
             if (title != null)
-              Center(
-                child: Text(
-                  title!,
-                  style: Theme.of(context).textTheme.headlineSmall,
-                  textAlign: TextAlign.center,
+              Padding(
+                padding: const EdgeInsets.only(
+                  bottom: 24,
                 ),
-              ),
-            if (title != null)
-              const SizedBox(
-                height: 24,
+                child: Center(
+                  child: Text(
+                    title!,
+                    style: Theme.of(context).textTheme.headlineSmall,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
               ),
 
-            // Содержимое диалога.
-            Flexible(
-              child: SingleChildScrollView(
-                child: Text(
-                  text,
-                  style: Theme.of(context).textTheme.bodyLarge,
+            // Текстовое содержимое диалога.
+            if (text != null)
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Text(
+                    text!,
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
                 ),
               ),
-            ),
+
+            // Обычное содержимое диалога.
+            if (contents != null)
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  children: contents!,
+                ),
+              ),
 
             // Действия диалога.
             if (actions == null || (actions ?? []).isNotEmpty)
-              const SizedBox(
-                height: 24,
-              ),
-            if (actions == null || (actions ?? []).isNotEmpty)
-              Align(
-                alignment: Alignment.bottomRight,
-                child: Wrap(
-                  spacing: 8,
-                  children: actions ??
-                      [
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          child: Text(
-                            AppLocalizations.of(context)!.general_close,
+              Padding(
+                padding: const EdgeInsets.only(
+                  top: 24,
+                ),
+                child: Align(
+                  alignment: Alignment.bottomRight,
+                  child: Wrap(
+                    spacing: 8,
+                    children: actions ??
+                        [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: Text(
+                              AppLocalizations.of(context)!.general_close,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                  ),
                 ),
               ),
           ],
