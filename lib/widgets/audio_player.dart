@@ -37,30 +37,22 @@ class BottomMusicProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.bottomLeft,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 18,
-        ),
-        child: isBuffering
-            ? LinearProgressIndicator(
-                minHeight: 2,
-                color: scheme.onPrimaryContainer.withOpacity(
-                  playbackState ? 1 : 0.5,
-                ),
-              )
-            : FractionallySizedBox(
-                widthFactor: progress,
-                child: Container(
-                  height: 2,
-                  color: scheme.onPrimaryContainer.withOpacity(
-                    playbackState ? 1 : 0.5,
-                  ),
-                ),
+    return isBuffering
+        ? LinearProgressIndicator(
+            minHeight: 2,
+            color: scheme.onPrimaryContainer.withOpacity(
+              playbackState ? 1 : 0.5,
+            ),
+          )
+        : FractionallySizedBox(
+            widthFactor: progress,
+            child: Container(
+              height: 2,
+              color: scheme.onPrimaryContainer.withOpacity(
+                playbackState ? 1 : 0.5,
               ),
-      ),
-    );
+            ),
+          );
   }
 }
 
@@ -849,11 +841,25 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
 
           // Полоска внизу для отображения прогресса трека в Mobile Layout'е.
           if (!widget.useBigLayout)
-            BottomMusicProgressBar(
-              scheme: widget.scheme,
-              isBuffering: widget.isBuffering,
-              playbackState: widget.playbackState,
-              progress: widget.progress,
+            Align(
+              alignment: Alignment.bottomLeft,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                ),
+                child: Transform.translate(
+                  offset: const Offset(
+                    0,
+                    0.5,
+                  ),
+                  child: BottomMusicProgressBar(
+                    scheme: widget.scheme,
+                    isBuffering: widget.isBuffering,
+                    playbackState: widget.playbackState,
+                    progress: widget.progress,
+                  ),
+                ),
+              ),
             ),
         ],
       ),
