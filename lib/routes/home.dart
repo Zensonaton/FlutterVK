@@ -1,5 +1,6 @@
 import "dart:async";
 
+import "package:audio_service/audio_service.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
@@ -481,6 +482,19 @@ class _HomeRouteState extends State<HomeRoute> {
 
       // Проверяем на наличие обновлений.
       checkForUpdates();
+    });
+
+    // Слушаем события нажатия на медиа-уведомление.
+    AudioService.notificationClicked.listen((tapped) {
+      logger.d("Handling player notification clicked event");
+
+      // AudioService иногда создаёт это событие при запуске плеера. Такой случай мы игнорируем.
+      if (!tapped) return;
+
+      // Если плеер не загружен, то ничего не делаем.
+      if (!player.loaded) return;
+
+      openFullscreenPlayer(context);
     });
   }
 
