@@ -95,6 +95,12 @@ class MaterialDialog extends StatelessWidget {
                 ),
               ),
 
+            // Разделитель, если есть одновременно и содержимое и текста.
+            if (text != null && contents != null)
+              const SizedBox(
+                height: 8,
+              ),
+
             // Обычное содержимое диалога.
             if (contents != null)
               Flexible(

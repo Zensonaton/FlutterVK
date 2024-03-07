@@ -422,6 +422,65 @@ class UpdatesChannelDialog extends StatelessWidget {
   }
 }
 
+/// Диалог, отображающий пользователю информацию об экспортированном списке треков.
+///
+/// Пример использования:
+/// ```dart
+/// showDialog(
+/// 	context: context,
+/// 	builder: (context) => const ExportTracksListDialog()
+/// );
+/// ```
+class ExportTracksListDialog extends StatelessWidget {
+  const ExportTracksListDialog({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final UserProvider user = Provider.of<UserProvider>(context);
+
+    assert(
+      user.favoritesPlaylist?.audios != null,
+      "Expected tracks list to be loaded",
+    );
+
+    final String exportContents = user.favoritesPlaylist!.audios!
+        .map((ExtendedAudio audio) => "${audio.artist} • ${audio.title}")
+        .join("\n\n");
+
+    return MaterialDialog(
+      icon: Icons.my_library_music,
+      title: AppLocalizations.of(context)!.profile_exportMusicListTitle,
+      text: AppLocalizations.of(context)!.profile_exportMusicListDescription(
+        user.favoritesPlaylist!.audios!.length,
+      ),
+      contents: [
+        SelectableText(
+          exportContents,
+        ),
+      ],
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(
+            AppLocalizations.of(context)!.general_close,
+          ),
+        ),
+        FilledButton.icon(
+          onPressed: () => Share.share(exportContents),
+          icon: const Icon(
+            Icons.share,
+          ),
+          label: Text(
+            AppLocalizations.of(context)!.profile_exportMusicListShareTitle,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 /// Страница для [HomeRoute] для просмотра собственного профиля.
 class HomeProfilePage extends StatefulWidget {
   const HomeProfilePage({
@@ -1023,7 +1082,11 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                               AppLocalizations.of(context)!
                                   .profile_exportMusicListTitle,
                             ),
-                            onTap: () => showWipDialog(context),
+                            onTap: () => showDialog(
+                              context: context,
+                              builder: (BuildContext context) =>
+                                  const ExportTracksListDialog(),
+                            ),
                           ),
                         ],
                       ),
