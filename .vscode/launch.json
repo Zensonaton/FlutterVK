@@ -33,6 +33,11 @@
 			"request": "launch",
 			"type": "dart",
 			"flutterMode": "release"
+		},
+		{
+			"name": "Подключиться к устройству",
+			"type": "dart",
+			"request": "attach"
 		}
 	]
 }
