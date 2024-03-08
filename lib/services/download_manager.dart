@@ -4,8 +4,6 @@ import "dart:io";
 import "package:collection/collection.dart";
 import "package:queue/queue.dart";
 
-import "../api/vk/api.dart";
-import "../api/vk/audio/get_lyrics.dart";
 import "../main.dart";
 import "../provider/user.dart";
 import "audio_player.dart";
@@ -22,7 +20,7 @@ class CacheItem {
   final bool cache;
 
   /// Объект пользователя, благодаря чему будет извлекаться текст песни.
-  final UserProvider? user;
+  final UserProvider user;
 
   /// Очередь по кэшированию треков.
   ///
@@ -32,42 +30,38 @@ class CacheItem {
   /// Callback-метод, вызываемый при успешной полной загрузке трека.
   static Future<void> _onTrackDownloaded(
     ExtendedAudio audio,
+    ExtendedPlaylist playlist,
     List<int> trackBytes,
-    File trackFile, {
-    UserProvider? user,
-  }) async {
+    File trackFile,
+    UserProvider user,
+  ) async {
     // Сохраняем трек на диск.
-    trackFile.createSync(
-      recursive: true,
-    );
+    trackFile.createSync(recursive: true);
     trackFile.writeAsBytesSync(trackBytes);
 
-    // Загружаем обложки трека.
-    await CachedStreamedAudio.downloadThumbnails(
-      albumID: audio.album?.id,
-      thumbnails: audio.album?.thumbnails,
+    // Загружаем информацию по треку.
+    await CachedStreamedAudio.downloadTrackData(
+      audio,
+      playlist,
+      user,
+      allowDeezer: user.settings.deezerThumbnails,
     );
-
-    // Загружаем текст трека, если таковой есть.
-    if ((audio.hasLyrics ?? false) && user != null) {
-      final APIAudioGetLyricsResponse response =
-          await user.audioGetLyrics(audio.mediaKey);
-      raiseOnAPIError(response);
-
-      audio.lyrics = response.response!.lyrics;
-    }
 
     // Запоминаем то, что трек кэширован.
     audio.isCached = true;
     audio.downloadProgress.value = 0.0;
+
+    // Сохраняем изменения.
+    appStorage.savePlaylist(playlist.asDBPlaylist);
   }
 
   /// Внутренняя задача по кэшированию отдельного трека в плейлисте. [cache] указывает, что трек будет именно кэширован, вместо его удаления.
   static Future<void> cacheTrack(
     ExtendedAudio audio,
-    bool cache, {
-    UserProvider? user,
-  }) async {
+    ExtendedPlaylist playlist,
+    bool cache,
+    UserProvider user,
+  ) async {
     final File trackFile =
         await CachedStreamedAudio.getCachedAudioByKey(audio.mediaKey);
     final bool trackFileExists = trackFile.existsSync();
@@ -139,9 +133,10 @@ class CacheItem {
         // Трек успешно загружен, вызываем callback-метод.
         await _onTrackDownloaded(
           audio,
+          playlist,
           trackBytes,
           trackFile,
-          user: user,
+          user,
         );
 
         completer.complete();
@@ -194,7 +189,9 @@ class CacheItem {
 
       if (cache && audio.url == null) continue;
 
-      _queue!.add(() => cacheTrack(audio, cache, user: user)).then((_) async {
+      _queue!
+          .add(() => cacheTrack(audio, playlist, cache, user))
+          .then((_) async {
         // Если мы загружаем треки, то после каждой загрузки сохраняем изменени в БД.
         if (!cache) return;
 
@@ -255,7 +252,7 @@ class CacheItem {
   CacheItem({
     required this.playlist,
     this.cache = true,
-    this.user,
+    required this.user,
   });
 }
 
@@ -280,7 +277,7 @@ class DownloadManager {
     ExtendedPlaylist playlist, {
     bool cache = true,
     bool saveInDB = true,
-    UserProvider? user,
+    required UserProvider user,
     Function(ExtendedAudio)? onTrackCached,
   }) async {
     final CacheItem? pendingItem = getCacheTask(playlist);

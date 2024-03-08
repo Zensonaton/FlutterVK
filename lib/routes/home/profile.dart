@@ -1074,6 +1074,29 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                           ),
 
                           // Экспорт списка треков.
+                          SwitchListTile(
+                            secondary: const Icon(
+                              Icons.image_search,
+                            ),
+                            title: Text(
+                              AppLocalizations.of(context)!
+                                  .profile_deezerThumbnailsTitle,
+                            ),
+                            subtitle: Text(
+                              AppLocalizations.of(context)!
+                                  .profile_deezerThumbnailsDescription,
+                            ),
+                            value: user.settings.deezerThumbnails,
+                            onChanged: (bool? enabled) async {
+                              if (enabled == null) return;
+
+                              user.settings.deezerThumbnails = enabled;
+
+                              user.markUpdated();
+                            },
+                          ),
+
+                          // Экспорт списка треков.
                           ListTile(
                             leading: const Icon(
                               Icons.my_library_music,

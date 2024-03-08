@@ -148,7 +148,7 @@ Future<void> toggleTrackLike(
 
     // Если это возможно, то удаляем трек из кэша.
     try {
-      CachedStreamedAudio(cacheKey: audio.mediaKey).delete();
+      CachedStreamedAudio(audio: audio).delete();
 
       audio.isCached = false;
     } catch (e) {
@@ -323,19 +323,6 @@ class _BottomMusicPlayerWidgetState extends State<BottomMusicPlayerWidget> {
     final PlayerSchemeProvider colorScheme =
         Provider.of<PlayerSchemeProvider>(context, listen: false);
 
-    /// Запускаем задачу по получению цветовой схемы.
-    player.getColorSchemeAsync().then(
-      ((ColorScheme, ColorScheme)? schemes) {
-        if (schemes == null) return;
-
-        colorScheme.setScheme(
-          schemes.$1,
-          schemes.$2,
-          player.currentAudio!.mediaKey,
-        );
-      },
-    );
-
     return BottomMusicPlayer(
       audio: player.smartCurrentAudio,
       nextAudio: player.smartNextAudio,
@@ -435,6 +422,10 @@ class _HomeRouteState extends State<HomeRoute> {
   void initState() {
     super.initState();
 
+    final UserProvider user = Provider.of<UserProvider>(context, listen: false);
+    final PlayerSchemeProvider colorScheme =
+        Provider.of<PlayerSchemeProvider>(context, listen: false);
+
     navigationPages = [
       if (messagesPageEnabled)
         NavigationPage(
@@ -495,6 +486,39 @@ class _HomeRouteState extends State<HomeRoute> {
       if (!player.loaded) return;
 
       openFullscreenPlayer(context);
+    });
+
+    // Слушаем события изменения текущего трека в плеере, что бы загружать обложку, текст песни, а так же создание цветовой схемы.
+    player.currentIndexStream.listen((int? index) {
+      if (index == null || !player.loaded) return;
+
+      /// Внутренний метод, который создаёт [ColorScheme], после чего сохраняет его внутрь [PlayerSchemeProvider].
+      void getColorScheme() async {
+        final (ColorScheme, ColorScheme)? schemes =
+            await player.getColorSchemeAsync();
+
+        if (schemes == null) return;
+
+        colorScheme.setScheme(
+          schemes.$1,
+          schemes.$2,
+          player.currentAudio!.mediaKey,
+        );
+      }
+
+      // Загружаем информацию по треку, если есть соединение с интернетом.
+      if (connectivityManager.hasConnection) {
+        CachedStreamedAudio.downloadTrackData(
+          player.currentAudio!,
+          player.currentPlaylist!,
+          user,
+          allowDeezer: user.settings.deezerThumbnails,
+          saveInDB: true,
+        ).then((_) => getColorScheme());
+      }
+
+      // Запускаем задачу по получению цветовой схемы.
+      getColorScheme();
     });
   }
 

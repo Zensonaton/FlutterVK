@@ -259,6 +259,71 @@ class ExtendedPlaylist {
   });
 }
 
+/// Класс, выступающий в роли упрощённой версии класса [Thumbnails].
+class ExtendedThumbnail {
+  /// URL на изображение альбома самого маленького размера. Рекомендуется использовать там, где нужно самое маленькое изображение трека: в списке треков, миниплеере и так далее.
+  ///
+  /// Размеры изображений, в зависимости от источника:
+  /// - ВКонтакте: `68x68`.
+  /// - Deezer: `56x56`.
+  final String photoSmall;
+
+  /// URL на изображение альбома среднего размера.
+  ///
+  /// Размеры изображений, в зависимости от источника:
+  /// - ВКонтакте: `270x270`.
+  /// - Deezer: `250x250`.
+  final String photoMedium;
+
+  /// URL на изображение альбома большого размера.
+  ///
+  /// Размеры изображений, в зависимости от источника:
+  /// - ВКонтакте: `600x600`.
+  /// - Deezer: `500x500`.
+  final String photoBig;
+
+  /// URL на изображение альбома самого большого размера из всех. Именно это изображение имеет самое высокое качество, и поэтому его рекомендуется использовать в полноэкранном плеере.
+  ///
+  /// Размеры изображений, в зависимости от источника:
+  /// - ВКонтакте: `1200x1200`.
+  /// - Deezer: `1000x1000`.
+  final String photoMax;
+
+  /// Создаёт из передаваемого объекта [DBExtendedThumbnail] объект данного класа.
+  static ExtendedThumbnail fromDBExtendedThumbnail(
+    DBExtendedThumbnail thumbnail,
+  ) =>
+      ExtendedThumbnail(
+        photoSmall: thumbnail.photoSmall!,
+        photoMedium: thumbnail.photoMedium!,
+        photoBig: thumbnail.photoBig!,
+        photoMax: thumbnail.photoMax!,
+      );
+
+  /// Возвращает копию данного класса в виде объекта [DBExtendedThumbnail].
+  DBExtendedThumbnail get asDBExtendedThumbnail =>
+      DBExtendedThumbnail.fromExtendedThumbnail(this);
+
+  /// Создаёт из передаваемого объекта [Thumbnails] объект данного класа.
+  static ExtendedThumbnail fromThumbnail(Thumbnails thumbnails) =>
+      ExtendedThumbnail(
+        photoSmall: thumbnails.photo68!,
+        photoMedium: thumbnails.photo270!,
+        photoBig: thumbnails.photo600!,
+        photoMax: thumbnails.photo1200!,
+      );
+
+  @override
+  String toString() => "DBExtendedThumbnails";
+
+  ExtendedThumbnail({
+    required this.photoSmall,
+    required this.photoMedium,
+    required this.photoBig,
+    required this.photoMax,
+  });
+}
+
 /// Класс, копирующий поля объекта [Audio] от API ВКонтакте, добавляя некоторые новые поля.
 class ExtendedAudio {
   /// ID аудиозаписи.
@@ -298,6 +363,21 @@ class ExtendedAudio {
 
   /// Информация об альбоме данной аудиозаписи.
   Album? album;
+
+  /// Информация об обложке данного трека, полученного с ВКонтакте.
+  ExtendedThumbnail? vkThumbs;
+
+  /// Информация об обложке данного трека, полученного с Deezer.
+  ExtendedThumbnail? deezerThumbs;
+
+  /// Возвращает объект типа [ExtendedThumbnail], берущий значение с переменной [vkThumbs] или [deezerThumbs].
+  ExtendedThumbnail? get thumbnail => vkThumbs ?? deezerThumbs;
+
+  /// Возвращает URL самой маленькой обложки ([ExtendedThumbnail.photoSmall]) из переменной [vkThumbs] либо [deezerThumbs].
+  String? get smallestThumbnail => thumbnail?.photoSmall;
+
+  /// Возвращает URL самой большой обложки ([ExtendedThumbnail.photoMax]) из переменной [vkThumbs] либо [deezerThumbs].
+  String? get maxThumbnail => thumbnail?.photoMax;
 
   /// Указывает наличие текста песни.
   bool? hasLyrics;
@@ -361,21 +441,18 @@ class ExtendedAudio {
         title: title,
         album: album?.title,
         artist: artist,
-        artUri: album?.thumbnails != null
-            ? Uri.parse(
-                album!.thumbnails!.photo1200!,
-              )
-            : null,
+        artUri: maxThumbnail != null ? Uri.parse(maxThumbnail!) : null,
         duration: Duration(
           seconds: duration,
         ),
         extras: {
           "albumID": album?.id,
+          "mediaKey": mediaKey,
         },
       );
 
   /// Создаёт из передаваемого объекта [Audio] объект данного класа.
-  static ExtendedAudio fromAudio(
+  static ExtendedAudio fromAPIAudio(
     Audio audio, {
     Lyrics? lyrics,
     bool? isLiked,
@@ -393,6 +470,7 @@ class ExtendedAudio {
         url: audio.url,
         date: audio.date,
         album: audio.album,
+        vkThumbs: audio.album?.thumbnails?.asExtendedThumbnail,
         hasLyrics: audio.hasLyrics,
         genreID: audio.genreID,
         lyrics: lyrics,
@@ -416,6 +494,8 @@ class ExtendedAudio {
         isRestricted: audio.isRestricted!,
         date: audio.date!,
         album: audio.album?.asAudioAlbum,
+        vkThumbs: audio.vkThumbs?.asExtendedThumbnails,
+        deezerThumbs: audio.deezerThumbs?.asExtendedThumbnails,
         hasLyrics: audio.hasLyrics!,
         genreID: audio.genreID ?? 18,
         lyrics: audio.lyrics?.asLyrics,
@@ -455,6 +535,8 @@ class ExtendedAudio {
     this.url,
     required this.date,
     this.album,
+    this.vkThumbs,
+    this.deezerThumbs,
     this.hasLyrics = false,
     this.genreID,
     this.lyrics,
@@ -518,6 +600,9 @@ class Settings {
 
   /// Указывает ветку для автообновлений.
   UpdateBranch updateBranch = UpdateBranch.releasesOnly;
+
+  /// Указывает, что приложение может загружать обложки треков с Deezer.
+  bool deezerThumbnails = false;
 }
 
 /// Provider для получения объекта пользователя в контексте интерфейса приложения.
@@ -761,6 +846,10 @@ class UserProvider extends ChangeNotifier {
       "UpdateBranch",
       settings.updateBranch.index,
     );
+    await prefs.setBool(
+      "DeezerThumbnails",
+      settings.deezerThumbnails,
+    );
   }
 
   /// Загружает данный объект пользователя с диска.
@@ -808,6 +897,7 @@ class UserProvider extends ChangeNotifier {
         UpdatePolicy.values[prefs.getInt("UpdatePolicy") ?? 0];
     settings.updateBranch =
         UpdateBranch.values[prefs.getInt("UpdateBranch") ?? 0];
+    settings.deezerThumbnails = prefs.getBool("DeezerThumbnails") ?? false;
 
     markUpdated(false);
 
@@ -887,7 +977,7 @@ class UserProvider extends ChangeNotifier {
 
           // Удаляем трек из кэша.
           try {
-            CachedStreamedAudio(cacheKey: audio.mediaKey).delete();
+            CachedStreamedAudio(audio: audio).delete();
 
             audio.isCached = false;
           } catch (e) {

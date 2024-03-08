@@ -155,7 +155,7 @@ Future<void> ensureUserAudioBasicInfo(
           count: response.response!.audioCount,
           audios: response.response!.audios
               .map(
-                (Audio audio) => ExtendedAudio.fromAudio(
+                (Audio audio) => ExtendedAudio.fromAPIAudio(
                   audio,
                   isLiked: true,
                 ),
@@ -183,7 +183,7 @@ Future<void> ensureUserAudioBasicInfo(
     // Запуск кэширования у других плейлистов происходит в ином месте:
     // Данный метод НЕ загружает содержимое у других плейлистов.
     if (user.favoritesPlaylist!.cacheTracks ?? false) {
-      downloadManager.cachePlaylist(user.favoritesPlaylist!);
+      downloadManager.cachePlaylist(user: user, user.favoritesPlaylist!);
     }
 
     user.markUpdated(false);
@@ -274,7 +274,7 @@ Future<void> ensureUserAudioRecommendations(
                 (Audio audio) => playlist.audios.contains(audio.mediaKey),
               )
               .map(
-                (Audio audio) => ExtendedAudio.fromAudio(audio),
+                (Audio audio) => ExtendedAudio.fromAPIAudio(audio),
               )
               .toList(),
         ),
@@ -396,7 +396,7 @@ Future<void> loadCachedTracksInformation(
     );
 
     // Запускаем задачу по кэшированию этого плейлиста.
-    downloadManager.cachePlaylist(newPlaylist);
+    downloadManager.cachePlaylist(user: user, newPlaylist);
 
     user.markUpdated(false);
   }
@@ -635,7 +635,7 @@ class _SearchDisplayDialogState extends State<SearchDisplayDialog> {
                   final Set<ExtendedAudio>? audios =
                       snapshot.data?.response?.items
                           .map(
-                            (audio) => ExtendedAudio.fromAudio(audio),
+                            (audio) => ExtendedAudio.fromAPIAudio(audio),
                           )
                           .toSet();
 
@@ -936,9 +936,13 @@ class BottomAudioOptionsDialog extends StatefulWidget {
   /// Трек типа [ExtendedAudio], над которым производится манипуляция.
   final ExtendedAudio audio;
 
+  /// Плейлист, в котором находится данный трек.
+  final ExtendedPlaylist playlist;
+
   const BottomAudioOptionsDialog({
     super.key,
     required this.audio,
+    required this.playlist,
   });
 
   @override
@@ -1097,8 +1101,9 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
                     try {
                       await CacheItem.cacheTrack(
                         widget.audio,
+                        widget.playlist,
                         true,
-                        user: user,
+                        user,
                       );
                     } catch (error, stackTrace) {
                       // ignore: use_build_context_synchronously
@@ -1284,7 +1289,7 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
     final bool selectedAndPlaying = widget.selected && widget.currentlyPlaying;
 
     /// Url на изображение данного трека.
-    final String? imageUrl = widget.audio.album?.thumbnails?.photo68;
+    final String? imageUrl = widget.audio.smallestThumbnail;
 
     return Dismissible(
       key: ValueKey(
@@ -1386,7 +1391,7 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
                             child: imageUrl != null
                                 ? CachedNetworkImage(
                                     imageUrl: imageUrl,
-                                    cacheKey: "${widget.audio.album!.id}68",
+                                    cacheKey: "${widget.audio.mediaKey}small",
                                     width: 50,
                                     height: 50,
                                     placeholder:

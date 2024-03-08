@@ -314,7 +314,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
         widget.useBigLayout ? (width - centerBlockSize) / 2 : width - 112;
 
     /// Url на изображение трека.
-    final String? imageUrl = widget.audio?.album?.thumbnails?.photo68;
+    final String? imageUrl = widget.audio?.smallestThumbnail;
 
     /// Размер изображения трека.
     final double imageSize = widget.useBigLayout ? 60 : 50;
@@ -454,7 +454,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                     child: SizedBox(
                                       key: ValueKey(
                                         imageUrl != null
-                                            ? widget.audio!.album?.id
+                                            ? widget.audio!.mediaKey
                                             : null,
                                       ),
                                       width: imageSize,
@@ -463,14 +463,13 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                           ? CachedNetworkImage(
                                               imageUrl: imageUrl,
                                               cacheKey:
-                                                  "${widget.audio!.album!.id}68",
-                                              memCacheHeight: imageSize.toInt(),
-                                              memCacheWidth: imageSize.toInt(),
+                                                  "${widget.audio!.mediaKey}small",
                                               placeholder: (
                                                 BuildContext context,
                                                 String url,
                                               ) =>
                                                   const FallbackAudioAvatar(),
+                                              fit: BoxFit.contain,
                                               cacheManager:
                                                   CachedAlbumImagesManager
                                                       .instance,

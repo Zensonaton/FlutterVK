@@ -83,6 +83,7 @@ class TopFullscreenControls extends StatelessWidget {
               builder: (BuildContext context) {
                 return BottomAudioOptionsDialog(
                   audio: player.currentAudio!,
+                  playlist: player.currentPlaylist!,
                 );
               },
             ),
@@ -172,10 +173,10 @@ class _ImageLyricsBlockState extends State<ImageLyricsBlock> {
               borderRadius: BorderRadius.circular(
                 globalBorderRadius,
               ),
-              child: audio.album?.thumbnails != null
+              child: audio.maxThumbnail != null
                   ? CachedNetworkImage(
-                      imageUrl: audio.album!.thumbnails!.photo1200!,
-                      cacheKey: "${audio.album!.id}1200",
+                      imageUrl: audio.maxThumbnail!,
+                      cacheKey: "${audio.mediaKey}max",
                       width: _playerImageSize,
                       height: _playerImageSize,
                       fit: BoxFit.fill,
@@ -207,7 +208,7 @@ class _ImageLyricsBlockState extends State<ImageLyricsBlock> {
       child: !lyricsLoadedAndShown
           ? MouseRegion(
               key: ValueKey(
-                player.smartCurrentAudio!.album?.id,
+                player.smartCurrentAudio!.mediaKey,
               ),
               cursor: SystemMouseCursors.click,
               child: GestureDetector(

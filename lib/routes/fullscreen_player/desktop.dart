@@ -176,15 +176,12 @@ class _NextTrackInfoWidgetState extends State<NextTrackInfoWidget> {
                 borderRadius: BorderRadius.circular(
                   globalBorderRadius,
                 ),
-                child: player.smartNextAudio!.album?.thumbnails != null
+                child: player.smartNextAudio!.smallestThumbnail != null
                     ? CachedNetworkImage(
-                        imageUrl: player
-                            .smartNextAudio!.album!.thumbnails!.photo1200!,
-                        cacheKey: "${player.nextAudio!.album!.id}1200",
+                        imageUrl: player.smartNextAudio!.smallestThumbnail!,
+                        cacheKey: "${player.nextAudio!.mediaKey}small",
                         width: 32,
                         height: 32,
-                        memCacheWidth: 32,
-                        memCacheHeight: 32,
                         placeholder: (BuildContext context, String url) =>
                             const FallbackAudioAvatar(),
                         cacheManager: CachedAlbumImagesManager.instance,
@@ -440,7 +437,7 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                     ),
                     child: Container(
                       key: ValueKey(
-                        player.currentAudio!.album?.id,
+                        player.currentAudio!.mediaKey,
                       ),
                       decoration: BoxDecoration(
                         boxShadow: [
@@ -456,16 +453,12 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                         borderRadius: BorderRadius.circular(
                           globalBorderRadius,
                         ),
-                        child: player.currentAudio!.album?.thumbnails != null
+                        child: player.currentAudio!.maxThumbnail != null
                             ? CachedNetworkImage(
-                                imageUrl: player.currentAudio!.album!
-                                    .thumbnails!.photo1200!,
-                                cacheKey:
-                                    "${player.currentAudio!.album!.id}1200",
+                                imageUrl: player.currentAudio!.maxThumbnail!,
+                                cacheKey: "${player.currentAudio!.mediaKey}max",
                                 width: 130,
                                 height: 130,
-                                memCacheWidth: 200,
-                                memCacheHeight: 200,
                                 fit: BoxFit.fill,
                                 placeholder:
                                     (BuildContext context, String url) =>

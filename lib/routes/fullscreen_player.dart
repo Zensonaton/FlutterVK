@@ -15,7 +15,6 @@ import "package:visibility_detector/visibility_detector.dart";
 import "package:wakelock_plus/wakelock_plus.dart";
 import "package:window_manager/window_manager.dart";
 
-import "../api/vk/api.dart";
 import "../api/vk/audio/get_lyrics.dart";
 import "../consts.dart";
 import "../extensions.dart";
@@ -564,8 +563,8 @@ class _BlurredBackgroundImageState extends State<BlurredBackgroundImage> {
           sigmaY: 50,
         ),
         child: CachedNetworkImage(
-          imageUrl: player.currentAudio!.album!.thumbnails!.photo1200!,
-          cacheKey: "${player.currentAudio!.album!.id}1200",
+          imageUrl: player.currentAudio!.maxThumbnail!,
+          cacheKey: "${player.currentAudio!.mediaKey}max",
           fit: BoxFit.cover,
           cacheManager: CachedAlbumImagesManager.instance,
           color: Colors.black.withOpacity(0.55),
@@ -589,12 +588,7 @@ class FullscreenPlayerRoute extends StatefulWidget {
 }
 
 class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
-  static AppLogger logger = getLogger("FullscreenPlayerDesktopRoute");
-
-  /// Список из [Audio.mediaKey] треков, текст песен которых пытается загрузиться в данный момент.
-  ///
-  /// Данное поле нужно, что бы при повторном вызове метода [build] не делалось множество HTTP-запросов.
-  final List<String> lyricsQueue = [];
+  final AppLogger logger = getLogger("FullscreenPlayerDesktopRoute");
 
   /// Подписки на изменения состояния воспроизведения трека.
   late final List<StreamSubscription> subscriptions;
@@ -685,59 +679,6 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
       );
     }
 
-    // Запускаем задачу по получению цветовой схемы.
-    player.getColorSchemeAsync().then(
-      ((ColorScheme, ColorScheme)? schemes) {
-        if (schemes == null) return;
-
-        colorScheme.setScheme(
-          schemes.$1,
-          schemes.$2,
-          player.currentAudio!.mediaKey,
-        );
-      },
-    );
-
-    // Если известно, что у трека есть текст песни, то пытаемся его загрузить.
-    if (connectivityManager.hasConnection &&
-        (player.currentAudio!.hasLyrics ?? false) &&
-        player.currentAudio!.lyrics == null &&
-        !lyricsQueue.contains(player.currentAudio!.mediaKey)) {
-      lyricsQueue.add(player.currentAudio!.mediaKey);
-
-      user.audioGetLyrics(player.currentAudio!.mediaKey).then(
-        (APIAudioGetLyricsResponse response) {
-          raiseOnAPIError(response);
-
-          // Сохраняем текст песни.
-          player.currentAudio!.lyrics = response.response!.lyrics;
-
-          user.updatePlaylist(player.currentPlaylist!);
-          user.markUpdated(false);
-        },
-      ).onError(
-        (error, stackTrace) {
-          logger.e(
-            "Ошибка при попытке получить lyrics трека с ID ${player.currentAudio!.mediaKey}: ",
-            error: error,
-            stackTrace: stackTrace,
-          );
-
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  AppLocalizations.of(context)!.musicFullscreenLyricsLoadError(
-                    error.toString(),
-                  ),
-                ),
-              ),
-            );
-          }
-        },
-      );
-    }
-
     /// Указывает, что будет использоваться Mobile Layout.
     final bool useMobileLayout =
         getDeviceType(MediaQuery.of(context).size) == DeviceScreenType.mobile;
@@ -801,8 +742,7 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
                         child: Stack(
                           children: [
                             // Размытое фоновое изображение.
-                            if (player.currentAudio?.album?.thumbnails !=
-                                    null &&
+                            if (player.currentAudio?.maxThumbnail != null &&
                                 user.settings.playerThumbAsBackground)
                               SizedBox(
                                 width: MediaQuery.of(context).size.width,

@@ -1,6 +1,7 @@
 import "package:isar/isar.dart";
 import "package:path_provider/path_provider.dart";
 
+import "../services/logger.dart";
 import "schemas/playlists.dart";
 
 /// Класс для работы с базой данных Isar, используемого для хранения persistent-данных пользователя.
@@ -11,6 +12,8 @@ class AppStorage {
 
   /// Название файла базы данных Isar.
   static String isarDBName = "flutter-vk";
+
+  static AppLogger logger = getLogger("AppStorage");
 
   /// Возвращает путь к папке, в которой будут храниться файлы баз данных Isar.
   Future<String> getDBDirectoryPath() async {
@@ -46,6 +49,8 @@ class AppStorage {
   Future<void> savePlaylist(
     DBPlaylist playlist,
   ) async {
+    logger.d("Called savePlaylist for $playlist");
+
     final Isar isar = await _getIsar();
 
     await isar.writeTxn(() async {

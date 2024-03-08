@@ -7,6 +7,48 @@ import "../../utils.dart";
 
 part "playlists.g.dart";
 
+/// Класс, олицетворяющий копию класса [ExtendedThumbnail].
+@Embedded()
+class DBExtendedThumbnail {
+  /// URL на изображение альбома самого маленького размера. Рекомендуется использовать там, где нужно самое маленькое изображение трека: в списке треков, миниплеере и так далее.
+  final String? photoSmall;
+
+  /// URL на изображение альбома среднего размера.
+  final String? photoMedium;
+
+  /// URL на изображение альбома большого размера.
+  final String? photoBig;
+
+  /// URL на изображение альбома самого большого размера из всех. Именно это изображение имеет самое высокое качество, и поэтому его рекомендуется использовать в полноэкранном плеере.
+  final String? photoMax;
+
+  /// Создаёт из передаваемого объекта [ExtendedThumbnail] объект данного класа.
+  static DBExtendedThumbnail fromExtendedThumbnail(
+    ExtendedThumbnail thumbnail,
+  ) =>
+      DBExtendedThumbnail(
+        photoSmall: thumbnail.photoSmall,
+        photoMedium: thumbnail.photoMedium,
+        photoBig: thumbnail.photoBig,
+        photoMax: thumbnail.photoMax,
+      );
+
+  /// Возвращает копию данного класса в виде объекта [ExtendedThumbnail].
+  @Ignore()
+  ExtendedThumbnail get asExtendedThumbnails =>
+      ExtendedThumbnail.fromDBExtendedThumbnail(this);
+
+  @override
+  String toString() => "DBExtendedThumbnails";
+
+  DBExtendedThumbnail({
+    this.photoSmall,
+    this.photoMedium,
+    this.photoBig,
+    this.photoMax,
+  });
+}
+
 /// Класс, олицетворяющий изображения плейлиста или трека.
 @Embedded()
 class DBThumbnails {
@@ -38,10 +80,7 @@ class DBThumbnails {
   final String? photo1200;
 
   /// Создаёт из передаваемого объекта [Thumbnails] объект данного класа.
-  static DBThumbnails fromAPIPhoto(
-    Thumbnails photo,
-  ) =>
-      DBThumbnails(
+  static DBThumbnails fromAPIPhoto(Thumbnails photo) => DBThumbnails(
         width: photo.width,
         height: photo.height,
         photo34: photo.photo34,
@@ -260,6 +299,12 @@ class DBAudio {
   /// Информация об альбоме данной аудиозаписи.
   DBAlbum? album;
 
+  /// Информация об обложке данного трека, полученного с ВКонтакте.
+  DBExtendedThumbnail? vkThumbs;
+
+  /// Информация об обложке данного трека, полученного с Deezer.
+  DBExtendedThumbnail? deezerThumbs;
+
   /// Указывает наличие текста песни.
   final bool? hasLyrics;
 
@@ -288,6 +333,8 @@ class DBAudio {
         lyrics: audio.lyrics?.asDBLyrics,
         genreID: audio.genreID,
         album: audio.album?.asDBAlbum,
+        vkThumbs: audio.vkThumbs?.asDBExtendedThumbnail,
+        deezerThumbs: audio.deezerThumbs?.asDBExtendedThumbnail,
         isCached: audio.isCached,
       );
 
@@ -324,6 +371,8 @@ class DBAudio {
     this.isRestricted,
     this.date,
     this.album,
+    this.vkThumbs,
+    this.deezerThumbs,
     this.hasLyrics,
     this.lyrics,
     this.genreID,

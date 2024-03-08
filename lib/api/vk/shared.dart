@@ -1,6 +1,7 @@
 import "package:json_annotation/json_annotation.dart";
 
 import "../../db/schemas/playlists.dart";
+import "../../provider/user.dart";
 import "../../utils.dart";
 
 part "shared.g.dart";
@@ -523,6 +524,10 @@ class Thumbnails {
 
   /// Возвращает копию данного класса в виде объекта [DBThumbnails].
   DBThumbnails get asDBThumbnails => DBThumbnails.fromAPIPhoto(this);
+
+  /// Возвращает копию данного класса в виде объекта [ExtendedThumbnail].
+  ExtendedThumbnail get asExtendedThumbnail =>
+      ExtendedThumbnail.fromThumbnail(this);
 
   @override
   String toString() => "Thumbnails $width*$height";

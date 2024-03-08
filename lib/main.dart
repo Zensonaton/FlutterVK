@@ -208,7 +208,7 @@ Future main() async {
       preloadArtwork: true,
     ),
     cacheManager: CachedAlbumImagesManager.instance,
-    cacheKeyResolver: (MediaItem item) => "${item.extras!["albumID"]!}1200",
+    cacheKeyResolver: (MediaItem item) => "${item.extras!["mediaKey"]!}max",
   );
 
   // Breakpoint'ы для разных размеров экранов.

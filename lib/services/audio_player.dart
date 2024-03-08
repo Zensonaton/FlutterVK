@@ -18,6 +18,9 @@ import "package:path_provider/path_provider.dart";
 import "package:provider/provider.dart";
 import "package:smtc_windows/smtc_windows.dart";
 
+import "../api/deezer/search.dart";
+import "../api/deezer/shared.dart";
+import "../api/vk/api.dart";
 import "../api/vk/shared.dart";
 import "../consts.dart";
 import "../main.dart";
@@ -48,19 +51,11 @@ class CachedStreamedAudio extends StreamAudioSource {
   /// Максимальное значение одновременных загрузок треков в фоне. При превышении этого порога, записи из [downloadQueue] будут отменяться.
   static int maxConcurrentDownloads = 5;
 
-  /// [Uri], введущий к треку.
-  ///
-  /// Не указав [uri], загрузка происходить не будет. Произойдёт исключение в случае, если [uri] не указан, а [cacheKey] введёт на несуществующий файл.
-  final Uri? uri;
+  /// Трек, данные которого будут загружаться.
+  final ExtendedAudio audio;
 
-  /// Ключ, который будет использоваться для кэширования полностью загруженных треков. Если его не указать, то класс не будет пытаться найти трек в кэше.
-  final String cacheKey;
-
-  /// Обложки трека. Если не указывать, кэширование обложек происходить не будет. Указывая это поле, [albumID] не может быть null;
-  final Thumbnails? thumbnails;
-
-  /// ID альбома, который ассоциирован с данным треком.
-  final int? albumID;
+  /// Объект пользователя, используемый для загрузки текста песни трека (при наличии).
+  final UserProvider? user;
 
   /// Указывает, будет ли данный трек кэшироваться.
   final bool cacheTrack;
@@ -69,10 +64,8 @@ class CachedStreamedAudio extends StreamAudioSource {
   final VoidCallback? onCached;
 
   CachedStreamedAudio({
-    required this.cacheKey,
-    this.uri,
-    this.thumbnails,
-    this.albumID,
+    required this.audio,
+    this.user,
     this.cacheTrack = false,
     this.onCached,
   });
@@ -101,7 +94,7 @@ class CachedStreamedAudio extends StreamAudioSource {
   }
 
   /// Возвращает объект типа [File], либо null, если [cacheKey] не указан.
-  Future<File?> getCachedAudio() => getCachedAudioByKey(cacheKey);
+  Future<File?> getCachedAudio() => getCachedAudioByKey(audio.mediaKey);
 
   /// Удаляет кэшированный трек из кэша.
   Future<void> delete() async {
@@ -114,40 +107,89 @@ class CachedStreamedAudio extends StreamAudioSource {
     }
   }
 
-  /// Загружает обложки и прочую информацию о треке.
+  /// Загружает обложки, текст, а так же прочую информацию о треке.
   ///
   /// Данный метод обычно вызывается после загрузки самого трека. Данный метод загружает изображения треков разных размеров, помещая их в [CachedNetworkImagesManager].
-  static Future<void> downloadThumbnails({
-    int? albumID,
-    Thumbnails? thumbnails,
+  static Future<void> downloadTrackData(
+    ExtendedAudio audio,
+    ExtendedPlaylist playlist,
+    UserProvider user, {
+    bool allowDeezer = false,
+    bool saveInDB = false,
   }) async {
+    logger.d("Called downloadTrackData for $audio");
+
     final List<Future> tasks = [];
+    bool shouldUpdateDB = false;
+
+    final FileInfo? cachedThumb =
+        await CachedAlbumImagesManager.instance.getFileFromCache(
+      "${audio.mediaKey}max",
+    );
 
     // Если файлы обложек уже загружены, то ничего не делаем.
-    if (albumID != null && thumbnails != null) {
-      final FileInfo? cachedThumb =
-          await CachedAlbumImagesManager.instance.getFileFromCache(
-        "${albumID}1200",
-      );
+    if (cachedThumb == null) {
+      ExtendedThumbnail? thumbs = audio.vkThumbs;
 
-      if (cachedThumb == null) {
-        // Загружаем обложки.
+      // Если мы можем загрузить обложки с Deezer, то получаем их URL.
+      if (allowDeezer && thumbs == null) {
+        final DeezerTrack? deezerTrack = await deezer_search_closest(
+          audio.artist,
+          audio.title,
+          album: audio.album?.title,
+          duration: audio.duration,
+        );
+
+        // Если мы ничего не нашли, либо у альбома нет изображений, то просто ничего не делаем.
+        if (deezerTrack == null || deezerTrack.album.cover == null) return;
+
+        // Всё ок, запоминаем новую обложку трека.
+        thumbs = ExtendedThumbnail(
+          photoSmall: deezerTrack.album.coverSmall!,
+          photoMedium: deezerTrack.album.coverMedium!,
+          photoBig: deezerTrack.album.coverBig!,
+          photoMax: deezerTrack.album.coverXL!,
+        );
+        audio.deezerThumbs = thumbs;
+        shouldUpdateDB = true;
+      }
+
+      // Загружаем обложки, либо с API ВКонтакте, либо Deezer.
+      if (thumbs != null) {
         tasks.add(
           CachedAlbumImagesManager.instance.downloadFile(
-            thumbnails.photo68!,
-            key: "${albumID}68",
+            thumbs.photoSmall,
+            key: "${audio.mediaKey}small",
           ),
         );
         tasks.add(
           CachedAlbumImagesManager.instance.downloadFile(
-            thumbnails.photo1200!,
-            key: "${albumID}1200",
+            thumbs.photoMax,
+            key: "${audio.mediaKey}max",
           ),
         );
       }
     }
 
+    // Если это возможно, то так же загружаем текст песни.
+    if (audio.hasLyrics ?? false) {
+      shouldUpdateDB = true;
+
+      tasks.add(
+        user.audioGetLyrics(audio.mediaKey).then((response) {
+          raiseOnAPIError(response);
+
+          audio.lyrics = response.response!.lyrics;
+        }),
+      );
+    }
+
     await Future.wait(tasks);
+
+    // Если это необходимо, то обновляем запись в БД.
+    if (saveInDB && shouldUpdateDB) {
+      await appStorage.savePlaylist(playlist.asDBPlaylist);
+    }
   }
 
   @override
@@ -155,28 +197,15 @@ class CachedStreamedAudio extends StreamAudioSource {
     int? start,
     int? end,
   ]) async {
-    if (thumbnails != null) {
-      assert(
-        albumID != null,
-        "thumbnails set, but albumID isn't given",
-      );
-    }
-
     final File? cacheFile = await getCachedAudio();
 
     // Если файл кэша уже существует, то мы должны вернуть его, не делая никаких запросов.
     if (cacheFile != null && cacheFile.existsSync()) {
       logger.d(
-        "Cache file exists for $cacheKey (${cacheFile.path})",
+        "Cache file exists for ${audio.mediaKey} (${cacheFile.path})",
       );
 
       final int sourceLength = cacheFile.lengthSync();
-
-      // Запускаем фоновую задачу по получению обложек трека.
-      downloadThumbnails(
-        albumID: albumID,
-        thumbnails: thumbnails,
-      );
 
       return StreamAudioResponse(
         sourceLength: start != null ? sourceLength : null,
@@ -194,17 +223,11 @@ class CachedStreamedAudio extends StreamAudioSource {
 
     // Кэшированный трек не был найден, загружаем его, и после чего кэшируем.
 
-    if (uri == null) {
-      throw Exception(
-        "uri is not passed and audio key $cacheKey haven't been yet cached",
-      );
-    }
-
     // Создаём HTTPClient, а так же HTTP-запрос.
     // Загрузка содержимого трека находится ниже.
     final HttpClient httpClient = HttpClient();
-    final HttpClientRequest request = (await httpClient.getUrl(uri!))
-      ..maxRedirects = 20;
+    final HttpClientRequest request =
+        (await httpClient.getUrl(Uri.parse(audio.url!)))..maxRedirects = 20;
     final List<int> trackBytes = [];
     final response = await request.close();
     if (response.statusCode != 200) {
@@ -228,54 +251,49 @@ class CachedStreamedAudio extends StreamAudioSource {
     }
 
     // Создаём задачу по загрузке данного трека, если таковой ещё не было.
-    StreamSubscription<List<int>>? subscription = downloadQueue[cacheKey] ??
-        responseStream.listen(
-          (List<int> data) {
-            trackBytes.addAll(data);
-          },
-          onDone: () async {
-            logger.d(
-              "Done downloading track $cacheKey, ${trackBytes.length} bytes",
+    StreamSubscription<List<int>>? subscription =
+        downloadQueue[audio.mediaKey] ??
+            responseStream.listen(
+              (List<int> data) {
+                trackBytes.addAll(data);
+              },
+              onDone: () async {
+                logger.d(
+                  "Done downloading track ${audio.mediaKey}, ${trackBytes.length} bytes",
+                );
+
+                // Проверяем длину полученного файла.
+                if (trackBytes.length != sourceLength) {
+                  throw Exception(
+                    "Download file ${audio.mediaKey} size mismatch: expected $sourceLength, but got ${trackBytes.length} instead",
+                  );
+                }
+
+                // Сохраняем трек на диск, если нам передан ключ для кэша.
+                if (cacheTrack && cacheFile != null) {
+                  cacheFile.createSync(recursive: true);
+                  cacheFile.writeAsBytesSync(trackBytes);
+                }
+
+                downloadQueue.remove(audio.mediaKey);
+
+                // Трек был успешно полностью кэширован.
+                onCached?.call();
+              },
+              onError: (Object e, StackTrace stackTrace) {
+                logger.e(
+                  "Error while downloading/caching media ${audio.mediaKey}",
+                  error: e,
+                  stackTrace: stackTrace,
+                );
+
+                downloadQueue.remove(audio.mediaKey);
+              },
+              cancelOnError: true,
             );
-
-            // Проверяем длину полученного файла.
-            if (trackBytes.length != sourceLength) {
-              throw Exception(
-                "Download file $cacheKey size mismatch: expected $sourceLength, but got ${trackBytes.length} instead",
-              );
-            }
-
-            // Сохраняем трек на диск, если нам передан ключ для кэша.
-            if (cacheFile != null) {
-              cacheFile.createSync(recursive: true);
-              cacheFile.writeAsBytesSync(trackBytes);
-            }
-
-            downloadQueue.remove(cacheKey);
-
-            // Запускаем задачу по загрузке обложек.
-            await downloadThumbnails(
-              albumID: albumID,
-              thumbnails: thumbnails,
-            );
-
-            // Трек был успешно полностью кэширован.
-            onCached?.call();
-          },
-          onError: (Object e, StackTrace stackTrace) {
-            logger.e(
-              "Error while downloading/caching media $cacheKey",
-              error: e,
-              stackTrace: stackTrace,
-            );
-
-            downloadQueue.remove(cacheKey);
-          },
-          cancelOnError: true,
-        );
 
     // Сохраняем текущий Stream, что бы в случае повторного запроса его можно было бы получить.
-    downloadQueue[cacheKey] = subscription;
+    downloadQueue[audio.mediaKey] = subscription;
 
     // StreamAudioResponse глупенький: subscription.cancel() не отменяет запрос на стороне just_audio.
     // Ввиду этого, загрузка треков может происходить по несколько раз.
@@ -485,6 +503,10 @@ class VKMusicPlayer {
   /// Stream, возвращающий события о изменении текущего плеера.
   Stream<SequenceState?> get sequenceStateStream =>
       _player.sequenceStateStream.asBroadcastStream();
+
+  /// Stream, возвращающий события о изменении индекса текущего трека.
+  Stream<int?> get currentIndexStream =>
+      _player.currentIndexStream.asBroadcastStream();
 
   /// Возвращет информацию о состоянии shuffle.
   bool get shuffleModeEnabled => _player.shuffleModeEnabled;
@@ -940,12 +962,12 @@ class VKMusicPlayer {
 
   /// Callback-метод, сохраняющий информацию о том, что трек был кэширован.
   void _onTrackCached(ExtendedAudio audio, ExtendedPlaylist playlist) {
-    audio.isCached = true;
-
     final UserProvider user =
         Provider.of<UserProvider>(buildContext!, listen: false);
 
-    user.updatePlaylist(playlist);
+    audio.isCached = true;
+
+    appStorage.savePlaylist(playlist.asDBPlaylist);
     user.markUpdated(false);
   }
 
@@ -973,22 +995,17 @@ class VKMusicPlayer {
     _playlist = playlist;
     _audiosQueue = [...audios];
     _queue = ConcatenatingAudioSource(
-      children: audios
-          .map(
-            (audio) => CachedStreamedAudio(
-              cacheKey: audio.mediaKey,
-              uri: audio.url != null
-                  ? Uri.parse(
-                      audio.url!,
-                    )
-                  : null,
-              thumbnails: audio.album?.thumbnails,
-              albumID: audio.album?.id,
-              cacheTrack: playlist.cacheTracks ?? false,
-              onCached: () => _onTrackCached(audio, playlist),
-            ),
-          )
-          .toList(),
+      children: audios.map(
+        (ExtendedAudio audio) {
+          final bool cacheTrack = playlist.cacheTracks ?? false;
+
+          return CachedStreamedAudio(
+            audio: audio,
+            cacheTrack: cacheTrack,
+            onCached: cacheTrack ? () => _onTrackCached(audio, playlist) : null,
+          );
+        },
+      ).toList(),
     );
 
     // Указываем, что плеер загружен.
@@ -1021,14 +1038,7 @@ class VKMusicPlayer {
     _queue!.insert(
       nextTrackIndex ?? 0,
       CachedStreamedAudio(
-        cacheKey: audio.mediaKey,
-        uri: audio.url != null
-            ? Uri.parse(
-                audio.url!,
-              )
-            : null,
-        thumbnails: audio.album?.thumbnails,
-        albumID: audio.album?.id,
+        audio: audio,
         onCached: () => _onTrackCached(audio, player.currentPlaylist!),
       ),
     );
@@ -1105,7 +1115,7 @@ class VKMusicPlayer {
           artist: currentAudio!.artist,
           albumArtist: currentAudio!.artist,
           album: currentAudio!.album?.title,
-          thumbnail: currentAudio!.album?.thumbnails?.photo1200,
+          thumbnail: currentAudio!.smallestThumbnail,
         ),
       );
     }
@@ -1192,12 +1202,12 @@ class VKMusicPlayer {
     final Stopwatch watch = Stopwatch()..start();
 
     // Если у изображения трека нету фотографии, либо задача уже запущена, то возвращаем null.
-    if (player.currentAudio?.album?.thumbnails == null ||
+    if (player.currentAudio?.smallestThumbnail == null ||
         _colorSchemeItemsQueue.contains(
           player.currentAudio!.mediaKey,
         )) return null;
 
-    final String cacheKey = "${player.currentAudio!.album!.id}68";
+    final String cacheKey = "${player.currentAudio!.mediaKey}small";
 
     // Пытаемся извлечь значение цветовых схем из кэша.
     if (imageColorSchemeCache.containsKey(cacheKey)) {
@@ -1212,7 +1222,7 @@ class VKMusicPlayer {
     // Извлекаем цвета из изображения, делая объект PaletteGenerator.
     final PaletteGenerator palette = await PaletteGenerator.fromImageProvider(
       CachedNetworkImageProvider(
-        player.currentAudio!.album!.thumbnails!.photo68!,
+        player.currentAudio!.smallestThumbnail!,
         cacheKey: cacheKey,
         cacheManager: CachedNetworkImagesManager.instance,
       ),

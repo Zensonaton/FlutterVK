@@ -4,6 +4,7 @@ import "dart:ui";
 
 import "package:cached_network_image/cached_network_image.dart";
 import "package:collection/collection.dart";
+import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/rendering.dart";
 import "package:flutter/services.dart";
@@ -79,7 +80,7 @@ Future<ExtendedPlaylist> loadPlaylistData(
 
   newPlaylist.audios = response.response!.audios
       .map(
-        (Audio audio) => ExtendedAudio.fromAudio(audio),
+        (Audio audio) => ExtendedAudio.fromAPIAudio(audio),
       )
       .toSet();
   newPlaylist.count = response.response!.audioCount;
@@ -230,6 +231,7 @@ Widget buildListTrackWidget(
         builder: (BuildContext context) {
           return BottomAudioOptionsDialog(
             audio: audio,
+            playlist: playlist,
           );
         },
       ),

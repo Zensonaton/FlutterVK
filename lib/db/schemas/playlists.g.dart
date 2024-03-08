@@ -127,6 +127,7 @@ const DBPlaylistSchema = CollectionSchema(
     r'DBThumbnails': DBThumbnailsSchema,
     r'DBAudio': DBAudioSchema,
     r'DBAlbum': DBAlbumSchema,
+    r'DBExtendedThumbnail': DBExtendedThumbnailSchema,
     r'DBLyrics': DBLyricsSchema,
     r'DBLyricTimestamp': DBLyricTimestampSchema
   },
@@ -2735,6 +2736,742 @@ extension DBPlaylistQueryProperty
 // **************************************************************************
 // IsarEmbeddedGenerator
 // **************************************************************************
+
+// coverage:ignore-file
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
+
+const DBExtendedThumbnailSchema = Schema(
+  name: r'DBExtendedThumbnail',
+  id: 9109142976767560344,
+  properties: {
+    r'photoBig': PropertySchema(
+      id: 0,
+      name: r'photoBig',
+      type: IsarType.string,
+    ),
+    r'photoMax': PropertySchema(
+      id: 1,
+      name: r'photoMax',
+      type: IsarType.string,
+    ),
+    r'photoMedium': PropertySchema(
+      id: 2,
+      name: r'photoMedium',
+      type: IsarType.string,
+    ),
+    r'photoSmall': PropertySchema(
+      id: 3,
+      name: r'photoSmall',
+      type: IsarType.string,
+    )
+  },
+  estimateSize: _dBExtendedThumbnailEstimateSize,
+  serialize: _dBExtendedThumbnailSerialize,
+  deserialize: _dBExtendedThumbnailDeserialize,
+  deserializeProp: _dBExtendedThumbnailDeserializeProp,
+);
+
+int _dBExtendedThumbnailEstimateSize(
+  DBExtendedThumbnail object,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  var bytesCount = offsets.last;
+  {
+    final value = object.photoBig;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.photoMax;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.photoMedium;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.photoSmall;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  return bytesCount;
+}
+
+void _dBExtendedThumbnailSerialize(
+  DBExtendedThumbnail object,
+  IsarWriter writer,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  writer.writeString(offsets[0], object.photoBig);
+  writer.writeString(offsets[1], object.photoMax);
+  writer.writeString(offsets[2], object.photoMedium);
+  writer.writeString(offsets[3], object.photoSmall);
+}
+
+DBExtendedThumbnail _dBExtendedThumbnailDeserialize(
+  Id id,
+  IsarReader reader,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  final object = DBExtendedThumbnail(
+    photoBig: reader.readStringOrNull(offsets[0]),
+    photoMax: reader.readStringOrNull(offsets[1]),
+    photoMedium: reader.readStringOrNull(offsets[2]),
+    photoSmall: reader.readStringOrNull(offsets[3]),
+  );
+  return object;
+}
+
+P _dBExtendedThumbnailDeserializeProp<P>(
+  IsarReader reader,
+  int propertyId,
+  int offset,
+  Map<Type, List<int>> allOffsets,
+) {
+  switch (propertyId) {
+    case 0:
+      return (reader.readStringOrNull(offset)) as P;
+    case 1:
+      return (reader.readStringOrNull(offset)) as P;
+    case 2:
+      return (reader.readStringOrNull(offset)) as P;
+    case 3:
+      return (reader.readStringOrNull(offset)) as P;
+    default:
+      throw IsarError('Unknown property with id $propertyId');
+  }
+}
+
+extension DBExtendedThumbnailQueryFilter on QueryBuilder<DBExtendedThumbnail,
+    DBExtendedThumbnail, QFilterCondition> {
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoBigIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'photoBig',
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoBigIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'photoBig',
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoBigEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'photoBig',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoBigGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'photoBig',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoBigLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'photoBig',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoBigBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'photoBig',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoBigStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'photoBig',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoBigEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'photoBig',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoBigContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'photoBig',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoBigMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'photoBig',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoBigIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'photoBig',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoBigIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'photoBig',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoMaxIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'photoMax',
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoMaxIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'photoMax',
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoMaxEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'photoMax',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoMaxGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'photoMax',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoMaxLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'photoMax',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoMaxBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'photoMax',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoMaxStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'photoMax',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoMaxEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'photoMax',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoMaxContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'photoMax',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoMaxMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'photoMax',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoMaxIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'photoMax',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoMaxIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'photoMax',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoMediumIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'photoMedium',
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoMediumIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'photoMedium',
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoMediumEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'photoMedium',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoMediumGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'photoMedium',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoMediumLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'photoMedium',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoMediumBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'photoMedium',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoMediumStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'photoMedium',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoMediumEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'photoMedium',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoMediumContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'photoMedium',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoMediumMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'photoMedium',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoMediumIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'photoMedium',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoMediumIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'photoMedium',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoSmallIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'photoSmall',
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoSmallIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'photoSmall',
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoSmallEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'photoSmall',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoSmallGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'photoSmall',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoSmallLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'photoSmall',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoSmallBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'photoSmall',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoSmallStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'photoSmall',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoSmallEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'photoSmall',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoSmallContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'photoSmall',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoSmallMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'photoSmall',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoSmallIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'photoSmall',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DBExtendedThumbnail, DBExtendedThumbnail, QAfterFilterCondition>
+      photoSmallIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'photoSmall',
+        value: '',
+      ));
+    });
+  }
+}
+
+extension DBExtendedThumbnailQueryObject on QueryBuilder<DBExtendedThumbnail,
+    DBExtendedThumbnail, QFilterCondition> {}
 
 // coverage:ignore-file
 // ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
@@ -6000,66 +6737,78 @@ const DBAudioSchema = Schema(
       name: r'date',
       type: IsarType.long,
     ),
-    r'duration': PropertySchema(
+    r'deezerThumbs': PropertySchema(
       id: 4,
+      name: r'deezerThumbs',
+      type: IsarType.object,
+      target: r'DBExtendedThumbnail',
+    ),
+    r'duration': PropertySchema(
+      id: 5,
       name: r'duration',
       type: IsarType.long,
     ),
     r'genreID': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'genreID',
       type: IsarType.long,
     ),
     r'hasLyrics': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'hasLyrics',
       type: IsarType.bool,
     ),
     r'hashCode': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'hashCode',
       type: IsarType.long,
     ),
     r'id': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'id',
       type: IsarType.long,
     ),
     r'isCached': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'isCached',
       type: IsarType.bool,
     ),
     r'isExplicit': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'isExplicit',
       type: IsarType.bool,
     ),
     r'isRestricted': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'isRestricted',
       type: IsarType.bool,
     ),
     r'lyrics': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'lyrics',
       type: IsarType.object,
       target: r'DBLyrics',
     ),
     r'ownerID': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'ownerID',
       type: IsarType.long,
     ),
     r'subtitle': PropertySchema(
-      id: 14,
+      id: 15,
       name: r'subtitle',
       type: IsarType.string,
     ),
     r'title': PropertySchema(
-      id: 15,
+      id: 16,
       name: r'title',
       type: IsarType.string,
+    ),
+    r'vkThumbs': PropertySchema(
+      id: 17,
+      name: r'vkThumbs',
+      type: IsarType.object,
+      target: r'DBExtendedThumbnail',
     )
   },
   estimateSize: _dBAudioEstimateSize,
@@ -6094,6 +6843,14 @@ int _dBAudioEstimateSize(
     }
   }
   {
+    final value = object.deezerThumbs;
+    if (value != null) {
+      bytesCount += 3 +
+          DBExtendedThumbnailSchema.estimateSize(
+              value, allOffsets[DBExtendedThumbnail]!, allOffsets);
+    }
+  }
+  {
     final value = object.lyrics;
     if (value != null) {
       bytesCount += 3 +
@@ -6110,6 +6867,14 @@ int _dBAudioEstimateSize(
     final value = object.title;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.vkThumbs;
+    if (value != null) {
+      bytesCount += 3 +
+          DBExtendedThumbnailSchema.estimateSize(
+              value, allOffsets[DBExtendedThumbnail]!, allOffsets);
     }
   }
   return bytesCount;
@@ -6130,23 +6895,35 @@ void _dBAudioSerialize(
   );
   writer.writeString(offsets[2], object.artist);
   writer.writeLong(offsets[3], object.date);
-  writer.writeLong(offsets[4], object.duration);
-  writer.writeLong(offsets[5], object.genreID);
-  writer.writeBool(offsets[6], object.hasLyrics);
-  writer.writeLong(offsets[7], object.hashCode);
-  writer.writeLong(offsets[8], object.id);
-  writer.writeBool(offsets[9], object.isCached);
-  writer.writeBool(offsets[10], object.isExplicit);
-  writer.writeBool(offsets[11], object.isRestricted);
+  writer.writeObject<DBExtendedThumbnail>(
+    offsets[4],
+    allOffsets,
+    DBExtendedThumbnailSchema.serialize,
+    object.deezerThumbs,
+  );
+  writer.writeLong(offsets[5], object.duration);
+  writer.writeLong(offsets[6], object.genreID);
+  writer.writeBool(offsets[7], object.hasLyrics);
+  writer.writeLong(offsets[8], object.hashCode);
+  writer.writeLong(offsets[9], object.id);
+  writer.writeBool(offsets[10], object.isCached);
+  writer.writeBool(offsets[11], object.isExplicit);
+  writer.writeBool(offsets[12], object.isRestricted);
   writer.writeObject<DBLyrics>(
-    offsets[12],
+    offsets[13],
     allOffsets,
     DBLyricsSchema.serialize,
     object.lyrics,
   );
-  writer.writeLong(offsets[13], object.ownerID);
-  writer.writeString(offsets[14], object.subtitle);
-  writer.writeString(offsets[15], object.title);
+  writer.writeLong(offsets[14], object.ownerID);
+  writer.writeString(offsets[15], object.subtitle);
+  writer.writeString(offsets[16], object.title);
+  writer.writeObject<DBExtendedThumbnail>(
+    offsets[17],
+    allOffsets,
+    DBExtendedThumbnailSchema.serialize,
+    object.vkThumbs,
+  );
 }
 
 DBAudio _dBAudioDeserialize(
@@ -6164,21 +6941,31 @@ DBAudio _dBAudioDeserialize(
     ),
     artist: reader.readStringOrNull(offsets[2]),
     date: reader.readLongOrNull(offsets[3]),
-    duration: reader.readLongOrNull(offsets[4]),
-    genreID: reader.readLongOrNull(offsets[5]),
-    hasLyrics: reader.readBoolOrNull(offsets[6]),
-    id: reader.readLongOrNull(offsets[8]),
-    isCached: reader.readBoolOrNull(offsets[9]),
-    isExplicit: reader.readBoolOrNull(offsets[10]),
-    isRestricted: reader.readBoolOrNull(offsets[11]),
+    deezerThumbs: reader.readObjectOrNull<DBExtendedThumbnail>(
+      offsets[4],
+      DBExtendedThumbnailSchema.deserialize,
+      allOffsets,
+    ),
+    duration: reader.readLongOrNull(offsets[5]),
+    genreID: reader.readLongOrNull(offsets[6]),
+    hasLyrics: reader.readBoolOrNull(offsets[7]),
+    id: reader.readLongOrNull(offsets[9]),
+    isCached: reader.readBoolOrNull(offsets[10]),
+    isExplicit: reader.readBoolOrNull(offsets[11]),
+    isRestricted: reader.readBoolOrNull(offsets[12]),
     lyrics: reader.readObjectOrNull<DBLyrics>(
-      offsets[12],
+      offsets[13],
       DBLyricsSchema.deserialize,
       allOffsets,
     ),
-    ownerID: reader.readLongOrNull(offsets[13]),
-    subtitle: reader.readStringOrNull(offsets[14]),
-    title: reader.readStringOrNull(offsets[15]),
+    ownerID: reader.readLongOrNull(offsets[14]),
+    subtitle: reader.readStringOrNull(offsets[15]),
+    title: reader.readStringOrNull(offsets[16]),
+    vkThumbs: reader.readObjectOrNull<DBExtendedThumbnail>(
+      offsets[17],
+      DBExtendedThumbnailSchema.deserialize,
+      allOffsets,
+    ),
   );
   return object;
 }
@@ -6203,33 +6990,45 @@ P _dBAudioDeserializeProp<P>(
     case 3:
       return (reader.readLongOrNull(offset)) as P;
     case 4:
-      return (reader.readLongOrNull(offset)) as P;
+      return (reader.readObjectOrNull<DBExtendedThumbnail>(
+        offset,
+        DBExtendedThumbnailSchema.deserialize,
+        allOffsets,
+      )) as P;
     case 5:
       return (reader.readLongOrNull(offset)) as P;
     case 6:
-      return (reader.readBoolOrNull(offset)) as P;
-    case 7:
-      return (reader.readLong(offset)) as P;
-    case 8:
       return (reader.readLongOrNull(offset)) as P;
-    case 9:
+    case 7:
       return (reader.readBoolOrNull(offset)) as P;
+    case 8:
+      return (reader.readLong(offset)) as P;
+    case 9:
+      return (reader.readLongOrNull(offset)) as P;
     case 10:
       return (reader.readBoolOrNull(offset)) as P;
     case 11:
       return (reader.readBoolOrNull(offset)) as P;
     case 12:
+      return (reader.readBoolOrNull(offset)) as P;
+    case 13:
       return (reader.readObjectOrNull<DBLyrics>(
         offset,
         DBLyricsSchema.deserialize,
         allOffsets,
       )) as P;
-    case 13:
-      return (reader.readLongOrNull(offset)) as P;
     case 14:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 15:
       return (reader.readStringOrNull(offset)) as P;
+    case 16:
+      return (reader.readStringOrNull(offset)) as P;
+    case 17:
+      return (reader.readObjectOrNull<DBExtendedThumbnail>(
+        offset,
+        DBExtendedThumbnailSchema.deserialize,
+        allOffsets,
+      )) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -6610,6 +7409,23 @@ extension DBAudioQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<DBAudio, DBAudio, QAfterFilterCondition> deezerThumbsIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'deezerThumbs',
+      ));
+    });
+  }
+
+  QueryBuilder<DBAudio, DBAudio, QAfterFilterCondition>
+      deezerThumbsIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'deezerThumbs',
       ));
     });
   }
@@ -7354,6 +8170,22 @@ extension DBAudioQueryFilter
       ));
     });
   }
+
+  QueryBuilder<DBAudio, DBAudio, QAfterFilterCondition> vkThumbsIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'vkThumbs',
+      ));
+    });
+  }
+
+  QueryBuilder<DBAudio, DBAudio, QAfterFilterCondition> vkThumbsIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'vkThumbs',
+      ));
+    });
+  }
 }
 
 extension DBAudioQueryObject
@@ -7365,10 +8197,24 @@ extension DBAudioQueryObject
     });
   }
 
+  QueryBuilder<DBAudio, DBAudio, QAfterFilterCondition> deezerThumbs(
+      FilterQuery<DBExtendedThumbnail> q) {
+    return QueryBuilder.apply(this, (query) {
+      return query.object(q, r'deezerThumbs');
+    });
+  }
+
   QueryBuilder<DBAudio, DBAudio, QAfterFilterCondition> lyrics(
       FilterQuery<DBLyrics> q) {
     return QueryBuilder.apply(this, (query) {
       return query.object(q, r'lyrics');
+    });
+  }
+
+  QueryBuilder<DBAudio, DBAudio, QAfterFilterCondition> vkThumbs(
+      FilterQuery<DBExtendedThumbnail> q) {
+    return QueryBuilder.apply(this, (query) {
+      return query.object(q, r'vkThumbs');
     });
   }
 }
