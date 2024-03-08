@@ -566,15 +566,16 @@ class _SearchDisplayDialogState extends State<SearchDisplayDialog> {
                 children: [
                   // Кнопка "Назад".
                   if (isMobileLayout)
-                    IconButton(
-                      icon: Icon(
-                        Icons.adaptive.arrow_back,
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        bottom: 12,
                       ),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                  if (isMobileLayout)
-                    const SizedBox(
-                      width: 12,
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.adaptive.arrow_back,
+                        ),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
                     ),
 
                   // Поиск.

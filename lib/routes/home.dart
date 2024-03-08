@@ -95,6 +95,8 @@ Future<void> toggleTrackLike(
     // Здесь мы должны проверить, пытается ли пользователь восстановить ранее удалённый трек или нет.
     final bool shouldRestore = user.favoritesPlaylist!.audios!.contains(audio);
 
+    audio.isLiked = true;
+
     // Если пользователь пытается восстановить трек, то вызываем audio.restore,
     // в ином случае просто добавляем его методом audio.add.
     if (shouldRestore) {
@@ -126,11 +128,15 @@ Future<void> toggleTrackLike(
     // Добавляем трек в список фаворитов.
     user.favoritesPlaylist!.count += 1;
 
-    // Убеждаемся, что трек не существует в списке.
+    // Убеждаемся, что трек не существует в списке, после чего добавляем его в самое начало.
     if (!user.favoritesPlaylist!.audios!.contains(audio)) {
-      user.favoritesPlaylist!.audios!.add(audio);
+      user.favoritesPlaylist!.audios = {
+        audio,
+        ...user.favoritesPlaylist!.audios!,
+      };
     }
 
+    user.updatePlaylist(user.favoritesPlaylist!);
     user.markUpdated(false);
   } else {
     // Пользователь пытается удалить трек.
@@ -206,9 +212,6 @@ Future<void> toggleTrackLikeState(
       audio,
       isFavorite,
     );
-
-    // Посылаем обновления объекта пользователя.
-    user.markUpdated(false);
   } catch (e, stackTrace) {
     // ignore: use_build_context_synchronously
     showLogErrorDialog(
@@ -221,6 +224,9 @@ Future<void> toggleTrackLikeState(
   } finally {
     if (context.mounted) LoadingOverlay.of(context).hide();
   }
+
+  // Посылаем обновления объекта пользователя.
+  user.markUpdated(false);
 }
 
 /// Wrapper для [BottomMusicPlayer], который передаёт все нужные поля для [BottomMusicPlayer].
