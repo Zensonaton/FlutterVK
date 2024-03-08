@@ -2746,7 +2746,7 @@ class _RecommendedPlaylistsBlockState extends State<RecommendedPlaylistsBlock> {
                     right: 8,
                   ),
                   child: AudioPlaylistWidget(
-                    backgroundUrl: playlist.photo!.photo270!,
+                    backgroundUrl: playlist.photo?.photo270,
                     mediaKey: "${playlist.mediaKey}270",
                     name: playlist.title!,
                     description: playlist.subtitle,

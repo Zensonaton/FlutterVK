@@ -931,6 +931,15 @@ class UserProvider extends ChangeNotifier {
   }) async {
     ExtendedPlaylist? existingPlaylist = allPlaylists[playlist.mediaKey];
 
+    // Не позволяем пользователю сохранить плейлист "Музыка из результатов поиска".
+    if (playlist.ownerID == id! && playlist.id == -1) {
+      logger.w(
+        "Attempted to call updatePlaylist for 'search results' playlist!",
+      );
+
+      return;
+    }
+
     if (existingPlaylist == null) {
       // Ранее такового плейлиста не было, просто сохраняем и ничего не делаем.
 
