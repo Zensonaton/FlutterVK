@@ -496,7 +496,8 @@ class _HomeRouteState extends State<HomeRoute> {
       void getColorScheme() async {
         final (ColorScheme, ColorScheme)? schemes =
             await player.getColorSchemeAsync(
-                useBetterAlgorithm: user.settings.playerSchemeAlgorithm);
+          useBetterAlgorithm: user.settings.playerSchemeAlgorithm,
+        );
 
         if (schemes == null) return;
 

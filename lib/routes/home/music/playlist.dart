@@ -570,8 +570,6 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
 
     final bool hasTracksLoaded = !widget.playlist.isEmpty && !_loading;
 
-    final bool selected = player.currentPlaylist == widget.playlist;
-
     return Column(
       children: [
         // Внутреннее содержимое.
@@ -1170,39 +1168,38 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
               if (isMobileLayout)
                 Align(
                   alignment: Alignment.bottomRight,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8).copyWith(
-                      bottom: player.loaded ? 84 : null,
+                  child: AnimatedOpacity(
+                    opacity:
+                        player.currentPlaylist != widget.playlist ? 1.0 : 0.0,
+                    duration: const Duration(
+                      milliseconds: 500,
                     ),
-                    child: player.currentPlaylist != widget.playlist
-                        ? FloatingActionButton.extended(
-                            onPressed: () async {
-                              await player.setShuffle(true);
+                    curve: Curves.ease,
+                    child: AnimatedPadding(
+                      padding: const EdgeInsets.all(8).copyWith(
+                        bottom: player.loaded ? 84 : null,
+                      ),
+                      duration: const Duration(
+                        milliseconds: 500,
+                      ),
+                      curve: Curves.ease,
+                      child: FloatingActionButton.extended(
+                        onPressed: () async {
+                          await player.setShuffle(true);
 
-                              await player.setPlaylist(
-                                widget.playlist,
-                                audio: widget.playlist.audios!.randomItem(),
-                              );
-                            },
-                            label: Text(
-                              selected
-                                  ? player.playing
-                                      ? AppLocalizations.of(context)!
-                                          .music_shuffleAndPlayPause
-                                      : AppLocalizations.of(context)!
-                                          .music_shuffleAndPlayResume
-                                  : AppLocalizations.of(context)!
-                                      .music_shuffleAndPlay,
-                            ),
-                            icon: Icon(
-                              selected
-                                  ? player.playing
-                                      ? Icons.pause
-                                      : Icons.play_arrow
-                                  : Icons.shuffle,
-                            ),
-                          )
-                        : null,
+                          await player.setPlaylist(
+                            widget.playlist,
+                            audio: widget.playlist.audios!.randomItem(),
+                          );
+                        },
+                        label: Text(
+                          AppLocalizations.of(context)!.music_shuffleAndPlay,
+                        ),
+                        icon: const Icon(
+                          Icons.shuffle,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
             ],
