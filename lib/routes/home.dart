@@ -489,23 +489,28 @@ class _HomeRouteState extends State<HomeRoute> {
     });
 
     // Слушаем события изменения текущего трека в плеере, что бы загружать обложку, текст песни, а так же создание цветовой схемы.
-    player.currentIndexStream.listen((int? index) {
+    player.currentIndexStream.listen((int? index) async {
       if (index == null || !player.loaded) return;
 
+      /// Указывает, были ли получены цвета для этого трека или нет.
+      bool gotColorscheme = false;
+
       /// Внутренний метод, который создаёт [ColorScheme], после чего сохраняет его внутрь [PlayerSchemeProvider].
-      void getColorScheme() async {
+      Future<bool> getColorScheme() async {
         final (ColorScheme, ColorScheme)? schemes =
             await player.getColorSchemeAsync(
           useBetterAlgorithm: user.settings.playerSchemeAlgorithm,
         );
 
-        if (schemes == null) return;
+        if (schemes == null) return false;
 
         colorScheme.setScheme(
           schemes.$1,
           schemes.$2,
           player.currentAudio!.mediaKey,
         );
+
+        return true;
       }
 
       // Загружаем информацию по треку, если есть соединение с интернетом.
@@ -516,11 +521,16 @@ class _HomeRouteState extends State<HomeRoute> {
           user,
           allowDeezer: user.settings.deezerThumbnails,
           saveInDB: true,
-        ).then((_) => getColorScheme());
+        ).then((_) async {
+          // Если мы уже получили цвета обложки, то ничего не делаем.
+          if (gotColorscheme) return;
+
+          await getColorScheme();
+        });
       }
 
       // Запускаем задачу по получению цветовой схемы.
-      getColorScheme();
+      gotColorscheme = await getColorScheme();
     });
   }
 

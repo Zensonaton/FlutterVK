@@ -1234,12 +1234,16 @@ class VKMusicPlayer {
 
     // Если мы должны использовать качественный алгоритм, то используем метод ColorScheme.fromImageProvider().
     if (useBetterAlgorithm) {
-      lightScheme =
-          await ColorScheme.fromImageProvider(provider: imageProvider);
-      darkScheme = await ColorScheme.fromImageProvider(
-        provider: imageProvider,
-        brightness: Brightness.dark,
-      );
+      final result = await Future.wait([
+        ColorScheme.fromImageProvider(provider: imageProvider),
+        ColorScheme.fromImageProvider(
+          provider: imageProvider,
+          brightness: Brightness.dark,
+        ),
+      ]);
+
+      lightScheme = result[0];
+      darkScheme = result[1];
     } else {
       // Используем менее точный, но более быстрый алгоритм, используя PaletteGenerator.
 
