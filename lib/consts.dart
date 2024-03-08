@@ -31,7 +31,7 @@ const int discordAppID = 1195224178996027412;
 const String tracksCacheReadmeFileName = "Abc_123_README.txt";
 
 /// Магическая константа, характеризующая размер в мегабайтах у одной минуты `mp3`-трека.
-const double trackSizePerMin = 2.4;
+const double trackSizePerMin = 2.2;
 
 /// Случайные названия треков, используемые в Skeleton Loader'ах.
 const List<String> fakeTrackNames = [
@@ -77,3 +77,10 @@ const List<String> fakeTrackLyrics = [
 
 /// Значение от 0.0 до 1.0, указывающее то, начиная с какого процента "прослушанности" трека появляется надпись "Сыграет следующим: Артист - Трек" в интерфейсе проигрывателя.
 const double nextPlayingTextProgress = 0.85;
+
+/// URL на страницу с авторизацией Spotify.
+const String spotifyAuthUrl = "https://accounts.spotify.com";
+
+/// URL на страницу с информацией по получению значения Cookie `sp_dc` из браузера.
+const String wikiSpotifySPDCcookie =
+    "https://github.com/Zensonaton/FlutterVK/wiki/Получение-значения-sp_dc-для-авторизации-Spotify";

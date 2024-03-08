@@ -5,6 +5,10 @@ import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:shared_preferences/shared_preferences.dart";
 
+import "../api/spotify/get_lyrics.dart";
+import "../api/spotify/get_token.dart";
+import "../api/spotify/search.dart";
+import "../api/spotify/shared.dart";
 import "../api/vk/audio/add.dart";
 import "../api/vk/audio/delete.dart";
 import "../api/vk/audio/edit.dart";
@@ -606,6 +610,9 @@ class Settings {
 
   /// Указывает, что плеер будет использовать более точный, но медленный алгоритм для получения цветов из обложки трека.
   bool playerSchemeAlgorithm = false;
+
+  /// Указывает, что приложение сможет загружать тексты песен со Spotify.
+  bool spotifyLyrics = false;
 }
 
 /// Provider для получения объекта пользователя в контексте интерфейса приложения.
@@ -702,6 +709,24 @@ class UserProvider extends ChangeNotifier {
   /// Настройки пользователя.
   Settings settings = Settings();
 
+  /// Значение Cookie `sp_dc` для Spotify.
+  String? spDCcookie;
+
+  /// Access-токен для Spotify, получаемый при помощи [spDCcookie].
+  ///
+  /// **Предупреждение**: Данное поле нельзя сохранять куда-либо, оно получается при помощи API-запроса с передачей [spDCcookie].
+  String? spotifyAPIToken;
+
+  /// [DateTime], отображающий время того, когда [spotifyAPIToken] перестанет быть валидным.
+  DateTime? spotifyAPITokenExpireDate;
+
+  /// Указывает, что [spotifyAPIToken] валиден, и им можно пользоваться.
+  ///
+  /// Возвращает `false`, если [spotifyAPIToken] пуст.
+  bool get spotifyTokenValid => spotifyAPITokenExpireDate != null
+      ? DateTime.now().isBefore(spotifyAPITokenExpireDate!)
+      : false;
+
   UserProvider(
     this.isAuthorized, {
     this.mainToken,
@@ -733,6 +758,9 @@ class UserProvider extends ChangeNotifier {
     photoMaxOrigUrl = null;
     playlistsCount = null;
     allPlaylists = {};
+    spDCcookie = null;
+    spotifyAPIToken = null;
+    spotifyAPITokenExpireDate = null;
 
     // Удаляем сохранённые данные SharedPreferences.
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -776,6 +804,9 @@ class UserProvider extends ChangeNotifier {
     if (photoMaxUrl != null) await prefs.setString("PhotoMax", photoMaxUrl!);
     if (photoMaxOrigUrl != null) {
       await prefs.setString("PhotoMaxOrig", photoMaxOrigUrl!);
+    }
+    if (spDCcookie != null) {
+      await prefs.setString("sp_dc", spDCcookie!);
     }
     await prefs.setBool(
       "MyMusicChipEnabled",
@@ -857,6 +888,10 @@ class UserProvider extends ChangeNotifier {
       "PlayerSchemeAlgorithm",
       settings.playerSchemeAlgorithm,
     );
+    await prefs.setBool(
+      "SpotifyLyrics",
+      settings.spotifyLyrics,
+    );
   }
 
   /// Загружает данный объект пользователя с диска.
@@ -878,6 +913,7 @@ class UserProvider extends ChangeNotifier {
     photo50Url = prefs.getString("Photo50");
     photoMaxUrl = prefs.getString("PhotoMax");
     photoMaxOrigUrl = prefs.getString("PhotoMaxOrig");
+    spDCcookie = prefs.getString("sp_dc");
     settings.myMusicChipEnabled = prefs.getBool("MyMusicChipEnabled") ?? true;
     settings.playlistsChipEnabled =
         prefs.getBool("PlaylistsChipEnabled") ?? true;
@@ -907,6 +943,7 @@ class UserProvider extends ChangeNotifier {
     settings.deezerThumbnails = prefs.getBool("DeezerThumbnails") ?? false;
     settings.playerSchemeAlgorithm =
         prefs.getBool("PlayerSchemeAlgorithm") ?? false;
+    settings.spotifyLyrics = prefs.getBool("SpotifyLyrics") ?? false;
 
     markUpdated(false);
 
@@ -1364,5 +1401,126 @@ class UserProvider extends ChangeNotifier {
     }
 
     return massAudios;
+  }
+
+  /// Обновляет поле [spotifyAPIToken], если токен истёк ([spotifyTokenValid] = `false`), либо он не был установлен.
+  ///
+  /// Требует, что бы [spDCcookie] не был равен `null`.
+  Future<void> updateSpotifyToken([String? token]) async {
+    token ??= spDCcookie;
+
+    assert(token != null, "sp_dc cookie not set");
+
+    // Если токен ещё актуален, то ничего не делаем.
+    if (spotifyAPIToken != null && spotifyTokenValid) return;
+
+    logger.d("Refreshing Spotify access token...");
+
+    // Обновляем токен.
+    final SpotifyAPIGetTokenResponse response = await spotify_get_token(token!);
+    if (response.error != null) {
+      throw Exception(
+        "API Error: ${response.error!.message}",
+      );
+    }
+
+    assert(
+      !response.isAnonymous!,
+      "Spotify used anonymous authorization",
+    );
+
+    // Всё ок, запоминаем новый токен.
+    spDCcookie = token;
+    spotifyAPIToken = response.accessToken!;
+    spotifyAPITokenExpireDate =
+        DateTime.fromMillisecondsSinceEpoch(response.expirationTimestampMS!);
+
+    logger.d(
+      "Spotify accessToken will expire after ${Duration(milliseconds: response.expirationTimestampMS! - DateTime.now().millisecondsSinceEpoch)}",
+    );
+  }
+
+  /// Возвращает текст трека при помощи API Spotify.
+  Future<Lyrics?> spotifyGetTrackLyrics(
+    String artist,
+    String title,
+    int duration,
+  ) async {
+    await updateSpotifyToken();
+
+    // Выполняем поиск.
+    final SpotifyAPISearchResponse searchResponse = await spotify_search(
+      spotifyAPIToken!,
+      artist,
+      title,
+    );
+    final SpotifyTrack track = searchResponse.tracks.items[0];
+
+    // Загружаем текст трека.
+    final SpotifyAPIGetLyricsResponse? lyricsResponse =
+        await spotify_get_lyrics(
+      spotifyAPIToken!,
+      track.id,
+    );
+
+    // Если текст песни не дан, то ничего не делаем.
+    if (lyricsResponse == null) return null;
+
+    final SpotifyLyrics lyrics = lyricsResponse.lyrics;
+
+    final int spotifyDuration = track.durationMS;
+    final double speedMultiplier = (duration * 1000) / spotifyDuration;
+
+    logger.d(
+      "Spotify lyrics type: ${lyrics.syncType}, Spotify track duration: $spotifyDuration, VK track duration: $duration (mult: $speedMultiplier)",
+    );
+
+    // Конвертируем формат текста песни Spotify в формат, принимаемый Flutter VK.
+    List<String>? textLyrics;
+    List<LyricTimestamp>? timestamps;
+
+    // Текст не синхронизирован по времени.
+    if (lyrics.syncType == "UNSYNCED") {
+      textLyrics = lyrics.lines
+          .map(
+            (lyric) => lyric.words,
+          )
+          .toList();
+    } else if (lyrics.syncType == "LINE_SYNCED") {
+      timestamps = [];
+
+      for (var index = 0; index < lyrics.lines.length; index++) {
+        final SpotifyLyricLine line = lyrics.lines[index];
+        final SpotifyLyricLine? nextLine =
+            lyrics.lines.elementAtOrNull(index + 1);
+
+        final String text = line.words.trim();
+        final bool interlude = text == "♪";
+
+        // Если строчка пуста, то пропускаем её.
+        if (text.isEmpty) continue;
+
+        timestamps.add(
+          LyricTimestamp(
+            line: !interlude ? line.words : null,
+            begin: (line.startTimeMS * speedMultiplier).toInt(),
+            end: ((line.endTimeMS != 0
+                        ? line.endTimeMS
+                        : nextLine?.startTimeMS ?? track.durationMS) *
+                    speedMultiplier)
+                .toInt(),
+            interlude: interlude,
+          ),
+        );
+      }
+    } else {
+      logger.w("Found unknown Spotify lyrics type: ${lyrics.syncType}");
+    }
+
+    return Lyrics(
+      language: lyrics.language,
+      text: textLyrics,
+      timestamps: timestamps,
+    );
   }
 }

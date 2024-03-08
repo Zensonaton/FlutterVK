@@ -57,7 +57,7 @@ class DuplicateWarningDialog extends StatelessWidget {
             AppLocalizations.of(context)!.general_no,
           ),
         ),
-        TextButton(
+        FilledButton(
           onPressed: () async {
             // Проверяем наличие интернета.
             if (!networkRequiredDialog(context)) return;
@@ -520,6 +520,8 @@ class _HomeRouteState extends State<HomeRoute> {
           player.currentPlaylist!,
           user,
           allowDeezer: user.settings.deezerThumbnails,
+          allowSpotifyLyrics:
+              user.settings.spotifyLyrics && user.spDCcookie != null,
           saveInDB: true,
         ).then((_) async {
           // Если мы уже получили цвета обложки, то ничего не делаем.

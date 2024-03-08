@@ -243,7 +243,7 @@ class _WelcomeDialogState extends State<WelcomeDialog> {
 }
 
 /// Route для авторизации на свою страницу ВКонтакте.
-class LoginRoute extends StatefulWidget {
+class LoginRoute extends StatelessWidget {
   /// Указывает, что вместо авторизации с Kate Mobile (главный токен) будет проводиться вторичная авторизация от имени VK Admin.
   ///
   /// Используется при подключении рекомендаций ВКонтакте.
@@ -255,20 +255,15 @@ class LoginRoute extends StatefulWidget {
   });
 
   @override
-  State<LoginRoute> createState() => _LoginRouteState();
-}
-
-class _LoginRouteState extends State<LoginRoute> {
-  @override
   Widget build(BuildContext context) {
     if (isMobile) {
       return MobileLoginWidget(
-        useAlternateAuth: widget.useAlternateAuth,
+        useAlternateAuth: useAlternateAuth,
       );
     }
 
     return DesktopLoginWidget(
-      useAlternateAuth: widget.useAlternateAuth,
+      useAlternateAuth: useAlternateAuth,
     );
   }
 }

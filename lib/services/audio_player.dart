@@ -115,12 +115,30 @@ class CachedStreamedAudio extends StreamAudioSource {
     ExtendedPlaylist playlist,
     UserProvider user, {
     bool allowDeezer = false,
+    bool allowSpotifyLyrics = false,
     bool saveInDB = false,
   }) async {
     logger.d("Called downloadTrackData for $audio");
 
     final List<Future> tasks = [];
     bool shouldUpdateDB = false;
+
+    /// Добавляет задачу по загрузке текста песни при помощи Spotify в очередь.
+    void spotifyLyricsTask() {
+      tasks.add(
+        user
+            .spotifyGetTrackLyrics(audio.artist, audio.title, audio.duration)
+            .then(
+          (lyrics) {
+            if (lyrics == null) return;
+
+            audio.lyrics = lyrics;
+            audio.hasLyrics = true;
+            shouldUpdateDB = true;
+          },
+        ),
+      );
+    }
 
     final FileInfo? cachedThumb =
         await CachedAlbumImagesManager.instance.getFileFromCache(
@@ -171,19 +189,30 @@ class CachedStreamedAudio extends StreamAudioSource {
       }
     }
 
-    // Если это возможно, то так же загружаем текст песни.
-    if (audio.hasLyrics ?? false) {
-      shouldUpdateDB = true;
+    // Если это возможно, то так же загружаем текст песни, если его ещё нет.
+    if (audio.lyrics == null) {
+      if (audio.hasLyrics ?? false) {
+        tasks.add(
+          user.audioGetLyrics(audio.mediaKey).then((response) {
+            raiseOnAPIError(response);
 
-      tasks.add(
-        user.audioGetLyrics(audio.mediaKey).then((response) {
-          raiseOnAPIError(response);
+            audio.lyrics = response.response!.lyrics;
+            shouldUpdateDB = true;
 
-          audio.lyrics = response.response!.lyrics;
-        }),
-      );
+            // Если ВКонтакте вернул несинхронизированный текст песни, то тогда загружаем его со Spotify.
+            if (allowSpotifyLyrics && audio.lyrics?.timestamps == null) {
+              spotifyLyricsTask();
+            }
+          }),
+        );
+      } else if (allowSpotifyLyrics) {
+        // Загружаем текст песни со Spotify, поскольку мы точно знаем, что ВК не вернёт текст песни.
+
+        spotifyLyricsTask();
+      }
     }
 
+    // Ждём загрузки всех задач сразу.
     await Future.wait(tasks);
 
     // Если это необходимо, то обновляем запись в БД.

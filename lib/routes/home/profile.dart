@@ -20,10 +20,10 @@ import "../../services/logger.dart";
 import "../../services/updater.dart";
 import "../../utils.dart";
 import "../../widgets/dialogs.dart";
-
 import "../../widgets/page_route_builders.dart";
 import "../login.dart";
 import "../welcome.dart";
+import "profile/spotify_auth.dart";
 
 /// Диалог, подтверждающий у пользователя действие для выхода из аккаунта на экране [HomeProfilePage].
 ///
@@ -56,7 +56,7 @@ class ProfileLogoutExitDialog extends StatelessWidget {
             AppLocalizations.of(context)!.general_no,
           ),
         ),
-        TextButton(
+        FilledButton(
           onPressed: () {
             user.logout();
 
@@ -105,7 +105,7 @@ class ConnectRecommendationsDialog extends StatelessWidget {
             AppLocalizations.of(context)!.general_no,
           ),
         ),
-        TextButton(
+        FilledButton(
           onPressed: () {
             Navigator.pop(context);
 
@@ -155,7 +155,7 @@ class DisableUpdatesDialog extends StatelessWidget {
             AppLocalizations.of(context)!.general_no,
           ),
         ),
-        TextButton(
+        FilledButton(
           onPressed: () => Navigator.of(context).pop(true),
           child: Text(
             AppLocalizations.of(context)!.profile_disableUpdatesWarningDisable,
@@ -416,6 +416,53 @@ class UpdatesChannelDialog extends StatelessWidget {
           value: UpdateBranch.prereleases,
           groupValue: user.settings.updateBranch,
           onChanged: onValueChanged,
+        ),
+      ],
+    );
+  }
+}
+
+/// Диалог, предупреждающий пользователя перед подключением функции "Тексты песен из Spotify".
+///
+/// Пример использования:
+/// ```dart
+/// showDialog(
+/// 	context: context,
+/// 	builder: (context) => const SpotifyLyricsDialog()
+/// );
+/// ```
+class SpotifyLyricsDialog extends StatelessWidget {
+  const SpotifyLyricsDialog({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialDialog(
+      icon: Icons.lyrics,
+      title: AppLocalizations.of(context)!.profile_spotifyLyricsAuthorizeTitle,
+      text: AppLocalizations.of(context)!
+          .profile_spotifyLyricsAuthorizeDescription,
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(
+            AppLocalizations.of(context)!.general_close,
+          ),
+        ),
+        FilledButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+
+            Navigator.of(context).push(
+              Material3PageRoute(
+                builder: (BuildContext context) => const SpotifyLoginRoute(),
+              ),
+            );
+          },
+          child: Text(
+            AppLocalizations.of(context)!.profile_spotifyLyricsAuthorizeButton,
+          ),
         ),
       ],
     );
@@ -745,7 +792,7 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                               },
                             ),
 
-                          // Действие при закрытии.
+                          // Поведение при закрытии.
                           if (isDesktop)
                             ListTile(
                               leading: const Icon(
@@ -1119,6 +1166,64 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                             },
                           ),
 
+                          // Тексты песен из Spotify, если авторизация не пройдена.
+                          if (user.spDCcookie == null)
+                            ListTile(
+                              leading: const Icon(
+                                Icons.lyrics,
+                              ),
+                              title: Text(
+                                AppLocalizations.of(context)!
+                                    .profile_spotifyLyricsTitle,
+                              ),
+                              subtitle: Text(
+                                AppLocalizations.of(context)!
+                                    .profile_spotifyLyricsDescription,
+                              ),
+                              onTap: () => showDialog(
+                                context: context,
+                                builder: (BuildContext context) =>
+                                    const SpotifyLyricsDialog(),
+                              ),
+                              trailing: !isMobileLayout
+                                  ? FilledButton(
+                                      onPressed: () => showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) =>
+                                            const SpotifyLyricsDialog(),
+                                      ),
+                                      child: Text(
+                                        AppLocalizations.of(context)!
+                                            .profile_spotifyLyricsAuthorizeButton,
+                                      ),
+                                    )
+                                  : null,
+                            ),
+
+                          // Тексты песен из Spotify, если авторизация пройдена.
+                          if (user.spDCcookie != null)
+                            SwitchListTile(
+                              secondary: const Icon(
+                                Icons.lyrics,
+                              ),
+                              title: Text(
+                                AppLocalizations.of(context)!
+                                    .profile_spotifyLyricsTitle,
+                              ),
+                              subtitle: Text(
+                                AppLocalizations.of(context)!
+                                    .profile_spotifyLyricsDescription,
+                              ),
+                              value: user.settings.spotifyLyrics,
+                              onChanged: (bool? enabled) async {
+                                if (enabled == null) return;
+
+                                user.settings.spotifyLyrics = enabled;
+
+                                user.markUpdated();
+                              },
+                            ),
+
                           // Экспорт списка треков.
                           ListTile(
                             leading: const Icon(
@@ -1455,6 +1560,19 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                                     content: Text("OK."),
                                   ),
                                 );
+                              },
+                            ),
+
+                            // Debug-тест.
+                            ListTile(
+                              leading: const Icon(
+                                Icons.bug_report,
+                              ),
+                              title: const Text(
+                                "DEBUG-тест",
+                              ),
+                              onTap: () async {
+                                // No-op.
                               },
                             ),
                           ],

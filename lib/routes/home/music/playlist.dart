@@ -271,7 +271,7 @@ class EnableCacheDialog extends StatelessWidget {
             AppLocalizations.of(context)!.general_no,
           ),
         ),
-        TextButton(
+        FilledButton(
           onPressed: () => Navigator.of(context).pop(true),
           child: Text(
             AppLocalizations.of(context)!.music_enableTrackCachingButton,
@@ -317,7 +317,7 @@ class CacheDisableWarningDialog extends StatelessWidget {
           ),
 
         // "Удалить".
-        TextButton(
+        FilledButton(
           onPressed: () => Navigator.of(context).pop(true),
           child: Text(
             AppLocalizations.of(context)!.music_disableTrackCachingButton,
