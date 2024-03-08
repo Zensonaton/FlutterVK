@@ -977,6 +977,7 @@ class UserProvider extends ChangeNotifier {
           newAudio.album ??= audio.album;
           newAudio.hasLyrics ??= audio.hasLyrics;
           newAudio.lyrics ??= audio.lyrics;
+          newAudio.vkThumbs ??= audio.vkThumbs;
 
           existingPlaylist.audios!.add(newAudio);
         }
