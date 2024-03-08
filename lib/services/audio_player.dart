@@ -1196,8 +1196,10 @@ class VKMusicPlayer {
 
   /// Создаёт две цветовых схемы из цветов плеера: [Brightness.light] и [Brightness.dark].
   ///
-  /// Данный метод при повторном вызове (если уже идёт процесс создания цветовой схемы) возвращает null. Результаты данного метода кэшируются, поэтому можно повторно вызывать этот метод, если [Audio.mediaKey] одинаков.
-  Future<(ColorScheme, ColorScheme)?> getColorSchemeAsync() async {
+  /// Данный метод при повторном вызове (если уже идёт процесс создания цветовой схемы) возвращает null. Результаты данного метода кэшируются, поэтому можно повторно вызывать этот метод, если [Audio.mediaKey] одинаков. [useBetterAlgorithm] указывает, что будет использоваться более точный, но медленный алгоритм для получения цветовой схемы.
+  Future<(ColorScheme, ColorScheme)?> getColorSchemeAsync({
+    bool useBetterAlgorithm = false,
+  }) async {
     final AppLogger logger = getLogger("getColorSchemeAsync");
     final Stopwatch watch = Stopwatch()..start();
 
@@ -1207,7 +1209,8 @@ class VKMusicPlayer {
           player.currentAudio!.mediaKey,
         )) return null;
 
-    final String cacheKey = "${player.currentAudio!.mediaKey}small";
+    final String cacheKey =
+        "${player.currentAudio!.mediaKey}$useBetterAlgorithm";
 
     // Пытаемся извлечь значение цветовых схем из кэша.
     if (imageColorSchemeCache.containsKey(cacheKey)) {
@@ -1219,27 +1222,44 @@ class VKMusicPlayer {
 
     logger.d("Creating ColorScheme for $cacheKey");
 
-    // Извлекаем цвета из изображения, делая объект PaletteGenerator.
-    final PaletteGenerator palette = await PaletteGenerator.fromImageProvider(
-      CachedNetworkImageProvider(
-        player.currentAudio!.smallestThumbnail!,
-        cacheKey: cacheKey,
-        cacheManager: CachedNetworkImagesManager.instance,
-      ),
+    // Загружаем изображение.
+    final ImageProvider imageProvider = CachedNetworkImageProvider(
+      player.currentAudio!.smallestThumbnail!,
+      cacheKey: cacheKey,
+      cacheManager: CachedNetworkImagesManager.instance,
     );
 
-    // Превращаем наш PaletteGenerator в цветовые схемы.
-    final ColorScheme lightScheme = palette.dominantColor != null
-        ? ColorScheme.fromSeed(
-            seedColor: palette.dominantColor!.color,
-          )
-        : fallbackLightColorScheme;
-    final ColorScheme darkScheme = palette.dominantColor != null
-        ? ColorScheme.fromSeed(
-            seedColor: palette.dominantColor!.color,
-            brightness: Brightness.dark,
-          )
-        : fallbackDarkColorScheme;
+    ColorScheme? lightScheme;
+    ColorScheme? darkScheme;
+
+    // Если мы должны использовать качественный алгоритм, то используем метод ColorScheme.fromImageProvider().
+    if (useBetterAlgorithm) {
+      lightScheme =
+          await ColorScheme.fromImageProvider(provider: imageProvider);
+      darkScheme = await ColorScheme.fromImageProvider(
+        provider: imageProvider,
+        brightness: Brightness.dark,
+      );
+    } else {
+      // Используем менее точный, но более быстрый алгоритм, используя PaletteGenerator.
+
+      // Извлекаем цвета из изображения, делая объект PaletteGenerator.
+      final PaletteGenerator palette =
+          await PaletteGenerator.fromImageProvider(imageProvider);
+
+      // Превращаем наш PaletteGenerator в цветовые схемы.
+      lightScheme = palette.dominantColor != null
+          ? ColorScheme.fromSeed(
+              seedColor: palette.dominantColor!.color,
+            )
+          : fallbackLightColorScheme;
+      darkScheme = palette.dominantColor != null
+          ? ColorScheme.fromSeed(
+              seedColor: palette.dominantColor!.color,
+              brightness: Brightness.dark,
+            )
+          : fallbackDarkColorScheme;
+    }
 
     imageColorSchemeCache[cacheKey] = (lightScheme, darkScheme);
 

@@ -495,7 +495,8 @@ class _HomeRouteState extends State<HomeRoute> {
       /// Внутренний метод, который создаёт [ColorScheme], после чего сохраняет его внутрь [PlayerSchemeProvider].
       void getColorScheme() async {
         final (ColorScheme, ColorScheme)? schemes =
-            await player.getColorSchemeAsync();
+            await player.getColorSchemeAsync(
+                useBetterAlgorithm: user.settings.playerSchemeAlgorithm);
 
         if (schemes == null) return;
 

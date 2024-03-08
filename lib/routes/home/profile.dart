@@ -1019,6 +1019,29 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                               user.markUpdated();
                             },
                           ),
+
+                          // Точный алгоритм цветов плеера.
+                          SwitchListTile(
+                            secondary: const Icon(
+                              Icons.auto_fix_high,
+                            ),
+                            title: Text(
+                              AppLocalizations.of(context)!
+                                  .profile_playerSchemeAlgorithmTitle,
+                            ),
+                            subtitle: Text(
+                              AppLocalizations.of(context)!
+                                  .profile_playerSchemeAlgorithmDescription,
+                            ),
+                            value: user.settings.playerSchemeAlgorithm,
+                            onChanged: (bool? enabled) async {
+                              if (enabled == null) return;
+
+                              user.settings.playerSchemeAlgorithm = enabled;
+
+                              user.markUpdated();
+                            },
+                          ),
                         ],
                       ),
                     ),
@@ -1073,7 +1096,7 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                             ),
                           ),
 
-                          // Экспорт списка треков.
+                          // Загрузка отсутсвующих обложек из Deezer.
                           SwitchListTile(
                             secondary: const Icon(
                               Icons.image_search,

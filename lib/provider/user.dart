@@ -603,6 +603,9 @@ class Settings {
 
   /// Указывает, что приложение может загружать обложки треков с Deezer.
   bool deezerThumbnails = false;
+
+  /// Указывает, что плеер будет использовать более точный, но медленный алгоритм для получения цветов из обложки трека.
+  bool playerSchemeAlgorithm = false;
 }
 
 /// Provider для получения объекта пользователя в контексте интерфейса приложения.
@@ -850,6 +853,10 @@ class UserProvider extends ChangeNotifier {
       "DeezerThumbnails",
       settings.deezerThumbnails,
     );
+    await prefs.setBool(
+      "PlayerSchemeAlgorithm",
+      settings.playerSchemeAlgorithm,
+    );
   }
 
   /// Загружает данный объект пользователя с диска.
@@ -898,6 +905,8 @@ class UserProvider extends ChangeNotifier {
     settings.updateBranch =
         UpdateBranch.values[prefs.getInt("UpdateBranch") ?? 0];
     settings.deezerThumbnails = prefs.getBool("DeezerThumbnails") ?? false;
+    settings.playerSchemeAlgorithm =
+        prefs.getBool("PlayerSchemeAlgorithm") ?? false;
 
     markUpdated(false);
 

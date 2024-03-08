@@ -322,11 +322,15 @@
 
 	"profile_usePlayerColorsAppWideTitle": "Использование цветов плеера по всему приложению",
 
+	"profile_playerSchemeAlgorithmTitle": "Точный алгоритм цветов плеера",
+	"profile_playerSchemeAlgorithmDescription": "Указывает, что будет использоваться более точный, но медленный алгоритм для получения цветов плеера",
+
 
 	"profile_experimentalTitle": "Экспериментальные функции",
 
 	"profile_deezerThumbnailsTitle": "Загрузка отсутвующих обложек из Deezer",
 	"profile_deezerThumbnailsDescription": "Если ВКонтакте не вернул обложку трека, то приложение будет пытаться загрузить обложку из Deezer.\nМожет выдавать неправильные обложки, а так же есть риск IP-бана в Deezer",
+
 
 	"profile_exportMusicListTitle": "Экспорт списка треков",
 	"profile_exportMusicListDescription": "Список из {count, plural, one{{count} лайкнутого трека} other{{count} лайкнутых треков}}:",
