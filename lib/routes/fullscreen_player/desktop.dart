@@ -406,6 +406,11 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
     /// Указывает, что используется более компактный интерфейс.
     final bool compactLayout = MediaQuery.of(context).size.width <= 900;
 
+    /// Указывает, что большое изображение трека должно использовать меньший максимальный размер.
+    final bool compactBigFullscreenImage =
+        MediaQuery.of(context).size.width <= 1200 ||
+            MediaQuery.of(context).size.height <= 800;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -427,6 +432,7 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
             alignment: Alignment.bottomLeft,
             child: Row(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 // Изображение трека.
                 Hero(
@@ -435,10 +441,28 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                     duration: const Duration(
                       milliseconds: 500,
                     ),
-                    child: Container(
+                    child: AnimatedContainer(
                       key: ValueKey(
                         player.currentAudio!.mediaKey,
                       ),
+                      duration: const Duration(
+                        milliseconds: 500,
+                      ),
+                      width: 130 *
+                          ((user.settings.fullscreenBigThumbnail &&
+                                  MediaQuery.of(context).size.height > 600)
+                              ? compactBigFullscreenImage
+                                  ? 2
+                                  : 3
+                              : 1),
+                      height: 130 *
+                          ((user.settings.fullscreenBigThumbnail &&
+                                  MediaQuery.of(context).size.height > 600)
+                              ? compactBigFullscreenImage
+                                  ? 2
+                                  : 3
+                              : 1),
+                      curve: Curves.ease,
                       decoration: BoxDecoration(
                         boxShadow: [
                           BoxShadow(
@@ -453,22 +477,33 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                         borderRadius: BorderRadius.circular(
                           globalBorderRadius,
                         ),
-                        child: player.currentAudio!.maxThumbnail != null
-                            ? CachedNetworkImage(
-                                imageUrl: player.currentAudio!.maxThumbnail!,
-                                cacheKey: "${player.currentAudio!.mediaKey}max",
-                                width: 130,
-                                height: 130,
-                                fit: BoxFit.fill,
-                                placeholder:
-                                    (BuildContext context, String url) =>
-                                        const FallbackAudioAvatar(),
-                                cacheManager: CachedAlbumImagesManager.instance,
-                              )
-                            : const FallbackAudioAvatar(
-                                width: 130,
-                                height: 130,
-                              ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () {
+                              user.settings.fullscreenBigThumbnail =
+                                  !user.settings.fullscreenBigThumbnail;
+
+                              user.markUpdated();
+                            },
+                            child: player.currentAudio!.maxThumbnail != null
+                                ? CachedNetworkImage(
+                                    imageUrl:
+                                        player.currentAudio!.maxThumbnail!,
+                                    cacheKey:
+                                        "${player.currentAudio!.mediaKey}max",
+                                    memCacheHeight: 130 * 3,
+                                    memCacheWidth: 130 * 3,
+                                    fit: BoxFit.fill,
+                                    placeholder:
+                                        (BuildContext context, String url) =>
+                                            const FallbackAudioAvatar(),
+                                    cacheManager:
+                                        CachedAlbumImagesManager.instance,
+                                  )
+                                : const FallbackAudioAvatar(),
+                          ),
+                        ),
                       ),
                     ),
                   ),

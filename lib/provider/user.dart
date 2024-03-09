@@ -613,6 +613,9 @@ class Settings {
 
   /// Указывает, что приложение сможет загружать тексты песен со Spotify.
   bool spotifyLyrics = false;
+
+  /// Указывает, что полноэкранный плеер будет использовать изображение большого размера при Desktop Layout'е.
+  bool fullscreenBigThumbnail = false;
 }
 
 /// Provider для получения объекта пользователя в контексте интерфейса приложения.
@@ -892,6 +895,10 @@ class UserProvider extends ChangeNotifier {
       "SpotifyLyrics",
       settings.spotifyLyrics,
     );
+    await prefs.setBool(
+      "FullscreenBigThumbnail",
+      settings.fullscreenBigThumbnail,
+    );
   }
 
   /// Загружает данный объект пользователя с диска.
@@ -944,6 +951,8 @@ class UserProvider extends ChangeNotifier {
     settings.playerSchemeAlgorithm =
         prefs.getBool("PlayerSchemeAlgorithm") ?? false;
     settings.spotifyLyrics = prefs.getBool("SpotifyLyrics") ?? false;
+    settings.fullscreenBigThumbnail =
+        prefs.getBool("FullscreenBigThumbnail") ?? false;
 
     markUpdated(false);
 
