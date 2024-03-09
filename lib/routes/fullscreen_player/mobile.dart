@@ -17,7 +17,7 @@ import "../../widgets/fallback_audio_photo.dart";
 import "../../widgets/responsive_slider.dart";
 import "../fullscreen_player.dart";
 import "../home.dart";
-import "../home/music.dart";
+import "../home/music/bottom_audio_options.dart";
 
 /// Размер (ширина и высота) изображения по центру полноэкраннонного плеера при Mobile Layout'е.
 const double _playerImageSize = 400;
