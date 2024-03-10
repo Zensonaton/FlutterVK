@@ -112,6 +112,11 @@ class _MobileSpotifyLoginState extends State<MobileSpotifyLogin> {
                     spotifyAuthUrl,
                   ),
                 ),
+                initialSettings: InAppWebViewSettings(
+                  userAgent:
+                      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 afari/537.36",
+                  incognito: true,
+                ),
                 onLoadStop: (
                   InAppWebViewController controller,
                   WebUri? action,
