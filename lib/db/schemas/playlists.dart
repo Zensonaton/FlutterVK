@@ -427,6 +427,18 @@ class DBPlaylist {
   /// Список треков в данном плейлисте.
   final List<DBAudio>? audios;
 
+  /// Указывает, что данный плейлист является плейлистом из раздела "Какой сейчас вайб?" ВКонтакте.
+  final bool? isMoodPlaylist;
+
+  /// Указывает, что данный плейлист является фейковым плейлистом, олицетворяющий аудио микс ВКонтакте.
+  final bool? isAudioMixPlaylist;
+
+  /// ID данного аудио микса. Данное поле не-null только для аудио микс-плейлистов.
+  final String? mixID;
+
+  /// URL на Lottie-анимацию, которая используется как фон данного микса. Данное поле не-null только для аудио микс-плейлистов.
+  final String? backgroundAnimationUrl;
+
   /// Указывает процент "схожести" данного плейлиста. Данное поле не-null только для плейлистов из раздела "совпадения по вкусам".
   final double? simillarity;
 
@@ -438,28 +450,6 @@ class DBPlaylist {
 
   /// Указывает, что в данном плейлисте разрешено кэширование треков.
   final bool isCachingAllowed;
-
-  /// Создаёт из передаваемого объекта [Playlist] объект данного класа.
-  static DBPlaylist fromPlaylist(
-    Playlist playlist, {
-    required bool isCachingAllowed,
-  }) =>
-      DBPlaylist(
-        id: playlist.id,
-        ownerID: playlist.ownerID,
-        title: playlist.title,
-        description: playlist.description,
-        subtitle: playlist.subtitle,
-        count: playlist.count,
-        accessKey: playlist.accessKey,
-        followers: playlist.followers,
-        plays: playlist.plays,
-        createTime: playlist.createTime,
-        updateTime: playlist.updateTime,
-        isFollowing: playlist.isFollowing,
-        photo: playlist.photo?.asDBThumbnails,
-        isCachingAllowed: isCachingAllowed,
-      );
 
   /// Создаёт объект [DBPlaylist] из передаваемого объекта [ExtendedPlaylist].
   static DBPlaylist fromExtendedPlaylist(ExtendedPlaylist playlist) =>
@@ -477,11 +467,17 @@ class DBPlaylist {
         updateTime: playlist.updateTime,
         isFollowing: playlist.isFollowing,
         photo: playlist.photo?.asDBThumbnails,
-        audios: playlist.audios
-            ?.map(
-              (ExtendedAudio audio) => audio.asDBAudio,
-            )
-            .toList(),
+        audios: !playlist.isAudioMixPlaylist
+            ? playlist.audios
+                ?.map(
+                  (ExtendedAudio audio) => audio.asDBAudio,
+                )
+                .toList()
+            : null,
+        isMoodPlaylist: playlist.isMoodPlaylist,
+        isAudioMixPlaylist: playlist.isAudioMixPlaylist,
+        mixID: playlist.mixID,
+        backgroundAnimationUrl: playlist.backgroundAnimationUrl,
         simillarity: playlist.simillarity,
         color: playlist.color,
         knownTracks: playlist.knownTracks
@@ -530,6 +526,10 @@ class DBPlaylist {
     this.isFollowing,
     this.photo,
     this.audios,
+    this.isMoodPlaylist,
+    this.isAudioMixPlaylist,
+    this.mixID,
+    this.backgroundAnimationUrl,
     this.simillarity,
     this.color,
     this.knownTracks,

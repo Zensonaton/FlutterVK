@@ -360,6 +360,10 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
     /// Указывает, что блок с текстом песни будет показан.
     final bool showLyricsBlock = MediaQuery.of(context).size.height > 150;
 
+    /// Указывает, что кнопка для переключения shuffle работает.
+    final bool canToggleShuffle =
+        !(player.currentPlaylist?.isAudioMixPlaylist ?? false);
+
     return Column(
       children: [
         // Кнопки для лайка/дизлайка, а так же включения/отключения текста песни.
@@ -412,17 +416,18 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
 
                         // Плашка "Explicit".
                         if (player.currentAudio!.isExplicit && !smallerLayout)
-                          const SizedBox(
-                            width: 4,
-                          ),
-                        if (player.currentAudio!.isExplicit && !smallerLayout)
-                          Icon(
-                            Icons.explicit,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onBackground
-                                .withOpacity(0.5),
-                            size: 12,
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              left: 4,
+                            ),
+                            child: Icon(
+                              Icons.explicit,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onBackground
+                                  .withOpacity(0.5),
+                              size: 12,
+                            ),
                           ),
                       ],
                     ),
@@ -543,15 +548,19 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                   final enabled = snapshot.data ?? false;
 
                   return IconButton(
-                    onPressed: () async {
-                      await player.setShuffle(!enabled);
+                    onPressed: canToggleShuffle
+                        ? () async {
+                            await player.setShuffle(!enabled);
 
-                      user.settings.shuffleEnabled = !enabled;
-                      user.markUpdated();
-                    },
+                            user.settings.shuffleEnabled = !enabled;
+                            user.markUpdated();
+                          }
+                        : null,
                     icon: Icon(
                       enabled ? Icons.shuffle_on_outlined : Icons.shuffle,
-                      color: Theme.of(context).colorScheme.primary,
+                      color: canToggleShuffle
+                          ? Theme.of(context).colorScheme.primary
+                          : null,
                     ),
                   );
                 },

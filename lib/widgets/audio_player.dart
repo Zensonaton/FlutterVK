@@ -227,6 +227,8 @@ class BottomMusicPlayer extends StatefulWidget {
   final VoidCallback? onPreviousTrack;
 
   /// Метод, вызываемый при переключении режима случайного выбора треков.
+  ///
+  /// Если не указать, то кнопка будет неактивна.
   final ValueSetter<bool>? onShuffleToggle;
 
   /// Метод, вызываемый при переключении повтора трека.
@@ -351,6 +353,9 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
               color: widget.scheme.onPrimaryContainer,
             ),
           );
+
+    /// Указывает, что кнопка для переключения shuffle работает.
+    final bool canToggleShuffle = widget.onShuffleToggle != null;
 
     return AnimatedContainer(
       height: widget.useBigLayout ? 88 : 66,
@@ -666,18 +671,23 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
+                                // Кнопка для переключения shuffle.
                                 IconButton(
-                                  onPressed: () => widget.onShuffleToggle
-                                      ?.call(!widget.isShuffleEnabled),
+                                  onPressed: canToggleShuffle
+                                      ? () => widget.onShuffleToggle
+                                          ?.call(!widget.isShuffleEnabled)
+                                      : null,
                                   icon: Icon(
                                     widget.isShuffleEnabled
                                         ? Icons.shuffle_on_outlined
                                         : Icons.shuffle,
-                                    color: widget.scheme.onPrimaryContainer,
+                                    color: canToggleShuffle
+                                        ? widget.scheme.onPrimaryContainer
+                                        : null,
                                   ),
                                 ),
 
-                                // Прерыдущий трек.
+                                // Предыдущий трек.
                                 IconButton(
                                   onPressed: widget.onPreviousTrack,
                                   icon: Icon(

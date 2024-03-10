@@ -9,6 +9,34 @@ import "../shared.dart";
 
 part "get_audio.g.dart";
 
+/// Класс отдельного аудиомикса по типу "VK Mix".
+@JsonSerializable()
+class AudioMix {
+  /// ID данного микса.
+  final String id;
+
+  /// URL на Lottie-анимацию, которая используется как фон данного микса.
+  @JsonKey(name: "background_animation_url")
+  final String backgroundAnimationUrl;
+
+  /// Название данного микса.
+  final String title;
+
+  /// Опциональное описание данного микса.
+  final String description;
+
+  AudioMix({
+    required this.id,
+    required this.backgroundAnimationUrl,
+    required this.title,
+    required this.description,
+  });
+
+  factory AudioMix.fromJson(Map<String, dynamic> json) =>
+      _$AudioMixFromJson(json);
+  Map<String, dynamic> toJson() => _$AudioMixToJson(this);
+}
+
 /// Класс отдельного рекомендуемого плейлиста из раздела "совпадения по вкусам".
 @JsonSerializable()
 class SimillarPlaylist {
@@ -199,11 +227,16 @@ class APICatalogRealResponse {
   @JsonKey(name: "recommended_playlists")
   final List<SimillarPlaylist> recommendedPlaylists;
 
+  /// Перечисление аудио миксов по типу VK Mix.
+  @JsonKey(name: "audio_stream_mixes")
+  final List<AudioMix> audioStreamMixes;
+
   APICatalogRealResponse({
     required this.audios,
     required this.playlists,
     required this.catalog,
     required this.recommendedPlaylists,
+    required this.audioStreamMixes,
   });
 
   factory APICatalogRealResponse.fromJson(Map<String, dynamic> json) =>

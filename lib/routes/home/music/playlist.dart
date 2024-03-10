@@ -128,7 +128,9 @@ Future<void> onPlaylistPlayToggle(
   }
 
   // Если информация по плейлисту не загружена, то мы должны её загрузить.
-  if (playlist.audios == null || playlist.isDataCached) {
+  if (playlist.audios == null ||
+      playlist.isDataCached ||
+      playlist.areTracksCached) {
     LoadingOverlay.of(context).show();
 
     try {

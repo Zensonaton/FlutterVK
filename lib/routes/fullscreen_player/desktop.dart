@@ -411,6 +411,10 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
         MediaQuery.of(context).size.width <= 1200 ||
             MediaQuery.of(context).size.height <= 800;
 
+    /// Указывает, что кнопка для переключения shuffle работает.
+    final bool canToggleShuffle =
+        !(player.currentPlaylist?.isAudioMixPlaylist ?? false);
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -673,17 +677,21 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                           final bool enabled = snapshot.data ?? false;
 
                           return IconButton(
-                            onPressed: () async {
-                              await player.setShuffle(!enabled);
+                            onPressed: canToggleShuffle
+                                ? () async {
+                                    await player.setShuffle(!enabled);
 
-                              user.settings.shuffleEnabled = !enabled;
-                              user.markUpdated();
-                            },
+                                    user.settings.shuffleEnabled = !enabled;
+                                    user.markUpdated();
+                                  }
+                                : null,
                             icon: Icon(
                               enabled
                                   ? Icons.shuffle_on_outlined
                                   : Icons.shuffle,
-                              color: Theme.of(context).colorScheme.primary,
+                              color: canToggleShuffle
+                                  ? Theme.of(context).colorScheme.primary
+                                  : null,
                             ),
                           );
                         },

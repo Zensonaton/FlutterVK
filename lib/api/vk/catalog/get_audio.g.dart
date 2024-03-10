@@ -6,6 +6,20 @@ part of 'get_audio.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
+AudioMix _$AudioMixFromJson(Map<String, dynamic> json) => AudioMix(
+      id: json['id'] as String,
+      backgroundAnimationUrl: json['background_animation_url'] as String,
+      title: json['title'] as String,
+      description: json['description'] as String,
+    );
+
+Map<String, dynamic> _$AudioMixToJson(AudioMix instance) => <String, dynamic>{
+      'id': instance.id,
+      'background_animation_url': instance.backgroundAnimationUrl,
+      'title': instance.title,
+      'description': instance.description,
+    };
+
 SimillarPlaylist _$SimillarPlaylistFromJson(Map<String, dynamic> json) =>
     SimillarPlaylist(
       id: json['id'] as int,
@@ -118,6 +132,9 @@ APICatalogRealResponse _$APICatalogRealResponseFromJson(
       recommendedPlaylists: (json['recommended_playlists'] as List<dynamic>)
           .map((e) => SimillarPlaylist.fromJson(e as Map<String, dynamic>))
           .toList(),
+      audioStreamMixes: (json['audio_stream_mixes'] as List<dynamic>)
+          .map((e) => AudioMix.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
 
 Map<String, dynamic> _$APICatalogRealResponseToJson(
@@ -127,6 +144,7 @@ Map<String, dynamic> _$APICatalogRealResponseToJson(
       'playlists': instance.playlists,
       'catalog': instance.catalog,
       'recommended_playlists': instance.recommendedPlaylists,
+      'audio_stream_mixes': instance.audioStreamMixes,
     };
 
 APICatalogGetAudioResponse _$APICatalogGetAudioResponseFromJson(

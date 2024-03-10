@@ -12,6 +12,7 @@ import "package:responsive_builder/responsive_builder.dart";
 import "../api/vk/api.dart";
 import "../api/vk/audio/add.dart";
 import "../api/vk/audio/delete.dart";
+import "../api/vk/audio/get_stream_mix_audios.dart";
 import "../api/vk/audio/restore.dart";
 import "../enums.dart";
 import "../intents.dart";
@@ -28,6 +29,7 @@ import "../widgets/loading_overlay.dart";
 import "fullscreen_player.dart";
 import "home/messages.dart";
 import "home/music.dart";
+import "home/music/categories/realtime_playlists.dart";
 import "home/profile.dart";
 
 /// Диалог, предупреждающий о том, что трек уже сохранён.
@@ -329,6 +331,9 @@ class _BottomMusicPlayerWidgetState extends State<BottomMusicPlayerWidget> {
     final PlayerSchemeProvider colorScheme =
         Provider.of<PlayerSchemeProvider>(context, listen: false);
 
+    final bool isMixPlaylistPlaying =
+        player.currentPlaylist?.isAudioMixPlaylist ?? false;
+
     return BottomMusicPlayer(
       audio: player.smartCurrentAudio,
       nextAudio: player.smartNextAudio,
@@ -367,12 +372,14 @@ class _BottomMusicPlayerWidgetState extends State<BottomMusicPlayerWidget> {
                 .contains(LogicalKeyboardKey.shiftLeft),
       ),
       onMiniplayer: () => openMiniPlayer(context),
-      onShuffleToggle: (bool enabled) async {
-        await player.setShuffle(enabled);
-        user.settings.shuffleEnabled = enabled;
+      onShuffleToggle: !isMixPlaylistPlaying
+          ? (bool enabled) async {
+              await player.setShuffle(enabled);
+              user.settings.shuffleEnabled = enabled;
 
-        user.markUpdated();
-      },
+              user.markUpdated();
+            }
+          : null,
       onRepeatToggle: (bool enabled) => player.setLoop(
         enabled ? LoopMode.one : LoopMode.all,
       ),
@@ -539,6 +546,63 @@ class _HomeRouteState extends State<HomeRoute> {
 
       // Запускаем задачу по получению цветовой схемы.
       gotColorscheme = await getColorScheme();
+    });
+
+    // Отдельно слушаем события изменения индекса текущего трека, что бы добавлять треки в реальном времени, если это аудио микс.
+    player.currentIndexStream.listen((int? index) async {
+      if (index == null ||
+          !player.loaded ||
+          !(player.currentPlaylist?.isAudioMixPlaylist ?? false)) return;
+
+      final int count = player.currentPlaylist!.count;
+      final int tracksLeft = count - index;
+      final int tracksToAdd = tracksLeft <= minMixAudiosCount
+          ? (minMixAudiosCount - tracksLeft)
+          : 0;
+
+      logger.d(
+        "Mix index: $index/$count, should add $tracksToAdd tracks",
+      );
+
+      // Если у нас достаточно треков в очереди, то ничего не делаем.
+      if (tracksToAdd <= 0) return;
+
+      logger.d("Adding $tracksToAdd tracks to mix queue");
+      try {
+        final APIAudioGetStreamMixAudiosResponse response =
+            await user.audioGetStreamMixAudiosWithAlbums(count: tracksToAdd);
+        raiseOnAPIError(response);
+
+        final List<ExtendedAudio> newAudios = response.response!
+            .map(
+              (audio) => ExtendedAudio.fromAPIAudio(audio),
+            )
+            .toList();
+
+        // Добавляем треки в объект плейлиста.
+        player.currentPlaylist!.audios!.addAll(newAudios);
+        player.currentPlaylist!.count += response.response!.length;
+
+        // Добавляем треки в очередь воспроизведения плеера.
+        for (ExtendedAudio audio in newAudios) {
+          await player.addToQueueEnd(audio);
+        }
+      } catch (e, stackTrace) {
+        // ignore: use_build_context_synchronously
+        showLogErrorDialog(
+          "Ошибка при загрузке дополнительных треков для аудио микса: ",
+          e,
+          stackTrace,
+          logger,
+          context,
+        );
+
+        return;
+      }
+
+      logger.d(
+        "Successfully added $tracksToAdd tracks to mix queue (current: ${player.currentPlaylist!.count})",
+      );
     });
   }
 

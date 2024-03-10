@@ -139,7 +139,7 @@ class _MyPlaylistsBlockState extends State<MyPlaylistsBlock> {
                   ),
                   child: AudioPlaylistWidget(
                     backgroundUrl: playlist.photo?.photo270,
-                    mediaKey: "${playlist.mediaKey}270",
+                    cacheKey: "${playlist.mediaKey}270",
                     name: playlist.title!,
                     description: playlist.description,
                     selected: player.currentPlaylist == playlist,

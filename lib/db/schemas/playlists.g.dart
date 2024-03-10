@@ -28,90 +28,110 @@ const DBPlaylistSchema = CollectionSchema(
       type: IsarType.objectList,
       target: r'DBAudio',
     ),
-    r'color': PropertySchema(
+    r'backgroundAnimationUrl': PropertySchema(
       id: 2,
+      name: r'backgroundAnimationUrl',
+      type: IsarType.string,
+    ),
+    r'color': PropertySchema(
+      id: 3,
       name: r'color',
       type: IsarType.string,
     ),
     r'count': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'count',
       type: IsarType.long,
     ),
     r'createTime': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'createTime',
       type: IsarType.long,
     ),
     r'description': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'description',
       type: IsarType.string,
     ),
     r'followers': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'followers',
       type: IsarType.long,
     ),
     r'hashCode': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'hashCode',
       type: IsarType.long,
     ),
     r'id': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'id',
       type: IsarType.long,
     ),
+    r'isAudioMixPlaylist': PropertySchema(
+      id: 10,
+      name: r'isAudioMixPlaylist',
+      type: IsarType.bool,
+    ),
     r'isCachingAllowed': PropertySchema(
-      id: 9,
+      id: 11,
       name: r'isCachingAllowed',
       type: IsarType.bool,
     ),
     r'isFollowing': PropertySchema(
-      id: 10,
+      id: 12,
       name: r'isFollowing',
       type: IsarType.bool,
     ),
+    r'isMoodPlaylist': PropertySchema(
+      id: 13,
+      name: r'isMoodPlaylist',
+      type: IsarType.bool,
+    ),
     r'knownTracks': PropertySchema(
-      id: 11,
+      id: 14,
       name: r'knownTracks',
       type: IsarType.objectList,
       target: r'DBAudio',
     ),
+    r'mixID': PropertySchema(
+      id: 15,
+      name: r'mixID',
+      type: IsarType.string,
+    ),
     r'ownerID': PropertySchema(
-      id: 12,
+      id: 16,
       name: r'ownerID',
       type: IsarType.long,
     ),
     r'photo': PropertySchema(
-      id: 13,
+      id: 17,
       name: r'photo',
       type: IsarType.object,
       target: r'DBThumbnails',
     ),
     r'plays': PropertySchema(
-      id: 14,
+      id: 18,
       name: r'plays',
       type: IsarType.long,
     ),
     r'simillarity': PropertySchema(
-      id: 15,
+      id: 19,
       name: r'simillarity',
       type: IsarType.double,
     ),
     r'subtitle': PropertySchema(
-      id: 16,
+      id: 20,
       name: r'subtitle',
       type: IsarType.string,
     ),
     r'title': PropertySchema(
-      id: 17,
+      id: 21,
       name: r'title',
       type: IsarType.string,
     ),
     r'updateTime': PropertySchema(
-      id: 18,
+      id: 22,
       name: r'updateTime',
       type: IsarType.long,
     )
@@ -163,6 +183,12 @@ int _dBPlaylistEstimateSize(
     }
   }
   {
+    final value = object.backgroundAnimationUrl;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
     final value = object.color;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
@@ -185,6 +211,12 @@ int _dBPlaylistEstimateSize(
           bytesCount += DBAudioSchema.estimateSize(value, offsets, allOffsets);
         }
       }
+    }
+  }
+  {
+    final value = object.mixID;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
     }
   }
   {
@@ -223,33 +255,37 @@ void _dBPlaylistSerialize(
     DBAudioSchema.serialize,
     object.audios,
   );
-  writer.writeString(offsets[2], object.color);
-  writer.writeLong(offsets[3], object.count);
-  writer.writeLong(offsets[4], object.createTime);
-  writer.writeString(offsets[5], object.description);
-  writer.writeLong(offsets[6], object.followers);
-  writer.writeLong(offsets[7], object.hashCode);
-  writer.writeLong(offsets[8], object.id);
-  writer.writeBool(offsets[9], object.isCachingAllowed);
-  writer.writeBool(offsets[10], object.isFollowing);
+  writer.writeString(offsets[2], object.backgroundAnimationUrl);
+  writer.writeString(offsets[3], object.color);
+  writer.writeLong(offsets[4], object.count);
+  writer.writeLong(offsets[5], object.createTime);
+  writer.writeString(offsets[6], object.description);
+  writer.writeLong(offsets[7], object.followers);
+  writer.writeLong(offsets[8], object.hashCode);
+  writer.writeLong(offsets[9], object.id);
+  writer.writeBool(offsets[10], object.isAudioMixPlaylist);
+  writer.writeBool(offsets[11], object.isCachingAllowed);
+  writer.writeBool(offsets[12], object.isFollowing);
+  writer.writeBool(offsets[13], object.isMoodPlaylist);
   writer.writeObjectList<DBAudio>(
-    offsets[11],
+    offsets[14],
     allOffsets,
     DBAudioSchema.serialize,
     object.knownTracks,
   );
-  writer.writeLong(offsets[12], object.ownerID);
+  writer.writeString(offsets[15], object.mixID);
+  writer.writeLong(offsets[16], object.ownerID);
   writer.writeObject<DBThumbnails>(
-    offsets[13],
+    offsets[17],
     allOffsets,
     DBThumbnailsSchema.serialize,
     object.photo,
   );
-  writer.writeLong(offsets[14], object.plays);
-  writer.writeDouble(offsets[15], object.simillarity);
-  writer.writeString(offsets[16], object.subtitle);
-  writer.writeString(offsets[17], object.title);
-  writer.writeLong(offsets[18], object.updateTime);
+  writer.writeLong(offsets[18], object.plays);
+  writer.writeDouble(offsets[19], object.simillarity);
+  writer.writeString(offsets[20], object.subtitle);
+  writer.writeString(offsets[21], object.title);
+  writer.writeLong(offsets[22], object.updateTime);
 }
 
 DBPlaylist _dBPlaylistDeserialize(
@@ -266,31 +302,35 @@ DBPlaylist _dBPlaylistDeserialize(
       allOffsets,
       DBAudio(),
     ),
-    color: reader.readStringOrNull(offsets[2]),
-    count: reader.readLong(offsets[3]),
-    createTime: reader.readLongOrNull(offsets[4]),
-    description: reader.readStringOrNull(offsets[5]),
-    followers: reader.readLongOrNull(offsets[6]) ?? 0,
-    id: reader.readLong(offsets[8]),
-    isCachingAllowed: reader.readBool(offsets[9]),
-    isFollowing: reader.readBoolOrNull(offsets[10]),
+    backgroundAnimationUrl: reader.readStringOrNull(offsets[2]),
+    color: reader.readStringOrNull(offsets[3]),
+    count: reader.readLong(offsets[4]),
+    createTime: reader.readLongOrNull(offsets[5]),
+    description: reader.readStringOrNull(offsets[6]),
+    followers: reader.readLongOrNull(offsets[7]) ?? 0,
+    id: reader.readLong(offsets[9]),
+    isAudioMixPlaylist: reader.readBoolOrNull(offsets[10]),
+    isCachingAllowed: reader.readBool(offsets[11]),
+    isFollowing: reader.readBoolOrNull(offsets[12]),
+    isMoodPlaylist: reader.readBoolOrNull(offsets[13]),
     knownTracks: reader.readObjectList<DBAudio>(
-      offsets[11],
+      offsets[14],
       DBAudioSchema.deserialize,
       allOffsets,
       DBAudio(),
     ),
-    ownerID: reader.readLong(offsets[12]),
+    mixID: reader.readStringOrNull(offsets[15]),
+    ownerID: reader.readLong(offsets[16]),
     photo: reader.readObjectOrNull<DBThumbnails>(
-      offsets[13],
+      offsets[17],
       DBThumbnailsSchema.deserialize,
       allOffsets,
     ),
-    plays: reader.readLongOrNull(offsets[14]) ?? 0,
-    simillarity: reader.readDoubleOrNull(offsets[15]),
-    subtitle: reader.readStringOrNull(offsets[16]),
-    title: reader.readStringOrNull(offsets[17]),
-    updateTime: reader.readLongOrNull(offsets[18]),
+    plays: reader.readLongOrNull(offsets[18]) ?? 0,
+    simillarity: reader.readDoubleOrNull(offsets[19]),
+    subtitle: reader.readStringOrNull(offsets[20]),
+    title: reader.readStringOrNull(offsets[21]),
+    updateTime: reader.readLongOrNull(offsets[22]),
   );
   return object;
 }
@@ -314,45 +354,53 @@ P _dBPlaylistDeserializeProp<P>(
     case 2:
       return (reader.readStringOrNull(offset)) as P;
     case 3:
-      return (reader.readLong(offset)) as P;
-    case 4:
-      return (reader.readLongOrNull(offset)) as P;
-    case 5:
       return (reader.readStringOrNull(offset)) as P;
-    case 6:
-      return (reader.readLongOrNull(offset) ?? 0) as P;
-    case 7:
+    case 4:
       return (reader.readLong(offset)) as P;
+    case 5:
+      return (reader.readLongOrNull(offset)) as P;
+    case 6:
+      return (reader.readStringOrNull(offset)) as P;
+    case 7:
+      return (reader.readLongOrNull(offset) ?? 0) as P;
     case 8:
       return (reader.readLong(offset)) as P;
     case 9:
-      return (reader.readBool(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 10:
       return (reader.readBoolOrNull(offset)) as P;
     case 11:
+      return (reader.readBool(offset)) as P;
+    case 12:
+      return (reader.readBoolOrNull(offset)) as P;
+    case 13:
+      return (reader.readBoolOrNull(offset)) as P;
+    case 14:
       return (reader.readObjectList<DBAudio>(
         offset,
         DBAudioSchema.deserialize,
         allOffsets,
         DBAudio(),
       )) as P;
-    case 12:
+    case 15:
+      return (reader.readStringOrNull(offset)) as P;
+    case 16:
       return (reader.readLong(offset)) as P;
-    case 13:
+    case 17:
       return (reader.readObjectOrNull<DBThumbnails>(
         offset,
         DBThumbnailsSchema.deserialize,
         allOffsets,
       )) as P;
-    case 14:
-      return (reader.readLongOrNull(offset) ?? 0) as P;
-    case 15:
-      return (reader.readDoubleOrNull(offset)) as P;
-    case 16:
-      return (reader.readStringOrNull(offset)) as P;
-    case 17:
-      return (reader.readStringOrNull(offset)) as P;
     case 18:
+      return (reader.readLongOrNull(offset) ?? 0) as P;
+    case 19:
+      return (reader.readDoubleOrNull(offset)) as P;
+    case 20:
+      return (reader.readStringOrNull(offset)) as P;
+    case 21:
+      return (reader.readStringOrNull(offset)) as P;
+    case 22:
       return (reader.readLongOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -706,6 +754,162 @@ extension DBPlaylistQueryFilter
         upper,
         includeUpper,
       );
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      backgroundAnimationUrlIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'backgroundAnimationUrl',
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      backgroundAnimationUrlIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'backgroundAnimationUrl',
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      backgroundAnimationUrlEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'backgroundAnimationUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      backgroundAnimationUrlGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'backgroundAnimationUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      backgroundAnimationUrlLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'backgroundAnimationUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      backgroundAnimationUrlBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'backgroundAnimationUrl',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      backgroundAnimationUrlStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'backgroundAnimationUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      backgroundAnimationUrlEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'backgroundAnimationUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      backgroundAnimationUrlContains(String value,
+          {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'backgroundAnimationUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      backgroundAnimationUrlMatches(String pattern,
+          {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'backgroundAnimationUrl',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      backgroundAnimationUrlIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'backgroundAnimationUrl',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      backgroundAnimationUrlIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'backgroundAnimationUrl',
+        value: '',
+      ));
     });
   }
 
@@ -1298,6 +1502,34 @@ extension DBPlaylistQueryFilter
   }
 
   QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      isAudioMixPlaylistIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'isAudioMixPlaylist',
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      isAudioMixPlaylistIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'isAudioMixPlaylist',
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      isAudioMixPlaylistEqualTo(bool? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isAudioMixPlaylist',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
       isCachingAllowedEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -1330,6 +1562,34 @@ extension DBPlaylistQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'isFollowing',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      isMoodPlaylistIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'isMoodPlaylist',
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      isMoodPlaylistIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'isMoodPlaylist',
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      isMoodPlaylistEqualTo(bool? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isMoodPlaylist',
         value: value,
       ));
     });
@@ -1492,6 +1752,153 @@ extension DBPlaylistQueryFilter
         upper,
         includeUpper,
       );
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition> mixIDIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'mixID',
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition> mixIDIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'mixID',
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition> mixIDEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'mixID',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition> mixIDGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'mixID',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition> mixIDLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'mixID',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition> mixIDBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'mixID',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition> mixIDStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'mixID',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition> mixIDEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'mixID',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition> mixIDContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'mixID',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition> mixIDMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'mixID',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition> mixIDIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'mixID',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      mixIDIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'mixID',
+        value: '',
+      ));
     });
   }
 
@@ -2115,6 +2522,20 @@ extension DBPlaylistQuerySortBy
     });
   }
 
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy>
+      sortByBackgroundAnimationUrl() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'backgroundAnimationUrl', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy>
+      sortByBackgroundAnimationUrlDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'backgroundAnimationUrl', Sort.desc);
+    });
+  }
+
   QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> sortByColor() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'color', Sort.asc);
@@ -2199,6 +2620,20 @@ extension DBPlaylistQuerySortBy
     });
   }
 
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy>
+      sortByIsAudioMixPlaylist() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isAudioMixPlaylist', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy>
+      sortByIsAudioMixPlaylistDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isAudioMixPlaylist', Sort.desc);
+    });
+  }
+
   QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> sortByIsCachingAllowed() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isCachingAllowed', Sort.asc);
@@ -2221,6 +2656,31 @@ extension DBPlaylistQuerySortBy
   QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> sortByIsFollowingDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isFollowing', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> sortByIsMoodPlaylist() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isMoodPlaylist', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy>
+      sortByIsMoodPlaylistDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isMoodPlaylist', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> sortByMixID() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'mixID', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> sortByMixIDDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'mixID', Sort.desc);
     });
   }
 
@@ -2311,6 +2771,20 @@ extension DBPlaylistQuerySortThenBy
     });
   }
 
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy>
+      thenByBackgroundAnimationUrl() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'backgroundAnimationUrl', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy>
+      thenByBackgroundAnimationUrlDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'backgroundAnimationUrl', Sort.desc);
+    });
+  }
+
   QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> thenByColor() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'color', Sort.asc);
@@ -2395,6 +2869,20 @@ extension DBPlaylistQuerySortThenBy
     });
   }
 
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy>
+      thenByIsAudioMixPlaylist() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isAudioMixPlaylist', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy>
+      thenByIsAudioMixPlaylistDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isAudioMixPlaylist', Sort.desc);
+    });
+  }
+
   QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> thenByIsCachingAllowed() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isCachingAllowed', Sort.asc);
@@ -2420,6 +2908,19 @@ extension DBPlaylistQuerySortThenBy
     });
   }
 
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> thenByIsMoodPlaylist() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isMoodPlaylist', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy>
+      thenByIsMoodPlaylistDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isMoodPlaylist', Sort.desc);
+    });
+  }
+
   QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> thenByIsarId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isarId', Sort.asc);
@@ -2429,6 +2930,18 @@ extension DBPlaylistQuerySortThenBy
   QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> thenByIsarIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isarId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> thenByMixID() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'mixID', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> thenByMixIDDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'mixID', Sort.desc);
     });
   }
 
@@ -2514,6 +3027,14 @@ extension DBPlaylistQueryWhereDistinct
     });
   }
 
+  QueryBuilder<DBPlaylist, DBPlaylist, QDistinct>
+      distinctByBackgroundAnimationUrl({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'backgroundAnimationUrl',
+          caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<DBPlaylist, DBPlaylist, QDistinct> distinctByColor(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -2558,6 +3079,13 @@ extension DBPlaylistQueryWhereDistinct
     });
   }
 
+  QueryBuilder<DBPlaylist, DBPlaylist, QDistinct>
+      distinctByIsAudioMixPlaylist() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isAudioMixPlaylist');
+    });
+  }
+
   QueryBuilder<DBPlaylist, DBPlaylist, QDistinct> distinctByIsCachingAllowed() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'isCachingAllowed');
@@ -2567,6 +3095,19 @@ extension DBPlaylistQueryWhereDistinct
   QueryBuilder<DBPlaylist, DBPlaylist, QDistinct> distinctByIsFollowing() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'isFollowing');
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QDistinct> distinctByIsMoodPlaylist() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isMoodPlaylist');
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QDistinct> distinctByMixID(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'mixID', caseSensitive: caseSensitive);
     });
   }
 
@@ -2629,6 +3170,13 @@ extension DBPlaylistQueryProperty
     });
   }
 
+  QueryBuilder<DBPlaylist, String?, QQueryOperations>
+      backgroundAnimationUrlProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'backgroundAnimationUrl');
+    });
+  }
+
   QueryBuilder<DBPlaylist, String?, QQueryOperations> colorProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'color');
@@ -2671,6 +3219,13 @@ extension DBPlaylistQueryProperty
     });
   }
 
+  QueryBuilder<DBPlaylist, bool?, QQueryOperations>
+      isAudioMixPlaylistProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isAudioMixPlaylist');
+    });
+  }
+
   QueryBuilder<DBPlaylist, bool, QQueryOperations> isCachingAllowedProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'isCachingAllowed');
@@ -2683,10 +3238,22 @@ extension DBPlaylistQueryProperty
     });
   }
 
+  QueryBuilder<DBPlaylist, bool?, QQueryOperations> isMoodPlaylistProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isMoodPlaylist');
+    });
+  }
+
   QueryBuilder<DBPlaylist, List<DBAudio>?, QQueryOperations>
       knownTracksProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'knownTracks');
+    });
+  }
+
+  QueryBuilder<DBPlaylist, String?, QQueryOperations> mixIDProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'mixID');
     });
   }
 

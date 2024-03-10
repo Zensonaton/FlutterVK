@@ -28,6 +28,7 @@ import "../home.dart";
 import "music/categories/by_vk_playlists.dart";
 import "music/categories/my_music.dart";
 import "music/categories/my_playlists.dart";
+import "music/categories/realtime_playlists.dart";
 import "music/categories/recommended_playlists.dart";
 import "music/categories/simillar_music.dart";
 import "music/playlist.dart";
@@ -211,6 +212,68 @@ Future<void> ensureUserAudioRecommendations(
   bool saveToDB = true,
   bool forceUpdate = false,
 }) async {
+  final UserProvider user = Provider.of<UserProvider>(context, listen: false);
+  final AppLogger logger = getLogger("ensureUserAudioRecommendations");
+
+  /// Парсит список из плейлистов, возвращая список плейлистов из раздела "Какой сейчас вайб?".
+  List<ExtendedPlaylist> parseMoodPlaylists(
+    APICatalogGetAudioResponse response,
+  ) {
+    final Section mainSection = response.response!.catalog.sections[0];
+
+    // Ищем блок с рекомендуемыми плейлистами.
+    SectionBlock moodPlaylistsBlock = mainSection.blocks!.firstWhere(
+      (SectionBlock block) =>
+          block.dataType == "music_playlists" &&
+          block.layout["style"] == "unopenable",
+      orElse: () => throw AssertionError(
+        "Блок с разделом 'Какой сейчас вайб?' не был найден",
+      ),
+    );
+
+    // Извлекаем список ID плейлистов из этого блока.
+    final List<String> moodPlaylistIDs = moodPlaylistsBlock.playlistIDs!;
+
+    // Достаём те плейлисты, которые рекомендуются нами ВКонтакте.
+    // Превращаем объекты типа AudioPlaylist в ExtendedPlaylist.
+    return response.response!.playlists
+        .where(
+          (Playlist playlist) => moodPlaylistIDs.contains(playlist.mediaKey),
+        )
+        .map(
+          (Playlist playlist) => ExtendedPlaylist.fromAudioPlaylist(
+            playlist,
+            isMoodPlaylist: true,
+          ),
+        )
+        .toList();
+  }
+
+  /// Парсит список из аудио миксов.
+  List<ExtendedPlaylist> parseAudioMixPlaylists(
+    APICatalogGetAudioResponse response,
+  ) {
+    final List<ExtendedPlaylist> playlists = [];
+
+    // Проходимся по списку аудио миксов, создавая из них плейлисты.
+    for (AudioMix mix in response.response!.audioStreamMixes) {
+      playlists.add(
+        ExtendedPlaylist(
+          id: -fastHash(mix.id),
+          ownerID: user.id!,
+          title: mix.title,
+          description: mix.description,
+          backgroundAnimationUrl: mix.backgroundAnimationUrl,
+          mixID: mix.id,
+          count: 0,
+          isAudioMixPlaylist: true,
+        ),
+      );
+    }
+
+    return playlists;
+  }
+
   /// Парсит список из плейлистов, возвращая только список из рекомендуемых плейлистов ("Для вас" и подобные).
   List<ExtendedPlaylist> parseRecommendedPlaylists(
     APICatalogGetAudioResponse response,
@@ -308,9 +371,6 @@ Future<void> ensureUserAudioRecommendations(
         .toList();
   }
 
-  final UserProvider user = Provider.of<UserProvider>(context, listen: false);
-  final AppLogger logger = getLogger("ensureUserAudioRecommendations");
-
   // Если информация уже загружена, то ничего не делаем.
   final ExtendedPlaylist? playlist = user.recommendationPlaylists.firstOrNull;
   if (!forceUpdate && playlist != null && playlist.isLiveData) {
@@ -329,6 +389,8 @@ Future<void> ensureUserAudioRecommendations(
     // Создаём список из всех рекомендуемых плейлистов, а так же добавляем их в память.
     user.updatePlaylists(
       [
+        ...parseMoodPlaylists(response),
+        ...parseAudioMixPlaylists(response),
         ...parseRecommendedPlaylists(response),
         ...parseSimillarPlaylists(response),
         ...parseMadeByVKPlaylists(response),
@@ -830,8 +892,8 @@ class AudioPlaylistWidget extends StatefulWidget {
   /// URL на изображение заднего фона.
   final String? backgroundUrl;
 
-  /// [ExtendedPlaylist.mediaKey], используемый как ключ для кэширования, а так же для [Hero]-анимации..
-  final String? mediaKey;
+  /// Поле, спользуемое как ключ для кэширования [backgroundUrl].
+  final String? cacheKey;
 
   /// Название данного плейлиста.
   final String name;
@@ -863,7 +925,7 @@ class AudioPlaylistWidget extends StatefulWidget {
   const AudioPlaylistWidget({
     super.key,
     this.backgroundUrl,
-    this.mediaKey,
+    this.cacheKey,
     required this.name,
     this.useTextOnImageLayout = false,
     this.description,
@@ -930,7 +992,7 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
                       child: widget.backgroundUrl != null
                           ? CachedNetworkImage(
                               imageUrl: widget.backgroundUrl!,
-                              cacheKey: widget.mediaKey,
+                              cacheKey: widget.cacheKey,
                               memCacheHeight: 200,
                               memCacheWidth: 200,
                               placeholder: (BuildContext context, String url) =>
@@ -1137,16 +1199,17 @@ class ChipFilters extends StatelessWidget {
       children: [
         // "Активные разделы".
         if (showLabel)
-          Text(
-            AppLocalizations.of(context)!.music_filterChipsLabel,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.w500,
+          Padding(
+            padding: const EdgeInsets.only(
+              bottom: 14,
             ),
-          ),
-        if (showLabel)
-          const SizedBox(
-            height: 14,
+            child: Text(
+              AppLocalizations.of(context)!.music_filterChipsLabel,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
 
         Wrap(
@@ -1192,6 +1255,19 @@ class ChipFilters extends StatelessWidget {
               selected: user.settings.playlistsChipEnabled,
               label: Text(
                 AppLocalizations.of(context)!.music_myPlaylistsChip,
+              ),
+            ),
+
+            // "В реальном времени".
+            FilterChip(
+              onSelected: (bool value) {
+                user.settings.realtimePlaylistsChipEnabled = value;
+
+                user.markUpdated();
+              },
+              selected: user.settings.realtimePlaylistsChipEnabled,
+              label: Text(
+                AppLocalizations.of(context)!.music_realtimePlaylistsChip,
               ),
             ),
 
@@ -1391,47 +1467,51 @@ class _HomeMusicPageState extends State<HomeMusicPage> {
     /// Указывает, что у пользователя подключены рекомендации музыки от ВКонтакте.
     final bool hasRecommendations = user.recommendationsToken != null;
 
-    final bool myMusicEnabled = user.settings.myMusicChipEnabled;
-    final bool playlistsEnabled = user.settings.playlistsChipEnabled;
-    final bool recommendedPlaylistsEnabled =
+    final bool myMusic = user.settings.myMusicChipEnabled;
+    final bool playlists = user.settings.playlistsChipEnabled;
+    final bool realtimePlaylists = user.settings.realtimePlaylistsChipEnabled;
+    final bool recommendedPlaylists =
         hasRecommendations && user.settings.recommendedPlaylistsChipEnabled;
-    final bool similarMusicChipEnabled =
+    final bool similarMusic =
         hasRecommendations && user.settings.similarMusicChipEnabled;
-    final bool byVKChipEnabled =
-        hasRecommendations && user.settings.byVKChipEnabled;
+    final bool byVK = hasRecommendations && user.settings.byVKChipEnabled;
 
     late bool everythingIsDisabled;
 
     // Если рекомендации включены, то мы должны учитывать и другие разделы.
     if (hasRecommendations) {
-      everythingIsDisabled = (!(myMusicEnabled ||
-          playlistsEnabled ||
-          recommendedPlaylistsEnabled ||
-          similarMusicChipEnabled ||
-          byVKChipEnabled));
+      everythingIsDisabled = (!(myMusic ||
+          playlists ||
+          realtimePlaylists ||
+          recommendedPlaylists ||
+          similarMusic ||
+          byVK));
     } else {
-      everythingIsDisabled = (!(myMusicEnabled || playlistsEnabled));
+      everythingIsDisabled = (!(myMusic || playlists));
     }
 
     /// [List], содержащий в себе список из виджетов/разделов на главном экране, которые доожны быть разделены [Divider]'ом.
     final List<Widget> activeBlocks = [
       // Раздел "Моя музыка".
-      if (myMusicEnabled)
+      if (myMusic)
         MyMusicBlock(
           useTopButtons: isMobileLayout,
         ),
 
       // Раздел "Ваши плейлисты".
-      if (playlistsEnabled) const MyPlaylistsBlock(),
+      if (playlists) const MyPlaylistsBlock(),
+
+      // Раздел "В реальном времени".
+      if (realtimePlaylists) const RealtimePlaylistsBlock(),
 
       // Раздел "Плейлисты для Вас".
-      if (recommendedPlaylistsEnabled) const RecommendedPlaylistsBlock(),
+      if (recommendedPlaylists) const RecommendedPlaylistsBlock(),
 
       // Раздел "Совпадения по вкусам".
-      if (similarMusicChipEnabled) const SimillarMusicBlock(),
+      if (similarMusic) const SimillarMusicBlock(),
 
       // Раздел "Собрано редакцией".
-      if (byVKChipEnabled) const ByVKPlaylistsBlock(),
+      if (byVK) const ByVKPlaylistsBlock(),
 
       // Нижняя часть интерфейса с переключателями при Mobile Layout'е.
       if (isMobileLayout) const ChipFilters(),

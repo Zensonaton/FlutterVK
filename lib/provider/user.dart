@@ -15,6 +15,7 @@ import "../api/vk/audio/edit.dart";
 import "../api/vk/audio/get.dart";
 import "../api/vk/audio/get_lyrics.dart";
 import "../api/vk/audio/get_playlists.dart";
+import "../api/vk/audio/get_stream_mix_audios.dart";
 import "../api/vk/audio/restore.dart";
 import "../api/vk/audio/search.dart";
 import "../api/vk/catalog/get_audio.dart";
@@ -83,7 +84,16 @@ class ExtendedPlaylist {
 
   /// Указывает, что данный плейлист является обычным плейлистом пользователя, который он либо создал либо сохранил.
   bool get isRegularPlaylist =>
-      id > 0 && ownerID != vkMusicGroupID && !isSimillarPlaylist;
+      id > 0 &&
+      ownerID != vkMusicGroupID &&
+      !isSimillarPlaylist &&
+      !isAudioMixPlaylist;
+
+  /// Указывает, что данный плейлист является плейлистом из раздела "Какой сейчас вайб?" ВКонтакте.
+  final bool isMoodPlaylist;
+
+  /// Указывает, что данный плейлист является фейковым плейлистом, олицетворяющий аудио микс ВКонтакте.
+  final bool isAudioMixPlaylist;
 
   /// Указывает, что данный плейлист является плейлистом из рекомендаций.
   bool get isRecommendationsPlaylist => id < 0;
@@ -105,6 +115,12 @@ class ExtendedPlaylist {
 
   /// Указывает первые 3 известных трека для данного плейлиста. Данное поле не-null только для плейлистов из раздела "совпадения по вкусам".
   final List<ExtendedAudio>? knownTracks;
+
+  /// ID данного аудио микса. Данное поле не-null только для аудио микс-плейлистов.
+  final String? mixID;
+
+  /// URL на Lottie-анимацию, которая используется как фон данного микса. Данное поле не-null только для аудио микс-плейлистов.
+  final String? backgroundAnimationUrl;
 
   /// Указывает, что данный плейлист был загружен с API ВКонтакте. Если данное поле false, то это значит, что все данные из этого плейлиста являются кешированными (т.е., загружены из БД Isar).
   ///
@@ -152,6 +168,7 @@ class ExtendedPlaylist {
     Playlist playlist, {
     Set<ExtendedAudio>? audios,
     int? totalAudios,
+    bool isMoodPlaylist = false,
     double? simillarity,
     String? color,
     List<ExtendedAudio>? knownTracks,
@@ -176,6 +193,7 @@ class ExtendedPlaylist {
         simillarity: simillarity,
         color: color,
         knownTracks: knownTracks,
+        isMoodPlaylist: isMoodPlaylist,
         isLiveData: isLiveData,
         areTracksLive: areTracksLive,
       );
@@ -206,6 +224,10 @@ class ExtendedPlaylist {
               ),
             )
             .toSet(),
+        isMoodPlaylist: playlist.isMoodPlaylist ?? false,
+        isAudioMixPlaylist: playlist.isAudioMixPlaylist ?? false,
+        mixID: playlist.mixID,
+        backgroundAnimationUrl: playlist.backgroundAnimationUrl,
         simillarity: playlist.simillarity,
         color: playlist.color,
         knownTracks: playlist.knownTracks
@@ -254,9 +276,13 @@ class ExtendedPlaylist {
     this.subtitle,
     this.photo,
     this.audios,
+    this.isMoodPlaylist = false,
+    this.isAudioMixPlaylist = false,
     this.simillarity,
     this.color,
     this.knownTracks,
+    this.mixID,
+    this.backgroundAnimationUrl,
     this.isLiveData = false,
     this.areTracksLive = false,
     this.cacheTracks,
@@ -557,6 +583,9 @@ class Settings {
   /// Указывает, что поле "Ваши плейлисты" включено на экране с музыкой.
   bool playlistsChipEnabled = true;
 
+  /// Указывает, что поле "В реальном времени" включено на экране с музыкой.
+  bool realtimePlaylistsChipEnabled = true;
+
   /// Указывает, что поле "Плейлисты для Вас" включено на экране с музыкой.
   bool recommendedPlaylistsChipEnabled = true;
 
@@ -682,6 +711,20 @@ class UserProvider extends ChangeNotifier {
   List<ExtendedPlaylist> get regularPlaylists => allPlaylists.values
       .where(
         (ExtendedPlaylist playlist) => playlist.isRegularPlaylist,
+      )
+      .toList();
+
+  /// Перечисление всех плейлистов раздела "В реальном времени" (маленький плейлист).
+  List<ExtendedPlaylist> get moodPlaylists => allPlaylists.values
+      .where(
+        (ExtendedPlaylist playlist) => playlist.isMoodPlaylist,
+      )
+      .toList();
+
+  /// Перечисление всех плейлистов-аудио миксов из раздела "В реальном времени".
+  List<ExtendedPlaylist> get audioMixPlaylists => allPlaylists.values
+      .where(
+        (ExtendedPlaylist playlist) => playlist.isAudioMixPlaylist,
       )
       .toList();
 
@@ -820,6 +863,10 @@ class UserProvider extends ChangeNotifier {
       settings.playlistsChipEnabled,
     );
     await prefs.setBool(
+      "RealtimePlaylistsChipEnabled",
+      settings.realtimePlaylistsChipEnabled,
+    );
+    await prefs.setBool(
       "RecommendedPlaylistsChipEnabled",
       settings.recommendedPlaylistsChipEnabled,
     );
@@ -924,6 +971,8 @@ class UserProvider extends ChangeNotifier {
     settings.myMusicChipEnabled = prefs.getBool("MyMusicChipEnabled") ?? true;
     settings.playlistsChipEnabled =
         prefs.getBool("PlaylistsChipEnabled") ?? true;
+    settings.realtimePlaylistsChipEnabled =
+        prefs.getBool("RealtimePlaylistsChipEnabled") ?? true;
     settings.recommendedPlaylistsChipEnabled =
         prefs.getBool("RecommendedPlaylistsChipEnabled") ?? true;
     settings.similarMusicChipEnabled =
@@ -1253,6 +1302,92 @@ class UserProvider extends ChangeNotifier {
       if (massAlbums.error != null) {
         // В случае ошибки создаём копию ответа от первого шага, изменяя там поле error.
         return APIAudioSearchResponse(
+          response: response.response,
+          error: massAlbums.error,
+        );
+      }
+
+      // Всё ок, объеденяем данные, что бы у объекта Audio (с первого запроса) была информация о альбомах.
+
+      // Создаём Map, где ключ - медиа ключ доступа, а значение - объект мини-альбома.
+      //
+      // Использовать массив - идея плохая, поскольку ВКонтакте не возвращает информацию по "недоступным" трекам,
+      // ввиду чего происходит смещение, что не очень-то и хорошо.
+      Map<String, Audio> albumsData = {
+        for (var album in massAlbums.response!) album.mediaKey: album,
+      };
+
+      // Мы получили список альбомов, обновляем существующий массив треков.
+      for (Audio audio in audios) {
+        if (audio.album != null) continue;
+        final Audio? extendedAudio = albumsData[audio.mediaKey];
+
+        // Если у нас нет информации по альбому этого трека, то ничего не делаем.
+        if (extendedAudio == null || extendedAudio.album == null) continue;
+
+        // Всё ок, заменяем данные в аудио.
+        audio.album = extendedAudio.album;
+      }
+    }
+
+    return response;
+  }
+
+  /// Возвращает список треков для аудио микса (VK Mix).
+  ///
+  /// Требуется токен от Kate Mobile.
+  Future<APIAudioGetStreamMixAudiosResponse> audioGetStreamMixAudios({
+    String mixID = "common",
+    int count = 10,
+  }) async =>
+      await audio_get_stream_mix_audios(
+        mainToken!,
+        mixID: mixID,
+        count: count,
+      );
+
+  /// Возвращает список треков для аудио микса (VK Mix), дополняя треки информацией об их альбомах.
+  ///
+  /// Требуется токен от Kate Mobile и VK Admin.
+  Future<APIAudioGetStreamMixAudiosResponse> audioGetStreamMixAudiosWithAlbums({
+    String mixID = "common",
+    int count = 10,
+  }) async {
+    final APIAudioGetStreamMixAudiosResponse response =
+        await audioGetStreamMixAudios(
+      mixID: mixID,
+      count: count,
+    );
+
+    if (response.error != null) return response;
+
+    // Если у пользователя есть токен VK Admin, то тогда нам нужно получить расширенную информацию о треках.
+    if (recommendationsToken != null) {
+      // Получаем MediaKey треков, делая в запросе не более 200 ключей.
+      List<String> audioIDs = [];
+      List<Audio> audios = response.response!;
+
+      for (int i = 0; i < audios.length; i += 200) {
+        int endIndex = i + 200;
+        List<Audio> batch = audios.sublist(
+          i,
+          endIndex.clamp(
+            0,
+            audios.length,
+          ),
+        );
+        List<String> currentMediaKey =
+            batch.map((audio) => audio.mediaKey).toList();
+
+        audioIDs.add(currentMediaKey.join(","));
+      }
+
+      final APIMassAudioAlbumsResponse massAlbums =
+          await scriptMassAudioAlbums(audioIDs);
+
+      if (massAlbums.error != null) {
+        // В случае ошибки создаём копию ответа от первого шага, изменяя там поле error.
+        return APIAudioGetStreamMixAudiosResponse(
           response: response.response,
           error: massAlbums.error,
         );

@@ -952,19 +952,31 @@ class VKMusicPlayer {
     return await seek(Duration.zero);
   }
 
-  /// Запускает воспроизведение следующего трека. Если это последний трек в плейлисте, то ничего не делает.
+  /// Запускает воспроизведение следующего трека. Если это последний трек в плейлисте, то ставит плеер на паузу.
   Future<void> next() async {
+    if (nextTrackIndex == null) {
+      await pause();
+
+      return;
+    }
+
     await jump(nextTrackIndex!);
 
     if (!playing) await play();
   }
 
-  /// Запускает воспроизведение предыдущего трека в очереди. Если это первый трек в плейлисте, то ничего не делает.
+  /// Запускает воспроизведение предыдущего трека в очереди. Если это первый трек в плейлисте, то ставит плеер на паузу.
   ///
   /// Если [allowSeekToBeginning] указан как true, то плеер, в случае, если прошло не более 5 секунд воспроизведения, запустит воспроизведение с самого начала трека, вместо перехода на предыдущий.
   Future<void> previous({
     bool allowSeekToBeginning = false,
   }) async {
+    if (previousTrackIndex == null) {
+      await pause();
+
+      return;
+    }
+
     if (allowSeekToBeginning && _player.position.inSeconds >= 5) {
       await seekToBeginning();
     } else {
@@ -976,6 +988,13 @@ class VKMusicPlayer {
 
   /// Включает или отключает случайное перемешивание треков в данном плейлисте, в зависимости от аргумента [shuffle].
   Future<void> setShuffle(bool shuffle) async {
+    if (shuffle) {
+      assert(
+        !(player.currentPlaylist?.isAudioMixPlaylist ?? false),
+        "Attempted to enable shuffle for audio mix",
+      );
+    }
+
     return await _player.setShuffleModeEnabled(shuffle);
   }
 
@@ -994,6 +1013,9 @@ class VKMusicPlayer {
     final UserProvider user =
         Provider.of<UserProvider>(buildContext!, listen: false);
 
+    // Если это аудио микс, то его сохранять при кэшировании необязательно.
+    if (playlist.isAudioMixPlaylist) return;
+
     audio.isCached = true;
 
     appStorage.savePlaylist(playlist.asDBPlaylist);
@@ -1005,6 +1027,7 @@ class VKMusicPlayer {
     ExtendedPlaylist playlist, {
     bool play = true,
     ExtendedAudio? audio,
+    bool setLoopAll = true,
   }) async {
     assert(
       playlist.audios != null,
@@ -1042,6 +1065,11 @@ class VKMusicPlayer {
       _setPlayerLoaded(true);
     }
 
+    // Возвращаем повтор треков в плейлисте, если это нужно.
+    if (setLoopAll && player.loopMode == LoopMode.off) {
+      await player.setLoop(LoopMode.all);
+    }
+
     // Отправляем плееру очередь из треков.
     await _player.setAudioSource(
       _queue!,
@@ -1055,9 +1083,7 @@ class VKMusicPlayer {
   }
 
   /// Добавляет указанный трек как следующий для воспроизведения.
-  Future<void> addNextToQueue(
-    ExtendedAudio audio,
-  ) async {
+  Future<void> addNextToQueue(ExtendedAudio audio) async {
     // На случай, если очередь пустая.
     _queue ??= ConcatenatingAudioSource(
       children: [],
@@ -1073,6 +1099,25 @@ class VKMusicPlayer {
     );
     _audiosQueue!.insert(
       nextTrackIndex ?? 0,
+      audio,
+    );
+  }
+
+  /// Добавляет указанный трек в конец очереди воспроизведения.
+  Future<void> addToQueueEnd(ExtendedAudio audio) async {
+    // На случай, если очередь пустая.
+    _queue ??= ConcatenatingAudioSource(
+      children: [],
+    );
+    _audiosQueue ??= [];
+
+    _queue!.add(
+      CachedStreamedAudio(
+        audio: audio,
+        onCached: () => _onTrackCached(audio, player.currentPlaylist!),
+      ),
+    );
+    _audiosQueue!.add(
       audio,
     );
   }
@@ -1358,13 +1403,18 @@ class AudioPlayerService extends BaseAudioHandler
           MediaControl.skipToPrevious,
           _player.playing ? MediaControl.pause : MediaControl.play,
           MediaControl.skipToNext,
-          MediaControl.custom(
-            androidIcon: _player.shuffleModeEnabled
-                ? "drawable/ic_shuffle_enabled"
-                : "drawable/ic_shuffle",
-            label: "Shuffle",
-            name: MediaNotificationAction.shuffle.name,
-          ),
+
+          // Кнопка для shuffle, если у нас не аудио микс.
+          if (!(player.currentPlaylist?.isAudioMixPlaylist ?? false))
+            MediaControl.custom(
+              androidIcon: _player.shuffleModeEnabled
+                  ? "drawable/ic_shuffle_enabled"
+                  : "drawable/ic_shuffle",
+              label: "Shuffle",
+              name: MediaNotificationAction.shuffle.name,
+            ),
+
+          // Кнопка для лайка/дизлайка трека.
           MediaControl.custom(
             androidIcon: _player.currentAudio?.isLiked ?? false
                 ? "drawable/ic_favorite"
@@ -1462,6 +1512,9 @@ class AudioPlayerService extends BaseAudioHandler
   @override
   Future<void> setShuffleMode(AudioServiceShuffleMode shuffleMode) async {
     await super.setShuffleMode(shuffleMode);
+
+    // Не позволяем включить Shuffle при включённом аудио миксе.
+    if (player.currentPlaylist?.isAudioMixPlaylist ?? false) return;
 
     await _player.setShuffle(
       shuffleMode == AudioServiceShuffleMode.all,
