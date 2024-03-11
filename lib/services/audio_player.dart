@@ -1084,14 +1084,13 @@ class VKMusicPlayer {
 
   /// Добавляет указанный трек как следующий для воспроизведения.
   Future<void> addNextToQueue(ExtendedAudio audio) async {
-    // На случай, если очередь пустая.
-    _queue ??= ConcatenatingAudioSource(
-      children: [],
+    assert(
+      _queue != null,
+      "Queue cannot be empty",
     );
-    _audiosQueue ??= [];
 
-    _queue!.insert(
-      nextTrackIndex ?? 0,
+    await _queue!.insert(
+      nextTrackIndex!,
       CachedStreamedAudio(
         audio: audio,
         onCached: () => _onTrackCached(audio, player.currentPlaylist!),
@@ -1105,13 +1104,12 @@ class VKMusicPlayer {
 
   /// Добавляет указанный трек в конец очереди воспроизведения.
   Future<void> addToQueueEnd(ExtendedAudio audio) async {
-    // На случай, если очередь пустая.
-    _queue ??= ConcatenatingAudioSource(
-      children: [],
+    assert(
+      _queue != null,
+      "Queue cannot be empty",
     );
-    _audiosQueue ??= [];
 
-    _queue!.add(
+    await _queue!.add(
       CachedStreamedAudio(
         audio: audio,
         onCached: () => _onTrackCached(audio, player.currentPlaylist!),
