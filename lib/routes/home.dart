@@ -505,6 +505,8 @@ class _HomeRouteState extends State<HomeRoute> {
     player.currentIndexStream.listen((int? index) async {
       if (index == null || !player.loaded) return;
 
+      final ExtendedAudio audio = player.currentAudio!;
+
       /// Указывает, были ли получены цвета для этого трека или нет.
       bool gotColorscheme = false;
 
@@ -520,7 +522,7 @@ class _HomeRouteState extends State<HomeRoute> {
         colorScheme.setScheme(
           schemes.$1,
           schemes.$2,
-          player.currentAudio!.mediaKey,
+          audio.mediaKey,
         );
 
         return true;
@@ -529,7 +531,7 @@ class _HomeRouteState extends State<HomeRoute> {
       // Загружаем информацию по треку, если есть соединение с интернетом.
       if (connectivityManager.hasConnection) {
         CachedStreamedAudio.downloadTrackData(
-          player.currentAudio!,
+          audio,
           player.currentPlaylist!,
           user,
           allowDeezer: user.settings.deezerThumbnails,

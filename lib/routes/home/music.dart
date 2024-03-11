@@ -1434,7 +1434,7 @@ class _HomeMusicPageState extends State<HomeMusicPage> {
       }),
     ];
 
-    // Загружаем информацию о плейлистах и треках.\
+    // Загружаем информацию о плейлистах и треках.
     ensureUserAudioAllInformation(context);
 
     // Обработчик нажатия кнопок клавиатуры.
