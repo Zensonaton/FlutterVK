@@ -115,11 +115,14 @@ class _ImageLyricsBlockState extends State<ImageLyricsBlock> {
     super.initState();
 
     subscriptions = [
+      // Изменение позиции воспроизведения.
       player.positionStream.listen(
-        (Duration? position) => setState(() {}),
+        (Duration position) => setState(() {}),
       ),
-      player.sequenceStateStream.listen(
-        (SequenceState? sequenceState) => setState(() {}),
+
+      // Изменение текущего трека.
+      player.currentIndexStream.listen(
+        (int? index) => setState(() {}),
       ),
     ];
   }
@@ -146,9 +149,7 @@ class _ImageLyricsBlockState extends State<ImageLyricsBlock> {
         player.currentAudio!.lyrics != null;
 
     // Создаёт виджет для отображения изображения трека.
-    Widget buildImageWidget(
-      ExtendedAudio audio,
-    ) {
+    Widget buildImageWidget(ExtendedAudio audio) {
       // TODO: Избавиться от этого метода, сделать вместо этого отдельный виджет.
 
       return FittedBox(
@@ -285,8 +286,8 @@ class _ImageLyricsBlockState extends State<ImageLyricsBlock> {
               ),
             )
           : Align(
-              key: const ValueKey(
-                "lyrics",
+              key: ValueKey(
+                "lyrics${player.currentAudio!.mediaKey}",
               ),
               alignment: Alignment.topCenter,
               child: AnimatedOpacity(
@@ -329,11 +330,14 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
     super.initState();
 
     subscriptions = [
-      player.sequenceStateStream.listen(
-        (SequenceState? state) => setState(() {}),
-      ),
+      // Изменение состояния плеера.
       player.playerStateStream.listen(
         (PlayerState? state) => setState(() {}),
+      ),
+
+      // Изменение текущего трека.
+      player.currentIndexStream.listen(
+        (int? index) => setState(() {}),
       ),
     ];
   }
@@ -680,8 +684,9 @@ class _FullscreenPlayerMobileRouteState
     super.initState();
 
     subscriptions = [
-      player.sequenceStateStream.listen(
-        (SequenceState? state) => setState(() {}),
+      // Изменение текущего трека.
+      player.currentIndexStream.listen(
+        (int? index) => setState(() {}),
       ),
     ];
   }

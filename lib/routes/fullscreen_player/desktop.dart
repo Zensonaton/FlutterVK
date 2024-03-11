@@ -125,8 +125,8 @@ class _NextTrackInfoWidgetState extends State<NextTrackInfoWidget> {
       ),
 
       // Изменение текущего трека.
-      player.sequenceStateStream.listen(
-        (SequenceState? state) => setState(() {}),
+      player.currentIndexStream.listen(
+        (int? index) => setState(() {}),
       ),
     ];
   }
