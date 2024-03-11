@@ -87,6 +87,22 @@ Future<void> onMixPlayToggle(
   );
 }
 
+/// Fallback-виджет, отображаемый вместо аудио миксов по типу VK Mix.
+class FallbackMixPlaylistWidget extends StatelessWidget {
+  const FallbackMixPlaylistWidget({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      height: 250,
+      color: Theme.of(context).colorScheme.primaryContainer,
+    );
+  }
+}
+
 /// Виджет, отображающий плейлист типа "VK Mix" или подобный.
 class LivePlaylistWidget extends StatelessWidget {
   /// Название плейлиста.
@@ -96,7 +112,7 @@ class LivePlaylistWidget extends StatelessWidget {
   final String? description;
 
   /// URL на Lottie-анимацию, которая используется для фона.
-  final String lottieUrl;
+  final String? lottieUrl;
 
   /// Указывает, что будет использоваться большой размер данного плейлиста.
   final bool bigLayout;
@@ -116,8 +132,8 @@ class LivePlaylistWidget extends StatelessWidget {
     super.key,
     required this.title,
     this.description,
-    required this.lottieUrl,
-    required this.bigLayout,
+    this.lottieUrl,
+    this.bigLayout = false,
     this.selected = false,
     this.currentlyPlaying = false,
     this.onPlayToggle,
@@ -159,16 +175,33 @@ class LivePlaylistWidget extends StatelessWidget {
           child: Stack(
             alignment: Alignment.center,
             children: [
-              // Фоновая анимация.
-              Lottie.network(
-                lottieUrl,
-                width: double.infinity,
-                height: 250,
-                fit: BoxFit.fill,
-                addRepaintBoundary: true,
-                animate: true,
-                repeat: true,
-              ),
+              // Фоновая анимация, если задана ссылка на это.
+              if (lottieUrl != null)
+                Lottie.network(
+                  lottieUrl!,
+                  width: double.infinity,
+                  height: 250,
+                  fit: BoxFit.fill,
+                  addRepaintBoundary: true,
+                  backgroundLoading: true,
+                  frameBuilder: (
+                    BuildContext context,
+                    Widget child,
+                    LottieComposition? composition,
+                  ) {
+                    return Stack(
+                      children: [
+                        const FallbackMixPlaylistWidget(),
+                        child,
+                      ],
+                    );
+                  },
+                  animate: true,
+                  repeat: true,
+                ),
+
+              // Заменяющий фоновый анимацию контейнер.
+              if (lottieUrl == null) const FallbackMixPlaylistWidget(),
 
               // Затемняющий эффект (градиент) поверх анимации.
               Container(
@@ -488,8 +521,19 @@ class _RealtimePlaylistsBlockState extends State<RealtimePlaylistsBlock> {
         ),
 
         // Проходимся по доступным аудио миксам.
-        // TODO: Fallback если Lottie не загрузился.
-        // TODO: Skeleton-loader'ы
+        // Skeleton loader.
+        if (user.audioMixPlaylists.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(
+              bottom: 8,
+            ),
+            child: LivePlaylistWidget(
+              title: fakePlaylistNames.first,
+              bigLayout: !isMobileLayout,
+            ),
+          ),
+
+        // Настоящие данные.
         for (ExtendedPlaylist playlist in user.audioMixPlaylists)
           Padding(
             padding: const EdgeInsets.only(
