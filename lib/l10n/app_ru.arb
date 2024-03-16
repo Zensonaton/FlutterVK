@@ -364,6 +364,12 @@
 	"profile_shareLogsDescription": "Содержит техническую информацию для отладки ошибок приложения",
 	"profile_shareLogsNoLogsDescription": "Недоступно, поскольку файл логов пуст",
 
+	"profile_resetDBTitle": "Сбросить базу данных",
+	"profile_resetDBDescription": "Удаляет копию базы данных треков, хранимую на этом устройстве",
+	"profile_resetDBDialogTitle": "Сброс базы данных",
+	"profile_resetDBDialogDescription": "Продолжив, Flutter VK удалит локальную базу данных треков, хранимую на данном устройстве. Пожалуйста, не делайте этого без острой необходимости.\n\nВаши треки (как лайкнутые, так и кэшированные) не будут удалены, однако Вам придётся по-новой запустить процесс кэшировани на ранее кэшированных плейлистах.",
+	"profile_resetDBDialogReset": "Сбросить",
+
 	"profile_updatesPolicyTitle": "Отображение новых обновлений",
 	"profile_updatesPolicyDescription": "Определяет, какой вид информирования будет о новых обновлениях после захода в приложение",
 	"profile_updatesPolicyDialog": "Диалог",

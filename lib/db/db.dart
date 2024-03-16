@@ -46,9 +46,7 @@ class AppStorage {
   }
 
   /// Сохраняет единственный плейлист пользователя в БД.
-  Future<void> savePlaylist(
-    DBPlaylist playlist,
-  ) async {
+  Future<void> savePlaylist(DBPlaylist playlist) async {
     logger.d("Called savePlaylist for $playlist");
 
     final Isar isar = await _getIsar();
@@ -59,13 +57,21 @@ class AppStorage {
   }
 
   /// Сохраняет список из плейлистов пользователя в БД.
-  Future<void> savePlaylists(
-    List<DBPlaylist> playlists,
-  ) async {
+  Future<void> savePlaylists(List<DBPlaylist> playlists) async {
     final Isar isar = await _getIsar();
 
     await isar.writeTxn(() async {
       await isar.dBPlaylists.putAll(playlists);
     });
+  }
+
+  /// Удаляет все данные, хранимые в БД.
+  Future<void> resetDB() async {
+    final Isar isar = await _getIsar();
+
+    await isar.close(
+      deleteFromDisk: true,
+    );
+    _isar = null;
   }
 }

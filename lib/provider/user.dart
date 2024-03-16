@@ -824,6 +824,9 @@ class UserProvider extends ChangeNotifier {
     ).deleteSync(
       recursive: true,
     );
+
+    // Очищаем локальную базу данных.
+    await appStorage.resetDB();
   }
 
   /// Сохраняет важные поля пользователя на диск.

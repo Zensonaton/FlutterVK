@@ -528,6 +528,44 @@ class ExportTracksListDialog extends StatelessWidget {
   }
 }
 
+/// Диалог, подтверждающий у пользователя то, что он хочет сбросить локальную базу данных приложения.
+///
+/// Пример использования:
+/// ```dart
+/// showDialog(
+/// 	context: context,
+/// 	builder: (context) => const ResetDBDialog()
+/// );
+/// ```
+class ResetDBDialog extends StatelessWidget {
+  const ResetDBDialog({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialDialog(
+      icon: Icons.delete,
+      title: AppLocalizations.of(context)!.profile_resetDBDialogTitle,
+      text: AppLocalizations.of(context)!.profile_resetDBDialogDescription,
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: Text(
+            AppLocalizations.of(context)!.general_no,
+          ),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(true),
+          child: Text(
+            AppLocalizations.of(context)!.profile_resetDBDialogReset,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 /// Страница для [HomeRoute] для просмотра собственного профиля.
 class HomeProfilePage extends StatefulWidget {
   const HomeProfilePage({
@@ -1324,6 +1362,49 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                                   ],
                                 ),
                               );
+                            },
+                          ),
+
+                          // Сбросить базу данных.
+                          ListTile(
+                            leading: const Icon(
+                              Icons.delete,
+                            ),
+                            title: Text(
+                              AppLocalizations.of(context)!
+                                  .profile_resetDBTitle,
+                            ),
+                            subtitle: Text(
+                              AppLocalizations.of(context)!
+                                  .profile_resetDBDescription,
+                            ),
+                            onTap: () async {
+                              final UserProvider user =
+                                  Provider.of<UserProvider>(
+                                context,
+                                listen: false,
+                              );
+                              final bool result = await showDialog(
+                                    context: context,
+                                    builder: (context) => const ResetDBDialog(),
+                                  ) ??
+                                  false;
+
+                              if (!result) return;
+
+                              getLogger("ProfileResetDB")
+                                  .i("User requested DB reset");
+
+                              // Если плеер играет, то останаливаем его.
+                              if (player.loaded) {
+                                await player.stop();
+                              }
+
+                              // Очищаем базу данных.
+                              await appStorage.resetDB();
+
+                              // Удаляем плейлисты пользователя.
+                              user.allPlaylists = {};
                             },
                           ),
 
