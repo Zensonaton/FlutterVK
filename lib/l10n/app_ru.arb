@@ -202,8 +202,19 @@
 	"music_detailsPlayNextTitle": "Сыграть следующим",
 	"music_detailsCacheTrackTitle": "Кэшировать этот трек",
 	"music_detailsCacheTrackDescription": "Позволяет прослушать трек даже без подключения к интернету",
+	"music_detailsSetThumbnailTitle": "Заменить обложку",
+	"music_detailsSetThumbnailDescription": "Устанавливает обложку, выполняя поиск с сервиса Deezer",
 	"music_detailsReuploadFromYoutubeTitle": "Перезалить с Youtube",
 	"music_detailsReuploadFromYoutubeDescription": "Заменит этот трек другой версией с Youtube для обхода «недоступности» трека",
+
+	"music_setThumbnailSearchText": "Запрос для Deezer",
+	"music_setThumbnailNoQuery": "Введите название трека сверху, что бы выполнить поиск по обложкам.",
+	"music_setThumbnailNoResults": "По Вашему запросу ничего не найдено. Попробуйте <click>очистить свой запрос</click>.",
+	"@music_setThumbnailNoResults": {
+		"description": "<click>...</click> очищает результаты поиска."
+	},
+	"music_setThumbnailSave": "Сохранить обложку",
+	"music_setThumbnailSaveSuccessful": "Обложка успешно изменена. Это изменение будет видно на этом устройстве после перезахода в приложение.",
 
 	"music_trackTitle": "Название",
 	"music_trackArtist": "Исполнитель",

@@ -5,6 +5,7 @@ import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:shared_preferences/shared_preferences.dart";
 
+import "../api/deezer/shared.dart";
 import "../api/spotify/get_lyrics.dart";
 import "../api/spotify/get_token.dart";
 import "../api/spotify/search.dart";
@@ -341,6 +342,15 @@ class ExtendedThumbnail {
         photoMedium: thumbnails.photo270!,
         photoBig: thumbnails.photo600!,
         photoMax: thumbnails.photo1200!,
+      );
+
+  /// Создаёт из передаваемого объекта [DeezerTrack] объект данного класса.
+  static ExtendedThumbnail fromDeezerTrack(DeezerTrack track) =>
+      ExtendedThumbnail(
+        photoSmall: track.album.coverSmall!,
+        photoMedium: track.album.coverMedium!,
+        photoBig: track.album.coverBig!,
+        photoMax: track.album.coverXL!,
       );
 
   @override

@@ -162,12 +162,7 @@ class CachedStreamedAudio extends StreamAudioSource {
         if (deezerTrack == null || deezerTrack.album.cover == null) return;
 
         // Всё ок, запоминаем новую обложку трека.
-        thumbs = ExtendedThumbnail(
-          photoSmall: deezerTrack.album.coverSmall!,
-          photoMedium: deezerTrack.album.coverMedium!,
-          photoBig: deezerTrack.album.coverBig!,
-          photoMax: deezerTrack.album.coverXL!,
-        );
+        thumbs = ExtendedThumbnail.fromDeezerTrack(deezerTrack);
         audio.deezerThumbs = thumbs;
         shouldUpdateDB = true;
       }

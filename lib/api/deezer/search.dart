@@ -48,8 +48,8 @@ Future<DeezerAPISearchResponse> deezer_search(
   return DeezerAPISearchResponse.fromJson(jsonDecode(response.body));
 }
 
-/// Используя API Deezer, выполняет поиск по передаваемым [artist] и [title] трека, после чего пытается найти самое точное совпадение, возвращая объект [DeezerTrack] в случае успеха (если процент схожести больше [simillarityPercentThreshold]).
-Future<DeezerTrack?> deezer_search_closest(
+/// Используя API Deezer, выполняет поиск по передаваемым [artist] и [title] трека, после чего возвращает список объектов [DeezerTrack], отсортированных по схожести с запросом.
+Future<List<DeezerTrack>> deezer_search_sorted(
   String artist,
   String title, {
   String? album,
@@ -58,23 +58,49 @@ Future<DeezerTrack?> deezer_search_closest(
   final DeezerAPISearchResponse response = await deezer_search(artist, title);
 
   final String trackA = "$artist$title${album ?? ""}$duration";
-  DeezerTrack? closestTrack;
-  double maxSimillarity = 0.0;
+  List<DeezerTrack> sortedTracks = [];
 
-  // Проходимся по всем результатам поиска, находим тот, который больше всего схож.
+  // Проходимся по всем результатам поиска и сортируем их по схожести с запросом.
   for (DeezerTrack track in response.data) {
     final String trackB =
         "${track.artist.name}${track.title}${album != null ? track.album : ""}${track.duration}";
 
-    final double simillarity = trackA.similarityTo(trackB);
+    final double similarity = trackA.similarityTo(trackB);
 
-    if (simillarity >= simillarityPercentThreshold &&
-        simillarity > maxSimillarity) {
-      maxSimillarity = simillarity;
-
-      closestTrack = track;
+    if (similarity >= simillarityPercentThreshold) {
+      sortedTracks.add(track);
     }
   }
 
-  return closestTrack;
+  // Сортируем список треков по убыванию схожести.
+  sortedTracks.sort((a, b) {
+    final String trackA =
+        "${a.artist.name}${a.title}${album != null ? a.album : ""}${a.duration}";
+    final String trackB =
+        "${b.artist.name}${b.title}${album != null ? b.album : ""}${b.duration}";
+
+    final double similarityA = trackA.similarityTo(trackB);
+    final double similarityB = trackB.similarityTo(trackA);
+
+    return similarityB.compareTo(similarityA);
+  });
+
+  return sortedTracks;
+}
+
+/// Используя API Deezer, выполняет поиск по передаваемым [artist] и [title] трека, после чего пытается найти самое точное совпадение, возвращая объект [DeezerTrack] в случае успеха (если процент схожести больше [simillarityPercentThreshold]).
+Future<DeezerTrack?> deezer_search_closest(
+  String artist,
+  String title, {
+  String? album,
+  int? duration,
+}) async {
+  final List<DeezerTrack> response = await deezer_search_sorted(
+    artist,
+    title,
+    album: album,
+    duration: duration,
+  );
+
+  return response[0];
 }
