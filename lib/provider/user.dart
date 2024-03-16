@@ -1615,11 +1615,20 @@ class UserProvider extends ChangeNotifier {
 
     final SpotifyLyrics lyrics = lyricsResponse.lyrics;
 
-    final int spotifyDuration = track.durationMS;
-    final double speedMultiplier = (duration * 1000) / spotifyDuration;
+    final int vkDurationMS = duration * 1000;
+    final int spotifyDurationMS = track.durationMS;
+
+    // Вычисляем множитель для текста песни.
+    // Он нужен для того, что бы компенсировать разницу между длительностью трека в ВК и Spotify.
+    double speedMultiplier = vkDurationMS / spotifyDurationMS;
+
+    // Ввиду округления длительности треков в ВК, данный множитель используется лишь в случае, если разница больше, чем 1 секунда.
+    if ((vkDurationMS - spotifyDurationMS).abs() <= 1000) {
+      speedMultiplier = 1.0;
+    }
 
     logger.d(
-      "Spotify lyrics type: ${lyrics.syncType}, Spotify track duration: $spotifyDuration, VK track duration: $duration (mult: $speedMultiplier)",
+      "Spotify lyrics type: ${lyrics.syncType}, Spotify track duration: $spotifyDurationMS, VK track duration: $vkDurationMS (mult: $speedMultiplier)",
     );
 
     // Конвертируем формат текста песни Spotify в формат, принимаемый Flutter VK.
