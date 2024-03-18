@@ -190,21 +190,24 @@ Widget buildListTrackWidget(
       audio: audio,
       glowIfSelected: true,
       showCachedIcon: showCachedIcon,
-      onAddToQueue: () async {
-        await player.addNextToQueue(audio);
+      onAddToQueue: false
+          // ignore: dead_code
+          ? () async {
+              await player.addNextToQueue(audio);
 
-        if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)!.general_addedToQueue,
-            ),
-            duration: const Duration(
-              seconds: 3,
-            ),
-          ),
-        );
-      },
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    AppLocalizations.of(context)!.general_addedToQueue,
+                  ),
+                  duration: const Duration(
+                    seconds: 3,
+                  ),
+                ),
+              );
+            }
+          : null,
       onPlay: !audio.canPlay
           ? () => showErrorDialog(
                 context,

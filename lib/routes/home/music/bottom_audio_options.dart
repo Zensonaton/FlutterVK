@@ -584,34 +584,36 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
                 ),
 
                 // Добавить в очередь.
-                ListTile(
-                  onTap: () async {
-                    await player.addNextToQueue(
-                      widget.audio,
-                    );
+                if (false)
+                  // ignore: dead_code
+                  ListTile(
+                    onTap: () async {
+                      await player.addNextToQueue(
+                        widget.audio,
+                      );
 
-                    if (!mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          AppLocalizations.of(context)!.general_addedToQueue,
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            AppLocalizations.of(context)!.general_addedToQueue,
+                          ),
+                          duration: const Duration(
+                            seconds: 3,
+                          ),
                         ),
-                        duration: const Duration(
-                          seconds: 3,
-                        ),
-                      ),
-                    );
+                      );
 
-                    Navigator.of(context).pop();
-                  },
-                  enabled: widget.audio.canPlay,
-                  leading: const Icon(
-                    Icons.queue_music,
+                      Navigator.of(context).pop();
+                    },
+                    enabled: widget.audio.canPlay,
+                    leading: const Icon(
+                      Icons.queue_music,
+                    ),
+                    title: Text(
+                      AppLocalizations.of(context)!.music_detailsPlayNextTitle,
+                    ),
                   ),
-                  title: Text(
-                    AppLocalizations.of(context)!.music_detailsPlayNextTitle,
-                  ),
-                ),
 
                 // Кэшировать этот трек.
                 ListTile(
