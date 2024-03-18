@@ -102,5 +102,8 @@ Future<DeezerTrack?> deezer_search_closest(
     duration: duration,
   );
 
+  // Если ничего нет, то возвращаем null.
+  if (response.isEmpty) return null;
+
   return response[0];
 }
