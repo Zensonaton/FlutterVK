@@ -309,12 +309,6 @@ class _MainAppState extends State<MainApp> with WindowListener {
     user.markUpdated(false);
 
     // Делаем панель навигации прозрачной.
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        systemNavigationBarColor: Colors.transparent,
-        systemNavigationBarDividerColor: Colors.transparent,
-      ),
-    );
     SystemChrome.setEnabledSystemUIMode(
       SystemUiMode.edgeToEdge,
     );
@@ -422,7 +416,13 @@ class _MainAppState extends State<MainApp> with WindowListener {
           themeAnimationCurve: Curves.ease,
           builder: (BuildContext context, Widget? child) {
             return LoadingOverlay(
-              child: child!,
+              child: AnnotatedRegion(
+                value: const SystemUiOverlayStyle(
+                  systemNavigationBarColor: Colors.transparent,
+                  systemNavigationBarDividerColor: Colors.transparent,
+                ),
+                child: child!,
+              ),
             );
           },
           onGenerateTitle: (BuildContext context) {
