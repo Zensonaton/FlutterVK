@@ -1176,8 +1176,6 @@ class VKMusicPlayer {
   ///
   /// Данный метод нужно вызвать после первого запуска плеера. После завершения музыкальной сессии, рекомендуется вызвать метод [stopMusicSession].
   Future<void> startMusicSession() async {
-    logger.d("Called startMusicSession");
-
     // Указываем, что в данный момент идёт сессия музыки.
     await audioSession!.setActive(true);
 
@@ -1194,8 +1192,6 @@ class VKMusicPlayer {
   ///
   /// Не стоит путать с [updateMusicSession]: Данный метод обновляет трек, который играет в данный момент.
   Future<void> updateMusicSessionTrack() async {
-    logger.d("Called updateMusicSessionTrack");
-
     if (currentAudio == null) return;
 
     // Если у пользователя Windows, то посылаем SMTC обновление.
@@ -1223,8 +1219,6 @@ class VKMusicPlayer {
   ///
   /// Не стоит путать с [updateMusicSessionTrack]: Данный метод лишь обновляет состояние воспроизведения.
   Future<void> updateMusicSession() async {
-    logger.d("Called updateMusicSession");
-
     // Указываем, есть ли у нас в данный момент сессия музыки.
     await audioSession?.setActive(playing);
 
@@ -1278,8 +1272,6 @@ class VKMusicPlayer {
   ///
   /// Данный метод стоит вызывать только после остановки музыкальной сессии, т.е., после вызова метода [stop].
   Future<void> stopMusicSession() async {
-    logger.d("Called stopMusicSession");
-
     if (Platform.isWindows) {
       await smtc?.disableSmtc();
     }
