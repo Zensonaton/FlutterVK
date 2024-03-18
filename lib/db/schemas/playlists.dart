@@ -246,7 +246,9 @@ class DBAlbum {
   bool operator ==(covariant DBAlbum other) {
     if (identical(this, other)) return true;
 
-    return other.runtimeType == DBAlbum && other.mediaKey == mediaKey;
+    return other.runtimeType == DBAlbum &&
+        other.id == id &&
+        other.ownerID == ownerID;
   }
 
   @override
@@ -353,7 +355,9 @@ class DBAudio {
   bool operator ==(covariant DBAudio other) {
     if (identical(this, other)) return true;
 
-    return other.runtimeType == DBAudio && other.mediaKey == mediaKey;
+    return other.runtimeType == DBAudio &&
+        other.id == id &&
+        other.ownerID == ownerID;
   }
 
   @override
@@ -505,7 +509,9 @@ class DBPlaylist {
   bool operator ==(covariant DBPlaylist other) {
     if (identical(this, other)) return true;
 
-    return other.runtimeType == DBPlaylist && other.mediaKey == mediaKey;
+    return other.runtimeType == DBPlaylist &&
+        other.id == id &&
+        other.ownerID == ownerID;
   }
 
   @override

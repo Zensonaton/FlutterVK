@@ -257,7 +257,9 @@ class ExtendedPlaylist {
   bool operator ==(covariant ExtendedPlaylist other) {
     if (identical(this, other)) return true;
 
-    return other.runtimeType == ExtendedPlaylist && other.mediaKey == mediaKey;
+    return other.runtimeType == ExtendedPlaylist &&
+        other.id == id &&
+        other.ownerID == ownerID;
   }
 
   @override
@@ -557,7 +559,9 @@ class ExtendedAudio {
   bool operator ==(covariant ExtendedAudio other) {
     if (identical(this, other)) return true;
 
-    return other.runtimeType == ExtendedAudio && other.mediaKey == mediaKey;
+    return other.runtimeType == ExtendedAudio &&
+        other.id == id &&
+        other.ownerID == ownerID;
   }
 
   @override

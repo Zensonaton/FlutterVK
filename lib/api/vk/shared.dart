@@ -633,7 +633,9 @@ class Playlist {
   bool operator ==(covariant Playlist other) {
     if (identical(this, other)) return true;
 
-    return other.runtimeType == Playlist && other.mediaKey == mediaKey;
+    return other.runtimeType == Playlist &&
+        other.id == id &&
+        other.ownerID == id;
   }
 
   @override
@@ -699,7 +701,9 @@ class Album {
   bool operator ==(covariant Album other) {
     if (identical(this, other)) return true;
 
-    return other.runtimeType == Album && other.mediaKey == mediaKey;
+    return other.runtimeType == Album &&
+        other.id == id &&
+        other.ownerID == ownerID;
   }
 
   @override
@@ -827,7 +831,9 @@ class Audio {
   bool operator ==(covariant Audio other) {
     if (identical(this, other)) return true;
 
-    return other.runtimeType == Audio && other.mediaKey == mediaKey;
+    return other.runtimeType == Audio &&
+        other.id == id &&
+        other.ownerID == ownerID;
   }
 
   @override
