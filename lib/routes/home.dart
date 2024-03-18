@@ -619,14 +619,22 @@ class _HomeRouteState extends State<HomeRoute> {
           await player.addToQueueEnd(audio);
         }
       } catch (e, stackTrace) {
-        // ignore: use_build_context_synchronously
-        showLogErrorDialog(
+        logger.e(
           "Ошибка при загрузке дополнительных треков для аудио микса: ",
-          e,
-          stackTrace,
-          logger,
-          context,
+          error: e,
+          stackTrace: stackTrace,
         );
+
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                AppLocalizations.of(context)!
+                    .musicMixAudiosAddError(e.toString()),
+              ),
+            ),
+          );
+        }
 
         return;
       }

@@ -1,6 +1,5 @@
 import "dart:io";
 
-import "package:audio_service/audio_service.dart";
 import "package:dynamic_color/dynamic_color.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
@@ -26,7 +25,6 @@ import "provider/user.dart";
 import "routes/home.dart";
 import "routes/welcome.dart";
 import "services/audio_player.dart";
-import "services/cache_manager.dart";
 import "services/connectivity_manager.dart";
 import "services/download_manager.dart";
 import "services/logger.dart";

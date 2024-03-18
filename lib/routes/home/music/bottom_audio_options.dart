@@ -17,7 +17,6 @@ import "../../../api/deezer/search.dart";
 import "../../../api/deezer/shared.dart";
 import "../../../consts.dart";
 import "../../../main.dart";
-import "../../../provider/color.dart";
 import "../../../provider/user.dart";
 import "../../../services/audio_player.dart";
 import "../../../services/cache_manager.dart";
@@ -178,8 +177,6 @@ class _TrackThumbnailDialogState extends State<TrackThumbnailDialog> {
   Widget build(BuildContext context) {
     final bool isMobileLayout =
         getDeviceType(MediaQuery.of(context).size) == DeviceScreenType.mobile;
-    final PlayerSchemeProvider colorScheme =
-        Provider.of<PlayerSchemeProvider>(context, listen: false);
 
     return AdaptiveDialog(
       child: Container(

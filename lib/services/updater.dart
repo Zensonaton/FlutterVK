@@ -370,14 +370,21 @@ class Updater {
 
       return false;
     } catch (e, stackTrace) {
-      // ignore: use_build_context_synchronously
-      showLogErrorDialog(
+      logger.e(
         "Не удалось проверить на наличие обновлений:",
-        e,
-        stackTrace,
-        logger,
-        context,
+        error: e,
+        stackTrace: stackTrace,
       );
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.updatesRetrieveError(e.toString()),
+            ),
+          ),
+        );
+      }
 
       return false;
     } finally {
