@@ -13,6 +13,7 @@ import "package:just_audio/just_audio.dart";
 import "package:provider/provider.dart";
 import "package:relative_time/relative_time.dart";
 import "package:responsive_builder/responsive_builder.dart";
+import "package:scroll_to_index/scroll_to_index.dart";
 import "package:skeletonizer/skeletonizer.dart";
 import "package:styled_text/tags/styled_text_tag_action.dart";
 import "package:styled_text/widgets/styled_text.dart";
@@ -387,6 +388,11 @@ class PlaylistInfoRoute extends StatefulWidget {
   /// Плейлист, информация о котором будет отображена.
   final ExtendedPlaylist playlist;
 
+  /// Указывает трек типа [ExtendedAudio], который будет иметь фокус после открытия данного плейлиста.
+  ///
+  /// Если не указывать, никакой из треков иметь фокус не будет.
+  final ExtendedAudio? audio;
+
   /// Если true, то сразу после открытия данного диалога фокус будет на [SearchBar].
   ///
   /// Если значение не указано, то оно будет зависеть от [isDesktop].
@@ -395,6 +401,7 @@ class PlaylistInfoRoute extends StatefulWidget {
   const PlaylistInfoRoute({
     super.key,
     required this.playlist,
+    this.audio,
     this.focusSearchBarOnOpen,
   });
 
@@ -407,6 +414,9 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
 
   /// Подписки на изменения состояния воспроизведения трека.
   late final List<StreamSubscription> subscriptions;
+
+  /// Контроллер, используемый для скроллинга для определённого трека в этом плейлисте, указанного в переменной [widget.audio].
+  final AutoScrollController scrollController = AutoScrollController();
 
   /// Контроллер, используемый для управления введённым в поле поиска текстом.
   final TextEditingController controller = TextEditingController();
@@ -534,6 +544,24 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
     // Если нам это разрешено, то устанавливаем фокус на поле поиска.
     if (widget.focusSearchBarOnOpen ?? isDesktop) focusNode.requestFocus();
 
+    // Если у нас указан трек, то скроллим до него.
+    if (widget.audio != null) {
+      final int index =
+          (widget.playlist.audios ?? {}).toList().indexOf(widget.audio!);
+
+      if (index != -1) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          scrollController.animateTo(
+            (50 + 8).toDouble() * index,
+            duration: const Duration(
+              milliseconds: 500,
+            ),
+            curve: Curves.ease,
+          );
+        });
+      }
+    }
+
     // Обработчик нажатия кнопок клавиатуры.
     RawKeyboard.instance.addListener(keyboardListener);
   }
@@ -581,6 +609,7 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
             children: [
               // Само содержимое плейлиста.
               CustomScrollView(
+                controller: scrollController,
                 slivers: [
                   // AppBar, дополнительно содержащий информацию о данном плейлисте.
                   SliverLayoutBuilder(

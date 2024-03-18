@@ -26,10 +26,12 @@ import "../utils.dart";
 import "../widgets/audio_player.dart";
 import "../widgets/dialogs.dart";
 import "../widgets/loading_overlay.dart";
+import "../widgets/page_route_builders.dart";
 import "fullscreen_player.dart";
 import "home/messages.dart";
 import "home/music.dart";
 import "home/music/categories/realtime_playlists.dart";
+import "home/music/playlist.dart";
 import "home/profile.dart";
 
 /// Диалог, предупреждающий о том, что трек уже сохранён.
@@ -239,10 +241,14 @@ class BottomMusicPlayerWidget extends StatefulWidget {
   /// Указывает, что этот мини плеер может быть больших размеров.
   final bool allowBigAudioPlayer;
 
+  /// Ключ для [Navigator].
+  final GlobalKey<NavigatorState> navigatorKey;
+
   const BottomMusicPlayerWidget({
     super.key,
     this.isMobileLayout = false,
     this.allowBigAudioPlayer = false,
+    required this.navigatorKey,
   });
 
   @override
@@ -387,6 +393,26 @@ class _BottomMusicPlayerWidgetState extends State<BottomMusicPlayerWidget> {
       onPreviousTrack: () => player.previous(
         allowSeekToBeginning: true,
       ),
+      onTrackSelected: (ExtendedAudio audio) {
+        // Пользователь не должен иметь возможности открыть аудио миксы и ещё некоторые типы плейлистов.
+        if (player.currentPlaylist == null ||
+            player.currentPlaylist!.isAudioMixPlaylist) return;
+
+        // Открываем сам плейлист.
+        HapticFeedback.selectionClick();
+
+        // TODO: Как-то сделать проверку на то, что открыта эта же страница, перед тем как открыть новую.
+
+        // Открываем страницу с плейлистом, передавая трек.
+        widget.navigatorKey.currentState!.push(
+          Material3PageRoute(
+            builder: (context) => PlaylistInfoRoute(
+              playlist: player.currentPlaylist!,
+              audio: player.currentAudio,
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -765,6 +791,7 @@ class _HomeRouteState extends State<HomeRoute> {
                           isMobileLayout: isMobileLayout,
                           allowBigAudioPlayer:
                               navigationPage.allowBigAudioPlayer,
+                          navigatorKey: navigationPage.navigatorKey,
                         ),
                       ),
                     ),
