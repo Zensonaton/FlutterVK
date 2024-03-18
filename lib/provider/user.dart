@@ -88,6 +88,7 @@ class ExtendedPlaylist {
       id > 0 &&
       ownerID != vkMusicGroupID &&
       !isSimillarPlaylist &&
+      !isMoodPlaylist &&
       !isAudioMixPlaylist;
 
   /// Указывает, что данный плейлист является плейлистом из раздела "Какой сейчас вайб?" ВКонтакте.
@@ -97,7 +98,7 @@ class ExtendedPlaylist {
   final bool isAudioMixPlaylist;
 
   /// Указывает, что данный плейлист является плейлистом из рекомендаций.
-  bool get isRecommendationsPlaylist => id < 0;
+  bool get isRecommendationsPlaylist => id < 0 && !isMoodPlaylist;
 
   /// Указывает, что данный плейлист является плейлистом из раздела "Совпадения по вкусам".
   bool get isSimillarPlaylist => simillarity != null;
