@@ -273,8 +273,8 @@ class _ImageLyricsBlockState extends State<ImageLyricsBlock> {
                                 opacity: dragProgress.abs(),
                                 child: buildImageWidget(
                                   dragProgress > 0.0
-                                      ? player.nextAudio!
-                                      : player.previousAudio!,
+                                      ? player.smartNextAudio!
+                                      : player.smartPreviousAudio!,
                                 ),
                               ),
                             ),

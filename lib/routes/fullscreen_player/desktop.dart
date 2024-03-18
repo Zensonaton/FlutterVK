@@ -142,6 +142,11 @@ class _NextTrackInfoWidgetState extends State<NextTrackInfoWidget> {
 
   @override
   Widget build(BuildContext context) {
+    assert(
+      player.smartNextAudio != null,
+      "Next audio is not known",
+    );
+
     /// Определяет по оставшейся длине трека то, стоит ли показывать надпись со следующим треком.
     final bool displayNextTrack =
         (player.smartCurrentAudio != null && player.smartNextAudio != null)
@@ -172,33 +177,39 @@ class _NextTrackInfoWidgetState extends State<NextTrackInfoWidget> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(
-                  globalBorderRadius,
+              // Изображение следующего трека.
+              Padding(
+                padding: const EdgeInsets.only(
+                  right: 12,
                 ),
-                child: player.smartNextAudio!.smallestThumbnail != null
-                    ? CachedNetworkImage(
-                        imageUrl: player.smartNextAudio!.smallestThumbnail!,
-                        cacheKey: "${player.nextAudio!.mediaKey}small",
-                        width: 32,
-                        height: 32,
-                        placeholder: (BuildContext context, String url) =>
-                            const FallbackAudioAvatar(),
-                        cacheManager: CachedAlbumImagesManager.instance,
-                      )
-                    : const FallbackAudioAvatar(
-                        width: 32,
-                        height: 32,
-                      ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(
+                    globalBorderRadius,
+                  ),
+                  child: player.smartNextAudio!.smallestThumbnail != null
+                      ? CachedNetworkImage(
+                          imageUrl: player.smartNextAudio!.smallestThumbnail!,
+                          cacheKey: "${player.smartNextAudio!.mediaKey}small",
+                          width: 32,
+                          height: 32,
+                          placeholder: (BuildContext context, String url) =>
+                              const FallbackAudioAvatar(),
+                          cacheManager: CachedAlbumImagesManager.instance,
+                        )
+                      : const FallbackAudioAvatar(
+                          width: 32,
+                          height: 32,
+                        ),
+                ),
               ),
-              const SizedBox(
-                width: 14,
-              ),
+
+              // Его название и прочая информация.
               Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  // "Следующим сыграет".
                   Text(
                     AppLocalizations.of(context)!
                         .music_fullscreenNextTrackTitle,
@@ -210,6 +221,8 @@ class _NextTrackInfoWidgetState extends State<NextTrackInfoWidget> {
                           .withOpacity(0.75),
                     ),
                   ),
+
+                  // Исполнитель и название трека.
                   Text(
                     "${player.smartNextAudio!.artist} • ${player.smartNextAudio!.title}",
                     overflow: TextOverflow.ellipsis,
