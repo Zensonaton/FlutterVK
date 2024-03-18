@@ -146,7 +146,8 @@ class CachedStreamedAudio extends StreamAudioSource {
     );
 
     // Если файлы обложек уже загружены, то ничего не делаем.
-    if (cachedThumb == null) {
+    if (cachedThumb == null ||
+        (audio.vkThumbs == null && audio.deezerThumbs == null)) {
       ExtendedThumbnail? thumbs = audio.vkThumbs;
 
       // Если мы можем загрузить обложки с Deezer, то получаем их URL.
@@ -396,6 +397,11 @@ class VKMusicPlayer {
   ///
   /// Данный объект инициализируется при вызове [_initPlayer].
   AudioSession? audioSession;
+
+  /// Объект типа [AudioPlayerService], создающий медиа-уведомление для Android с кнопками для управления воспроизведения.
+  ///
+  /// Данный объект инициализируется при вызове [_initPlayer].
+  AudioPlayerService? audioService;
 
   /// Список из значений [Audio.mediaKey], по которым была запущена задача по созданию цветовой схемы в методе [getColorSchemeAsync].
   final List<String> _colorSchemeItemsQueue = [];
@@ -659,6 +665,20 @@ class VKMusicPlayer {
   Future<void> _initPlayer() async {
     // Устанавливаем значение для LoopMode по-умолчанию.
     await setLoop(LoopMode.all);
+
+    // Регистрируем AudioHandler для управления музыки при помощи медиа-уведомления на OS Android.
+    audioService = await AudioService.init(
+      builder: () => AudioPlayerService(player),
+      config: const AudioServiceConfig(
+        androidNotificationChannelName: "Flutter VK",
+        androidNotificationChannelId: "com.zensonaton.fluttervk",
+        androidNotificationIcon: "drawable/ic_music_note",
+        androidNotificationOngoing: true,
+        preloadArtwork: true,
+      ),
+      cacheManager: CachedAlbumImagesManager.instance,
+      cacheKeyResolver: (MediaItem item) => "${item.extras!["mediaKey"]!}max",
+    );
 
     // Слушаем события от SMTC, если приложение запущено на Windows.
     if (Platform.isWindows) {
@@ -1167,6 +1187,8 @@ class VKMusicPlayer {
   /// Метод, обновляющий данные о музыкальной сессии, отправляя новые данные по текущему треку после вызова метода [startMusicSession].
   ///
   /// Данный метод стоит вызывать после изменения текущего трека.
+  ///
+  /// Не стоит путать с [updateMusicSession]: Данный метод обновляет трек, который играет в данный момент.
   Future<void> updateMusicSessionTrack() async {
     logger.d("Called updateMusicSessionTrack");
 
@@ -1186,11 +1208,16 @@ class VKMusicPlayer {
         ),
       );
     }
+
+    // Делаем обновление трека в медиа-уведомлении.
+    await audioService?._updateTrack();
   }
 
   /// Метод, обновляющий данные о музыкальной сессии после вызова метода [startMusicSession].
   ///
   /// Данный метод рекомендуется вызывать только при событиях изменения состояния плеера, например, начало буферизации, паузы/воспроизведения и/ли подобных.
+  ///
+  /// Не стоит путать с [updateMusicSessionTrack]: Данный метод лишь обновляет состояние воспроизведения.
   Future<void> updateMusicSession() async {
     logger.d("Called updateMusicSession");
 
@@ -1266,18 +1293,25 @@ class VKMusicPlayer {
   /// Данный метод при повторном вызове (если уже идёт процесс создания цветовой схемы) возвращает null. Результаты данного метода кэшируются, поэтому можно повторно вызывать этот метод, если [Audio.mediaKey] одинаков. [useBetterAlgorithm] указывает, что будет использоваться более точный, но медленный алгоритм для получения цветовой схемы.
   Future<(ColorScheme, ColorScheme)?> getColorSchemeAsync({
     bool useBetterAlgorithm = false,
+    bool forceReset = false,
   }) async {
     final AppLogger logger = getLogger("getColorSchemeAsync");
     final Stopwatch watch = Stopwatch()..start();
+    final String cacheKey =
+        "${player.currentAudio!.mediaKey}$useBetterAlgorithm";
+
+    // Если мы делаем сброс, то удаляем все записи.
+    if (forceReset) {
+      _colorSchemeItemsQueue.remove(player.currentAudio!.mediaKey);
+
+      imageColorSchemeCache.remove(cacheKey);
+    }
 
     // Если у изображения трека нету фотографии, либо задача уже запущена, то возвращаем null.
     if (player.currentAudio?.smallestThumbnail == null ||
         _colorSchemeItemsQueue.contains(
           player.currentAudio!.mediaKey,
         )) return null;
-
-    final String cacheKey =
-        "${player.currentAudio!.mediaKey}$useBetterAlgorithm";
 
     // Пытаемся извлечь значение цветовых схем из кэша.
     if (imageColorSchemeCache.containsKey(cacheKey)) {
@@ -1348,9 +1382,7 @@ class AudioPlayerService extends BaseAudioHandler
     with QueueHandler, SeekHandler {
   final VKMusicPlayer _player;
 
-  AudioPlayerService(
-    this._player,
-  ) {
+  AudioPlayerService(this._player) {
     // События состояния плеера.
     _player.playerStateStream.listen((PlayerState state) async {
       if (!player.playing) return;
@@ -1368,13 +1400,6 @@ class AudioPlayerService extends BaseAudioHandler
     // События изменения позиции плеера.
     _player.positionStream.listen((Duration position) async {
       await _updateEvent();
-    });
-
-    // События изменения плейлиста.
-    _player.sequenceStateStream.listen((SequenceState? state) async {
-      if (state == null) return;
-
-      await _updateTrack();
     });
 
     // События остановки/первого запуска (загрузки) плеера.
@@ -1446,10 +1471,7 @@ class AudioPlayerService extends BaseAudioHandler
   }
 
   @override
-  Future<void> customAction(
-    String name, [
-    Map<String, dynamic>? extras,
-  ]) async {
+  Future<void> customAction(String name, [Map<String, dynamic>? extras]) async {
     final UserProvider user = Provider.of<UserProvider>(
       buildContext!,
       listen: false,

@@ -17,6 +17,7 @@ import "../../../api/deezer/search.dart";
 import "../../../api/deezer/shared.dart";
 import "../../../consts.dart";
 import "../../../main.dart";
+import "../../../provider/color.dart";
 import "../../../provider/user.dart";
 import "../../../services/audio_player.dart";
 import "../../../services/cache_manager.dart";
@@ -177,6 +178,8 @@ class _TrackThumbnailDialogState extends State<TrackThumbnailDialog> {
   Widget build(BuildContext context) {
     final bool isMobileLayout =
         getDeviceType(MediaQuery.of(context).size) == DeviceScreenType.mobile;
+    final PlayerSchemeProvider colorScheme =
+        Provider.of<PlayerSchemeProvider>(context, listen: false);
 
     return AdaptiveDialog(
       child: Container(
@@ -390,6 +393,17 @@ class _TrackThumbnailDialogState extends State<TrackThumbnailDialog> {
                         user.markUpdated(false);
                         await appStorage
                             .savePlaylist(widget.playlist.asDBPlaylist);
+
+                        // Загружаем новые обложки.
+                        CachedStreamedAudio.downloadTrackData(
+                          widget.audio,
+                          widget.playlist,
+                          user,
+                          allowDeezer: user.settings.deezerThumbnails,
+                          allowSpotifyLyrics: user.settings.spotifyLyrics &&
+                              user.spDCcookie != null,
+                          saveInDB: true,
+                        );
 
                         // Отображаем сообщение об успешном изменении, и выходим из диалога.
                         if (context.mounted) {

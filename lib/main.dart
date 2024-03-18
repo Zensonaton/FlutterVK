@@ -197,20 +197,6 @@ Future main() async {
 
   player = VKMusicPlayer();
 
-  // Регистрируем AudioHandler для управления музыки при помощи уведомлений.
-  await AudioService.init(
-    builder: () => AudioPlayerService(player),
-    config: const AudioServiceConfig(
-      androidNotificationChannelName: "Flutter VK",
-      androidNotificationChannelId: "com.zensonaton.fluttervk",
-      androidNotificationIcon: "drawable/ic_music_note",
-      androidNotificationOngoing: true,
-      preloadArtwork: true,
-    ),
-    cacheManager: CachedAlbumImagesManager.instance,
-    cacheKeyResolver: (MediaItem item) => "${item.extras!["mediaKey"]!}max",
-  );
-
   // Breakpoint'ы для разных размеров экранов.
   ResponsiveSizingConfig.instance.setCustomBreakpoints(
     const ScreenBreakpoints(

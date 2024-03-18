@@ -565,6 +565,9 @@ class _HomeRouteState extends State<HomeRoute> {
               user.settings.spotifyLyrics && user.spDCcookie != null,
           saveInDB: true,
         ).then((_) async {
+          // Делаем так, что бы плеер обновил обложку трека.
+          await player.updateMusicSessionTrack();
+
           // Если мы уже получили цвета обложки, то ничего не делаем.
           if (gotColorscheme) return;
 
