@@ -489,8 +489,10 @@ class _HomeRouteState extends State<HomeRoute> {
       ),
     ];
 
-    // Проверяем на наличие обновлений.
-    checkForUpdates();
+    // Проверяем на наличие обновлений, если мы не запущены в debug-режме.
+    if (!kDebugMode) {
+      checkForUpdates();
+    }
 
     // Слушаем события подключения к интернету.
     connectivityManager.connectionChange.listen((bool isConnected) {
@@ -510,8 +512,10 @@ class _HomeRouteState extends State<HomeRoute> {
         ),
       );
 
-      // Проверяем на наличие обновлений.
-      checkForUpdates();
+      // Проверяем на наличие обновлений, если мы не запущены в debug-режме.
+      if (!kDebugMode) {
+        checkForUpdates();
+      }
     });
 
     // Слушаем события нажатия на медиа-уведомление.
