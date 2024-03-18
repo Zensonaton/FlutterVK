@@ -96,9 +96,13 @@ class CachedStreamedAudio extends StreamAudioSource {
   /// Возвращает объект типа [File], либо null, если [cacheKey] не указан.
   Future<File?> getCachedAudio() => getCachedAudioByKey(audio.mediaKey);
 
-  /// Удаляет кэшированный трек из кэша.
+  /// Удаляет кэшированный трек из кэша, а так же его обложки, если они вообще были.
   Future<void> delete() async {
     final File cacheFile = (await getCachedAudio())!;
+
+    // Удаляем кэшированные обложки.
+    CachedAlbumImagesManager.instance.removeFile("${audio.mediaKey}small");
+    CachedAlbumImagesManager.instance.removeFile("${audio.mediaKey}max");
 
     try {
       cacheFile.deleteSync();
