@@ -551,12 +551,8 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
 
       if (index != -1) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          scrollController.animateTo(
+          scrollController.jumpTo(
             (50 + 8).toDouble() * index,
-            duration: const Duration(
-              milliseconds: 500,
-            ),
-            curve: Curves.ease,
           );
         });
       }
