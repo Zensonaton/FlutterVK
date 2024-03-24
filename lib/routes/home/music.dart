@@ -1469,7 +1469,8 @@ class _HomeMusicPageState extends State<HomeMusicPage> {
 
     final bool myMusic = user.settings.myMusicChipEnabled;
     final bool playlists = user.settings.playlistsChipEnabled;
-    final bool realtimePlaylists = user.settings.realtimePlaylistsChipEnabled;
+    final bool realtimePlaylists =
+        hasRecommendations && user.settings.realtimePlaylistsChipEnabled;
     final bool recommendedPlaylists =
         hasRecommendations && user.settings.recommendedPlaylistsChipEnabled;
     final bool similarMusic =
