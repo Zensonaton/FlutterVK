@@ -409,6 +409,7 @@ class _BottomMusicPlayerWidgetState extends State<BottomMusicPlayerWidget> {
             builder: (context) => PlaylistInfoRoute(
               playlist: player.currentPlaylist!,
               audio: player.currentAudio,
+              focusSearchBarOnOpen: false,
             ),
           ),
         );
