@@ -6,7 +6,6 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "package:fullscreen_window/fullscreen_window.dart";
-import "package:just_audio/just_audio.dart";
 import "package:provider/provider.dart";
 import "package:responsive_builder/responsive_builder.dart";
 import "package:scroll_to_index/scroll_to_index.dart";
@@ -539,8 +538,9 @@ class _BlurredBackgroundImageState extends State<BlurredBackgroundImage> {
     super.initState();
 
     subscriptions = [
-      player.sequenceStateStream.listen(
-        (SequenceState? state) => setState(() {}),
+      // Изменение текущего трека.
+      player.currentIndexStream.listen(
+        (int? index) => setState(() {}),
       ),
     ];
   }
@@ -598,8 +598,14 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
     super.initState();
 
     subscriptions = [
-      player.sequenceStateStream.listen(
-        (SequenceState? state) => setState(() {}),
+      // Изменение текущего трека.
+      player.currentIndexStream.listen(
+        (int? index) => setState(() {}),
+      ),
+
+      // Изменение состояния паузы плеера.
+      player.loadedStateStream.listen(
+        (bool loaded) => setState(() {}),
       ),
     ];
   }
