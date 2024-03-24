@@ -150,9 +150,8 @@ class CachedStreamedAudio extends StreamAudioSource {
     );
 
     // Если файлы обложек уже загружены, то ничего не делаем.
-    if (cachedThumb == null ||
-        (audio.vkThumbs == null && audio.deezerThumbs == null)) {
-      ExtendedThumbnail? thumbs = audio.vkThumbs;
+    if (cachedThumb == null || audio.thumbnail == null) {
+      ExtendedThumbnail? thumbs = audio.thumbnail;
 
       // Если мы можем загрузить обложки с Deezer, то получаем их URL.
       if (allowDeezer && thumbs == null) {
