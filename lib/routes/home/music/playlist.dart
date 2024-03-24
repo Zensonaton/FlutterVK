@@ -1196,39 +1196,31 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
               ),
 
               // FAB, располагаемый поверх всего интерфейса при Mobile Layout'е, если играет не этот плейлист.
-              if (isMobileLayout)
+              if (isMobileLayout && player.currentPlaylist != widget.playlist)
                 Align(
                   alignment: Alignment.bottomRight,
-                  child: AnimatedOpacity(
-                    opacity:
-                        player.currentPlaylist != widget.playlist ? 1.0 : 0.0,
+                  child: AnimatedPadding(
+                    padding: const EdgeInsets.all(8).copyWith(
+                      bottom: player.loaded ? 84 : null,
+                    ),
                     duration: const Duration(
                       milliseconds: 500,
                     ),
                     curve: Curves.ease,
-                    child: AnimatedPadding(
-                      padding: const EdgeInsets.all(8).copyWith(
-                        bottom: player.loaded ? 84 : null,
-                      ),
-                      duration: const Duration(
-                        milliseconds: 500,
-                      ),
-                      curve: Curves.ease,
-                      child: FloatingActionButton.extended(
-                        onPressed: () async {
-                          await player.setShuffle(true);
+                    child: FloatingActionButton.extended(
+                      onPressed: () async {
+                        await player.setShuffle(true);
 
-                          await player.setPlaylist(
-                            widget.playlist,
-                            audio: widget.playlist.audios!.randomItem(),
-                          );
-                        },
-                        label: Text(
-                          AppLocalizations.of(context)!.music_shuffleAndPlay,
-                        ),
-                        icon: const Icon(
-                          Icons.shuffle,
-                        ),
+                        await player.setPlaylist(
+                          widget.playlist,
+                          audio: widget.playlist.audios!.randomItem(),
+                        );
+                      },
+                      label: Text(
+                        AppLocalizations.of(context)!.music_shuffleAndPlay,
+                      ),
+                      icon: const Icon(
+                        Icons.shuffle,
                       ),
                     ),
                   ),
