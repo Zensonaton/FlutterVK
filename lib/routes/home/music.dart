@@ -401,7 +401,7 @@ Future<void> ensureUserAudioRecommendations(
     user.markUpdated(false);
   } catch (e, stackTrace) {
     logger.e(
-      "Ошибка при загрузке информации для раздела музыки: ",
+      "Ошибка при загрузке рекомендованной музыки: ",
       error: e,
       stackTrace: stackTrace,
     );

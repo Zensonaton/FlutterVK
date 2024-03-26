@@ -132,9 +132,10 @@ APICatalogRealResponse _$APICatalogRealResponseFromJson(
       recommendedPlaylists: (json['recommended_playlists'] as List<dynamic>)
           .map((e) => SimillarPlaylist.fromJson(e as Map<String, dynamic>))
           .toList(),
-      audioStreamMixes: (json['audio_stream_mixes'] as List<dynamic>)
-          .map((e) => AudioMix.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      audioStreamMixes: (json['audio_stream_mixes'] as List<dynamic>?)
+              ?.map((e) => AudioMix.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
     );
 
 Map<String, dynamic> _$APICatalogRealResponseToJson(

@@ -228,7 +228,7 @@ class APICatalogRealResponse {
   final List<SimillarPlaylist> recommendedPlaylists;
 
   /// Перечисление аудио миксов по типу VK Mix.
-  @JsonKey(name: "audio_stream_mixes")
+  @JsonKey(name: "audio_stream_mixes", defaultValue: [])
   final List<AudioMix> audioStreamMixes;
 
   APICatalogRealResponse({
