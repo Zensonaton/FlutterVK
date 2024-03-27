@@ -635,7 +635,7 @@ packages:
     description:
       path: "."
       ref: main
-      resolved-ref: "52a29fae1a4f1a2f8de3cf47d47181fc01046149"
+      resolved-ref: c836d09ca47899c348d2d45a718d4f04cd615c0b
       url: "https://github.com/Zensonaton/just_audio_media_kit.git"
     source: git
     version: "2.0.1"
