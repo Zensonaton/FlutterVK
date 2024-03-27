@@ -78,7 +78,7 @@ class ExtendedPlaylist {
   Thumbnails? photo;
 
   /// Список из аудио в данном плейлисте.
-  Set<ExtendedAudio>? audios;
+  List<ExtendedAudio>? audios;
 
   /// Указывает, что данный плейлист является плейлистом с "любимыми" треками пользователя.
   bool get isFavoritesPlaylist => id == 0;
@@ -168,7 +168,7 @@ class ExtendedPlaylist {
   /// Создаёт из передаваемого объекта [Playlist] объект данного класа.
   static ExtendedPlaylist fromAudioPlaylist(
     Playlist playlist, {
-    Set<ExtendedAudio>? audios,
+    List<ExtendedAudio>? audios,
     int? totalAudios,
     bool isMoodPlaylist = false,
     double? simillarity,
@@ -225,7 +225,7 @@ class ExtendedPlaylist {
                 isLiked: playlist.id == 0,
               ),
             )
-            .toSet(),
+            .toList(),
         isMoodPlaylist: playlist.isMoodPlaylist ?? false,
         isAudioMixPlaylist: playlist.isAudioMixPlaylist ?? false,
         mixID: playlist.mixID,
@@ -1077,8 +1077,8 @@ class UserProvider extends ChangeNotifier {
       if (playlist.audios != null) {
         // Создаём отдельный List с shadow copy списка треков.
         final List<ExtendedAudio> newAudios = [...playlist.audios!];
-        final Set<ExtendedAudio> oldAudios = existingPlaylist.audios ?? {};
-        existingPlaylist.audios = {};
+        final List<ExtendedAudio> oldAudios = existingPlaylist.audios ?? [];
+        existingPlaylist.audios = [];
 
         for (ExtendedAudio audio in newAudios) {
           ExtendedAudio newAudio =
@@ -1096,13 +1096,13 @@ class UserProvider extends ChangeNotifier {
         }
 
         // Проходимся по тому списку треков, которые кэшированы, но больше нет в плейлисте.
-        final Set<ExtendedAudio> removedAudios = oldAudios
+        final List<ExtendedAudio> removedAudios = oldAudios
             .where(
               (audio) =>
                   (audio.isCached ?? false) &&
                   !existingPlaylist!.audios!.contains(audio),
             )
-            .toSet();
+            .toList();
 
         for (ExtendedAudio audio in removedAudios) {
           logger.d("Audio $audio will be deleted");

@@ -252,12 +252,12 @@ class _SearchDisplayDialogState extends State<SearchDisplayDialog> {
                   BuildContext context,
                   AsyncSnapshot<APIAudioSearchResponse> snapshot,
                 ) {
-                  final Set<ExtendedAudio>? audios =
+                  final List<ExtendedAudio>? audios =
                       snapshot.data?.response?.items
                           .map(
                             (audio) => ExtendedAudio.fromAPIAudio(audio),
                           )
-                          .toSet();
+                          .toList();
 
                   // Пользователь ещё ничего не ввёл.
                   if (snapshot.connectionState == ConnectionState.none) {

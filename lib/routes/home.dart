@@ -134,10 +134,7 @@ Future<void> toggleTrackLike(
 
     // Убеждаемся, что трек не существует в списке, после чего добавляем его в самое начало.
     if (!user.favoritesPlaylist!.audios!.contains(audio)) {
-      user.favoritesPlaylist!.audios = {
-        audio,
-        ...user.favoritesPlaylist!.audios!,
-      };
+      user.favoritesPlaylist!.audios!.insert(0, audio);
     }
 
     user.updatePlaylist(user.favoritesPlaylist!);

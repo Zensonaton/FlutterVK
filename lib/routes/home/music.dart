@@ -154,20 +154,18 @@ Future<void> ensureUserAudioBasicInfo(
                   isLiked: true,
                 ),
               )
-              .toSet(),
+              .toList(),
           isLiveData: true,
           areTracksLive: true,
         ),
 
         // Все остальные плейлисты пользователя.
         // Мы помечаем что плейлисты являются кэшированными.
-        ...response.response!.playlists
-            .map(
-              (playlist) => ExtendedPlaylist.fromAudioPlaylist(
-                playlist,
-              ),
-            )
-            .toSet(),
+        ...response.response!.playlists.map(
+          (playlist) => ExtendedPlaylist.fromAudioPlaylist(
+            playlist,
+          ),
+        ),
       ],
       saveToDB: saveToDB,
     );

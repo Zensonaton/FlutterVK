@@ -84,7 +84,7 @@ Future<ExtendedPlaylist> loadPlaylistData(
       .map(
         (Audio audio) => ExtendedAudio.fromAPIAudio(audio),
       )
-      .toSet();
+      .toList();
   newPlaylist.count = response.response!.audioCount;
   newPlaylist.photo ??= response.response!.playlists
       .firstWhereOrNull(
@@ -96,8 +96,8 @@ Future<ExtendedPlaylist> loadPlaylistData(
 }
 
 /// Возвращает только те [Audio], которые совпадают по названию [query].
-Set<ExtendedAudio> filterAudiosByName(
-  Set<ExtendedAudio> audios,
+List<ExtendedAudio> filterAudiosByName(
+  List<ExtendedAudio> audios,
   String query,
 ) {
   // Избавляемся от всех пробелов в запросе, а так же диакритические знаки.
@@ -111,7 +111,7 @@ Set<ExtendedAudio> filterAudiosByName(
       .where(
         (ExtendedAudio audio) => audio.normalizedName.contains(query),
       )
-      .toSet();
+      .toList();
 }
 
 /// Метод, вызываемый при нажатии по центру плейлиста. Данный метод либо ставит плейлист на паузу, либо загружает его информацию.
@@ -550,7 +550,7 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
     // Если у нас указан трек, то скроллим до него.
     if (widget.audio != null) {
       final int index =
-          (widget.playlist.audios ?? {}).toList().indexOf(widget.audio!);
+          (widget.playlist.audios ?? []).toList().indexOf(widget.audio!);
 
       if (index != -1) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -580,8 +580,8 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
   Widget build(BuildContext context) {
     final UserProvider user = Provider.of<UserProvider>(context);
 
-    final Set<ExtendedAudio> playlistAudios = widget.playlist.audios ?? {};
-    final Set<ExtendedAudio> filteredAudios =
+    final List<ExtendedAudio> playlistAudios = widget.playlist.audios ?? [];
+    final List<ExtendedAudio> filteredAudios =
         filterAudiosByName(playlistAudios, controller.text);
 
     final bool isMobileLayout =

@@ -54,7 +54,7 @@ Future<void> onMixPlayToggle(
         .map(
           (audio) => ExtendedAudio.fromAPIAudio(audio),
         )
-        .toSet();
+        .toList();
     playlist.count = response.response!.length;
   } catch (e, stackTrace) {
     // ignore: use_build_context_synchronously
