@@ -189,7 +189,7 @@ class CachedStreamedAudio extends StreamAudioSource {
     }
 
     // Если это возможно, то так же загружаем текст песни, если его ещё нет.
-    if (audio.lyrics == null) {
+    if (audio.lyrics == null || audio.lyrics?.timestamps == null) {
       if (audio.hasLyrics ?? false) {
         tasks.add(
           user.audioGetLyrics(audio.mediaKey).then((response) {
