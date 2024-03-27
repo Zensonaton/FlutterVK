@@ -688,7 +688,7 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                                   CrossAxisAlignment.start,
                                               children: [
                                                 // Название плейлиста.
-                                                Text(
+                                                SelectableText(
                                                   widget.playlist.title ??
                                                       AppLocalizations.of(
                                                         context,
@@ -700,9 +700,9 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                                       .copyWith(
                                                         fontWeight:
                                                             FontWeight.w500,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
                                                       ),
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
                                                 ),
                                                 const SizedBox(
                                                   height: 4,
@@ -712,15 +712,16 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                                 if (widget
                                                         .playlist.description !=
                                                     null)
-                                                  Text(
+                                                  SelectableText(
                                                     widget
                                                         .playlist.description!,
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
                                                     style: TextStyle(
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
                                                       color: Theme.of(context)
                                                           .colorScheme
-                                                          .onBackground,
+                                                          .onBackground
+                                                          .withOpacity(0.9),
                                                     ),
                                                   ),
                                                 if (widget
@@ -762,7 +763,7 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                                       color: Theme.of(context)
                                                           .colorScheme
                                                           .onBackground
-                                                          .withOpacity(0.75),
+                                                          .withOpacity(0.8),
                                                     ),
                                                   ),
                                                 ),
