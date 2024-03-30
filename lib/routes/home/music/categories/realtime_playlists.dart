@@ -378,6 +378,8 @@ class MoodPlaylistWidget extends StatelessWidget {
                           imageUrl: backgroundUrl!,
                           cacheKey: cacheKey,
                           fit: BoxFit.fill,
+                          width: 200,
+                          height: 50,
                           memCacheWidth:
                               (200 * MediaQuery.devicePixelRatioOf(context))
                                   .round(),
