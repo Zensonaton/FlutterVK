@@ -1085,6 +1085,8 @@ class UserProvider extends ChangeNotifier {
               oldAudios.firstWhereOrNull((oldAudio) => oldAudio == audio) ??
                   audio;
 
+          newAudio.title = audio.title;
+          newAudio.artist = audio.artist;
           newAudio.url ??= audio.url;
           newAudio.isCached = audio.isCached ?? newAudio.isCached;
           newAudio.album ??= audio.album;
