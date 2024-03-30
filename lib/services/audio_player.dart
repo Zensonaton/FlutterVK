@@ -435,7 +435,7 @@ class VKMusicPlayer {
   /// Указывает, будет ли плеер вызывать метод [stop], если после вызова [pause] не происходило никаких других взаимодействий с плеером.
   bool get allowStopOnPause => _allowStopOnPause;
 
-  bool _allowStopOnPause = true;
+  bool _allowStopOnPause = false;
 
   /// [Timer], используемый если [allowStopOnPause] не равен false, создаваемый после вызова [pause], и удаляемый после вызова [play].
   Timer? _pauseStopTimer;
@@ -1262,8 +1262,13 @@ class VKMusicPlayer {
     _pauseStopTimer?.cancel();
 
     if (!playing && _loaded && _allowStopOnPause) {
+      logger.d("Starting stopOnPause timer for $stopOnPauseTimerDuration");
+
       // Запускаем таймер.
-      _pauseStopTimer = Timer(stopOnPauseTimerDuration, _stopOnPauseCallback);
+      _pauseStopTimer = Timer(
+        stopOnPauseTimerDuration,
+        _stopOnPauseCallback,
+      );
     }
   }
 
