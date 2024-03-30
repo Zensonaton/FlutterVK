@@ -381,6 +381,7 @@ class VKMusicPlayer {
           if (state == null || currentAudio == null) return;
 
           _fakeCurrentTrackIndex = null;
+          _fakeCurrentPosition = null;
 
           await updateMusicSessionTrack();
           await updateMusicSession();
@@ -455,6 +456,16 @@ class VKMusicPlayer {
   Stream<bool> get loadedStateStream =>
       _loadedStateController.stream.asBroadcastStream();
 
+  /// Фейковое время для [seek]'а. Используется, что бы значение прослушанности трека после вызова [seek] происходило мгновенно.
+  Duration? _fakeCurrentPosition;
+
+  final StreamController<Duration> _seekStateController =
+      StreamController.broadcast();
+
+  /// Stream, указывающий события метода [seek].
+  Stream<Duration> get seekStateStream =>
+      _seekStateController.stream.asBroadcastStream();
+
   /// Информация о том, играет ли что-то сейчас у плеера или нет.
   ///
   /// Учтите, что это поле может быть true даже в том случае, если идёт буферизация (см. [buffering]).
@@ -504,7 +515,7 @@ class VKMusicPlayer {
   /// Возвращает текущую позицию трека.
   ///
   /// Для полной длительности трека воспользуйтесь полем [duration]. Если Вам необходим процент (число от 0.0 до 1.0), отображающий прогресс прослушивания текущего трека, то для этого есть поле [progress].
-  Duration get position => _player.position;
+  Duration get position => _fakeCurrentPosition ?? _player.position;
 
   /// Stream, возвращающий события о изменения текущей позиции воспроизведения.
   ///
@@ -890,7 +901,11 @@ class VKMusicPlayer {
     Duration position, {
     bool play = false,
   }) async {
+    _fakeCurrentPosition = position;
+
     await _player.seek(position);
+    _fakeCurrentPosition = null;
+    _seekStateController.add(position);
 
     if (play && !playing) await _player.play();
   }

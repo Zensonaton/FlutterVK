@@ -337,6 +337,9 @@ class TrackLyricsBlock extends StatefulWidget {
 }
 
 class _TrackLyricsBlockState extends State<TrackLyricsBlock> {
+  /// Подписки на изменения состояния воспроизведения трека.
+  late final List<StreamSubscription> subscriptions;
+
   /// [AutoScrollController] для [ListView.builder], необходимый для автоматического перемещения до определённой строчки.
   final AutoScrollController controller = AutoScrollController();
 
@@ -366,6 +369,15 @@ class _TrackLyricsBlockState extends State<TrackLyricsBlock> {
   void initState() {
     super.initState();
 
+    subscriptions = [
+      player.seekStateStream.listen(
+        (Duration position) => scrollToIndex(
+          index: currentLyricIndex,
+          checkVisibility: false,
+        ),
+      ),
+    ];
+
     // Если у нас несинхронизированный текст песни, то тогда нам нужно преобразовать все [String] в [LyricTimestamp].
     lyrics = (widget.lyrics.timestamps ?? widget.lyrics.text!).map(
       (dynamic item) {
@@ -394,7 +406,7 @@ class _TrackLyricsBlockState extends State<TrackLyricsBlock> {
     // Скроллим до этого момента в треке.
     if (currentLyricIndex != null) {
       scrollToIndex(
-        currentLyricIndex!,
+        index: currentLyricIndex!,
         checkVisibility: false,
       );
     }
@@ -406,6 +418,10 @@ class _TrackLyricsBlockState extends State<TrackLyricsBlock> {
 
     if (controller.hasClients) {
       controller.position.isScrollingNotifier.removeListener(onScroll);
+    }
+
+    for (StreamSubscription subscription in subscriptions) {
+      subscription.cancel();
     }
   }
 
@@ -431,9 +447,9 @@ class _TrackLyricsBlockState extends State<TrackLyricsBlock> {
     return currentLyricIndex;
   }
 
-  /// Прокручивает [ListView] с текстом до указанного [index]. Если [checkVisibility] = true, то прокрутка произойдёт только в том случае, если виджет с текстом виден пользователю. [checkScroll] указывает, что скроллинг не будет происходить, если пользователь сам скроллит.
-  Future<void> scrollToIndex(
-    int index, {
+  /// Прокручивает [ListView] с текстом до указанного [index], либо в самое начало, если [index] не указан. Если [checkVisibility] = true, то прокрутка произойдёт только в том случае, если виджет с текстом виден пользователю. [checkScroll] указывает, что скроллинг не будет происходить, если пользователь сам скроллит.
+  Future<void> scrollToIndex({
+    int? index,
     bool checkVisibility = true,
     bool checkScroll = true,
   }) async {
@@ -444,7 +460,7 @@ class _TrackLyricsBlockState extends State<TrackLyricsBlock> {
     if (checkScroll && currentlyScrolling) return;
 
     controller.scrollToIndex(
-      currentLyricIndex!,
+      currentLyricIndex ?? 0,
       preferPosition: AutoScrollPosition.middle,
     );
   }
@@ -454,7 +470,7 @@ class _TrackLyricsBlockState extends State<TrackLyricsBlock> {
     // Если индекс неизвестен, то ничего не делаем.
     if (currentLyricIndex == null) return;
 
-    scrollToIndex(currentLyricIndex!);
+    scrollToIndex(index: currentLyricIndex!);
   }
 
   @override
