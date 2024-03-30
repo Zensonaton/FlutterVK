@@ -375,11 +375,12 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                 globalBorderRadius,
               ),
         boxShadow: [
-          BoxShadow(
-            color: widget.scheme.secondaryContainer,
-            blurRadius: widget.playbackState ? 50 : 0,
-            blurStyle: BlurStyle.outer,
-          ),
+          if (widget.playbackState)
+            BoxShadow(
+              color: widget.scheme.secondaryContainer,
+              blurRadius: widget.playbackState ? 50 : 0,
+              blurStyle: BlurStyle.outer,
+            ),
         ],
       ),
       child: Stack(
@@ -444,15 +445,20 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                             onTap: () => widget.onFullscreen?.call(false),
                             child: Hero(
                               tag: widget.audio?.mediaKey ?? "",
-                              child: Container(
+                              child: AnimatedContainer(
+                                duration: const Duration(
+                                  milliseconds: 200,
+                                ),
+                                curve: Curves.ease,
                                 decoration: BoxDecoration(
                                   boxShadow: [
-                                    BoxShadow(
-                                      blurRadius: 10,
-                                      spreadRadius: -3,
-                                      color: widget.scheme.tertiary,
-                                      blurStyle: BlurStyle.outer,
-                                    ),
+                                    if (widget.playbackState)
+                                      BoxShadow(
+                                        blurRadius: 10,
+                                        spreadRadius: -3,
+                                        color: widget.scheme.tertiary,
+                                        blurStyle: BlurStyle.outer,
+                                      ),
                                   ],
                                 ),
                                 child: ClipRRect(

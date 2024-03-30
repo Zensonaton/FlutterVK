@@ -465,6 +465,7 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                       duration: const Duration(
                         milliseconds: 500,
                       ),
+                      curve: Curves.ease,
                       width: 130 *
                           ((user.settings.fullscreenBigThumbnail &&
                                   MediaQuery.of(context).size.height > 600)
@@ -479,15 +480,15 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                                   ? 2
                                   : 3
                               : 1),
-                      curve: Curves.ease,
                       decoration: BoxDecoration(
                         boxShadow: [
-                          BoxShadow(
-                            blurRadius: 22,
-                            spreadRadius: -3,
-                            color: Theme.of(context).colorScheme.tertiary,
-                            blurStyle: BlurStyle.outer,
-                          ),
+                          if (player.playing)
+                            BoxShadow(
+                              blurRadius: 22,
+                              spreadRadius: -3,
+                              color: Theme.of(context).colorScheme.tertiary,
+                              blurStyle: BlurStyle.outer,
+                            ),
                         ],
                       ),
                       child: ClipRRect(
@@ -509,8 +510,6 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                                         player.currentAudio!.maxThumbnail!,
                                     cacheKey:
                                         "${player.currentAudio!.mediaKey}max",
-                                    memCacheHeight: 130 * 3,
-                                    memCacheWidth: 130 * 3,
                                     fit: BoxFit.fill,
                                     placeholder:
                                         (BuildContext context, String url) =>

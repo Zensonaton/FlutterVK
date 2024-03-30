@@ -636,6 +636,14 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
                                     cacheKey: "${widget.audio.mediaKey}small",
                                     width: 50,
                                     height: 50,
+                                    memCacheWidth: (50 *
+                                            MediaQuery.of(context)
+                                                .devicePixelRatio)
+                                        .round(),
+                                    memCacheHeight: (50 *
+                                            MediaQuery.of(context)
+                                                .devicePixelRatio)
+                                        .round(),
                                     placeholder:
                                         (BuildContext context, String url) =>
                                             const FallbackAudioAvatar(),
@@ -991,8 +999,12 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
                           ? CachedNetworkImage(
                               imageUrl: widget.backgroundUrl!,
                               cacheKey: widget.cacheKey,
-                              memCacheHeight: 200,
-                              memCacheWidth: 200,
+                              memCacheHeight:
+                                  (200 * MediaQuery.devicePixelRatioOf(context))
+                                      .round(),
+                              memCacheWidth:
+                                  (200 * MediaQuery.devicePixelRatioOf(context))
+                                      .round(),
                               placeholder: (BuildContext context, String url) =>
                                   const FallbackAudioPlaylistAvatar(),
                               cacheManager: CachedNetworkImagesManager.instance,

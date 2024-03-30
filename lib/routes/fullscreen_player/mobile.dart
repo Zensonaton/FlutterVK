@@ -157,17 +157,22 @@ class _ImageLyricsBlockState extends State<ImageLyricsBlock> {
           padding: const EdgeInsets.all(
             36,
           ),
-          child: Container(
+          child: AnimatedContainer(
+            duration: const Duration(
+              milliseconds: 500,
+            ),
+            curve: Curves.ease,
             width: _playerImageSize,
             height: _playerImageSize,
             decoration: BoxDecoration(
               boxShadow: [
-                BoxShadow(
-                  blurRadius: 20,
-                  spreadRadius: -3,
-                  color: Theme.of(context).colorScheme.tertiary,
-                  blurStyle: BlurStyle.outer,
-                ),
+                if (player.playing)
+                  BoxShadow(
+                    blurRadius: 20,
+                    spreadRadius: -3,
+                    color: Theme.of(context).colorScheme.tertiary,
+                    blurStyle: BlurStyle.outer,
+                  ),
               ],
             ),
             child: ClipRRect(
@@ -184,8 +189,6 @@ class _ImageLyricsBlockState extends State<ImageLyricsBlock> {
                       placeholder: (BuildContext context, String url) =>
                           const FallbackAudioAvatar(),
                       cacheManager: CachedAlbumImagesManager.instance,
-                      memCacheWidth: _playerImageSize.toInt(),
-                      memCacheHeight: _playerImageSize.toInt(),
                     )
                   : const FallbackAudioAvatar(
                       width: _playerImageSize,

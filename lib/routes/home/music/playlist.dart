@@ -660,8 +660,8 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                                         .photo!.photo270!,
                                                     cacheKey:
                                                         "${widget.playlist.mediaKey}270",
-                                                    memCacheHeight: 200,
-                                                    memCacheWidth: 200,
+                                                    memCacheHeight: (200 * MediaQuery.devicePixelRatioOf(context)).round(),
+                                                    memCacheWidth: (200 * MediaQuery.devicePixelRatioOf(context)).round(),
                                                     placeholder: (
                                                       BuildContext context,
                                                       String url,
