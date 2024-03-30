@@ -719,50 +719,92 @@ class UserProvider extends ChangeNotifier {
   /// Объект, перечисляющий все плейлисты пользователя.
   Map<String, ExtendedPlaylist> allPlaylists = {};
 
+  ExtendedPlaylist? _favoritesPlaylist;
+
   /// Фейковый плейлист с "лайкнутыми" треками пользователя.
-  ExtendedPlaylist? get favoritesPlaylist => allPlaylists["${id!}_0"];
+  ExtendedPlaylist? get favoritesPlaylist {
+    _favoritesPlaylist ??= allPlaylists["${id!}_0"];
+
+    return _favoritesPlaylist;
+  }
+
+  List<ExtendedPlaylist>? _regularPlaylists;
 
   /// Перечисление всех обычных плейлистов, которые были сделаны данным пользователем.
-  List<ExtendedPlaylist> get regularPlaylists => allPlaylists.values
-      .where(
-        (ExtendedPlaylist playlist) => playlist.isRegularPlaylist,
-      )
-      .toList();
+  List<ExtendedPlaylist> get regularPlaylists {
+    _regularPlaylists ??= allPlaylists.values
+        .where(
+          (ExtendedPlaylist playlist) => playlist.isRegularPlaylist,
+        )
+        .toList();
+
+    return _regularPlaylists!;
+  }
+
+  List<ExtendedPlaylist>? _moodPlaylists;
 
   /// Перечисление всех плейлистов раздела "В реальном времени" (маленький плейлист).
-  List<ExtendedPlaylist> get moodPlaylists => allPlaylists.values
-      .where(
-        (ExtendedPlaylist playlist) => playlist.isMoodPlaylist,
-      )
-      .toList();
+  List<ExtendedPlaylist> get moodPlaylists {
+    _moodPlaylists ??= allPlaylists.values
+        .where(
+          (ExtendedPlaylist playlist) => playlist.isMoodPlaylist,
+        )
+        .toList();
+
+    return _moodPlaylists!;
+  }
+
+  List<ExtendedPlaylist>? _audioMixPlaylists;
 
   /// Перечисление всех плейлистов-аудио миксов из раздела "В реальном времени".
-  List<ExtendedPlaylist> get audioMixPlaylists => allPlaylists.values
-      .where(
-        (ExtendedPlaylist playlist) => playlist.isAudioMixPlaylist,
-      )
-      .toList();
+  List<ExtendedPlaylist> get audioMixPlaylists {
+    _audioMixPlaylists ??= allPlaylists.values
+        .where(
+          (ExtendedPlaylist playlist) => playlist.isAudioMixPlaylist,
+        )
+        .toList();
+
+    return _audioMixPlaylists!;
+  }
+
+  List<ExtendedPlaylist>? _recommendationPlaylists;
 
   /// Перечисление всех "рекомендованных" плейлистов.
-  List<ExtendedPlaylist> get recommendationPlaylists => allPlaylists.values
-      .where(
-        (ExtendedPlaylist playlist) => playlist.isRecommendationsPlaylist,
-      )
-      .toList();
+  List<ExtendedPlaylist> get recommendationPlaylists {
+    _recommendationPlaylists ??= allPlaylists.values
+        .where(
+          (ExtendedPlaylist playlist) => playlist.isRecommendationsPlaylist,
+        )
+        .toList();
+
+    return _recommendationPlaylists!;
+  }
+
+  List<ExtendedPlaylist>? _simillarPlaylists;
 
   /// Перечисление всех плейлистов из раздела "Совпадения по вкусам".
-  List<ExtendedPlaylist> get simillarPlaylists => allPlaylists.values
-      .where(
-        (ExtendedPlaylist playlist) => playlist.isSimillarPlaylist,
-      )
-      .toList();
+  List<ExtendedPlaylist> get simillarPlaylists {
+    _simillarPlaylists ??= allPlaylists.values
+        .where(
+          (ExtendedPlaylist playlist) => playlist.isSimillarPlaylist,
+        )
+        .toList();
+
+    return _simillarPlaylists!;
+  }
+
+  List<ExtendedPlaylist>? _madeByVKPlaylists;
 
   /// Перечисление всех плейлистов, которые были сделаны ВКонтакте (раздел "Собрано редакцией").
-  List<ExtendedPlaylist> get madeByVKPlaylists => allPlaylists.values
-      .where(
-        (ExtendedPlaylist playlist) => playlist.isMadeByVKPlaylist,
-      )
-      .toList();
+  List<ExtendedPlaylist> get madeByVKPlaylists {
+    _madeByVKPlaylists ??= allPlaylists.values
+        .where(
+          (ExtendedPlaylist playlist) => playlist.isMadeByVKPlaylist,
+        )
+        .toList();
+
+    return _madeByVKPlaylists!;
+  }
 
   /// Информация о количестве плейлистов пользователя.
   int? playlistsCount;
@@ -1121,8 +1163,17 @@ class UserProvider extends ChangeNotifier {
       }
     }
 
+    // Сохраняем новый плейлист, очищая кэш плейлистов в памяти.
     allPlaylists[playlist.mediaKey] = existingPlaylist;
+    _favoritesPlaylist = null;
+    _regularPlaylists = null;
+    _moodPlaylists = null;
+    _audioMixPlaylists = null;
+    _recommendationPlaylists = null;
+    _simillarPlaylists = null;
+    _madeByVKPlaylists = null;
 
+    // Сохраняем в БД.
     if (saveToDB) {
       await appStorage.savePlaylists(
         allPlaylists.values
