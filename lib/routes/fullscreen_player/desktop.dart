@@ -534,6 +534,7 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                   children: [
                     Row(
                       children: [
+                        // Название трека.
                         Text(
                           player.currentAudio!.title,
                           overflow: TextOverflow.ellipsis,
@@ -546,17 +547,39 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                                 .onPrimaryContainer,
                           ),
                         ),
+
+                        // Иконка Explicit.
                         if (player.currentAudio!.isExplicit)
-                          const SizedBox(
-                            width: 4,
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              left: 4,
+                            ),
+                            child: Icon(
+                              Icons.explicit,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onPrimaryContainer
+                                  .withOpacity(0.5),
+                            ),
                           ),
-                        if (player.currentAudio!.isExplicit)
-                          Icon(
-                            Icons.explicit,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onBackground
-                                .withOpacity(0.5),
+
+                        // Подпись трека.
+                        if (player.currentAudio!.subtitle != null)
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              left: 10,
+                            ),
+                            child: Text(
+                              player.currentAudio!.subtitle!,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 22,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onPrimaryContainer
+                                    .withOpacity(0.5),
+                              ),
+                            ),
                           ),
                       ],
                     ),

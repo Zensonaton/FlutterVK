@@ -93,12 +93,14 @@ class NextTrackInfoWidget extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.music_note,
-              color: scheme.primary,
-            ),
-            const SizedBox(
-              width: 8,
+            Padding(
+              padding: const EdgeInsets.only(
+                right: 8,
+              ),
+              child: Icon(
+                Icons.music_note,
+                color: scheme.primary,
+              ),
             ),
             Text(
               "${nextAudio.artist} • ${nextAudio.title}",
@@ -121,6 +123,12 @@ class TrackTitleAndArtist extends StatelessWidget {
   /// Исполнитель трека.
   final String artist;
 
+  /// Подпись трека.
+  final String? subtitle;
+
+  /// Указывает, что это Explicit-трек.
+  final bool explicit;
+
   /// Цветовая схема.
   final ColorScheme scheme;
 
@@ -128,6 +136,8 @@ class TrackTitleAndArtist extends StatelessWidget {
     super.key,
     required this.title,
     required this.artist,
+    this.subtitle,
+    this.explicit = false,
     required this.scheme,
   });
 
@@ -137,15 +147,50 @@ class TrackTitleAndArtist extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Название трека.
-        Text(
-          title,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: scheme.onPrimaryContainer,
-          ),
+        // Информация по названию трека и прочей информацией.
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Название трека.
+            Text(
+              title,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: scheme.onPrimaryContainer,
+              ),
+            ),
+
+            // Плашка "Explicit".
+            if (explicit)
+              Padding(
+                padding: const EdgeInsets.only(
+                  left: 4,
+                ),
+                child: Icon(
+                  Icons.explicit,
+                  color: scheme.onPrimaryContainer.withOpacity(0.5),
+                  size: 14,
+                ),
+              ),
+
+            // Подпись трека.
+            if (subtitle != null)
+              Padding(
+                padding: const EdgeInsets.only(
+                  left: 10,
+                ),
+                child: Text(
+                  subtitle!,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: scheme.onPrimaryContainer.withOpacity(0.5),
+                  ),
+                ),
+              ),
+          ],
         ),
 
         // Исполнитель.
@@ -154,9 +199,7 @@ class TrackTitleAndArtist extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
             fontSize: 12,
-            color: scheme.onPrimaryContainer.withOpacity(
-              0.9,
-            ),
+            color: scheme.onPrimaryContainer.withOpacity(0.9),
           ),
         ),
       ],
@@ -525,6 +568,9 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                       child: TrackTitleAndArtist(
                                         title: widget.audio?.title ?? "",
                                         artist: widget.audio?.artist ?? "",
+                                        subtitle: widget.audio?.subtitle,
+                                        explicit:
+                                            widget.audio?.isExplicit ?? false,
                                         scheme: widget.scheme,
                                       ),
                                     ),
@@ -557,6 +603,11 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                                 artist:
                                                     widget.nextAudio?.artist ??
                                                         "",
+                                                subtitle:
+                                                    widget.audio?.subtitle,
+                                                explicit:
+                                                    widget.audio?.isExplicit ??
+                                                        false,
                                                 scheme: widget.scheme,
                                               )
                                             : TrackTitleAndArtist(
@@ -566,6 +617,11 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                                 artist: widget.previousAudio
                                                         ?.artist ??
                                                     "",
+                                                subtitle:
+                                                    widget.audio?.subtitle,
+                                                explicit:
+                                                    widget.audio?.isExplicit ??
+                                                        false,
                                                 scheme: widget.scheme,
                                               ),
                                       ),

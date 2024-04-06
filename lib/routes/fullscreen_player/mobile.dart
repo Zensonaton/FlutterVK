@@ -431,9 +431,30 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                               Icons.explicit,
                               color: Theme.of(context)
                                   .colorScheme
-                                  .onBackground
+                                  .onPrimaryContainer
                                   .withOpacity(0.5),
                               size: 12,
+                            ),
+                          ),
+
+                        // Подпись трека.
+                        if (player.currentAudio!.subtitle != null)
+                          Flexible(
+                            child: Padding(
+                              padding: const EdgeInsets.only(
+                                left: 6,
+                              ),
+                              child: Text(
+                                player.currentAudio!.subtitle!,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onPrimaryContainer
+                                      .withOpacity(0.5),
+                                ),
+                              ),
                             ),
                           ),
                       ],

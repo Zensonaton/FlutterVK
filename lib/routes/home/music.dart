@@ -533,6 +533,11 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
     /// Url на изображение данного трека.
     final String? imageUrl = widget.audio.smallestThumbnail;
 
+    /// Цвет для текста и прочих иконок.
+    final Color color = widget.selected
+        ? Theme.of(context).colorScheme.primary
+        : Theme.of(context).colorScheme.onBackground;
+
     return Dismissible(
       key: ValueKey(
         widget.audio.mediaKey,
@@ -729,11 +734,7 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
                                     fontWeight: FontWeight.w500,
-                                    color: widget.selected
-                                        ? Theme.of(context).colorScheme.primary
-                                        : Theme.of(context)
-                                            .colorScheme
-                                            .onBackground,
+                                    color: color,
                                   ),
                                 ),
                               ),
@@ -747,10 +748,7 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
                                   child: Icon(
                                     Icons.explicit,
                                     size: 16,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onBackground
-                                        .withOpacity(0.5),
+                                    color: color.withOpacity(0.5),
                                   ),
                                 ),
 
@@ -764,12 +762,7 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
                                   child: Icon(
                                     Icons.arrow_downward,
                                     size: 16,
-                                    color: widget.selected
-                                        ? Theme.of(context).colorScheme.primary
-                                        : Theme.of(context)
-                                            .colorScheme
-                                            .onBackground
-                                            .withOpacity(0.5),
+                                    color: color.withOpacity(0.5),
                                   ),
                                 ),
 
@@ -795,14 +788,7 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
                                         return CircularProgressIndicator(
                                           value: value,
                                           strokeWidth: 2,
-                                          color: widget.selected
-                                              ? Theme.of(context)
-                                                  .colorScheme
-                                                  .primary
-                                              : Theme.of(context)
-                                                  .colorScheme
-                                                  .onBackground
-                                                  .withOpacity(0.5),
+                                          color: color.withOpacity(0.5),
                                         );
                                       },
                                     ),
@@ -821,10 +807,7 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
                                       overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
                                         fontSize: 10,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onBackground
-                                            .withOpacity(0.5),
+                                        color: color.withOpacity(0.5),
                                       ),
                                     ),
                                   ),
