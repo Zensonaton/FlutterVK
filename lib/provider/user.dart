@@ -481,9 +481,9 @@ class ExtendedAudio {
   /// Возвращает данный объект как [MediaItem] для аудио плеера.
   MediaItem get asMediaItem => MediaItem(
         id: mediaKey,
-        title: title,
-        album: album?.title,
+        title: subtitle != null ? "$title ($subtitle)" : title,
         artist: artist,
+        album: album?.title,
         artUri: maxThumbnail != null ? Uri.parse(maxThumbnail!) : null,
         duration: Duration(
           seconds: duration,
