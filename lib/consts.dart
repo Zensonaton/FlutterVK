@@ -20,7 +20,7 @@ const String repoName = "FlutterVK";
 String get repoURL => "https://github.com/$repoOwner/$repoName";
 
 /// Значение скругления многих элементов интерфейса.
-const double globalBorderRadius = 6;
+const double globalBorderRadius = 8;
 
 /// ID приложения Discord, используемый для работы Rich Presence.
 ///
