@@ -1356,11 +1356,22 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                                       : AppLocalizations.of(context)!
                                           .profile_shareLogsNoLogsDescription,
                                 ),
-                                onTap: () async => Share.shareXFiles(
-                                  [
-                                    XFile((await logFilePath()).path),
-                                  ],
-                                ),
+                                onTap: () async {
+                                  final File path = await logFilePath();
+
+                                  // Если пользователь на OS Windows, то просто открываем папку с файлом.
+                                  if (Platform.isWindows) {
+                                    await Process.run(
+                                      "explorer.exe",
+                                      ["/select,", path.path],
+                                    );
+
+                                    return;
+                                  }
+
+                                  // В ином случае делимся файлом.
+                                  await Share.shareXFiles([XFile(path.path)]);
+                                },
                               );
                             },
                           ),
