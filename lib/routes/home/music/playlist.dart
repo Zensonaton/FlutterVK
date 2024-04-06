@@ -620,7 +620,8 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                           constraints.scrollOffset < 280 && !isMobileLayout;
 
                       return SliverAppBar(
-                        pinned: true,
+                        pinned: !isMobileLayout,
+                        floating: isMobileLayout,
                         expandedHeight: isMobileLayout ? null : 260,
                         elevation: 0,
                         title: isExpanded
@@ -660,8 +661,18 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                                         .photo!.photo270!,
                                                     cacheKey:
                                                         "${widget.playlist.mediaKey}270",
-                                                    memCacheHeight: (200 * MediaQuery.devicePixelRatioOf(context)).round(),
-                                                    memCacheWidth: (200 * MediaQuery.devicePixelRatioOf(context)).round(),
+                                                    memCacheHeight: (200 *
+                                                            MediaQuery
+                                                                .devicePixelRatioOf(
+                                                              context,
+                                                            ))
+                                                        .round(),
+                                                    memCacheWidth: (200 *
+                                                            MediaQuery
+                                                                .devicePixelRatioOf(
+                                                              context,
+                                                            ))
+                                                        .round(),
                                                     placeholder: (
                                                       BuildContext context,
                                                       String url,
