@@ -360,6 +360,9 @@ class _TrackLyricsBlockState extends State<TrackLyricsBlock> {
   /// Указывает, производится ли скроллинг пользователем в [ListView.builder] или нет.
   bool currentlyScrolling = false;
 
+  /// Значение, устанавливаемое при успешном вызове [scrollToIndex] с аргументом [lockAutoScroll] = true, который указывает время, прошедшее с момента вызова.
+  int? scrollLock;
+
   /// Вызывается при изменении состояния скроллинга у [ListView.builder].
   void onScroll() =>
       currentlyScrolling = controller.position.isScrollingNotifier.value &&
@@ -370,12 +373,34 @@ class _TrackLyricsBlockState extends State<TrackLyricsBlock> {
     super.initState();
 
     subscriptions = [
-      player.seekStateStream.listen(
-        (Duration position) => scrollToIndex(
+      // При изменении прогресса прослушанности трека.
+      player.positionStream.listen((Duration position) {
+        // Пытаемся найти индекс текущего момента в тексте песни.
+        final int? newLyricIndex = getCurrentLyricIndex(position);
+
+        // Если поменялась строчка песни, то скроллим до этой строчки.
+        if (newLyricIndex != currentLyricIndex) {
+          currentLyricIndex = newLyricIndex;
+
+          // Скроллим.
+          scrollToIndex(
+            index: currentLyricIndex!,
+          );
+        }
+      }),
+
+      // При ручной перемотке.
+      player.seekStateStream.listen((Duration position) {
+        // Пытаемся найти индекс текущего момента в тексте песни.
+        currentLyricIndex = getCurrentLyricIndex(position);
+
+        scrollToIndex(
           index: currentLyricIndex,
           checkVisibility: false,
-        ),
-      ),
+          checkScroll: false,
+          lockAutoScroll: true,
+        );
+      }),
     ];
 
     // Если у нас несинхронизированный текст песни, то тогда нам нужно преобразовать все [String] в [LyricTimestamp].
@@ -394,14 +419,14 @@ class _TrackLyricsBlockState extends State<TrackLyricsBlock> {
       controller.position.isScrollingNotifier.addListener(onScroll);
     });
 
-    // Пытаемся найти текущий момент в тексте песни, если мы уже что-то воспроизвели.
-    currentLyricIndex = getCurrentLyricIndex();
-
     // Заполняем массив видимости строчек песни.
     visibilityIndexes = List.generate(
       lyrics.length,
       (index) => index == currentLyricIndex,
     );
+
+    // Пытаемся найти текущий момент в тексте песни, если мы уже что-то воспроизвели.
+    currentLyricIndex = getCurrentLyricIndex(player.position);
 
     // Скроллим до этого момента в треке.
     if (currentLyricIndex != null) {
@@ -425,9 +450,9 @@ class _TrackLyricsBlockState extends State<TrackLyricsBlock> {
     }
   }
 
-  /// Возвращает индекс текущей строчки в тексте песни.
-  int? getCurrentLyricIndex() {
-    final int playerPosition = player.position.inMilliseconds;
+  /// Возвращает индекс текущей строчки в тексте песни по передаваемой [Duration] позиции.
+  int? getCurrentLyricIndex(Duration position) {
+    final int posMs = position.inMilliseconds;
 
     // Узнаём индекс строчки в тексте песни.
     // Начинаем с конца, на случай, если по какой-то причине "поют" сразу две строчки песни.
@@ -438,7 +463,7 @@ class _TrackLyricsBlockState extends State<TrackLyricsBlock> {
       if (lyric.begin == null) return null;
 
       // Если у нас плеер находится в 'правильной' позиции, то тогда мы нашли активную строчку.
-      if (playerPosition >= lyric.begin! && playerPosition <= lyric.end!) {
+      if (posMs >= lyric.begin! && posMs <= lyric.end!) {
         return i;
       }
     }
@@ -447,11 +472,12 @@ class _TrackLyricsBlockState extends State<TrackLyricsBlock> {
     return currentLyricIndex;
   }
 
-  /// Прокручивает [ListView] с текстом до указанного [index], либо в самое начало, если [index] не указан. Если [checkVisibility] = true, то прокрутка произойдёт только в том случае, если виджет с текстом виден пользователю. [checkScroll] указывает, что скроллинг не будет происходить, если пользователь сам скроллит.
+  /// Прокручивает [ListView] с текстом до указанного [index], либо в самое начало, если [index] не указан. Если [checkVisibility] = true, то прокрутка произойдёт только в том случае, если виджет с текстом виден пользователю. [checkScroll] указывает, что скроллинг не будет происходить, если пользователь сам скроллит. [lockAutoScroll] указывает, что после успешного скроллинга автоматический скроллинг будет отключён на небольшой промежуток времени.
   Future<void> scrollToIndex({
     int? index,
     bool checkVisibility = true,
     bool checkScroll = true,
+    bool lockAutoScroll = false,
   }) async {
     // Проверяем на видимость.
     if (checkVisibility && !currentLyricIsVisible) return;
@@ -459,32 +485,24 @@ class _TrackLyricsBlockState extends State<TrackLyricsBlock> {
     // Проверяем на то, скроллит ли пользователь в данный момент или нет.
     if (checkScroll && currentlyScrolling) return;
 
+    // Если включён таймер для защиты от скроллинга, то ничего не делаем.
+    if (!lockAutoScroll &&
+        scrollLock != null &&
+        DateTime.now().millisecondsSinceEpoch - scrollLock! <= 500) return;
+
     controller.scrollToIndex(
       currentLyricIndex ?? 0,
       preferPosition: AutoScrollPosition.middle,
     );
-  }
 
-  /// Метод, вызываемый при изменении строчки песни.
-  void onLyricLineChanged() {
-    // Если индекс неизвестен, то ничего не делаем.
-    if (currentLyricIndex == null) return;
-
-    scrollToIndex(index: currentLyricIndex!);
+    // Если это разрешено, то запускаем небольшой "таймер" для того, который запрещает скроллинг.
+    if (lockAutoScroll) {
+      scrollLock = DateTime.now().millisecondsSinceEpoch;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Пытаемся найти индекс текущего момента в тексте песни.
-    final int? newLyricIndex = getCurrentLyricIndex();
-
-    // Если поменялась строчка песни, то скроллим до этой строчки.
-    if (newLyricIndex != currentLyricIndex) {
-      currentLyricIndex = newLyricIndex;
-
-      onLyricLineChanged();
-    }
-
     return ScrollConfiguration(
       behavior: ScrollConfiguration.of(context).copyWith(
         scrollbars: false,

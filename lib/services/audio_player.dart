@@ -903,9 +903,9 @@ class VKMusicPlayer {
   }) async {
     _fakeCurrentPosition = position;
 
+    _seekStateController.add(position);
     await _player.seek(position);
     _fakeCurrentPosition = null;
-    _seekStateController.add(position);
 
     if (play && !playing) await _player.play();
   }
