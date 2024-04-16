@@ -114,6 +114,35 @@ List<ExtendedAudio> filterAudiosByName(
       .toList();
 }
 
+/// Открывает диалог [AllowRecommendationsStatsDialog], спрашивая у пользователя то, хочет ли он отправлять информацию о прослушанных треках серверам ВКонтакте или нет. Если пользователь дал ранее разрешение на это - то данный метод ничего делать не будет.
+Future<bool> recommendationsStatsAllowedDialog(
+  BuildContext context,
+  ExtendedPlaylist playlist,
+) async {
+  final UserProvider user = Provider.of<UserProvider>(context, listen: false);
+
+  // Пользователь уже дал разрешение.
+  if (user.settings.recommendationsStatsWarning) return true;
+
+  // Это не рекомендуемый плейлист.
+  if (!playlist.isRecommendationTypePlaylist) return true;
+
+  // Спрашиваем разрешения.
+  final bool? result = await showDialog(
+    builder: (BuildContext context) => const AllowRecommendationsStatsDialog(),
+    context: context,
+  );
+
+  // Если пользователь не разрешил, то не запускаем воспроизведение.
+  if (!(result ?? false)) return false;
+
+  // Пользователь разрешил, запоминаем это.
+  user.settings.recommendationsStatsWarning = true;
+  user.markUpdated();
+
+  return true;
+}
+
 /// Метод, вызываемый при нажатии по центру плейлиста. Данный метод либо ставит плейлист на паузу, либо загружает его информацию.
 Future<void> onPlaylistPlayToggle(
   BuildContext context,
@@ -122,6 +151,9 @@ Future<void> onPlaylistPlayToggle(
 ) async {
   final UserProvider user = Provider.of<UserProvider>(context, listen: false);
   final AppLogger logger = getLogger("onPlaylistPlayToggle");
+
+  // Уточняем, разрешает ли пользователь отправку информации для работы рекомендаций.
+  if (!(await recommendationsStatsAllowedDialog(context, playlist))) return;
 
   // Если у нас играет этот же плейлист, то тогда мы попросту должны поставить на паузу/убрать паузу.
   if (player.currentPlaylist == playlist) {
@@ -132,7 +164,7 @@ Future<void> onPlaylistPlayToggle(
   if (playlist.audios == null ||
       playlist.isDataCached ||
       playlist.areTracksCached) {
-    LoadingOverlay.of(context).show();
+    if (context.mounted) LoadingOverlay.of(context).show();
 
     try {
       final ExtendedPlaylist newPlaylist = await loadPlaylistData(
@@ -193,6 +225,14 @@ Widget buildListTrackWidget(
       onAddToQueue: false
           // ignore: dead_code
           ? () async {
+              // Уточняем, разрешает ли пользователь отправку информации для работы рекомендаций.
+              if (!(await recommendationsStatsAllowedDialog(
+                context,
+                playlist,
+              ))) {
+                return;
+              }
+
               await player.addNextToQueue(audio);
 
               if (!context.mounted) return;
@@ -216,10 +256,20 @@ Widget buildListTrackWidget(
                 description: AppLocalizations.of(context)!
                     .music_trackUnavailableDescription,
               )
-          : () => player.setPlaylist(
+          : () async {
+              // Уточняем, разрешает ли пользователь отправку информации для работы рекомендаций.
+              if (!(await recommendationsStatsAllowedDialog(
+                context,
+                playlist,
+              ))) {
+                return;
+              }
+
+              player.setPlaylist(
                 playlist,
                 audio: audio,
-              ),
+              );
+            },
       onPlayToggle: (bool enabled) => player.playOrPause(enabled),
       onLikeToggle: (bool liked) {
         if (!networkRequiredDialog(context)) return false;
@@ -244,6 +294,37 @@ Widget buildListTrackWidget(
       ),
     ),
   );
+}
+
+/// Диалог, спрашивающий у пользователя то, разрешает ли он Flutter VK делиться информацией о проигранных треках.
+class AllowRecommendationsStatsDialog extends StatelessWidget {
+  const AllowRecommendationsStatsDialog({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialDialog(
+      icon: Icons.privacy_tip,
+      title: AppLocalizations.of(context)!.recommendationsStatsWarningTitle,
+      text:
+          AppLocalizations.of(context)!.recommendationsStatsWarningDescription,
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: Text(
+            AppLocalizations.of(context)!.general_no,
+          ),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(true),
+          child: Text(
+            AppLocalizations.of(context)!.recommendationsStatsWarningAllow,
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 /// Диалог, спрашивающий у пользователя разрешения на запуск кэширования плейлиста.

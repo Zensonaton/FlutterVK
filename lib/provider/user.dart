@@ -19,6 +19,7 @@ import "../api/vk/audio/get_playlists.dart";
 import "../api/vk/audio/get_stream_mix_audios.dart";
 import "../api/vk/audio/restore.dart";
 import "../api/vk/audio/search.dart";
+import "../api/vk/audio/send_start_event.dart";
 import "../api/vk/catalog/get_audio.dart";
 import "../api/vk/consts.dart";
 import "../api/vk/executeScripts/audio_get_data.dart";
@@ -108,6 +109,14 @@ class ExtendedPlaylist {
 
   /// Указывает, пуст ли данный плейлист. Данный метод всегда возвращает true, если треки не были загружены.
   bool get isEmpty => audios == null ? true : count == 0;
+
+  /// Указывает, что этот плейлист является плейлистом любого рекомендательного типа.
+  bool get isRecommendationTypePlaylist =>
+      isRecommendationsPlaylist ||
+      isSimillarPlaylist ||
+      isMoodPlaylist ||
+      isAudioMixPlaylist ||
+      isMadeByVKPlaylist;
 
   /// Указывает процент "схожести" данного плейлиста. Данное поле не-null только для плейлистов из раздела "совпадения по вкусам".
   final double? simillarity;
@@ -660,6 +669,9 @@ class Settings {
 
   /// Указывает, что полноэкранный плеер будет использовать изображение большого размера при Desktop Layout'е.
   bool fullscreenBigThumbnail = false;
+
+  /// Указывает, что приложение сделало предупреждение о том, что при прослушивании рекомендаций музыки серверам ВКонтакте будет передаваться информация об этом.
+  bool recommendationsStatsWarning = false;
 }
 
 /// Provider для получения объекта пользователя в контексте интерфейса приложения.
@@ -1006,6 +1018,10 @@ class UserProvider extends ChangeNotifier {
       "FullscreenBigThumbnail",
       settings.fullscreenBigThumbnail,
     );
+    await prefs.setBool(
+      "RecommendationsStatsWarning",
+      settings.recommendationsStatsWarning,
+    );
   }
 
   /// Загружает данный объект пользователя с диска.
@@ -1062,6 +1078,8 @@ class UserProvider extends ChangeNotifier {
     settings.spotifyLyrics = prefs.getBool("SpotifyLyrics") ?? false;
     settings.fullscreenBigThumbnail =
         prefs.getBool("FullscreenBigThumbnail") ?? false;
+    settings.recommendationsStatsWarning =
+        prefs.getBool("RecommendationsStatsWarning") ?? false;
 
     markUpdated(false);
 
@@ -1311,21 +1329,15 @@ class UserProvider extends ChangeNotifier {
         audioID,
       );
 
-  /// Ищет треки во ВКонтакте по их названию.
+  /// Информирует ВКонтакте о том, что передавемый трек сейчас прослушивается. Благодаря этому методу, рекомендации ВКонтакте перестают рекомендовать этот трек снова и снова.
   ///
-  /// API: `audio.search`.
-  Future<APIAudioSearchResponse> audioSearch(
-    String query, {
-    bool autoComplete = true,
-    int count = 50,
-    int offset = 0,
-  }) async =>
-      await audio_search(
+  /// API: `audio.sendStartEvent`.
+  Future<APIAudioSendStartEventResponse> audioSendStartEvent(
+    String id,
+  ) async =>
+      await audio_send_start_event(
         mainToken!,
-        query,
-        autoComplete: autoComplete,
-        count: count,
-        offset: offset,
+        id,
       );
 
   /// Ищет треки во ВКонтакте по их названию, дополняя информацию о треках альбомами.
@@ -1404,6 +1416,23 @@ class UserProvider extends ChangeNotifier {
 
     return response;
   }
+
+  /// Ищет треки во ВКонтакте по их названию.
+  ///
+  /// API: `audio.search`.
+  Future<APIAudioSearchResponse> audioSearch(
+    String query, {
+    bool autoComplete = true,
+    int count = 50,
+    int offset = 0,
+  }) async =>
+      await audio_search(
+        mainToken!,
+        query,
+        autoComplete: autoComplete,
+        count: count,
+        offset: offset,
+      );
 
   /// Возвращает список треков для аудио микса (VK Mix).
   ///

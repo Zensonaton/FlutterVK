@@ -37,13 +37,16 @@ Future<void> onMixPlayToggle(
   final UserProvider user = Provider.of<UserProvider>(context, listen: false);
   final AppLogger logger = getLogger("onMixPlayToggle");
 
+  // Уточняем, разрешает ли пользователь отправку информации для работы рекомендаций.
+  if (!(await recommendationsStatsAllowedDialog(context, playlist))) return;
+
   // Если у нас играет этот же плейлист, то тогда мы попросту должны поставить на паузу/убрать паузу.
   if (player.currentPlaylist == playlist) {
     return await player.playOrPause(playing);
   }
 
   // Мы запускаем этот аудио микс впервые, поэтому мы должны загрузить несколько его треков.
-  LoadingOverlay.of(context).show();
+  if (context.mounted) LoadingOverlay.of(context).show();
 
   try {
     final APIAudioGetStreamMixAudiosResponse response =

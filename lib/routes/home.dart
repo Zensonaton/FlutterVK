@@ -14,6 +14,7 @@ import "../api/vk/audio/add.dart";
 import "../api/vk/audio/delete.dart";
 import "../api/vk/audio/get_stream_mix_audios.dart";
 import "../api/vk/audio/restore.dart";
+import "../api/vk/audio/send_start_event.dart";
 import "../enums.dart";
 import "../intents.dart";
 import "../main.dart";
@@ -579,6 +580,42 @@ class _HomeRouteState extends State<HomeRoute> {
 
       // Запускаем задачу по получению цветовой схемы.
       gotColorscheme = await getColorScheme();
+    });
+
+    // Слушаем события изменения текущего трека, что бы в случае, если запущен рекомендательный плейлист, мы передавали информацию об этом ВКонтакте.
+    player.currentIndexStream.listen((int? index) async {
+      if (index == null) return;
+
+      // Если это не рекомендуемый плейлист, то ничего не делаем.
+      if (!(player.currentPlaylist?.isRecommendationTypePlaylist ?? false)) {
+        return;
+      }
+
+      // Если мы слушаем рекомендуемый плейлист, однако разрешение на отправку инфы не дано, то ничего не делаем, кроме предупреждения.
+      if (!user.settings.recommendationsStatsWarning) {
+        logger.w(
+          "Playing recommendation playlist (${player.currentPlaylist}), but not broadcasting recommendations info, because no permission was given.",
+        );
+
+        return;
+      }
+
+      // Если нет доступа к интернету, то ничего не делаем.
+      if (!connectivityManager.hasConnection) return;
+
+      // Делаем API-запрос, передавая информацию серверам ВКонтакте.
+      try {
+        final APIAudioSendStartEventResponse response =
+            await user.audioSendStartEvent(player.currentAudio!.mediaKey);
+
+        raiseOnAPIError(response);
+      } catch (e, stackTrace) {
+        logger.w(
+          "Не удалось оповестить сервера ВКонтакте о текущем рекомендуемом треке: ",
+          error: e,
+          stackTrace: stackTrace,
+        );
+      }
     });
 
     // Отдельно слушаем события изменения индекса текущего трека, что бы добавлять треки в реальном времени, если это аудио микс.

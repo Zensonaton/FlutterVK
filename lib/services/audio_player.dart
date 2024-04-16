@@ -165,8 +165,9 @@ class CachedStreamedAudio extends StreamAudioSource {
         );
 
         // Если мы ничего не нашли, либо у альбома нет изображений, то просто ничего не делаем.
-        if (deezerTrack == null || deezerTrack.album.cover == null)
+        if (deezerTrack == null || deezerTrack.album.cover == null) {
           return false;
+        }
 
         // Всё ок, запоминаем новую обложку трека.
         thumbs = ExtendedThumbnail.fromDeezerTrack(deezerTrack);
