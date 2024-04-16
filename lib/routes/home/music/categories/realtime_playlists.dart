@@ -150,17 +150,6 @@ class LivePlaylistWidget extends StatelessWidget {
         milliseconds: 500,
       ),
       curve: Curves.ease,
-      decoration: BoxDecoration(
-        boxShadow: [
-          if (selected)
-            BoxShadow(
-              blurRadius: 15,
-              spreadRadius: -3,
-              color: Theme.of(context).colorScheme.tertiary,
-              blurStyle: BlurStyle.outer,
-            ),
-        ],
-      ),
       child: InkWell(
         onTap: () => onPlayToggle?.call(
           !selectedAndPlaying,
@@ -189,12 +178,7 @@ class LivePlaylistWidget extends StatelessWidget {
                     Widget child,
                     LottieComposition? composition,
                   ) {
-                    return Stack(
-                      children: [
-                        const FallbackMixPlaylistWidget(),
-                        child,
-                      ],
-                    );
+                    return child;
                   },
                   animate: true,
                   repeat: true,
@@ -202,20 +186,6 @@ class LivePlaylistWidget extends StatelessWidget {
 
               // Заменяющий фоновый анимацию контейнер.
               if (lottieUrl == null) const FallbackMixPlaylistWidget(),
-
-              // Затемняющий эффект (градиент) поверх анимации.
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.transparent,
-                      Colors.black.withOpacity(0.3),
-                      Colors.black.withOpacity(0.3),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
-              ),
 
               // Текст, а так же кнопка запуска.
               Theme(
