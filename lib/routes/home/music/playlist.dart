@@ -620,8 +620,7 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                           constraints.scrollOffset < 280 && !isMobileLayout;
 
                       return SliverAppBar(
-                        pinned: !isMobileLayout,
-                        floating: isMobileLayout,
+                        pinned: true,
                         expandedHeight: isMobileLayout ? null : 260,
                         elevation: 0,
                         title: isExpanded
