@@ -638,6 +638,8 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
     final bool isMobileLayout =
         getDeviceType(MediaQuery.of(context).size) == DeviceScreenType.mobile;
 
+    final bool recommendationsConnected = user.recommendationsToken != null;
+
     return Scaffold(
       appBar: isMobileLayout
           ? AppBar(
@@ -743,7 +745,7 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                 ),
 
                 // Подключение рекомендаций.
-                if (user.recommendationsToken == null)
+                if (!recommendationsConnected)
                   Padding(
                     padding: const EdgeInsets.only(
                       bottom: 10,
@@ -1095,13 +1097,16 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                                   .profile_useThumbnailAsBackgroundDescription,
                             ),
                             value: user.settings.playerThumbAsBackground,
-                            onChanged: (bool? enabled) async {
-                              if (enabled == null) return;
+                            onChanged: recommendationsConnected
+                                ? (bool? enabled) async {
+                                    if (enabled == null) return;
 
-                              user.settings.playerThumbAsBackground = enabled;
+                                    user.settings.playerThumbAsBackground =
+                                        enabled;
 
-                              user.markUpdated();
-                            },
+                                    user.markUpdated();
+                                  }
+                                : null,
                           ),
 
                           // Использование цветов плеера по всему приложению.
@@ -1114,13 +1119,15 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                                   .profile_usePlayerColorsAppWideTitle,
                             ),
                             value: user.settings.playerColorsAppWide,
-                            onChanged: (bool? enabled) async {
-                              if (enabled == null) return;
+                            onChanged: recommendationsConnected
+                                ? (bool? enabled) async {
+                                    if (enabled == null) return;
 
-                              user.settings.playerColorsAppWide = enabled;
+                                    user.settings.playerColorsAppWide = enabled;
 
-                              user.markUpdated();
-                            },
+                                    user.markUpdated();
+                                  }
+                                : null,
                           ),
 
                           // Точный алгоритм цветов плеера.
@@ -1137,13 +1144,16 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                                   .profile_playerSchemeAlgorithmDescription,
                             ),
                             value: user.settings.playerSchemeAlgorithm,
-                            onChanged: (bool? enabled) async {
-                              if (enabled == null) return;
+                            onChanged: recommendationsConnected
+                                ? (bool? enabled) async {
+                                    if (enabled == null) return;
 
-                              user.settings.playerSchemeAlgorithm = enabled;
+                                    user.settings.playerSchemeAlgorithm =
+                                        enabled;
 
-                              user.markUpdated();
-                            },
+                                    user.markUpdated();
+                                  }
+                                : null,
                           ),
                         ],
                       ),
@@ -1213,13 +1223,15 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                                   .profile_deezerThumbnailsDescription,
                             ),
                             value: user.settings.deezerThumbnails,
-                            onChanged: (bool? enabled) async {
-                              if (enabled == null) return;
+                            onChanged: recommendationsConnected
+                                ? (bool? enabled) async {
+                                    if (enabled == null) return;
 
-                              user.settings.deezerThumbnails = enabled;
+                                    user.settings.deezerThumbnails = enabled;
 
-                              user.markUpdated();
-                            },
+                                    user.markUpdated();
+                                  }
+                                : null,
                           ),
 
                           // Тексты песен из Spotify, если авторизация не пройдена.
@@ -1236,11 +1248,13 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                                 AppLocalizations.of(context)!
                                     .profile_spotifyLyricsDescription,
                               ),
-                              onTap: () => showDialog(
-                                context: context,
-                                builder: (BuildContext context) =>
-                                    const SpotifyLyricsDialog(),
-                              ),
+                              onTap: recommendationsConnected
+                                  ? () => showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) =>
+                                            const SpotifyLyricsDialog(),
+                                      )
+                                  : null,
                               trailing: !isMobileLayout
                                   ? FilledButton(
                                       onPressed: () => showDialog(
@@ -1271,13 +1285,15 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                                     .profile_spotifyLyricsDescription,
                               ),
                               value: user.settings.spotifyLyrics,
-                              onChanged: (bool? enabled) async {
-                                if (enabled == null) return;
+                              onChanged: recommendationsConnected
+                                  ? (bool? enabled) async {
+                                      if (enabled == null) return;
 
-                                user.settings.spotifyLyrics = enabled;
+                                      user.settings.spotifyLyrics = enabled;
 
-                                user.markUpdated();
-                              },
+                                      user.markUpdated();
+                                    }
+                                  : null,
                             ),
 
                           // Экспорт списка треков.
@@ -1642,7 +1658,7 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                               title: const Text(
                                 "Скопировать VK Admin токен",
                               ),
-                              enabled: user.recommendationsToken != null,
+                              enabled: recommendationsConnected,
                               onTap: () {
                                 Clipboard.setData(
                                   ClipboardData(
