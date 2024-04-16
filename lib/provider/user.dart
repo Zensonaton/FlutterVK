@@ -122,7 +122,7 @@ class ExtendedPlaylist {
   final String? mixID;
 
   /// URL на Lottie-анимацию, которая используется как фон данного микса. Данное поле не-null только для аудио микс-плейлистов.
-  final String? backgroundAnimationUrl;
+  String? backgroundAnimationUrl;
 
   /// Указывает, что данный плейлист был загружен с API ВКонтакте. Если данное поле false, то это значит, что все данные из этого плейлиста являются кешированными (т.е., загружены из БД Isar).
   ///
@@ -1114,6 +1114,7 @@ class UserProvider extends ChangeNotifier {
       existingPlaylist.followers = playlist.followers;
       existingPlaylist.isLiveData = playlist.isLiveData;
       existingPlaylist.areTracksLive = playlist.areTracksLive;
+      existingPlaylist.backgroundAnimationUrl = playlist.backgroundAnimationUrl;
 
       // Проходимся по новому списку треков, если он вообще был передан.
       if (playlist.audios != null) {
