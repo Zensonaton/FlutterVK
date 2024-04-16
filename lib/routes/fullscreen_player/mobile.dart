@@ -159,9 +159,9 @@ class _ImageLyricsBlockState extends State<ImageLyricsBlock> {
           ),
           child: AnimatedContainer(
             duration: const Duration(
-              milliseconds: 500,
+              milliseconds: 350,
             ),
-            curve: Curves.ease,
+            curve: Curves.bounceOut,
             width: _playerImageSize,
             height: _playerImageSize,
             decoration: BoxDecoration(
@@ -256,7 +256,7 @@ class _ImageLyricsBlockState extends State<ImageLyricsBlock> {
                             duration: const Duration(
                               milliseconds: 500,
                             ),
-                            curve: Curves.ease,
+                            curve: Curves.bounceOut,
                             child: Transform.translate(
                               offset: Offset(
                                 dragProgress * -scrollWidth,
