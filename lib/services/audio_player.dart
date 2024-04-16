@@ -760,6 +760,8 @@ class VKMusicPlayer {
 
       // События отключения наушников.
       audioSession?.becomingNoisyEventStream.listen((_) {
+        logger.d("Becoming noisy, calling pause");
+
         player.pause();
       });
 
@@ -769,6 +771,10 @@ class VKMusicPlayer {
       audioSession?.interruptionEventStream.listen((
         AudioInterruptionEvent event,
       ) async {
+        logger.d(
+          "Interruption event! ${event.type}, beginning: ${event.begin}",
+        );
+
         if (event.begin) {
           switch (event.type) {
             case AudioInterruptionType.duck:
@@ -1238,9 +1244,6 @@ class VKMusicPlayer {
   ///
   /// Не стоит путать с [updateMusicSessionTrack]: Данный метод лишь обновляет состояние воспроизведения.
   Future<void> updateMusicSession() async {
-    // Указываем, есть ли у нас в данный момент сессия музыки.
-    await audioSession?.setActive(playing);
-
     // Если у пользователя Windows, то обновляем параметры SMTC.
     if (Platform.isWindows) {
       PlaybackStatus status = PlaybackStatus.Stopped;
