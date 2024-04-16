@@ -250,15 +250,22 @@ class _ImageLyricsBlockState extends State<ImageLyricsBlock> {
                         alignment: Alignment.center,
                         children: [
                           // Текущий трек.
-                          Transform.translate(
-                            offset: Offset(
-                              dragProgress * -scrollWidth,
-                              0.0,
+                          AnimatedScale(
+                            scale: player.playing ? 1.0 : 0.9,
+                            duration: const Duration(
+                              milliseconds: 500,
                             ),
-                            child: Opacity(
-                              opacity: 1.0 - dragProgress.abs(),
-                              child:
-                                  buildImageWidget(player.smartCurrentAudio!),
+                            curve: Curves.ease,
+                            child: Transform.translate(
+                              offset: Offset(
+                                dragProgress * -scrollWidth,
+                                0.0,
+                              ),
+                              child: Opacity(
+                                opacity: 1.0 - dragProgress.abs(),
+                                child:
+                                    buildImageWidget(player.smartCurrentAudio!),
+                              ),
                             ),
                           ),
 
