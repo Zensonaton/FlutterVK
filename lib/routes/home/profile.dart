@@ -25,6 +25,24 @@ import "../login.dart";
 import "../welcome.dart";
 import "profile/spotify_auth.dart";
 
+/// Вызывает окно, дающее пользователю возможность поделиться файлом логов приложения ([logFilePath]), либо же открывающее проводник (`explorer.exe`) с файлом логов (на OS Windows).
+void shareLogs() async {
+  final File path = await logFilePath();
+
+  // Если пользователь на OS Windows, то просто открываем папку с файлом.
+  if (Platform.isWindows) {
+    await Process.run(
+      "explorer.exe",
+      ["/select,", path.path],
+    );
+
+    return;
+  }
+
+  // В ином случае делимся файлом.
+  await Share.shareXFiles([XFile(path.path)]);
+}
+
 /// Диалог, подтверждающий у пользователя действие для выхода из аккаунта на экране [HomeProfilePage].
 ///
 /// Пример использования:
@@ -1356,22 +1374,7 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                                       : AppLocalizations.of(context)!
                                           .profile_shareLogsNoLogsDescription,
                                 ),
-                                onTap: () async {
-                                  final File path = await logFilePath();
-
-                                  // Если пользователь на OS Windows, то просто открываем папку с файлом.
-                                  if (Platform.isWindows) {
-                                    await Process.run(
-                                      "explorer.exe",
-                                      ["/select,", path.path],
-                                    );
-
-                                    return;
-                                  }
-
-                                  // В ином случае делимся файлом.
-                                  await Share.shareXFiles([XFile(path.path)]);
-                                },
+                                onTap: shareLogs,
                               );
                             },
                           ),

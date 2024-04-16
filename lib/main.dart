@@ -14,6 +14,7 @@ import "package:path_provider/path_provider.dart";
 import "package:provider/provider.dart";
 import "package:responsive_builder/responsive_builder.dart";
 import "package:system_tray/system_tray.dart";
+import "package:url_launcher/url_launcher.dart";
 import "package:window_manager/window_manager.dart";
 
 import "consts.dart";
@@ -23,6 +24,7 @@ import "intents.dart";
 import "provider/color.dart";
 import "provider/user.dart";
 import "routes/home.dart";
+import "routes/home/profile.dart";
 import "routes/welcome.dart";
 import "services/audio_player.dart";
 import "services/connectivity_manager.dart";
@@ -127,103 +129,152 @@ Future<void> initSystemTray() async {
 }
 
 Future main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  final AppLogger logger = getLogger("main");
 
-  // Инициализируем WindowManager на Desktop-платформах.
-  if (isDesktop) {
-    await windowManager.ensureInitialized();
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
 
-    // Делаем так, что бы пользователь не смог закрыть приложение.
-    // Обработка закрытия приложения находится в ином месте: [_MainAppState.onWindowClose].
-    await windowManager.setPreventClose(true);
+    // Инициализируем WindowManager на Desktop-платформах.
+    if (isDesktop) {
+      await windowManager.ensureInitialized();
 
-    // Устанавливаем размеры окна.
-    windowManager.waitUntilReadyToShow(
-      const WindowOptions(
-        size: Size(
-          1280,
-          720,
+      // Делаем так, что бы пользователь не смог закрыть приложение.
+      // Обработка закрытия приложения находится в ином месте: [_MainAppState.onWindowClose].
+      await windowManager.setPreventClose(true);
+
+      // Устанавливаем размеры окна.
+      windowManager.waitUntilReadyToShow(
+        const WindowOptions(
+          size: Size(
+            1280,
+            720,
+          ),
+          minimumSize: Size(
+            400,
+            500,
+          ),
+          center: true,
         ),
-        minimumSize: Size(
-          400,
-          500,
-        ),
-        center: true,
+        () async {
+          await windowManager.show();
+
+          // Делаем фокус окна не в debug-режиме.
+          if (!kDebugMode) {
+            await windowManager.focus();
+          }
+
+          // Инициализируем иконку в трее.
+          await initSystemTray();
+
+          // Убираем полноэкранный режим.
+          if (kDebugMode) {
+            await windowManager.setFullScreen(false);
+          }
+
+          // Делаем название окна в debug-режиме.
+          if (kDebugMode) {
+            await windowManager.setTitle("Flutter VK (DEBUG)");
+          }
+        },
+      );
+    }
+
+    // Удаляем файл обновления, если таковой существует.
+    final File updaterInstaller = File(
+      path.join(
+        (await getApplicationSupportDirectory()).path,
+        Updater.getFilenameByPlatform(),
       ),
-      () async {
-        await windowManager.show();
-
-        // Делаем фокус окна не в debug-режиме.
-        if (!kDebugMode) {
-          await windowManager.focus();
-        }
-
-        // Инициализируем иконку в трее.
-        await initSystemTray();
-
-        // Убираем полноэкранный режим.
-        if (kDebugMode) {
-          await windowManager.setFullScreen(false);
-        }
-
-        // Делаем название окна в debug-режиме.
-        if (kDebugMode) {
-          await windowManager.setTitle("Flutter VK (DEBUG)");
-        }
-      },
     );
+    if (updaterInstaller.existsSync()) {
+      updaterInstaller.deleteSync();
+    }
+
+    // Удаляем папку со старым кэшем треков, если таковой существует.
+    // Сейчас, для кэша треков используется папка audios, однако раньше использовалась папка tracks.
+    final Directory oldCacheDirectory = Directory(
+      path.join(
+        (await getApplicationSupportDirectory()).path,
+        "tracks",
+      ),
+    );
+    if (oldCacheDirectory.existsSync()) {
+      oldCacheDirectory.deleteSync(recursive: true);
+    }
+
+    // Инициализируем библиотеку для создания уведомлений.
+    await localNotifier.setup(appName: "Flutter VK");
+
+    // Загружаем базу данных Isar.
+    appStorage = AppStorage();
+
+    // Создаём менеджер загрузок.
+    downloadManager = DownloadManager();
+
+    // Создаём менеджер интернет соединения.
+    connectivityManager = ConnectivityManager();
+    await connectivityManager.initialize();
+
+    // Инициализируем плеер.
+    JustAudioMediaKit.title = "Flutter VK";
+    JustAudioMediaKit.ensureInitialized();
+
+    player = VKMusicPlayer();
+
+    // Breakpoint'ы для разных размеров экранов.
+    ResponsiveSizingConfig.instance.setCustomBreakpoints(
+      const ScreenBreakpoints(
+        desktop: 900,
+        tablet: 700,
+        watch: 100,
+      ),
+    );
+
+    // Узнаём версию приложения.
+    appVersion = (await PackageInfo.fromPlatform()).version;
+
+    logger.i("Running Flutter VK v$appVersion");
+
+    runApp(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(
+            create: (BuildContext context) => UserProvider(false),
+          ),
+          ChangeNotifierProvider(
+            create: (BuildContext context) => PlayerSchemeProvider(),
+          ),
+        ],
+        child: const MainApp(),
+      ),
+    );
+  } catch (e, stackTrace) {
+    logger.e(
+      "Ошибка при запуске приложения (main): ",
+      error: e,
+      stackTrace: stackTrace,
+    );
+
+    // Пытаемся запустить errored-версию приложения.
+    try {
+      runApp(
+        ErroredMainApp(
+          error: e.toString(),
+        ),
+      );
+    } catch (e, stackTrace) {
+      logger.w(
+        "Запустить errored-версию приложения не вышло: ",
+        error: e,
+        stackTrace: stackTrace,
+      );
+    }
   }
-
-  // Инициализируем библиотеку для создания уведомлений.
-  await localNotifier.setup(
-    appName: "Flutter VK",
-  );
-
-  // Загружаем базу данных Isar.
-  appStorage = AppStorage();
-
-  // Создаём менеджер загрузок.
-  downloadManager = DownloadManager();
-
-  // Создаём менеджер интернет соединения.
-  connectivityManager = ConnectivityManager();
-  await connectivityManager.initialize();
-
-  // Инициализируем плеер.
-  JustAudioMediaKit.title = "Flutter VK";
-  JustAudioMediaKit.ensureInitialized();
-
-  player = VKMusicPlayer();
-
-  // Breakpoint'ы для разных размеров экранов.
-  ResponsiveSizingConfig.instance.setCustomBreakpoints(
-    const ScreenBreakpoints(
-      desktop: 900,
-      tablet: 700,
-      watch: 100,
-    ),
-  );
-
-  // Узнаём версию приложения.
-  appVersion = (await PackageInfo.fromPlatform()).version;
-
-  getLogger("main").i("Running Flutter VK v$appVersion");
-
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(
-          create: (BuildContext context) => UserProvider(false),
-        ),
-        ChangeNotifierProvider(
-          create: (BuildContext context) => PlayerSchemeProvider(),
-        ),
-      ],
-      child: const MainApp(),
-    ),
-  );
 }
 
+/// Основной виджет главного приложения, используемый методом [runApp] внутри [main].
+///
+/// В случае, если по какой-то причине произойдёт ошибка, вместо этого класса будет вызван [runApp], но для класса [ErroredMainApp], который символизирует ошибку запуска приложения.
 class MainApp extends StatefulWidget {
   const MainApp({
     super.key,
@@ -281,29 +332,6 @@ class _MainAppState extends State<MainApp> with WindowListener {
           AppLocalizations.of(buildContext!)!.general_musicReadmeFileContents,
         );
       }
-    }
-
-    // Удаляем файл обновления, если таковой существует.
-    final File updaterInstaller = File(
-      path.join(
-        (await getApplicationSupportDirectory()).path,
-        Updater.getFilenameByPlatform(),
-      ),
-    );
-    if (updaterInstaller.existsSync()) {
-      updaterInstaller.deleteSync();
-    }
-
-    // Удаляем папку со старым кэшем треков, если таковой существует.
-    // Сейчас, для кэша треков используется папка audios, однако раньше использовалась папка tracks.
-    final Directory oldCacheDirectory = Directory(
-      path.join(
-        (await getApplicationSupportDirectory()).path,
-        "tracks",
-      ),
-    );
-    if (oldCacheDirectory.existsSync()) {
-      oldCacheDirectory.deleteSync(recursive: true);
     }
 
     user.markUpdated(false);
@@ -459,6 +487,86 @@ class _MainAppState extends State<MainApp> with WindowListener {
           home: home,
         );
       },
+    );
+  }
+}
+
+/// Альтернативная версия класса [MainApp], вызываемая в случае, если при инициализации [MainApp] (или метода [runApp]/[main]) произошла ошибка. Данный класс отображает [MaterialApp], показывающий текст ошибки, а так же предлагающий пользователю опции для возможного решения проблемы.
+class ErroredMainApp extends StatelessWidget {
+  /// Ошибка, вызвавшая краш приложения.
+  final String error;
+
+  const ErroredMainApp({
+    super.key,
+    required this.error,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Иконка.
+              const Padding(
+                padding: EdgeInsets.only(
+                  bottom: 12,
+                ),
+                child: Icon(
+                  Icons.warning,
+                ),
+              ),
+
+              // Текст про ошибку запуска.
+              // В данном классе мы не должны использовать локализацию, поскольку она может быть поломана.
+              Padding(
+                padding: const EdgeInsets.only(
+                  bottom: 12,
+                ),
+                child: Text(
+                  "Unfortunately, Flutter VK couldn't start up properly due to unhandled exception:\n$error\n\nPlease try to check for app updates, and/or create a Github Issue on Flutter VK Github.",
+                  textAlign: TextAlign.center,
+                ),
+              ),
+
+              Wrap(
+                spacing: 8,
+                children: [
+                  // Кнопка для возможности поделиться логами.
+                  const FilledButton(
+                    onPressed: shareLogs,
+                    child: Text(
+                      "Share logs",
+                    ),
+                  ),
+
+                  // Кнопка для возможности поделиться логами.
+                  FilledButton.tonal(
+                    onPressed: () => launchUrl(
+                      Uri.parse(
+                        repoURL,
+                      ),
+                    ),
+                    child: const Text(
+                      "Open Github",
+                    ),
+                  ),
+
+                  // Кнопка для возможности поделиться логами.
+                  FilledButton.tonal(
+                    onPressed: () => exit(0),
+                    child: const Text(
+                      "Exit",
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
