@@ -217,6 +217,7 @@ class _ImageLyricsBlockState extends State<ImageLyricsBlock> {
               cursor: SystemMouseCursors.click,
               child: GestureDetector(
                 behavior: HitTestBehavior.translucent,
+                onTap: () => player.togglePlay(),
                 onHorizontalDragUpdate: (DragUpdateDetails details) {
                   dragProgress = clampDouble(
                     dragProgress - details.primaryDelta! / scrollWidth,
