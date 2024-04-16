@@ -6,16 +6,18 @@ import "package:path_provider/path_provider.dart";
 import "package:path/path.dart" as path;
 import "package:logger/logger.dart";
 
-/// Возвращает объект логгера.
-AppLogger getLogger<T>(
-  T owner,
-) {
+/// Возвращает объект логгера для передаваемого [owner].
+AppLogger getLogger<T>(T owner) {
   String ownerStr = owner is String ? owner : owner.toString();
 
-  return AppLogger(owner: ownerStr);
+  return AppLogger(
+    owner: ownerStr,
+  );
 }
 
 /// Возвращает путь к файлу, в котором хранятся логи приложения. Данный метод не создаёт файл в случае его отсутствия.
+///
+/// Если вам нужно, что бы файл с логом существовал, то вместо этого метода воспользуйтесь методом [createLogFile].
 Future<File> logFilePath() async {
   final String dir = (await getApplicationSupportDirectory()).path;
 
@@ -31,43 +33,53 @@ Future<File> createLogFile() async {
   return file;
 }
 
+/// [DevelopmentFilter] для [AppLogger], который разрешает вывод debug/trace/verbose логов только в debug-версии приложения ([kDebugMode] = true).
 class _AppLogFilter extends DevelopmentFilter {
   @override
   bool shouldLog(LogEvent event) {
-    if (kDebugMode && event.level == Level.debug) return true;
+    if (!kDebugMode && event.level.value <= Level.debug.value) return false;
 
-    return super.shouldLog(event);
+    return true;
   }
 }
 
+/// [LogOutput], который форматирует вывод.
 class _AppLogOutput extends LogOutput {
   /// Текстовый файл, в котором хранится лог приложения.
   File? _logFile;
 
   @override
-  void output(
-    OutputEvent event,
-  ) async {
+  void output(OutputEvent event) async {
+    final List<String> output = [];
+    _logFile ??= await createLogFile();
+
+    // Содержимое лога.
+    output.addAll(event.lines);
+
+    // Выводим в консоль.
     // ignore: avoid_print
-    event.lines.forEach(print);
+    output.forEach(print);
 
-    if (event.level != Level.debug) {
-      _logFile ??= await createLogFile();
+    // Не позволяем сохранять в файл debug и другие более низкие логи.
+    if (event.level.value <= Level.debug.value) return;
 
-      _logFile!.writeAsString(
-        "${event.lines}\n",
-        mode: FileMode.writeOnlyAppend,
-      );
-    }
+    // Сохраняем в файл, удаляя ANSI-символы.
+    _logFile!.writeAsStringSync(
+      _AppLogPrinter.removeAnsiColors("${output.join("\n")}\n"),
+      mode: FileMode.writeOnlyAppend,
+    );
   }
 }
 
+/// [LogPrinter], выводящий красивый вывод для лога в консоль.
 class _AppLogPrinter extends LogPrinter {
   _AppLogPrinter({
     this.owner,
   });
 
   String? owner;
+
+  /// Префиксы для различных уровней логирования.
   static final levelPrefixes = {
     Level.trace: "TRACE  ",
     Level.debug: "DEBUG  ",
@@ -77,32 +89,49 @@ class _AppLogPrinter extends LogPrinter {
     Level.fatal: "FATAL  ",
   };
 
+  /// Цвета для различных уровней логирования.
   static final levelColors = {
-    Level.trace: AnsiColor.fg(AnsiColor.grey(0.5)),
+    Level.trace: const AnsiColor.fg(8),
     Level.debug: const AnsiColor.none(),
-    Level.info: const AnsiColor.fg(12),
-    Level.warning: const AnsiColor.fg(011),
-    Level.error: const AnsiColor.fg(31),
-    Level.fatal: const AnsiColor.fg(199),
+    Level.info: const AnsiColor.none(),
+    Level.warning: const AnsiColor.fg(11),
+    Level.error: const AnsiColor.fg(160),
+    Level.fatal: const AnsiColor.fg(196),
   };
 
-  String _getColoredTime(DateTime time) {
-    return const AnsiColor.fg(10)(time.toString());
-  }
+  /// Возвращает текущее время с зелёным фоном.
+  static String getColoredTime(DateTime time) =>
+      const AnsiColor.fg(10).call(time.toString());
 
-  String _getColoredLabelName(Level level) {
-    return levelColors[level]!(levelPrefixes[level]!);
-  }
+  /// Возвращает текстовое название для [level] лога, окрашенный в свой цвет. Название уровня берётся с [levelPrefixes], пока как цвета с [levelColors].
+  static String getColoredLevelName(Level level) =>
+      levelColors.containsKey(level)
+          ? levelColors[level]!.call(
+              levelPrefixes[level]!,
+            )
+          : "<?$level> ";
 
-  String _getColoredOwner() {
-    return owner != null ? const AnsiColor.fg(43)(owner!) : "";
-  }
+  /// Возвращает окрашенное значение для поля [owner].
+  String getColoredOwner() =>
+      owner != null ? const AnsiColor.fg(43).call(owner!) : "";
 
-  String _getColoredError(String error) {
-    return levelColors[Level.error]!(error);
-  }
+  /// Возвращет окрашенный текст ошибки [error].
+  static String getColoredError(String error) =>
+      levelColors[Level.error]!.call(error);
 
-  String _stringifyMessage(dynamic message) {
+  /// Возвращет окрашенный текст StackTrace [stackTrace].
+  static List<String> getColoredStacktrace(StackTrace stackTrace) => stackTrace
+      .toString()
+      .split("\n")
+      .map((line) => levelColors[Level.error]!.call(line))
+      .toList();
+
+  /// Удаляет все ANSI-символы, используемые для окрашивания строки.
+  static String removeAnsiColors(String input) =>
+      input.replaceAll(RegExp("\x1b\\[[0-9;]*m"), "");
+
+  /// Возвращает строковую версию передаваемого [message]. В случае, если будет передан [Map] или [Iterable], то он будет закодирован как JSON-строка.
+  static String stringifyMessage(dynamic message) {
     final finalMessage = message is Function ? message() : message;
 
     if (finalMessage is Map || finalMessage is Iterable) {
@@ -114,24 +143,31 @@ class _AppLogPrinter extends LogPrinter {
     return finalMessage.toString();
   }
 
-  String _getColoredMessage(dynamic message, Level level) {
-    return levelColors[level]!(_stringifyMessage(message));
-  }
+  /// Возвращает окрашенный текст сообщения.
+  static String getColoredMessage(dynamic message, Level level) =>
+      levelColors[level]!(stringifyMessage(message));
 
   @override
   List<String> log(LogEvent event) {
-    String time = _getColoredTime(event.time);
-    String level = _getColoredLabelName(event.level);
-    String owner = _getColoredOwner();
-    String message = _getColoredMessage(event.message, event.level);
+    String time = getColoredTime(event.time);
+    String level = getColoredLevelName(event.level);
+    String owner = getColoredOwner();
+    String message = getColoredMessage(event.message, event.level);
 
     List<String> outputList = [
       "$time | $level | ${this.owner != null ? '$owner - ' : ''}$message",
     ];
     if (event.error != null) {
       outputList.add(
-        _getColoredError(
+        getColoredError(
           event.error.toString(),
+        ),
+      );
+    }
+    if (event.stackTrace != null) {
+      outputList.addAll(
+        getColoredStacktrace(
+          event.stackTrace!,
         ),
       );
     }
@@ -140,31 +176,19 @@ class _AppLogPrinter extends LogPrinter {
   }
 }
 
+/// Класс, расширяющий [Logger], дающий опции для логирования в stdin а так же в файл, путь к которому возвращается методом [logFilePath].
+///
+/// Вместо привычных `Logger.error(...)` в данном классе используются сокращённые наименования, где берётся лишь первая буква каждого метода: [d] (debug), [i] (info), [w] (warning), [e] (error), и так далее.
+///
+/// Вместо инициализации данного класса рекомендуется использовать метод [getLogger], автоматически создающий instance этого класса с правильно передавемым [owner].
 class AppLogger extends Logger {
   AppLogger({
     this.owner,
   }) : super(
           filter: _AppLogFilter(),
           output: _AppLogOutput(),
-          printer: _AppLogPrinter(
-            owner: owner,
-          ),
+          printer: _AppLogPrinter(owner: owner),
         );
 
   String? owner;
-
-  @override
-  void log(
-    Level level,
-    dynamic message, {
-    DateTime? time,
-    Object? error,
-    StackTrace? stackTrace,
-  }) =>
-      super.log(
-        level,
-        message,
-        error: error,
-        stackTrace: stackTrace,
-      );
 }

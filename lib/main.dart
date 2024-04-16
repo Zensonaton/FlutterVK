@@ -249,7 +249,7 @@ Future main() async {
       ),
     );
   } catch (e, stackTrace) {
-    logger.e(
+    logger.f(
       "Ошибка при запуске приложения (main): ",
       error: e,
       stackTrace: stackTrace,
@@ -504,66 +504,83 @@ class ErroredMainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      theme: ThemeData(
+        colorScheme: fallbackLightColorScheme,
+      ),
+      darkTheme: ThemeData(
+        colorScheme: fallbackDarkColorScheme,
+        brightness: Brightness.dark,
+      ),
       home: Scaffold(
         body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Иконка.
-              const Padding(
-                padding: EdgeInsets.only(
-                  bottom: 12,
-                ),
-                child: Icon(
-                  Icons.warning,
-                ),
+          child: Card(
+            child: Padding(
+              padding: const EdgeInsets.all(
+                16,
               ),
-
-              // Текст про ошибку запуска.
-              // В данном классе мы не должны использовать локализацию, поскольку она может быть поломана.
-              Padding(
-                padding: const EdgeInsets.only(
-                  bottom: 12,
-                ),
-                child: Text(
-                  "Unfortunately, Flutter VK couldn't start up properly due to unhandled exception:\n$error\n\nPlease try to check for app updates, and/or create a Github Issue on Flutter VK Github.",
-                  textAlign: TextAlign.center,
-                ),
-              ),
-
-              Wrap(
-                spacing: 8,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Кнопка для возможности поделиться логами.
-                  const FilledButton(
-                    onPressed: shareLogs,
-                    child: Text(
-                      "Share logs",
+                  // Иконка.
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      bottom: 12,
+                    ),
+                    child: Icon(
+                      Icons.warning,
+                      color: Theme.of(context).colorScheme.error,
+                      size: 36,
                     ),
                   ),
 
-                  // Кнопка для возможности поделиться логами.
-                  FilledButton.tonal(
-                    onPressed: () => launchUrl(
-                      Uri.parse(
-                        repoURL,
+                  // Текст про ошибку запуска.
+                  // В данном классе мы не должны использовать локализацию, поскольку она может быть поломана.
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      bottom: 24,
+                    ),
+                    child: SelectableText(
+                      "Unfortunately, Flutter VK couldn't start up properly due to unhandled exception:\n$error\n\nPlease try to check for app updates, and/or create a Github Issue on Flutter VK Github.",
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+
+                  // Кнопки снизу.
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      // Кнопка для возможности поделиться логами.
+                      const FilledButton(
+                        onPressed: shareLogs,
+                        child: Text(
+                          "Share logs",
+                        ),
                       ),
-                    ),
-                    child: const Text(
-                      "Open Github",
-                    ),
-                  ),
 
-                  // Кнопка для возможности поделиться логами.
-                  FilledButton.tonal(
-                    onPressed: () => exit(0),
-                    child: const Text(
-                      "Exit",
-                    ),
+                      // Кнопка для возможности поделиться логами.
+                      FilledButton.tonal(
+                        onPressed: () => launchUrl(
+                          Uri.parse(
+                            repoURL,
+                          ),
+                        ),
+                        child: const Text(
+                          "Open Github",
+                        ),
+                      ),
+
+                      // Кнопка для возможности поделиться логами.
+                      FilledButton.tonal(
+                        onPressed: () => exit(0),
+                        child: const Text(
+                          "Exit",
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
       ),
