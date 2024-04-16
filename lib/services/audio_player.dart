@@ -114,7 +114,9 @@ class CachedStreamedAudio extends StreamAudioSource {
   /// Загружает обложки, текст, а так же прочую информацию о треке.
   ///
   /// Данный метод обычно вызывается после загрузки самого трека. Данный метод загружает изображения треков разных размеров, помещая их в [CachedNetworkImagesManager].
-  static Future<void> downloadTrackData(
+  ///
+  /// Возвращает bool, олицетворяющий то, было ли произведено хоть какое-то изменение в БД.
+  static Future<bool> downloadTrackData(
     ExtendedAudio audio,
     ExtendedPlaylist playlist,
     UserProvider user, {
@@ -163,7 +165,8 @@ class CachedStreamedAudio extends StreamAudioSource {
         );
 
         // Если мы ничего не нашли, либо у альбома нет изображений, то просто ничего не делаем.
-        if (deezerTrack == null || deezerTrack.album.cover == null) return;
+        if (deezerTrack == null || deezerTrack.album.cover == null)
+          return false;
 
         // Всё ок, запоминаем новую обложку трека.
         thumbs = ExtendedThumbnail.fromDeezerTrack(deezerTrack);
@@ -218,6 +221,8 @@ class CachedStreamedAudio extends StreamAudioSource {
     if (saveInDB && shouldUpdateDB) {
       await appStorage.savePlaylist(playlist.asDBPlaylist);
     }
+
+    return shouldUpdateDB;
   }
 
   @override
