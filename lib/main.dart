@@ -186,8 +186,13 @@ Future main() async {
         Updater.getFilenameByPlatform(),
       ),
     );
+    try {
+
     if (updaterInstaller.existsSync()) {
       updaterInstaller.deleteSync();
+    }
+    } catch (e, stackTrace) {
+      logger.w("Не удалось удалить существующий файл обновления по пули ${updaterInstaller.path}: ", error: e, stackTrace: stackTrace,);
     }
 
     // Удаляем папку со старым кэшем треков, если таковой существует.
