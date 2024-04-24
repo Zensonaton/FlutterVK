@@ -187,12 +187,15 @@ Future main() async {
       ),
     );
     try {
-
-    if (updaterInstaller.existsSync()) {
-      updaterInstaller.deleteSync();
-    }
+      if (updaterInstaller.existsSync()) {
+        updaterInstaller.deleteSync();
+      }
     } catch (e, stackTrace) {
-      logger.w("Не удалось удалить существующий файл обновления по пули ${updaterInstaller.path}: ", error: e, stackTrace: stackTrace,);
+      logger.w(
+        "Не удалось удалить существующий файл обновления по пули ${updaterInstaller.path}: ",
+        error: e,
+        stackTrace: stackTrace,
+      );
     }
 
     // Удаляем папку со старым кэшем треков, если таковой существует.
@@ -562,7 +565,7 @@ class ErroredMainApp extends StatelessWidget {
                         ),
                       ),
 
-                      // Кнопка для возможности поделиться логами.
+                      // Открытие Github-репозитория.
                       FilledButton.tonal(
                         onPressed: () => launchUrl(
                           Uri.parse(
@@ -574,7 +577,7 @@ class ErroredMainApp extends StatelessWidget {
                         ),
                       ),
 
-                      // Кнопка для возможности поделиться логами.
+                      // Кнопка для выхода.
                       FilledButton.tonal(
                         onPressed: () => exit(0),
                         child: const Text(
