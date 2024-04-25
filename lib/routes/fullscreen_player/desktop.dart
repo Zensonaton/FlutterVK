@@ -6,9 +6,6 @@ import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "package:just_audio/just_audio.dart";
 import "package:provider/provider.dart";
 import "package:skeletonizer/skeletonizer.dart";
-import "package:styled_text/tags/styled_text_tag.dart";
-import "package:styled_text/tags/styled_text_tag_action.dart";
-import "package:styled_text/widgets/styled_text.dart";
 
 import "../../consts.dart";
 import "../../main.dart";
@@ -319,47 +316,10 @@ class _LyricsBlockWidgetState extends State<LyricsBlockWidget> {
                           );
                         },
                       )
-                : Column(
-                    key: const ValueKey(
-                      "nolyrics",
+                : const SizedBox(
+                    key: ValueKey(
+                      null,
                     ),
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      RepaintBoundary(
-                        child: Image.asset(
-                          "assets/images/dog.gif",
-                          width: 25 * 5,
-                          height: 12 * 5,
-                          fit: BoxFit.fill,
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 18,
-                      ),
-                      StyledText(
-                        text: AppLocalizations.of(context)!
-                            .music_fullscreenTrackNoLyrics,
-                        textAlign: TextAlign.center,
-                        tags: {
-                          "bold": StyledTextTag(
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          "toggle": StyledTextActionTag(
-                            (String? text, Map<String?, String?> attrs) {
-                              user.settings.trackLyricsEnabled =
-                                  !user.settings.trackLyricsEnabled;
-
-                              user.markUpdated();
-                            },
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                          ),
-                        },
-                      ),
-                    ],
                   ),
           ),
         ),

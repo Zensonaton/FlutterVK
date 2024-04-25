@@ -275,11 +275,6 @@
 	},
 	"music_fullscreenNoAudioButton": "Выйти из плеера",
 
-	"music_fullscreenTrackNoLyrics": "<bold>Тс-с-с, собачка спит</bold>!\n\nУ данного трека нет текста.\nНажмите <toggle>сюда</toggle>, что бы выключить показ текстов песен.",
-	"@music_fullscreenTrackNoLyrics": {
-		"description": "В случае, если у трека нету текста, в интерфейсе показывается изображение спящей собачки. Эта надпись располагается под этой собачкой. <bold>....</bold> делает текст жирным, <toggle>...</toggle> выключает показ текста трека."
-	},
-
 	"musicMixAudiosAddError": "Ошибка при получении треков для аудио микса: {error}",
 	"@musicMixAudiosAddError": {
 		"placeholders": {
