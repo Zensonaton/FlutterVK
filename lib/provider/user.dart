@@ -1109,6 +1109,7 @@ class UserProvider extends ChangeNotifier {
     if (playlist.ownerID == id! && playlist.id == -1) {
       logger.w(
         "Attempted to call updatePlaylist for 'search results' playlist!",
+        stackTrace: StackTrace.current,
       );
 
       return;
