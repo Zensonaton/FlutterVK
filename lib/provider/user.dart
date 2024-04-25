@@ -11,6 +11,7 @@ import "../api/spotify/get_token.dart";
 import "../api/spotify/search.dart";
 import "../api/spotify/shared.dart";
 import "../api/vk/audio/add.dart";
+import "../api/vk/audio/add_dislike.dart";
 import "../api/vk/audio/delete.dart";
 import "../api/vk/audio/edit.dart";
 import "../api/vk/audio/get.dart";
@@ -1338,6 +1339,17 @@ class UserProvider extends ChangeNotifier {
       await audio_send_start_event(
         mainToken!,
         id,
+      );
+
+  /// Помечает передаваемые треки как дизлайкнутые.
+  ///
+  /// API: `audio.addDislike`.
+  Future<APIAudioAddDislikeResponse> audioAddDislike(
+    List<String> ids,
+  ) async =>
+      await audio_add_dislike(
+        mainToken!,
+        ids,
       );
 
   /// Ищет треки во ВКонтакте по их названию, дополняя информацию о треках альбомами.

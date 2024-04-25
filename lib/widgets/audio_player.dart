@@ -152,13 +152,15 @@ class TrackTitleAndArtist extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             // Название трека.
-            Text(
-              title,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: scheme.onPrimaryContainer,
+            Flexible(
+              child: Text(
+                title,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: scheme.onPrimaryContainer,
+                ),
               ),
             ),
 
@@ -177,16 +179,18 @@ class TrackTitleAndArtist extends StatelessWidget {
 
             // Подпись трека.
             if (subtitle != null)
-              Padding(
-                padding: const EdgeInsets.only(
-                  left: 10,
-                ),
-                child: Text(
-                  subtitle!,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: scheme.onPrimaryContainer.withOpacity(0.5),
+              Flexible(
+                child: Padding(
+                  padding: const EdgeInsets.only(
+                    left: 6,
+                  ),
+                  child: Text(
+                    subtitle!,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: scheme.onPrimaryContainer.withOpacity(0.5),
+                    ),
                   ),
                 ),
               ),
@@ -263,6 +267,9 @@ class BottomMusicPlayer extends StatefulWidget {
   /// Метод, вызываемый при изменения состояния "лайка" трека.
   final ValueSetter<bool>? onFavoriteStateToggle;
 
+  /// Метод, вызываемый при нажатии кнопки "дизлайка" у трека.
+  final VoidCallback? onDislike;
+
   /// Метод, вызываемый при попытке запустить следующий трек (свайп влево).
   final VoidCallback? onNextTrack;
 
@@ -322,6 +329,7 @@ class BottomMusicPlayer extends StatefulWidget {
     this.duration = Duration.zero,
     this.onPlayStateToggle,
     this.onFavoriteStateToggle,
+    this.onDislike,
     this.onNextTrack,
     this.onPreviousTrack,
     this.onShuffleToggle,
@@ -359,8 +367,9 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
     );
 
     // Размер блоков слева.
-    final double leftAndRightBlocksSize =
-        widget.useBigLayout ? (width - centerBlockSize) / 2 : width - 112;
+    final double leftAndRightBlocksSize = widget.useBigLayout
+        ? (width - centerBlockSize) / 2
+        : width - (widget.onDislike != null ? 136 : 96);
 
     /// Url на изображение трека.
     final String? imageUrl = widget.audio?.smallestThumbnail;
@@ -633,7 +642,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                         ),
                         if (widget.useBigLayout)
                           const SizedBox(
-                            width: 12,
+                            width: 8,
                           ),
 
                         // Кнопка для лайка (в Desktop Layout'е).
@@ -645,6 +654,16 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                               widget.favoriteState
                                   ? Icons.favorite
                                   : Icons.favorite_outline,
+                              color: widget.scheme.onPrimaryContainer,
+                            ),
+                          ),
+
+                        // Кнопка для дизлайка (в Desktop Layout'е).
+                        if (widget.useBigLayout && widget.onDislike != null)
+                          IconButton(
+                            onPressed: widget.onDislike,
+                            icon: Icon(
+                              Icons.thumb_down_outlined,
                               color: widget.scheme.onPrimaryContainer,
                             ),
                           ),
@@ -909,6 +928,16 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                         color: widget.scheme.onPrimaryContainer,
                       ),
                     ),
+
+                    // Кнопка для дизлайка.
+                    if (widget.onDislike != null)
+                      IconButton(
+                        onPressed: widget.onDislike,
+                        icon: Icon(
+                          Icons.thumb_down_outlined,
+                          color: widget.scheme.onPrimaryContainer,
+                        ),
+                      ),
 
                     // Кнопка паузы/возобновления.
                     playPauseButton,

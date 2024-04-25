@@ -11,6 +11,7 @@ import "package:responsive_builder/responsive_builder.dart";
 
 import "../api/vk/api.dart";
 import "../api/vk/audio/add.dart";
+import "../api/vk/audio/add_dislike.dart";
 import "../api/vk/audio/delete.dart";
 import "../api/vk/audio/get_stream_mix_audios.dart";
 import "../api/vk/audio/restore.dart";
@@ -168,9 +169,8 @@ Future<void> toggleTrackLike(
   }
 }
 
-/// Меняет состояние "лайка" у передаваемого трека.
+/// Меняет состояние "лайка" у передаваемого трека [audio]. При вызове, начинается анимация загрузки ([LoadingOverlay]).
 ///
-/// Учтите, что данный метод делает изменения в интерфейсе.
 /// Если [checkBeforeSaving] равен true, то в случае дубликата трека появится диалог, подтверждающий создание дубликата.
 Future<void> toggleTrackLikeState(
   BuildContext context,
@@ -229,6 +229,42 @@ Future<void> toggleTrackLikeState(
 
   // Посылаем обновления объекта пользователя.
   user.markUpdated(false);
+}
+
+/// Помечает передаваемый трек [audio] как дизлайкнутый. При вызове, начинается анимация загрузки ([LoadingOverlay]).
+///
+/// Возвращает то, был ли запрос успешен.
+Future<bool> addDislikeTrackState(
+  BuildContext context,
+  ExtendedAudio audio,
+) async {
+  final UserProvider user = Provider.of<UserProvider>(context, listen: false);
+  final AppLogger logger = getLogger("addDislike");
+
+  LoadingOverlay.of(context).show();
+
+  try {
+    final APIAudioAddDislikeResponse response =
+        await user.audioAddDislike([audio.mediaKey]);
+    raiseOnAPIError(response);
+
+    assert(response.response, "Track is not disliked: ${response.response}");
+
+    return true;
+  } catch (e, stackTrace) {
+    // ignore: use_build_context_synchronously
+    showLogErrorDialog(
+      "Ошибка при дизлайке трека: ",
+      e,
+      stackTrace,
+      logger,
+      context,
+    );
+
+    return false;
+  } finally {
+    if (context.mounted) LoadingOverlay.of(context).hide();
+  }
 }
 
 /// Wrapper для [BottomMusicPlayer], который передаёт все нужные поля для [BottomMusicPlayer].
@@ -365,6 +401,19 @@ class _BottomMusicPlayerWidgetState extends State<BottomMusicPlayerWidget> {
           !player.currentAudio!.isLiked,
         );
       },
+      onDislike: (player.currentPlaylist?.isRecommendationTypePlaylist ?? false)
+          ? () async {
+              if (!networkRequiredDialog(context)) return;
+
+              // Делаем трек дизлайкнутым.
+              final bool result =
+                  await addDislikeTrackState(context, player.currentAudio!);
+              if (!result) return;
+
+              // Запускаем следующий трек в плейлисте.
+              await player.next();
+            }
+          : null,
       onPlayStateToggle: (bool enabled) => player.playOrPause(enabled),
       onProgressChange: (double progress) => player.seekNormalized(progress),
       onVolumeChange: (double volume) => player.setVolume(volume),

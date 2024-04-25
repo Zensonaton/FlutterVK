@@ -409,6 +409,36 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
     }
   }
 
+  /// Переключает состояние лайка у трека, играющий в данный момент.
+  void _toggleLike() {
+    assert(player.currentAudio != null, "Current audio is null");
+    if (!networkRequiredDialog(context)) return;
+
+    toggleTrackLikeState(
+      context,
+      player.currentAudio!,
+      !player.currentAudio!.isLiked,
+    );
+  }
+
+  /// Добавляет дизлайк для трека, который играет в данный момент.
+  void _toggleDislike() async {
+    assert(player.currentAudio != null, "Current audio is null");
+    assert(
+      player.currentPlaylist!.isRecommendationTypePlaylist,
+      "Attempted to dislike non-recommendation track",
+    );
+    if (!networkRequiredDialog(context)) return;
+
+    // Делаем трек дизлайкнутым.
+    final bool result =
+        await addDislikeTrackState(context, player.currentAudio!);
+    if (!result) return;
+
+    // Запускаем следующий трек в плейлисте.
+    await player.next();
+  }
+
   @override
   Widget build(BuildContext context) {
     final UserProvider user = Provider.of<UserProvider>(context);
@@ -417,12 +447,15 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
     final bool isFavorite = player.currentAudio!.isLiked;
 
     /// Указывает, что используется более компактный интерфейс.
-    final bool compactLayout = MediaQuery.of(context).size.width <= 900;
+    final bool compactLayout = MediaQuery.of(context).size.width <= 1000;
 
     /// Указывает, что большое изображение трека должно использовать меньший максимальный размер.
     final bool compactBigFullscreenImage =
         MediaQuery.of(context).size.width <= 1200 ||
             MediaQuery.of(context).size.height <= 800;
+
+    /// Указывает, что кнопки управления будут иметь меньшее расстояние при маленьком размере интерфейса.
+    final bool smallerButtonSpacing = MediaQuery.of(context).size.width <= 800;
 
     /// Указывает, что кнопка для переключения shuffle работает.
     final bool canToggleShuffle =
@@ -436,6 +469,9 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
         Container(
           constraints: const BoxConstraints(
             minWidth: 200,
+          ),
+          padding: const EdgeInsets.only(
+            bottom: 18,
           ),
           width: MediaQuery.of(context).size.width -
               _playerPadding * 2 -
@@ -452,80 +488,82 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 // Изображение трека.
-                Hero(
-                  tag: player.currentAudio!.mediaKey,
-                  child: AnimatedSwitcher(
-                    duration: const Duration(
-                      milliseconds: 500,
-                    ),
-                    child: AnimatedContainer(
-                      key: ValueKey(
-                        player.currentAudio!.mediaKey,
-                      ),
+                Padding(
+                  padding: const EdgeInsets.only(
+                    right: 24,
+                  ),
+                  child: Hero(
+                    tag: player.currentAudio!.mediaKey,
+                    child: AnimatedSwitcher(
                       duration: const Duration(
                         milliseconds: 500,
                       ),
-                      curve: Curves.ease,
-                      width: 130 *
-                          ((user.settings.fullscreenBigThumbnail &&
-                                  MediaQuery.of(context).size.height > 600)
-                              ? compactBigFullscreenImage
-                                  ? 2
-                                  : 3
-                              : 1),
-                      height: 130 *
-                          ((user.settings.fullscreenBigThumbnail &&
-                                  MediaQuery.of(context).size.height > 600)
-                              ? compactBigFullscreenImage
-                                  ? 2
-                                  : 3
-                              : 1),
-                      decoration: BoxDecoration(
-                        boxShadow: [
-                          if (player.playing)
-                            BoxShadow(
-                              blurRadius: 22,
-                              spreadRadius: -3,
-                              color: Theme.of(context).colorScheme.tertiary,
-                              blurStyle: BlurStyle.outer,
-                            ),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(
-                          globalBorderRadius,
+                      child: AnimatedContainer(
+                        key: ValueKey(
+                          player.currentAudio!.mediaKey,
                         ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: () {
-                              user.settings.fullscreenBigThumbnail =
-                                  !user.settings.fullscreenBigThumbnail;
+                        duration: const Duration(
+                          milliseconds: 500,
+                        ),
+                        curve: Curves.ease,
+                        width: 130 *
+                            ((user.settings.fullscreenBigThumbnail &&
+                                    MediaQuery.of(context).size.height > 600)
+                                ? compactBigFullscreenImage
+                                    ? 2
+                                    : 3
+                                : 1),
+                        height: 130 *
+                            ((user.settings.fullscreenBigThumbnail &&
+                                    MediaQuery.of(context).size.height > 600)
+                                ? compactBigFullscreenImage
+                                    ? 2
+                                    : 3
+                                : 1),
+                        decoration: BoxDecoration(
+                          boxShadow: [
+                            if (player.playing)
+                              BoxShadow(
+                                blurRadius: 22,
+                                spreadRadius: -3,
+                                color: Theme.of(context).colorScheme.tertiary,
+                                blurStyle: BlurStyle.outer,
+                              ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(
+                            globalBorderRadius,
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () {
+                                user.settings.fullscreenBigThumbnail =
+                                    !user.settings.fullscreenBigThumbnail;
 
-                              user.markUpdated();
-                            },
-                            child: player.currentAudio!.maxThumbnail != null
-                                ? CachedNetworkImage(
-                                    imageUrl:
-                                        player.currentAudio!.maxThumbnail!,
-                                    cacheKey:
-                                        "${player.currentAudio!.mediaKey}max",
-                                    fit: BoxFit.fill,
-                                    placeholder:
-                                        (BuildContext context, String url) =>
-                                            const FallbackAudioAvatar(),
-                                    cacheManager:
-                                        CachedAlbumImagesManager.instance,
-                                  )
-                                : const FallbackAudioAvatar(),
+                                user.markUpdated();
+                              },
+                              child: player.currentAudio!.maxThumbnail != null
+                                  ? CachedNetworkImage(
+                                      imageUrl:
+                                          player.currentAudio!.maxThumbnail!,
+                                      cacheKey:
+                                          "${player.currentAudio!.mediaKey}max",
+                                      fit: BoxFit.fill,
+                                      placeholder:
+                                          (BuildContext context, String url) =>
+                                              const FallbackAudioAvatar(),
+                                      cacheManager:
+                                          CachedAlbumImagesManager.instance,
+                                    )
+                                  : const FallbackAudioAvatar(),
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(
-                  width: 24,
                 ),
 
                 // Информация по названию трека и его исполнителю.
@@ -583,6 +621,8 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                           ),
                       ],
                     ),
+
+                    // Исполнитель трека.
                     Text(
                       player.currentAudio!.artist,
                       overflow: TextOverflow.ellipsis,
@@ -599,9 +639,6 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
               ],
             ),
           ),
-        ),
-        const SizedBox(
-          height: 18,
         ),
 
         // Индикатор буферизации.
@@ -642,33 +679,43 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
               ),
             ),
           ),
-        const SizedBox(
-          height: 4,
-        ),
 
         // Кнопки управления воспроизведением.
         Stack(
           children: [
-            // Кнопка для лайка/дизлайка трека. Если места мало (compactLayout), то кнопка находится в панели управления плеера (ниже).
+            // Кнопки лайка, дизлайка.
             if (!compactLayout)
               Align(
                 alignment: Alignment.bottomLeft,
                 child: SizedBox(
                   height: 70,
-                  child: IconButton(
-                    onPressed: () {
-                      if (!networkRequiredDialog(context)) return;
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Кнопка для добавления/удаления лайка.
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          right: 8,
+                        ),
+                        child: IconButton(
+                          onPressed: _toggleLike,
+                          icon: Icon(
+                            isFavorite ? Icons.favorite : Icons.favorite_border,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      ),
 
-                      toggleTrackLikeState(
-                        context,
-                        player.currentAudio!,
-                        !isFavorite,
-                      );
-                    },
-                    icon: Icon(
-                      isFavorite ? Icons.favorite : Icons.favorite_border,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+                      // Кнопка для дизлайка трека, если включён рекомендуемый плейлист.
+                      if (player.currentPlaylist!.isRecommendationTypePlaylist)
+                        IconButton(
+                          onPressed: _toggleDislike,
+                          icon: Icon(
+                            Icons.thumb_down_outlined,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               ),
@@ -686,104 +733,127 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                     children: [
                       // Если места мало, то кнопка для лайка/дизлайка.
                       if (compactLayout)
-                        IconButton(
-                          onPressed: () => toggleTrackLikeState(
-                            context,
-                            player.currentAudio!,
-                            !isFavorite,
+                        Padding(
+                          padding: EdgeInsets.only(
+                            right: smallerButtonSpacing ? 0 : 8,
                           ),
-                          icon: Icon(
-                            isFavorite ? Icons.favorite : Icons.favorite_border,
-                            color: Theme.of(context).colorScheme.primary,
+                          child: IconButton(
+                            onPressed: _toggleLike,
+                            icon: Icon(
+                              isFavorite
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
                           ),
                         ),
-                      if (compactLayout)
-                        const SizedBox(
-                          width: 8,
+
+                      // Кнопка для дизлайка трека, если включён рекомендуемый плейлист.
+                      if (compactLayout &&
+                          player.currentPlaylist!.isRecommendationTypePlaylist)
+                        Padding(
+                          padding: EdgeInsets.only(
+                            right: smallerButtonSpacing ? 0 : 8,
+                          ),
+                          child: IconButton(
+                            onPressed: _toggleDislike,
+                            icon: Icon(
+                              Icons.thumb_down_outlined,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
                         ),
 
                       // Переключение shuffle.
-                      StreamBuilder<bool>(
-                        stream: player.shuffleModeEnabledStream,
-                        builder: (
-                          BuildContext context,
-                          AsyncSnapshot<bool> snapshot,
-                        ) {
-                          final bool enabled = snapshot.data ?? false;
+                      Padding(
+                        padding: EdgeInsets.only(
+                          right: smallerButtonSpacing ? 0 : 8,
+                        ),
+                        child: StreamBuilder<bool>(
+                          stream: player.shuffleModeEnabledStream,
+                          builder: (
+                            BuildContext context,
+                            AsyncSnapshot<bool> snapshot,
+                          ) {
+                            final bool enabled = snapshot.data ?? false;
 
-                          return IconButton(
-                            onPressed: canToggleShuffle
-                                ? () async {
-                                    await player.setShuffle(!enabled);
+                            return IconButton(
+                              onPressed: canToggleShuffle
+                                  ? () async {
+                                      await player.setShuffle(!enabled);
 
-                                    user.settings.shuffleEnabled = !enabled;
-                                    user.markUpdated();
-                                  }
-                                : null,
-                            icon: Icon(
-                              enabled
-                                  ? Icons.shuffle_on_outlined
-                                  : Icons.shuffle,
-                              color: canToggleShuffle
-                                  ? Theme.of(context).colorScheme.primary
+                                      user.settings.shuffleEnabled = !enabled;
+                                      user.markUpdated();
+                                    }
                                   : null,
-                            ),
-                          );
-                        },
-                      ),
-                      const SizedBox(
-                        width: 8,
+                              icon: Icon(
+                                enabled
+                                    ? Icons.shuffle_on_outlined
+                                    : Icons.shuffle,
+                                color: canToggleShuffle
+                                    ? Theme.of(context).colorScheme.primary
+                                    : null,
+                              ),
+                            );
+                          },
+                        ),
                       ),
 
                       // Предыдущий трек.
-                      IconButton(
-                        onPressed: () => player.previous(
-                          allowSeekToBeginning: true,
+                      Padding(
+                        padding: EdgeInsets.only(
+                          right: smallerButtonSpacing ? 0 : 8,
                         ),
-                        icon: Icon(
-                          Icons.skip_previous,
-                          color: Theme.of(context).colorScheme.primary,
+                        child: IconButton(
+                          onPressed: () => player.previous(
+                            allowSeekToBeginning: true,
+                          ),
+                          icon: Icon(
+                            Icons.skip_previous,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
                         ),
-                      ),
-                      const SizedBox(
-                        width: 8,
                       ),
 
                       // Пауза/воспроизведение.
-                      StreamBuilder<PlayerState>(
-                        stream: player.playerStateStream,
-                        builder: (
-                          BuildContext context,
-                          AsyncSnapshot<PlayerState> snapshot,
-                        ) {
-                          return IconButton(
-                            onPressed: () => player.togglePlay(),
-                            icon: Icon(
-                              player.playing
-                                  ? Icons.pause_circle
-                                  : Icons.play_circle,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onPrimaryContainer,
-                            ),
-                            iconSize: 50,
-                          );
-                        },
-                      ),
-                      const SizedBox(
-                        width: 8,
+                      Padding(
+                        padding: EdgeInsets.only(
+                          right: smallerButtonSpacing ? 0 : 8,
+                        ),
+                        child: StreamBuilder<PlayerState>(
+                          stream: player.playerStateStream,
+                          builder: (
+                            BuildContext context,
+                            AsyncSnapshot<PlayerState> snapshot,
+                          ) {
+                            return IconButton(
+                              onPressed: () => player.togglePlay(),
+                              icon: Icon(
+                                player.playing
+                                    ? Icons.pause_circle
+                                    : Icons.play_circle,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onPrimaryContainer,
+                              ),
+                              iconSize: 50,
+                            );
+                          },
+                        ),
                       ),
 
                       // Следующий трек.
-                      IconButton(
-                        onPressed: () => player.next(),
-                        icon: Icon(
-                          Icons.skip_next,
-                          color: Theme.of(context).colorScheme.primary,
+                      Padding(
+                        padding: EdgeInsets.only(
+                          right: smallerButtonSpacing ? 0 : 8,
                         ),
-                      ),
-                      const SizedBox(
-                        width: 8,
+                        child: IconButton(
+                          onPressed: () => player.next(),
+                          icon: Icon(
+                            Icons.skip_next,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
                       ),
 
                       // Повтор трека.
@@ -824,62 +894,67 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                     children: [
                       // Управление громкостью.
                       if (isDesktop)
-                        StreamBuilder<double>(
-                          stream: player.volumeStream,
-                          builder: (
-                            BuildContext context,
-                            AsyncSnapshot<double> snapshot,
-                          ) {
-                            return ScrollableSlider(
-                              value: snapshot.data ?? 1.0,
-                              activeColor:
-                                  Theme.of(context).colorScheme.primary,
-                              inactiveColor: Theme.of(context)
-                                  .colorScheme
-                                  .primary
-                                  .withOpacity(0.5),
-                              onChanged: (double newVolume) async {
-                                await player.setVolume(newVolume);
+                        Padding(
+                          padding: EdgeInsets.only(
+                            right: smallerButtonSpacing ? 0 : 18,
+                          ),
+                          child: StreamBuilder<double>(
+                            stream: player.volumeStream,
+                            builder: (
+                              BuildContext context,
+                              AsyncSnapshot<double> snapshot,
+                            ) {
+                              return ScrollableSlider(
+                                value: snapshot.data ?? 1.0,
+                                activeColor:
+                                    Theme.of(context).colorScheme.primary,
+                                inactiveColor: Theme.of(context)
+                                    .colorScheme
+                                    .primary
+                                    .withOpacity(0.5),
+                                onChanged: (double newVolume) async {
+                                  await player.setVolume(newVolume);
 
-                                // Если пользователь установил минимальную громкость, а так же настройка "Пауза при отключении громкости" включена, то ставим плеер на паузу.
-                                if (newVolume == 0 &&
-                                    user.settings.pauseOnMuteEnabled) {
-                                  await player.pause();
-                                }
-                              },
-                            );
-                          },
-                        ),
-                      if (isDesktop)
-                        const SizedBox(
-                          width: 18,
+                                  // Если пользователь установил минимальную громкость, а так же настройка "Пауза при отключении громкости" включена, то ставим плеер на паузу.
+                                  if (newVolume == 0 &&
+                                      user.settings.pauseOnMuteEnabled) {
+                                    await player.pause();
+                                  }
+                                },
+                              );
+                            },
+                          ),
                         ),
 
                       // Показ текста песни.
-                      IconButton(
-                        onPressed: player.currentAudio!.hasLyrics ?? false
-                            ? () {
-                                user.settings.trackLyricsEnabled =
-                                    !user.settings.trackLyricsEnabled;
-
-                                user.markUpdated();
-                              }
-                            : null,
-                        icon: Icon(
-                          user.settings.trackLyricsEnabled &&
-                                  (player.currentAudio!.hasLyrics ?? false)
-                              ? Icons.lyrics
-                              : Icons.lyrics_outlined,
-                          color:
-                              Theme.of(context).colorScheme.primary.withOpacity(
-                                    player.currentAudio!.hasLyrics ?? false
-                                        ? 1.0
-                                        : 0.5,
-                                  ),
+                      Padding(
+                        padding: EdgeInsets.only(
+                          right: smallerButtonSpacing ? 0 : 8,
                         ),
-                      ),
-                      const SizedBox(
-                        width: 8,
+                        child: IconButton(
+                          onPressed: player.currentAudio!.hasLyrics ?? false
+                              ? () {
+                                  user.settings.trackLyricsEnabled =
+                                      !user.settings.trackLyricsEnabled;
+
+                                  user.markUpdated();
+                                }
+                              : null,
+                          icon: Icon(
+                            user.settings.trackLyricsEnabled &&
+                                    (player.currentAudio!.hasLyrics ?? false)
+                                ? Icons.lyrics
+                                : Icons.lyrics_outlined,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withOpacity(
+                                  player.currentAudio!.hasLyrics ?? false
+                                      ? 1.0
+                                      : 0.5,
+                                ),
+                          ),
+                        ),
                       ),
 
                       // Выход из полноэкранного режима.

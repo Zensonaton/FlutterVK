@@ -379,6 +379,10 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
     final bool canToggleShuffle =
         !(player.currentPlaylist?.isAudioMixPlaylist ?? false);
 
+    /// Указывает, что запущен рекомендуемый плейлист.
+    final bool isRecommendationTypePlaylist =
+        player.currentPlaylist?.isRecommendationTypePlaylist ?? false;
+
     return Column(
       children: [
         // Кнопки для лайка/дизлайка, а так же включения/отключения текста песни.
@@ -389,7 +393,7 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Кнопка для дизлайка/лайка трека.
+              // Кнопка для лайка трека.
               IconButton(
                 onPressed: () {
                   if (!networkRequiredDialog(context)) return;
@@ -405,6 +409,28 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                   color: Theme.of(context).colorScheme.primary,
                 ),
               ),
+
+              // Кнопка для дизлайка трека.
+              if (isRecommendationTypePlaylist)
+                IconButton(
+                  onPressed: () async {
+                    if (!networkRequiredDialog(context)) return;
+
+                    // Делаем трек дизлайкнутым.
+                    final bool result = await addDislikeTrackState(
+                      context,
+                      player.currentAudio!,
+                    );
+                    if (!result) return;
+
+                    // Запускаем следующий трек в плейлисте.
+                    await player.next();
+                  },
+                  icon: Icon(
+                    Icons.thumb_down_outlined,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
 
               // Информация по текущему треку: его исполнителю и названию.
               Expanded(
@@ -482,6 +508,12 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                   ],
                 ),
               ),
+
+              // Пустое место для центрирования текста, смещённого ввиду кнопки дизлайка слева.
+              if (isRecommendationTypePlaylist)
+                const SizedBox(
+                  width: 40,
+                ),
 
               // Кнопка для включения/отключения показа текста песни.
               if (showLyricsBlock)
