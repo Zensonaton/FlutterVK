@@ -667,59 +667,73 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
 
     // Проверка на случай, если запустился плеер без активного трека.
     if (player.currentAudio == null) {
-      return Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // GIF с собакой.
-              RepaintBoundary(
-                child: Image.asset(
-                  "assets/images/dog.gif",
-                  width: 25 * 5,
-                  height: 12 * 5,
-                  fit: BoxFit.fill,
-                ),
-              ),
-              const SizedBox(
-                height: 18,
-              ),
-
-              // Текст.
-              StyledText(
-                text: AppLocalizations.of(context)!.music_fullscreenNoAudio,
-                textAlign: TextAlign.center,
-                tags: {
-                  "bold": StyledTextTag(
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w500,
+      return AnnotatedRegion(
+        value: const SystemUiOverlayStyle(
+          statusBarBrightness: Brightness.light,
+          statusBarIconBrightness: Brightness.light,
+        ),
+        child: Theme(
+          data: ThemeData(
+            colorScheme: colorScheme.darkColorScheme ?? fallbackDarkColorScheme,
+          ),
+          child: Scaffold(
+            body: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // GIF с собакой.
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      bottom: 18,
+                    ),
+                    child: RepaintBoundary(
+                      child: Image.asset(
+                        "assets/images/dog.gif",
+                        width: 25 * 5,
+                        height: 12 * 5,
+                        fit: BoxFit.fill,
+                      ),
                     ),
                   ),
-                  "exit": StyledTextActionTag(
-                    (String? text, Map<String?, String?> attrs) {
-                      closePlayer(context);
+
+                  // Текст.
+                  StyledText(
+                    text: AppLocalizations.of(context)!.music_fullscreenNoAudio,
+                    textAlign: TextAlign.center,
+                    tags: {
+                      "bold": StyledTextTag(
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      "exit": StyledTextActionTag(
+                        (String? text, Map<String?, String?> attrs) {
+                          closePlayer(context);
+                        },
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
                     },
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(
+                    height: 24,
+                  ),
+
+                  // Кнопка для выхода.
+                  FilledButton.icon(
+                    onPressed: () => closePlayer(context),
+                    icon: const Icon(
+                      Icons.fullscreen_exit,
+                    ),
+                    label: Text(
+                      AppLocalizations.of(context)!
+                          .music_fullscreenNoAudioButton,
                     ),
                   ),
-                },
+                ],
               ),
-              const SizedBox(
-                height: 24,
-              ),
-
-              // Кнопка для выхода.
-              FilledButton.icon(
-                onPressed: () => closePlayer(context),
-                icon: const Icon(
-                  Icons.fullscreen_exit,
-                ),
-                label: Text(
-                  AppLocalizations.of(context)!.music_fullscreenNoAudioButton,
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       );
