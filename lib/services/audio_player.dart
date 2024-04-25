@@ -693,7 +693,7 @@ class VKMusicPlayer {
         androidNotificationChannelName: "Flutter VK",
         androidNotificationChannelId: "com.zensonaton.fluttervk",
         androidNotificationIcon: "drawable/ic_music_note",
-        androidNotificationOngoing: true,
+        androidStopForegroundOnPause: false,
         preloadArtwork: true,
       ),
       cacheManager: CachedAlbumImagesManager.instance,
@@ -877,7 +877,11 @@ class VKMusicPlayer {
   ///   player.pause();
   /// }
   /// ```
-  Future<void> pause() async {
+  Future<void> pause({
+    bool stopAudioSession = false,
+  }) async {
+    if (stopAudioSession) {}
+
     return await _player.pause();
   }
 
