@@ -45,6 +45,9 @@ Future<void> openFullscreenPlayer(
   BuildContext context, {
   bool fullscreenOnDesktop = true,
 }) async {
+// Не позволяем открыть полноэкранный плеер, если плеер остановлен.
+  if (!player.loaded) return;
+
   // Если плеер уже открыт, то ничего не делаем.
   if (isFullscreenPlayerOpen || isMiniplayerOpen) {
     return;
@@ -120,6 +123,9 @@ Future<void> toggleFullscreenPlayer(
 Future<void> openMiniPlayer(
   BuildContext context,
 ) async {
+// Не позволяем открыть полноэкранный плеер, если плеер остановлен.
+  if (!player.loaded) return;
+
   // Если плеер уже открыт, то ничего не делаем.
   if (isMiniplayerOpen || isFullscreenPlayerOpen) {
     return;
