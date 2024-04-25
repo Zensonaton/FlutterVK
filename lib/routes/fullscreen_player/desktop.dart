@@ -989,34 +989,38 @@ class FullscreenPlayerDesktopRoute extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(
-        _playerPadding,
-      ),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Надпись "Воспроизведение музыки".
-              const PlaylistTitleWidget(),
+    return GestureDetector(
+      onTap: () => player.togglePlay(),
+      behavior: HitTestBehavior.translucent,
+      child: Padding(
+        padding: const EdgeInsets.all(
+          _playerPadding,
+        ),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Надпись "Воспроизведение музыки".
+                const PlaylistTitleWidget(),
 
-              // Надпись со следующим треком.
-              if (player.smartNextAudio != null) const NextTrackInfoWidget(),
+                // Надпись со следующим треком.
+                if (player.smartNextAudio != null) const NextTrackInfoWidget(),
 
-              // Информация по текущему треку и медиаплеер.
-              const SizedBox(
-                width: double.infinity,
-                child: FullscreenMediaControls(),
-              ),
-            ],
-          ),
+                // Информация по текущему треку и медиаплеер.
+                const SizedBox(
+                  width: double.infinity,
+                  child: FullscreenMediaControls(),
+                ),
+              ],
+            ),
 
-          // Текст песни, либо заглушка на случай, если текста нет.
-          const LyricsBlockWidget(),
-        ],
+            // Текст песни, либо заглушка на случай, если текста нет.
+            const LyricsBlockWidget(),
+          ],
+        ),
       ),
     );
   }
