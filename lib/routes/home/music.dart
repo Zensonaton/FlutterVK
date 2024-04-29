@@ -1586,19 +1586,56 @@ class _HomeMusicPageState extends State<HomeMusicPage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          // Текст "Добро пожаловать".
-                          Flexible(
-                            child: Text(
-                              AppLocalizations.of(context)!.music_welcomeTitle(
-                                user.firstName!,
-                              ),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .displayMedium!
-                                  .copyWith(
-                                    fontWeight: FontWeight.w500,
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              // Аватарка пользователя.
+                              if (user.photoMaxUrl != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    right: 18,
                                   ),
-                            ),
+                                  child: CachedNetworkImage(
+                                    imageUrl: user.photoMaxUrl!,
+                                    cacheKey: "${user.id}400",
+                                    imageBuilder: (
+                                      BuildContext context,
+                                      ImageProvider imageProvider,
+                                    ) {
+                                      return Container(
+                                        width: 40,
+                                        height: 40,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          image: DecorationImage(
+                                            image: imageProvider,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    cacheManager:
+                                        CachedNetworkImagesManager.instance,
+                                  ),
+                                ),
+
+                              // Текст "Добро пожаловать".
+                              Flexible(
+                                child: Text(
+                                  AppLocalizations.of(context)!
+                                      .music_welcomeTitle(
+                                    user.firstName!,
+                                  ),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .displayMedium!
+                                      .copyWith(
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                ),
+                              ),
+                            ],
                           ),
 
                           // Поиск.
