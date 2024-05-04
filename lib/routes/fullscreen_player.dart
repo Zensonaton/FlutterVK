@@ -645,7 +645,7 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
 
       // Изменение состояния паузы плеера.
       player.loadedStateStream.listen(
-        (bool loaded) => setState(() {}),
+        (bool loaded) => closeFullscreenPlayer(context),
       ),
     ];
   }
