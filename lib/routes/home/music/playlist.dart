@@ -1079,8 +1079,6 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                                       .hide();
                                                 }
                                               }
-
-                                              setState(() {});
                                             }
                                           : null,
                                       iconSize: 38,
