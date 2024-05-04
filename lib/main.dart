@@ -318,6 +318,11 @@ class _MainAppState extends State<MainApp> with WindowListener {
       await player.setDiscordRPCEnabled(true);
     }
 
+    // Восстанавливаем значение настройки "пауза при отключении громкости".
+    if (user.settings.pauseOnMuteEnabled) {
+      player.setPauseOnMuteEnabled(true);
+    }
+
     // Восстанавливаем значение настройки "остановка при неактивности".
     if (user.settings.stopOnPauseEnabled) {
       player.setStopOnPauseEnabled(true);

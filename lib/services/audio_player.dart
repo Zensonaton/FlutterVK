@@ -393,6 +393,23 @@ class VKMusicPlayer {
           await updateMusicSession();
         },
       ),
+
+      // Обработчик громкости.
+      _player.volumeStream.listen((double volume) async {
+        if (!_pauseOnMuteEnabled) return;
+
+        // Случай постановления на паузу ввиду нуливой громкости.
+        if (playing && volume == 0.0) {
+          logger.d(
+            "Pausing player, because pauseOnMute is enabled, and volume is $volume",
+          );
+          _pausedDueMute = true;
+
+          await pause();
+        } else if (!playing && _pausedDueMute && volume > 0.0) {
+          await play();
+        }
+      }),
     ];
 
     _initPlayer();
@@ -401,17 +418,17 @@ class VKMusicPlayer {
   /// Объект [SMTCWindows] для управления воспроизведения музыкой при помощи глобальных клавиш на Windows.
   ///
   /// Данный объект инициализируется при вызове [_initPlayer], если приложение запущено на Windows.
-  SMTCWindows? smtc;
+  SMTCWindows? _smtc;
 
   /// Сессия объекта [AudioSession], который позволяет указать операционным системам то, что воспроизводит данное приложение, а так же даёт возможность обрабатывать события "затыкания" приложения в случае, к примеру, звонка.
   ///
   /// Данный объект инициализируется при вызове [_initPlayer].
-  AudioSession? audioSession;
+  AudioSession? _audioSession;
 
   /// Объект типа [AudioPlayerService], создающий медиа-уведомление для Android с кнопками для управления воспроизведения.
   ///
   /// Данный объект инициализируется при вызове [_initPlayer].
-  AudioPlayerService? audioService;
+  AudioPlayerService? _audioService;
 
   /// Список из значений [Audio.mediaKey], по которым была запущена задача по созданию цветовой схемы в методе [getColorSchemeAsync].
   final List<String> _colorSchemeItemsQueue = [];
@@ -419,20 +436,20 @@ class VKMusicPlayer {
   /// Кэш для объектов типа [ColorScheme] разных изображений по их [Audio.mediaKey].
   Map<String, (ColorScheme, ColorScheme)> imageColorSchemeCache = {};
 
-  /// Флаг для [audioSession], устанавливаемый на значение true в случае, если плеер поставился на паузу из-за внешнего звонка или другой причины.
+  /// Флаг для [_audioSession], устанавливаемый на значение true в случае, если плеер поставился на паузу из-за внешнего звонка или другой причины.
   bool _pausedExternally = false;
-
-  /// Объект [DiscordRPC], который позволяет транслировать Rich Presence (надпись "сейчас слушает ...") в Discord.
-  ///
-  /// Инициализируется при вызове метода [_initPlayer]. Устанавливается лишь в случае, если [isDesktop] = true.
-  DiscordRPC? discordRPC;
-
-  bool _discordRPCEnabled = false;
 
   /// Указывает, что Discord Rich Presence включён.
   ///
   /// Для включения/отключения Discord RPC воспользуйтесь методом [setDiscordRPCEnabled];
   bool get discordRPCEnabled => _discordRPCEnabled;
+
+  bool _discordRPCEnabled = false;
+
+  /// Объект [DiscordRPC], который позволяет транслировать Rich Presence (надпись "сейчас слушает ...") в Discord.
+  ///
+  /// Инициализируется при вызове метода [_initPlayer]. Устанавливается лишь в случае, если [isDesktop] = true.
+  DiscordRPC? _discordRPC;
 
   bool _loaded = false;
 
@@ -449,6 +466,13 @@ class VKMusicPlayer {
 
   /// Фейковый индекс трека, который играет в данный момент. Используется, что бы изменение трека после вызовов типа [next] или [previous] происходило мгновенно.
   int? _fakeCurrentTrackIndex;
+
+  /// Указывает, будет ли плеер вызывать паузу ([pause]) в том случае, если громкость ([volume]) была установлена на минимум.
+  bool get pauseOnMute => _pauseOnMuteEnabled;
+
+  bool _pauseOnMuteEnabled = false;
+
+  bool _pausedDueMute = false;
 
   /// Указывает, что аудио плеер загружен (т.е., был запущен хоть раз), и его стоит показать в интерфейсе.
   ///
@@ -687,7 +711,7 @@ class VKMusicPlayer {
     await setLoop(LoopMode.all);
 
     // Регистрируем AudioHandler для управления музыки при помощи медиа-уведомления на OS Android.
-    audioService = await AudioService.init(
+    _audioService = await AudioService.init(
       builder: () => AudioPlayerService(player),
       config: const AudioServiceConfig(
         androidNotificationChannelName: "Flutter VK",
@@ -702,7 +726,7 @@ class VKMusicPlayer {
 
     // Слушаем события от SMTC, если приложение запущено на Windows.
     if (Platform.isWindows) {
-      smtc = SMTCWindows(
+      _smtc = SMTCWindows(
         config: const SMTCConfig(
           fastForwardEnabled: true,
           nextEnabled: true,
@@ -716,7 +740,7 @@ class VKMusicPlayer {
       );
 
       try {
-        smtc!.buttonPressStream.listen((PressedButton event) async {
+        _smtc!.buttonPressStream.listen((PressedButton event) async {
           switch (event) {
             case PressedButton.play:
               await play();
@@ -752,15 +776,15 @@ class VKMusicPlayer {
     }
 
     // Инициализируем объект AudioSession, что бы ставить плеер на паузу в случае звонка или другого события.
-    if (audioSession == null) {
-      audioSession = await AudioSession.instance;
+    if (_audioSession == null) {
+      _audioSession = await AudioSession.instance;
 
-      await audioSession!.configure(
+      await _audioSession!.configure(
         const AudioSessionConfiguration.music(),
       );
 
       // События отключения наушников.
-      audioSession?.becomingNoisyEventStream.listen((_) {
+      _audioSession?.becomingNoisyEventStream.listen((_) {
         logger.d("Becoming noisy, calling pause");
 
         player.pause();
@@ -769,7 +793,7 @@ class VKMusicPlayer {
       // Другие события системы.
       //
       // К примеру, здесь обрабатываются события звонка на телефон (громкость понижается на 50%), а так же события запуска других аудио-приложений.
-      audioSession?.interruptionEventStream.listen((
+      _audioSession?.interruptionEventStream.listen((
         AudioInterruptionEvent event,
       ) async {
         logger.d(
@@ -817,13 +841,13 @@ class VKMusicPlayer {
     if (isDesktop) {
       DiscordRPC.initialize();
 
-      discordRPC = DiscordRPC(
+      _discordRPC = DiscordRPC(
         applicationId: discordAppID.toString(),
       );
-      discordRPC!.start(
+      _discordRPC!.start(
         autoRegister: true,
       );
-      discordRPC!.clearPresence();
+      _discordRPC!.clearPresence();
     }
   }
 
@@ -1186,7 +1210,26 @@ class VKMusicPlayer {
     if (enabled) {
       await updateMusicSession();
     } else {
-      discordRPC?.clearPresence();
+      _discordRPC?.clearPresence();
+    }
+  }
+
+  /// Включает или отключает настройку "пауза при отключении громкости".
+  Future<void> setPauseOnMuteEnabled(bool enabled) async {
+    logger.d("Called setPauseOnMuteEnabled($enabled)");
+
+    if (enabled) {
+      assert(
+        isDesktop,
+        "setPauseOnMuteEnabled can only be enabled on Desktop-platforms.",
+      );
+    }
+
+    if (enabled == _pauseOnMuteEnabled) return;
+    _pauseOnMuteEnabled = enabled;
+
+    if (enabled && volume == 0.0) {
+      await pause();
     }
   }
 
@@ -1207,10 +1250,10 @@ class VKMusicPlayer {
   /// Данный метод нужно вызвать после первого запуска плеера. После завершения музыкальной сессии, рекомендуется вызвать метод [stopMusicSession].
   Future<void> startMusicSession() async {
     // Указываем, что в данный момент идёт сессия музыки.
-    await audioSession!.setActive(true);
+    await _audioSession!.setActive(true);
 
     if (Platform.isWindows) {
-      await smtc?.enableSmtc();
+      await _smtc?.enableSmtc();
     }
 
     if (_loaded) return;
@@ -1226,9 +1269,9 @@ class VKMusicPlayer {
 
     // Если у пользователя Windows, то посылаем SMTC обновление.
     if (Platform.isWindows) {
-      if (!smtc!.enabled) await smtc!.enableSmtc();
+      if (!_smtc!.enabled) await _smtc!.enableSmtc();
 
-      await smtc?.updateMetadata(
+      await _smtc?.updateMetadata(
         MusicMetadata(
           title: currentAudio!.title,
           artist: currentAudio!.artist,
@@ -1240,7 +1283,7 @@ class VKMusicPlayer {
     }
 
     // Делаем обновление трека в медиа-уведомлении.
-    await audioService?._updateTrack();
+    await _audioService?._updateTrack();
   }
 
   /// Метод, обновляющий данные о музыкальной сессии после вызова метода [startMusicSession].
@@ -1263,12 +1306,12 @@ class VKMusicPlayer {
         status = PlaybackStatus.Paused;
       }
 
-      await smtc?.setPlaybackStatus(status);
+      await _smtc?.setPlaybackStatus(status);
     }
 
     // Обновляем Discord RPC, если это разрешено пользователем.
     if (discordRPCEnabled && currentAudio != null) {
-      discordRPC?.updatePresence(
+      _discordRPC?.updatePresence(
         DiscordPresence(
           state: currentAudio!.title,
           details: currentAudio!.artist,
@@ -1305,12 +1348,12 @@ class VKMusicPlayer {
   /// Данный метод стоит вызывать только после остановки музыкальной сессии, т.е., после вызова метода [stop].
   Future<void> stopMusicSession() async {
     if (Platform.isWindows) {
-      await smtc?.disableSmtc();
+      await _smtc?.disableSmtc();
     }
 
-    await audioSession?.setActive(false);
+    await _audioSession?.setActive(false);
     if (discordRPCEnabled) {
-      discordRPC?.clearPresence();
+      _discordRPC?.clearPresence();
     }
 
     _pauseStopTimer?.cancel();

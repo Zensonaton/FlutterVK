@@ -916,6 +916,7 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                                 if (enabled == null) return;
 
                                 user.settings.pauseOnMuteEnabled = enabled;
+                                await player.setPauseOnMuteEnabled(enabled);
 
                                 user.markUpdated();
                               },

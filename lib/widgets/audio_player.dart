@@ -446,228 +446,237 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
               ),
               child: SizedBox(
                 width: leftAndRightBlocksSize,
-                child: MouseRegion(
-                  cursor: widget.useBigLayout
-                      ? SystemMouseCursors.basic
-                      : SystemMouseCursors.click,
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.translucent,
-                    onTap: widget.useBigLayout
-                        ? null
-                        : () => widget.onFullscreen?.call(false),
-                    onLongPress: widget.audio != null
-                        ? () => widget.onTrackSelected?.call(widget.audio!)
-                        : null,
-                    onHorizontalDragUpdate: widget.useBigLayout
-                        ? null
-                        : (DragUpdateDetails details) {
-                            _dragProgress = clampDouble(
-                              _dragProgress -
-                                  details.primaryDelta! / scrollSensetivity,
-                              -1.0,
-                              1.0,
-                            );
+                child: ScrollableWidget(
+                  onChanged: (double diff) {
+                    if (widget.useBigLayout || isMobile) return;
 
-                            setState(() {});
-                          },
-                    onHorizontalDragEnd: widget.useBigLayout
-                        ? null
-                        : (DragEndDetails details) {
-                            if (_dragProgress > 0.5) {
-                              // Запуск следующего трека.
+                    return widget.onVolumeChange?.call(
+                      clampDouble(widget.volume + diff / 10, 0.0, 1.0),
+                    );
+                  },
+                  child: MouseRegion(
+                    cursor: widget.useBigLayout
+                        ? SystemMouseCursors.basic
+                        : SystemMouseCursors.click,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.translucent,
+                      onTap: widget.useBigLayout
+                          ? null
+                          : () => widget.onFullscreen?.call(false),
+                      onLongPress: widget.audio != null
+                          ? () => widget.onTrackSelected?.call(widget.audio!)
+                          : null,
+                      onHorizontalDragUpdate: widget.useBigLayout
+                          ? null
+                          : (DragUpdateDetails details) {
+                              _dragProgress = clampDouble(
+                                _dragProgress -
+                                    details.primaryDelta! / scrollSensetivity,
+                                -1.0,
+                                1.0,
+                              );
 
-                              widget.onNextTrack?.call();
-                            } else if (_dragProgress < -0.5) {
-                              // Запуск предыдущего трека.
+                              setState(() {});
+                            },
+                      onHorizontalDragEnd: widget.useBigLayout
+                          ? null
+                          : (DragEndDetails details) {
+                              if (_dragProgress > 0.5) {
+                                // Запуск следующего трека.
 
-                              widget.onPreviousTrack?.call();
-                            }
+                                widget.onNextTrack?.call();
+                              } else if (_dragProgress < -0.5) {
+                                // Запуск предыдущего трека.
 
-                            _dragProgress = 0.0;
-                            setState(() {});
-                          },
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Изображение трека.
-                        SizedBox(
-                          width: imageSize,
-                          height: imageSize,
-                          child: InkWell(
-                            onTap: () => widget.onFullscreen?.call(false),
-                            child: Hero(
-                              tag: widget.audio?.mediaKey ?? "",
-                              child: AnimatedContainer(
-                                duration: const Duration(
-                                  milliseconds: 200,
-                                ),
-                                curve: Curves.ease,
-                                decoration: BoxDecoration(
-                                  boxShadow: [
-                                    if (widget.playbackState)
-                                      BoxShadow(
-                                        blurRadius: 10,
-                                        spreadRadius: -3,
-                                        color: widget.scheme.tertiary,
-                                        blurStyle: BlurStyle.outer,
-                                      ),
-                                  ],
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(
-                                    globalBorderRadius,
+                                widget.onPreviousTrack?.call();
+                              }
+
+                              _dragProgress = 0.0;
+                              setState(() {});
+                            },
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Изображение трека.
+                          SizedBox(
+                            width: imageSize,
+                            height: imageSize,
+                            child: InkWell(
+                              onTap: () => widget.onFullscreen?.call(false),
+                              child: Hero(
+                                tag: widget.audio?.mediaKey ?? "",
+                                child: AnimatedContainer(
+                                  duration: const Duration(
+                                    milliseconds: 200,
                                   ),
-                                  child: AnimatedSwitcher(
-                                    duration: const Duration(
-                                      milliseconds: 400,
+                                  curve: Curves.ease,
+                                  decoration: BoxDecoration(
+                                    boxShadow: [
+                                      if (widget.playbackState)
+                                        BoxShadow(
+                                          blurRadius: 10,
+                                          spreadRadius: -3,
+                                          color: widget.scheme.tertiary,
+                                          blurStyle: BlurStyle.outer,
+                                        ),
+                                    ],
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(
+                                      globalBorderRadius,
                                     ),
-                                    child: SizedBox(
-                                      key: ValueKey(
-                                        imageUrl != null
-                                            ? widget.audio!.mediaKey
-                                            : null,
+                                    child: AnimatedSwitcher(
+                                      duration: const Duration(
+                                        milliseconds: 400,
                                       ),
-                                      width: imageSize,
-                                      height: imageSize,
-                                      child: imageUrl != null
-                                          ? CachedNetworkImage(
-                                              imageUrl: imageUrl,
-                                              cacheKey:
-                                                  "${widget.audio!.mediaKey}small",
-                                              placeholder: (
-                                                BuildContext context,
-                                                String url,
-                                              ) =>
-                                                  const FallbackAudioAvatar(),
-                                              fit: BoxFit.contain,
-                                              cacheManager:
-                                                  CachedAlbumImagesManager
-                                                      .instance,
-                                            )
-                                          : const FallbackAudioAvatar(),
+                                      child: SizedBox(
+                                        key: ValueKey(
+                                          imageUrl != null
+                                              ? widget.audio!.mediaKey
+                                              : null,
+                                        ),
+                                        width: imageSize,
+                                        height: imageSize,
+                                        child: imageUrl != null
+                                            ? CachedNetworkImage(
+                                                imageUrl: imageUrl,
+                                                cacheKey:
+                                                    "${widget.audio!.mediaKey}small",
+                                                placeholder: (
+                                                  BuildContext context,
+                                                  String url,
+                                                ) =>
+                                                    const FallbackAudioAvatar(),
+                                                fit: BoxFit.contain,
+                                                cacheManager:
+                                                    CachedAlbumImagesManager
+                                                        .instance,
+                                              )
+                                            : const FallbackAudioAvatar(),
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                        SizedBox(
-                          width: widget.useBigLayout ? 14 : 8,
-                        ),
+                          SizedBox(
+                            width: widget.useBigLayout ? 14 : 8,
+                          ),
 
-                        // Название и исполнитель трека.
-                        Flexible(
-                          child: Stack(
-                            alignment: Alignment.centerLeft,
-                            children: [
-                              // Текущий трек.
-                              ClipRRect(
-                                child: Transform.translate(
-                                  offset: Offset(
-                                    _dragProgress * -scrollWidth,
-                                    0.0,
-                                  ),
-                                  child: Opacity(
-                                    opacity: 1.0 - _dragProgress.abs(),
-                                    child: SizedBox(
-                                      width: widget.useBigLayout
-                                          ? null
-                                          : double.infinity,
-                                      child: TrackTitleAndArtist(
-                                        title: widget.audio?.title ?? "",
-                                        artist: widget.audio?.artist ?? "",
-                                        subtitle: widget.audio?.subtitle,
-                                        explicit:
-                                            widget.audio?.isExplicit ?? false,
-                                        scheme: widget.scheme,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-
-                              // Другой трек.
-                              if (_dragProgress != 0.0)
+                          // Название и исполнитель трека.
+                          Flexible(
+                            child: Stack(
+                              alignment: Alignment.centerLeft,
+                              children: [
+                                // Текущий трек.
                                 ClipRRect(
                                   child: Transform.translate(
                                     offset: Offset(
-                                      (_dragProgress > 0.0
-                                              ? scrollWidth
-                                              : -scrollWidth) -
-                                          _dragProgress * scrollWidth,
+                                      _dragProgress * -scrollWidth,
                                       0.0,
                                     ),
                                     child: Opacity(
-                                      opacity: _dragProgress.abs(),
+                                      opacity: 1.0 - _dragProgress.abs(),
                                       child: SizedBox(
                                         width: widget.useBigLayout
                                             ? null
                                             : double.infinity,
-                                        child: _dragProgress > 0.0
-                                            ? TrackTitleAndArtist(
-                                                title:
-                                                    widget.nextAudio?.title ??
-                                                        "",
-                                                artist:
-                                                    widget.nextAudio?.artist ??
-                                                        "",
-                                                subtitle:
-                                                    widget.nextAudio?.subtitle,
-                                                explicit: widget.nextAudio
-                                                        ?.isExplicit ??
-                                                    false,
-                                                scheme: widget.scheme,
-                                              )
-                                            : TrackTitleAndArtist(
-                                                title: widget
-                                                        .previousAudio?.title ??
-                                                    "",
-                                                artist: widget.previousAudio
-                                                        ?.artist ??
-                                                    "",
-                                                subtitle: widget
-                                                    .previousAudio?.subtitle,
-                                                explicit: widget.previousAudio
-                                                        ?.isExplicit ??
-                                                    false,
-                                                scheme: widget.scheme,
-                                              ),
+                                        child: TrackTitleAndArtist(
+                                          title: widget.audio?.title ?? "",
+                                          artist: widget.audio?.artist ?? "",
+                                          subtitle: widget.audio?.subtitle,
+                                          explicit:
+                                              widget.audio?.isExplicit ?? false,
+                                          scheme: widget.scheme,
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ),
-                            ],
-                          ),
-                        ),
-                        if (widget.useBigLayout)
-                          const SizedBox(
-                            width: 8,
-                          ),
 
-                        // Кнопка для лайка (в Desktop Layout'е).
-                        if (widget.useBigLayout)
-                          IconButton(
-                            onPressed: () => widget.onFavoriteStateToggle
-                                ?.call(!widget.favoriteState),
-                            icon: Icon(
-                              widget.favoriteState
-                                  ? Icons.favorite
-                                  : Icons.favorite_outline,
-                              color: widget.scheme.onPrimaryContainer,
+                                // Другой трек.
+                                if (_dragProgress != 0.0)
+                                  ClipRRect(
+                                    child: Transform.translate(
+                                      offset: Offset(
+                                        (_dragProgress > 0.0
+                                                ? scrollWidth
+                                                : -scrollWidth) -
+                                            _dragProgress * scrollWidth,
+                                        0.0,
+                                      ),
+                                      child: Opacity(
+                                        opacity: _dragProgress.abs(),
+                                        child: SizedBox(
+                                          width: widget.useBigLayout
+                                              ? null
+                                              : double.infinity,
+                                          child: _dragProgress > 0.0
+                                              ? TrackTitleAndArtist(
+                                                  title:
+                                                      widget.nextAudio?.title ??
+                                                          "",
+                                                  artist: widget
+                                                          .nextAudio?.artist ??
+                                                      "",
+                                                  subtitle: widget
+                                                      .nextAudio?.subtitle,
+                                                  explicit: widget.nextAudio
+                                                          ?.isExplicit ??
+                                                      false,
+                                                  scheme: widget.scheme,
+                                                )
+                                              : TrackTitleAndArtist(
+                                                  title: widget.previousAudio
+                                                          ?.title ??
+                                                      "",
+                                                  artist: widget.previousAudio
+                                                          ?.artist ??
+                                                      "",
+                                                  subtitle: widget
+                                                      .previousAudio?.subtitle,
+                                                  explicit: widget.previousAudio
+                                                          ?.isExplicit ??
+                                                      false,
+                                                  scheme: widget.scheme,
+                                                ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
-
-                        // Кнопка для дизлайка (в Desktop Layout'е).
-                        if (widget.useBigLayout && widget.onDislike != null)
-                          IconButton(
-                            onPressed: widget.onDislike,
-                            icon: Icon(
-                              Icons.thumb_down_outlined,
-                              color: widget.scheme.onPrimaryContainer,
+                          if (widget.useBigLayout)
+                            const SizedBox(
+                              width: 8,
                             ),
-                          ),
-                      ],
+
+                          // Кнопка для лайка (в Desktop Layout'е).
+                          if (widget.useBigLayout)
+                            IconButton(
+                              onPressed: () => widget.onFavoriteStateToggle
+                                  ?.call(!widget.favoriteState),
+                              icon: Icon(
+                                widget.favoriteState
+                                    ? Icons.favorite
+                                    : Icons.favorite_outline,
+                                color: widget.scheme.onPrimaryContainer,
+                              ),
+                            ),
+
+                          // Кнопка для дизлайка (в Desktop Layout'е).
+                          if (widget.useBigLayout && widget.onDislike != null)
+                            IconButton(
+                              onPressed: widget.onDislike,
+                              icon: Icon(
+                                Icons.thumb_down_outlined,
+                                color: widget.scheme.onPrimaryContainer,
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -863,13 +872,9 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                 inactiveColor: widget.scheme.onPrimaryContainer
                                     .withOpacity(0.5),
                                 onChanged: (double newVolume) {
-                                  widget.onVolumeChange?.call(newVolume);
+                                  if (isMobile) return;
 
-                                  // Если пользователь установил минимальную громкость, а так же настройка "Пауза при отключении громкости" включена, то ставим плеер на паузу.
-                                  if (newVolume == 0 &&
-                                      widget.pauseOnMuteEnabled) {
-                                    widget.onPlayStateToggle?.call(false);
-                                  }
+                                  widget.onVolumeChange?.call(newVolume);
                                 },
                               ),
                             ),

@@ -873,13 +873,9 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                                     .primary
                                     .withOpacity(0.5),
                                 onChanged: (double newVolume) async {
-                                  await player.setVolume(newVolume);
+                                  if (isMobile) return;
 
-                                  // Если пользователь установил минимальную громкость, а так же настройка "Пауза при отключении громкости" включена, то ставим плеер на паузу.
-                                  if (newVolume == 0 &&
-                                      user.settings.pauseOnMuteEnabled) {
-                                    await player.pause();
-                                  }
+                                  await player.setVolume(newVolume);
                                 },
                               );
                             },
