@@ -489,20 +489,30 @@ class ExtendedAudio {
   final ValueNotifier<double> downloadProgress = ValueNotifier(0.0);
 
   /// Возвращает данный объект как [MediaItem] для аудио плеера.
-  MediaItem get asMediaItem => MediaItem(
-        id: mediaKey,
-        title: subtitle != null ? "$title ($subtitle)" : title,
-        artist: artist,
-        album: album?.title,
-        artUri: maxThumbnail != null ? Uri.parse(maxThumbnail!) : null,
-        duration: Duration(
-          seconds: duration,
-        ),
-        extras: {
-          "albumID": album?.id,
-          "mediaKey": mediaKey,
-        },
-      );
+  MediaItem get asMediaItem {
+    final String mediaTitle = subtitle != null ? "$title ($subtitle)" : title;
+    final String mediaArtist = isExplicit ? "🅴 $artist" : artist;
+    final String? mediaAlbum = album?.title;
+    final Uri? mediaArtUri =
+        maxThumbnail != null ? Uri.parse(maxThumbnail!) : null;
+    final Duration mediaDuration = Duration(
+      seconds: duration,
+    );
+    final Map<String, dynamic> mediaExtras = {
+      "albumID": album?.id,
+      "mediaKey": mediaKey,
+    };
+
+    return MediaItem(
+      id: mediaKey,
+      title: mediaTitle,
+      artist: mediaArtist,
+      album: mediaAlbum,
+      artUri: mediaArtUri,
+      duration: mediaDuration,
+      extras: mediaExtras,
+    );
+  }
 
   /// Создаёт из передаваемого объекта [Audio] объект данного класа.
   static ExtendedAudio fromAPIAudio(
