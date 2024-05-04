@@ -743,8 +743,8 @@ class VKMusicPlayer {
       );
 
       try {
-        _smtc!.buttonPressStream.listen((PressedButton event) async {
-          switch (event) {
+        _smtc!.buttonPressStream.listen((PressedButton button) async {
+          switch (button) {
             case PressedButton.play:
               await play();
 
@@ -758,7 +758,7 @@ class VKMusicPlayer {
 
               break;
             case PressedButton.previous:
-              await previous();
+              await previous(allowSeekToBeginning: true);
 
               break;
             case PressedButton.stop:
