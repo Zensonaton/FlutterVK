@@ -32,11 +32,14 @@ import "logger.dart";
 
 /// enum, перечисляющий действия в уведомлениях над треком.
 enum MediaNotificationAction {
-  /// Переключение состояния shuffle.
+  /// Переключение состояния shuffle. Показывается у не-рекомендуемых треках.
   shuffle,
 
   /// Переключение состояния "нравится" у трека.
   favorite,
+
+  /// Установка "дизлайка" у трека. Показывается только у рекомендуемых треков.
+  dislike,
 }
 
 /// Расширение [StreamAudioSource] для `just_audio`, который воспроизводит аудио по передаваемому [Uri], а после загрузки аудио сохраняет его в кэш.
@@ -1486,6 +1489,10 @@ class AudioPlayerService extends BaseAudioHandler
 
   /// Отправляет изменения состояния воспроизведения в `audio_service`, обновляя информацию, отображаемую в уведомлении.
   Future<void> _updateEvent() async {
+    final bool isAudioMix = player.currentPlaylist?.isAudioMixPlaylist ?? false;
+    final bool isRecommended =
+        player.currentPlaylist?.isRecommendationTypePlaylist ?? false;
+
     playbackState.add(
       PlaybackState(
         controls: [
@@ -1494,7 +1501,7 @@ class AudioPlayerService extends BaseAudioHandler
           MediaControl.skipToNext,
 
           // Кнопка для shuffle, если у нас не аудио микс.
-          if (!(player.currentPlaylist?.isAudioMixPlaylist ?? false))
+          if (!isAudioMix && !isRecommended)
             MediaControl.custom(
               androidIcon: _player.shuffleModeEnabled
                   ? "drawable/ic_shuffle_enabled"
@@ -1503,7 +1510,15 @@ class AudioPlayerService extends BaseAudioHandler
               name: MediaNotificationAction.shuffle.name,
             ),
 
-          // Кнопка для лайка/дизлайка трека.
+          // Кнопка для дизлайка трека, если это рекомендуемый плейлист.
+          if (isRecommended)
+            MediaControl.custom(
+              androidIcon: "drawable/ic_dislike",
+              label: "Dislike",
+              name: MediaNotificationAction.dislike.name,
+            ),
+
+          // Кнопка для сохранения трека как лайкнутый.
           MediaControl.custom(
             androidIcon: _player.currentAudio?.isLiked ?? false
                 ? "drawable/ic_favorite"
@@ -1519,7 +1534,7 @@ class AudioPlayerService extends BaseAudioHandler
         playing: _player.playing,
         updatePosition: _player.position,
         bufferedPosition: _player.bufferedPosition,
-        shuffleMode: player.shuffleModeEnabled == true
+        shuffleMode: player.shuffleModeEnabled
             ? AudioServiceShuffleMode.all
             : AudioServiceShuffleMode.none,
         repeatMode: _player.loopMode == LoopMode.one
@@ -1558,7 +1573,7 @@ class AudioPlayerService extends BaseAudioHandler
         await _player.toggleShuffle();
 
         user.settings.shuffleEnabled = _player.shuffleModeEnabled;
-        user.markUpdated(false);
+        user.markUpdated();
 
         break;
 
@@ -1570,6 +1585,22 @@ class AudioPlayerService extends BaseAudioHandler
           _player.currentAudio!,
           !_player.currentAudio!.isLiked,
         );
+
+        await _updateEvent();
+
+        user.updatePlaylist(player.currentPlaylist!);
+        user.markUpdated(false);
+
+        break;
+
+      case (MediaNotificationAction.dislike):
+        if (!connectivityManager.hasConnection) return;
+
+        await dislikeTrack(
+          user,
+          _player.currentAudio!,
+        );
+        await player.next();
 
         await _updateEvent();
 

@@ -417,7 +417,7 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                     if (!networkRequiredDialog(context)) return;
 
                     // Делаем трек дизлайкнутым.
-                    final bool result = await addDislikeTrackState(
+                    final bool result = await dislikeTrackState(
                       context,
                       player.currentAudio!,
                     );

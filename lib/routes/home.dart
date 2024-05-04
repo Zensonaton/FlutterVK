@@ -231,24 +231,34 @@ Future<void> toggleTrackLikeState(
   user.markUpdated(false);
 }
 
+/// /// Помечает передаваемый трек [audio] как дизлайкнутый.
+///
+/// Возвращает то, был ли запрос успешен.
+Future<void> dislikeTrack(
+  UserProvider user,
+  ExtendedAudio audio,
+) async {
+  final APIAudioAddDislikeResponse response =
+      await user.audioAddDislike([audio.mediaKey]);
+  raiseOnAPIError(response);
+
+  assert(response.response, "Track is not disliked: ${response.response}");
+}
+
 /// Помечает передаваемый трек [audio] как дизлайкнутый. При вызове, начинается анимация загрузки ([LoadingOverlay]).
 ///
 /// Возвращает то, был ли запрос успешен.
-Future<bool> addDislikeTrackState(
+Future<bool> dislikeTrackState(
   BuildContext context,
   ExtendedAudio audio,
 ) async {
   final UserProvider user = Provider.of<UserProvider>(context, listen: false);
-  final AppLogger logger = getLogger("addDislike");
+  final AppLogger logger = getLogger("addDislikeTrackState");
 
   LoadingOverlay.of(context).show();
 
   try {
-    final APIAudioAddDislikeResponse response =
-        await user.audioAddDislike([audio.mediaKey]);
-    raiseOnAPIError(response);
-
-    assert(response.response, "Track is not disliked: ${response.response}");
+    await dislikeTrack(user, audio);
 
     return true;
   } catch (e, stackTrace) {
@@ -407,7 +417,7 @@ class _BottomMusicPlayerWidgetState extends State<BottomMusicPlayerWidget> {
 
               // Делаем трек дизлайкнутым.
               final bool result =
-                  await addDislikeTrackState(context, player.currentAudio!);
+                  await dislikeTrackState(context, player.currentAudio!);
               if (!result) return;
 
               // Запускаем следующий трек в плейлисте.
