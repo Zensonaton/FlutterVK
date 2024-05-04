@@ -613,10 +613,10 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                                     widget.nextAudio?.artist ??
                                                         "",
                                                 subtitle:
-                                                    widget.audio?.subtitle,
-                                                explicit:
-                                                    widget.audio?.isExplicit ??
-                                                        false,
+                                                    widget.nextAudio?.subtitle,
+                                                explicit: widget.nextAudio
+                                                        ?.isExplicit ??
+                                                    false,
                                                 scheme: widget.scheme,
                                               )
                                             : TrackTitleAndArtist(
@@ -626,11 +626,11 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                                 artist: widget.previousAudio
                                                         ?.artist ??
                                                     "",
-                                                subtitle:
-                                                    widget.audio?.subtitle,
-                                                explicit:
-                                                    widget.audio?.isExplicit ??
-                                                        false,
+                                                subtitle: widget
+                                                    .previousAudio?.subtitle,
+                                                explicit: widget.previousAudio
+                                                        ?.isExplicit ??
+                                                    false,
                                                 scheme: widget.scheme,
                                               ),
                                       ),
