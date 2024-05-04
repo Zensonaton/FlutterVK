@@ -357,7 +357,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
     final double padding = widget.useBigLayout ? 14 : 8;
 
     // Ширина проигрывателя.
-    final double width = MediaQuery.of(context).size.width - padding * 2;
+    final double width = MediaQuery.of(context).size.width - padding * 2 - 16;
 
     // Размер центрального блока, в котором производится управление музыкой в Desktop Layout'е.
     final double centerBlockSize = clampDouble(
@@ -366,10 +366,10 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
       600,
     );
 
-    // Размер блоков слева.
+    /// Размер блоков слева.
     final double leftAndRightBlocksSize = widget.useBigLayout
         ? (width - centerBlockSize) / 2
-        : width - (widget.onDislike != null ? 136 : 96);
+        : width - (widget.onDislike != null ? 146 : 96);
 
     /// Url на изображение трека.
     final String? imageUrl = widget.audio?.smallestThumbnail;
