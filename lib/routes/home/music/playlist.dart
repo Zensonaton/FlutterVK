@@ -1123,23 +1123,6 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                         const SingleActivator(
                                           LogicalKeyboardKey.escape,
                                         ): () => controller.clear(),
-                                        if (hasTracksLoaded)
-                                          const SingleActivator(
-                                            LogicalKeyboardKey.enter,
-                                          ): () async {
-                                            // Если у нас уже запущен этот же трек, то переключаем паузу/воспроизведение.
-                                            if (player.currentAudio ==
-                                                filteredAudios.first) {
-                                              await player.togglePlay();
-
-                                              return;
-                                            }
-
-                                            await player.setPlaylist(
-                                              widget.playlist,
-                                              audio: filteredAudios.first,
-                                            );
-                                          },
                                       },
                                       child: TextField(
                                         focusNode: focusNode,
@@ -1147,6 +1130,20 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                         enabled: hasTracksLoaded,
                                         onChanged: (String query) =>
                                             setState(() {}),
+                                        onSubmitted: (String? value) async {
+                                          // Если у нас уже запущен этот же трек, то переключаем паузу/воспроизведение.
+                                          if (player.currentAudio ==
+                                              filteredAudios.first) {
+                                            await player.togglePlay();
+
+                                            return;
+                                          }
+
+                                          await player.setPlaylist(
+                                            widget.playlist,
+                                            audio: filteredAudios.first,
+                                          );
+                                        },
                                         decoration: InputDecoration(
                                           hintText:
                                               AppLocalizations.of(context)!
