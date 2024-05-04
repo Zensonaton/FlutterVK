@@ -200,7 +200,7 @@ class _TrackThumbnailDialogState extends State<TrackThumbnailDialog> {
                   if (isMobileLayout)
                     Padding(
                       padding: const EdgeInsets.only(
-                        bottom: 12,
+                        right: 12,
                       ),
                       child: IconButton(
                         icon: Icon(
@@ -311,20 +311,25 @@ class _TrackThumbnailDialogState extends State<TrackThumbnailDialog> {
 
                   // Ничего не найдено.
                   if (snapshot.hasData && tracks.isEmpty) {
-                    return StyledText(
-                      text:
-                          AppLocalizations.of(context)!.music_zeroSearchResults,
-                      tags: {
-                        "click": StyledTextActionTag(
-                          (String? text, Map<String?, String?> attrs) =>
-                              setState(
-                            () => controller.clear(),
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                      ),
+                      child: StyledText(
+                        text: AppLocalizations.of(context)!
+                            .music_zeroSearchResults,
+                        tags: {
+                          "click": StyledTextActionTag(
+                            (String? text, Map<String?, String?> attrs) =>
+                                setState(
+                              () => controller.clear(),
+                            ),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
                           ),
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
-                      },
+                        },
+                      ),
                     );
                   }
 

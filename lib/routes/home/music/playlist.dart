@@ -1211,21 +1211,26 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                       filteredAudios.isEmpty &&
                       !_loading)
                     SliverToBoxAdapter(
-                      child: StyledText(
-                        text: AppLocalizations.of(context)!
-                            .music_zeroSearchResults,
-                        textAlign: TextAlign.center,
-                        tags: {
-                          "click": StyledTextActionTag(
-                            (String? text, Map<String?, String?> attrs) =>
-                                setState(
-                              () => controller.clear(),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                        ),
+                        child: StyledText(
+                          text: AppLocalizations.of(context)!
+                              .music_zeroSearchResults,
+                          textAlign: TextAlign.center,
+                          tags: {
+                            "click": StyledTextActionTag(
+                              (String? text, Map<String?, String?> attrs) =>
+                                  setState(
+                                () => controller.clear(),
+                              ),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
                             ),
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                          ),
-                        },
+                          },
+                        ),
                       ),
                     ),
 
