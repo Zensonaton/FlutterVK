@@ -214,20 +214,23 @@ Future<void> ensureUserAudioRecommendations(
   final AppLogger logger = getLogger("ensureUserAudioRecommendations");
 
   /// Парсит список из плейлистов, возвращая список плейлистов из раздела "Какой сейчас вайб?".
-  List<ExtendedPlaylist> parseMoodPlaylists(
+  List<ExtendedPlaylist>? parseMoodPlaylists(
     APICatalogGetAudioResponse response,
   ) {
     final Section mainSection = response.response!.catalog.sections[0];
 
     // Ищем блок с рекомендуемыми плейлистами.
-    SectionBlock moodPlaylistsBlock = mainSection.blocks!.firstWhere(
+    SectionBlock? moodPlaylistsBlock = mainSection.blocks!.firstWhereOrNull(
       (SectionBlock block) =>
           block.dataType == "music_playlists" &&
           block.layout["style"] == "unopenable",
-      orElse: () => throw AssertionError(
-        "Блок с разделом 'Какой сейчас вайб?' не был найден",
-      ),
     );
+
+    if (moodPlaylistsBlock == null) {
+      logger.w("Блок с разделом 'Какой сейчас вайб?' не был найден");
+
+      return null;
+    }
 
     // Извлекаем список ID плейлистов из этого блока.
     final List<String> moodPlaylistIDs = moodPlaylistsBlock.playlistIDs!;
@@ -273,18 +276,22 @@ Future<void> ensureUserAudioRecommendations(
   }
 
   /// Парсит список из плейлистов, возвращая только список из рекомендуемых плейлистов ("Для вас" и подобные).
-  List<ExtendedPlaylist> parseRecommendedPlaylists(
+  List<ExtendedPlaylist>? parseRecommendedPlaylists(
     APICatalogGetAudioResponse response,
   ) {
     final Section mainSection = response.response!.catalog.sections[0];
 
     // Ищем блок с рекомендуемыми плейлистами.
-    SectionBlock recommendedPlaylistsBlock = mainSection.blocks!.firstWhere(
+    SectionBlock? recommendedPlaylistsBlock =
+        mainSection.blocks!.firstWhereOrNull(
       (SectionBlock block) => block.dataType == "music_playlists",
-      orElse: () => throw AssertionError(
-        "Блок с рекомендуемыми плейлистами не был найден",
-      ),
     );
+
+    if (recommendedPlaylistsBlock == null) {
+      logger.w("Блок с рекомендуемыми плейлистами не был найден");
+
+      return null;
+    }
 
     // Извлекаем список ID плейлистов из этого блока.
     final List<String> recommendedPlaylistIDs =
@@ -339,18 +346,22 @@ Future<void> ensureUserAudioRecommendations(
   }
 
   /// Парсит список из плейлистов, возвращая только список из плейлистов раздела "Собрано редакцией".
-  List<ExtendedPlaylist> parseMadeByVKPlaylists(
+  List<ExtendedPlaylist>? parseMadeByVKPlaylists(
     APICatalogGetAudioResponse response,
   ) {
     final Section mainSection = response.response!.catalog.sections[0];
 
     // Ищем блок с плейлистами "Собрано редакцией". Данный блок имеет [SectionBlock.dataType] == "music_playlists", но он расположен в конце.
-    SectionBlock recommendedPlaylistsBlock = mainSection.blocks!.lastWhere(
+    SectionBlock? recommendedPlaylistsBlock =
+        mainSection.blocks!.lastWhereOrNull(
       (SectionBlock block) => block.dataType == "music_playlists",
-      orElse: () => throw AssertionError(
-        "Блок с разделом 'собрано редакцией' не был найден",
-      ),
     );
+
+    if (recommendedPlaylistsBlock == null) {
+      logger.w("Блок с разделом 'собрано редакцией' не был найден");
+
+      return null;
+    }
 
     // Извлекаем список ID плейлистов из этого блока.
     final List<String> recommendedPlaylistIDs =
@@ -387,11 +398,11 @@ Future<void> ensureUserAudioRecommendations(
     // Создаём список из всех рекомендуемых плейлистов, а так же добавляем их в память.
     user.updatePlaylists(
       [
-        ...parseMoodPlaylists(response),
+        ...parseMoodPlaylists(response) ?? [],
         ...parseAudioMixPlaylists(response),
-        ...parseRecommendedPlaylists(response),
+        ...parseRecommendedPlaylists(response) ?? [],
         ...parseSimillarPlaylists(response),
-        ...parseMadeByVKPlaylists(response),
+        ...parseMadeByVKPlaylists(response) ?? [],
       ],
       saveToDB: saveToDB,
     );
