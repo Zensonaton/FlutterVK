@@ -305,9 +305,6 @@ class BottomMusicPlayer extends StatefulWidget {
   /// Выводом данного Callback'а является число от 0.0 до 1.0.
   final Function(double)? onVolumeChange;
 
-  /// Метод, вызываемый при долгом зажатии плеера. Используется для открытия плеера, который играет в данный момент, с выбором играющего в данный момент трека.
-  final Function(ExtendedAudio)? onTrackSelected;
-
   /// Если [true], то тогда будет использоваться альтернативный вид плеера, который предназначен для desktop-интерфейса.
   final bool useBigLayout;
 
@@ -339,7 +336,6 @@ class BottomMusicPlayer extends StatefulWidget {
     this.onDismiss,
     this.onProgressChange,
     this.onVolumeChange,
-    this.onTrackSelected,
     this.useBigLayout = false,
   });
 
@@ -463,9 +459,6 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                       onTap: widget.useBigLayout
                           ? null
                           : () => widget.onFullscreen?.call(false),
-                      onLongPress: widget.audio != null
-                          ? () => widget.onTrackSelected?.call(widget.audio!)
-                          : null,
                       onHorizontalDragUpdate: widget.useBigLayout
                           ? null
                           : (DragUpdateDetails details) {
