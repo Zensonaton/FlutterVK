@@ -594,7 +594,7 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
                         widget.audio,
                       );
 
-                      if (!mounted) return;
+                      if (!context.mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
@@ -633,12 +633,12 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
                         user,
                       );
                     } catch (error, stackTrace) {
-                      // ignore: use_build_context_synchronously
                       showLogErrorDialog(
                         "Ошибка при принудительном кэшировании отдельного трека: ",
                         error,
                         stackTrace,
                         logger,
+                        // ignore: use_build_context_synchronously
                         context,
                       );
 

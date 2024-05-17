@@ -122,12 +122,12 @@ Future<bool> tryAuthorize(
       );
     }
   } catch (e, stackTrace) {
-    // ignore: use_build_context_synchronously
     showLogErrorDialog(
       "Ошибка при авторизации: ",
       e,
       stackTrace,
       logger,
+      // ignore: use_build_context_synchronously
       context,
     );
 

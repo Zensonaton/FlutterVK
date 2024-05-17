@@ -80,7 +80,7 @@ class UpdateAvailableDialog extends StatelessWidget {
                         style: TextStyle(
                           color: Theme.of(context)
                               .colorScheme
-                              .onBackground
+                              .onSurface
                               .withOpacity(0.75),
                         ),
                       ),
@@ -95,7 +95,7 @@ class UpdateAvailableDialog extends StatelessWidget {
                           size: 18,
                           color: Theme.of(context)
                               .colorScheme
-                              .onBackground
+                              .onSurface
                               .withOpacity(0.75),
                         ),
                       ),
@@ -106,7 +106,7 @@ class UpdateAvailableDialog extends StatelessWidget {
                         style: TextStyle(
                           color: Theme.of(context)
                               .colorScheme
-                              .onBackground
+                              .onSurface
                               .withOpacity(0.75),
                         ),
                       ),

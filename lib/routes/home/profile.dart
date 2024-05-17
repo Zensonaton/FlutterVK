@@ -720,7 +720,7 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                               Theme.of(context).textTheme.titleSmall!.copyWith(
                                     color: Theme.of(context)
                                         .colorScheme
-                                        .onBackground
+                                        .onSurface
                                         .withOpacity(0.5),
                                   ),
                           textAlign: TextAlign.center,

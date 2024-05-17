@@ -197,7 +197,7 @@ class _TrackInfoEditDialogState extends State<TrackInfoEditDialog> {
                       stackTrace: stackTrace,
                     );
 
-                    if (mounted) {
+                    if (context.mounted) {
                       showErrorDialog(
                         context,
                         description: e.toString(),

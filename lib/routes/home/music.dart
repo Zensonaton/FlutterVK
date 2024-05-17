@@ -547,7 +547,7 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
     /// Цвет для текста и прочих иконок.
     final Color color = widget.selected
         ? Theme.of(context).colorScheme.primary
-        : Theme.of(context).colorScheme.onBackground;
+        : Theme.of(context).colorScheme.onSurface;
 
     return Dismissible(
       key: ValueKey(
@@ -676,7 +676,7 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
                                 decoration: BoxDecoration(
                                   color: Theme.of(context)
                                       .colorScheme
-                                      .background
+                                      .surface
                                       .withOpacity(0.5),
                                   borderRadius: BorderRadius.circular(
                                     globalBorderRadius,
@@ -834,7 +834,7 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
                               fontSize: 12,
                               color: widget.selected
                                   ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(context).colorScheme.onBackground,
+                                  : Theme.of(context).colorScheme.onSurface,
                             ),
                           ),
                         ],
@@ -854,7 +854,7 @@ class _AudioTrackTileState extends State<AudioTrackTile> {
                     style: TextStyle(
                       color: Theme.of(context)
                           .colorScheme
-                          .onBackground
+                          .onSurface
                           .withOpacity(0.75),
                     ),
                   ),
@@ -1073,7 +1073,7 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
                         decoration: BoxDecoration(
                           color: Theme.of(context)
                               .colorScheme
-                              .background
+                              .surface
                               .withOpacity(0.3),
                           borderRadius: BorderRadius.circular(
                             globalBorderRadius,

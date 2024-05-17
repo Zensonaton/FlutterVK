@@ -21,12 +21,12 @@ Future<bool> spotifyAuthorize(BuildContext context, String spDC) async {
   try {
     await user.updateSpotifyToken(spDC);
   } catch (e, stackTrace) {
-    // ignore: use_build_context_synchronously
     showLogErrorDialog(
       "Ошибка при авторизации Spotify: ",
       e,
       stackTrace,
       logger,
+      // ignore: use_build_context_synchronously
       context,
     );
 

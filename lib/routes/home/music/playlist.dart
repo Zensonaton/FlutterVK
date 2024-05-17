@@ -174,12 +174,12 @@ Future<void> onPlaylistPlayToggle(
 
       user.updatePlaylist(newPlaylist);
     } catch (e, stackTrace) {
-      // ignore: use_build_context_synchronously
       showLogErrorDialog(
         "Ошибка при загрузке информации по плейлисту для запуска трека: ",
         e,
         stackTrace,
         logger,
+        // ignore: use_build_context_synchronously
         context,
       );
 
@@ -389,7 +389,7 @@ class CacheDisableWarningDialog extends StatelessWidget {
       actions: [
         // "Нет".
         TextButton(
-          onPressed: () => Navigator.of(context).pop(null),
+          onPressed: () => Navigator.of(context).pop(),
           child: Text(
             AppLocalizations.of(context)!.general_no,
           ),
@@ -535,12 +535,12 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
 
         user.updatePlaylist(newPlaylist);
       } catch (e, stackTrace) {
-        // ignore: use_build_context_synchronously
         showLogErrorDialog(
           "Ошибка при открытии плейлиста: ",
           e,
           stackTrace,
           logger,
+          // ignore: use_build_context_synchronously
           context,
         );
       } finally {
@@ -811,7 +811,7 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                                           TextOverflow.ellipsis,
                                                       color: Theme.of(context)
                                                           .colorScheme
-                                                          .onBackground
+                                                          .onSurface
                                                           .withOpacity(0.9),
                                                     ),
                                                   ),
@@ -853,7 +853,7 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                                     style: TextStyle(
                                                       color: Theme.of(context)
                                                           .colorScheme
-                                                          .onBackground
+                                                          .onSurface
                                                           .withOpacity(0.8),
                                                     ),
                                                   ),
@@ -888,7 +888,7 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                         maxHeight: 54 + 8 * 2,
                         builder: (BuildContext context, double shrinkOffset) {
                           return Container(
-                            color: Theme.of(context).colorScheme.background,
+                            color: Theme.of(context).colorScheme.surface,
                             padding: const EdgeInsets.symmetric(
                               vertical: 8,
                             ),
@@ -1102,7 +1102,7 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                                           .primary
                                                       : Theme.of(context)
                                                           .colorScheme
-                                                          .onBackground)
+                                                          .onSurface)
                                                   : null,
                                             ),
                                     ),
@@ -1155,7 +1155,7 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                           ),
                                           prefixIconColor: Theme.of(context)
                                               .colorScheme
-                                              .onBackground
+                                              .onSurface
                                               .withOpacity(
                                                 hasTracksLoaded ? 1.0 : 0.5,
                                               ),

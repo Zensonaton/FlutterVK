@@ -18,7 +18,7 @@ class MessagesSearchBar extends StatelessWidget {
       ),
       child: SearchAnchor.bar(
         barHintText: "Поиск",
-        barElevation: MaterialStateProperty.all(1),
+        barElevation: WidgetStateProperty.all(1),
         viewTrailing: const [],
         suggestionsBuilder:
             (BuildContext context, SearchController controller) {

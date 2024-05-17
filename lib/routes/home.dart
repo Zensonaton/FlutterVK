@@ -213,12 +213,12 @@ Future<void> toggleTrackLikeState(
       isFavorite,
     );
   } catch (e, stackTrace) {
-    // ignore: use_build_context_synchronously
     showLogErrorDialog(
       "Ошибка при попытке сделать трек лайкнутым/дизлайкнутым (новое состояние: $isFavorite): ",
       e,
       stackTrace,
       logger,
+      // ignore: use_build_context_synchronously
       context,
     );
   } finally {
@@ -260,12 +260,12 @@ Future<bool> dislikeTrackState(
 
     return true;
   } catch (e, stackTrace) {
-    // ignore: use_build_context_synchronously
     showLogErrorDialog(
       "Ошибка при дизлайке трека: ",
       e,
       stackTrace,
       logger,
+      // ignore: use_build_context_synchronously
       context,
     );
 
@@ -351,7 +351,7 @@ class _BottomMusicPlayerWidgetState extends State<BottomMusicPlayerWidget> {
             stackTrace: stackTrace,
           );
 
-          if (context.mounted) {
+          if (mounted) {
             showErrorDialog(
               context,
               title: "Ошибка воспроизведения",
@@ -700,7 +700,7 @@ class _HomeRouteState extends State<HomeRoute> {
           stackTrace: stackTrace,
         );
 
-        if (context.mounted) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(

@@ -20,7 +20,7 @@ class ConnectivityManager {
   /// Данный метод должен быть вызван лишь одинажды.
   Future<void> initialize() async {
     _connectivity.onConnectivityChanged.listen(
-      (ConnectivityResult result) => Future.delayed(
+      (List<ConnectivityResult> result) => Future.delayed(
         const Duration(
           milliseconds: 500,
         ),

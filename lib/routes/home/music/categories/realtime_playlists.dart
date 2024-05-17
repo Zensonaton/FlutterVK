@@ -60,12 +60,12 @@ Future<void> onMixPlayToggle(
         .toList();
     playlist.count = response.response!.length;
   } catch (e, stackTrace) {
-    // ignore: use_build_context_synchronously
     showLogErrorDialog(
       "Ошибка при загрузке информации по аудио миксу: ",
       e,
       stackTrace,
       logger,
+      // ignore: use_build_context_synchronously
       context,
     );
 

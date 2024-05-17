@@ -75,7 +75,7 @@ class PlaylistTitleWidget extends StatelessWidget {
               style: TextStyle(
                 color: Theme.of(context)
                     .colorScheme
-                    .onBackground
+                    .onSurface
                     .withOpacity(0.75),
               ),
             ),
@@ -214,7 +214,7 @@ class _NextTrackInfoWidgetState extends State<NextTrackInfoWidget> {
                     style: TextStyle(
                       color: Theme.of(context)
                           .colorScheme
-                          .onBackground
+                          .onSurface
                           .withOpacity(0.75),
                     ),
                   ),

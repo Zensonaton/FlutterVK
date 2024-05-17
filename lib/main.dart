@@ -446,7 +446,6 @@ class _MainAppState extends State<MainApp> with WindowListener {
                     darkColorScheme ??
                     fallbackDarkColorScheme)
                 .copyWith(
-              background: user.settings.oledTheme ? Colors.black : null,
               surface: user.settings.oledTheme ? Colors.black : null,
             ),
           ),
