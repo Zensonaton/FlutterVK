@@ -1430,12 +1430,14 @@ class VKMusicPlayer {
       lightScheme = palette.dominantColor != null
           ? ColorScheme.fromSeed(
               seedColor: palette.dominantColor!.color,
+              dynamicSchemeVariant: DynamicSchemeVariant.fidelity,
             )
           : fallbackLightColorScheme;
       darkScheme = palette.dominantColor != null
           ? ColorScheme.fromSeed(
               seedColor: palette.dominantColor!.color,
               brightness: Brightness.dark,
+              dynamicSchemeVariant: DynamicSchemeVariant.fidelity,
             )
           : fallbackDarkColorScheme;
     }
