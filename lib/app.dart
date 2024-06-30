@@ -73,26 +73,23 @@ class _FlutterVKAppState extends State<FlutterVKApp> with WindowListener {
       player.setStopOnPauseEnabled(true);
     }
 
-    // На Desktop-платформах, создаём README-файл в папке кэша треков, если он не существует.
-    if (isDesktop) {
+    // На Desktop-платформах, создаём README-файл в папке кэша треков.
+    // FIXME: AppLocalizations здесь не работает, и это вызывает ошибку.
+    if (isDesktop && context.mounted) {
       final File readmeFile = File(
         path.join(
           await CachedStreamedAudio.getTrackStorageDirectory(),
           tracksCacheReadmeFileName,
         ),
       );
-      if (!readmeFile.existsSync()) {
-        readmeFile.createSync(
-          recursive: true,
-        );
-        readmeFile.writeAsStringSync(
-          // ignore: use_build_context_synchronously
-          AppLocalizations.of(buildContext!)!.general_musicReadmeFileContents,
-        );
-      }
+      readmeFile.createSync(
+        recursive: true,
+      );
+      readmeFile.writeAsStringSync(
+        // ignore: use_build_context_synchronously
+        AppLocalizations.of(context)!.general_musicReadmeFileContents,
+      );
     }
-
-    user.markUpdated(false);
 
     // Делаем панель навигации прозрачной.
     SystemChrome.setEnabledSystemUIMode(
