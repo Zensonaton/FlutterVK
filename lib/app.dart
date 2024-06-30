@@ -168,22 +168,36 @@ class _FlutterVKAppState extends State<FlutterVKApp> with WindowListener {
       );
     }
 
+    final bool playerColorsAppwide = user.settings.playerColorsAppWide;
+    final playerLightColorScheme =
+        playerColorsAppwide ? colorScheme.lightColorScheme : null;
+    final playerDarkColorScheme =
+        playerColorsAppwide ? colorScheme.darkColorScheme : null;
+
     return DynamicColorBuilder(
       builder:
           (ColorScheme? lightDynamicScheme, ColorScheme? darkDynamicScheme) {
-        final bool playerColorsAppwide = user.settings.playerColorsAppWide;
-        final playerLightColorScheme =
-            playerColorsAppwide ? colorScheme.lightColorScheme : null;
-        final playerDarkColorScheme =
-            playerColorsAppwide ? colorScheme.darkColorScheme : null;
+        final (ColorScheme, ColorScheme)? dynamicSchemesFixed =
+            lightDynamicScheme != null
+                ? generateDynamicColorSchemes(
+                    lightDynamicScheme,
+                    darkDynamicScheme!,
+                  )
+                : null;
+        final ColorScheme? lightDynamicSchemeFixed = dynamicSchemesFixed?.$1;
+        final ColorScheme? darkDynamicSchemeFixed = dynamicSchemesFixed?.$2;
 
         return MaterialApp(
           theme: ThemeData(
-            colorScheme: playerLightColorScheme ?? fallbackLightColorScheme,
+            colorScheme: playerLightColorScheme ??
+                lightDynamicSchemeFixed ??
+                fallbackLightColorScheme,
           ),
           darkTheme: ThemeData(
-            colorScheme:
-                (playerDarkColorScheme ?? fallbackDarkColorScheme).copyWith(
+            colorScheme: (playerDarkColorScheme ??
+                    darkDynamicSchemeFixed ??
+                    fallbackDarkColorScheme)
+                .copyWith(
               surface: user.settings.oledTheme ? Colors.black : null,
               // Некоторые части интерфейса Flutter до сих пор используют background.
               // ignore: deprecated_member_use
