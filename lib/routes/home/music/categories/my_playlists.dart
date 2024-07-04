@@ -1,13 +1,12 @@
-import "dart:async";
-
 import "package:flutter/material.dart";
-import "package:flutter_gen/gen_l10n/app_localizations.dart";
-import "package:just_audio/just_audio.dart";
-import "package:provider/provider.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:skeletonizer/skeletonizer.dart";
 
 import "../../../../consts.dart";
 import "../../../../main.dart";
+import "../../../../provider/l18n.dart";
+import "../../../../provider/player_events.dart";
+import "../../../../provider/playlists.dart";
 import "../../../../provider/user.dart";
 import "../../../../services/logger.dart";
 import "../../../../utils.dart";
@@ -16,7 +15,7 @@ import "../../music.dart";
 import "../playlist.dart";
 
 /// Виджет с разделом "Ваши плейлисты"
-class MyPlaylistsBlock extends StatefulWidget {
+class MyPlaylistsBlock extends HookConsumerWidget {
   static AppLogger logger = getLogger("MyPlaylistsBlock");
 
   const MyPlaylistsBlock({
@@ -24,44 +23,14 @@ class MyPlaylistsBlock extends StatefulWidget {
   });
 
   @override
-  State<MyPlaylistsBlock> createState() => _MyPlaylistsBlockState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final playlists = ref.watch(playlistsProvider);
+    final userPlaylists = ref.watch(userPlaylistsProvider);
+    final l18n = ref.watch(l18nProvider);
+    ref.watch(playerStateProvider);
+    ref.watch(playerLoadedStateProvider);
 
-class _MyPlaylistsBlockState extends State<MyPlaylistsBlock> {
-  /// Подписки на изменения состояния воспроизведения трека.
-  late final List<StreamSubscription> subscriptions;
-
-  @override
-  void initState() {
-    super.initState();
-
-    subscriptions = [
-      // Изменения состояния воспроизведения.
-      player.playerStateStream.listen(
-        (PlayerState state) => setState(() {}),
-      ),
-
-      // Изменения состояния остановки/запуска плеера.
-      player.loadedStateStream.listen(
-        (bool loaded) => setState(() {}),
-      ),
-    ];
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-
-    for (StreamSubscription subscription in subscriptions) {
-      subscription.cancel();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final UserProvider user = Provider.of<UserProvider>(context);
-
-    final int playlistsCount = user.playlistsCount ?? 0;
+    final int playlistsCount = playlists.value?.playlistsCount ?? 0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -74,18 +43,21 @@ class _MyPlaylistsBlockState extends State<MyPlaylistsBlock> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // "Ваши плейлисты".
               Padding(
                 padding: const EdgeInsets.only(
                   right: 8,
                 ),
                 child: Text(
-                  AppLocalizations.of(context)!.music_myPlaylistsChip,
+                  l18n.music_myPlaylistsChip,
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.primary,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
+
+              // Надпись с количеством плейлистов.
               if (playlistsCount > 0)
                 Text(
                   playlistsCount.toString(),
@@ -108,15 +80,13 @@ class _MyPlaylistsBlockState extends State<MyPlaylistsBlock> {
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               clipBehavior: Clip.none,
-              physics: user.regularPlaylists.isEmpty
+              physics: userPlaylists == null
                   ? const NeverScrollableScrollPhysics()
                   : null,
-              itemCount: user.regularPlaylists.isNotEmpty
-                  ? user.regularPlaylists.length
-                  : null,
+              itemCount: userPlaylists?.length,
               itemBuilder: (BuildContext context, int index) {
                 // Skeleton loader.
-                if (user.regularPlaylists.isEmpty) {
+                if (userPlaylists == null) {
                   return Padding(
                     padding: const EdgeInsets.only(
                       right: 8,
@@ -131,7 +101,7 @@ class _MyPlaylistsBlockState extends State<MyPlaylistsBlock> {
                 }
 
                 // Настоящие данные.
-                final ExtendedPlaylist playlist = user.regularPlaylists[index];
+                final ExtendedPlaylist playlist = userPlaylists[index];
 
                 return Padding(
                   padding: const EdgeInsets.only(
@@ -153,6 +123,7 @@ class _MyPlaylistsBlockState extends State<MyPlaylistsBlock> {
                       ),
                     ),
                     onPlayToggle: (bool playing) => onPlaylistPlayToggle(
+                      ref,
                       context,
                       playlist,
                       playing,

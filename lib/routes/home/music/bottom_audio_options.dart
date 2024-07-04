@@ -5,9 +5,9 @@ import "package:debounce_throttle/debounce_throttle.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
-import "package:flutter_gen/gen_l10n/app_localizations.dart";
-import "package:just_audio/just_audio.dart";
-import "package:provider/provider.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
+import "package:go_router/go_router.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:responsive_builder/responsive_builder.dart";
 import "package:skeletonizer/skeletonizer.dart";
 import "package:styled_text/tags/styled_text_tag_action.dart";
@@ -17,6 +17,8 @@ import "../../../api/deezer/search.dart";
 import "../../../api/deezer/shared.dart";
 import "../../../consts.dart";
 import "../../../main.dart";
+import "../../../provider/l18n.dart";
+import "../../../provider/player_events.dart";
 import "../../../provider/user.dart";
 import "../../../services/audio_player.dart";
 import "../../../services/cache_manager.dart";
@@ -29,7 +31,7 @@ import "../music.dart";
 import "track_info.dart";
 
 /// Диалог, помогающий пользователю заменить обложку у трека.
-class TrackThumbnailDialog extends StatefulWidget {
+class TrackThumbnailDialog extends StatefulHookConsumerWidget {
   /// Трек, над обложкой которого производится манипуляция.
   final ExtendedAudio audio;
 
@@ -47,15 +49,18 @@ class TrackThumbnailDialog extends StatefulWidget {
   });
 
   @override
-  State<TrackThumbnailDialog> createState() => _TrackThumbnailDialogState();
+  ConsumerState<TrackThumbnailDialog> createState() =>
+      _TrackThumbnailDialogState();
 }
 
-class _TrackThumbnailDialogState extends State<TrackThumbnailDialog> {
+class _TrackThumbnailDialogState extends ConsumerState<TrackThumbnailDialog> {
+  // TODO: Переписать с использованием hook'ов.
+
   /// Контроллер, используемый для управления введённым в поле поиска текстом.
-  final TextEditingController controller = TextEditingController();
+  final controller = useTextEditingController();
 
   /// FocusNode для фокуса поля поиска сразу после открытия данного диалога.
-  final FocusNode focusNode = FocusNode();
+  final focusNode = useFocusNode();
 
   /// Подписки на изменения состояния воспроизведения трека.
   late final List<StreamSubscription> subscriptions;
@@ -82,7 +87,7 @@ class _TrackThumbnailDialogState extends State<TrackThumbnailDialog> {
     if (!mounted) return;
 
     // Проверяем наличие интернета.
-    if (!networkRequiredDialog(context)) return;
+    if (!networkRequiredDialog(ref, context)) return;
 
     // Если ничего не введено, то делаем пустой Future.
     if (query.isEmpty) {
@@ -99,33 +104,6 @@ class _TrackThumbnailDialogState extends State<TrackThumbnailDialog> {
     setState(() {});
   }
 
-  /// Метод, который вызывается при нажатии на клавишу клавиатуры.
-  void keyboardListener(
-    RawKeyEvent key,
-  ) {
-    // Нажатие кнопки ESC.
-    if (key.isKeyPressed(LogicalKeyboardKey.escape)) {
-      // Если в поле поиска есть текст, и это поле находится в фокусе, то ничего не делаем.
-      // "Стирание" текста находится в TextField'е.
-      if (controller.text.isNotEmpty && focusNode.hasFocus || !mounted) return;
-
-      Navigator.of(context).pop();
-
-      return;
-    }
-
-    // Нажатие комбинации CTRL+F.
-    if (key.isControlPressed && key.isKeyPressed(LogicalKeyboardKey.keyF)) {
-      controller.selection = TextSelection(
-        baseOffset: 0,
-        extentOffset: controller.text.length,
-      );
-      focusNode.requestFocus();
-
-      return;
-    }
-  }
-
   @override
   void initState() {
     super.initState();
@@ -133,12 +111,7 @@ class _TrackThumbnailDialogState extends State<TrackThumbnailDialog> {
     subscriptions = [
       // Изменения состояния воспроизведения.
       player.playerStateStream.listen(
-        (PlayerState state) => setState(() {}),
-      ),
-
-      // Изменения плейлиста.
-      player.sequenceStateStream.listen(
-        (SequenceState? state) => setState(() {}),
+        (_) => setState(() {}),
       ),
     ];
 
@@ -157,9 +130,6 @@ class _TrackThumbnailDialogState extends State<TrackThumbnailDialog> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       controller.text = "${widget.audio.artist} - ${widget.audio.title}";
     });
-
-    // Обработчик нажатия кнопок клавиатуры.
-    RawKeyboard.instance.addListener(keyboardListener);
   }
 
   @override
@@ -169,12 +139,12 @@ class _TrackThumbnailDialogState extends State<TrackThumbnailDialog> {
     for (StreamSubscription subscription in subscriptions) {
       subscription.cancel();
     }
-
-    RawKeyboard.instance.removeListener(keyboardListener);
   }
 
   @override
   Widget build(BuildContext context) {
+    final l18n = ref.watch(l18nProvider);
+
     final bool isMobileLayout =
         getDeviceType(MediaQuery.of(context).size) == DeviceScreenType.mobile;
 
@@ -206,7 +176,7 @@ class _TrackThumbnailDialogState extends State<TrackThumbnailDialog> {
                         icon: Icon(
                           Icons.adaptive.arrow_back,
                         ),
-                        onPressed: () => Navigator.of(context).pop(),
+                        onPressed: () => context.pop(),
                       ),
                     ),
 
@@ -223,8 +193,7 @@ class _TrackThumbnailDialogState extends State<TrackThumbnailDialog> {
                         controller: controller,
                         onChanged: (String query) => setState(() {}),
                         decoration: InputDecoration(
-                          hintText: AppLocalizations.of(context)!
-                              .music_setThumbnailSearchText,
+                          hintText: l18n.music_setThumbnailSearchText,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(
                               globalBorderRadius,
@@ -272,7 +241,7 @@ class _TrackThumbnailDialogState extends State<TrackThumbnailDialog> {
                   // Пользователь ещё ничего не ввёл.
                   if (snapshot.connectionState == ConnectionState.none) {
                     return Text(
-                      AppLocalizations.of(context)!.music_typeToSearchText,
+                      l18n.music_typeToSearchText,
                     );
                   }
 
@@ -316,8 +285,7 @@ class _TrackThumbnailDialogState extends State<TrackThumbnailDialog> {
                         horizontal: 6,
                       ),
                       child: StyledText(
-                        text: AppLocalizations.of(context)!
-                            .music_zeroSearchResults,
+                        text: l18n.music_zeroSearchResults,
                         tags: {
                           "click": StyledTextActionTag(
                             (String? text, Map<String?, String?> attrs) =>
@@ -377,9 +345,6 @@ class _TrackThumbnailDialogState extends State<TrackThumbnailDialog> {
               child: FilledButton.icon(
                 onPressed: selectedTrack != null
                     ? () async {
-                        final UserProvider user =
-                            Provider.of<UserProvider>(context, listen: false);
-
                         // Заменяем обложки.
                         widget.audio.deezerThumbs = null;
                         widget.audio.vkThumbs =
@@ -391,34 +356,32 @@ class _TrackThumbnailDialogState extends State<TrackThumbnailDialog> {
                         CachedAlbumImagesManager.instance
                             .removeFile("${widget.audio.mediaKey}max");
 
-                        // Сохраняем изменения.
-                        user.markUpdated(false);
+                        // TODO: Сохраняем изменения.
                         await appStorage
                             .savePlaylist(widget.playlist.asDBPlaylist);
 
                         // Загружаем новые обложки.
-                        CachedStreamedAudio.downloadTrackData(
-                          widget.audio,
-                          widget.playlist,
-                          user,
-                          allowDeezer: user.settings.deezerThumbnails,
-                          allowSpotifyLyrics: user.settings.spotifyLyrics &&
-                              user.spDCcookie != null,
-                          saveInDB: true,
-                        );
+                        // CachedStreamedAudio.downloadTrackData(
+                        //   widget.audio,
+                        //   widget.playlist,
+                        //   user,
+                        //   allowDeezer: user.settings.deezerThumbnails,
+                        //   allowSpotifyLyrics: user.settings.spotifyLyrics &&
+                        //       user.spDCcookie != null,
+                        //   saveInDB: true,
+                        // );
 
                         // Отображаем сообщение об успешном изменении, и выходим из диалога.
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                AppLocalizations.of(context)!
-                                    .music_setThumbnailSaveSuccessful,
+                                l18n.music_setThumbnailSaveSuccessful,
                               ),
                             ),
                           );
 
-                          Navigator.of(context).pop();
+                          context.pop();
                         }
                       }
                     : null,
@@ -426,7 +389,7 @@ class _TrackThumbnailDialogState extends State<TrackThumbnailDialog> {
                   Icons.image_search,
                 ),
                 label: Text(
-                  AppLocalizations.of(context)!.music_setThumbnailSave,
+                  l18n.music_setThumbnailSave,
                 ),
               ),
             ),
@@ -446,7 +409,7 @@ class _TrackThumbnailDialogState extends State<TrackThumbnailDialog> {
 ///   builder: (BuildContext context) => const BottomAudioOptionsDialog(...),
 /// ),
 /// ```
-class BottomAudioOptionsDialog extends StatefulWidget {
+class BottomAudioOptionsDialog extends ConsumerWidget {
   /// Трек типа [ExtendedAudio], над которым производится манипуляция.
   final ExtendedAudio audio;
 
@@ -460,44 +423,11 @@ class BottomAudioOptionsDialog extends StatefulWidget {
   });
 
   @override
-  State<BottomAudioOptionsDialog> createState() =>
-      _BottomAudioOptionsDialogState();
-}
-
-class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
-  /// Подписки на изменения состояния воспроизведения трека.
-  late final List<StreamSubscription> subscriptions;
-
-  @override
-  void initState() {
-    super.initState();
-
-    subscriptions = [
-      // Изменения состояния воспроизведения.
-      player.playingStream.listen(
-        (bool playing) => setState(() {}),
-      ),
-
-      // Изменения плейлиста.
-      player.sequenceStateStream.listen(
-        (SequenceState? state) => setState(() {}),
-      ),
-    ];
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-
-    for (StreamSubscription subscription in subscriptions) {
-      subscription.cancel();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final AppLogger logger = getLogger("BottomAudioOptionsDialog");
-    final UserProvider user = Provider.of<UserProvider>(context);
+    final user = ref.watch(userProvider);
+    final l18n = ref.watch(l18nProvider);
+    ref.watch(playerStateProvider);
 
     return DraggableScrollableSheet(
       expand: false,
@@ -516,8 +446,8 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
                     bottom: 8,
                   ),
                   child: AudioTrackTile(
-                    audio: widget.audio,
-                    selected: widget.audio == player.currentAudio,
+                    audio: audio,
+                    selected: audio == player.currentAudio,
                     currentlyPlaying: player.loaded && player.playing,
                   ),
                 ),
@@ -532,17 +462,16 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
 
                 // Редактировать данные трека.
                 ListTile(
-                  enabled: widget.audio.album == null &&
-                      widget.audio.ownerID == user.id!,
+                  enabled: audio.album == null && audio.ownerID == user.id,
                   onTap: () {
-                    if (!networkRequiredDialog(context)) return;
+                    if (!networkRequiredDialog(ref, context)) return;
 
-                    Navigator.of(context).pop();
+                    context.pop();
 
                     showDialog(
                       context: context,
                       builder: (BuildContext context) => TrackInfoEditDialog(
-                        audio: widget.audio,
+                        audio: audio,
                       ),
                     );
                   },
@@ -550,14 +479,14 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
                     Icons.edit,
                   ),
                   title: Text(
-                    AppLocalizations.of(context)!.music_detailsEditTitle,
+                    l18n.music_detailsEditTitle,
                   ),
                 ),
 
                 // Удалить из текущего плейлиста.
                 ListTile(
                   onTap: () {
-                    if (!networkRequiredDialog(context)) return;
+                    if (!networkRequiredDialog(ref, context)) return;
 
                     showWipDialog(context);
                   },
@@ -565,14 +494,14 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
                     Icons.playlist_remove,
                   ),
                   title: Text(
-                    AppLocalizations.of(context)!.music_detailsDeleteTrackTitle,
+                    l18n.music_detailsDeleteTrackTitle,
                   ),
                 ),
 
                 // Добавить в другой плейлист.
                 ListTile(
                   onTap: () {
-                    if (!networkRequiredDialog(context)) return;
+                    if (!networkRequiredDialog(ref, context)) return;
 
                     showWipDialog(context);
                   },
@@ -580,8 +509,7 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
                     Icons.playlist_add,
                   ),
                   title: Text(
-                    AppLocalizations.of(context)!
-                        .music_detailsAddToOtherPlaylistTitle,
+                    l18n.music_detailsAddToOtherPlaylistTitle,
                   ),
                 ),
 
@@ -591,14 +519,14 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
                   ListTile(
                     onTap: () async {
                       await player.addNextToQueue(
-                        widget.audio,
+                        audio,
                       );
 
                       if (!context.mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
-                            AppLocalizations.of(context)!.general_addedToQueue,
+                            l18n.general_addedToQueue,
                           ),
                           duration: const Duration(
                             seconds: 3,
@@ -606,31 +534,31 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
                         ),
                       );
 
-                      Navigator.of(context).pop();
+                      context.pop();
                     },
-                    enabled: widget.audio.canPlay,
+                    enabled: audio.canPlay,
                     leading: const Icon(
                       Icons.queue_music,
                     ),
                     title: Text(
-                      AppLocalizations.of(context)!.music_detailsPlayNextTitle,
+                      l18n.music_detailsPlayNextTitle,
                     ),
                   ),
 
                 // Кэшировать этот трек.
                 ListTile(
                   onTap: () async {
-                    if (!networkRequiredDialog(context)) return;
+                    if (!networkRequiredDialog(ref, context)) return;
 
-                    Navigator.of(context).pop();
+                    context.pop();
 
                     // Загружаем трек.
                     try {
                       await CacheItem.cacheTrack(
-                        widget.audio,
-                        widget.playlist,
+                        audio,
+                        playlist,
                         true,
-                        user,
+                        // user,
                       );
                     } catch (error, stackTrace) {
                       showLogErrorDialog(
@@ -646,36 +574,32 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
                     }
 
                     if (!context.mounted) return;
-
-                    user.markUpdated();
                   },
-                  enabled: !widget.audio.isRestricted &&
-                      !(widget.audio.isCached ?? false),
+                  enabled: !audio.isRestricted && !(audio.isCached ?? false),
                   leading: const Icon(
                     Icons.download,
                   ),
                   title: Text(
-                    AppLocalizations.of(context)!.music_detailsCacheTrackTitle,
+                    l18n.music_detailsCacheTrackTitle,
                   ),
                   subtitle: Text(
-                    AppLocalizations.of(context)!
-                        .music_detailsCacheTrackDescription,
+                    l18n.music_detailsCacheTrackDescription,
                   ),
                 ),
 
                 // Заменить обложку.
                 ListTile(
                   onTap: () {
-                    if (!networkRequiredDialog(context)) return;
+                    if (!networkRequiredDialog(ref, context)) return;
 
-                    Navigator.of(context).pop();
+                    context.pop();
 
                     showDialog(
                       context: context,
                       builder: (BuildContext context) {
                         return TrackThumbnailDialog(
-                          audio: widget.audio,
-                          playlist: widget.playlist,
+                          audio: audio,
+                          playlist: playlist,
                         );
                       },
                     );
@@ -684,19 +608,17 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
                     Icons.image_search,
                   ),
                   title: Text(
-                    AppLocalizations.of(context)!
-                        .music_detailsSetThumbnailTitle,
+                    l18n.music_detailsSetThumbnailTitle,
                   ),
                   subtitle: Text(
-                    AppLocalizations.of(context)!
-                        .music_detailsSetThumbnailDescription,
+                    l18n.music_detailsSetThumbnailDescription,
                   ),
                 ),
 
                 // Перезалить с Youtube.
                 ListTile(
                   onTap: () {
-                    if (!networkRequiredDialog(context)) return;
+                    if (!networkRequiredDialog(ref, context)) return;
 
                     showWipDialog(context);
                   },
@@ -704,12 +626,10 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
                     Icons.rotate_left,
                   ),
                   title: Text(
-                    AppLocalizations.of(context)!
-                        .music_detailsReuploadFromYoutubeTitle,
+                    l18n.music_detailsReuploadFromYoutubeTitle,
                   ),
                   subtitle: Text(
-                    AppLocalizations.of(context)!
-                        .music_detailsReuploadFromYoutubeDescription,
+                    l18n.music_detailsReuploadFromYoutubeDescription,
                   ),
                 ),
 
@@ -719,11 +639,11 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
                     onTap: () {
                       Clipboard.setData(
                         ClipboardData(
-                          text: widget.audio.mediaKey,
+                          text: audio.mediaKey,
                         ),
                       );
 
-                      Navigator.of(context).pop();
+                      context.pop();
                     },
                     leading: const Icon(
                       Icons.link,
@@ -738,18 +658,18 @@ class _BottomAudioOptionsDialogState extends State<BottomAudioOptionsDialog> {
                   if (Platform.isWindows)
                     ListTile(
                       onTap: () async {
-                        Navigator.of(context).pop();
+                        context.pop();
 
                         final File path =
                             await CachedStreamedAudio.getCachedAudioByKey(
-                          widget.audio.mediaKey,
+                          audio.mediaKey,
                         );
                         await Process.run(
                           "explorer.exe",
                           ["/select,", path.path],
                         );
                       },
-                      enabled: widget.audio.isCached ?? false,
+                      enabled: audio.isCached ?? false,
                       leading: const Icon(
                         Icons.folder_open,
                       ),

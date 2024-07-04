@@ -3,6 +3,8 @@ import "dart:io";
 import "package:flutter/material.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "package:flutter_markdown/flutter_markdown.dart";
+import "package:go_router/go_router.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:http/http.dart";
 import "package:install_plugin/install_plugin.dart";
 import "package:intl/intl.dart";
@@ -15,6 +17,7 @@ import "../api/github/get_releases.dart";
 import "../api/github/shared.dart";
 import "../consts.dart";
 import "../main.dart";
+import "../provider/l18n.dart";
 import "../utils.dart";
 import "../widgets/dialogs.dart";
 import "../widgets/loading_overlay.dart";
@@ -30,7 +33,7 @@ import "package:path/path.dart" as path;
 ///   builder: (BuildContext context) => const UpdateAvailableDialog(...),
 /// ),
 /// ```
-class UpdateAvailableDialog extends StatelessWidget {
+class UpdateAvailableDialog extends ConsumerWidget {
   static AppLogger logger = getLogger("UpdateAvailableDialog");
 
   /// Github Release с новым обновлением.
@@ -42,8 +45,9 @@ class UpdateAvailableDialog extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final String locale = Localizations.localeOf(context).languageCode;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l18n = ref.watch(l18nProvider);
+    final String locale = l18n.localeName;
 
     return DraggableScrollableSheet(
       expand: false,
@@ -58,7 +62,7 @@ class UpdateAvailableDialog extends StatelessWidget {
                 children: [
                   // Текст "Доступно обновление".
                   Text(
-                    AppLocalizations.of(context)!.updateAvailableTitle,
+                    l18n.updateAvailableTitle,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.primary,
@@ -141,6 +145,12 @@ class UpdateAvailableDialog extends StatelessWidget {
                     children: [
                       // Подробности.
                       FilledButton.tonalIcon(
+                        icon: const Icon(
+                          Icons.library_books,
+                        ),
+                        label: Text(
+                          l18n.showUpdateDetails,
+                        ),
                         onPressed: () {
                           launchUrl(
                             Uri.parse(
@@ -148,18 +158,20 @@ class UpdateAvailableDialog extends StatelessWidget {
                             ),
                           );
                         },
-                        icon: const Icon(
-                          Icons.library_books,
-                        ),
-                        label: Text(
-                          AppLocalizations.of(context)!.showUpdateDetails,
-                        ),
                       ),
 
                       // Установить.
                       FilledButton.icon(
+                        icon: Icon(
+                          isMobile
+                              ? Icons.install_mobile
+                              : Icons.install_desktop,
+                        ),
+                        label: Text(
+                          l18n.installUpdate,
+                        ),
                         onPressed: () async {
-                          Navigator.of(context).pop();
+                          context.pop();
 
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
@@ -167,8 +179,7 @@ class UpdateAvailableDialog extends StatelessWidget {
                                 seconds: 10,
                               ),
                               content: Text(
-                                AppLocalizations.of(context)!
-                                    .installPendingDescription,
+                                l18n.installPendingDescription,
                               ),
                             ),
                           );
@@ -191,19 +202,10 @@ class UpdateAvailableDialog extends StatelessWidget {
                               stackTrace,
                               logger,
                               context,
-                              title: AppLocalizations.of(context)!
-                                  .updateErrorTitle,
+                              title: l18n.updateErrorTitle,
                             );
                           }
                         },
-                        icon: Icon(
-                          isMobile
-                              ? Icons.install_mobile
-                              : Icons.install_desktop,
-                        ),
-                        label: Text(
-                          AppLocalizations.of(context)!.installUpdate,
-                        ),
                       ),
                     ],
                   ),

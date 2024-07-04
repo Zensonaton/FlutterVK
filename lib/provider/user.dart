@@ -1,15 +1,9 @@
-import "dart:io";
-
 import "package:audio_service/audio_service.dart";
-import "package:collection/collection.dart";
 import "package:flutter/material.dart";
+import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:shared_preferences/shared_preferences.dart";
 
 import "../api/deezer/shared.dart";
-import "../api/spotify/get_lyrics.dart";
-import "../api/spotify/get_token.dart";
-import "../api/spotify/search.dart";
-import "../api/spotify/shared.dart";
 import "../api/vk/audio/add.dart";
 import "../api/vk/audio/add_dislike.dart";
 import "../api/vk/audio/delete.dart";
@@ -29,12 +23,12 @@ import "../api/vk/executeScripts/mass_audio_get.dart";
 import "../api/vk/shared.dart";
 import "../api/vk/users/get.dart";
 import "../db/schemas/playlists.dart";
-import "../enums.dart";
 import "../main.dart";
-import "../services/audio_player.dart";
-import "../services/cache_manager.dart";
-import "../services/logger.dart";
 import "../utils.dart";
+import "auth.dart";
+import "shared_prefs.dart";
+
+part "user.g.dart";
 
 /// Класс, копирующий поля из класса [Playlist] от API ВКонтакте, добавляющий информацию о треках в данном плейлисте.
 class ExtendedPlaylist {
@@ -269,7 +263,9 @@ class ExtendedPlaylist {
 
     return other.runtimeType == ExtendedPlaylist &&
         other.id == id &&
-        other.ownerID == ownerID;
+        other.ownerID == ownerID &&
+        other.isDataCached == isDataCached &&
+        other.areTracksCached == areTracksCached;
   }
 
   @override
@@ -610,125 +606,21 @@ class ExtendedAudio {
   });
 }
 
-/// Класс с настройками пользователя.
-class Settings {
-  /// Указывает, что поле "Моя музыка" включено на экране с музыкой.
-  bool myMusicChipEnabled = true;
-
-  /// Указывает, что поле "Ваши плейлисты" включено на экране с музыкой.
-  bool playlistsChipEnabled = true;
-
-  /// Указывает, что поле "В реальном времени" включено на экране с музыкой.
-  bool realtimePlaylistsChipEnabled = true;
-
-  /// Указывает, что поле "Плейлисты для Вас" включено на экране с музыкой.
-  bool recommendedPlaylistsChipEnabled = true;
-
-  /// Указывает, что поле "Совпадения по вкусам" включено на экране с музыкой.
-  bool similarMusicChipEnabled = true;
-
-  /// Указывает, что поле "Собрано редакцией" включено на экране с музыкой.
-  bool byVKChipEnabled = true;
-
-  /// Указывает, что при последнем прослушивании shuffle был включён.
-  bool shuffleEnabled = false;
-
-  /// Указывает, что Discord Rich Presence включён.
-  bool discordRPCEnabled = true;
-
-  /// Указывает, что настройка "пауза при минимальной громкости" включена.
-  bool pauseOnMuteEnabled = false;
-
-  /// Указывает, что при установке плеера на паузу, воспроизведение музыки будет автоматически остановлено ([VKMusicPlayer.stop]) через некоторое время.
-  bool stopOnPauseEnabled = true;
-
-  /// Указывает, что полноэкранный плеер использует изображение трека в качестве фона.
-  bool playerThumbAsBackground = true;
-
-  /// Указывает, что включён показ текста трека в полноэкранном плеере.
-  bool trackLyricsEnabled = true;
-
-  /// Указывает, что цвета плеера распространяются на всё приложение.
-  bool playerColorsAppWide = false;
-
-  /// Указывает, какая тема приложения используется.
-  ThemeMode theme = ThemeMode.system;
-
-  /// Указывает, что включена OLED тема приложения.
-  bool oledTheme = false;
-
-  /// Указывает поведение в случае закрытия приложения.
-  AppCloseBehavior closeBehavior = AppCloseBehavior.close;
-
-  /// Указывает, что приложение показывает предупреждение при попытке сохранить уже лайкнутый трек.
-  bool checkBeforeFavorite = true;
-
-  /// Указывает политику для автообновлений.
-  UpdatePolicy updatePolicy = UpdatePolicy.dialog;
-
-  /// Указывает ветку для автообновлений.
-  UpdateBranch updateBranch = UpdateBranch.releasesOnly;
-
-  /// Указывает, что приложение может загружать обложки треков с Deezer.
-  bool deezerThumbnails = false;
-
-  /// Указывает, что плеер будет использовать более точный, но медленный алгоритм для получения цветов из обложки трека.
-  bool playerSchemeAlgorithm = false;
-
-  /// Указывает, что приложение сможет загружать тексты песен со Spotify.
-  bool spotifyLyrics = false;
-
-  /// Указывает, что полноэкранный плеер будет использовать изображение большого размера при Desktop Layout'е.
-  bool fullscreenBigThumbnail = false;
-
-  /// Указывает, что приложение сделало предупреждение о том, что при прослушивании рекомендаций музыки серверам ВКонтакте будет передаваться информация об этом.
-  bool recommendationsStatsWarning = false;
-}
-
-/// Provider для получения объекта пользователя в контексте интерфейса приложения.
+/// Класс для хранения данных о пользователе ВКонтакте, авторизованного в приложении.
 ///
-/// Использование:
-/// ```dart
-/// final UserProvider user = Provider.of<UserProvider>(context, listen: false);
-/// print(user.id);
-/// ```
-///
-/// Если Вы хотите получить объект пользователя в контексте интерфейса Flutter, и хотите, что бы интерфейс сам обновлялся при изменении полей, то используйте следующий код:
-/// ```dart
-/// final UserProvider user = Provider.of<UserProvider>(context);
-/// ...
-/// Text(
-///   "Ваш ID: ${user.id}"
-/// )
-/// ```
-class UserProvider extends ChangeNotifier {
-  /// Объект логгера для пользователя.
-  static AppLogger logger = getLogger("UserProvider");
-
-  /// Указывает, что данный пользователь авторизован в приложении при помощи основного токена (Kate Mobile).
-  bool isAuthorized;
-
-  /// Основной access-токен (Kate Mobile).
-  ///
-  /// Все запросы (кроме получения рекомендаций) делаются при помощи этого токена.
-  String? mainToken;
-
-  /// Вторичный access-токен (VK Admin).
-  ///
-  /// Используется для получения списка рекомендаций музыки.
-  String? recommendationsToken;
-
+/// Для получения данных воспользуйтесь [Provider]'ом [userProvider].
+class UserData {
   /// Указывает ID данного пользователя.
-  int? id;
+  int id;
 
   /// Имя пользователя.
-  String? firstName;
+  String firstName;
 
   /// Фамилия пользователя.
-  String? lastName;
+  String lastName;
 
   /// Возвращает имя и фамилию пользователя.
-  String? get fullName => isAuthorized ? "$firstName $lastName" : null;
+  String get fullName => "$firstName $lastName";
 
   /// URL к квадратной фотографии с шириной в 50 пикселей.
   String? photo50Url;
@@ -736,508 +628,187 @@ class UserProvider extends ChangeNotifier {
   /// URL к квадратной фотографии с максимальным размером.
   String? photoMaxUrl;
 
-  /// URL к изначальной фотографии с максимальным размером.
-  String? photoMaxOrigUrl;
-
-  /// Объект, перечисляющий все плейлисты пользователя.
-  Map<String, ExtendedPlaylist> allPlaylists = {};
-
-  ExtendedPlaylist? _favoritesPlaylist;
-
-  /// Фейковый плейлист с "лайкнутыми" треками пользователя.
-  ExtendedPlaylist? get favoritesPlaylist {
-    _favoritesPlaylist ??= allPlaylists["${id!}_0"];
-
-    return _favoritesPlaylist;
-  }
-
-  List<ExtendedPlaylist>? _regularPlaylists;
-
-  /// Перечисление всех обычных плейлистов, которые были сделаны данным пользователем.
-  List<ExtendedPlaylist> get regularPlaylists {
-    _regularPlaylists ??= allPlaylists.values
-        .where(
-          (ExtendedPlaylist playlist) => playlist.isRegularPlaylist,
-        )
-        .toList();
-
-    return _regularPlaylists!;
-  }
-
-  List<ExtendedPlaylist>? _moodPlaylists;
-
-  /// Перечисление всех плейлистов раздела "В реальном времени" (маленький плейлист).
-  List<ExtendedPlaylist> get moodPlaylists {
-    _moodPlaylists ??= allPlaylists.values
-        .where(
-          (ExtendedPlaylist playlist) => playlist.isMoodPlaylist,
-        )
-        .toList();
-
-    return _moodPlaylists!;
-  }
-
-  List<ExtendedPlaylist>? _audioMixPlaylists;
-
-  /// Перечисление всех плейлистов-аудио миксов из раздела "В реальном времени".
-  List<ExtendedPlaylist> get audioMixPlaylists {
-    _audioMixPlaylists ??= allPlaylists.values
-        .where(
-          (ExtendedPlaylist playlist) => playlist.isAudioMixPlaylist,
-        )
-        .toList();
-
-    return _audioMixPlaylists!;
-  }
-
-  List<ExtendedPlaylist>? _recommendationPlaylists;
-
-  /// Перечисление всех "рекомендованных" плейлистов.
-  List<ExtendedPlaylist> get recommendationPlaylists {
-    _recommendationPlaylists ??= allPlaylists.values
-        .where(
-          (ExtendedPlaylist playlist) => playlist.isRecommendationsPlaylist,
-        )
-        .toList();
-
-    return _recommendationPlaylists!;
-  }
-
-  List<ExtendedPlaylist>? _simillarPlaylists;
-
-  /// Перечисление всех плейлистов из раздела "Совпадения по вкусам".
-  List<ExtendedPlaylist> get simillarPlaylists {
-    _simillarPlaylists ??= allPlaylists.values
-        .where(
-          (ExtendedPlaylist playlist) => playlist.isSimillarPlaylist,
-        )
-        .toList();
-
-    return _simillarPlaylists!;
-  }
-
-  List<ExtendedPlaylist>? _madeByVKPlaylists;
-
-  /// Перечисление всех плейлистов, которые были сделаны ВКонтакте (раздел "Собрано редакцией").
-  List<ExtendedPlaylist> get madeByVKPlaylists {
-    _madeByVKPlaylists ??= allPlaylists.values
-        .where(
-          (ExtendedPlaylist playlist) => playlist.isMadeByVKPlaylist,
-        )
-        .toList();
-
-    return _madeByVKPlaylists!;
-  }
-
-  /// Информация о количестве плейлистов пользователя.
-  int? playlistsCount;
-
-  /// Настройки пользователя.
-  Settings settings = Settings();
-
-  /// Значение Cookie `sp_dc` для Spotify.
-  String? spDCcookie;
-
-  /// Access-токен для Spotify, получаемый при помощи [spDCcookie].
-  ///
-  /// **Предупреждение**: Данное поле нельзя сохранять куда-либо, оно получается при помощи API-запроса с передачей [spDCcookie].
-  String? spotifyAPIToken;
-
-  /// [DateTime], отображающий время того, когда [spotifyAPIToken] перестанет быть валидным.
-  DateTime? spotifyAPITokenExpireDate;
-
-  /// Указывает, что [spotifyAPIToken] валиден, и им можно пользоваться.
-  ///
-  /// Возвращает `false`, если [spotifyAPIToken] пуст.
-  bool get spotifyTokenValid => spotifyAPITokenExpireDate != null
-      ? DateTime.now().isBefore(spotifyAPITokenExpireDate!)
-      : false;
-
-  UserProvider(
-    this.isAuthorized, {
-    this.mainToken,
-    this.recommendationsToken,
-    this.id,
-    this.firstName,
-    this.lastName,
+  UserData({
+    required this.id,
+    required this.firstName,
+    required this.lastName,
     this.photo50Url,
     this.photoMaxUrl,
-    this.photoMaxOrigUrl,
   });
+}
 
-  /// Деавторизовывает данного пользователя, удаляя данные для авторизации с диска, а так же очищая из памяти лишние объекты.
+/// [Provider] для получения данных о пользователе ВКонтакте, авторизованного во Flutter VK.
+@riverpod
+class User extends _$User {
+  @override
+  UserData build() {
+    final AuthState state = ref.read(currentAuthStateProvider);
+    assert(
+      state == AuthState.authenticated,
+      "Attempted to read userProvider without authorization ($state)",
+    );
+
+    final SharedPreferences prefs = ref.read(sharedPrefsProvider).requireValue;
+
+    return UserData(
+      id: prefs.getInt("ID")!,
+      firstName: prefs.getString("FirstName")!,
+      lastName: prefs.getString("LastName")!,
+      photo50Url: prefs.getString("Photo50"),
+      photoMaxUrl: prefs.getString("PhotoMax"),
+    );
+  }
+
+  /// Сохраняет вторичный токен (VK Admin) ВКонтакте в [SharedPreferences] ([sharedPrefsProvider]), а так же обновляет состояние этого Provider.
   ///
-  /// После данного вызова рекомендуется перекинуть пользователя на экран [WelcomeRoute].
-  void logout() async {
-    // Очищаем объект плеера.
-    player.stop();
+  /// Если Вы желаете сохранить не вторичный, а основной токен (Kate Mobile), то воспользуйтесь [currentAuthStateProvider].
+  Future<void> loginSecondary(String token) async {
+    final SharedPreferences prefs = ref.read(sharedPrefsProvider).requireValue;
 
-    // Очищаем все поля у пользователя.
-    isAuthorized = false;
-    mainToken = null;
-    recommendationsToken = null;
-    id = null;
-    firstName = null;
-    lastName = null;
-    photo50Url = null;
-    photoMaxUrl = null;
-    photoMaxOrigUrl = null;
-    playlistsCount = null;
-    allPlaylists = {};
-    spDCcookie = null;
-    spotifyAPIToken = null;
-    spotifyAPITokenExpireDate = null;
+    // Авторизуем пользователя, и сохраняем флаг авторизации в [SharedPreferences].
+    prefs.setString("RecommendationsToken", token);
 
-    // Удаляем сохранённые данные SharedPreferences.
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    await prefs.clear();
-    markUpdated(false);
-
-    // Очищаем кэш изображений.
-    await CachedNetworkImagesManager.instance.emptyCache();
-    await CachedAlbumImagesManager.instance.emptyCache();
-
-    // Удаляем кэшированные треки.
-    Directory(
-      await CachedStreamedAudio.getTrackStorageDirectory(),
-    ).deleteSync(
-      recursive: true,
-    );
-
-    // Очищаем локальную базу данных.
-    await appStorage.resetDB();
+    // Обновляем состояние авторизации.
+    ref.invalidateSelf();
+    ref.invalidate(secondaryTokenProvider);
   }
 
-  /// Сохраняет важные поля пользователя на диск.
-  void saveToDisk() async {
-    logger.d("saveToDisk call");
+//   /// Вставляет в [allPlaylists] указанный плейлист [playlists], объеденяя старые и новые поля. Если плейлист не существовал ранее, то он будет создан. [saveToDB] указывает, будет ли изменение сохранено в БД Isar.
+//   void updatePlaylist(
+//     ExtendedPlaylist playlist, {
+//     bool saveToDB = true,
+//   }) async {
+//     ExtendedPlaylist? existingPlaylist = allPlaylists[playlist.mediaKey];
 
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+//     // Не позволяем пользователю сохранить плейлист "Музыка из результатов поиска".
+//     if (playlist.ownerID == id! && playlist.id == -1) {
+//       logger.w(
+//         "Attempted to call updatePlaylist for 'search results' playlist!",
+//         stackTrace: StackTrace.current,
+//       );
 
-    // Сохраняем состояние авторизованности пользователем.
-    await prefs.setBool("IsAuthorized", isAuthorized);
+//       return;
+//     }
 
-    // Если мы не авторизованы, то ничего более сохранять не нужно.
-    if (!isAuthorized) return;
+//     if (existingPlaylist == null) {
+//       // Ранее такового плейлиста не было, просто сохраняем и ничего не делаем.
 
-    // Сохраняем остальные поля.
-    await prefs.setString("Token", mainToken!);
-    if (recommendationsToken != null) {
-      await prefs.setString("RecommendationsToken", recommendationsToken!);
-    }
-    await prefs.setInt("ID", id!);
-    await prefs.setString("FirstName", firstName!);
-    await prefs.setString("LastName", lastName!);
-    if (photo50Url != null) await prefs.setString("Photo50", photo50Url!);
-    if (photoMaxUrl != null) await prefs.setString("PhotoMax", photoMaxUrl!);
-    if (photoMaxOrigUrl != null) {
-      await prefs.setString("PhotoMaxOrig", photoMaxOrigUrl!);
-    }
-    if (spDCcookie != null) {
-      await prefs.setString("sp_dc", spDCcookie!);
-    }
-    await prefs.setBool(
-      "MyMusicChipEnabled",
-      settings.myMusicChipEnabled,
-    );
-    await prefs.setBool(
-      "PlaylistsChipEnabled",
-      settings.playlistsChipEnabled,
-    );
-    await prefs.setBool(
-      "RealtimePlaylistsChipEnabled",
-      settings.realtimePlaylistsChipEnabled,
-    );
-    await prefs.setBool(
-      "RecommendedPlaylistsChipEnabled",
-      settings.recommendedPlaylistsChipEnabled,
-    );
-    await prefs.setBool(
-      "SimilarMusicChipEnabled",
-      settings.similarMusicChipEnabled,
-    );
-    await prefs.setBool(
-      "ByVKChipEnabled",
-      settings.byVKChipEnabled,
-    );
-    await prefs.setBool(
-      "ShuffleEnabled",
-      settings.shuffleEnabled,
-    );
-    await prefs.setBool(
-      "DiscordRPCEnabled",
-      settings.discordRPCEnabled,
-    );
-    await prefs.setBool(
-      "PauseOnMuteEnabled",
-      settings.pauseOnMuteEnabled,
-    );
-    await prefs.setBool(
-      "StopOnPauseEnabled",
-      settings.stopOnPauseEnabled,
-    );
-    await prefs.setBool(
-      "PlayerThumbAsBackground",
-      settings.playerThumbAsBackground,
-    );
-    await prefs.setBool(
-      "TrackLyricsEnabled",
-      settings.trackLyricsEnabled,
-    );
-    await prefs.setBool(
-      "PlayerColorsAppWide",
-      settings.playerColorsAppWide,
-    );
-    await prefs.setInt(
-      "Theme",
-      settings.theme.index,
-    );
-    await prefs.setBool(
-      "OLEDTheme",
-      settings.oledTheme,
-    );
-    await prefs.setInt(
-      "CloseBehavior",
-      settings.closeBehavior.index,
-    );
-    await prefs.setBool(
-      "CheckBeforeFavorite",
-      settings.checkBeforeFavorite,
-    );
-    await prefs.setInt(
-      "UpdatePolicy",
-      settings.updatePolicy.index,
-    );
-    await prefs.setInt(
-      "UpdateBranch",
-      settings.updateBranch.index,
-    );
-    await prefs.setBool(
-      "DeezerThumbnails",
-      settings.deezerThumbnails,
-    );
-    await prefs.setBool(
-      "PlayerSchemeAlgorithm",
-      settings.playerSchemeAlgorithm,
-    );
-    await prefs.setBool(
-      "SpotifyLyrics",
-      settings.spotifyLyrics,
-    );
-    await prefs.setBool(
-      "FullscreenBigThumbnail",
-      settings.fullscreenBigThumbnail,
-    );
-    await prefs.setBool(
-      "RecommendationsStatsWarning",
-      settings.recommendationsStatsWarning,
-    );
-  }
+//       existingPlaylist = playlist;
+//     } else {
+//       // Мы должны сделать объединение полей из старого и нового плейлиста.
 
-  /// Загружает данный объект пользователя с диска.
-  ///
-  /// Возвращает значение переменной [isAuthorized].
-  Future<bool> loadFromDisk() async {
-    logger.d("loadFromDisk call");
+//       existingPlaylist.count = playlist.count;
+//       existingPlaylist.title = playlist.title;
+//       existingPlaylist.description = playlist.description;
+//       existingPlaylist.subtitle = playlist.subtitle;
+//       existingPlaylist.cacheTracks =
+//           playlist.cacheTracks ?? existingPlaylist.cacheTracks;
+//       existingPlaylist.photo = playlist.photo;
+//       existingPlaylist.createTime = playlist.createTime;
+//       existingPlaylist.updateTime = playlist.updateTime;
+//       existingPlaylist.followers = playlist.followers;
+//       existingPlaylist.isLiveData = playlist.isLiveData;
+//       existingPlaylist.areTracksLive = playlist.areTracksLive;
+//       existingPlaylist.backgroundAnimationUrl = playlist.backgroundAnimationUrl;
 
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+//       // Проходимся по новому списку треков, если он вообще был передан.
+//       if (playlist.audios != null) {
+//         // Создаём отдельный List с shadow copy списка треков.
+//         final List<ExtendedAudio> newAudios = [...playlist.audios!];
+//         final List<ExtendedAudio> oldAudios = existingPlaylist.audios ?? [];
+//         existingPlaylist.audios = [];
 
-    isAuthorized = (prefs.getBool("IsAuthorized")) ?? false;
-    if (!isAuthorized) return false;
+//         for (ExtendedAudio audio in newAudios) {
+//           ExtendedAudio newAudio =
+//               oldAudios.firstWhereOrNull((oldAudio) => oldAudio == audio) ??
+//                   audio;
 
-    mainToken = prefs.getString("Token");
-    recommendationsToken = prefs.getString("RecommendationsToken");
-    id = prefs.getInt("ID");
-    firstName = prefs.getString("FirstName");
-    lastName = prefs.getString("LastName");
-    photo50Url = prefs.getString("Photo50");
-    photoMaxUrl = prefs.getString("PhotoMax");
-    photoMaxOrigUrl = prefs.getString("PhotoMaxOrig");
-    spDCcookie = prefs.getString("sp_dc");
-    settings.myMusicChipEnabled = prefs.getBool("MyMusicChipEnabled") ?? true;
-    settings.playlistsChipEnabled =
-        prefs.getBool("PlaylistsChipEnabled") ?? true;
-    settings.realtimePlaylistsChipEnabled =
-        prefs.getBool("RealtimePlaylistsChipEnabled") ?? true;
-    settings.recommendedPlaylistsChipEnabled =
-        prefs.getBool("RecommendedPlaylistsChipEnabled") ?? true;
-    settings.similarMusicChipEnabled =
-        prefs.getBool("SimilarMusicChipEnabled") ?? true;
-    settings.byVKChipEnabled = prefs.getBool("ByVKChipEnabled") ?? true;
-    settings.shuffleEnabled = prefs.getBool("ShuffleEnabled") ?? false;
-    settings.discordRPCEnabled = prefs.getBool("DiscordRPCEnabled") ?? true;
-    settings.pauseOnMuteEnabled = prefs.getBool("PauseOnMuteEnabled") ?? false;
-    settings.stopOnPauseEnabled = prefs.getBool("StopOnPauseEnabled") ?? true;
-    settings.playerThumbAsBackground =
-        prefs.getBool("PlayerThumbAsBackground") ?? true;
-    settings.trackLyricsEnabled = prefs.getBool("TrackLyricsEnabled") ?? true;
-    settings.playerColorsAppWide =
-        prefs.getBool("PlayerColorsAppWide") ?? false;
-    settings.theme = ThemeMode.values[prefs.getInt("Theme") ?? 0];
-    settings.oledTheme = prefs.getBool("OLEDTheme") ?? false;
-    settings.closeBehavior =
-        AppCloseBehavior.values[prefs.getInt("CloseBehavior") ?? 0];
-    settings.checkBeforeFavorite = prefs.getBool("CheckBeforeFavorite") ?? true;
-    settings.updatePolicy =
-        UpdatePolicy.values[prefs.getInt("UpdatePolicy") ?? 0];
-    settings.updateBranch =
-        UpdateBranch.values[prefs.getInt("UpdateBranch") ?? 0];
-    settings.deezerThumbnails = prefs.getBool("DeezerThumbnails") ?? false;
-    settings.playerSchemeAlgorithm =
-        prefs.getBool("PlayerSchemeAlgorithm") ?? false;
-    settings.spotifyLyrics = prefs.getBool("SpotifyLyrics") ?? false;
-    settings.fullscreenBigThumbnail =
-        prefs.getBool("FullscreenBigThumbnail") ?? false;
-    settings.recommendationsStatsWarning =
-        prefs.getBool("RecommendationsStatsWarning") ?? false;
+//           newAudio.title = audio.title;
+//           newAudio.artist = audio.artist;
+//           newAudio.url ??= audio.url;
+//           newAudio.isCached = audio.isCached ?? newAudio.isCached;
+//           newAudio.album ??= audio.album;
+//           newAudio.hasLyrics ??= audio.hasLyrics;
+//           newAudio.lyrics ??= audio.lyrics;
+//           newAudio.vkThumbs ??= audio.vkThumbs;
 
-    markUpdated(false);
+//           existingPlaylist.audios!.add(newAudio);
+//         }
 
-    return isAuthorized;
-  }
+//         // Проходимся по тому списку треков, которые кэшированы, но больше нет в плейлисте.
+//         final List<ExtendedAudio> removedAudios = oldAudios
+//             .where(
+//               (audio) =>
+//                   (audio.isCached ?? false) &&
+//                   !existingPlaylist!.audios!.contains(audio),
+//             )
+//             .toList();
 
-  /// Помечает данный объект пользователя как обновлённый, заставляя Flutter перестроить ту часть интерфейса, где используется информация о данном пользователе.
-  ///
-  /// Данный метод рекомендуется вызывать только после всех манипуляций и изменений над данным классом (т.е., вызывать его множество раз не рекомендуется).
-  ///
-  /// [dumpData] указывает, будут ли данные в объекте данного пользователя сериализированы и сохранены на диск.
-  void markUpdated([bool dumpData = true]) {
-    notifyListeners();
+//         for (ExtendedAudio audio in removedAudios) {
+//           logger.d("Audio $audio will be deleted");
 
-    if (dumpData) saveToDisk();
-  }
+//           // Удаляем трек из кэша.
+//           try {
+//             CachedStreamedAudio(audio: audio).delete();
 
-  /// Вставляет в [allPlaylists] указанный плейлист [playlists], объеденяя старые и новые поля. Если плейлист не существовал ранее, то он будет создан. [saveToDB] указывает, будет ли изменение сохранено в БД Isar.
-  void updatePlaylist(
-    ExtendedPlaylist playlist, {
-    bool saveToDB = true,
-  }) async {
-    ExtendedPlaylist? existingPlaylist = allPlaylists[playlist.mediaKey];
+//             audio.isCached = false;
+//           } catch (e) {
+//             // No-op.
+//           }
+//         }
+//       }
+//     }
 
-    // Не позволяем пользователю сохранить плейлист "Музыка из результатов поиска".
-    if (playlist.ownerID == id! && playlist.id == -1) {
-      logger.w(
-        "Attempted to call updatePlaylist for 'search results' playlist!",
-        stackTrace: StackTrace.current,
-      );
+//     // Сохраняем новый плейлист, очищая кэш плейлистов в памяти.
+//     allPlaylists[playlist.mediaKey] = existingPlaylist;
+//     _favoritesPlaylist = null;
+//     _regularPlaylists = null;
+//     _moodPlaylists = null;
+//     _audioMixPlaylists = null;
+//     _recommendationPlaylists = null;
+//     _simillarPlaylists = null;
+//     _madeByVKPlaylists = null;
 
-      return;
-    }
+//     // Сохраняем в БД.
+//     if (saveToDB) {
+//       await appStorage.savePlaylists(
+//         allPlaylists.values
+//             .map(
+//               (playlist) => playlist.asDBPlaylist,
+//             )
+//             .toList(),
+//       );
+//     }
+//   }
 
-    if (existingPlaylist == null) {
-      // Ранее такового плейлиста не было, просто сохраняем и ничего не делаем.
+//   /// Вставляет в [allPlaylists] указанный список из плейлистов [playlists], объеденяя старые и новые поля. Если какой то из плейлистов [playlists] не существовал ранее, то он будет создан. [saveToDB] указывает, будет ли изменение сохранено в БД Isar.
+//   void updatePlaylists(
+//     List<ExtendedPlaylist> playlists, {
+//     bool saveToDB = true,
+//   }) async {
+//     for (ExtendedPlaylist playlist in playlists) {
+//       updatePlaylist(
+//         playlist,
+//         saveToDB: false,
+//       );
+//     }
 
-      existingPlaylist = playlist;
-    } else {
-      // Мы должны сделать объединение полей из старого и нового плейлиста.
+//     if (saveToDB) {
+//       await appStorage.savePlaylists(
+//         allPlaylists.values
+//             .map(
+//               (playlist) => playlist.asDBPlaylist,
+//             )
+//             .toList(),
+//       );
+//     }
+//   }
 
-      existingPlaylist.count = playlist.count;
-      existingPlaylist.title = playlist.title;
-      existingPlaylist.description = playlist.description;
-      existingPlaylist.subtitle = playlist.subtitle;
-      existingPlaylist.cacheTracks =
-          playlist.cacheTracks ?? existingPlaylist.cacheTracks;
-      existingPlaylist.photo = playlist.photo;
-      existingPlaylist.createTime = playlist.createTime;
-      existingPlaylist.updateTime = playlist.updateTime;
-      existingPlaylist.followers = playlist.followers;
-      existingPlaylist.isLiveData = playlist.isLiveData;
-      existingPlaylist.areTracksLive = playlist.areTracksLive;
-      existingPlaylist.backgroundAnimationUrl = playlist.backgroundAnimationUrl;
+  /// Возвращает основной токен.
+  String? get _mainToken => ref.read(tokenProvider);
 
-      // Проходимся по новому списку треков, если он вообще был передан.
-      if (playlist.audios != null) {
-        // Создаём отдельный List с shadow copy списка треков.
-        final List<ExtendedAudio> newAudios = [...playlist.audios!];
-        final List<ExtendedAudio> oldAudios = existingPlaylist.audios ?? [];
-        existingPlaylist.audios = [];
-
-        for (ExtendedAudio audio in newAudios) {
-          ExtendedAudio newAudio =
-              oldAudios.firstWhereOrNull((oldAudio) => oldAudio == audio) ??
-                  audio;
-
-          newAudio.title = audio.title;
-          newAudio.artist = audio.artist;
-          newAudio.url ??= audio.url;
-          newAudio.isCached = audio.isCached ?? newAudio.isCached;
-          newAudio.album ??= audio.album;
-          newAudio.hasLyrics ??= audio.hasLyrics;
-          newAudio.lyrics ??= audio.lyrics;
-          newAudio.vkThumbs ??= audio.vkThumbs;
-
-          existingPlaylist.audios!.add(newAudio);
-        }
-
-        // Проходимся по тому списку треков, которые кэшированы, но больше нет в плейлисте.
-        final List<ExtendedAudio> removedAudios = oldAudios
-            .where(
-              (audio) =>
-                  (audio.isCached ?? false) &&
-                  !existingPlaylist!.audios!.contains(audio),
-            )
-            .toList();
-
-        for (ExtendedAudio audio in removedAudios) {
-          logger.d("Audio $audio will be deleted");
-
-          // Удаляем трек из кэша.
-          try {
-            CachedStreamedAudio(audio: audio).delete();
-
-            audio.isCached = false;
-          } catch (e) {
-            // No-op.
-          }
-        }
-      }
-    }
-
-    // Сохраняем новый плейлист, очищая кэш плейлистов в памяти.
-    allPlaylists[playlist.mediaKey] = existingPlaylist;
-    _favoritesPlaylist = null;
-    _regularPlaylists = null;
-    _moodPlaylists = null;
-    _audioMixPlaylists = null;
-    _recommendationPlaylists = null;
-    _simillarPlaylists = null;
-    _madeByVKPlaylists = null;
-
-    // Сохраняем в БД.
-    if (saveToDB) {
-      await appStorage.savePlaylists(
-        allPlaylists.values
-            .map(
-              (playlist) => playlist.asDBPlaylist,
-            )
-            .toList(),
-      );
-    }
-  }
-
-  /// Вставляет в [allPlaylists] указанный список из плейлистов [playlists], объеденяя старые и новые поля. Если какой то из плейлистов [playlists] не существовал ранее, то он будет создан. [saveToDB] указывает, будет ли изменение сохранено в БД Isar.
-  void updatePlaylists(
-    List<ExtendedPlaylist> playlists, {
-    bool saveToDB = true,
-  }) async {
-    for (ExtendedPlaylist playlist in playlists) {
-      updatePlaylist(
-        playlist,
-        saveToDB: false,
-      );
-    }
-
-    if (saveToDB) {
-      await appStorage.savePlaylists(
-        allPlaylists.values
-            .map(
-              (playlist) => playlist.asDBPlaylist,
-            )
-            .toList(),
-      );
-    }
-  }
+  /// Возвращает основной токен.
+  String? get _secondaryToken => ref.read(secondaryTokenProvider);
 
   /// Получает публичную информацию о пользователях с передаваемым ID, либо же о владельце текущей страницы, если ID не передаётся.
   Future<APIUsersGetResponse> usersGet({
@@ -1245,7 +816,7 @@ class UserProvider extends ChangeNotifier {
     String? fields = vkAPIallUserFields,
   }) async =>
       await users_get(
-        mainToken!,
+        _mainToken!,
         userIDs: userIDs,
         fields: fields,
       );
@@ -1257,7 +828,7 @@ class UserProvider extends ChangeNotifier {
     int userID,
   ) async =>
       audio_get(
-        mainToken!,
+        _mainToken!,
         userID,
       );
 
@@ -1268,7 +839,7 @@ class UserProvider extends ChangeNotifier {
     int userID,
   ) async =>
       audio_getPlaylists(
-        mainToken!,
+        _mainToken!,
         userID,
       );
 
@@ -1280,7 +851,7 @@ class UserProvider extends ChangeNotifier {
     int ownerID,
   ) async =>
       audio_add(
-        mainToken!,
+        _mainToken!,
         audioID,
         ownerID,
       );
@@ -1293,7 +864,7 @@ class UserProvider extends ChangeNotifier {
     int ownerID,
   ) async =>
       audio_delete(
-        mainToken!,
+        _mainToken!,
         audioID,
         ownerID,
       );
@@ -1306,9 +877,9 @@ class UserProvider extends ChangeNotifier {
     int? ownerID,
   }) async =>
       audio_restore(
-        mainToken!,
+        _mainToken!,
         audioID,
-        ownerID ?? id!,
+        ownerID ?? state.id,
       );
 
   /// Модифицирует параметры трека: его название ([title]) и/ли исполнителя ([artist]).
@@ -1322,7 +893,7 @@ class UserProvider extends ChangeNotifier {
     int genreID,
   ) async =>
       await audio_edit(
-        mainToken!,
+        _mainToken!,
         ownerID,
         audioID,
         title,
@@ -1337,7 +908,7 @@ class UserProvider extends ChangeNotifier {
     String audioID,
   ) async =>
       await audio_get_lyrics(
-        mainToken!,
+        _mainToken!,
         audioID,
       );
 
@@ -1348,7 +919,7 @@ class UserProvider extends ChangeNotifier {
     String id,
   ) async =>
       await audio_send_start_event(
-        mainToken!,
+        _mainToken!,
         id,
       );
 
@@ -1359,7 +930,7 @@ class UserProvider extends ChangeNotifier {
     List<String> ids,
   ) async =>
       await audio_add_dislike(
-        mainToken!,
+        _mainToken!,
         ids,
       );
 
@@ -1373,7 +944,7 @@ class UserProvider extends ChangeNotifier {
     int offset = 0,
   }) async {
     final APIAudioSearchResponse response = await audio_search(
-      mainToken!,
+      _mainToken!,
       query,
       autoComplete: autoComplete,
       count: count,
@@ -1382,8 +953,10 @@ class UserProvider extends ChangeNotifier {
 
     if (response.error != null) return response;
 
+    // TODO: Избавиться от этих костылей.
+
     // Если у пользователя есть токен VK Admin, то тогда нам нужно получить расширенную информацию о треках.
-    if (recommendationsToken != null) {
+    if (_secondaryToken != null) {
       // Получаем MediaKey треков, делая в запросе не более 200 ключей.
       List<String> audioIDs = [];
       List<Audio> audios = response.response!.items;
@@ -1450,7 +1023,7 @@ class UserProvider extends ChangeNotifier {
     int offset = 0,
   }) async =>
       await audio_search(
-        mainToken!,
+        _mainToken!,
         query,
         autoComplete: autoComplete,
         count: count,
@@ -1465,7 +1038,7 @@ class UserProvider extends ChangeNotifier {
     int count = 10,
   }) async =>
       await audio_get_stream_mix_audios(
-        mainToken!,
+        _mainToken!,
         mixID: mixID,
         count: count,
       );
@@ -1485,8 +1058,10 @@ class UserProvider extends ChangeNotifier {
 
     if (response.error != null) return response;
 
+    // TODO: Избавиться от этих костылей.
+
     // Если у пользователя есть токен VK Admin, то тогда нам нужно получить расширенную информацию о треках.
-    if (recommendationsToken != null) {
+    if (_secondaryToken != null) {
       // Получаем MediaKey треков, делая в запросе не более 200 ключей.
       List<String> audioIDs = [];
       List<Audio> audios = response.response!;
@@ -1548,7 +1123,7 @@ class UserProvider extends ChangeNotifier {
   /// API: `catalog.getAudio`.
   Future<APICatalogGetAudioResponse> catalogGetAudio() async =>
       await catalog_getAudio(
-        recommendationsToken!,
+        _secondaryToken!,
       );
 
   /// Массово извлекает список треков ВКонтакте. Максимум извлекает около 5000 треков.
@@ -1560,7 +1135,7 @@ class UserProvider extends ChangeNotifier {
     String? accessKey,
   }) async =>
       await scripts_massAudioGet(
-        mainToken!,
+        _mainToken!,
         userID,
         albumID: albumID,
         accessKey: accessKey,
@@ -1573,7 +1148,7 @@ class UserProvider extends ChangeNotifier {
     List<String> audioMediaIDs,
   ) async =>
       await scripts_massAlbumsGet(
-        recommendationsToken!,
+        _secondaryToken!,
         audioMediaIDs,
       );
 
@@ -1584,7 +1159,7 @@ class UserProvider extends ChangeNotifier {
     int userID,
   ) async =>
       await scripts_getFavAudioAndPlaylists(
-        mainToken!,
+        _mainToken!,
         userID,
       );
 
@@ -1597,7 +1172,7 @@ class UserProvider extends ChangeNotifier {
     String? accessKey,
   }) async {
     final APIMassAudioGetResponse massAudios = await scripts_massAudioGet(
-      mainToken!,
+      _mainToken!,
       ownerID,
       albumID: albumID,
       accessKey: accessKey,
@@ -1605,199 +1180,63 @@ class UserProvider extends ChangeNotifier {
 
     if (massAudios.error != null) return massAudios;
 
+    // TODO: Избавиться от этих костылей.
+
     // Если у пользователя есть токен VK Admin, то тогда нам нужно получить расширенную информацию о треках.
-    try {
-      if (recommendationsToken != null) {
-        // Получаем MediaKey треков, делая в запросе не более 200 ключей.
-        List<String> audioIDs = [];
-        List<Audio> audios = massAudios.response!.audios;
+    if (_secondaryToken != null) {
+      // Получаем MediaKey треков, делая в запросе не более 200 ключей.
+      List<String> audioIDs = [];
+      List<Audio> audios = massAudios.response!.audios;
 
-        for (int i = 0; i < audios.length; i += 200) {
-          int endIndex = i + 200;
-          List<Audio> batch = audios.sublist(
-            i,
-            endIndex.clamp(
-              0,
-              audios.length,
-            ),
-          );
-          List<String> currentMediaKey =
-              batch.map((audio) => audio.mediaKey).toList();
+      for (int i = 0; i < audios.length; i += 200) {
+        int endIndex = i + 200;
+        List<Audio> batch = audios.sublist(
+          i,
+          endIndex.clamp(
+            0,
+            audios.length,
+          ),
+        );
+        List<String> currentMediaKey =
+            batch.map((audio) => audio.mediaKey).toList();
 
-          audioIDs.add(currentMediaKey.join(","));
-        }
-
-        final APIMassAudioAlbumsResponse massAlbums =
-            await scriptMassAudioAlbums(audioIDs);
-
-        if (massAlbums.error != null) {
-          // В случае ошибки создаём копию ответа от первого шага, изменяя там поле error.
-          return APIMassAudioGetResponse(
-            response: massAudios.response,
-            error: massAlbums.error,
-          );
-        }
-
-        // Всё ок, объеденяем данные, что бы у объекта Audio (с первого запроса) была информация о альбомах.
-
-        // Создаём Map, где ключ - медиа ключ доступа, а значение - объект мини-альбома.
-        //
-        // Использовать массив - идея плохая, поскольку ВКонтакте не возвращает информацию по "недоступным" трекам,
-        // ввиду чего происходит смещение, что не очень-то и хорошо.
-        Map<String, Audio> albumsData = {
-          for (var album in massAlbums.response!) album.mediaKey: album,
-        };
-
-        // Мы получили список альбомов, обновляем существующий массив треков.
-        for (Audio audio in audios) {
-          if (audio.album != null) continue;
-          final Audio? extendedAudio = albumsData[audio.mediaKey];
-
-          // Если у нас нет информации по альбому этого трека, то ничего не делаем.
-          if (extendedAudio == null || extendedAudio.album == null) continue;
-
-          // Всё ок, заменяем данные в аудио.
-          audio.album = extendedAudio.album;
-        }
+        audioIDs.add(currentMediaKey.join(","));
       }
-    } catch (e, stackTrace) {
-      logger.w(
-        "Не удалось получить список альбомов:",
-        error: e,
-        stackTrace: stackTrace,
-      );
+
+      final APIMassAudioAlbumsResponse massAlbums =
+          await scriptMassAudioAlbums(audioIDs);
+
+      if (massAlbums.error != null) {
+        // В случае ошибки создаём копию ответа от первого шага, изменяя там поле error.
+        return APIMassAudioGetResponse(
+          response: massAudios.response,
+          error: massAlbums.error,
+        );
+      }
+
+      // Всё ок, объеденяем данные, что бы у объекта Audio (с первого запроса) была информация о альбомах.
+
+      // Создаём Map, где ключ - медиа ключ доступа, а значение - объект мини-альбома.
+      //
+      // Использовать массив - идея плохая, поскольку ВКонтакте не возвращает информацию по "недоступным" трекам,
+      // ввиду чего происходит смещение, что не очень-то и хорошо.
+      Map<String, Audio> albumsData = {
+        for (var album in massAlbums.response!) album.mediaKey: album,
+      };
+
+      // Мы получили список альбомов, обновляем существующий массив треков.
+      for (Audio audio in audios) {
+        if (audio.album != null) continue;
+        final Audio? extendedAudio = albumsData[audio.mediaKey];
+
+        // Если у нас нет информации по альбому этого трека, то ничего не делаем.
+        if (extendedAudio == null || extendedAudio.album == null) continue;
+
+        // Всё ок, заменяем данные в аудио.
+        audio.album = extendedAudio.album;
+      }
     }
 
     return massAudios;
-  }
-
-  /// Обновляет поле [spotifyAPIToken], если токен истёк ([spotifyTokenValid] = `false`), либо он не был установлен.
-  ///
-  /// Требует, что бы [spDCcookie] не был равен `null`.
-  Future<void> updateSpotifyToken([String? token]) async {
-    token ??= spDCcookie;
-
-    assert(token != null, "sp_dc cookie not set");
-
-    // Если токен ещё актуален, то ничего не делаем.
-    if (spotifyAPIToken != null && spotifyTokenValid) return;
-
-    logger.d("Refreshing Spotify access token...");
-
-    // Обновляем токен.
-    final SpotifyAPIGetTokenResponse response = await spotify_get_token(token!);
-    if (response.error != null) {
-      throw Exception(
-        "API Error: ${response.error!.message}",
-      );
-    }
-
-    assert(
-      !response.isAnonymous!,
-      "Spotify used anonymous authorization",
-    );
-
-    // Всё ок, запоминаем новый токен.
-    spDCcookie = token;
-    spotifyAPIToken = response.accessToken!;
-    spotifyAPITokenExpireDate =
-        DateTime.fromMillisecondsSinceEpoch(response.expirationTimestampMS!);
-
-    logger.d(
-      "Spotify accessToken will expire after ${Duration(milliseconds: response.expirationTimestampMS! - DateTime.now().millisecondsSinceEpoch)}",
-    );
-  }
-
-  /// Возвращает текст трека при помощи API Spotify.
-  Future<Lyrics?> spotifyGetTrackLyrics(
-    String artist,
-    String title,
-    int duration,
-  ) async {
-    await updateSpotifyToken();
-
-    // Выполняем поиск.
-    final SpotifyAPISearchResponse searchResponse = await spotify_search(
-      spotifyAPIToken!,
-      artist,
-      title,
-    );
-    final SpotifyTrack track = searchResponse.tracks.items[0];
-
-    // Загружаем текст трека.
-    final SpotifyAPIGetLyricsResponse? lyricsResponse =
-        await spotify_get_lyrics(
-      spotifyAPIToken!,
-      track.id,
-    );
-
-    // Если текст песни не дан, то ничего не делаем.
-    if (lyricsResponse == null) return null;
-
-    final SpotifyLyrics lyrics = lyricsResponse.lyrics;
-
-    final int vkDurationMS = duration * 1000;
-    final int spotifyDurationMS = track.durationMS;
-
-    // Вычисляем множитель для текста песни.
-    // Он нужен для того, что бы компенсировать разницу между длительностью трека в ВК и Spotify.
-    double speedMultiplier = vkDurationMS / spotifyDurationMS;
-
-    // Ввиду округления длительности треков в ВК, данный множитель используется лишь в случае, если разница больше, чем 1 секунда.
-    if ((vkDurationMS - spotifyDurationMS).abs() <= 1000) {
-      speedMultiplier = 1.0;
-    }
-
-    logger.d(
-      "Spotify lyrics type: ${lyrics.syncType}, Spotify track duration: $spotifyDurationMS, VK track duration: $vkDurationMS (mult: $speedMultiplier)",
-    );
-
-    // Конвертируем формат текста песни Spotify в формат, принимаемый Flutter VK.
-    List<String>? textLyrics;
-    List<LyricTimestamp>? timestamps;
-
-    // Текст не синхронизирован по времени.
-    if (lyrics.syncType == "UNSYNCED") {
-      textLyrics = lyrics.lines
-          .map(
-            (lyric) => lyric.words,
-          )
-          .toList();
-    } else if (lyrics.syncType == "LINE_SYNCED") {
-      timestamps = [];
-
-      for (var index = 0; index < lyrics.lines.length; index++) {
-        final SpotifyLyricLine line = lyrics.lines[index];
-        final SpotifyLyricLine? nextLine =
-            lyrics.lines.elementAtOrNull(index + 1);
-
-        final String text = line.words.trim();
-        final bool interlude = text == "♪";
-
-        // Если строчка пуста, то пропускаем её.
-        if (text.isEmpty) continue;
-
-        timestamps.add(
-          LyricTimestamp(
-            line: !interlude ? line.words : null,
-            begin: (line.startTimeMS * speedMultiplier).toInt(),
-            end: ((line.endTimeMS != 0
-                        ? line.endTimeMS
-                        : nextLine?.startTimeMS ?? track.durationMS) *
-                    speedMultiplier)
-                .toInt(),
-            interlude: interlude,
-          ),
-        );
-      }
-    } else {
-      logger.w("Found unknown Spotify lyrics type: ${lyrics.syncType}");
-    }
-
-    return Lyrics(
-      language: lyrics.language,
-      text: textLyrics,
-      timestamps: timestamps,
-    );
   }
 }

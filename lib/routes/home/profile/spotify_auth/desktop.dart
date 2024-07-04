@@ -1,30 +1,30 @@
 import "package:flutter/material.dart";
-import "package:flutter_gen/gen_l10n/app_localizations.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
+import "package:go_router/go_router.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:styled_text/styled_text.dart";
 import "package:url_launcher/url_launcher.dart";
 
 import "../../../../consts.dart";
+import "../../../../provider/l18n.dart";
 import "../spotify_auth.dart";
 
 /// Часть Route'а [LoginRoute], показываемая при запуске на desktop-платформах.
-class DesktopSpotifyLogin extends StatefulWidget {
+class DesktopSpotifyLogin extends HookConsumerWidget {
   const DesktopSpotifyLogin({
     super.key,
   });
 
   @override
-  State<DesktopSpotifyLogin> createState() => _DesktopSpotifyLoginState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final spDC = useState("");
 
-class _DesktopSpotifyLoginState extends State<DesktopSpotifyLogin> {
-  String spDC = "";
+    final l18n = ref.watch(l18nProvider);
 
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          AppLocalizations.of(context)!.profile_spotifyAuthTitle,
+          l18n.profile_spotifyAuthTitle,
         ),
         centerTitle: true,
       ),
@@ -46,7 +46,7 @@ class _DesktopSpotifyLoginState extends State<DesktopSpotifyLogin> {
                     ),
                     child: Center(
                       child: Text(
-                        AppLocalizations.of(context)!.login_desktopTitle,
+                        l18n.login_desktopTitle,
                         style: Theme.of(context).textTheme.titleLarge!,
                       ),
                     ),
@@ -58,8 +58,7 @@ class _DesktopSpotifyLoginState extends State<DesktopSpotifyLogin> {
                       bottom: 8,
                     ),
                     child: StyledText(
-                      text: AppLocalizations.of(context)!
-                          .profile_spotifyAuthDescription,
+                      text: l18n.profile_spotifyAuthDescription,
                       style: Theme.of(context).textTheme.bodyLarge,
                       tags: {
                         "bold": StyledTextTag(
@@ -99,9 +98,7 @@ class _DesktopSpotifyLoginState extends State<DesktopSpotifyLogin> {
                         hintText:
                             "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz...",
                       ),
-                      onChanged: (String value) => setState(
-                        () => spDC = value,
-                      ),
+                      onChanged: (String value) => spDC.value = value,
                     ),
                   ),
 
@@ -111,8 +108,7 @@ class _DesktopSpotifyLoginState extends State<DesktopSpotifyLogin> {
                       bottom: 36,
                     ),
                     child: StyledText(
-                      text: AppLocalizations.of(context)!
-                          .profile_spotifyAuthHelpDescription,
+                      text: l18n.profile_spotifyAuthHelpDescription,
                       style: Theme.of(context).textTheme.bodyLarge,
                       tags: {
                         "link": StyledTextActionTag(
@@ -135,23 +131,25 @@ class _DesktopSpotifyLoginState extends State<DesktopSpotifyLogin> {
                   Align(
                     alignment: Alignment.bottomRight,
                     child: FilledButton.icon(
-                      onPressed: spDC.trim().length >= 75
-                          ? () async {
-                              if (!await spotifyAuthorize(context, spDC)) {
-                                return;
-                              }
-
-                              if (context.mounted) {
-                                Navigator.of(context).pop();
-                              }
-                            }
-                          : null,
                       icon: const Icon(
                         Icons.arrow_forward_ios,
                       ),
                       label: Text(
-                        AppLocalizations.of(context)!.login_desktopContinue,
+                        l18n.login_desktopContinue,
                       ),
+                      onPressed: spDC.value.trim().length >= 75
+                          ? () async {
+                              if (!await spotifyAuthorize(
+                                ref,
+                                context,
+                                spDC.value,
+                              )) {
+                                return;
+                              }
+
+                              if (context.mounted) context.pop();
+                            }
+                          : null,
                     ),
                   ),
                 ],

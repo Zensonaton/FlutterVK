@@ -1,13 +1,12 @@
-import "dart:async";
-
 import "package:flutter/material.dart";
-import "package:flutter_gen/gen_l10n/app_localizations.dart";
-import "package:just_audio/just_audio.dart";
-import "package:provider/provider.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:skeletonizer/skeletonizer.dart";
 
 import "../../../../consts.dart";
 import "../../../../main.dart";
+import "../../../../provider/l18n.dart";
+import "../../../../provider/player_events.dart";
+import "../../../../provider/playlists.dart";
 import "../../../../provider/user.dart";
 import "../../../../services/logger.dart";
 import "../../../../utils.dart";
@@ -16,7 +15,7 @@ import "../../music.dart";
 import "../playlist.dart";
 
 /// Виджет, показывающий раздел "Собрано редакцией".
-class ByVKPlaylistsBlock extends StatefulWidget {
+class ByVKPlaylistsBlock extends HookConsumerWidget {
   static AppLogger logger = getLogger("ByVKPlaylistsBlock");
 
   const ByVKPlaylistsBlock({
@@ -24,42 +23,10 @@ class ByVKPlaylistsBlock extends StatefulWidget {
   });
 
   @override
-  State<ByVKPlaylistsBlock> createState() => _ByVKPlaylistsBlockState();
-}
-
-class _ByVKPlaylistsBlockState extends State<ByVKPlaylistsBlock> {
-  /// Подписки на изменения состояния воспроизведения трека.
-  late final List<StreamSubscription> subscriptions;
-
-  @override
-  void initState() {
-    super.initState();
-
-    subscriptions = [
-      // Изменения состояния воспроизведения.
-      player.playerStateStream.listen(
-        (PlayerState state) => setState(() {}),
-      ),
-
-      // Изменения состояния остановки/запуска плеера.
-      player.loadedStateStream.listen(
-        (bool loaded) => setState(() {}),
-      ),
-    ];
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-
-    for (StreamSubscription subscription in subscriptions) {
-      subscription.cancel();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final UserProvider user = Provider.of<UserProvider>(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final playlists = ref.watch(madeByVKPlaylistsProvider);
+    final l18n = ref.watch(l18nProvider);
+    ref.watch(playerStateProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -70,7 +37,7 @@ class _ByVKPlaylistsBlockState extends State<ByVKPlaylistsBlock> {
             bottom: 14,
           ),
           child: Text(
-            AppLocalizations.of(context)!.music_byVKChip,
+            l18n.music_byVKChip,
             style: TextStyle(
               color: Theme.of(context).colorScheme.primary,
               fontWeight: FontWeight.w500,
@@ -86,15 +53,13 @@ class _ByVKPlaylistsBlockState extends State<ByVKPlaylistsBlock> {
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               clipBehavior: Clip.none,
-              physics: user.madeByVKPlaylists.isEmpty
+              physics: playlists == null
                   ? const NeverScrollableScrollPhysics()
                   : null,
-              itemCount: user.madeByVKPlaylists.isNotEmpty
-                  ? user.madeByVKPlaylists.length
-                  : null,
+              itemCount: playlists?.length,
               itemBuilder: (BuildContext context, int index) {
                 // Skeleton loader.
-                if (user.madeByVKPlaylists.isEmpty) {
+                if (playlists == null) {
                   return Padding(
                     padding: const EdgeInsets.only(
                       right: 8,
@@ -109,7 +74,7 @@ class _ByVKPlaylistsBlockState extends State<ByVKPlaylistsBlock> {
                 }
 
                 // Настоящие данные.
-                final ExtendedPlaylist playlist = user.madeByVKPlaylists[index];
+                final ExtendedPlaylist playlist = playlists[index];
 
                 return Padding(
                   padding: const EdgeInsets.only(
@@ -131,6 +96,7 @@ class _ByVKPlaylistsBlockState extends State<ByVKPlaylistsBlock> {
                       ),
                     ),
                     onPlayToggle: (bool playing) => onPlaylistPlayToggle(
+                      ref,
                       context,
                       playlist,
                       playing,

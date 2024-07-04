@@ -1,11 +1,10 @@
 import "package:flutter/material.dart";
-import "package:flutter_gen/gen_l10n/app_localizations.dart";
-import "package:provider/provider.dart";
+import "package:go_router/go_router.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 
-import "../../../api/vk/api.dart";
-import "../../../api/vk/audio/edit.dart";
 import "../../../api/vk/consts.dart";
 import "../../../main.dart";
+import "../../../provider/l18n.dart";
 import "../../../provider/user.dart";
 import "../../../services/logger.dart";
 import "../../../widgets/dialogs.dart";
@@ -21,7 +20,7 @@ import "../music.dart";
 ///   builder: (BuildContext context) => const TrackInfoEditDialog(...),
 /// ),
 /// ```
-class TrackInfoEditDialog extends StatefulWidget {
+class TrackInfoEditDialog extends ConsumerStatefulWidget {
   /// Трек, данные которого будут изменяться.
   final ExtendedAudio audio;
 
@@ -31,10 +30,11 @@ class TrackInfoEditDialog extends StatefulWidget {
   });
 
   @override
-  State<TrackInfoEditDialog> createState() => _TrackInfoEditDialogState();
+  ConsumerState<TrackInfoEditDialog> createState() =>
+      _TrackInfoEditDialogState();
 }
 
-class _TrackInfoEditDialogState extends State<TrackInfoEditDialog> {
+class _TrackInfoEditDialogState extends ConsumerState<TrackInfoEditDialog> {
   static AppLogger logger = getLogger("TrackInfoEditDialog");
 
   /// [TextEditingController] для поля ввода названия трека.
@@ -57,7 +57,7 @@ class _TrackInfoEditDialogState extends State<TrackInfoEditDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final UserProvider user = Provider.of<UserProvider>(context);
+    final l18n = ref.watch(l18nProvider);
 
     // Создаём копию трека, засовывая в неё новые значения с новым именем трека и прочим.
     final ExtendedAudio audio = ExtendedAudio(
@@ -110,7 +110,7 @@ class _TrackInfoEditDialogState extends State<TrackInfoEditDialog> {
                   ),
                 ),
                 label: Text(
-                  AppLocalizations.of(context)!.music_trackTitle,
+                  l18n.music_trackTitle,
                 ),
               ),
             ),
@@ -133,7 +133,7 @@ class _TrackInfoEditDialogState extends State<TrackInfoEditDialog> {
                     ),
                   ),
                   label: Text(
-                    AppLocalizations.of(context)!.music_trackArtist,
+                    l18n.music_trackArtist,
                   ),
                 ),
               ),
@@ -146,7 +146,7 @@ class _TrackInfoEditDialogState extends State<TrackInfoEditDialog> {
               ),
               child: DropdownMenu(
                 label: Text(
-                  AppLocalizations.of(context)!.music_trackGenre,
+                  l18n.music_trackGenre,
                 ),
                 onSelected: (int? genreID) {
                   if (genreID == null) return;
@@ -168,28 +168,34 @@ class _TrackInfoEditDialogState extends State<TrackInfoEditDialog> {
             Align(
               alignment: Alignment.bottomRight,
               child: FilledButton.icon(
+                icon: const Icon(
+                  Icons.edit,
+                ),
+                label: Text(
+                  l18n.general_save,
+                ),
                 onPressed: () async {
                   final LoadingOverlay overlay = LoadingOverlay.of(context);
 
-                  Navigator.of(context).pop();
+                  context.pop();
                   overlay.show();
 
                   try {
-                    final APIAudioEditResponse response = await user.audioEdit(
-                      widget.audio.ownerID,
-                      widget.audio.id,
-                      titleController.text,
-                      artistController.text,
-                      trackGenre,
-                    );
-                    raiseOnAPIError(response);
+                    // final APIAudioEditResponse response = await user.audioEdit(
+                    //   widget.audio.ownerID,
+                    //   widget.audio.id,
+                    //   titleController.text,
+                    //   artistController.text,
+                    //   trackGenre,
+                    // );
+                    // raiseOnAPIError(response);
 
                     // Обновляем данные о треке у пользователя.
                     widget.audio.title = titleController.text;
                     widget.audio.artist = artistController.text;
                     widget.audio.genreID = trackGenre;
 
-                    user.markUpdated(false);
+                    // user.markUpdated(false);
                   } catch (e, stackTrace) {
                     logger.e(
                       "Ошибка при редактировании данных трека: ",
@@ -207,10 +213,6 @@ class _TrackInfoEditDialogState extends State<TrackInfoEditDialog> {
                     overlay.hide();
                   }
                 },
-                icon: const Icon(Icons.edit),
-                label: Text(
-                  AppLocalizations.of(context)!.general_save,
-                ),
               ),
             ),
           ],

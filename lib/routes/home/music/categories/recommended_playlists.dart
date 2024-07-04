@@ -1,14 +1,12 @@
-import "dart:async";
-
-import "package:collection/collection.dart";
 import "package:flutter/material.dart";
-import "package:flutter_gen/gen_l10n/app_localizations.dart";
-import "package:just_audio/just_audio.dart";
-import "package:provider/provider.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:skeletonizer/skeletonizer.dart";
 
 import "../../../../consts.dart";
 import "../../../../main.dart";
+import "../../../../provider/l18n.dart";
+import "../../../../provider/player_events.dart";
+import "../../../../provider/playlists.dart";
 import "../../../../provider/user.dart";
 import "../../../../services/logger.dart";
 import "../../../../utils.dart";
@@ -17,7 +15,7 @@ import "../../music.dart";
 import "../playlist.dart";
 
 /// Виджет, показывающий раздел "Плейлисты для Вас".
-class RecommendedPlaylistsBlock extends StatefulWidget {
+class RecommendedPlaylistsBlock extends HookConsumerWidget {
   static AppLogger logger = getLogger("RecommendedPlaylistsBlock");
 
   const RecommendedPlaylistsBlock({
@@ -25,43 +23,11 @@ class RecommendedPlaylistsBlock extends StatefulWidget {
   });
 
   @override
-  State<RecommendedPlaylistsBlock> createState() =>
-      _RecommendedPlaylistsBlockState();
-}
-
-class _RecommendedPlaylistsBlockState extends State<RecommendedPlaylistsBlock> {
-  /// Подписки на изменения состояния воспроизведения трека.
-  late final List<StreamSubscription> subscriptions;
-
-  @override
-  void initState() {
-    super.initState();
-
-    subscriptions = [
-      // Изменения состояния воспроизведения.
-      player.playerStateStream.listen(
-        (PlayerState state) => setState(() {}),
-      ),
-
-      // Изменения состояния остановки/запуска плеера.
-      player.loadedStateStream.listen(
-        (bool loaded) => setState(() {}),
-      ),
-    ];
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-
-    for (StreamSubscription subscription in subscriptions) {
-      subscription.cancel();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final UserProvider user = Provider.of<UserProvider>(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final playlists = ref.watch(recommendedPlaylistsProvider);
+    final l18n = ref.watch(l18nProvider);
+    ref.watch(playerStateProvider);
+    ref.watch(playerLoadedStateProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -72,7 +38,7 @@ class _RecommendedPlaylistsBlockState extends State<RecommendedPlaylistsBlock> {
             bottom: 14,
           ),
           child: Text(
-            AppLocalizations.of(context)!.music_recommendedPlaylistsChip,
+            l18n.music_recommendedPlaylistsChip,
             style: TextStyle(
               color: Theme.of(context).colorScheme.primary,
               fontWeight: FontWeight.w500,
@@ -88,19 +54,13 @@ class _RecommendedPlaylistsBlockState extends State<RecommendedPlaylistsBlock> {
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               clipBehavior: Clip.none,
-              physics: user.recommendationPlaylists.isEmpty
+              physics: playlists == null
                   ? const NeverScrollableScrollPhysics()
                   : null,
-              itemCount: user.recommendationPlaylists.isNotEmpty
-                  ? user.recommendationPlaylists.length
-                  : null,
+              itemCount: playlists?.length,
               itemBuilder: (BuildContext context, int index) {
-                final List<ExtendedPlaylist> recommendationPlaylists = user
-                    .recommendationPlaylists
-                    .sorted((a, b) => b.id.compareTo(a.id));
-
                 // Skeleton loader.
-                if (recommendationPlaylists.isEmpty) {
+                if (playlists == null) {
                   return Padding(
                     padding: const EdgeInsets.only(
                       right: 8,
@@ -117,8 +77,7 @@ class _RecommendedPlaylistsBlockState extends State<RecommendedPlaylistsBlock> {
                 }
 
                 // Настоящие данные.
-                final ExtendedPlaylist playlist =
-                    recommendationPlaylists[index];
+                final ExtendedPlaylist playlist = playlists[index];
 
                 return Padding(
                   padding: const EdgeInsets.only(
@@ -141,6 +100,7 @@ class _RecommendedPlaylistsBlockState extends State<RecommendedPlaylistsBlock> {
                       ),
                     ),
                     onPlayToggle: (bool playing) => onPlaylistPlayToggle(
+                      ref,
                       context,
                       playlist,
                       playing,

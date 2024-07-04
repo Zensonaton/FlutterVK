@@ -51,6 +51,15 @@
 	"login_noTokenFound": "Access-токен не был найден в переданной ссылке.",
 
 	"login_noMusicAccessDescription": "Flutter VK не смог получить доступ к специальным разделам музыки, необходимых для функционирования приложения.\nЧаще всего, такая ошибка происходит в случае, если Вы по-ошибке попытались авторизоваться при помощи приложения Kate Mobile вместо приложения VK Admin.\n\nПожалуйста, внимательно проследуйте инструкциям для авторизации, и попробуйте снова.",
+	"login_alternativeWrongUserID": "Flutter VK обнаружил, что Вы подключили другую страницу ВКонтакте, которая отличается от той, которая подключена сейчас.\nПожалуйста, авторизуйтесь как {name} и попробуйте снова.",
+	"@login_alternativeWrongUserID": {
+		"placeholders": {
+			"name": {
+				"type": "String",
+				"description": "Имя пользователя основной страницы."
+			}
+		}
+	},
 
 	"login_mobileSuccessAuth": "Авторизация успешна!",
 
@@ -117,7 +126,7 @@
 	"music_connectRecommendationsChipDescription": "Дополнительно включает отображение изображений треков",
 
 	"music_connectRecommendationsTitle": "Подключение рекомендаций",
-	"music_connectRecommendationsDescription": "Подключив рекомендации, Вы получите доступ к разделам по типу «Плейлисты для Вас» и другие, а так же у многих треков появятся обложки.\n\nЧто бы подключить рекомендации, Вам будет необходимо повторно авторизоваться. Хотите попробовать?",
+	"music_connectRecommendationsDescription": "Подключив рекомендации, Вы получите доступ к разделам музыки «Плейлисты для Вас», «VK Mix» и другие, а так же Вы начнёте видеть обложки треков.\n\nДля подключения рекомендаций, Вам будет необходимо повторно авторизоваться.",
 	"music_connectRecommendationsConnect": "Подключить",
 
 	"music_shuffleAndPlay": "Перемешать",
@@ -342,8 +351,12 @@
 
 	"profile_usePlayerColorsAppWideTitle": "Использование цветов плеера по всему приложению",
 
-	"profile_playerSchemeAlgorithmTitle": "Точный алгоритм цветов плеера",
-	"profile_playerSchemeAlgorithmDescription": "Указывает, что будет использоваться более точный, но медленный алгоритм для получения цветов плеера",
+	"profile_playerDynamicColorSchemeTypeTitle": "Тип палитры цветов обложки",
+	"profile_playerDynamicColorSchemeTypeDescription": "Задаёт тип палитры, которая используется для цветов обложки играющего трека",
+	"profile_playerDynamicColorSchemeTonalSpot": "По-умолчанию",
+	"profile_playerDynamicColorSchemeNeutral": "Нейтральный",
+	"profile_playerDynamicColorSchemeContent": "Яркий",
+	"profile_playerDynamicColorSchemeMonochrome": "Монохромный",
 
 
 	"profile_experimentalTitle": "Экспериментальные функции",

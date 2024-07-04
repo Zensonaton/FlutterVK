@@ -7,7 +7,7 @@ part of 'shared.dart';
 // **************************************************************************
 
 DeezerArtist _$DeezerArtistFromJson(Map<String, dynamic> json) => DeezerArtist(
-      id: json['id'] as int,
+      id: (json['id'] as num).toInt(),
       name: json['name'] as String,
     );
 
@@ -18,7 +18,7 @@ Map<String, dynamic> _$DeezerArtistToJson(DeezerArtist instance) =>
     };
 
 DeezerAlbum _$DeezerAlbumFromJson(Map<String, dynamic> json) => DeezerAlbum(
-      id: json['id'] as int,
+      id: (json['id'] as num).toInt(),
       title: json['title'] as String,
       coverSmall: json['cover_small'] as String?,
       cover: json['cover'] as String?,
@@ -39,9 +39,9 @@ Map<String, dynamic> _$DeezerAlbumToJson(DeezerAlbum instance) =>
     };
 
 DeezerTrack _$DeezerTrackFromJson(Map<String, dynamic> json) => DeezerTrack(
-      id: json['id'] as int,
+      id: (json['id'] as num).toInt(),
       title: json['title'] as String,
-      duration: json['duration'] as int,
+      duration: (json['duration'] as num).toInt(),
       artist: DeezerArtist.fromJson(json['artist'] as Map<String, dynamic>),
       album: DeezerAlbum.fromJson(json['album'] as Map<String, dynamic>),
     );

@@ -14,7 +14,7 @@ part "get.g.dart";
 @JsonSerializable()
 class APIUsersGetResponse {
   /// Массив с пользователями.
-  final List<User>? response;
+  final List<APIUser>? response;
 
   /// Объект ошибки.
   final APIError? error;

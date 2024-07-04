@@ -7,7 +7,7 @@ part of 'shared.dart';
 // **************************************************************************
 
 APIError _$APIErrorFromJson(Map<String, dynamic> json) => APIError(
-      errorCode: json['error_code'] as int,
+      errorCode: (json['error_code'] as num).toInt(),
       errorMessage: json['error_msg'] as String,
       requestParams: (json['request_params'] as List<dynamic>)
           .map((e) => Map<String, String>.from(e as Map))
@@ -24,8 +24,8 @@ Map<String, dynamic> _$APIErrorToJson(APIError instance) => <String, dynamic>{
       'captcha_img': instance.captchaUrl,
     };
 
-User _$UserFromJson(Map<String, dynamic> json) => User(
-      id: json['id'] as int,
+APIUser _$APIUserFromJson(Map<String, dynamic> json) => APIUser(
+      id: (json['id'] as num).toInt(),
       firstName: json['first_name'] as String,
       lastName: json['last_name'] as String,
       deactivated: json['deactivated'] as String?,
@@ -34,19 +34,20 @@ User _$UserFromJson(Map<String, dynamic> json) => User(
       about: json['about'] as String?,
       activities: json['activities'] as String?,
       bdate: json['bdate'] as String?,
-      blacklisted: boolFromInt(json['blacklisted'] as int?),
-      blacklistedByMe: boolFromInt(json['blacklisted_by_me'] as int?),
+      blacklisted: boolFromInt((json['blacklisted'] as num?)?.toInt()),
+      blacklistedByMe:
+          boolFromInt((json['blacklisted_by_me'] as num?)?.toInt()),
       books: json['books'] as String?,
-      canPost: boolFromInt(json['can_post'] as int?),
-      canSeeAllPosts: boolFromInt(json['can_see_all_posts'] as int?),
-      canSeeAudio: boolFromInt(json['can_see_audio'] as int?),
+      canPost: boolFromInt((json['can_post'] as num?)?.toInt()),
+      canSeeAllPosts: boolFromInt((json['can_see_all_posts'] as num?)?.toInt()),
+      canSeeAudio: boolFromInt((json['can_see_audio'] as num?)?.toInt()),
       canSendFriendRequest:
-          boolFromInt(json['can_send_friend_request'] as int?),
+          boolFromInt((json['can_send_friend_request'] as num?)?.toInt()),
       canWritePrivateMessage:
-          boolFromInt(json['can_write_private_message'] as int?),
+          boolFromInt((json['can_write_private_message'] as num?)?.toInt()),
       career: json['career'],
       city: json['city'],
-      commonCount: json['common_count'] as int?,
+      commonCount: (json['common_count'] as num?)?.toInt(),
       contacts: json['contacts'],
       country: json['country'],
       cropPhoto: json['crop_photo'],
@@ -59,25 +60,25 @@ User _$UserFromJson(Map<String, dynamic> json) => User(
       firstNameAcc: json['first_name_acc'] as String?,
       firstNameIns: json['first_name_ins'] as String?,
       firstNameAbl: json['first_name_abl'] as String?,
-      followersCount: json['followers_count'] as int?,
-      friendStatus: json['friend_status'] as int?,
+      followersCount: (json['followers_count'] as num?)?.toInt(),
+      friendStatus: (json['friend_status'] as num?)?.toInt(),
       games: json['games'] as String?,
-      hasMobile: boolFromInt(json['has_mobile'] as int?),
-      hasPhoto: boolFromInt(json['has_photo'] as int?),
+      hasMobile: boolFromInt((json['has_mobile'] as num?)?.toInt()),
+      hasPhoto: boolFromInt((json['has_photo'] as num?)?.toInt()),
       homeTown: json['home_town'] as String?,
       interests: json['interests'] as String?,
       isFavorite: json['is_favorite'] == null
           ? false
-          : boolFromInt(json['is_favorite'] as int?),
+          : boolFromInt((json['is_favorite'] as num?)?.toInt()),
       isFriend: json['is_friend'] == null
           ? false
-          : boolFromInt(json['is_friend'] as int?),
+          : boolFromInt((json['is_friend'] as num?)?.toInt()),
       isHiddenFromFeed: json['is_hidden_from_feed'] == null
           ? false
-          : boolFromInt(json['is_hidden_from_feed'] as int?),
+          : boolFromInt((json['is_hidden_from_feed'] as num?)?.toInt()),
       isNoIndex: json['is_no_index'] == null
           ? false
-          : boolFromInt(json['is_no_index'] as int?),
+          : boolFromInt((json['is_no_index'] as num?)?.toInt()),
       lastNameNom: json['last_name_nom'] as String?,
       lastNameGen: json['last_name_gen'] as String?,
       lastNameDat: json['last_name_dat'] as String?,
@@ -92,7 +93,7 @@ User _$UserFromJson(Map<String, dynamic> json) => User(
       music: json['music'] as String?,
       nickname: json['nickname'] as String?,
       occupation: json['occupation'],
-      online: json['online'] as int?,
+      online: (json['online'] as num?)?.toInt(),
       personal: json['personal'],
       photo50: json['photo_50'] as String?,
       photo100: json['photo_100'] as String?,
@@ -104,27 +105,27 @@ User _$UserFromJson(Map<String, dynamic> json) => User(
       photoMaxOrig: json['photo_max_orig'] as String?,
       quoutes: json['quoutes'] as String?,
       relatives: json['relatives'],
-      relation: json['relation'] as int?,
+      relation: (json['relation'] as num?)?.toInt(),
       schools: json['schools'],
       screenName: json['screen_name'] as String?,
-      sex: json['sex'] as int?,
+      sex: (json['sex'] as num?)?.toInt(),
       site: json['site'] as String?,
       status: json['status'] as String?,
       timezone: json['timezone'] as num?,
-      trending: json['trending'] as int?,
+      trending: (json['trending'] as num?)?.toInt(),
       tv: json['tv'] as String?,
       universities: json['universities'],
-      verified: json['verified'] as int?,
+      verified: (json['verified'] as num?)?.toInt(),
       wallDefault: json['wall_default'] as String?,
     )
       ..connections = (json['connections'] as Map<String, dynamic>?)?.map(
         (k, e) => MapEntry(k, e as String),
       )
       ..counters = (json['counters'] as Map<String, dynamic>?)?.map(
-        (k, e) => MapEntry(k, e as int),
+        (k, e) => MapEntry(k, (e as num).toInt()),
       );
 
-Map<String, dynamic> _$UserToJson(User instance) => <String, dynamic>{
+Map<String, dynamic> _$APIUserToJson(APIUser instance) => <String, dynamic>{
       'id': instance.id,
       'first_name': instance.firstName,
       'last_name': instance.lastName,
@@ -211,8 +212,8 @@ Map<String, dynamic> _$UserToJson(User instance) => <String, dynamic>{
     };
 
 Thumbnails _$ThumbnailsFromJson(Map<String, dynamic> json) => Thumbnails(
-      width: json['width'] as int?,
-      height: json['height'] as int?,
+      width: (json['width'] as num?)?.toInt(),
+      height: (json['height'] as num?)?.toInt(),
       photo34: json['photo_34'] as String?,
       photo68: json['photo_68'] as String?,
       photo135: json['photo_135'] as String?,
@@ -236,17 +237,17 @@ Map<String, dynamic> _$ThumbnailsToJson(Thumbnails instance) =>
     };
 
 Playlist _$PlaylistFromJson(Map<String, dynamic> json) => Playlist(
-      id: json['id'] as int,
-      ownerID: json['owner_id'] as int,
-      type: json['type'] as int? ?? 0,
+      id: (json['id'] as num).toInt(),
+      ownerID: (json['owner_id'] as num).toInt(),
+      type: (json['type'] as num?)?.toInt() ?? 0,
       title: json['title'] as String?,
       description: emptyStringAsNull(json['description'] as String?),
-      count: json['count'] as int,
+      count: (json['count'] as num).toInt(),
       accessKey: json['access_key'] as String?,
-      followers: json['followers'] as int? ?? 0,
-      plays: json['plays'] as int? ?? 0,
-      createTime: json['create_time'] as int?,
-      updateTime: json['update_time'] as int?,
+      followers: (json['followers'] as num?)?.toInt() ?? 0,
+      plays: (json['plays'] as num?)?.toInt() ?? 0,
+      createTime: (json['create_time'] as num?)?.toInt(),
+      updateTime: (json['update_time'] as num?)?.toInt(),
       isFollowing: json['is_following'] as bool? ?? false,
       subtitleBadge: json['subtitle_badge'] as bool? ?? false,
       playButton: json['play_button'] as bool? ?? false,
@@ -286,9 +287,9 @@ Map<String, dynamic> _$PlaylistToJson(Playlist instance) => <String, dynamic>{
     };
 
 Album _$AlbumFromJson(Map<String, dynamic> json) => Album(
-      id: json['id'] as int,
+      id: (json['id'] as num).toInt(),
       title: json['title'] as String,
-      ownerID: json['owner_id'] as int,
+      ownerID: (json['owner_id'] as num).toInt(),
       accessKey: json['access_key'] as String,
       thumbnails: json['thumb'] == null
           ? null
@@ -304,11 +305,11 @@ Map<String, dynamic> _$AlbumToJson(Album instance) => <String, dynamic>{
     };
 
 Audio _$AudioFromJson(Map<String, dynamic> json) => Audio(
-      id: json['id'] as int,
-      ownerID: json['owner_id'] as int,
+      id: (json['id'] as num).toInt(),
+      ownerID: (json['owner_id'] as num).toInt(),
       artist: json['artist'] as String,
       title: json['title'] as String,
-      duration: json['duration'] as int,
+      duration: (json['duration'] as num).toInt(),
       subtitle: json['subtitle'] as String?,
       accessKey: json['access_key'] as String,
       ads: json['ads'],
@@ -317,19 +318,19 @@ Audio _$AudioFromJson(Map<String, dynamic> json) => Audio(
       isLicensed: json['is_licensed'] as bool?,
       isRestricted: json['content_restricted'] == null
           ? false
-          : boolFromInt(json['content_restricted'] as int?),
+          : boolFromInt((json['content_restricted'] as num?)?.toInt()),
       shortVideosAllowed: json['short_videos_allowed'] as bool?,
       storiesAllowed: json['stories_allowed'] as bool?,
       storiesCoverAllowed: json['stories_cover_allowed'] as bool?,
       trackCode: json['track_code'] as String?,
       url: emptyStringAsNull(json['url'] as String?),
-      date: json['date'] as int,
+      date: (json['date'] as num).toInt(),
       album: json['album'] == null
           ? null
           : Album.fromJson(json['album'] as Map<String, dynamic>),
       hasLyrics: json['has_lyrics'] as bool? ?? false,
-      albumID: json['album_id'] as int?,
-      genreID: json['genre_id'] as int?,
+      albumID: (json['album_id'] as num?)?.toInt(),
+      genreID: (json['genre_id'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$AudioToJson(Audio instance) => <String, dynamic>{

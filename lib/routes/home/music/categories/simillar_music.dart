@@ -1,15 +1,14 @@
-import "dart:async";
-
-import "package:collection/collection.dart";
 import "package:flutter/material.dart";
-import "package:flutter_gen/gen_l10n/app_localizations.dart";
-import "package:just_audio/just_audio.dart";
-import "package:provider/provider.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:skeletonizer/skeletonizer.dart";
 
 import "../../../../consts.dart";
 import "../../../../extensions.dart";
 import "../../../../main.dart";
+import "../../../../provider/l18n.dart";
+import "../../../../provider/player_events.dart";
+import "../../../../provider/playlists.dart";
 import "../../../../provider/user.dart";
 import "../../../../services/logger.dart";
 import "../../../../utils.dart";
@@ -18,7 +17,7 @@ import "../../music.dart";
 import "../playlist.dart";
 
 /// Виджет, отображающий несколько треков из плейлиста раздела "Совпадения по вкусам".
-class SimillarMusicPlaylistWidget extends StatefulWidget {
+class SimillarMusicPlaylistWidget extends HookConsumerWidget {
   /// Название плейлиста.
   final String name;
 
@@ -62,24 +61,19 @@ class SimillarMusicPlaylistWidget extends StatefulWidget {
   });
 
   @override
-  State<SimillarMusicPlaylistWidget> createState() =>
-      _SimillarMusicPlaylistWidgetState();
-}
-
-class _SimillarMusicPlaylistWidgetState
-    extends State<SimillarMusicPlaylistWidget> {
-  bool isHovered = false;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     assert(
-      widget.tracks.length == 3,
-      "Expected tracks amount to be 3, but got ${widget.tracks.length} instead",
+      tracks.length == 3,
+      "Expected tracks amount to be 3, but got ${tracks.length} instead",
     );
 
+    final l18n = ref.watch(l18nProvider);
+
+    final isHovered = useState(false);
+
     final Color topColor =
-        widget.color ?? Theme.of(context).colorScheme.primaryContainer;
-    final bool selectedAndPlaying = widget.selected && widget.currentlyPlaying;
+        color ?? Theme.of(context).colorScheme.primaryContainer;
+    final bool selectedAndPlaying = selected && currentlyPlaying;
 
     return Container(
       width: 250,
@@ -100,7 +94,7 @@ class _SimillarMusicPlaylistWidgetState
               bottom: 14,
             ),
             child: Tooltip(
-              message: widget.name,
+              message: name,
               waitDuration: const Duration(
                 seconds: 1,
               ),
@@ -108,11 +102,9 @@ class _SimillarMusicPlaylistWidgetState
                 borderRadius: BorderRadius.circular(
                   globalBorderRadius * 2,
                 ),
-                onTap: widget.onOpen,
-                onSecondaryTap: widget.onOpen,
-                onHover: (bool value) => setState(
-                  () => isHovered = value,
-                ),
+                onTap: onOpen,
+                onSecondaryTap: onOpen,
+                onHover: (bool value) => isHovered.value = value,
                 child: Stack(
                   children: [
                     // Название и прочая информация.
@@ -147,7 +139,7 @@ class _SimillarMusicPlaylistWidgetState
                                   right: 4,
                                 ),
                                 child: Text(
-                                  "${(widget.simillarity * 100).truncate()}%",
+                                  "${(simillarity * 100).truncate()}%",
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w500,
@@ -158,8 +150,7 @@ class _SimillarMusicPlaylistWidgetState
 
                               // "совпадения".
                               Text(
-                                AppLocalizations.of(context)!
-                                    .music_simillarityPercentTitle,
+                                l18n.music_simillarityPercentTitle,
                                 style: const TextStyle(
                                   fontSize: 14,
                                   color: Colors.white,
@@ -171,7 +162,7 @@ class _SimillarMusicPlaylistWidgetState
                           // Название плейлиста.
                           Flexible(
                             child: Text(
-                              widget.name,
+                              name,
                               textAlign: TextAlign.center,
                               overflow: TextOverflow.fade,
                               maxLines: 2,
@@ -188,7 +179,7 @@ class _SimillarMusicPlaylistWidgetState
 
                     // Кнопки для совершения действий над этим плейлистом при наведении.
                     AnimatedOpacity(
-                      opacity: isHovered ? 1.0 : 0.0,
+                      opacity: isHovered.value ? 1.0 : 0.0,
                       duration: const Duration(
                         milliseconds: 300,
                       ),
@@ -214,8 +205,8 @@ class _SimillarMusicPlaylistWidgetState
                                 size: 32,
                                 color: Colors.white,
                               ),
-                              onPressed: isHovered
-                                  ? () => widget.onPlayToggle?.call(
+                              onPressed: isHovered.value
+                                  ? () => onPlayToggle?.call(
                                         !selectedAndPlaying,
                                       )
                                   : null,
@@ -231,7 +222,7 @@ class _SimillarMusicPlaylistWidgetState
           ),
 
           // Отображение треков в этом плейлисте.
-          for (ExtendedAudio audio in widget.tracks)
+          for (ExtendedAudio audio in tracks)
             Padding(
               padding: const EdgeInsets.only(
                 left: 12,
@@ -257,7 +248,7 @@ class _SimillarMusicPlaylistWidgetState
 }
 
 /// Виджет, показывающий раздел "Совпадения по вкусам".
-class SimillarMusicBlock extends StatefulWidget {
+class SimillarMusicBlock extends HookConsumerWidget {
   static AppLogger logger = getLogger("SimillarMusicBlock");
 
   const SimillarMusicBlock({
@@ -265,42 +256,11 @@ class SimillarMusicBlock extends StatefulWidget {
   });
 
   @override
-  State<SimillarMusicBlock> createState() => _SimillarMusicBlockState();
-}
-
-class _SimillarMusicBlockState extends State<SimillarMusicBlock> {
-  /// Подписки на изменения состояния воспроизведения трека.
-  late final List<StreamSubscription> subscriptions;
-
-  @override
-  void initState() {
-    super.initState();
-
-    subscriptions = [
-      // Изменения состояния воспроизведения.
-      player.playerStateStream.listen(
-        (PlayerState state) => setState(() {}),
-      ),
-
-      // Изменения состояния остановки/запуска плеера.
-      player.loadedStateStream.listen(
-        (bool loaded) => setState(() {}),
-      ),
-    ];
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-
-    for (StreamSubscription subscription in subscriptions) {
-      subscription.cancel();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final UserProvider user = Provider.of<UserProvider>(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final playlists = ref.watch(simillarPlaylistsProvider);
+    final l18n = ref.watch(l18nProvider);
+    ref.watch(playerStateProvider);
+    ref.watch(playerLoadedStateProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -311,7 +271,7 @@ class _SimillarMusicBlockState extends State<SimillarMusicBlock> {
             bottom: 14,
           ),
           child: Text(
-            AppLocalizations.of(context)!.music_similarMusicChip,
+            l18n.music_similarMusicChip,
             style: TextStyle(
               color: Theme.of(context).colorScheme.primary,
               fontWeight: FontWeight.w500,
@@ -327,19 +287,13 @@ class _SimillarMusicBlockState extends State<SimillarMusicBlock> {
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               clipBehavior: Clip.none,
-              physics: user.simillarPlaylists.isEmpty
+              physics: playlists == null
                   ? const NeverScrollableScrollPhysics()
                   : null,
-              itemCount: user.simillarPlaylists.isNotEmpty
-                  ? user.recommendationPlaylists.length
-                  : null,
+              itemCount: playlists?.length,
               itemBuilder: (BuildContext context, int index) {
-                final List<ExtendedPlaylist> simillarPlaylists = user
-                    .simillarPlaylists
-                    .sorted((a, b) => b.simillarity!.compareTo(a.simillarity!));
-
                 // Skeleton loader.
-                if (simillarPlaylists.isEmpty) {
+                if (playlists == null) {
                   return Padding(
                     padding: const EdgeInsets.only(
                       right: 8,
@@ -370,7 +324,7 @@ class _SimillarMusicBlockState extends State<SimillarMusicBlock> {
                 }
 
                 // Настоящие данные.
-                final ExtendedPlaylist playlist = simillarPlaylists[index];
+                final ExtendedPlaylist playlist = playlists[index];
 
                 return Padding(
                   padding: const EdgeInsets.only(
@@ -392,6 +346,7 @@ class _SimillarMusicBlockState extends State<SimillarMusicBlock> {
                       ),
                     ),
                     onPlayToggle: (bool playing) => onPlaylistPlayToggle(
+                      ref,
                       context,
                       playlist,
                       playing,

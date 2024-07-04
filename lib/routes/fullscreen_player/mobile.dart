@@ -3,12 +3,15 @@ import "dart:ui";
 
 import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
-import "package:flutter_gen/gen_l10n/app_localizations.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:just_audio/just_audio.dart";
-import "package:provider/provider.dart";
 
 import "../../consts.dart";
 import "../../main.dart";
+import "../../provider/color.dart";
+import "../../provider/l18n.dart";
+import "../../provider/preferences.dart";
 import "../../provider/user.dart";
 import "../../services/cache_manager.dart";
 import "../../utils.dart";
@@ -23,13 +26,15 @@ import "../home/music/bottom_audio_options.dart";
 const double _playerImageSize = 400;
 
 /// Ряд из кнопок полноэкранного плеера Mobile Layout'а, отображаемого сверху.
-class TopFullscreenControls extends StatelessWidget {
+class TopFullscreenControls extends ConsumerWidget {
   const TopFullscreenControls({
     super.key,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l18n = ref.watch(l18nProvider);
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -38,7 +43,7 @@ class TopFullscreenControls extends StatelessWidget {
           icon: Icon(
             Icons.adaptive.arrow_back,
           ),
-          onPressed: () => closePlayer(context),
+          onPressed: () => closeFullscreenPlayer(context),
         ),
 
         // Название плейлиста, из которого идёт воспроизведение.
@@ -47,19 +52,16 @@ class TopFullscreenControls extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                AppLocalizations.of(context)!.music_fullscreenPlaylistNameTitle,
+                l18n.music_fullscreenPlaylistNameTitle,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withOpacity(0.75),
+                  color:
+                      Theme.of(context).colorScheme.onSurface.withOpacity(0.75),
                 ),
               ),
               Text(
                 player.currentPlaylist?.title ??
-                    AppLocalizations.of(context)!
-                        .music_fullscreenFavoritePlaylistName,
+                    l18n.music_fullscreenFavoritePlaylistName,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   fontWeight: FontWeight.w500,
@@ -93,36 +95,93 @@ class TopFullscreenControls extends StatelessWidget {
   }
 }
 
+/// Виджет, используемый в [ImageLyricsBlock] для отображения иконки трека.
+class _PlayerImageWidget extends ConsumerWidget {
+  /// Трек, изображение которого будет показано.
+  final ExtendedAudio audio;
+
+  const _PlayerImageWidget({
+    required this.audio,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final schemeInfo = ref.watch(trackSchemeInfoProvider);
+
+    return FittedBox(
+      child: Padding(
+        padding: const EdgeInsets.all(
+          36,
+        ),
+        child: AnimatedContainer(
+          duration: const Duration(
+            milliseconds: 350,
+          ),
+          curve: Curves.bounceOut,
+          width: _playerImageSize,
+          height: _playerImageSize,
+          decoration: BoxDecoration(
+            boxShadow: [
+              if (player.playing)
+                BoxShadow(
+                  blurRadius: 20,
+                  spreadRadius: -3,
+                  color: (audio.thumbnail != null
+                          ? schemeInfo?.frequentColor
+                          : null) ??
+                      Colors.blueGrey.withOpacity(0.25),
+                  blurStyle: BlurStyle.outer,
+                ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(
+              globalBorderRadius,
+            ),
+            child: audio.maxThumbnail != null
+                ? CachedNetworkImage(
+                    imageUrl: audio.maxThumbnail!,
+                    cacheKey: "${audio.mediaKey}max",
+                    width: _playerImageSize,
+                    height: _playerImageSize,
+                    fit: BoxFit.fill,
+                    placeholder: (BuildContext context, String url) =>
+                        const FallbackAudioAvatar(),
+                    cacheManager: CachedAlbumImagesManager.instance,
+                  )
+                : const FallbackAudioAvatar(
+                    width: _playerImageSize,
+                    height: _playerImageSize,
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Виджет, отображающий текст песни, или изображениие трека по центру полноэкранного плеера Mobile Layout'а.
-class ImageLyricsBlock extends StatefulWidget {
+class ImageLyricsBlock extends StatefulHookConsumerWidget {
   const ImageLyricsBlock({
     super.key,
   });
 
   @override
-  State<ImageLyricsBlock> createState() => _ImageLyricsBlockState();
+  ConsumerState<ImageLyricsBlock> createState() => _ImageLyricsBlockState();
 }
 
-class _ImageLyricsBlockState extends State<ImageLyricsBlock> {
+class _ImageLyricsBlockState extends ConsumerState<ImageLyricsBlock> {
   /// Подписки на изменения состояния воспроизведения трека.
   late final List<StreamSubscription> subscriptions;
-
-  /// Прогресс скроллинга изображения трека. Имеет значение от `-1.0` до `1.0`, где `0.0` олицетворяет то, что трек ещё не скроллился, `-1.0` - пользователь доскроллил до предыдущего трека, `1.0` - пользователь доскроллил до следующего трека.
-  double dragProgress = 0.0;
 
   @override
   void initState() {
     super.initState();
 
     subscriptions = [
-      // Изменение позиции воспроизведения.
-      player.positionStream.listen(
-        (Duration position) => setState(() {}),
-      ),
-
       // Изменение текущего трека.
       player.currentIndexStream.listen(
-        (int? index) => setState(() {}),
+        (_) => setState(() {}),
       ),
     ];
   }
@@ -138,67 +197,13 @@ class _ImageLyricsBlockState extends State<ImageLyricsBlock> {
 
   @override
   Widget build(BuildContext context) {
-    final UserProvider user = Provider.of<UserProvider>(context);
+    final preferences = ref.watch(preferencesProvider);
+    final dragProgress = useState(0.0);
 
-    /// Ширина блока для скроллинга. При увеличении данного значения, предыдущий/следующий треки будут появляться на большем расстоянии.
     const scrollWidth = _playerImageSize + 50;
-
-    /// Указывает, что пользователь включил показа текста песни, а так же текст существует и он загружен.
-    final bool lyricsLoadedAndShown = user.settings.trackLyricsEnabled &&
+    final bool lyricsLoadedAndShown = preferences.trackLyricsEnabled &&
         (player.currentAudio!.hasLyrics ?? false) &&
         player.currentAudio!.lyrics != null;
-
-    // Создаёт виджет для отображения изображения трека.
-    Widget buildImageWidget(ExtendedAudio audio) {
-      // TODO: Избавиться от этого метода, сделать вместо этого отдельный виджет.
-
-      return FittedBox(
-        child: Padding(
-          padding: const EdgeInsets.all(
-            36,
-          ),
-          child: AnimatedContainer(
-            duration: const Duration(
-              milliseconds: 350,
-            ),
-            curve: Curves.bounceOut,
-            width: _playerImageSize,
-            height: _playerImageSize,
-            decoration: BoxDecoration(
-              boxShadow: [
-                if (player.playing)
-                  BoxShadow(
-                    blurRadius: 20,
-                    spreadRadius: -3,
-                    color: Theme.of(context).colorScheme.tertiary,
-                    blurStyle: BlurStyle.outer,
-                  ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(
-                globalBorderRadius,
-              ),
-              child: audio.maxThumbnail != null
-                  ? CachedNetworkImage(
-                      imageUrl: audio.maxThumbnail!,
-                      cacheKey: "${audio.mediaKey}max",
-                      width: _playerImageSize,
-                      height: _playerImageSize,
-                      fit: BoxFit.fill,
-                      placeholder: (BuildContext context, String url) =>
-                          const FallbackAudioAvatar(),
-                      cacheManager: CachedAlbumImagesManager.instance,
-                    )
-                  : const FallbackAudioAvatar(
-                      width: _playerImageSize,
-                      height: _playerImageSize,
-                    ),
-            ),
-          ),
-        ),
-      );
-    }
 
     return AnimatedSwitcher(
       duration: const Duration(
@@ -218,28 +223,24 @@ class _ImageLyricsBlockState extends State<ImageLyricsBlock> {
               child: GestureDetector(
                 behavior: HitTestBehavior.translucent,
                 onTap: () => player.togglePlay(),
-                onHorizontalDragUpdate: (DragUpdateDetails details) {
-                  dragProgress = clampDouble(
-                    dragProgress - details.primaryDelta! / scrollWidth,
-                    -1.0,
-                    1.0,
-                  );
-
-                  setState(() {});
-                },
+                onHorizontalDragUpdate: (DragUpdateDetails details) =>
+                    dragProgress.value = clampDouble(
+                  dragProgress.value - details.primaryDelta! / scrollWidth,
+                  -1.0,
+                  1.0,
+                ),
                 onHorizontalDragEnd: (DragEndDetails details) {
-                  if (dragProgress > 0.5) {
+                  if (dragProgress.value > 0.5) {
                     // Запуск следующего трека.
 
                     player.next();
-                  } else if (dragProgress < -0.5) {
+                  } else if (dragProgress.value < -0.5) {
                     // Запуск предыдущего трека.
 
                     player.previous();
                   }
 
-                  dragProgress = 0.0;
-                  setState(() {});
+                  dragProgress.value = 0.0;
                 },
                 child: HeroMode(
                   enabled: !lyricsLoadedAndShown,
@@ -259,31 +260,33 @@ class _ImageLyricsBlockState extends State<ImageLyricsBlock> {
                             curve: Curves.bounceOut,
                             child: Transform.translate(
                               offset: Offset(
-                                dragProgress * -scrollWidth,
+                                dragProgress.value * -scrollWidth,
                                 0.0,
                               ),
                               child: Opacity(
-                                opacity: 1.0 - dragProgress.abs(),
-                                child:
-                                    buildImageWidget(player.smartCurrentAudio!),
+                                opacity: 1.0 - dragProgress.value.abs(),
+                                child: _PlayerImageWidget(
+                                  audio: player.smartCurrentAudio!,
+                                ),
                               ),
                             ),
                           ),
 
                           // Другой трек.
-                          if (!lyricsLoadedAndShown && dragProgress != 0.0)
+                          if (!lyricsLoadedAndShown &&
+                              dragProgress.value != 0.0)
                             Transform.translate(
                               offset: Offset(
-                                (dragProgress > 0.0
+                                (dragProgress.value > 0.0
                                         ? scrollWidth
                                         : -scrollWidth) -
-                                    dragProgress * scrollWidth,
+                                    dragProgress.value * scrollWidth,
                                 0.0,
                               ),
                               child: Opacity(
-                                opacity: dragProgress.abs(),
-                                child: buildImageWidget(
-                                  dragProgress > 0.0
+                                opacity: dragProgress.value.abs(),
+                                child: _PlayerImageWidget(
+                                  audio: dragProgress.value > 0.0
                                       ? player.smartNextAudio!
                                       : player.smartPreviousAudio!,
                                 ),
@@ -322,17 +325,18 @@ class _ImageLyricsBlockState extends State<ImageLyricsBlock> {
 }
 
 /// Кнопки, а так же информация по текущему треку полноэкранного плеера Mobile Layout'а, отображаемого снизу плеера.
-class FullscreenMediaControls extends StatefulWidget {
+class FullscreenMediaControls extends ConsumerStatefulWidget {
   const FullscreenMediaControls({
     super.key,
   });
 
   @override
-  State<FullscreenMediaControls> createState() =>
+  ConsumerState<FullscreenMediaControls> createState() =>
       _FullscreenMediaControlsState();
 }
 
-class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
+class _FullscreenMediaControlsState
+    extends ConsumerState<FullscreenMediaControls> {
   /// Подписки на изменения состояния воспроизведения трека.
   late final List<StreamSubscription> subscriptions;
 
@@ -343,12 +347,12 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
     subscriptions = [
       // Изменение состояния плеера.
       player.playerStateStream.listen(
-        (PlayerState? state) => setState(() {}),
+        (_) => setState(() {}),
       ),
 
       // Изменение текущего трека.
       player.currentIndexStream.listen(
-        (int? index) => setState(() {}),
+        (_) => setState(() {}),
       ),
     ];
   }
@@ -364,22 +368,14 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
 
   @override
   Widget build(BuildContext context) {
-    final UserProvider user = Provider.of<UserProvider>(context);
+    final prefsNotifier = ref.read(preferencesProvider.notifier);
+    final preferences = ref.watch(preferencesProvider);
 
-    /// Указывает, сохранён ли этот трек в лайкнутых.
     final bool isFavorite = player.currentAudio!.isLiked;
-
-    /// Указывает, что будет использоваться очень маленький размер интерфейса.
     final bool smallerLayout = MediaQuery.of(context).size.width <= 300;
-
-    /// Указывает, что блок с текстом песни будет показан.
     final bool showLyricsBlock = MediaQuery.of(context).size.height > 150;
-
-    /// Указывает, что кнопка для переключения shuffle работает.
     final bool canToggleShuffle =
         !(player.currentPlaylist?.isAudioMixPlaylist ?? false);
-
-    /// Указывает, что запущен рекомендуемый плейлист.
     final bool isRecommendationTypePlaylist =
         player.currentPlaylist?.isRecommendationTypePlaylist ?? false;
 
@@ -396,7 +392,7 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
               // Кнопка для лайка трека.
               IconButton(
                 onPressed: () {
-                  if (!networkRequiredDialog(context)) return;
+                  if (!networkRequiredDialog(ref, context)) return;
 
                   toggleTrackLikeState(
                     context,
@@ -414,7 +410,7 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
               if (isRecommendationTypePlaylist)
                 IconButton(
                   onPressed: () async {
-                    if (!networkRequiredDialog(context)) return;
+                    if (!networkRequiredDialog(ref, context)) return;
 
                     // Делаем трек дизлайкнутым.
                     final bool result = await dislikeTrackState(
@@ -519,15 +515,12 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
               if (showLyricsBlock)
                 IconButton(
                   onPressed: player.currentAudio!.hasLyrics ?? false
-                      ? () {
-                          user.settings.trackLyricsEnabled =
-                              !user.settings.trackLyricsEnabled;
-
-                          user.markUpdated();
-                        }
+                      ? () => prefsNotifier.setTrackLyricsEnabled(
+                            !preferences.trackLyricsEnabled,
+                          )
                       : null,
                   icon: Icon(
-                    user.settings.trackLyricsEnabled &&
+                    preferences.trackLyricsEnabled &&
                             (player.currentAudio!.hasLyrics ?? false)
                         ? Icons.lyrics
                         : Icons.lyrics_outlined,
@@ -540,7 +533,7 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
               // Кнопка для выхода из плеера.
               if (!showLyricsBlock)
                 IconButton(
-                  onPressed: () => closePlayer(context),
+                  onPressed: () => closeMiniPlayer(context),
                   icon: Icon(
                     Icons.picture_in_picture_alt,
                     color: Theme.of(context).colorScheme.primary,
@@ -620,8 +613,7 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                         ? () async {
                             await player.setShuffle(!enabled);
 
-                            user.settings.shuffleEnabled = !enabled;
-                            user.markUpdated();
+                            prefsNotifier.setShuffleEnabled(!enabled);
                           }
                         : null,
                     icon: Icon(
@@ -728,41 +720,10 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
 /// Mobile Layout для полноэкранного плеера.
 ///
 /// [FullscreenPlayerRoute] автоматически определяет, должен отображаться Desktop или Mobile Layout.
-class FullscreenPlayerMobileRoute extends StatefulWidget {
+class FullscreenPlayerMobileRoute extends StatelessWidget {
   const FullscreenPlayerMobileRoute({
     super.key,
   });
-
-  @override
-  State<FullscreenPlayerMobileRoute> createState() =>
-      _FullscreenPlayerMobileRouteState();
-}
-
-class _FullscreenPlayerMobileRouteState
-    extends State<FullscreenPlayerMobileRoute> {
-  /// Подписки на изменения состояния воспроизведения трека.
-  late final List<StreamSubscription> subscriptions;
-
-  @override
-  void initState() {
-    super.initState();
-
-    subscriptions = [
-      // Изменение текущего трека.
-      player.currentIndexStream.listen(
-        (int? index) => setState(() {}),
-      ),
-    ];
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-
-    for (StreamSubscription subscription in subscriptions) {
-      subscription.cancel();
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -826,7 +787,7 @@ class _FullscreenPlayerMobileRouteState
                       icon: const Icon(
                         Icons.arrow_back,
                       ),
-                      onPressed: () => closePlayer(context),
+                      onPressed: () => closeMiniPlayer(context),
                     ),
                   ),
                 ),

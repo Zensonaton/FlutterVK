@@ -2,22 +2,19 @@ import "dart:async";
 
 import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
-import "package:flutter_gen/gen_l10n/app_localizations.dart";
-import "package:just_audio/just_audio.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:lottie/lottie.dart";
-import "package:provider/provider.dart";
 import "package:responsive_builder/responsive_builder.dart";
 import "package:skeletonizer/skeletonizer.dart";
 
-import "../../../../api/vk/api.dart";
-import "../../../../api/vk/audio/get_stream_mix_audios.dart";
 import "../../../../consts.dart";
 import "../../../../main.dart";
+import "../../../../provider/l18n.dart";
+import "../../../../provider/player_events.dart";
+import "../../../../provider/playlists.dart";
 import "../../../../provider/user.dart";
 import "../../../../services/logger.dart";
 import "../../../../utils.dart";
-import "../../../../widgets/dialogs.dart";
-import "../../../../widgets/loading_overlay.dart";
 import "../playlist.dart";
 
 /// Указывает минимальное треков из аудио микса, которое обязано быть в очереди плеера. Если очередь плейлиста состоит из меньшего количества треков, то очередь будет восполнена этим значением.
@@ -34,60 +31,60 @@ Future<void> onMixPlayToggle(
     "onMixPlayToggle can only be called for audio mix playlists",
   );
 
-  final UserProvider user = Provider.of<UserProvider>(context, listen: false);
-  final AppLogger logger = getLogger("onMixPlayToggle");
+  // final UserProvider user = Provider.of<UserProvider>(context, listen: false);
+  // final AppLogger logger = getLogger("onMixPlayToggle");
 
-  // Уточняем, разрешает ли пользователь отправку информации для работы рекомендаций.
-  if (!(await recommendationsStatsAllowedDialog(context, playlist))) return;
+  // // Уточняем, разрешает ли пользователь отправку информации для работы рекомендаций.
+  // if (!(await recommendationsStatsAllowedDialog(context, playlist))) return;
 
-  // Если у нас играет этот же плейлист, то тогда мы попросту должны поставить на паузу/убрать паузу.
-  if (player.currentPlaylist == playlist) {
-    return await player.playOrPause(playing);
-  }
+  // // Если у нас играет этот же плейлист, то тогда мы попросту должны поставить на паузу/убрать паузу.
+  // if (player.currentPlaylist == playlist) {
+  //   return await player.playOrPause(playing);
+  // }
 
-  // Мы запускаем этот аудио микс впервые, поэтому мы должны загрузить несколько его треков.
-  if (context.mounted) LoadingOverlay.of(context).show();
+  // // Мы запускаем этот аудио микс впервые, поэтому мы должны загрузить несколько его треков.
+  // if (context.mounted) LoadingOverlay.of(context).show();
 
-  try {
-    final APIAudioGetStreamMixAudiosResponse response =
-        await user.audioGetStreamMixAudiosWithAlbums(count: minMixAudiosCount);
-    raiseOnAPIError(response);
+  // try {
+  //   final APIAudioGetStreamMixAudiosResponse response =
+  //       await user.audioGetStreamMixAudiosWithAlbums(count: minMixAudiosCount);
+  //   raiseOnAPIError(response);
 
-    playlist.audios = response.response!
-        .map(
-          (audio) => ExtendedAudio.fromAPIAudio(audio),
-        )
-        .toList();
-    playlist.count = response.response!.length;
-  } catch (e, stackTrace) {
-    showLogErrorDialog(
-      "Ошибка при загрузке информации по аудио миксу: ",
-      e,
-      stackTrace,
-      logger,
-      // ignore: use_build_context_synchronously
-      context,
-    );
+  //   playlist.audios = response.response!
+  //       .map(
+  //         (audio) => ExtendedAudio.fromAPIAudio(audio),
+  //       )
+  //       .toList();
+  //   playlist.count = response.response!.length;
+  // } catch (e, stackTrace) {
+  //   showLogErrorDialog(
+  //     "Ошибка при загрузке информации по аудио миксу: ",
+  //     e,
+  //     stackTrace,
+  //     logger,
+  //     // ignore: use_build_context_synchronously
+  //     context,
+  //   );
 
-    return;
-  } finally {
-    if (context.mounted) {
-      LoadingOverlay.of(context).hide();
-    }
-  }
+  //   return;
+  // } finally {
+  //   if (context.mounted) {
+  //     LoadingOverlay.of(context).hide();
+  //   }
+  // }
 
-  // Всё ок, запускаем воспроизведение, отключив при этом shuffle, а так же зацикливание плейлиста.
-  if (player.shuffleModeEnabled) {
-    await player.setShuffle(false);
-  }
-  if (player.loopMode != LoopMode.off) {
-    await player.setLoop(LoopMode.off);
-  }
+  // // Всё ок, запускаем воспроизведение, отключив при этом shuffle, а так же зацикливание плейлиста.
+  // if (player.shuffleModeEnabled) {
+  //   await player.setShuffle(false);
+  // }
+  // if (player.loopMode != LoopMode.off) {
+  //   await player.setLoop(LoopMode.off);
+  // }
 
-  await player.setPlaylist(
-    playlist,
-    setLoopAll: false,
-  );
+  // await player.setPlaylist(
+  //   playlist,
+  //   setLoopAll: false,
+  // );
 }
 
 /// Fallback-виджет, отображаемый вместо аудио миксов по типу VK Mix.
@@ -434,7 +431,7 @@ class MoodPlaylistWidget extends StatelessWidget {
 }
 
 /// Виджет, показывающий раздел "В реальном времени".
-class RealtimePlaylistsBlock extends StatefulWidget {
+class RealtimePlaylistsBlock extends HookConsumerWidget {
   static AppLogger logger = getLogger("RealtimePlaylistsBlock");
 
   const RealtimePlaylistsBlock({
@@ -442,42 +439,12 @@ class RealtimePlaylistsBlock extends StatefulWidget {
   });
 
   @override
-  State<RealtimePlaylistsBlock> createState() => _RealtimePlaylistsBlockState();
-}
-
-class _RealtimePlaylistsBlockState extends State<RealtimePlaylistsBlock> {
-  /// Подписки на изменения состояния воспроизведения трека.
-  late final List<StreamSubscription> subscriptions;
-
-  @override
-  void initState() {
-    super.initState();
-
-    subscriptions = [
-      // Изменения состояния воспроизведения.
-      player.playerStateStream.listen(
-        (PlayerState state) => setState(() {}),
-      ),
-
-      // Изменения состояния остановки/запуска плеера.
-      player.loadedStateStream.listen(
-        (bool loaded) => setState(() {}),
-      ),
-    ];
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-
-    for (StreamSubscription subscription in subscriptions) {
-      subscription.cancel();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final UserProvider user = Provider.of<UserProvider>(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final mixPlaylists = ref.watch(mixPlaylistsProvider);
+    final moodPlaylists = ref.watch(moodPlaylistsProvider);
+    final l18n = ref.watch(l18nProvider);
+    ref.watch(playerStateProvider);
+    ref.watch(playerLoadedStateProvider);
 
     final bool isMobileLayout =
         getDeviceType(MediaQuery.of(context).size) == DeviceScreenType.mobile;
@@ -491,7 +458,7 @@ class _RealtimePlaylistsBlockState extends State<RealtimePlaylistsBlock> {
             bottom: 14,
           ),
           child: Text(
-            AppLocalizations.of(context)!.music_realtimePlaylistsChip,
+            l18n.music_realtimePlaylistsChip,
             style: TextStyle(
               color: Theme.of(context).colorScheme.primary,
               fontWeight: FontWeight.w500,
@@ -501,7 +468,7 @@ class _RealtimePlaylistsBlockState extends State<RealtimePlaylistsBlock> {
 
         // Проходимся по доступным аудио миксам.
         // Skeleton loader.
-        if (user.audioMixPlaylists.isEmpty)
+        if (mixPlaylists == null)
           Padding(
             padding: const EdgeInsets.only(
               bottom: 8,
@@ -513,25 +480,27 @@ class _RealtimePlaylistsBlockState extends State<RealtimePlaylistsBlock> {
           ),
 
         // Настоящие данные.
-        for (ExtendedPlaylist playlist in user.audioMixPlaylists)
-          Padding(
-            padding: const EdgeInsets.only(
-              bottom: 8,
-            ),
-            child: LivePlaylistWidget(
-              title: playlist.title!,
-              description: playlist.description,
-              lottieUrl: playlist.backgroundAnimationUrl!,
-              bigLayout: !isMobileLayout,
-              selected: player.currentPlaylist == playlist,
-              currentlyPlaying: player.playing,
-              onPlayToggle: (bool playing) => onMixPlayToggle(
-                context,
-                playlist,
-                playing,
+        if (mixPlaylists != null)
+          for (ExtendedPlaylist playlist in mixPlaylists)
+            Padding(
+              padding: const EdgeInsets.only(
+                bottom: 8,
+              ),
+              child: LivePlaylistWidget(
+                // TODO: Сделать, что бы Lottie-анимация не играла, если этот плейлист не воспроизводится.
+                title: playlist.title!,
+                description: playlist.description,
+                lottieUrl: playlist.backgroundAnimationUrl!,
+                bigLayout: !isMobileLayout,
+                selected: player.currentPlaylist == playlist,
+                currentlyPlaying: player.playing,
+                onPlayToggle: (bool playing) => onMixPlayToggle(
+                  context,
+                  playlist,
+                  playing,
+                ),
               ),
             ),
-          ),
 
         // Содержимое плейлистов из раздела "Какой сейчас вайб?".
         ScrollConfiguration(
@@ -541,17 +510,13 @@ class _RealtimePlaylistsBlockState extends State<RealtimePlaylistsBlock> {
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               clipBehavior: Clip.none,
-              physics: user.moodPlaylists.isEmpty
+              physics: moodPlaylists == null
                   ? const NeverScrollableScrollPhysics()
                   : null,
-              itemCount: user.moodPlaylists.isNotEmpty
-                  ? user.moodPlaylists.length
-                  : null,
+              itemCount: moodPlaylists?.length,
               itemBuilder: (BuildContext context, int index) {
-                final List<ExtendedPlaylist> moodPlaylists = user.moodPlaylists;
-
                 // Skeleton loader.
-                if (moodPlaylists.isEmpty) {
+                if (moodPlaylists == null) {
                   return Padding(
                     padding: const EdgeInsets.only(
                       right: 8,
@@ -580,6 +545,7 @@ class _RealtimePlaylistsBlockState extends State<RealtimePlaylistsBlock> {
                     selected: player.currentPlaylist == playlist,
                     currentlyPlaying: player.playing,
                     onPlayToggle: (bool playing) => onPlaylistPlayToggle(
+                      ref,
                       context,
                       playlist,
                       playing,

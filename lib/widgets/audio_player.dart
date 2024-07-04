@@ -1,9 +1,12 @@
 import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 
 import "../consts.dart";
 import "../extensions.dart";
+import "../provider/color.dart";
 import "../provider/user.dart";
 import "../services/cache_manager.dart";
 import "../utils.dart";
@@ -212,7 +215,7 @@ class TrackTitleAndArtist extends StatelessWidget {
 }
 
 /// Виджет плеера, отображаемый внизу экрана, отображающий информацию по текущему треку [audio], а так же дающий возможность делать базовые действия с плеером и треком.
-class BottomMusicPlayer extends StatefulWidget {
+class BottomMusicPlayer extends HookConsumerWidget {
   /// Объект [ExtendedAudio], который играет в данный момент.
   final ExtendedAudio? audio;
 
@@ -340,17 +343,13 @@ class BottomMusicPlayer extends StatefulWidget {
   });
 
   @override
-  State<BottomMusicPlayer> createState() => _BottomMusicPlayerState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final schemeInfo = ref.watch(trackSchemeInfoProvider);
 
-class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
-  /// Прогресс скроллинга блока с названием трека. Имеет значение от `-1.0` до `1.0`, где `0.0` олицетворяет то, что трек ещё не скроллился, `-1.0` - пользователь доскроллил до предыдущего трека, `1.0` - пользователь доскроллил до следующего трека.
-  double _dragProgress = 0.0;
+    final dragProgress = useState(0.0);
 
-  @override
-  Widget build(BuildContext context) {
     // Размер Padding'а для всех блоков внутри Stack'а.
-    final double padding = widget.useBigLayout ? 14 : 8;
+    final double padding = useBigLayout ? 14 : 8;
 
     // Ширина проигрывателя.
     final double width = MediaQuery.of(context).size.width - padding * 2 - 16;
@@ -363,15 +362,15 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
     );
 
     /// Размер блоков слева.
-    final double leftAndRightBlocksSize = widget.useBigLayout
+    final double leftAndRightBlocksSize = useBigLayout
         ? (width - centerBlockSize) / 2
-        : width - (widget.onDislike != null ? 146 : 96);
+        : width - (onDislike != null ? 146 : 96);
 
     /// Url на изображение трека.
-    final String? imageUrl = widget.audio?.smallestThumbnail;
+    final String? imageUrl = audio?.smallestThumbnail;
 
     /// Размер изображения трека.
-    final double imageSize = widget.useBigLayout ? 60 : 50;
+    final double imageSize = useBigLayout ? 60 : 50;
 
     /// Чувствительность для скроллинга.
     const scrollSensetivity = 200.0;
@@ -380,53 +379,64 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
     const scrollWidth = 150.0;
 
     /// Определяет по оставшейся длине трека то, стоит ли показывать надпись со следующим треком.
-    final bool displayNextTrack =
-        (widget.audio != null && widget.nextAudio != null)
-            ? (widget.progress >= nextPlayingTextProgress)
-            : false;
+    final bool displayNextTrack = (audio != null && nextAudio != null)
+        ? (progress >= nextPlayingTextProgress)
+        : false;
 
     /// Кнопка для паузы и/ли воспроизведения музыки.
-    final Widget playPauseButton = widget.useBigLayout
+    final Widget playPauseButton = useBigLayout
         ? IconButton(
-            onPressed: () =>
-                widget.onPlayStateToggle?.call(!widget.playbackState),
+            onPressed: () => onPlayStateToggle?.call(!playbackState),
             iconSize: 48,
             padding: EdgeInsets.zero,
             icon: Icon(
-              widget.playbackState ? Icons.pause_circle : Icons.play_circle,
-              color: widget.scheme.onPrimaryContainer,
+              playbackState ? Icons.pause_circle : Icons.play_circle,
+              color: scheme.onPrimaryContainer,
             ),
           )
         : IconButton(
-            onPressed: () =>
-                widget.onPlayStateToggle?.call(!widget.playbackState),
+            onPressed: () => onPlayStateToggle?.call(!playbackState),
             icon: Icon(
-              widget.playbackState ? Icons.pause : Icons.play_arrow,
-              color: widget.scheme.onPrimaryContainer,
+              playbackState ? Icons.pause : Icons.play_arrow,
+              color: scheme.onPrimaryContainer,
             ),
           );
 
     /// Указывает, что кнопка для переключения shuffle работает.
-    final bool canToggleShuffle = widget.onShuffleToggle != null;
+    final bool canToggleShuffle = onShuffleToggle != null;
+
+    /// [Widget] для отображения изображения этого трека.
+    final Widget trackImageWidget = imageUrl != null
+        ? CachedNetworkImage(
+            imageUrl: imageUrl,
+            cacheKey: "${audio!.mediaKey}small",
+            cacheManager: CachedAlbumImagesManager.instance,
+            placeholder: (BuildContext context, String url) {
+              return const FallbackAudioAvatar();
+            },
+            fit: BoxFit.contain,
+          )
+        : const FallbackAudioAvatar();
 
     return AnimatedContainer(
-      height: widget.useBigLayout ? 88 : 66,
+      height: useBigLayout ? 88 : 66,
       duration: const Duration(
         milliseconds: 400,
       ),
       decoration: BoxDecoration(
-        color: widget.scheme.primaryContainer
-            .darken(widget.playbackState ? 0 : 0.15),
-        borderRadius: widget.useBigLayout
+        color: scheme.primaryContainer.darken(
+          playbackState ? 0 : 0.15,
+        ),
+        borderRadius: useBigLayout
             ? null
             : BorderRadius.circular(
                 globalBorderRadius,
               ),
         boxShadow: [
-          if (widget.playbackState)
+          if (playbackState)
             BoxShadow(
-              color: widget.scheme.secondaryContainer,
-              blurRadius: widget.playbackState ? 50 : 0,
+              color: scheme.secondaryContainer,
+              blurRadius: playbackState ? 50 : 0,
               blurStyle: BlurStyle.outer,
             ),
         ],
@@ -444,48 +454,43 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                 width: leftAndRightBlocksSize,
                 child: ScrollableWidget(
                   onChanged: (double diff) {
-                    if (widget.useBigLayout || isMobile) return;
+                    if (useBigLayout || isMobile) return;
 
-                    return widget.onVolumeChange?.call(
-                      clampDouble(widget.volume + diff / 10, 0.0, 1.0),
+                    return onVolumeChange?.call(
+                      clampDouble(volume + diff / 10, 0.0, 1.0),
                     );
                   },
                   child: MouseRegion(
-                    cursor: widget.useBigLayout
+                    cursor: useBigLayout
                         ? SystemMouseCursors.basic
                         : SystemMouseCursors.click,
                     child: GestureDetector(
                       behavior: HitTestBehavior.translucent,
-                      onTap: widget.useBigLayout
+                      onTap:
+                          useBigLayout ? null : () => onFullscreen?.call(false),
+                      onHorizontalDragUpdate: useBigLayout
                           ? null
-                          : () => widget.onFullscreen?.call(false),
-                      onHorizontalDragUpdate: widget.useBigLayout
-                          ? null
-                          : (DragUpdateDetails details) {
-                              _dragProgress = clampDouble(
-                                _dragProgress -
+                          : (DragUpdateDetails details) =>
+                              dragProgress.value = clampDouble(
+                                dragProgress.value -
                                     details.primaryDelta! / scrollSensetivity,
                                 -1.0,
                                 1.0,
-                              );
-
-                              setState(() {});
-                            },
-                      onHorizontalDragEnd: widget.useBigLayout
+                              ),
+                      onHorizontalDragEnd: useBigLayout
                           ? null
                           : (DragEndDetails details) {
-                              if (_dragProgress > 0.5) {
+                              if (dragProgress.value > 0.5) {
                                 // Запуск следующего трека.
 
-                                widget.onNextTrack?.call();
-                              } else if (_dragProgress < -0.5) {
+                                onNextTrack?.call();
+                              } else if (dragProgress.value < -0.5) {
                                 // Запуск предыдущего трека.
 
-                                widget.onPreviousTrack?.call();
+                                onPreviousTrack?.call();
                               }
 
-                              _dragProgress = 0.0;
-                              setState(() {});
+                              dragProgress.value = 0.0;
                             },
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -495,9 +500,9 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                             width: imageSize,
                             height: imageSize,
                             child: InkWell(
-                              onTap: () => widget.onFullscreen?.call(false),
+                              onTap: () => onFullscreen?.call(false),
                               child: Hero(
-                                tag: widget.audio?.mediaKey ?? "",
+                                tag: audio?.mediaKey ?? "",
                                 child: AnimatedContainer(
                                   duration: const Duration(
                                     milliseconds: 200,
@@ -505,11 +510,14 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                   curve: Curves.ease,
                                   decoration: BoxDecoration(
                                     boxShadow: [
-                                      if (widget.playbackState)
+                                      if (playbackState)
                                         BoxShadow(
                                           blurRadius: 10,
                                           spreadRadius: -3,
-                                          color: widget.scheme.tertiary,
+                                          color: (audio?.thumbnail != null
+                                                  ? schemeInfo?.frequentColor
+                                                  : null) ??
+                                              Colors.blueGrey,
                                           blurStyle: BlurStyle.outer,
                                         ),
                                     ],
@@ -525,27 +533,12 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                       child: SizedBox(
                                         key: ValueKey(
                                           imageUrl != null
-                                              ? widget.audio!.mediaKey
+                                              ? audio!.mediaKey
                                               : null,
                                         ),
                                         width: imageSize,
                                         height: imageSize,
-                                        child: imageUrl != null
-                                            ? CachedNetworkImage(
-                                                imageUrl: imageUrl,
-                                                cacheKey:
-                                                    "${widget.audio!.mediaKey}small",
-                                                placeholder: (
-                                                  BuildContext context,
-                                                  String url,
-                                                ) =>
-                                                    const FallbackAudioAvatar(),
-                                                fit: BoxFit.contain,
-                                                cacheManager:
-                                                    CachedAlbumImagesManager
-                                                        .instance,
-                                              )
-                                            : const FallbackAudioAvatar(),
+                                        child: trackImageWidget,
                                       ),
                                     ),
                                   ),
@@ -554,7 +547,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                             ),
                           ),
                           SizedBox(
-                            width: widget.useBigLayout ? 14 : 8,
+                            width: useBigLayout ? 14 : 8,
                           ),
 
                           // Название и исполнитель трека.
@@ -566,22 +559,21 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                 ClipRRect(
                                   child: Transform.translate(
                                     offset: Offset(
-                                      _dragProgress * -scrollWidth,
+                                      dragProgress.value * -scrollWidth,
                                       0.0,
                                     ),
                                     child: Opacity(
-                                      opacity: 1.0 - _dragProgress.abs(),
+                                      opacity: 1.0 - dragProgress.value.abs(),
                                       child: SizedBox(
-                                        width: widget.useBigLayout
+                                        width: useBigLayout
                                             ? null
                                             : double.infinity,
                                         child: TrackTitleAndArtist(
-                                          title: widget.audio?.title ?? "",
-                                          artist: widget.audio?.artist ?? "",
-                                          subtitle: widget.audio?.subtitle,
-                                          explicit:
-                                              widget.audio?.isExplicit ?? false,
-                                          scheme: widget.scheme,
+                                          title: audio?.title ?? "",
+                                          artist: audio?.artist ?? "",
+                                          subtitle: audio?.subtitle,
+                                          explicit: audio?.isExplicit ?? false,
+                                          scheme: scheme,
                                         ),
                                       ),
                                     ),
@@ -589,50 +581,45 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                 ),
 
                                 // Другой трек.
-                                if (_dragProgress != 0.0)
+                                if (dragProgress.value != 0.0)
                                   ClipRRect(
                                     child: Transform.translate(
                                       offset: Offset(
-                                        (_dragProgress > 0.0
+                                        (dragProgress.value > 0.0
                                                 ? scrollWidth
                                                 : -scrollWidth) -
-                                            _dragProgress * scrollWidth,
+                                            dragProgress.value * scrollWidth,
                                         0.0,
                                       ),
                                       child: Opacity(
-                                        opacity: _dragProgress.abs(),
+                                        opacity: dragProgress.value.abs(),
                                         child: SizedBox(
-                                          width: widget.useBigLayout
+                                          width: useBigLayout
                                               ? null
                                               : double.infinity,
-                                          child: _dragProgress > 0.0
+                                          child: dragProgress.value > 0.0
                                               ? TrackTitleAndArtist(
-                                                  title:
-                                                      widget.nextAudio?.title ??
-                                                          "",
-                                                  artist: widget
-                                                          .nextAudio?.artist ??
-                                                      "",
-                                                  subtitle: widget
-                                                      .nextAudio?.subtitle,
-                                                  explicit: widget.nextAudio
-                                                          ?.isExplicit ??
-                                                      false,
-                                                  scheme: widget.scheme,
+                                                  title: nextAudio?.title ?? "",
+                                                  artist:
+                                                      nextAudio?.artist ?? "",
+                                                  subtitle: nextAudio?.subtitle,
+                                                  explicit:
+                                                      nextAudio?.isExplicit ??
+                                                          false,
+                                                  scheme: scheme,
                                                 )
                                               : TrackTitleAndArtist(
-                                                  title: widget.previousAudio
-                                                          ?.title ??
+                                                  title: previousAudio?.title ??
                                                       "",
-                                                  artist: widget.previousAudio
-                                                          ?.artist ??
-                                                      "",
-                                                  subtitle: widget
-                                                      .previousAudio?.subtitle,
-                                                  explicit: widget.previousAudio
+                                                  artist:
+                                                      previousAudio?.artist ??
+                                                          "",
+                                                  subtitle:
+                                                      previousAudio?.subtitle,
+                                                  explicit: previousAudio
                                                           ?.isExplicit ??
                                                       false,
-                                                  scheme: widget.scheme,
+                                                  scheme: scheme,
                                                 ),
                                         ),
                                       ),
@@ -641,31 +628,31 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                               ],
                             ),
                           ),
-                          if (widget.useBigLayout)
+                          if (useBigLayout)
                             const SizedBox(
                               width: 8,
                             ),
 
                           // Кнопка для лайка (в Desktop Layout'е).
-                          if (widget.useBigLayout)
+                          if (useBigLayout)
                             IconButton(
-                              onPressed: () => widget.onFavoriteStateToggle
-                                  ?.call(!widget.favoriteState),
+                              onPressed: () =>
+                                  onFavoriteStateToggle?.call(!favoriteState),
                               icon: Icon(
-                                widget.favoriteState
+                                favoriteState
                                     ? Icons.favorite
                                     : Icons.favorite_outline,
-                                color: widget.scheme.onPrimaryContainer,
+                                color: scheme.onPrimaryContainer,
                               ),
                             ),
 
                           // Кнопка для дизлайка (в Desktop Layout'е).
-                          if (widget.useBigLayout && widget.onDislike != null)
+                          if (useBigLayout && onDislike != null)
                             IconButton(
-                              onPressed: widget.onDislike,
+                              onPressed: onDislike,
                               icon: Icon(
                                 Icons.thumb_down_outlined,
-                                color: widget.scheme.onPrimaryContainer,
+                                color: scheme.onPrimaryContainer,
                               ),
                             ),
                         ],
@@ -678,23 +665,19 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
           ),
 
           // Кнопки управления плеером по центру в Desktop Layout'е.
-          if (widget.useBigLayout)
+          if (useBigLayout)
             Align(
               child: Stack(
                 clipBehavior: Clip.none,
                 alignment: Alignment.center,
                 children: [
                   // Надпись "Играет следующим". Если включён повтор текущего трека, то отображаем текущий трек вместо следующего.
-                  if (widget.useBigLayout &&
-                      (widget.isRepeatEnabled
-                          ? widget.audio != null
-                          : widget.nextAudio != null))
+                  if (useBigLayout &&
+                      (isRepeatEnabled ? audio != null : nextAudio != null))
                     NextTrackInfoWidget(
                       displayNextTrack: displayNextTrack,
-                      scheme: widget.scheme,
-                      nextAudio: widget.isRepeatEnabled
-                          ? widget.audio!
-                          : widget.nextAudio!,
+                      scheme: scheme,
+                      nextAudio: isRepeatEnabled ? audio! : nextAudio!,
                     ),
 
                   // Ряд из кнопок управления плеером в Desktop Layout'е.
@@ -704,7 +687,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         // Индикатор буферизации.
-                        if (widget.isBuffering)
+                        if (isBuffering)
                           Padding(
                             padding: const EdgeInsets.symmetric(
                               vertical: 8,
@@ -713,27 +696,25 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                               borderRadius: BorderRadius.circular(
                                 globalBorderRadius,
                               ),
-                              backgroundColor: widget.scheme.onPrimaryContainer
-                                  .withOpacity(0.5),
+                              backgroundColor:
+                                  scheme.onPrimaryContainer.withOpacity(0.5),
                             ),
                           ),
 
                         // Slider для отображения прогресса воспроизведения трека.
-                        if (!widget.isBuffering)
+                        if (!isBuffering)
                           SliderTheme(
                             data: SliderThemeData(
                               trackShape: CustomTrackShape(),
                               overlayShape: SliderComponentShape.noOverlay,
-                              activeTrackColor:
-                                  widget.scheme.onPrimaryContainer,
-                              thumbColor: widget.scheme.onPrimaryContainer,
-                              inactiveTrackColor: widget
-                                  .scheme.onPrimaryContainer
-                                  .withOpacity(0.5),
+                              activeTrackColor: scheme.onPrimaryContainer,
+                              thumbColor: scheme.onPrimaryContainer,
+                              inactiveTrackColor:
+                                  scheme.onPrimaryContainer.withOpacity(0.5),
                             ),
                             child: ResponsiveSlider(
-                              value: widget.progress,
-                              onChangeEnd: widget.onProgressChange,
+                              value: progress,
+                              onChangeEnd: onProgressChange,
                             ),
                           ),
 
@@ -747,10 +728,10 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                 fit: BoxFit.scaleDown,
                                 child: Text(
                                   secondsAsString(
-                                    widget.position.inSeconds,
+                                    position.inSeconds,
                                   ),
                                   style: TextStyle(
-                                    color: widget.scheme.onPrimaryContainer
+                                    color: scheme.onPrimaryContainer
                                         .withOpacity(0.75),
                                   ),
                                 ),
@@ -764,25 +745,25 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                 // Кнопка для переключения shuffle.
                                 IconButton(
                                   onPressed: canToggleShuffle
-                                      ? () => widget.onShuffleToggle
-                                          ?.call(!widget.isShuffleEnabled)
+                                      ? () => onShuffleToggle
+                                          ?.call(!isShuffleEnabled)
                                       : null,
                                   icon: Icon(
-                                    widget.isShuffleEnabled
+                                    isShuffleEnabled
                                         ? Icons.shuffle_on_outlined
                                         : Icons.shuffle,
                                     color: canToggleShuffle
-                                        ? widget.scheme.onPrimaryContainer
+                                        ? scheme.onPrimaryContainer
                                         : null,
                                   ),
                                 ),
 
                                 // Предыдущий трек.
                                 IconButton(
-                                  onPressed: widget.onPreviousTrack,
+                                  onPressed: onPreviousTrack,
                                   icon: Icon(
                                     Icons.skip_previous,
-                                    color: widget.scheme.onPrimaryContainer,
+                                    color: scheme.onPrimaryContainer,
                                   ),
                                 ),
 
@@ -791,22 +772,22 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
 
                                 // Кнопка для запуска следующего трека.
                                 IconButton(
-                                  onPressed: widget.onNextTrack,
+                                  onPressed: onNextTrack,
                                   icon: Icon(
                                     Icons.skip_next,
-                                    color: widget.scheme.onPrimaryContainer,
+                                    color: scheme.onPrimaryContainer,
                                   ),
                                 ),
 
                                 // Кнопка повтора.
                                 IconButton(
-                                  onPressed: () => widget.onRepeatToggle
-                                      ?.call(!widget.isRepeatEnabled),
+                                  onPressed: () =>
+                                      onRepeatToggle?.call(!isRepeatEnabled),
                                   icon: Icon(
-                                    widget.isRepeatEnabled
+                                    isRepeatEnabled
                                         ? Icons.repeat_on_outlined
                                         : Icons.repeat,
-                                    color: widget.scheme.onPrimaryContainer,
+                                    color: scheme.onPrimaryContainer,
                                   ),
                                 ),
                               ],
@@ -818,10 +799,10 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                                 fit: BoxFit.scaleDown,
                                 child: Text(
                                   secondsAsString(
-                                    widget.duration.inSeconds,
+                                    duration.inSeconds,
                                   ),
                                   style: TextStyle(
-                                    color: widget.scheme.onPrimaryContainer
+                                    color: scheme.onPrimaryContainer
                                         .withOpacity(0.75),
                                   ),
                                 ),
@@ -837,7 +818,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
             ),
 
           // Кнопки управления громкости и прочей мелочи справа в Desktop Layout'е.
-          if (widget.useBigLayout)
+          if (useBigLayout)
             Align(
               alignment: Alignment.bottomRight,
               child: Padding(
@@ -860,14 +841,14 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                             child: SizedBox(
                               width: 150,
                               child: ScrollableSlider(
-                                value: widget.volume,
-                                activeColor: widget.scheme.onPrimaryContainer,
-                                inactiveColor: widget.scheme.onPrimaryContainer
-                                    .withOpacity(0.5),
+                                value: volume,
+                                activeColor: scheme.onPrimaryContainer,
+                                inactiveColor:
+                                    scheme.onPrimaryContainer.withOpacity(0.5),
                                 onChanged: (double newVolume) {
                                   if (isMobile) return;
 
-                                  widget.onVolumeChange?.call(newVolume);
+                                  onVolumeChange?.call(newVolume);
                                 },
                               ),
                             ),
@@ -881,10 +862,10 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                             right: 2,
                           ),
                           child: IconButton(
-                            onPressed: widget.onMiniplayer,
+                            onPressed: onMiniplayer,
                             icon: Icon(
                               Icons.picture_in_picture_alt,
-                              color: widget.scheme.onPrimaryContainer,
+                              color: scheme.onPrimaryContainer,
                             ),
                           ),
                         ),
@@ -892,10 +873,10 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                       // Кнопка для перехода в полноэкранный режим.
                       if (isDesktop)
                         IconButton(
-                          onPressed: () => widget.onFullscreen?.call(false),
+                          onPressed: () => onFullscreen?.call(false),
                           icon: Icon(
                             Icons.fullscreen,
-                            color: widget.scheme.onPrimaryContainer,
+                            color: scheme.onPrimaryContainer,
                           ),
                         ),
                     ],
@@ -905,7 +886,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
             ),
 
           // Кнопки для управления справа в Mobile Layout'е.
-          if (!widget.useBigLayout)
+          if (!useBigLayout)
             Align(
               alignment: Alignment.centerRight,
               child: Padding(
@@ -917,23 +898,21 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                   children: [
                     // Кнопка лайка.
                     IconButton(
-                      onPressed: () => widget.onFavoriteStateToggle
-                          ?.call(!widget.favoriteState),
+                      onPressed: () =>
+                          onFavoriteStateToggle?.call(!favoriteState),
                       icon: Icon(
-                        widget.favoriteState
-                            ? Icons.favorite
-                            : Icons.favorite_outline,
-                        color: widget.scheme.onPrimaryContainer,
+                        favoriteState ? Icons.favorite : Icons.favorite_outline,
+                        color: scheme.onPrimaryContainer,
                       ),
                     ),
 
                     // Кнопка для дизлайка.
-                    if (widget.onDislike != null)
+                    if (onDislike != null)
                       IconButton(
-                        onPressed: widget.onDislike,
+                        onPressed: onDislike,
                         icon: Icon(
                           Icons.thumb_down_outlined,
-                          color: widget.scheme.onPrimaryContainer,
+                          color: scheme.onPrimaryContainer,
                         ),
                       ),
 
@@ -945,7 +924,7 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
             ),
 
           // Полоска внизу для отображения прогресса трека в Mobile Layout'е.
-          if (!widget.useBigLayout)
+          if (!useBigLayout)
             Align(
               alignment: Alignment.bottomLeft,
               child: Padding(
@@ -958,10 +937,10 @@ class _BottomMusicPlayerState extends State<BottomMusicPlayer> {
                     0.5,
                   ),
                   child: BottomMusicProgressBar(
-                    scheme: widget.scheme,
-                    isBuffering: widget.isBuffering,
-                    playbackState: widget.playbackState,
-                    progress: widget.progress,
+                    scheme: scheme,
+                    isBuffering: isBuffering,
+                    playbackState: playbackState,
+                    progress: progress,
                   ),
                 ),
               ),

@@ -4,9 +4,9 @@ import "dart:ui";
 import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
-import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "package:fullscreen_window/fullscreen_window.dart";
-import "package:provider/provider.dart";
+import "package:go_router/go_router.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:responsive_builder/responsive_builder.dart";
 import "package:scroll_to_index/scroll_to_index.dart";
 import "package:styled_text/styled_text.dart";
@@ -20,7 +20,8 @@ import "../extensions.dart";
 import "../intents.dart";
 import "../main.dart";
 import "../provider/color.dart";
-import "../provider/user.dart";
+import "../provider/l18n.dart";
+import "../provider/preferences.dart";
 import "../services/cache_manager.dart";
 import "../services/logger.dart";
 import "../utils.dart";
@@ -60,12 +61,7 @@ Future<void> openFullscreenPlayer(
 
   if (!context.mounted) return;
 
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => const FullscreenPlayerRoute(),
-    ),
-  );
+  context.push("/fullscreenPlayer");
 
   isFullscreenPlayerOpen = true;
 
@@ -90,7 +86,7 @@ Future<void> closeFullscreenPlayer(
 
   if (!context.mounted) return;
 
-  if (popRoute) Navigator.of(context).pop();
+  if (popRoute) context.pop();
 
   isFullscreenPlayerOpen = false;
 
@@ -179,7 +175,7 @@ Future<void> closeMiniPlayer(
     return;
   }
 
-  if (popRoute && context.mounted) Navigator.of(context).pop();
+  if (popRoute && context.mounted) context.pop();
 
   // Если приложение запущено на Desktop, то делаем окошко маленьким.
   if (isDesktop) {
@@ -580,7 +576,7 @@ class _BlurredBackgroundImageState extends State<BlurredBackgroundImage> {
     subscriptions = [
       // Изменение текущего трека.
       player.currentIndexStream.listen(
-        (int? index) => setState(() {}),
+        (_) => setState(() {}),
       ),
     ];
   }
@@ -618,16 +614,17 @@ class _BlurredBackgroundImageState extends State<BlurredBackgroundImage> {
 }
 
 /// Route, отображающий полноэкранный плеер.
-class FullscreenPlayerRoute extends StatefulWidget {
+class FullscreenPlayerRoute extends ConsumerStatefulWidget {
   const FullscreenPlayerRoute({
     super.key,
   });
 
   @override
-  State<FullscreenPlayerRoute> createState() => _FullscreenPlayerRouteState();
+  ConsumerState<FullscreenPlayerRoute> createState() =>
+      _FullscreenPlayerRouteState();
 }
 
-class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
+class _FullscreenPlayerRouteState extends ConsumerState<FullscreenPlayerRoute> {
   final AppLogger logger = getLogger("FullscreenPlayerDesktopRoute");
 
   /// Подписки на изменения состояния воспроизведения трека.
@@ -640,12 +637,16 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
     subscriptions = [
       // Изменение текущего трека.
       player.currentIndexStream.listen(
-        (int? index) => setState(() {}),
+        (_) => setState(() {}),
       ),
 
       // Изменение состояния паузы плеера.
       player.loadedStateStream.listen(
-        (bool loaded) => closeFullscreenPlayer(context),
+        (bool loaded) {
+          if (loaded) return;
+
+          closeFullscreenPlayer(context);
+        },
       ),
     ];
   }
@@ -661,9 +662,9 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
 
   @override
   Widget build(BuildContext context) {
-    final UserProvider user = Provider.of<UserProvider>(context);
-    final PlayerSchemeProvider colorScheme =
-        Provider.of<PlayerSchemeProvider>(context);
+    final preferences = ref.watch(preferencesProvider);
+    final trackImageInfo = ref.watch(trackSchemeInfoProvider);
+    final l18n = ref.watch(l18nProvider);
 
     // Проверка на случай, если запустился плеер без активного трека.
     if (player.currentAudio == null) {
@@ -674,7 +675,8 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
         ),
         child: Theme(
           data: ThemeData(
-            colorScheme: colorScheme.darkColorScheme ?? fallbackDarkColorScheme,
+            colorScheme:
+                trackImageInfo?.darkColorScheme ?? fallbackDarkColorScheme,
           ),
           child: Scaffold(
             body: Center(
@@ -698,7 +700,7 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
 
                   // Текст.
                   StyledText(
-                    text: AppLocalizations.of(context)!.music_fullscreenNoAudio,
+                    text: l18n.music_fullscreenNoAudio,
                     textAlign: TextAlign.center,
                     tags: {
                       "bold": StyledTextTag(
@@ -727,8 +729,7 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
                       Icons.fullscreen_exit,
                     ),
                     label: Text(
-                      AppLocalizations.of(context)!
-                          .music_fullscreenNoAudioButton,
+                      l18n.music_fullscreenNoAudioButton,
                     ),
                   ),
                 ],
@@ -750,7 +751,8 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
       ),
       child: Theme(
         data: ThemeData(
-          colorScheme: colorScheme.darkColorScheme ?? fallbackDarkColorScheme,
+          colorScheme:
+              trackImageInfo?.darkColorScheme ?? fallbackDarkColorScheme,
         ),
         child: Builder(
           builder: (
@@ -802,8 +804,9 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
                         child: Stack(
                           children: [
                             // Размытое фоновое изображение.
+
                             if (player.currentAudio?.maxThumbnail != null &&
-                                user.settings.playerThumbAsBackground)
+                                preferences.playerThumbAsBackground)
                               SizedBox(
                                 width: MediaQuery.of(context).size.width,
                                 height: MediaQuery.of(context).size.height,

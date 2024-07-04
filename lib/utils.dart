@@ -4,6 +4,7 @@ import "dart:ui";
 import "package:diacritic/diacritic.dart";
 import "package:dynamic_color/dynamic_color.dart";
 import "package:flutter/material.dart";
+import "package:responsive_builder/responsive_builder.dart";
 
 /// Класс для отображения Route'ов в [BottomNavigationBar], вместе с их названиями, а так же иконками.
 class NavigationPage {
@@ -129,6 +130,9 @@ DateTime? datetimeFromString(String? value) {
 /// Превращает входную строку [value] типа [DateTime] в [String].
 String stringFromdatetime(DateTime value) => value.toIso8601String();
 
+/// Превращает входное значение [value] типа [Enum] в [int].
+int intFromEnum(Enum value) => value.index;
+
 /// Превращает пустую строку ([String.isEmpty]) в null, либо возвращает тот же объект строки.
 String? emptyStringAsNull(String? value) {
   if (value == null || value.isEmpty) return null;
@@ -161,6 +165,22 @@ bool get isDesktop =>
 /// Platform.isAndroid || Platform.isIOS
 /// ```
 bool get isMobile => Platform.isAndroid || Platform.isIOS;
+
+/// Указывает, что используется Mobile Layout.
+bool isMobileLayout(BuildContext context) =>
+    getDeviceType(MediaQuery.sizeOf(context)) == DeviceScreenType.mobile;
+
+/// Указывает, что используется Desktop Layout.
+bool isDesktopLayout(BuildContext context) =>
+    getDeviceType(MediaQuery.sizeOf(context)) == DeviceScreenType.desktop;
+
+/// Указывает, что используется светлая тема ([Brightness.light]).
+bool isLightTheme(BuildContext context) =>
+    Theme.of(context).brightness == Brightness.light;
+
+/// Указывает, что используется тёмная тема ([Brightness.dark]).
+bool isDarkTheme(BuildContext context) =>
+    Theme.of(context).brightness == Brightness.dark;
 
 /// Небольшой класс для создания виджетов класса [Slider] без Padding'ов.
 ///

@@ -19,8 +19,8 @@ class CacheItem {
   /// Указывает, что данный плейлист будет именно кэшироваться, а не удаляться из памяти устройства.
   final bool cache;
 
-  /// Объект пользователя, благодаря чему будет извлекаться текст песни.
-  final UserProvider user;
+  // /// Объект пользователя, благодаря чему будет извлекаться текст песни.
+  // final UserProvider user;
 
   /// Очередь по кэшированию треков.
   ///
@@ -33,21 +33,21 @@ class CacheItem {
     ExtendedPlaylist playlist,
     List<int> trackBytes,
     File trackFile,
-    UserProvider user,
+    // UserProvider user,
   ) async {
     // Сохраняем трек на диск.
     trackFile.createSync(recursive: true);
     trackFile.writeAsBytesSync(trackBytes);
 
-    // Загружаем информацию по треку.
-    await CachedStreamedAudio.downloadTrackData(
-      audio,
-      playlist,
-      user,
-      allowDeezer: user.settings.deezerThumbnails,
-      allowSpotifyLyrics:
-          user.settings.spotifyLyrics && user.spDCcookie != null,
-    );
+    // // Загружаем информацию по треку.
+    // await CachedStreamedAudio.downloadTrackData(
+    //   audio,
+    //   playlist,
+    //   user,
+    //   allowDeezer: user.settings.deezerThumbnails,
+    //   allowSpotifyLyrics:
+    //       user.settings.spotifyLyrics && user.spDCcookie != null,
+    // );
 
     // Запоминаем то, что трек кэширован.
     audio.isCached = true;
@@ -62,7 +62,7 @@ class CacheItem {
     ExtendedAudio audio,
     ExtendedPlaylist playlist,
     bool cache,
-    UserProvider user,
+    // UserProvider user,
   ) async {
     final File trackFile =
         await CachedStreamedAudio.getCachedAudioByKey(audio.mediaKey);
@@ -132,14 +132,14 @@ class CacheItem {
           );
         }
 
-        // Трек успешно загружен, вызываем callback-метод.
-        await _onTrackDownloaded(
-          audio,
-          playlist,
-          trackBytes,
-          trackFile,
-          user,
-        );
+        // // Трек успешно загружен, вызываем callback-метод.
+        // await _onTrackDownloaded(
+        //   audio,
+        //   playlist,
+        //   trackBytes,
+        //   trackFile,
+        //   user,
+        // );
 
         completer.complete();
       },
@@ -191,9 +191,7 @@ class CacheItem {
 
       if (cache && audio.url == null) continue;
 
-      _queue!
-          .add(() => cacheTrack(audio, playlist, cache, user))
-          .then((_) async {
+      _queue!.add(() => cacheTrack(audio, playlist, cache)).then((_) async {
         // Если мы загружаем треки, то после каждой загрузки сохраняем изменени в БД.
         if (!cache) return;
 
@@ -254,7 +252,7 @@ class CacheItem {
   CacheItem({
     required this.playlist,
     this.cache = true,
-    required this.user,
+    // required this.user,
   });
 }
 
@@ -279,7 +277,7 @@ class DownloadManager {
     ExtendedPlaylist playlist, {
     bool cache = true,
     bool saveInDB = true,
-    required UserProvider user,
+    // required UserProvider user,
     Function(ExtendedAudio)? onTrackCached,
   }) async {
     final CacheItem? pendingItem = getCacheTask(playlist);
@@ -304,7 +302,7 @@ class DownloadManager {
     final CacheItem cacheTask = CacheItem(
       playlist: playlist,
       cache: cache,
-      user: user,
+      // user: user,
     );
 
     _tasks.add(cacheTask);

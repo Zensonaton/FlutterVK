@@ -2,14 +2,15 @@ import "dart:async";
 
 import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
-import "package:flutter_gen/gen_l10n/app_localizations.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:just_audio/just_audio.dart";
-import "package:provider/provider.dart";
 import "package:skeletonizer/skeletonizer.dart";
 
 import "../../consts.dart";
 import "../../main.dart";
-import "../../provider/user.dart";
+import "../../provider/color.dart";
+import "../../provider/l18n.dart";
+import "../../provider/preferences.dart";
 import "../../services/cache_manager.dart";
 import "../../services/logger.dart";
 import "../../utils.dart";
@@ -27,13 +28,15 @@ const double _playerPadding = 56;
 const double _lyricsWidth = 500;
 
 /// Виджет, отображающий информацию по плейлисту, который играет в данный момент в полноэкранном плеере Desktop Layout'а.
-class PlaylistTitleWidget extends StatelessWidget {
+class PlaylistTitleWidget extends ConsumerWidget {
   const PlaylistTitleWidget({
     super.key,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l18n = ref.watch(l18nProvider);
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -70,21 +73,18 @@ class PlaylistTitleWidget extends StatelessWidget {
           children: [
             // "Воспроизведение музыки".
             Text(
-              AppLocalizations.of(context)!.music_fullscreenPlaylistNameTitle,
+              l18n.music_fullscreenPlaylistNameTitle,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withOpacity(0.75),
+                color:
+                    Theme.of(context).colorScheme.onSurface.withOpacity(0.75),
               ),
             ),
 
             // Название плейлиста.
             Text(
               player.currentPlaylist?.title ??
-                  AppLocalizations.of(context)!
-                      .music_fullscreenFavoritePlaylistName,
+                  l18n.music_fullscreenFavoritePlaylistName,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 fontWeight: FontWeight.w500,
@@ -98,16 +98,17 @@ class PlaylistTitleWidget extends StatelessWidget {
 }
 
 /// Виджет, отображающий информацию по следующему треку Desktop Layout'а.
-class NextTrackInfoWidget extends StatefulWidget {
+class NextTrackInfoWidget extends ConsumerStatefulWidget {
   const NextTrackInfoWidget({
     super.key,
   });
 
   @override
-  State<NextTrackInfoWidget> createState() => _NextTrackInfoWidgetState();
+  ConsumerState<NextTrackInfoWidget> createState() =>
+      _NextTrackInfoWidgetState();
 }
 
-class _NextTrackInfoWidgetState extends State<NextTrackInfoWidget> {
+class _NextTrackInfoWidgetState extends ConsumerState<NextTrackInfoWidget> {
   /// Подписки на изменения состояния воспроизведения трека.
   late final List<StreamSubscription> subscriptions;
 
@@ -118,12 +119,12 @@ class _NextTrackInfoWidgetState extends State<NextTrackInfoWidget> {
     subscriptions = [
       // Изменения позиции плеера.
       player.positionStream.listen(
-        (Duration? state) => setState(() {}),
+        (_) => setState(() {}),
       ),
 
       // Изменение текущего трека.
       player.currentIndexStream.listen(
-        (int? index) => setState(() {}),
+        (_) => setState(() {}),
       ),
     ];
   }
@@ -143,6 +144,8 @@ class _NextTrackInfoWidgetState extends State<NextTrackInfoWidget> {
       player.smartNextAudio != null,
       "Next audio is not known",
     );
+
+    final l18n = ref.watch(l18nProvider);
 
     /// Определяет по оставшейся длине трека то, стоит ли показывать надпись со следующим треком.
     final bool displayNextTrack =
@@ -208,8 +211,7 @@ class _NextTrackInfoWidgetState extends State<NextTrackInfoWidget> {
                 children: [
                   // "Следующим сыграет".
                   Text(
-                    AppLocalizations.of(context)!
-                        .music_fullscreenNextTrackTitle,
+                    l18n.music_fullscreenNextTrackTitle,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: Theme.of(context)
@@ -238,16 +240,16 @@ class _NextTrackInfoWidgetState extends State<NextTrackInfoWidget> {
 }
 
 /// Блок, отображающий текст песни.
-class LyricsBlockWidget extends StatefulWidget {
+class LyricsBlockWidget extends ConsumerStatefulWidget {
   const LyricsBlockWidget({
     super.key,
   });
 
   @override
-  State<LyricsBlockWidget> createState() => _LyricsBlockWidgetState();
+  ConsumerState<LyricsBlockWidget> createState() => _LyricsBlockWidgetState();
 }
 
-class _LyricsBlockWidgetState extends State<LyricsBlockWidget> {
+class _LyricsBlockWidgetState extends ConsumerState<LyricsBlockWidget> {
   /// Подписки на изменения состояния воспроизведения трека.
   late final List<StreamSubscription> subscriptions;
 
@@ -256,11 +258,9 @@ class _LyricsBlockWidgetState extends State<LyricsBlockWidget> {
     super.initState();
 
     subscriptions = [
+      // Изменения позиции плеера.
       player.positionStream.listen(
-        (Duration? position) => setState(() {}),
-      ),
-      player.sequenceStateStream.listen(
-        (SequenceState? sequence) => setState(() {}),
+        (Duration? state) => setState(() {}),
       ),
     ];
   }
@@ -276,14 +276,14 @@ class _LyricsBlockWidgetState extends State<LyricsBlockWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final UserProvider user = Provider.of<UserProvider>(context);
+    final preferences = ref.watch(preferencesProvider);
 
     return AnimatedOpacity(
       duration: const Duration(
         milliseconds: 500,
       ),
       curve: Curves.ease,
-      opacity: user.settings.trackLyricsEnabled ? 1.0 : 0.0,
+      opacity: preferences.trackLyricsEnabled ? 1.0 : 0.0,
       child: Align(
         alignment: Alignment.topRight,
         child: SizedBox(
@@ -329,17 +329,18 @@ class _LyricsBlockWidgetState extends State<LyricsBlockWidget> {
 }
 
 /// Блок для полноэкранного плеера Desktop Layout'а, отображаемый снизу, который показывает информацию по текущему треку, а так же кнопки для управления плеером.
-class FullscreenMediaControls extends StatefulWidget {
+class FullscreenMediaControls extends ConsumerStatefulWidget {
   const FullscreenMediaControls({
     super.key,
   });
 
   @override
-  State<FullscreenMediaControls> createState() =>
+  ConsumerState<FullscreenMediaControls> createState() =>
       _FullscreenMediaControlsState();
 }
 
-class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
+class _FullscreenMediaControlsState
+    extends ConsumerState<FullscreenMediaControls> {
   /// Подписки на изменения состояния воспроизведения трека.
   late final List<StreamSubscription> subscriptions;
 
@@ -348,14 +349,14 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
     super.initState();
 
     subscriptions = [
-      player.sequenceStateStream.listen(
-        (SequenceState? state) => setState(() {}),
-      ),
+      // Изменения состояния плеера.
       player.playerStateStream.listen(
-        (PlayerState? state) => setState(() {}),
+        (_) => setState(() {}),
       ),
+
+      // Изменения состояния паузы/воспроизведения.
       player.playingStream.listen(
-        (bool playing) => setState(() {}),
+        (_) => setState(() {}),
       ),
     ];
   }
@@ -371,8 +372,11 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
 
   /// Переключает состояние лайка у трека, играющий в данный момент.
   void _toggleLike() {
-    assert(player.currentAudio != null, "Current audio is null");
-    if (!networkRequiredDialog(context)) return;
+    assert(
+      player.currentAudio != null,
+      "Current audio is null",
+    );
+    if (!networkRequiredDialog(ref, context)) return;
 
     toggleTrackLikeState(
       context,
@@ -388,7 +392,7 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
       player.currentPlaylist!.isRecommendationTypePlaylist,
       "Attempted to dislike non-recommendation track",
     );
-    if (!networkRequiredDialog(context)) return;
+    if (!networkRequiredDialog(ref, context)) return;
 
     // Делаем трек дизлайкнутым.
     final bool result = await dislikeTrackState(context, player.currentAudio!);
@@ -400,7 +404,9 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
 
   @override
   Widget build(BuildContext context) {
-    final UserProvider user = Provider.of<UserProvider>(context);
+    final schemeInfo = ref.watch(trackSchemeInfoProvider);
+    final prefsNotifier = ref.read(preferencesProvider.notifier);
+    final preferences = ref.watch(preferencesProvider);
 
     /// Указывает, сохранён ли этот трек в лайкнутых.
     final bool isFavorite = player.currentAudio!.isLiked;
@@ -435,7 +441,7 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
           width: MediaQuery.of(context).size.width -
               _playerPadding * 2 -
               (((player.currentAudio!.hasLyrics ?? false) &&
-                      user.settings.trackLyricsEnabled)
+                      preferences.trackLyricsEnabled)
                   ? _lyricsWidth
                   : 0) -
               50,
@@ -466,15 +472,15 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                         ),
                         curve: Curves.ease,
                         width: 130 *
-                            ((user.settings.fullscreenBigThumbnail &&
-                                    MediaQuery.of(context).size.height > 600)
+                            ((preferences.fullscreenBigThumbnail &&
+                                    MediaQuery.sizeOf(context).height > 600)
                                 ? compactBigFullscreenImage
                                     ? 2
                                     : 3
                                 : 1),
                         height: 130 *
-                            ((user.settings.fullscreenBigThumbnail &&
-                                    MediaQuery.of(context).size.height > 600)
+                            ((preferences.fullscreenBigThumbnail &&
+                                    MediaQuery.sizeOf(context).height > 600)
                                 ? compactBigFullscreenImage
                                     ? 2
                                     : 3
@@ -485,7 +491,10 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                               BoxShadow(
                                 blurRadius: 22,
                                 spreadRadius: -3,
-                                color: Theme.of(context).colorScheme.tertiary,
+                                color: (player.currentAudio?.thumbnail != null
+                                        ? schemeInfo?.frequentColor
+                                        : null) ??
+                                    Colors.blueGrey.withOpacity(0.25),
                                 blurStyle: BlurStyle.outer,
                               ),
                           ],
@@ -497,12 +506,10 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                           child: Material(
                             color: Colors.transparent,
                             child: InkWell(
-                              onTap: () {
-                                user.settings.fullscreenBigThumbnail =
-                                    !user.settings.fullscreenBigThumbnail;
-
-                                user.markUpdated();
-                              },
+                              onTap: () => prefsNotifier
+                                  .setFullscreenBigThumbnailEnabled(
+                                !preferences.fullscreenBigThumbnail,
+                              ),
                               child: player.currentAudio!.maxThumbnail != null
                                   ? CachedNetworkImage(
                                       imageUrl:
@@ -741,8 +748,7 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                                   ? () async {
                                       await player.setShuffle(!enabled);
 
-                                      user.settings.shuffleEnabled = !enabled;
-                                      user.markUpdated();
+                                      prefsNotifier.setShuffleEnabled(!enabled);
                                     }
                                   : null,
                               icon: Icon(
@@ -888,15 +894,12 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                         ),
                         child: IconButton(
                           onPressed: player.currentAudio!.hasLyrics ?? false
-                              ? () {
-                                  user.settings.trackLyricsEnabled =
-                                      !user.settings.trackLyricsEnabled;
-
-                                  user.markUpdated();
-                                }
+                              ? () => prefsNotifier.setTrackLyricsEnabled(
+                                    !preferences.trackLyricsEnabled,
+                                  )
                               : null,
                           icon: Icon(
-                            user.settings.trackLyricsEnabled &&
+                            preferences.trackLyricsEnabled &&
                                     (player.currentAudio!.hasLyrics ?? false)
                                 ? Icons.lyrics
                                 : Icons.lyrics_outlined,
@@ -914,7 +917,7 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
 
                       // Выход из полноэкранного режима.
                       IconButton(
-                        onPressed: () => closePlayer(context),
+                        onPressed: () => closeFullscreenPlayer(context),
                         icon: Icon(
                           Icons.fullscreen_exit,
                           color: Theme.of(context).colorScheme.primary,

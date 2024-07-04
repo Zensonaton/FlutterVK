@@ -22,8 +22,8 @@ Map<String, dynamic> _$AudioMixToJson(AudioMix instance) => <String, dynamic>{
 
 SimillarPlaylist _$SimillarPlaylistFromJson(Map<String, dynamic> json) =>
     SimillarPlaylist(
-      id: json['id'] as int,
-      ownerID: json['owner_id'] as int,
+      id: (json['id'] as num).toInt(),
+      ownerID: (json['owner_id'] as num).toInt(),
       percentage: (json['percentage'] as num).toDouble(),
       audios:
           (json['audios'] as List<dynamic>).map((e) => e as String).toList(),
@@ -42,7 +42,7 @@ Map<String, dynamic> _$SimillarPlaylistToJson(SimillarPlaylist instance) =>
 BlockAction _$BlockActionFromJson(Map<String, dynamic> json) => BlockAction(
       sectionID: json['section_id'] as String?,
       title: json['title'] as String?,
-      refItemsCount: json['ref_items_count'] as int?,
+      refItemsCount: (json['ref_items_count'] as num?)?.toInt(),
       refLayoutName: json['ref_layout_name'] as String?,
       refDataType: json['ref_data_type'] as String?,
     );

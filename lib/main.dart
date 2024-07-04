@@ -3,20 +3,18 @@ import "dart:io";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:just_audio_media_kit/just_audio_media_kit.dart";
 import "package:local_notifier/local_notifier.dart";
 import "package:package_info_plus/package_info_plus.dart";
 import "package:path/path.dart" as path;
 import "package:path_provider/path_provider.dart";
-import "package:provider/provider.dart";
 import "package:responsive_builder/responsive_builder.dart";
 import "package:system_tray/system_tray.dart";
 import "package:window_manager/window_manager.dart";
 
 import "app.dart";
 import "db/db.dart";
-import "provider/color.dart";
-import "provider/user.dart";
 import "services/audio_player.dart";
 import "services/connectivity_manager.dart";
 import "services/download_manager.dart";
@@ -24,12 +22,21 @@ import "services/logger.dart";
 import "services/updater.dart";
 import "utils.dart";
 
+// TODO: Удалить это.
 /// Глобальный объект [BuildContext].
 ///
 /// За этот костыль меня могут отпиздить, и правильно сделают. Данный BuildContext нужен, что бы можно было извлекать ключи локализации там, где BuildContext отсутствует (внутри методов initState, к примеру).
 ///
 /// Источник: https://christopher.khawand.dev/posts/flutter-internationalization-without-buildcontext
 BuildContext? buildContext;
+
+/// [GlobalKey] для [Navigator], который позволяет переходить между экранами вне контекста виджета.
+///
+/// Пример использования:
+/// ```dart
+/// navigatorKey.currentContext?.go("/grades");
+/// ```
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 /// Объект базы данных приложения.
 late final AppStorage appStorage;
@@ -237,16 +244,10 @@ Future main() async {
 
     // Запускаем само приложение.
     runApp(
-      MultiProvider(
-        providers: [
-          ChangeNotifierProvider(
-            create: (BuildContext context) => UserProvider(false),
-          ),
-          ChangeNotifierProvider(
-            create: (BuildContext context) => PlayerSchemeProvider(),
-          ),
-        ],
-        child: const FlutterVKApp(),
+      const ProviderScope(
+        child: EagerInitialization(
+          app: FlutterVKApp(),
+        ),
       ),
     );
   } catch (e, stackTrace) {
@@ -259,8 +260,10 @@ Future main() async {
     // Пытаемся запустить errored-версию приложения.
     try {
       runApp(
-        ErroredApp(
-          error: e.toString(),
+        ProviderScope(
+          child: ErroredApp(
+            error: e.toString(),
+          ),
         ),
       );
     } catch (e, stackTrace) {

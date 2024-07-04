@@ -5,9 +5,9 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "package:flutter_localizations/flutter_localizations.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:local_notifier/local_notifier.dart";
 import "package:path/path.dart" as path;
-import "package:provider/provider.dart";
 import "package:url_launcher/url_launcher.dart";
 import "package:window_manager/window_manager.dart";
 
@@ -16,66 +16,88 @@ import "enums.dart";
 import "intents.dart";
 import "main.dart";
 import "provider/color.dart";
-import "provider/user.dart";
-import "routes/home.dart";
+import "provider/l18n.dart";
+import "provider/navigation_router.dart";
+import "provider/preferences.dart";
+import "provider/shared_prefs.dart";
 import "routes/home/profile.dart";
-import "routes/welcome.dart";
 import "services/audio_player.dart";
 import "services/logger.dart";
 import "utils.dart";
 import "widgets/loading_overlay.dart";
 
+/// Wrapper для [FlutterVKApp], который загружает критически важные [Provider]'ы перед запуском основного приложения.
+class EagerInitialization extends ConsumerWidget {
+  /// Класс самого приложения.
+  final FlutterVKApp app;
+
+  const EagerInitialization({
+    super.key,
+    required this.app,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final result = ref.watch(sharedPrefsProvider);
+
+    if (result.isLoading) {
+      return const Center(
+        child: CircularProgressIndicator.adaptive(),
+      );
+    } else if (result.hasError) {
+      throw Exception(
+        result.error!.toString(),
+      );
+    }
+
+    return app;
+  }
+}
+
 /// Основной виджет главного приложения, используемый методом [runApp] внутри [main].
 ///
 /// В случае, если по какой-то причине произойдёт ошибка, вместо этого класса будет вызван [runApp], но для класса [ErroredApp], который символизирует ошибку запуска приложения.
-class FlutterVKApp extends StatefulWidget {
+class FlutterVKApp extends ConsumerStatefulWidget {
   const FlutterVKApp({
     super.key,
   });
 
   @override
-  State<FlutterVKApp> createState() => _FlutterVKAppState();
+  ConsumerState<FlutterVKApp> createState() => _FlutterVKAppState();
 }
 
-class _FlutterVKAppState extends State<FlutterVKApp> with WindowListener {
+class _FlutterVKAppState extends ConsumerState<FlutterVKApp>
+    with WindowListener {
   final AppLogger logger = getLogger("MainApp");
 
-  /// Виджет, который будет хранить в себе "главную" страницу, с которой и начнётся изначальная навигация пользователем.
-  Widget? home;
-
   void init() async {
+    final UserPreferences preferences = ref.read(preferencesProvider);
+
     // Загружаем обработчик событий окна.
     windowManager.addListener(this);
 
-    // Загружаем объект пользователя с диска.
-    final UserProvider user = Provider.of<UserProvider>(context, listen: false);
-
-    // Узнаём, куда нужно перекинуть пользователя.
-    home = await user.loadFromDisk() ? const HomeRoute() : const WelcomeRoute();
-
     // Восстанавливаем состояние shuffle у плеера.
-    if (user.settings.shuffleEnabled) {
+    if (preferences.shuffleEnabled) {
       await player.setShuffle(true);
     }
 
     // Переключаем состояние Discord Rich Presence.
-    if (user.settings.discordRPCEnabled && isDesktop) {
+    if (preferences.discordRPCEnabled && isDesktop) {
       await player.setDiscordRPCEnabled(true);
     }
 
     // Восстанавливаем значение настройки "пауза при отключении громкости".
-    if (user.settings.pauseOnMuteEnabled) {
+    if (preferences.pauseOnMuteEnabled) {
       player.setPauseOnMuteEnabled(true);
     }
 
     // Восстанавливаем значение настройки "остановка при неактивности".
-    if (user.settings.stopOnPauseEnabled) {
+    if (preferences.stopOnPauseEnabled) {
       player.setStopOnPauseEnabled(true);
     }
 
     // На Desktop-платформах, создаём README-файл в папке кэша треков.
-    // FIXME: AppLocalizations здесь не работает, и это вызывает ошибку.
-    if (isDesktop && context.mounted) {
+    if (isDesktop) {
       final File readmeFile = File(
         path.join(
           await CachedStreamedAudio.getTrackStorageDirectory(),
@@ -86,8 +108,7 @@ class _FlutterVKAppState extends State<FlutterVKApp> with WindowListener {
         recursive: true,
       );
       readmeFile.writeAsStringSync(
-        // ignore: use_build_context_synchronously
-        AppLocalizations.of(context)!.general_musicReadmeFileContents,
+        ref.read(l18nProvider).general_musicReadmeFileContents,
       );
     }
 
@@ -113,23 +134,23 @@ class _FlutterVKAppState extends State<FlutterVKApp> with WindowListener {
 
   @override
   void onWindowClose() async {
-    final UserProvider user = Provider.of<UserProvider>(context, listen: false);
-    final AppCloseBehavior behavior = user.settings.closeBehavior;
+    final AppLocalizations l18n = ref.read(l18nProvider);
+    final UserPreferences preferences = ref.read(preferencesProvider);
+    final CloseBehavior behavior = preferences.closeBehavior;
 
     // В зависимости от настройки "Поведение при закрытии", приложение должно либо закрыться, либо просто минимизироваться.
-    if (behavior == AppCloseBehavior.minimize ||
-        (behavior == AppCloseBehavior.minimizeIfPlaying && player.playing)) {
+    if (behavior == CloseBehavior.minimize ||
+        (behavior == CloseBehavior.minimizeIfPlaying && player.playing)) {
       final LocalNotification notification = LocalNotification(
         title: "Flutter VK",
-        body: AppLocalizations.of(buildContext!)!.general_appMinimized,
+        body: l18n.general_appMinimized,
         silent: true,
         actions: [
           LocalNotificationAction(
-            text: AppLocalizations.of(buildContext!)!.general_appMinimizedClose,
+            text: l18n.general_appMinimizedClose,
           ),
           LocalNotificationAction(
-            text:
-                AppLocalizations.of(buildContext!)!.general_appMinimizedRestore,
+            text: l18n.general_appMinimizedRestore,
           ),
         ],
       );
@@ -157,22 +178,15 @@ class _FlutterVKAppState extends State<FlutterVKApp> with WindowListener {
 
   @override
   Widget build(BuildContext context) {
-    final UserProvider user = Provider.of<UserProvider>(context);
-    final PlayerSchemeProvider colorScheme =
-        Provider.of<PlayerSchemeProvider>(context);
+    final router = ref.watch(routerProvider);
+    final preferences = ref.watch(preferencesProvider);
+    final trackImageInfo = ref.watch(trackSchemeInfoProvider);
 
-    // Если мы ещё не загрузились, то показываем загрузку.
-    if (home == null) {
-      return const Center(
-        child: CircularProgressIndicator.adaptive(),
-      );
-    }
-
-    final bool playerColorsAppwide = user.settings.playerColorsAppWide;
+    final bool appwideColors = preferences.playerColorsAppWide;
     final playerLightColorScheme =
-        playerColorsAppwide ? colorScheme.lightColorScheme : null;
+        appwideColors ? trackImageInfo?.lightColorScheme : null;
     final playerDarkColorScheme =
-        playerColorsAppwide ? colorScheme.darkColorScheme : null;
+        appwideColors ? trackImageInfo?.darkColorScheme : null;
 
     return DynamicColorBuilder(
       builder:
@@ -187,7 +201,7 @@ class _FlutterVKAppState extends State<FlutterVKApp> with WindowListener {
         final ColorScheme? lightDynamicSchemeFixed = dynamicSchemesFixed?.$1;
         final ColorScheme? darkDynamicSchemeFixed = dynamicSchemesFixed?.$2;
 
-        return MaterialApp(
+        return MaterialApp.router(
           theme: ThemeData(
             colorScheme: playerLightColorScheme ??
                 lightDynamicSchemeFixed ??
@@ -198,13 +212,13 @@ class _FlutterVKAppState extends State<FlutterVKApp> with WindowListener {
                     darkDynamicSchemeFixed ??
                     fallbackDarkColorScheme)
                 .copyWith(
-              surface: user.settings.oledTheme ? Colors.black : null,
+              surface: preferences.oledTheme ? Colors.black : null,
               // Некоторые части интерфейса Flutter до сих пор используют background.
               // ignore: deprecated_member_use
-              background: user.settings.oledTheme ? Colors.black : null,
+              background: preferences.oledTheme ? Colors.black : null,
             ),
           ),
-          themeMode: user.settings.theme,
+          themeMode: preferences.theme,
           themeAnimationDuration: const Duration(
             milliseconds: 500,
           ),
@@ -220,7 +234,9 @@ class _FlutterVKAppState extends State<FlutterVKApp> with WindowListener {
               ),
             );
           },
+          routerConfig: router,
           onGenerateTitle: (BuildContext context) {
+            // TODO: Избавиться от этого.
             buildContext = context;
 
             return "Flutter VK";
@@ -251,7 +267,6 @@ class _FlutterVKAppState extends State<FlutterVKApp> with WindowListener {
             Locale("ru"),
             Locale("en"),
           ],
-          home: home,
         );
       },
     );
