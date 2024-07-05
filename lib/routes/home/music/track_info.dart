@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
 import "package:gap/gap.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
@@ -21,7 +22,9 @@ import "../music.dart";
 ///   builder: (BuildContext context) => const TrackInfoEditDialog(...),
 /// ),
 /// ```
-class TrackInfoEditDialog extends ConsumerStatefulWidget {
+class TrackInfoEditDialog extends HookConsumerWidget {
+  static final AppLogger logger = getLogger("TrackInfoEditDialog");
+
   /// Трек, данные которого будут изменяться.
   final ExtendedAudio audio;
 
@@ -31,47 +34,25 @@ class TrackInfoEditDialog extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<TrackInfoEditDialog> createState() =>
-      _TrackInfoEditDialogState();
-}
-
-class _TrackInfoEditDialogState extends ConsumerState<TrackInfoEditDialog> {
-  static final AppLogger logger = getLogger("TrackInfoEditDialog");
-
-  /// [TextEditingController] для поля ввода названия трека.
-  final TextEditingController titleController = TextEditingController();
-
-  /// [TextEditingController] для поля ввода артиста трека.
-  final TextEditingController artistController = TextEditingController();
-
-  /// Выбранный жанр у трека.
-  late int trackGenre;
-
-  @override
-  void initState() {
-    super.initState();
-
-    titleController.text = widget.audio.title;
-    artistController.text = widget.audio.artist;
-    trackGenre = widget.audio.genreID ?? 18; // Жанр "Other".
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l18n = ref.watch(l18nProvider);
 
+    final trackTitle = useState(audio.title);
+    final trackArtist = useState(audio.artist);
+    final trackGenre = useState(audio.genreID ?? 18);
+
     // Создаём копию трека, засовывая в неё новые значения с новым именем трека и прочим.
-    final ExtendedAudio audio = ExtendedAudio(
-      title: titleController.text,
-      artist: artistController.text,
-      id: widget.audio.id,
-      ownerID: widget.audio.ownerID,
-      duration: widget.audio.duration,
-      accessKey: widget.audio.accessKey,
-      url: widget.audio.url,
-      date: widget.audio.date,
-      album: widget.audio.album,
-      isLiked: widget.audio.isLiked,
+    final ExtendedAudio newAudio = ExtendedAudio(
+      title: trackTitle.value,
+      artist: trackArtist.value,
+      id: audio.id,
+      ownerID: audio.ownerID,
+      duration: audio.duration,
+      accessKey: audio.accessKey,
+      url: audio.url,
+      date: audio.date,
+      album: audio.album,
+      isLiked: audio.isLiked,
     );
 
     return Dialog(
@@ -84,8 +65,8 @@ class _TrackInfoEditDialogState extends ConsumerState<TrackInfoEditDialog> {
           children: [
             // Открытый трек.
             AudioTrackTile(
-              audio: audio,
-              selected: audio == player.currentAudio,
+              audio: newAudio,
+              selected: newAudio == player.currentAudio,
               currentlyPlaying: player.loaded && player.playing,
             ),
             const Gap(8),
@@ -95,9 +76,10 @@ class _TrackInfoEditDialogState extends ConsumerState<TrackInfoEditDialog> {
 
             // Текстовое поле для изменения названия.
             TextField(
-              controller: titleController,
-              onChanged: (String _) => setState(() {}),
               decoration: InputDecoration(
+                label: Text(
+                  l18n.music_trackTitle,
+                ),
                 prefixIcon: const Padding(
                   padding: EdgeInsetsDirectional.only(
                     end: 12,
@@ -106,16 +88,12 @@ class _TrackInfoEditDialogState extends ConsumerState<TrackInfoEditDialog> {
                     Icons.music_note,
                   ),
                 ),
-                label: Text(
-                  l18n.music_trackTitle,
-                ),
               ),
+              onChanged: (String value) => trackTitle.value = value,
             ),
 
             // Текстовое поле для изменения исполнителя.
             TextField(
-              controller: artistController,
-              onChanged: (String _) => setState(() {}),
               decoration: InputDecoration(
                 prefixIcon: const Padding(
                   padding: EdgeInsetsDirectional.only(
@@ -129,6 +107,7 @@ class _TrackInfoEditDialogState extends ConsumerState<TrackInfoEditDialog> {
                   l18n.music_trackArtist,
                 ),
               ),
+              onChanged: (String value) => trackArtist.value = value,
             ),
             const Gap(28),
 
@@ -137,12 +116,7 @@ class _TrackInfoEditDialogState extends ConsumerState<TrackInfoEditDialog> {
               label: Text(
                 l18n.music_trackGenre,
               ),
-              onSelected: (int? genreID) {
-                if (genreID == null) return;
-
-                setState(() => trackGenre = genreID);
-              },
-              initialSelection: widget.audio.genreID ?? 18, // Жанр "Other".
+              initialSelection: trackGenre.value,
               dropdownMenuEntries: [
                 for (MapEntry<int, String> genre in musicGenres.entries)
                   DropdownMenuEntry(
@@ -150,6 +124,11 @@ class _TrackInfoEditDialogState extends ConsumerState<TrackInfoEditDialog> {
                     label: genre.value,
                   ),
               ],
+              onSelected: (int? genreID) {
+                if (genreID == null) return;
+
+                trackGenre.value = genreID;
+              },
             ),
             const Gap(24),
 
@@ -171,8 +150,8 @@ class _TrackInfoEditDialogState extends ConsumerState<TrackInfoEditDialog> {
 
                   try {
                     // final APIAudioEditResponse response = await user.audioEdit(
-                    //   widget.audio.ownerID,
-                    //   widget.audio.id,
+                    //   audio.ownerID,
+                    //   audio.id,
                     //   titleController.text,
                     //   artistController.text,
                     //   trackGenre,
@@ -180,9 +159,9 @@ class _TrackInfoEditDialogState extends ConsumerState<TrackInfoEditDialog> {
                     // raiseOnAPIError(response);
 
                     // Обновляем данные о треке у пользователя.
-                    widget.audio.title = titleController.text;
-                    widget.audio.artist = artistController.text;
-                    widget.audio.genreID = trackGenre;
+                    // newAudio.title = titleController.text;
+                    // newAudio.artist = artistController.text;
+                    // newAudio.genreID = trackGenre;
 
                     // user.markUpdated(false);
                   } catch (e, stackTrace) {

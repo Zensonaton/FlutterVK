@@ -438,7 +438,7 @@ class AudioTrackTile extends HookConsumerWidget {
 }
 
 /// Виджет, отображающий плейлист, как обычный так и рекомендательный.
-class AudioPlaylistWidget extends StatefulWidget {
+class AudioPlaylistWidget extends HookConsumerWidget {
   /// URL на изображение заднего фона.
   final String? backgroundUrl;
 
@@ -486,27 +486,20 @@ class AudioPlaylistWidget extends StatefulWidget {
   });
 
   @override
-  State<AudioPlaylistWidget> createState() => _AudioPlaylistWidgetState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isHovered = useState(false);
 
-class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
-  bool isHovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final bool selectedAndPlaying = widget.selected && widget.currentlyPlaying;
+    final bool selectedAndPlaying = selected && currentlyPlaying;
 
     return Tooltip(
-      message: widget.description ?? "",
+      message: description ?? "",
       waitDuration: const Duration(
         seconds: 1,
       ),
       child: InkWell(
-        onTap: widget.onOpen,
-        onSecondaryTap: widget.onOpen,
-        onHover: (bool value) => setState(
-          () => isHovered = value,
-        ),
+        onTap: onOpen,
+        onSecondaryTap: onOpen,
+        onHover: (bool value) => isHovered.value = value,
         borderRadius: BorderRadius.circular(
           globalBorderRadius,
         ),
@@ -523,7 +516,7 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
                 height: 200,
                 decoration: BoxDecoration(
                   boxShadow: [
-                    if (widget.selected)
+                    if (selected)
                       BoxShadow(
                         blurRadius: 15,
                         spreadRadius: -3,
@@ -539,10 +532,10 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
                       borderRadius: BorderRadius.circular(
                         globalBorderRadius,
                       ),
-                      child: widget.backgroundUrl != null
+                      child: backgroundUrl != null
                           ? CachedNetworkImage(
-                              imageUrl: widget.backgroundUrl!,
-                              cacheKey: widget.cacheKey,
+                              imageUrl: backgroundUrl!,
+                              cacheKey: cacheKey,
                               memCacheHeight:
                                   (200 * MediaQuery.devicePixelRatioOf(context))
                                       .round(),
@@ -557,7 +550,7 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
                     ),
 
                     // Затемнение у тех плейлистов, текст которых расположен поверх плейлистов.
-                    if (widget.useTextOnImageLayout)
+                    if (useTextOnImageLayout)
                       Container(
                         width: 200,
                         height: 200,
@@ -577,16 +570,18 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
                       ),
 
                     // Если это у нас рекомендательный плейлист, то текст должен находиться внутри изображения плейлиста.
-                    if (widget.useTextOnImageLayout)
+                    if (useTextOnImageLayout)
                       Padding(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(
+                          16,
+                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             // Название плейлиста.
                             Text(
-                              widget.name,
+                              name,
                               overflow: TextOverflow.ellipsis,
                               maxLines: 2,
                               style: Theme.of(context)
@@ -599,9 +594,9 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
                             ),
 
                             // Описание плейлиста.
-                            if (widget.description != null)
+                            if (description != null)
                               Text(
-                                widget.description!,
+                                description!,
                                 overflow: TextOverflow.ellipsis,
                                 maxLines: 3,
                                 style: Theme.of(context)
@@ -616,7 +611,7 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
                       ),
 
                     // Затемнение, а так же иконка поверх плейлиста.
-                    if (isHovered || widget.selected)
+                    if (isHovered.value || selected)
                       Container(
                         width: 200,
                         height: 200,
@@ -629,7 +624,7 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
                             globalBorderRadius,
                           ),
                         ),
-                        child: !isHovered && selectedAndPlaying
+                        child: !isHovered.value && selectedAndPlaying
                             ? Center(
                                 child: RepaintBoundary(
                                   child: Image.asset(
@@ -647,12 +642,11 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
                                 height: 50,
                                 child: Center(
                                   child: InkWell(
-                                    onTap:
-                                        isDesktop && widget.onPlayToggle != null
-                                            ? () => widget.onPlayToggle?.call(
-                                                  !selectedAndPlaying,
-                                                )
-                                            : null,
+                                    onTap: isDesktop && onPlayToggle != null
+                                        ? () => onPlayToggle?.call(
+                                              !selectedAndPlaying,
+                                            )
+                                        : null,
                                     child: Icon(
                                       selectedAndPlaying
                                           ? Icons.pause
@@ -670,7 +664,7 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
               ),
 
               // Если это обычный плейлист, то нам нужно показать его содержимое под изображением.
-              if (!widget.useTextOnImageLayout)
+              if (!useTextOnImageLayout)
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.only(
@@ -681,7 +675,7 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
                       children: [
                         // Название плейлиста.
                         Text(
-                          widget.name,
+                          name,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: Theme.of(context)
@@ -689,28 +683,28 @@ class _AudioPlaylistWidgetState extends State<AudioPlaylistWidget> {
                               .headlineSmall!
                               .copyWith(
                                 fontWeight: FontWeight.w500,
-                                color: widget.selected
+                                color: selected
                                     ? Theme.of(context).colorScheme.primary
                                     : null,
                               ),
                         ),
 
                         // Описание плейлиста, при наличии.
-                        if (widget.description != null)
+                        if (description != null)
                           Flexible(
                             child: Padding(
                               padding: const EdgeInsets.only(
                                 top: 2,
                               ),
                               child: Text(
-                                widget.description!,
+                                description!,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: Theme.of(context)
                                     .textTheme
                                     .bodyMedium!
                                     .copyWith(
-                                      color: widget.selected
+                                      color: selected
                                           ? Theme.of(context)
                                               .colorScheme
                                               .primary

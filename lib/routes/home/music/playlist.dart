@@ -324,10 +324,7 @@ class SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   final double maxHeight;
 
   /// Builder, используемый для создания интерфейса.
-  final Function(
-    BuildContext context,
-    double shrinkOffset,
-  ) builder;
+  final Function(BuildContext context, double shrinkOffset) builder;
 
   SliverAppBarDelegate({
     required this.minHeight,
@@ -339,10 +336,7 @@ class SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   double get minExtent => minHeight;
 
   @override
-  double get maxExtent => max(
-        maxHeight,
-        minHeight,
-      );
+  double get maxExtent => max(maxHeight, minHeight);
 
   @override
   Widget build(
@@ -357,9 +351,7 @@ class SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  bool shouldRebuild(
-    SliverAppBarDelegate oldDelegate,
-  ) {
+  bool shouldRebuild(SliverAppBarDelegate oldDelegate) {
     return maxHeight != oldDelegate.maxHeight ||
         minHeight != oldDelegate.minHeight ||
         builder != oldDelegate.builder;
@@ -409,8 +401,6 @@ class _PlaylistInfoRouteState extends ConsumerState<PlaylistInfoRoute> {
 
   /// Загрузка данных данного плейлиста.
   Future<void> loadPlaylist() async {
-    // final UserProvider user = Provider.of<UserProvider>(context, listen: false);
-
     // Если информация по данному плейлисту не загружена, то загружаем её.
     if (widget.playlist.audios == null ||
         widget.playlist.isDataCached ||

@@ -58,9 +58,6 @@ class HomeProfilePage extends ConsumerStatefulWidget {
 }
 
 class _HomeProfilePageState extends ConsumerState<HomeProfilePage> {
-  /// Подписки на изменения состояния воспроизведения трека.
-  late final List<StreamSubscription> subscriptions;
-
   /// Future, отображающий информацию о том, существует ли файл с логом.
   late final Future<bool> logExistsFuture;
 
