@@ -222,6 +222,9 @@ class AudioTrackTile extends HookConsumerWidget {
                                           MediaQuery.of(context)
                                               .devicePixelRatio)
                                       .round(),
+                                  fadeInDuration: Duration.zero,
+                                  fadeOutDuration: Duration.zero,
+                                  placeholderFadeInDuration: Duration.zero,
                                   placeholder:
                                       (BuildContext context, String url) =>
                                           const FallbackAudioAvatar(),

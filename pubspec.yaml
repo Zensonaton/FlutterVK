@@ -77,6 +77,11 @@ dependencies:
   visibility_detector: ^0.4.0+2
   wakelock_plus: ^1.1.4
   window_manager: ^0.3.7
+dependency_overrides:
+  octo_image:
+    git:
+      url: https://github.com/AshishSingh2001/octo_image.git
+      ref: fix/issue-34
 dev_dependencies:
   build_runner: ^2.4.11
   custom_lint: ^0.5.11

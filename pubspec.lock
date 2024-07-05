@@ -936,12 +936,13 @@ packages:
     source: hosted
     version: "0.5.0"
   octo_image:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
-      name: octo_image
-      sha256: "45b40f99622f11901238e18d48f5f12ea36426d8eced9f4cbf58479c7aa2430d"
-      url: "https://pub.dev"
-    source: hosted
+      path: "."
+      ref: "fix/issue-34"
+      resolved-ref: "2979f31fd946703ac59fda2c4c28a60dbedb95d6"
+      url: "https://github.com/AshishSingh2001/octo_image.git"
+    source: git
     version: "2.0.0"
   package_config:
     dependency: transitive
