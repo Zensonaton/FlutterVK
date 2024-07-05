@@ -3,6 +3,7 @@ import "dart:async";
 import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
+import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:responsive_builder/responsive_builder.dart";
 
@@ -169,7 +170,9 @@ class AudioTrackTile extends HookConsumerWidget {
         child: Align(
           alignment: Alignment.centerLeft,
           child: Padding(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(
+              14,
+            ),
             child: Icon(
               Icons.queue_music,
               color: Theme.of(context).colorScheme.onPrimary,
@@ -315,125 +318,122 @@ class AudioTrackTile extends HookConsumerWidget {
                     ),
                   ),
                 ),
+                const Gap(8),
 
                 // Название и исполнитель трека.
                 Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(
-                      left: 8,
-                    ),
-                    child: Opacity(
-                      opacity: forceAvailable || audio.canPlay ? 1.0 : 0.5,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Ряд с названием трека, плашки Explicit и иконки кэша, и subtitle, при наличии.
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              // Название трека.
-                              Flexible(
-                                child: Text(
-                                  audio.title,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                    color: color,
+                  child: Opacity(
+                    opacity: forceAvailable || audio.canPlay ? 1.0 : 0.5,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Ряд с названием трека, плашки Explicit и иконки кэша, и subtitle, при наличии.
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Название трека.
+                            Flexible(
+                              child: Text(
+                                audio.title,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  color: color,
+                                ),
+                              ),
+                            ),
+
+                            // Плашка Explicit.
+                            if (audio.isExplicit)
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  left: 4,
+                                ),
+                                child: Icon(
+                                  Icons.explicit,
+                                  size: 16,
+                                  color: color.withOpacity(0.5),
+                                ),
+                              ),
+
+                            // Иконка кэшированного трека.
+                            if (showCachedIcon && (audio.isCached ?? false))
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  left: 4,
+                                ),
+                                child: Icon(
+                                  Icons.arrow_downward,
+                                  size: 16,
+                                  color: color.withOpacity(0.5),
+                                ),
+                              ),
+
+                            // Прогресс загрузки трека.
+                            if (showCachedIcon &&
+                                !(audio.isCached ?? false) &&
+                                audio.downloadProgress.value > 0.0)
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  left: 4,
+                                ),
+                                child: SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: ValueListenableBuilder(
+                                    valueListenable: audio.downloadProgress,
+                                    builder: (
+                                      BuildContext context,
+                                      double value,
+                                      Widget? child,
+                                    ) {
+                                      return CircularProgressIndicator(
+                                        value: value,
+                                        strokeWidth: 2,
+                                        color: color.withOpacity(0.5),
+                                      );
+                                    },
                                   ),
                                 ),
                               ),
 
-                              // Плашка Explicit.
-                              if (audio.isExplicit)
-                                Padding(
+                            // Подпись трека.
+                            if (audio.subtitle != null)
+                              Flexible(
+                                child: Padding(
                                   padding: const EdgeInsets.only(
-                                    left: 4,
+                                    left: 6,
                                   ),
-                                  child: Icon(
-                                    Icons.explicit,
-                                    size: 16,
-                                    color: color.withOpacity(0.5),
-                                  ),
-                                ),
-
-                              // Иконка кэшированного трека.
-                              if (showCachedIcon && (audio.isCached ?? false))
-                                Padding(
-                                  padding: const EdgeInsets.only(
-                                    left: 4,
-                                  ),
-                                  child: Icon(
-                                    Icons.arrow_downward,
-                                    size: 16,
-                                    color: color.withOpacity(0.5),
-                                  ),
-                                ),
-
-                              // Прогресс загрузки трека.
-                              if (showCachedIcon &&
-                                  !(audio.isCached ?? false) &&
-                                  audio.downloadProgress.value > 0.0)
-                                Padding(
-                                  padding: const EdgeInsets.only(
-                                    left: 4,
-                                  ),
-                                  child: SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: ValueListenableBuilder(
-                                      valueListenable: audio.downloadProgress,
-                                      builder: (
-                                        BuildContext context,
-                                        double value,
-                                        Widget? child,
-                                      ) {
-                                        return CircularProgressIndicator(
-                                          value: value,
-                                          strokeWidth: 2,
-                                          color: color.withOpacity(0.5),
-                                        );
-                                      },
+                                  child: Text(
+                                    audio.subtitle!,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: color.withOpacity(0.5),
                                     ),
                                   ),
                                 ),
+                              ),
+                          ],
+                        ),
 
-                              // Подпись трека.
-                              if (audio.subtitle != null)
-                                Flexible(
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(
-                                      left: 6,
-                                    ),
-                                    child: Text(
-                                      audio.subtitle!,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        color: color.withOpacity(0.5),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                            ],
+                        // Исполнитель.
+                        Text(
+                          audio.artist,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: selected
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.onSurface,
                           ),
-
-                          // Исполнитель.
-                          Text(
-                            audio.artist,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: selected
-                                  ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(context).colorScheme.onSurface,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
+
 
                 // Длительность трека, если включена.
                 if (showDuration)
@@ -919,9 +919,7 @@ class EverythingIsDisabledBlock extends ConsumerWidget {
           ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(
-          height: 8,
-        ),
+        const Gap(8),
 
         // "Соскучились по музыке? ..."
         Text(
@@ -1043,9 +1041,7 @@ class HomeMusicPage extends HookConsumerWidget {
                     Icons.search,
                   ),
                 ),
-                const SizedBox(
-                  width: 18,
-                ),
+                const Gap(18),
               ],
             )
           : null,
@@ -1178,21 +1174,15 @@ class HomeMusicPage extends HookConsumerWidget {
                         ),
                     ],
 
-                    // Данный SizedBox нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
-                    if (player.loaded && isMobileLayout)
-                      const SizedBox(
-                        height: 66,
-                      ),
+                    // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
+                    if (player.loaded && isMobileLayout) const Gap(66),
                   ],
                 ),
               ),
 
-              // Данный SizedBox нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
+              // Данный Gap нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
               // Мы его располагаем после ListView, что бы ScrollBar не был закрыт плеером.
-              if (player.loaded && !isMobileLayout)
-                const SizedBox(
-                  height: 88,
-                ),
+              if (player.loaded && !isMobileLayout) const Gap(88),
             ],
           ),
         ),

@@ -8,6 +8,7 @@ import "package:flutter/material.dart";
 import "package:flutter/rendering.dart";
 import "package:flutter/services.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
+import "package:gap/gap.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:relative_time/relative_time.dart";
@@ -622,9 +623,7 @@ class _PlaylistInfoRouteState extends ConsumerState<PlaylistInfoRoute> {
                                                         .isFavoritesPlaylist,
                                                   ),
                                           ),
-                                          const SizedBox(
-                                            width: 24,
-                                          ),
+                                          const Gap(24),
 
                                           // Название плейлиста, количество треков в нём.
                                           Expanded(
@@ -646,9 +645,7 @@ class _PlaylistInfoRouteState extends ConsumerState<PlaylistInfoRoute> {
                                                             .ellipsis,
                                                       ),
                                                 ),
-                                                const SizedBox(
-                                                  height: 4,
-                                                ),
+                                                const Gap(4),
 
                                                 // Описание плейлиста, при наличии.
                                                 if (widget
@@ -669,9 +666,7 @@ class _PlaylistInfoRouteState extends ConsumerState<PlaylistInfoRoute> {
                                                 if (widget
                                                         .playlist.description !=
                                                     null)
-                                                  const SizedBox(
-                                                    height: 4,
-                                                  ),
+                                                  Gap(4),
 
                                                 // Строка вида "100 треков • Ваш плейлист, 25 часов".
                                                 // TODO: Написать свою функцию для форматирования времени.
@@ -783,9 +778,7 @@ class _PlaylistInfoRouteState extends ConsumerState<PlaylistInfoRoute> {
                                             : null,
                                       ),
                                     ),
-                                    const SizedBox(
-                                      width: 6,
-                                    ),
+                                    const Gap(6),
 
                                     // Кнопка для загрузки треков в кэш.
                                     IconButton(
@@ -953,9 +946,7 @@ class _PlaylistInfoRouteState extends ConsumerState<PlaylistInfoRoute> {
                                                   : null,
                                             ),
                                     ),
-                                    const SizedBox(
-                                      width: 6,
-                                    ),
+                                    const Gap(6),
                                   ],
                                 ),
 
@@ -1012,9 +1003,7 @@ class _PlaylistInfoRouteState extends ConsumerState<PlaylistInfoRoute> {
                                               ? Padding(
                                                   padding:
                                                       const EdgeInsetsDirectional
-                                                          .only(
-                                                    end: 12,
-                                                  ),
+                                                          .only(end: 12),
                                                   child: IconButton(
                                                     icon: const Icon(
                                                       Icons.close,
@@ -1109,10 +1098,10 @@ class _PlaylistInfoRouteState extends ConsumerState<PlaylistInfoRoute> {
                           }
 
                           if (index == filteredAudios.length) {
-                            // Данный SizedBox нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
-                            return const SizedBox(
+                            // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
+                            return const Gap(
                               key: ValueKey(null),
-                              height: 76,
+                              76,
                             );
                           }
 
@@ -1169,12 +1158,9 @@ class _PlaylistInfoRouteState extends ConsumerState<PlaylistInfoRoute> {
           ),
         ),
 
-        // Данный SizedBox нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
+        // Данный Gap нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
         // Мы его располагаем после ListView, что бы ScrollBar не был закрыт плеером.
-        if (player.loaded && !isMobileLayout)
-          const SizedBox(
-            height: 88,
-          ),
+        if (player.loaded && !isMobileLayout) const Gap(88),
       ],
     );
   }

@@ -5,6 +5,7 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "package:flutter_localizations/flutter_localizations.dart";
+import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:local_notifier/local_notifier.dart";
 import "package:path/path.dart" as path;
@@ -306,27 +307,19 @@ class ErroredApp extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // Иконка.
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      bottom: 12,
-                    ),
-                    child: Icon(
-                      Icons.warning,
-                      color: Theme.of(context).colorScheme.error,
-                      size: 36,
-                    ),
+                  Icon(
+                    Icons.warning,
+                    color: Theme.of(context).colorScheme.error,
+                    size: 36,
                   ),
+                  const Gap(12),
 
                   // Текст про ошибку запуска.
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      bottom: 24,
-                    ),
-                    child: SelectableText(
-                      "Unfortunately, Flutter VK couldn't start up properly due to unhandled exception:\n$error\n\nPlease try to check for app updates, and/or create a Github Issue on Flutter VK Github.",
-                      textAlign: TextAlign.center,
-                    ),
+                  SelectableText(
+                    "Unfortunately, Flutter VK couldn't start up properly due to unhandled exception:\n$error\n\nPlease try to check for app updates, and/or create a Github Issue on Flutter VK Github.",
+                    textAlign: TextAlign.center,
                   ),
+                  const Gap(24),
 
                   // Кнопки снизу.
                   Wrap(

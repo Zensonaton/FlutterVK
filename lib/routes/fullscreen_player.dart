@@ -5,6 +5,7 @@ import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:fullscreen_window/fullscreen_window.dart";
+import "package:gap/gap.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:responsive_builder/responsive_builder.dart";
@@ -684,19 +685,15 @@ class _FullscreenPlayerRouteState extends ConsumerState<FullscreenPlayerRoute> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // GIF с собакой.
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      bottom: 18,
-                    ),
-                    child: RepaintBoundary(
-                      child: Image.asset(
-                        "assets/images/dog.gif",
-                        width: 25 * 5,
-                        height: 12 * 5,
-                        fit: BoxFit.fill,
-                      ),
+                  RepaintBoundary(
+                    child: Image.asset(
+                      "assets/images/dog.gif",
+                      width: 25 * 5,
+                      height: 12 * 5,
+                      fit: BoxFit.fill,
                     ),
                   ),
+                  const Gap(18),
 
                   // Текст.
                   StyledText(
@@ -718,9 +715,7 @@ class _FullscreenPlayerRouteState extends ConsumerState<FullscreenPlayerRoute> {
                       ),
                     },
                   ),
-                  const SizedBox(
-                    height: 24,
-                  ),
+                  const Gap(24),
 
                   // Кнопка для выхода.
                   FilledButton.icon(

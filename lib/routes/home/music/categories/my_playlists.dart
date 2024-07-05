@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:skeletonizer/skeletonizer.dart";
 
@@ -36,41 +37,31 @@ class MyPlaylistsBlock extends HookConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // "Ваши плейлисты".
-        Padding(
-          padding: const EdgeInsets.only(
-            bottom: 14,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // "Ваши плейлисты".
-              Padding(
-                padding: const EdgeInsets.only(
-                  right: 8,
-                ),
-                child: Text(
-                  l18n.music_myPlaylistsChip,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.w500,
-                  ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // "Ваши плейлисты".
+            Text(
+              l18n.music_myPlaylistsChip,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const Gap(8),
+
+            // Надпись с количеством плейлистов.
+            if (playlistsCount > 0)
+              Text(
+                playlistsCount.toString(),
+                style: TextStyle(
+                  color:
+                      Theme.of(context).colorScheme.secondary.withOpacity(0.75),
                 ),
               ),
-
-              // Надпись с количеством плейлистов.
-              if (playlistsCount > 0)
-                Text(
-                  playlistsCount.toString(),
-                  style: TextStyle(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .secondary
-                        .withOpacity(0.75),
-                  ),
-                ),
-            ],
-          ),
+          ],
         ),
+        const Gap(14),
 
         // Содержимое.
         ScrollConfiguration(

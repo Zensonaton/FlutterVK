@@ -6,6 +6,7 @@ import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
+import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:responsive_builder/responsive_builder.dart";
 import "package:share_plus/share_plus.dart";
@@ -108,24 +109,23 @@ class _HomeProfilePageState extends ConsumerState<HomeProfilePage> {
     final l18n = ref.watch(l18nProvider);
 
     return Scaffold(
-      // appBar: isMobileLayout
-      //     ? AppBar(
-      //         title: StreamBuilder<bool>(
-      //           stream: connectivityManager.connectionChange,
-      //           builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
-      //             final bool isConnected = connectivityManager.hasConnection;
+      appBar: isMobileLayout
+          ? AppBar(
+              title: StreamBuilder<bool>(
+                stream: connectivityManager.connectionChange,
+                builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
+                  final bool isConnected = connectivityManager.hasConnection;
 
-      //             return Text(
-      //               isConnected
-      //                   ? l18n.home_profilePageLabel
-      //                   : l18n
-      //                       .home_profilePageLabelOffline,
-      //             );
-      //           },
-      //         ),
-      //         centerTitle: true,
-      //       )
-      //     : null,
+                  return Text(
+                    isConnected
+                        ? l18n.home_profilePageLabel
+                        : l18n.home_profilePageLabelOffline,
+                  );
+                },
+              ),
+              centerTitle: true,
+            )
+          : null,
       body: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -177,22 +177,17 @@ class _HomeProfilePageState extends ConsumerState<HomeProfilePage> {
                       ),
 
                       // ID ВКонтакте.
-                      Padding(
-                        padding: const EdgeInsets.only(
-                          bottom: 16,
-                        ),
-                        child: SelectableText(
-                          "ID ${user.id}",
-                          style:
-                              Theme.of(context).textTheme.titleSmall!.copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurface
-                                        .withOpacity(0.5),
-                                  ),
-                          textAlign: TextAlign.center,
-                        ),
+                      SelectableText(
+                        "ID ${user.id}",
+                        style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withOpacity(0.5),
+                            ),
+                        textAlign: TextAlign.center,
                       ),
+                      const Gap(16),
 
                       // Выход из аккаунта.
                       FilledButton.tonalIcon(
@@ -246,7 +241,6 @@ class _HomeProfilePageState extends ConsumerState<HomeProfilePage> {
                 // Музыкальный плеер.
                 Padding(
                   padding: EdgeInsets.only(
-                    bottom: 16,
                     left: !isMobileLayout ? 10 : 0,
                     right: !isMobileLayout ? 18 : 0,
                   ),
@@ -418,11 +412,11 @@ class _HomeProfilePageState extends ConsumerState<HomeProfilePage> {
                     ),
                   ),
                 ),
+                const Gap(16),
 
                 // Визуал.
                 Padding(
                   padding: EdgeInsets.only(
-                    bottom: 16,
                     left: !isMobileLayout ? 10 : 0,
                     right: !isMobileLayout ? 18 : 0,
                   ),
@@ -604,11 +598,11 @@ class _HomeProfilePageState extends ConsumerState<HomeProfilePage> {
                     ),
                   ),
                 ),
+                const Gap(16),
 
                 // Экспериментальные функции.
                 Padding(
                   padding: EdgeInsets.only(
-                    bottom: 16,
                     left: !isMobileLayout ? 10 : 0,
                     right: !isMobileLayout ? 18 : 0,
                   ),
@@ -750,11 +744,11 @@ class _HomeProfilePageState extends ConsumerState<HomeProfilePage> {
                     ),
                   ),
                 ),
+                const Gap(16),
 
                 // О приложении.
                 Padding(
                   padding: EdgeInsets.only(
-                    bottom: 16,
                     left: !isMobileLayout ? 10 : 0,
                     right: !isMobileLayout ? 18 : 0,
                   ),
@@ -990,12 +984,12 @@ class _HomeProfilePageState extends ConsumerState<HomeProfilePage> {
                     ),
                   ),
                 ),
+                const Gap(16),
 
                 // Debug-опции.
                 if (kDebugMode)
                   Padding(
                     padding: EdgeInsets.only(
-                      bottom: 10,
                       left: !isMobileLayout ? 10 : 0,
                       right: !isMobileLayout ? 18 : 0,
                     ),
@@ -1108,21 +1102,15 @@ class _HomeProfilePageState extends ConsumerState<HomeProfilePage> {
                     ),
                   ),
 
-                // Данный SizedBox нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
-                if (player.loaded && isMobileLayout)
-                  const SizedBox(
-                    height: 70,
-                  ),
+                // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
+                if (player.loaded && isMobileLayout) const Gap(70),
               ],
             ),
           ),
 
-          // Данный SizedBox нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
+          // Данный Gap нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
           // Мы его располагаем после ListView, что бы ScrollBar не был закрыт плеером.
-          if (player.loaded && !isMobileLayout)
-            const SizedBox(
-              height: 88,
-            ),
+          if (player.loaded && !isMobileLayout) const Gap(88),
         ],
       ),
     );

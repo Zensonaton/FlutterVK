@@ -2,6 +2,7 @@ import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:flutter_inappwebview/flutter_inappwebview.dart";
+import "package:gap/gap.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
@@ -29,15 +30,11 @@ class SuccessAuthWidget extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           // Иконка.
-          Padding(
-            padding: const EdgeInsets.only(
-              bottom: 12,
-            ),
-            child: Icon(
-              Icons.check_circle,
-              color: Theme.of(context).colorScheme.primary,
-            ),
+          Icon(
+            Icons.check_circle,
+            color: Theme.of(context).colorScheme.primary,
           ),
+          const Gap(12),
 
           // Текст "Авторизация успешна".
           Text(

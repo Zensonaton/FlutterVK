@@ -6,6 +6,7 @@ import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
+import "package:gap/gap.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:responsive_builder/responsive_builder.dart";
@@ -224,9 +225,7 @@ class _TrackThumbnailDialogState extends ConsumerState<TrackThumbnailDialog> {
                 ],
               ),
             ),
-            const SizedBox(
-              height: 16,
-            ),
+            const Gap(16),
 
             // Результаты поиска.
             Expanded(
@@ -335,9 +334,7 @@ class _TrackThumbnailDialogState extends ConsumerState<TrackThumbnailDialog> {
                 },
               ),
             ),
-            const SizedBox(
-              height: 16,
-            ),
+            const Gap(16),
 
             // Кнопка для сохранения.
             Align(
@@ -441,27 +438,25 @@ class BottomAudioOptionsDialog extends ConsumerWidget {
               controller: controller,
               children: [
                 // Трек.
-                Padding(
-                  padding: const EdgeInsets.only(
-                    bottom: 8,
-                  ),
-                  child: AudioTrackTile(
-                    audio: audio,
-                    selected: audio == player.currentAudio,
-                    currentlyPlaying: player.loaded && player.playing,
-                  ),
+                AudioTrackTile(
+                  audio: audio,
+                  selected: audio == player.currentAudio,
+                  currentlyPlaying: player.loaded && player.playing,
                 ),
+                const Gap(8),
 
                 // Разделитель.
-                const Padding(
-                  padding: EdgeInsets.only(
-                    bottom: 8,
-                  ),
-                  child: Divider(),
-                ),
+                const Divider(),
+                const Gap(8),
 
                 // Редактировать данные трека.
                 ListTile(
+                  leading: const Icon(
+                    Icons.edit,
+                  ),
+                  title: Text(
+                    l18n.music_detailsEditTitle,
+                  ),
                   enabled: audio.album == null && audio.ownerID == user.id,
                   onTap: () {
                     if (!networkRequiredDialog(ref, context)) return;
@@ -475,48 +470,49 @@ class BottomAudioOptionsDialog extends ConsumerWidget {
                       ),
                     );
                   },
-                  leading: const Icon(
-                    Icons.edit,
-                  ),
-                  title: Text(
-                    l18n.music_detailsEditTitle,
-                  ),
                 ),
 
                 // Удалить из текущего плейлиста.
                 ListTile(
-                  onTap: () {
-                    if (!networkRequiredDialog(ref, context)) return;
-
-                    showWipDialog(context);
-                  },
                   leading: const Icon(
                     Icons.playlist_remove,
                   ),
                   title: Text(
                     l18n.music_detailsDeleteTrackTitle,
                   ),
-                ),
-
-                // Добавить в другой плейлист.
-                ListTile(
                   onTap: () {
                     if (!networkRequiredDialog(ref, context)) return;
 
                     showWipDialog(context);
                   },
+                ),
+
+                // Добавить в другой плейлист.
+                ListTile(
                   leading: const Icon(
                     Icons.playlist_add,
                   ),
                   title: Text(
                     l18n.music_detailsAddToOtherPlaylistTitle,
                   ),
+                  onTap: () {
+                    if (!networkRequiredDialog(ref, context)) return;
+
+                    showWipDialog(context);
+                  },
                 ),
 
                 // Добавить в очередь.
                 if (false)
                   // ignore: dead_code
                   ListTile(
+                    leading: const Icon(
+                      Icons.queue_music,
+                    ),
+                    title: Text(
+                      l18n.music_detailsPlayNextTitle,
+                    ),
+                    enabled: audio.canPlay,
                     onTap: () async {
                       await player.addNextToQueue(
                         audio,
@@ -536,17 +532,20 @@ class BottomAudioOptionsDialog extends ConsumerWidget {
 
                       context.pop();
                     },
-                    enabled: audio.canPlay,
-                    leading: const Icon(
-                      Icons.queue_music,
-                    ),
-                    title: Text(
-                      l18n.music_detailsPlayNextTitle,
-                    ),
                   ),
 
                 // Кэшировать этот трек.
                 ListTile(
+                  leading: const Icon(
+                    Icons.download,
+                  ),
+                  title: Text(
+                    l18n.music_detailsCacheTrackTitle,
+                  ),
+                  subtitle: Text(
+                    l18n.music_detailsCacheTrackDescription,
+                  ),
+                  enabled: !audio.isRestricted && !(audio.isCached ?? false),
                   onTap: () async {
                     if (!networkRequiredDialog(ref, context)) return;
 
@@ -575,20 +574,19 @@ class BottomAudioOptionsDialog extends ConsumerWidget {
 
                     if (!context.mounted) return;
                   },
-                  enabled: !audio.isRestricted && !(audio.isCached ?? false),
-                  leading: const Icon(
-                    Icons.download,
-                  ),
-                  title: Text(
-                    l18n.music_detailsCacheTrackTitle,
-                  ),
-                  subtitle: Text(
-                    l18n.music_detailsCacheTrackDescription,
-                  ),
                 ),
 
                 // Заменить обложку.
                 ListTile(
+                  leading: const Icon(
+                    Icons.image_search,
+                  ),
+                  title: Text(
+                    l18n.music_detailsSetThumbnailTitle,
+                  ),
+                  subtitle: Text(
+                    l18n.music_detailsSetThumbnailDescription,
+                  ),
                   onTap: () {
                     if (!networkRequiredDialog(ref, context)) return;
 
@@ -604,24 +602,10 @@ class BottomAudioOptionsDialog extends ConsumerWidget {
                       },
                     );
                   },
-                  leading: const Icon(
-                    Icons.image_search,
-                  ),
-                  title: Text(
-                    l18n.music_detailsSetThumbnailTitle,
-                  ),
-                  subtitle: Text(
-                    l18n.music_detailsSetThumbnailDescription,
-                  ),
                 ),
 
                 // Перезалить с Youtube.
                 ListTile(
-                  onTap: () {
-                    if (!networkRequiredDialog(ref, context)) return;
-
-                    showWipDialog(context);
-                  },
                   leading: const Icon(
                     Icons.rotate_left,
                   ),
@@ -631,11 +615,23 @@ class BottomAudioOptionsDialog extends ConsumerWidget {
                   subtitle: Text(
                     l18n.music_detailsReuploadFromYoutubeDescription,
                   ),
+                  onTap: () {
+                    if (!networkRequiredDialog(ref, context)) return;
+
+                    showWipDialog(context);
+                  },
                 ),
 
                 // Debug-опции.
                 if (kDebugMode) ...[
+                  // Скопировать ID трека.
                   ListTile(
+                    leading: const Icon(
+                      Icons.link,
+                    ),
+                    title: const Text(
+                      "Copy mediaKey",
+                    ),
                     onTap: () {
                       Clipboard.setData(
                         ClipboardData(
@@ -645,18 +641,18 @@ class BottomAudioOptionsDialog extends ConsumerWidget {
 
                       context.pop();
                     },
-                    leading: const Icon(
-                      Icons.link,
-                    ),
-                    title: const Text(
-                      "Скопировать ID трека",
-                    ),
-                    subtitle: const Text(
-                      "Debug-режим",
-                    ),
                   ),
+
+                  // Открыть папку с треком.
                   if (Platform.isWindows)
                     ListTile(
+                      leading: const Icon(
+                        Icons.folder_open,
+                      ),
+                      title: const Text(
+                        "Open folder with audio",
+                      ),
+                      enabled: audio.isCached ?? false,
                       onTap: () async {
                         context.pop();
 
@@ -669,16 +665,6 @@ class BottomAudioOptionsDialog extends ConsumerWidget {
                           ["/select,", path.path],
                         );
                       },
-                      enabled: audio.isCached ?? false,
-                      leading: const Icon(
-                        Icons.folder_open,
-                      ),
-                      title: const Text(
-                        "Открыть папку с треком",
-                      ),
-                      subtitle: const Text(
-                        "Debug-режим",
-                      ),
                     ),
                 ],
               ],

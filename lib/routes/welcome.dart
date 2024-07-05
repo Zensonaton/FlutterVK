@@ -1,12 +1,12 @@
 import "package:flutter/material.dart";
+import "package:gap/gap.dart";
+import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:styled_text/styled_text.dart";
 import "package:url_launcher/url_launcher.dart";
 
 import "../../consts.dart";
 import "../provider/l18n.dart";
-import "../widgets/page_route_builders.dart";
-import "login.dart";
 
 /// Route, показываемый при первом входе в приложение.
 class WelcomeRoute extends ConsumerWidget {
@@ -35,13 +35,14 @@ class WelcomeRoute extends ConsumerWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // "Добро пожаловать!".
                   Text(
                     l18n.welcome_welcomeTitle,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
-                  const SizedBox(
-                    height: 12,
-                  ),
+                  const Gap(12),
+
+                  // "Flutter VK - ...".
                   StyledText(
                     text: l18n.welcome_welcomeDescription,
                     style: Theme.of(context).textTheme.bodyLarge,
@@ -62,18 +63,13 @@ class WelcomeRoute extends ConsumerWidget {
                       ),
                     },
                   ),
-                  const SizedBox(
-                    height: 36,
-                  ),
+                  const Gap(36),
+
+                  // Продолжить.
                   Align(
                     alignment: Alignment.bottomRight,
                     child: FilledButton.icon(
-                      onPressed: () => Navigator.push(
-                        context,
-                        Material3PageRoute(
-                          builder: (context) => const LoginRoute(),
-                        ),
-                      ),
+                      onPressed: () => context.pop("/login"),
                       icon: const Icon(
                         Icons.arrow_forward_ios,
                       ),

@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:flutter_inappwebview/flutter_inappwebview.dart";
+import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
 import "../../consts.dart";
@@ -46,9 +47,7 @@ class MobileLoginWidget extends HookConsumerWidget {
               Icons.check_circle,
               color: Theme.of(context).colorScheme.primary,
             ),
-            const SizedBox(
-              height: 12,
-            ),
+            const Gap(12),
 
             // Текст "Авторизация успешна".
             Text(

@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:skeletonizer/skeletonizer.dart";
 
@@ -99,40 +100,30 @@ class MyMusicBlock extends HookConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: EdgeInsets.only(
-            bottom: useTopButtons ? 10 : 14,
-          ),
-          child: Row(
-            children: [
-              // Название блока.
-              Padding(
-                padding: const EdgeInsets.only(
-                  right: 8,
-                ),
-                child: Text(
-                  l18n.music_myMusicChip,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.w500,
-                  ),
+        Row(
+          children: [
+            // Название блока.
+            Text(
+              l18n.music_myMusicChip,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const Gap(8),
+
+            // Надпись с количеством треков.
+            if (musicCount > 0)
+              Text(
+                musicCount.toString(),
+                style: TextStyle(
+                  color:
+                      Theme.of(context).colorScheme.secondary.withOpacity(0.75),
                 ),
               ),
-
-              // Надпись с количеством треков.
-              if (musicCount > 0)
-                Text(
-                  musicCount.toString(),
-                  style: TextStyle(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .secondary
-                        .withOpacity(0.75),
-                  ),
-                ),
-            ],
-          ),
+          ],
         ),
+        Gap(useTopButtons ? 10 : 14),
 
         // Кнопки для управления (сверху, если useTopButtons = true).
         if (useTopButtons)
@@ -177,11 +168,7 @@ class MyMusicBlock extends HookConsumerWidget {
             ),
 
         // Кнопки для управления (снизу, если useTopButtons = false).
-        if (!useTopButtons)
-          const SizedBox(
-            height: 12,
-          ),
-
+        if (!useTopButtons) const Gap(12),
         if (!useTopButtons) controlButtonsRow,
       ],
     );

@@ -3,6 +3,7 @@ import "dart:async";
 import "package:debounce_throttle/debounce_throttle.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
+import "package:gap/gap.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:responsive_builder/responsive_builder.dart";
@@ -141,6 +142,7 @@ class _SearchDisplayDialogState extends ConsumerState<SearchDisplayDialog> {
         width: 650,
         child: Column(
           children: [
+            // Верхний "AppBar".
             Padding(
               padding: isMobileLayout
                   ? EdgeInsets.zero
@@ -209,9 +211,9 @@ class _SearchDisplayDialogState extends ConsumerState<SearchDisplayDialog> {
                 ],
               ),
             ),
-            const SizedBox(
-              height: 16,
-            ),
+            const Gap(16),
+
+            // Содержимое поиска.
             Expanded(
               child: FutureBuilder(
                 future: searchFuture,

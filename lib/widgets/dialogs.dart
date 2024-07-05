@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:gap/gap.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
@@ -100,10 +101,7 @@ class MaterialDialog extends ConsumerWidget {
               ),
 
             // Разделитель, если есть одновременно и содержимое и текста.
-            if (text != null && contents != null)
-              const SizedBox(
-                height: 8,
-              ),
+            if (text != null && contents != null) const Gap(8),
 
             // Обычное содержимое диалога.
             if (contents != null)

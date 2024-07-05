@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
+import "package:gap/gap.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:styled_text/styled_text.dart";
@@ -32,7 +33,9 @@ class DesktopSpotifyLogin extends HookConsumerWidget {
       body: Center(
         child: Card(
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(
+              24,
+            ),
             child: SizedBox(
               width: 500,
               child: Column(
@@ -40,92 +43,70 @@ class DesktopSpotifyLogin extends HookConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Текст "Авторизация".
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      bottom: 12,
-                    ),
-                    child: Center(
-                      child: Text(
-                        l18n.login_desktopTitle,
-                        style: Theme.of(context).textTheme.titleLarge!,
-                      ),
+                  Center(
+                    child: Text(
+                      l18n.login_desktopTitle,
+                      style: Theme.of(context).textTheme.titleLarge!,
                     ),
                   ),
+                  const Gap(12),
 
                   // Описание авторизации.
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      bottom: 8,
-                    ),
-                    child: StyledText(
-                      text: l18n.profile_spotifyAuthDescription,
-                      style: Theme.of(context).textTheme.bodyLarge,
-                      tags: {
-                        "bold": StyledTextTag(
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
+                  StyledText(
+                    text: l18n.profile_spotifyAuthDescription,
+                    style: Theme.of(context).textTheme.bodyLarge,
+                    tags: {
+                      "bold": StyledTextTag(
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      "link": StyledTextActionTag(
+                        (String? text, Map<String?, String?> attrs) =>
+                            launchUrl(
+                          Uri.parse(
+                            spotifyAuthUrl,
                           ),
                         ),
-                        "link": StyledTextActionTag(
-                          (String? text, Map<String?, String?> attrs) =>
-                              launchUrl(
-                            Uri.parse(
-                              spotifyAuthUrl,
+                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                              color: Theme.of(context).colorScheme.primary,
                             ),
-                          ),
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyLarge!
-                              .copyWith(
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                        ),
-                      },
-                    ),
+                      ),
+                    },
                   ),
+                  const Gap(8),
 
                   // Поле для ввода токена.
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      bottom: 8,
-                    ),
-                    child: TextField(
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(
-                          Icons.key,
-                        ),
-                        hintText:
-                            "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz...",
+                  TextField(
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(
+                        Icons.key,
                       ),
-                      onChanged: (String value) => spDC.value = value,
+                      hintText:
+                          "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz...",
                     ),
+                    onChanged: (String value) => spDC.value = value,
                   ),
+                  const Gap(8),
 
                   // Дополнительная информация для помощи.
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      bottom: 36,
-                    ),
-                    child: StyledText(
-                      text: l18n.profile_spotifyAuthHelpDescription,
-                      style: Theme.of(context).textTheme.bodyLarge,
-                      tags: {
-                        "link": StyledTextActionTag(
-                          (String? text, Map<String?, String?> attrs) =>
-                              launchUrl(
-                            Uri.parse(wikiSpotifySPDCcookie),
-                          ),
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyLarge!
-                              .copyWith(
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
+                  StyledText(
+                    text: l18n.profile_spotifyAuthHelpDescription,
+                    style: Theme.of(context).textTheme.bodyLarge,
+                    tags: {
+                      "link": StyledTextActionTag(
+                        (String? text, Map<String?, String?> attrs) =>
+                            launchUrl(
+                          Uri.parse(wikiSpotifySPDCcookie),
                         ),
-                      },
-                    ),
+                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                      ),
+                    },
                   ),
+                  const Gap(36),
 
                   // Кнопки для продолжения авторизации.
                   Align(

@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:skeletonizer/skeletonizer.dart";
 
@@ -32,18 +33,14 @@ class ByVKPlaylistsBlock extends HookConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // "Собрано редакцией".
-        Padding(
-          padding: const EdgeInsets.only(
-            bottom: 14,
-          ),
-          child: Text(
-            l18n.music_byVKChip,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.w500,
-            ),
+        Text(
+          l18n.music_byVKChip,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.primary,
+            fontWeight: FontWeight.w500,
           ),
         ),
+        const Gap(14),
 
         // Содержимое.
         ScrollConfiguration(

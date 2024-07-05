@@ -2,6 +2,7 @@ import "dart:async";
 
 import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
+import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:lottie/lottie.dart";
 import "package:responsive_builder/responsive_builder.dart";
@@ -198,36 +199,28 @@ class LivePlaylistWidget extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       // Запуск воспроизведения.
-                      Padding(
-                        padding: const EdgeInsets.only(
-                          bottom: 12,
+                      IconButton.filled(
+                        icon: Icon(
+                          selectedAndPlaying ? Icons.pause : Icons.play_arrow,
                         ),
-                        child: IconButton.filled(
-                          onPressed: () => onPlayToggle?.call(
-                            !selectedAndPlaying,
-                          ),
-                          icon: Icon(
-                            selectedAndPlaying ? Icons.pause : Icons.play_arrow,
-                          ),
-                          iconSize: bigLayout ? 36 : null,
+                        iconSize: bigLayout ? 36 : null,
+                        onPressed: () => onPlayToggle?.call(
+                          !selectedAndPlaying,
                         ),
                       ),
+                      const Gap(12),
 
                       // "Слушать VK Mix".
-                      Padding(
-                        padding: const EdgeInsets.only(
-                          bottom: 2,
-                        ),
-                        child: Text(
-                          title,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w500,
-                          ),
+                      Text(
+                        title,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
+                      const Gap(2),
 
                       // Описание плейлиста, при наличии.
                       if (description != null)
@@ -453,18 +446,14 @@ class RealtimePlaylistsBlock extends HookConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // "В реальном времени".
-        Padding(
-          padding: const EdgeInsets.only(
-            bottom: 14,
-          ),
-          child: Text(
-            l18n.music_realtimePlaylistsChip,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.w500,
-            ),
+        Text(
+          l18n.music_realtimePlaylistsChip,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.primary,
+            fontWeight: FontWeight.w500,
           ),
         ),
+        const Gap(14),
 
         // Проходимся по доступным аудио миксам.
         // Skeleton loader.

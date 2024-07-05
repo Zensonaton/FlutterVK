@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:gap/gap.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
@@ -432,9 +433,7 @@ class PlayerDynamicSchemeDialog extends ConsumerWidget {
           groupValue: preferences.dynamicSchemeType,
           onChanged: onValueChanged,
         ),
-        const SizedBox(
-          height: 16,
-        ),
+        const Gap(16),
 
         // Фейковые треки для отображения тем.
         ...buildTrackWidgets(),

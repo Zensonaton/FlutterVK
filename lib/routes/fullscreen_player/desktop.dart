@@ -2,6 +2,7 @@ import "dart:async";
 
 import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
+import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:just_audio/just_audio.dart";
 import "package:skeletonizer/skeletonizer.dart";
@@ -62,9 +63,7 @@ class PlaylistTitleWidget extends ConsumerWidget {
             },
           ),
         ),
-        const SizedBox(
-          width: 14,
-        ),
+        const Gap(14),
 
         // Текст с названием плейлиста.
         Column(
@@ -178,30 +177,26 @@ class _NextTrackInfoWidgetState extends ConsumerState<NextTrackInfoWidget> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               // Изображение следующего трека.
-              Padding(
-                padding: const EdgeInsets.only(
-                  right: 12,
+              ClipRRect(
+                borderRadius: BorderRadius.circular(
+                  globalBorderRadius,
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(
-                    globalBorderRadius,
-                  ),
-                  child: player.smartNextAudio!.smallestThumbnail != null
-                      ? CachedNetworkImage(
-                          imageUrl: player.smartNextAudio!.smallestThumbnail!,
-                          cacheKey: "${player.smartNextAudio!.mediaKey}small",
-                          width: 32,
-                          height: 32,
-                          placeholder: (BuildContext context, String url) =>
-                              const FallbackAudioAvatar(),
-                          cacheManager: CachedAlbumImagesManager.instance,
-                        )
-                      : const FallbackAudioAvatar(
-                          width: 32,
-                          height: 32,
-                        ),
-                ),
+                child: player.smartNextAudio!.smallestThumbnail != null
+                    ? CachedNetworkImage(
+                        imageUrl: player.smartNextAudio!.smallestThumbnail!,
+                        cacheKey: "${player.smartNextAudio!.mediaKey}small",
+                        width: 32,
+                        height: 32,
+                        placeholder: (BuildContext context, String url) =>
+                            const FallbackAudioAvatar(),
+                        cacheManager: CachedAlbumImagesManager.instance,
+                      )
+                    : const FallbackAudioAvatar(
+                        width: 32,
+                        height: 32,
+                      ),
               ),
+              const Gap(12),
 
               // Его название и прочая информация.
               Column(
@@ -453,84 +448,80 @@ class _FullscreenMediaControlsState
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 // Изображение трека.
-                Padding(
-                  padding: const EdgeInsets.only(
-                    right: 24,
-                  ),
-                  child: Hero(
-                    tag: player.currentAudio!.mediaKey,
-                    child: AnimatedSwitcher(
+                Hero(
+                  tag: player.currentAudio!.mediaKey,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(
+                      milliseconds: 500,
+                    ),
+                    child: AnimatedContainer(
+                      key: ValueKey(
+                        player.currentAudio!.mediaKey,
+                      ),
                       duration: const Duration(
                         milliseconds: 500,
                       ),
-                      child: AnimatedContainer(
-                        key: ValueKey(
-                          player.currentAudio!.mediaKey,
-                        ),
-                        duration: const Duration(
-                          milliseconds: 500,
-                        ),
-                        curve: Curves.ease,
-                        width: 130 *
-                            ((preferences.fullscreenBigThumbnail &&
-                                    MediaQuery.sizeOf(context).height > 600)
-                                ? compactBigFullscreenImage
-                                    ? 2
-                                    : 3
-                                : 1),
-                        height: 130 *
-                            ((preferences.fullscreenBigThumbnail &&
-                                    MediaQuery.sizeOf(context).height > 600)
-                                ? compactBigFullscreenImage
-                                    ? 2
-                                    : 3
-                                : 1),
-                        decoration: BoxDecoration(
-                          boxShadow: [
-                            if (player.playing)
-                              BoxShadow(
-                                blurRadius: 22,
-                                spreadRadius: -3,
-                                color: (player.currentAudio?.thumbnail != null
-                                        ? schemeInfo?.frequentColor
-                                        : null) ??
-                                    Colors.blueGrey.withOpacity(0.25),
-                                blurStyle: BlurStyle.outer,
-                              ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(
-                            globalBorderRadius,
-                          ),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: () => prefsNotifier
-                                  .setFullscreenBigThumbnailEnabled(
-                                !preferences.fullscreenBigThumbnail,
-                              ),
-                              child: player.currentAudio!.maxThumbnail != null
-                                  ? CachedNetworkImage(
-                                      imageUrl:
-                                          player.currentAudio!.maxThumbnail!,
-                                      cacheKey:
-                                          "${player.currentAudio!.mediaKey}max",
-                                      fit: BoxFit.fill,
-                                      placeholder:
-                                          (BuildContext context, String url) =>
-                                              const FallbackAudioAvatar(),
-                                      cacheManager:
-                                          CachedAlbumImagesManager.instance,
-                                    )
-                                  : const FallbackAudioAvatar(),
+                      curve: Curves.ease,
+                      width: 130 *
+                          ((preferences.fullscreenBigThumbnail &&
+                                  MediaQuery.sizeOf(context).height > 600)
+                              ? compactBigFullscreenImage
+                                  ? 2
+                                  : 3
+                              : 1),
+                      height: 130 *
+                          ((preferences.fullscreenBigThumbnail &&
+                                  MediaQuery.sizeOf(context).height > 600)
+                              ? compactBigFullscreenImage
+                                  ? 2
+                                  : 3
+                              : 1),
+                      decoration: BoxDecoration(
+                        boxShadow: [
+                          if (player.playing)
+                            BoxShadow(
+                              blurRadius: 22,
+                              spreadRadius: -3,
+                              color: (player.currentAudio?.thumbnail != null
+                                      ? schemeInfo?.frequentColor
+                                      : null) ??
+                                  Colors.blueGrey.withOpacity(0.25),
+                              blurStyle: BlurStyle.outer,
                             ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(
+                          globalBorderRadius,
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () =>
+                                prefsNotifier.setFullscreenBigThumbnailEnabled(
+                              !preferences.fullscreenBigThumbnail,
+                            ),
+                            child: player.currentAudio!.maxThumbnail != null
+                                ? CachedNetworkImage(
+                                    imageUrl:
+                                        player.currentAudio!.maxThumbnail!,
+                                    cacheKey:
+                                        "${player.currentAudio!.mediaKey}max",
+                                    fit: BoxFit.fill,
+                                    placeholder:
+                                        (BuildContext context, String url) =>
+                                            const FallbackAudioAvatar(),
+                                    cacheManager:
+                                        CachedAlbumImagesManager.instance,
+                                  )
+                                : const FallbackAudioAvatar(),
                           ),
                         ),
                       ),
                     ),
                   ),
                 ),
+                const Gap(24),
 
                 // Информация по названию трека и его исполнителю.
                 Column(
@@ -659,18 +650,14 @@ class _FullscreenMediaControlsState
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       // Кнопка для добавления/удаления лайка.
-                      Padding(
-                        padding: const EdgeInsets.only(
-                          right: 8,
-                        ),
-                        child: IconButton(
-                          onPressed: _toggleLike,
-                          icon: Icon(
-                            isFavorite ? Icons.favorite : Icons.favorite_border,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
+                      IconButton(
+                        onPressed: _toggleLike,
+                        icon: Icon(
+                          isFavorite ? Icons.favorite : Icons.favorite_border,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
+                      const Gap(8),
 
                       // Кнопка для дизлайка трека, если включён рекомендуемый плейлист.
                       if (player.currentPlaylist!.isRecommendationTypePlaylist)
@@ -731,95 +718,79 @@ class _FullscreenMediaControlsState
                         ),
 
                       // Переключение shuffle.
-                      Padding(
-                        padding: EdgeInsets.only(
-                          right: smallerButtonSpacing ? 0 : 8,
-                        ),
-                        child: StreamBuilder<bool>(
-                          stream: player.shuffleModeEnabledStream,
-                          builder: (
-                            BuildContext context,
-                            AsyncSnapshot<bool> snapshot,
-                          ) {
-                            final bool enabled = snapshot.data ?? false;
+                      StreamBuilder<bool>(
+                        stream: player.shuffleModeEnabledStream,
+                        builder: (
+                          BuildContext context,
+                          AsyncSnapshot<bool> snapshot,
+                        ) {
+                          final bool enabled = snapshot.data ?? false;
 
-                            return IconButton(
-                              onPressed: canToggleShuffle
-                                  ? () async {
-                                      await player.setShuffle(!enabled);
+                          return IconButton(
+                            onPressed: canToggleShuffle
+                                ? () async {
+                                    await player.setShuffle(!enabled);
 
-                                      prefsNotifier.setShuffleEnabled(!enabled);
-                                    }
+                                    prefsNotifier.setShuffleEnabled(!enabled);
+                                  }
+                                : null,
+                            icon: Icon(
+                              enabled
+                                  ? Icons.shuffle_on_outlined
+                                  : Icons.shuffle,
+                              color: canToggleShuffle
+                                  ? Theme.of(context).colorScheme.primary
                                   : null,
-                              icon: Icon(
-                                enabled
-                                    ? Icons.shuffle_on_outlined
-                                    : Icons.shuffle,
-                                color: canToggleShuffle
-                                    ? Theme.of(context).colorScheme.primary
-                                    : null,
-                              ),
-                            );
-                          },
-                        ),
+                            ),
+                          );
+                        },
                       ),
+                      Gap(smallerButtonSpacing ? 0 : 8),
 
                       // Предыдущий трек.
-                      Padding(
-                        padding: EdgeInsets.only(
-                          right: smallerButtonSpacing ? 0 : 8,
+                      IconButton(
+                        onPressed: () => player.previous(
+                          allowSeekToBeginning: true,
                         ),
-                        child: IconButton(
-                          onPressed: () => player.previous(
-                            allowSeekToBeginning: true,
-                          ),
-                          icon: Icon(
-                            Icons.skip_previous,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
+                        icon: Icon(
+                          Icons.skip_previous,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
+                      Gap(smallerButtonSpacing ? 0 : 8),
 
                       // Пауза/воспроизведение.
-                      Padding(
-                        padding: EdgeInsets.only(
-                          right: smallerButtonSpacing ? 0 : 8,
-                        ),
-                        child: StreamBuilder<PlayerState>(
-                          stream: player.playerStateStream,
-                          builder: (
-                            BuildContext context,
-                            AsyncSnapshot<PlayerState> snapshot,
-                          ) {
-                            return IconButton(
-                              onPressed: () => player.togglePlay(),
-                              icon: Icon(
-                                player.playing
-                                    ? Icons.pause_circle
-                                    : Icons.play_circle,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onPrimaryContainer,
-                              ),
-                              iconSize: 50,
-                            );
-                          },
-                        ),
+                      StreamBuilder<PlayerState>(
+                        stream: player.playerStateStream,
+                        builder: (
+                          BuildContext context,
+                          AsyncSnapshot<PlayerState> snapshot,
+                        ) {
+                          return IconButton(
+                            onPressed: () => player.togglePlay(),
+                            icon: Icon(
+                              player.playing
+                                  ? Icons.pause_circle
+                                  : Icons.play_circle,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onPrimaryContainer,
+                            ),
+                            iconSize: 50,
+                          );
+                        },
                       ),
+                      Gap(smallerButtonSpacing ? 0 : 8),
 
                       // Следующий трек.
-                      Padding(
-                        padding: EdgeInsets.only(
-                          right: smallerButtonSpacing ? 0 : 8,
-                        ),
-                        child: IconButton(
-                          onPressed: () => player.next(),
-                          icon: Icon(
-                            Icons.skip_next,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
+                      IconButton(
+                        onPressed: () => player.next(),
+                        icon: Icon(
+                          Icons.skip_next,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
+                      Gap(smallerButtonSpacing ? 0 : 8),
 
                       // Повтор трека.
                       StreamBuilder<LoopMode>(
@@ -888,32 +859,28 @@ class _FullscreenMediaControlsState
                         ),
 
                       // Показ текста песни.
-                      Padding(
-                        padding: EdgeInsets.only(
-                          right: smallerButtonSpacing ? 0 : 8,
-                        ),
-                        child: IconButton(
-                          onPressed: player.currentAudio!.hasLyrics ?? false
-                              ? () => prefsNotifier.setTrackLyricsEnabled(
-                                    !preferences.trackLyricsEnabled,
-                                  )
-                              : null,
-                          icon: Icon(
-                            preferences.trackLyricsEnabled &&
-                                    (player.currentAudio!.hasLyrics ?? false)
-                                ? Icons.lyrics
-                                : Icons.lyrics_outlined,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .primary
-                                .withOpacity(
-                                  player.currentAudio!.hasLyrics ?? false
-                                      ? 1.0
-                                      : 0.5,
-                                ),
-                          ),
+                      IconButton(
+                        onPressed: player.currentAudio!.hasLyrics ?? false
+                            ? () => prefsNotifier.setTrackLyricsEnabled(
+                                  !preferences.trackLyricsEnabled,
+                                )
+                            : null,
+                        icon: Icon(
+                          preferences.trackLyricsEnabled &&
+                                  (player.currentAudio!.hasLyrics ?? false)
+                              ? Icons.lyrics
+                              : Icons.lyrics_outlined,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(
+                                player.currentAudio!.hasLyrics ?? false
+                                    ? 1.0
+                                    : 0.5,
+                              ),
                         ),
                       ),
+                      Gap(smallerButtonSpacing ? 0 : 8),
 
                       // Выход из полноэкранного режима.
                       IconButton(

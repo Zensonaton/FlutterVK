@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
+import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:skeletonizer/skeletonizer.dart";
 
@@ -89,137 +90,129 @@ class SimillarMusicPlaylistWidget extends HookConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           // Верхняя часть такового плейлиста, в которой отображается название плейлиста, а так же его "схожесть".
-          Padding(
-            padding: const EdgeInsets.only(
-              bottom: 14,
+          Tooltip(
+            message: name,
+            waitDuration: const Duration(
+              seconds: 1,
             ),
-            child: Tooltip(
-              message: name,
-              waitDuration: const Duration(
-                seconds: 1,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(
+                globalBorderRadius * 2,
               ),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(
-                  globalBorderRadius * 2,
-                ),
-                onTap: onOpen,
-                onSecondaryTap: onOpen,
-                onHover: (bool value) => isHovered.value = value,
-                child: Stack(
-                  children: [
-                    // Название и прочая информация.
-                    Container(
-                      height: 90,
-                      padding: const EdgeInsets.all(
-                        10,
+              onTap: onOpen,
+              onSecondaryTap: onOpen,
+              onHover: (bool value) => isHovered.value = value,
+              child: Stack(
+                children: [
+                  // Название и прочая информация.
+                  Container(
+                    height: 90,
+                    padding: const EdgeInsets.all(
+                      10,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          topColor,
+                          topColor.withOpacity(0.8),
+                        ],
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
                       ),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            topColor,
-                            topColor.withOpacity(0.8),
-                          ],
-                          begin: Alignment.bottomCenter,
-                          end: Alignment.topCenter,
-                        ),
-                        borderRadius: BorderRadius.circular(
-                          globalBorderRadius * 2,
-                        ),
+                      borderRadius: BorderRadius.circular(
+                        globalBorderRadius * 2,
                       ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          // "80% совпадения".
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              // Процент.
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                  right: 4,
-                                ),
-                                child: Text(
-                                  "${(simillarity * 100).truncate()}%",
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-
-                              // "совпадения".
-                              Text(
-                                l18n.music_simillarityPercentTitle,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          // Название плейлиста.
-                          Flexible(
-                            child: Text(
-                              name,
-                              textAlign: TextAlign.center,
-                              overflow: TextOverflow.fade,
-                              maxLines: 2,
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // "80% совпадения".
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // Процент.
+                            Text(
+                              "${(simillarity * 100).truncate()}%",
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
                                 color: Colors.white,
                               ),
                             ),
+                            const Gap(4),
+
+                            // "совпадения".
+                            Text(
+                              l18n.music_simillarityPercentTitle,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        // Название плейлиста.
+                        Flexible(
+                          child: Text(
+                            name,
+                            textAlign: TextAlign.center,
+                            overflow: TextOverflow.fade,
+                            maxLines: 2,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Кнопки для совершения действий над этим плейлистом при наведении.
+                  AnimatedOpacity(
+                    opacity: isHovered.value ? 1.0 : 0.0,
+                    duration: const Duration(
+                      milliseconds: 300,
+                    ),
+                    curve: Curves.ease,
+                    child: Container(
+                      height: 90,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.black38,
+                        borderRadius: BorderRadius.circular(
+                          globalBorderRadius * 2,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // Запуск воспроизведения.
+                          IconButton(
+                            icon: Icon(
+                              selectedAndPlaying
+                                  ? Icons.pause
+                                  : Icons.play_arrow,
+                              size: 32,
+                              color: Colors.white,
+                            ),
+                            onPressed: isHovered.value
+                                ? () => onPlayToggle?.call(
+                                      !selectedAndPlaying,
+                                    )
+                                : null,
                           ),
                         ],
                       ),
                     ),
-
-                    // Кнопки для совершения действий над этим плейлистом при наведении.
-                    AnimatedOpacity(
-                      opacity: isHovered.value ? 1.0 : 0.0,
-                      duration: const Duration(
-                        milliseconds: 300,
-                      ),
-                      curve: Curves.ease,
-                      child: Container(
-                        height: 90,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: Colors.black38,
-                          borderRadius: BorderRadius.circular(
-                            globalBorderRadius * 2,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            // Запуск воспроизведения.
-                            IconButton(
-                              icon: Icon(
-                                selectedAndPlaying
-                                    ? Icons.pause
-                                    : Icons.play_arrow,
-                                size: 32,
-                                color: Colors.white,
-                              ),
-                              onPressed: isHovered.value
-                                  ? () => onPlayToggle?.call(
-                                        !selectedAndPlaying,
-                                      )
-                                  : null,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
+          const Gap(14),
 
           // Отображение треков в этом плейлисте.
           for (ExtendedAudio audio in tracks)
@@ -238,9 +231,7 @@ class SimillarMusicPlaylistWidget extends HookConsumerWidget {
                 forceAvailable: true,
               ),
             ),
-          const SizedBox(
-            height: 4,
-          ),
+          const Gap(4),
         ],
       ),
     );
@@ -266,18 +257,14 @@ class SimillarMusicBlock extends HookConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // "Совпадения по вкусам".
-        Padding(
-          padding: const EdgeInsets.only(
-            bottom: 14,
-          ),
-          child: Text(
-            l18n.music_similarMusicChip,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.w500,
-            ),
+        Text(
+          l18n.music_similarMusicChip,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.primary,
+            fontWeight: FontWeight.w500,
           ),
         ),
+        const Gap(14),
 
         // Содержимое.
         ScrollConfiguration(

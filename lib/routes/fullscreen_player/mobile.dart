@@ -4,6 +4,7 @@ import "dart:ui";
 import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
+import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:just_audio/just_audio.dart";
 
@@ -506,10 +507,7 @@ class _FullscreenMediaControlsState
               ),
 
               // Пустое место для центрирования текста, смещённого ввиду кнопки дизлайка слева.
-              if (isRecommendationTypePlaylist)
-                const SizedBox(
-                  width: 40,
-                ),
+              if (isRecommendationTypePlaylist) const Gap(40),
 
               // Кнопка для включения/отключения показа текста песни.
               if (showLyricsBlock)
@@ -542,9 +540,7 @@ class _FullscreenMediaControlsState
             ],
           ),
         ),
-        const SizedBox(
-          height: 10,
-        ),
+        const Gap(10),
 
         // Индикатор буферизации.
         if (!smallerLayout && player.buffering)
@@ -626,9 +622,7 @@ class _FullscreenMediaControlsState
                 },
               ),
               const Flexible(
-                child: SizedBox(
-                  width: 8,
-                ),
+                child: Gap(8),
               ),
 
               // Запуск предыдущего трека.
@@ -642,9 +636,7 @@ class _FullscreenMediaControlsState
                 ),
               ),
               const Flexible(
-                child: SizedBox(
-                  width: 8,
-                ),
+                child: Gap(8),
               ),
 
               // Кнопка паузы.
@@ -670,9 +662,7 @@ class _FullscreenMediaControlsState
                 },
               ),
               const Flexible(
-                child: SizedBox(
-                  width: 8,
-                ),
+                child: Gap(8),
               ),
 
               // Запуск следующего трека.
@@ -684,9 +674,7 @@ class _FullscreenMediaControlsState
                 ),
               ),
               const Flexible(
-                child: SizedBox(
-                  width: 8,
-                ),
+                child: Gap(8),
               ),
 
               // Повтор трека.

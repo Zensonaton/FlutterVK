@@ -3,6 +3,7 @@ import "dart:io";
 import "package:flutter/material.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "package:flutter_markdown/flutter_markdown.dart";
+import "package:gap/gap.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:http/http.dart";
@@ -70,9 +71,7 @@ class UpdateAvailableDialog extends ConsumerWidget {
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  const SizedBox(
-                    height: 4,
-                  ),
+                  const Gap(4),
 
                   // Информация о старой и новой версии.
                   Row(
@@ -116,27 +115,19 @@ class UpdateAvailableDialog extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(
-                    height: 6,
-                  ),
+                  const Gap(6),
 
                   const Divider(),
-                  const SizedBox(
-                    height: 6,
-                  ),
+                  const Gap(6),
 
                   // Описание обновления.
                   MarkdownBody(
                     data: release.body,
                   ),
-                  const SizedBox(
-                    height: 6,
-                  ),
+                  const Gap(6),
 
                   const Divider(),
-                  const SizedBox(
-                    height: 6,
-                  ),
+                  const Gap(6),
 
                   // Ряд из кнопок.
                   Wrap(

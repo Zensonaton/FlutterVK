@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
+import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:styled_text/styled_text.dart";
 import "package:url_launcher/url_launcher.dart";
@@ -51,9 +52,7 @@ class DesktopLoginWidget extends HookConsumerWidget {
                         : l18n.login_desktopTitle,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
-                  const SizedBox(
-                    height: 12,
-                  ),
+                  const Gap(12),
 
                   // Описание авторизации.
                   StyledText(
@@ -83,9 +82,7 @@ class DesktopLoginWidget extends HookConsumerWidget {
                       ),
                     },
                   ),
-                  const SizedBox(
-                    height: 8,
-                  ),
+                  const Gap(8),
 
                   // Поле для ввода токена.
                   TextField(
@@ -99,9 +96,7 @@ class DesktopLoginWidget extends HookConsumerWidget {
                     ),
                     onChanged: (String text) => token.value = text,
                   ),
-                  const SizedBox(
-                    height: 36,
-                  ),
+                  const Gap(36),
 
                   // Кнопки для продолжения авторизации.
                   Align(

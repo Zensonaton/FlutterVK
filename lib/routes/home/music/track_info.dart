@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:gap/gap.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
@@ -82,16 +83,12 @@ class _TrackInfoEditDialogState extends ConsumerState<TrackInfoEditDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Открытый трек.
-            Padding(
-              padding: const EdgeInsets.only(
-                bottom: 8,
-              ),
-              child: AudioTrackTile(
-                audio: audio,
-                selected: audio == player.currentAudio,
-                currentlyPlaying: player.loaded && player.playing,
-              ),
+            AudioTrackTile(
+              audio: audio,
+              selected: audio == player.currentAudio,
+              currentlyPlaying: player.loaded && player.playing,
             ),
+            const Gap(8),
 
             // Разделитель.
             const Divider(),
@@ -116,53 +113,45 @@ class _TrackInfoEditDialogState extends ConsumerState<TrackInfoEditDialog> {
             ),
 
             // Текстовое поле для изменения исполнителя.
-            Padding(
-              padding: const EdgeInsets.only(
-                bottom: 28,
-              ),
-              child: TextField(
-                controller: artistController,
-                onChanged: (String _) => setState(() {}),
-                decoration: InputDecoration(
-                  prefixIcon: const Padding(
-                    padding: EdgeInsetsDirectional.only(
-                      end: 12,
-                    ),
-                    child: Icon(
-                      Icons.album,
-                    ),
+            TextField(
+              controller: artistController,
+              onChanged: (String _) => setState(() {}),
+              decoration: InputDecoration(
+                prefixIcon: const Padding(
+                  padding: EdgeInsetsDirectional.only(
+                    end: 12,
                   ),
-                  label: Text(
-                    l18n.music_trackArtist,
+                  child: Icon(
+                    Icons.album,
                   ),
+                ),
+                label: Text(
+                  l18n.music_trackArtist,
                 ),
               ),
             ),
+            const Gap(28),
 
             // Выпадающее меню с жанром.
-            Padding(
-              padding: const EdgeInsets.only(
-                bottom: 24,
+            DropdownMenu(
+              label: Text(
+                l18n.music_trackGenre,
               ),
-              child: DropdownMenu(
-                label: Text(
-                  l18n.music_trackGenre,
-                ),
-                onSelected: (int? genreID) {
-                  if (genreID == null) return;
+              onSelected: (int? genreID) {
+                if (genreID == null) return;
 
-                  setState(() => trackGenre = genreID);
-                },
-                initialSelection: widget.audio.genreID ?? 18, // Жанр "Other".
-                dropdownMenuEntries: [
-                  for (MapEntry<int, String> genre in musicGenres.entries)
-                    DropdownMenuEntry(
-                      value: genre.key,
-                      label: genre.value,
-                    ),
-                ],
-              ),
+                setState(() => trackGenre = genreID);
+              },
+              initialSelection: widget.audio.genreID ?? 18, // Жанр "Other".
+              dropdownMenuEntries: [
+                for (MapEntry<int, String> genre in musicGenres.entries)
+                  DropdownMenuEntry(
+                    value: genre.key,
+                    label: genre.value,
+                  ),
+              ],
             ),
+            const Gap(24),
 
             // Кнопка для сохранения.
             Align(

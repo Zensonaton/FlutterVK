@@ -2,6 +2,7 @@ import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
+import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
 import "../consts.dart";
@@ -96,15 +97,14 @@ class NextTrackInfoWidget extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Padding(
-              padding: const EdgeInsets.only(
-                right: 8,
-              ),
-              child: Icon(
-                Icons.music_note,
-                color: scheme.primary,
-              ),
+            // Иконка ноты.
+            Icon(
+              Icons.music_note,
+              color: scheme.primary,
             ),
+            const Gap(8),
+
+            // Название для следующего трека.
             Text(
               "${nextAudio.artist} • ${nextAudio.title}",
               style: TextStyle(
@@ -546,9 +546,7 @@ class BottomMusicPlayer extends HookConsumerWidget {
                               ),
                             ),
                           ),
-                          SizedBox(
-                            width: useBigLayout ? 14 : 8,
-                          ),
+                          Gap(useBigLayout ? 14 : 8),
 
                           // Название и исполнитель трека.
                           Flexible(
@@ -628,10 +626,7 @@ class BottomMusicPlayer extends HookConsumerWidget {
                               ],
                             ),
                           ),
-                          if (useBigLayout)
-                            const SizedBox(
-                              width: 8,
-                            ),
+                          if (useBigLayout) const Gap(8),
 
                           // Кнопка для лайка (в Desktop Layout'е).
                           if (useBigLayout)
