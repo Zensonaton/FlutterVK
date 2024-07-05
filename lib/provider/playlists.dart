@@ -256,7 +256,7 @@ class Playlists extends _$Playlists {
       );
 
       if (recommendedPlaylistsBlock == null) {
-        logger.w("Блок с рекомендуемыми плейлистами не был найден");
+        logger.w("Recommended playlists block was not found");
 
         return null;
       }
@@ -321,20 +321,20 @@ class Playlists extends _$Playlists {
       final Section mainSection = response.response!.catalog.sections[0];
 
       // Ищем блок с плейлистами "Собрано редакцией". Данный блок имеет [SectionBlock.dataType] == "music_playlists", но он расположен в конце.
-      SectionBlock? recommendedPlaylistsBlock =
+      SectionBlock? madeByVKPlaylistsBlock =
           mainSection.blocks!.lastWhereOrNull(
         (SectionBlock block) => block.dataType == "music_playlists",
       );
 
-      if (recommendedPlaylistsBlock == null) {
-        logger.w("Блок с разделом 'собрано редакцией' не был найден");
+      if (madeByVKPlaylistsBlock == null) {
+        logger.w("Made by VK playlists block was not found");
 
         return null;
       }
 
       // Извлекаем список ID плейлистов из этого блока.
       final List<String> recommendedPlaylistIDs =
-          recommendedPlaylistsBlock.playlistIDs!;
+          madeByVKPlaylistsBlock.playlistIDs!;
 
       // Достаём те плейлисты, которые рекомендуются нами ВКонтакте.
       // Превращаем объекты типа AudioPlaylist в ExtendedPlaylist.

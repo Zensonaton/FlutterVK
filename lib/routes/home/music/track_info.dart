@@ -36,7 +36,7 @@ class TrackInfoEditDialog extends ConsumerStatefulWidget {
 }
 
 class _TrackInfoEditDialogState extends ConsumerState<TrackInfoEditDialog> {
-  static AppLogger logger = getLogger("TrackInfoEditDialog");
+  static final AppLogger logger = getLogger("TrackInfoEditDialog");
 
   /// [TextEditingController] для поля ввода названия трека.
   final TextEditingController titleController = TextEditingController();
@@ -187,7 +187,7 @@ class _TrackInfoEditDialogState extends ConsumerState<TrackInfoEditDialog> {
                     // user.markUpdated(false);
                   } catch (e, stackTrace) {
                     logger.e(
-                      "Ошибка при редактировании данных трека: ",
+                      "Error while modifying track info: ",
                       error: e,
                       stackTrace: stackTrace,
                     );

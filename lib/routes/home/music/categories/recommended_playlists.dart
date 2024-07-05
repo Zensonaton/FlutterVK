@@ -17,7 +17,7 @@ import "../playlist.dart";
 
 /// Виджет, показывающий раздел "Плейлисты для Вас".
 class RecommendedPlaylistsBlock extends HookConsumerWidget {
-  static AppLogger logger = getLogger("RecommendedPlaylistsBlock");
+  static final AppLogger logger = getLogger("RecommendedPlaylistsBlock");
 
   const RecommendedPlaylistsBlock({
     super.key,

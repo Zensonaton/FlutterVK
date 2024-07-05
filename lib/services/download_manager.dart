@@ -11,7 +11,7 @@ import "logger.dart";
 
 /// Класс, используемый в [DownloadManager], хранящий задачу по загрузке/удаления плейлиста.
 class CacheItem {
-  static AppLogger logger = getLogger("DownloadItem");
+  static final AppLogger logger = getLogger("DownloadItem");
 
   /// Плейлист типа [ExtendedPlaylist], список треков которого будет загружаться и кэшироваться, либо удаляться.
   final ExtendedPlaylist playlist;

@@ -425,7 +425,7 @@ class MoodPlaylistWidget extends StatelessWidget {
 
 /// Виджет, показывающий раздел "В реальном времени".
 class RealtimePlaylistsBlock extends HookConsumerWidget {
-  static AppLogger logger = getLogger("RealtimePlaylistsBlock");
+  static final AppLogger logger = getLogger("RealtimePlaylistsBlock");
 
   const RealtimePlaylistsBlock({
     super.key,

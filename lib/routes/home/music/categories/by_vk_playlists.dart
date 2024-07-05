@@ -17,7 +17,7 @@ import "../playlist.dart";
 
 /// Виджет, показывающий раздел "Собрано редакцией".
 class ByVKPlaylistsBlock extends HookConsumerWidget {
-  static AppLogger logger = getLogger("ByVKPlaylistsBlock");
+  static final AppLogger logger = getLogger("ByVKPlaylistsBlock");
 
   const ByVKPlaylistsBlock({
     super.key,

@@ -39,7 +39,7 @@ enum MediaNotificationAction {
 /// Расширение [StreamAudioSource] для `just_audio`, который воспроизводит аудио по передаваемому [Uri], а после загрузки аудио сохраняет его в кэш.
 class CachedStreamedAudio extends StreamAudioSource {
   /// [AppLogger] для этого класса.
-  static AppLogger logger = getLogger("CachedStreamedAudio");
+  static final AppLogger logger = getLogger("CachedStreamedAudio");
 
   /// Map из [StreamSubscription], который защищает от повторной загрузки одного и того же трека.
   static LinkedHashMap<String, StreamSubscription<List<int>>> downloadQueue =
@@ -786,7 +786,7 @@ class VKMusicPlayer {
         });
       } catch (e, stackTrace) {
         logger.e(
-          "Ошибка при обработке события от SMTC: ",
+          "SMTC event error: ",
           error: e,
           stackTrace: stackTrace,
         );

@@ -69,8 +69,6 @@ class FlutterVKApp extends ConsumerStatefulWidget {
 
 class _FlutterVKAppState extends ConsumerState<FlutterVKApp>
     with WindowListener {
-  final AppLogger logger = getLogger("MainApp");
-
   void init() async {
     final UserPreferences preferences = ref.read(preferencesProvider);
 

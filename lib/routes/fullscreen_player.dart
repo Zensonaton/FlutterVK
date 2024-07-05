@@ -325,7 +325,7 @@ class TrackLyric extends StatelessWidget {
 
 /// Виджет, отображающий текст трека.
 class TrackLyricsBlock extends StatefulWidget {
-  static AppLogger logger = getLogger("TrackLyricsBlock");
+  static final AppLogger logger = getLogger("TrackLyricsBlock");
 
   /// Отображаемый текст песни.
   final Lyrics lyrics;

@@ -296,7 +296,7 @@ void showLogErrorDialog(
 
   if (!context.mounted) {
     logger.w(
-      "Был вызван метод showLogErrorDialog, однако context.mounted == false. Это значит, что был произведён вызов Navigator.of(...).pop() раньше времени.",
+      "showLogErrorDialog() was called while context.mounted is false",
     );
 
     return;

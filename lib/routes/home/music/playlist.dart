@@ -418,7 +418,7 @@ class PlaylistInfoRoute extends ConsumerStatefulWidget {
 }
 
 class _PlaylistInfoRouteState extends ConsumerState<PlaylistInfoRoute> {
-  static AppLogger logger = getLogger("PlaylistInfoRoute");
+  static final AppLogger logger = getLogger("PlaylistInfoRoute");
 
   /// Подписки на изменения состояния воспроизведения трека.
   late final List<StreamSubscription> subscriptions;
@@ -908,7 +908,7 @@ class _PlaylistInfoRouteState extends ConsumerState<PlaylistInfoRoute> {
                                                 );
                                               } catch (e, stackTrace) {
                                                 logger.e(
-                                                  "Ошибка при кэшировании плейлиста: ",
+                                                  "Playlist caching error: ",
                                                   error: e,
                                                   stackTrace: stackTrace,
                                                 );

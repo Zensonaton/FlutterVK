@@ -155,7 +155,7 @@ Future<void> toggleTrackLike(
   //     audio.isCached = false;
   //   } catch (e) {
   //     logger.w(
-  //       "Не удалось удалить трек из кэша после удаления трека из лайкнутых: ",
+  //       "Couldn't delete cached track after dislike: ",
   //       error: e,
   //     );
   //   }
@@ -292,7 +292,7 @@ class HomeRoute extends ConsumerStatefulWidget {
 }
 
 class _HomeRouteState extends ConsumerState<HomeRoute> {
-  final AppLogger logger = getLogger("HomeRoute");
+  static final AppLogger logger = getLogger("HomeRoute");
 
   /// Текущий индекс страницы для [BottomNavigationBar].
   int navigationScreenIndex = 0;
@@ -419,7 +419,7 @@ class _HomeRouteState extends ConsumerState<HomeRoute> {
         // TODO
       } catch (e, stackTrace) {
         logger.w(
-          "Не удалось оповестить сервера ВКонтакте о текущем рекомендуемом треке: ",
+          "Couldn't notify VK about track listening state: ",
           error: e,
           stackTrace: stackTrace,
         );
@@ -468,7 +468,7 @@ class _HomeRouteState extends ConsumerState<HomeRoute> {
         // }
       } catch (e, stackTrace) {
         logger.e(
-          "Ошибка при загрузке дополнительных треков для аудио микса: ",
+          "Couldn't load audio mix tracks: ",
           error: e,
           stackTrace: stackTrace,
         );

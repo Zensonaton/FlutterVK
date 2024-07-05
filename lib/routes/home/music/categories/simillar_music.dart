@@ -240,7 +240,7 @@ class SimillarMusicPlaylistWidget extends HookConsumerWidget {
 
 /// Виджет, показывающий раздел "Совпадения по вкусам".
 class SimillarMusicBlock extends HookConsumerWidget {
-  static AppLogger logger = getLogger("SimillarMusicBlock");
+  static final AppLogger logger = getLogger("SimillarMusicBlock");
 
   const SimillarMusicBlock({
     super.key,

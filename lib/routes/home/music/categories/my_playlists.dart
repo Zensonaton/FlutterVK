@@ -17,7 +17,7 @@ import "../playlist.dart";
 
 /// Виджет с разделом "Ваши плейлисты"
 class MyPlaylistsBlock extends HookConsumerWidget {
-  static AppLogger logger = getLogger("MyPlaylistsBlock");
+  static final AppLogger logger = getLogger("MyPlaylistsBlock");
 
   const MyPlaylistsBlock({
     super.key,

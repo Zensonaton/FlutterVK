@@ -35,7 +35,7 @@ import "package:path/path.dart" as path;
 /// ),
 /// ```
 class UpdateAvailableDialog extends ConsumerWidget {
-  static AppLogger logger = getLogger("UpdateAvailableDialog");
+  static final AppLogger logger = getLogger("UpdateAvailableDialog");
 
   /// Github Release с новым обновлением.
   final Release release;
@@ -213,7 +213,7 @@ class UpdateAvailableDialog extends ConsumerWidget {
 /// Класс для обработки обновлений приложения.
 class Updater {
   /// [AppLogger] для этого класса.
-  static AppLogger logger = getLogger("Updater");
+  static final AppLogger logger = getLogger("Updater");
 
   /// Возвращает информацию по последнему Github Release репозитория данного приложения.
   ///
@@ -364,7 +364,7 @@ class Updater {
       return false;
     } catch (e, stackTrace) {
       logger.e(
-        "Не удалось проверить на наличие обновлений:",
+        "Couldn't check for updates:",
         error: e,
         stackTrace: stackTrace,
       );

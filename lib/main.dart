@@ -191,7 +191,7 @@ Future main() async {
       }
     } catch (e, stackTrace) {
       logger.w(
-        "Не удалось удалить существующий файл обновления по пули ${updaterInstaller.path}: ",
+        "Error while deleting updater on path ${updaterInstaller.path}: ",
         error: e,
         stackTrace: stackTrace,
       );
@@ -252,7 +252,7 @@ Future main() async {
     );
   } catch (e, stackTrace) {
     logger.f(
-      "Ошибка при запуске приложения (main): ",
+      "Exception while running FlutterVKApp (main): ",
       error: e,
       stackTrace: stackTrace,
     );
@@ -267,8 +267,8 @@ Future main() async {
         ),
       );
     } catch (e, stackTrace) {
-      logger.w(
-        "Запустить errored-версию приложения не вышло: ",
+      logger.f(
+        "Couldn't run ErroredApp: ",
         error: e,
         stackTrace: stackTrace,
       );
