@@ -136,39 +136,37 @@ class MyMusicBlock extends HookConsumerWidget {
 
         // Настоящие данные.
         if (playlist?.audios != null)
-          for (int index = 0; index < clampedMusicCount; index++)
+          for (int index = 0; index < clampedMusicCount; index++) ...[
             buildListTrackWidget(
               ref,
               context,
               playlist!.audios!.elementAt(index),
               playlist,
-              addBottomPadding: index < clampedMusicCount - 1,
             ),
+            const Gap(trackTileSpacing),
+          ],
 
         // Skeleton loader.
-        if (playlist?.audios == null)
+        if (playlist?.audios == null) ...[
           for (int index = 0; index < 10; index++)
             Skeletonizer(
-              child: Padding(
-                padding: EdgeInsets.only(
-                  bottom: index + 1 != 10 ? 8 : 0,
-                ),
-                child: AudioTrackTile(
-                  audio: ExtendedAudio(
-                    id: -1,
-                    ownerID: -1,
-                    title: fakeTrackNames[index % fakeTrackNames.length],
-                    artist: fakeTrackNames[(index + 1) % fakeTrackNames.length],
-                    duration: 60 * 3,
-                    accessKey: "",
-                    date: 0,
-                  ),
+              child: AudioTrackTile(
+                audio: ExtendedAudio(
+                  id: -1,
+                  ownerID: -1,
+                  title: fakeTrackNames[index % fakeTrackNames.length],
+                  artist: fakeTrackNames[(index + 1) % fakeTrackNames.length],
+                  duration: 60 * 3,
+                  accessKey: "",
+                  date: 0,
                 ),
               ),
             ),
+          const Gap(8),
+        ],
 
         // Кнопки для управления (снизу, если useTopButtons = false).
-        if (!useTopButtons) const Gap(12),
+        if (!useTopButtons) const Gap(4),
         if (!useTopButtons) controlButtonsRow,
       ],
     );

@@ -171,75 +171,51 @@ Widget buildListTrackWidget(
   BuildContext context,
   ExtendedAudio audio,
   ExtendedPlaylist playlist, {
-  bool addBottomPadding = true,
   bool showCachedIcon = false,
 }) {
   final l18n = ref.watch(l18nProvider);
 
-  return Padding(
+  return AudioTrackTile(
     key: ValueKey(
       audio.mediaKey,
     ),
-    padding: EdgeInsets.only(
-      bottom: addBottomPadding ? 8 : 0,
-    ),
-    child: AudioTrackTile(
-      selected: audio == player.currentAudio,
-      currentlyPlaying: player.loaded && player.playing,
-      isLoading: player.buffering,
-      audio: audio,
-      glowIfSelected: true,
-      showCachedIcon: showCachedIcon,
-      onAddToQueue: false
-          // ignore: dead_code
-          ? () async {
-              await player.addNextToQueue(audio);
+    selected: audio == player.currentAudio,
+    currentlyPlaying: player.loaded && player.playing,
+    isLoading: player.buffering,
+    audio: audio,
+    glowIfSelected: true,
+    showCachedIcon: showCachedIcon,
+    onPlay: !audio.canPlay
+        ? () => showErrorDialog(
+              context,
+              title: l18n.music_trackUnavailableTitle,
+              description: l18n.music_trackUnavailableDescription,
+            )
+        : () => player.setPlaylist(
+              playlist,
+              audio: audio,
+            ),
+    onPlayToggle: (bool enabled) => player.playOrPause(enabled),
+    onLikeToggle: (bool liked) {
+      if (!networkRequiredDialog(ref, context)) return false;
 
-              if (!context.mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    l18n.general_addedToQueue,
-                  ),
-                  duration: const Duration(
-                    seconds: 3,
-                  ),
-                ),
-              );
-            }
-          : null,
-      onPlay: !audio.canPlay
-          ? () => showErrorDialog(
-                context,
-                title: l18n.music_trackUnavailableTitle,
-                description: l18n.music_trackUnavailableDescription,
-              )
-          : () => player.setPlaylist(
-                playlist,
-                audio: audio,
-              ),
-      onPlayToggle: (bool enabled) => player.playOrPause(enabled),
-      onLikeToggle: (bool liked) {
-        if (!networkRequiredDialog(ref, context)) return false;
-
-        return toggleTrackLikeState(
-          context,
-          audio,
-          !audio.isLiked,
+      return toggleTrackLikeState(
+        context,
+        audio,
+        !audio.isLiked,
+      );
+    },
+    onSecondaryAction: () => showModalBottomSheet(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (BuildContext context) {
+        return BottomAudioOptionsDialog(
+          audio: audio,
+          playlist: playlist,
         );
       },
-      onSecondaryAction: () => showModalBottomSheet(
-        context: context,
-        useRootNavigator: true,
-        isScrollControlled: true,
-        useSafeArea: true,
-        builder: (BuildContext context) {
-          return BottomAudioOptionsDialog(
-            audio: audio,
-            playlist: playlist,
-          );
-        },
-      ),
     ),
   );
 }
@@ -1066,57 +1042,57 @@ class _PlaylistInfoRouteState extends ConsumerState<PlaylistInfoRoute> {
                     padding: EdgeInsets.symmetric(
                       horizontal: horizontalPadding,
                     ),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (BuildContext context, int index) {
-                          // Если ничего не загружено, то отображаем Skeleton Loader вместо реального трека.
+                    sliver: SliverList.separated(
+                      itemCount: loading
                           // ignore: dead_code
-                          if (loading) {
-                            return Skeletonizer(
-                              child: Padding(
-                                padding: const EdgeInsets.only(
-                                  bottom: 8,
-                                ),
-                                child: AudioTrackTile(
-                                  audio: ExtendedAudio(
-                                    id: -1,
-                                    ownerID: -1,
-                                    title: fakeTrackNames[
-                                        index % fakeTrackNames.length],
-                                    artist: fakeTrackNames[
-                                        (index + 1) % fakeTrackNames.length],
-                                    duration: 60 * 3,
-                                    accessKey: "",
-                                    url: "",
-                                    date: 0,
-                                  ),
+                          ? widget.playlist.count
+                          : filteredAudios.length +
+                              (isMobile && player.loaded ? 1 : 0),
+                      separatorBuilder: (BuildContext context, int index) =>
+                          const Gap(8),
+                      itemBuilder: (BuildContext context, int index) {
+                        // Если ничего не загружено, то отображаем Skeleton Loader вместо реального трека.
+                        // ignore: dead_code
+                        if (loading) {
+                          return Skeletonizer(
+                            child: Padding(
+                              padding: const EdgeInsets.only(
+                                bottom: 8,
+                              ),
+                              child: AudioTrackTile(
+                                audio: ExtendedAudio(
+                                  id: -1,
+                                  ownerID: -1,
+                                  title: fakeTrackNames[
+                                      index % fakeTrackNames.length],
+                                  artist: fakeTrackNames[
+                                      (index + 1) % fakeTrackNames.length],
+                                  duration: 60 * 3,
+                                  accessKey: "",
+                                  url: "",
+                                  date: 0,
                                 ),
                               ),
-                            );
-                          }
-
-                          if (index == filteredAudios.length) {
-                            // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
-                            return const Gap(
-                              key: ValueKey(null),
-                              76,
-                            );
-                          }
-
-                          return buildListTrackWidget(
-                            ref,
-                            context,
-                            filteredAudios.elementAt(index),
-                            widget.playlist,
-                            showCachedIcon: true,
+                            ),
                           );
-                        },
-                        childCount: loading
-                            // ignore: dead_code
-                            ? widget.playlist.count
-                            : filteredAudios.length +
-                                (isMobile && player.loaded ? 1 : 0),
-                      ),
+                        }
+
+                        if (index == filteredAudios.length) {
+                          // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
+                          return const Gap(
+                            key: ValueKey(null),
+                            76,
+                          );
+                        }
+
+                        return buildListTrackWidget(
+                          ref,
+                          context,
+                          filteredAudios.elementAt(index),
+                          widget.playlist,
+                          showCachedIcon: true,
+                        );
+                      },
                     ),
                   ),
                 ],

@@ -37,6 +37,8 @@ class SearchDisplayDialog extends ConsumerStatefulWidget {
 }
 
 class _SearchDisplayDialogState extends ConsumerState<SearchDisplayDialog> {
+  // TODO: Переписать с использованием hook'ов.
+
   /// Контроллер, используемый для управления введённым в поле поиска текстом.
   final TextEditingController controller = TextEditingController();
 
@@ -272,8 +274,10 @@ class _SearchDisplayDialogState extends ConsumerState<SearchDisplayDialog> {
                   }
 
                   // Отображаем данные.
-                  return ListView.builder(
+                  return ListView.separated(
                     itemCount: audios!.length,
+                    separatorBuilder: (BuildContext context, int index) =>
+                        const Gap(trackTileSpacing),
                     itemBuilder: (BuildContext context, int index) {
                       return buildListTrackWidget(
                         ref,
