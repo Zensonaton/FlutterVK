@@ -9,7 +9,6 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:gap/gap.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:responsive_builder/responsive_builder.dart";
 import "package:skeletonizer/skeletonizer.dart";
 import "package:styled_text/tags/styled_text_tag_action.dart";
 import "package:styled_text/widgets/styled_text.dart";
@@ -128,19 +127,18 @@ class _TrackThumbnailDialogState extends ConsumerState<TrackThumbnailDialog> {
     final l18n = ref.watch(l18nProvider);
     ref.watch(playerStateProvider);
 
-    final bool isMobileLayout =
-        getDeviceType(MediaQuery.of(context).size) == DeviceScreenType.mobile;
+    final bool isMobile = isMobileLayout(context);
 
     return AdaptiveDialog(
       child: Container(
         padding: EdgeInsets.all(
-          isMobileLayout ? 16 : 24,
+          isMobile ? 16 : 24,
         ),
         width: 650,
         child: Column(
           children: [
             Padding(
-              padding: isMobileLayout
+              padding: isMobile
                   ? EdgeInsets.zero
                   : const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -150,7 +148,7 @@ class _TrackThumbnailDialogState extends ConsumerState<TrackThumbnailDialog> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // Кнопка "Назад".
-                  if (isMobileLayout)
+                  if (isMobile)
                     Padding(
                       padding: const EdgeInsets.only(
                         right: 12,

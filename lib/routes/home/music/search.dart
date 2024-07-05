@@ -6,7 +6,6 @@ import "package:flutter/services.dart";
 import "package:gap/gap.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:responsive_builder/responsive_builder.dart";
 import "package:skeletonizer/skeletonizer.dart";
 import "package:styled_text/tags/styled_text_tag_action.dart";
 import "package:styled_text/widgets/styled_text.dart";
@@ -106,12 +105,11 @@ class _SearchDisplayDialogState extends ConsumerState<SearchDisplayDialog> {
     ref.watch(playerStateProvider);
     ref.watch(playerCurrentIndexProvider);
 
-    final bool isMobileLayout =
-        getDeviceType(MediaQuery.of(context).size) == DeviceScreenType.mobile;
+    final bool isMobile = isMobileLayout(context);
 
     return AdaptiveDialog(
       child: Container(
-        padding: isMobileLayout
+        padding: isMobile
             ? const EdgeInsets.only(
                 top: 16,
                 left: 16,
@@ -125,7 +123,7 @@ class _SearchDisplayDialogState extends ConsumerState<SearchDisplayDialog> {
           children: [
             // Верхний "AppBar".
             Padding(
-              padding: isMobileLayout
+              padding: isMobile
                   ? EdgeInsets.zero
                   : const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -135,7 +133,7 @@ class _SearchDisplayDialogState extends ConsumerState<SearchDisplayDialog> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // Кнопка "Назад".
-                  if (isMobileLayout)
+                  if (isMobile)
                     Padding(
                       padding: const EdgeInsets.only(
                         right: 12,

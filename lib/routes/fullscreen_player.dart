@@ -8,7 +8,6 @@ import "package:fullscreen_window/fullscreen_window.dart";
 import "package:gap/gap.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:responsive_builder/responsive_builder.dart";
 import "package:scroll_to_index/scroll_to_index.dart";
 import "package:styled_text/styled_text.dart";
 import "package:visibility_detector/visibility_detector.dart";
@@ -581,8 +580,8 @@ class BlurredBackgroundImage extends ConsumerWidget {
           cacheManager: CachedAlbumImagesManager.instance,
           color: Colors.black.withOpacity(0.55),
           colorBlendMode: BlendMode.darken,
-          memCacheWidth: MediaQuery.of(context).size.width.toInt(),
-          memCacheHeight: MediaQuery.of(context).size.height.toInt(),
+          memCacheWidth: MediaQuery.sizeOf(context).width.toInt(),
+          memCacheHeight: MediaQuery.sizeOf(context).height.toInt(),
         ),
       ),
     );
@@ -637,6 +636,8 @@ class _FullscreenPlayerRouteState extends ConsumerState<FullscreenPlayerRoute> {
     final trackImageInfo = ref.watch(trackSchemeInfoProvider);
     final l18n = ref.watch(l18nProvider);
     ref.watch(playerCurrentIndexProvider);
+
+    final bool isMobile = isMobileLayout(context);
 
     // Проверка на случай, если запустился плеер без активного трека.
     if (player.currentAudio == null) {
@@ -706,10 +707,6 @@ class _FullscreenPlayerRouteState extends ConsumerState<FullscreenPlayerRoute> {
       );
     }
 
-    /// Указывает, что будет использоваться Mobile Layout.
-    final bool useMobileLayout =
-        getDeviceType(MediaQuery.of(context).size) == DeviceScreenType.mobile;
-
     return AnnotatedRegion(
       value: const SystemUiOverlayStyle(
         statusBarBrightness: Brightness.light,
@@ -774,14 +771,14 @@ class _FullscreenPlayerRouteState extends ConsumerState<FullscreenPlayerRoute> {
                             if (player.currentAudio?.maxThumbnail != null &&
                                 preferences.playerThumbAsBackground)
                               SizedBox(
-                                width: MediaQuery.of(context).size.width,
-                                height: MediaQuery.of(context).size.height,
+                                width: MediaQuery.sizeOf(context).width,
+                                height: MediaQuery.sizeOf(context).height,
                                 child: const BlurredBackgroundImage(),
                               ),
 
                             // Внутреннее содержимое, зависящее от типа Layout'а.
                             SafeArea(
-                              child: useMobileLayout
+                              child: isMobile
                                   ? const FullscreenPlayerMobileRoute()
                                   : const FullscreenPlayerDesktopRoute(),
                             ),

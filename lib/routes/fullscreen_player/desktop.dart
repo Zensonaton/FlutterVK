@@ -222,7 +222,7 @@ class LyricsBlockWidget extends ConsumerWidget {
         alignment: Alignment.topRight,
         child: SizedBox(
           width: _lyricsWidth,
-          height: MediaQuery.of(context).size.height - _playerPadding * 2 - 100,
+          height: MediaQuery.sizeOf(context).height - _playerPadding * 2 - 100,
           child: AnimatedSwitcher(
             duration: const Duration(
               milliseconds: 500,
@@ -311,15 +311,15 @@ class FullscreenMediaControls extends ConsumerWidget {
     final bool isFavorite = player.currentAudio!.isLiked;
 
     /// Указывает, что используется более компактный интерфейс.
-    final bool compactLayout = MediaQuery.of(context).size.width <= 1000;
+    final bool compactLayout = MediaQuery.sizeOf(context).width <= 1000;
 
     /// Указывает, что большое изображение трека должно использовать меньший максимальный размер.
     final bool compactBigFullscreenImage =
-        MediaQuery.of(context).size.width <= 1200 ||
-            MediaQuery.of(context).size.height <= 800;
+        MediaQuery.sizeOf(context).width <= 1200 ||
+            MediaQuery.sizeOf(context).height <= 800;
 
     /// Указывает, что кнопки управления будут иметь меньшее расстояние при маленьком размере интерфейса.
-    final bool smallerButtonSpacing = MediaQuery.of(context).size.width <= 800;
+    final bool smallerButtonSpacing = MediaQuery.sizeOf(context).width <= 800;
 
     /// Указывает, что кнопка для переключения shuffle работает.
     final bool canToggleShuffle =
@@ -337,7 +337,7 @@ class FullscreenMediaControls extends ConsumerWidget {
           padding: const EdgeInsets.only(
             bottom: 18,
           ),
-          width: MediaQuery.of(context).size.width -
+          width: MediaQuery.sizeOf(context).width -
               _playerPadding * 2 -
               (((player.currentAudio!.hasLyrics ?? false) &&
                       preferences.trackLyricsEnabled)

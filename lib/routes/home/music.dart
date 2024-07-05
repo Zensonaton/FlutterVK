@@ -5,7 +5,6 @@ import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:responsive_builder/responsive_builder.dart";
 
 import "../../consts.dart";
 import "../../main.dart";
@@ -433,7 +432,6 @@ class AudioTrackTile extends HookConsumerWidget {
                     ),
                   ),
                 ),
-
 
                 // Длительность трека, если включена.
                 if (showDuration)
@@ -943,8 +941,7 @@ class HomeMusicPage extends HookConsumerWidget {
     final preferences = ref.watch(preferencesProvider);
     final l18n = ref.watch(l18nProvider);
 
-    final bool isMobileLayout =
-        getDeviceType(MediaQuery.of(context).size) == DeviceScreenType.mobile;
+    final bool isMobile = isMobileLayout(context);
 
     /// Указывает, что у пользователя подключены рекомендации музыки от ВКонтакте.
     final bool hasRecommendations = ref.read(secondaryTokenProvider) != null;
@@ -959,7 +956,7 @@ class HomeMusicPage extends HookConsumerWidget {
         hasRecommendations && preferences.similarMusicChipEnabled;
     final bool byVK = hasRecommendations && preferences.byVKChipEnabled;
 
-    late bool everythingIsDisabled;
+    bool everythingIsDisabled;
 
     // Если рекомендации включены, то мы должны учитывать и другие разделы.
     if (hasRecommendations) {
@@ -979,7 +976,7 @@ class HomeMusicPage extends HookConsumerWidget {
               // Раздел "Моя музыка".
               if (myMusic)
                 MyMusicBlock(
-                  useTopButtons: isMobileLayout,
+                  useTopButtons: isMobile,
                 ),
 
               // Раздел "Ваши плейлисты".
@@ -998,7 +995,7 @@ class HomeMusicPage extends HookConsumerWidget {
               if (byVK) const ByVKPlaylistsBlock(),
 
               // Нижняя часть интерфейса с переключателями при Mobile Layout'е.
-              if (isMobileLayout) const ChipFilters(),
+              if (isMobile) const ChipFilters(),
 
               // Случай, если пользователь отключил все возможные разделы музыки.
               if (everythingIsDisabled) const EverythingIsDisabledBlock(),
@@ -1014,7 +1011,7 @@ class HomeMusicPage extends HookConsumerWidget {
         ]);
 
     return Scaffold(
-      appBar: isMobileLayout
+      appBar: isMobile
           ? AppBar(
               title: StreamBuilder<bool>(
                 stream: connectivityManager.connectionChange,
@@ -1055,14 +1052,14 @@ class HomeMusicPage extends HookConsumerWidget {
               Expanded(
                 child: ListView(
                   padding: EdgeInsets.only(
-                    left: isMobileLayout ? 16 : 24,
-                    right: isMobileLayout ? 16 : 24,
-                    top: isMobileLayout ? 4 : 30,
-                    bottom: isMobileLayout ? 20 : 30,
+                    left: isMobile ? 16 : 24,
+                    right: isMobile ? 16 : 24,
+                    top: isMobile ? 4 : 30,
+                    bottom: isMobile ? 20 : 30,
                   ),
                   children: [
                     // Часть интерфейса "Добро пожаловать", а так же кнопка поиска.
-                    if (!isMobileLayout)
+                    if (!isMobile)
                       Padding(
                         padding: const EdgeInsets.only(
                           bottom: 36,
@@ -1145,11 +1142,11 @@ class HomeMusicPage extends HookConsumerWidget {
                       ),
 
                     // Верхняя часть интерфейса с переключателями при Desktop Layout'е.
-                    if (!isMobileLayout)
+                    if (!isMobile)
                       const ChipFilters(
                         showLabel: false,
                       ),
-                    if (!isMobileLayout)
+                    if (!isMobile)
                       const Padding(
                         padding: EdgeInsets.only(
                           top: 8,
@@ -1175,14 +1172,14 @@ class HomeMusicPage extends HookConsumerWidget {
                     ],
 
                     // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
-                    if (player.loaded && isMobileLayout) const Gap(66),
+                    if (player.loaded && isMobile) const Gap(66),
                   ],
                 ),
               ),
 
               // Данный Gap нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
               // Мы его располагаем после ListView, что бы ScrollBar не был закрыт плеером.
-              if (player.loaded && !isMobileLayout) const Gap(88),
+              if (player.loaded && !isMobile) const Gap(88),
             ],
           ),
         ),

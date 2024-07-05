@@ -5,7 +5,6 @@ import "package:flutter/material.dart";
 import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:lottie/lottie.dart";
-import "package:responsive_builder/responsive_builder.dart";
 import "package:skeletonizer/skeletonizer.dart";
 
 import "../../../../consts.dart";
@@ -439,8 +438,7 @@ class RealtimePlaylistsBlock extends HookConsumerWidget {
     ref.watch(playerStateProvider);
     ref.watch(playerLoadedStateProvider);
 
-    final bool isMobileLayout =
-        getDeviceType(MediaQuery.of(context).size) == DeviceScreenType.mobile;
+    final bool isMobile = isMobileLayout(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -464,7 +462,7 @@ class RealtimePlaylistsBlock extends HookConsumerWidget {
             ),
             child: LivePlaylistWidget(
               title: fakePlaylistNames.first,
-              bigLayout: !isMobileLayout,
+              bigLayout: !isMobile,
             ),
           ),
 
@@ -480,7 +478,7 @@ class RealtimePlaylistsBlock extends HookConsumerWidget {
                 title: playlist.title!,
                 description: playlist.description,
                 lottieUrl: playlist.backgroundAnimationUrl!,
-                bigLayout: !isMobileLayout,
+                bigLayout: !isMobile,
                 selected: player.currentPlaylist == playlist,
                 currentlyPlaying: player.playing,
                 onPlayToggle: (bool playing) => onMixPlayToggle(

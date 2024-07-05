@@ -1,6 +1,6 @@
 import "package:flutter/material.dart";
-import "package:responsive_builder/responsive_builder.dart";
 
+import "../../utils.dart";
 import "../home.dart";
 
 /// Виджет для поиска диалогов и/ли сообщения.
@@ -89,7 +89,7 @@ class HomeMessagesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (getDeviceType(MediaQuery.of(context).size) == DeviceScreenType.mobile) {
+    if (isMobileLayout(context)) {
       return const MobileLayout();
     }
 

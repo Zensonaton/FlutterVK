@@ -12,7 +12,6 @@ import "package:gap/gap.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:relative_time/relative_time.dart";
-import "package:responsive_builder/responsive_builder.dart";
 import "package:scroll_to_index/scroll_to_index.dart";
 import "package:skeletonizer/skeletonizer.dart";
 import "package:styled_text/tags/styled_text_tag_action.dart";
@@ -519,11 +518,10 @@ class _PlaylistInfoRouteState extends ConsumerState<PlaylistInfoRoute> {
     final List<ExtendedAudio> filteredAudios =
         filterAudiosByName(playlistAudios, controller.text);
 
-    final bool isMobileLayout =
-        getDeviceType(MediaQuery.of(context).size) == DeviceScreenType.mobile;
+    final bool isMobile = isMobileLayout(context);
 
-    final double horizontalPadding = isMobileLayout ? 16 : 24;
-    final double verticalPadding = isMobileLayout ? 0 : 30;
+    final double horizontalPadding = isMobile ? 16 : 24;
+    final double verticalPadding = isMobile ? 0 : 30;
 
     const bool loading = false;
 
@@ -554,11 +552,11 @@ class _PlaylistInfoRouteState extends ConsumerState<PlaylistInfoRoute> {
                       SliverConstraints constraints,
                     ) {
                       final isExpanded =
-                          constraints.scrollOffset < 280 && !isMobileLayout;
+                          constraints.scrollOffset < 280 && !isMobile;
 
                       return SliverAppBar(
                         pinned: true,
-                        expandedHeight: isMobileLayout ? null : 260,
+                        expandedHeight: isMobile ? null : 260,
                         elevation: 0,
                         title: isExpanded
                             ? null
@@ -567,7 +565,7 @@ class _PlaylistInfoRouteState extends ConsumerState<PlaylistInfoRoute> {
                                     l18n.music_fullscreenFavoritePlaylistName,
                               ),
                         centerTitle: true,
-                        flexibleSpace: isMobileLayout
+                        flexibleSpace: isMobile
                             ? null
                             : FlexibleSpaceBar(
                                 background: Padding(
@@ -666,7 +664,7 @@ class _PlaylistInfoRouteState extends ConsumerState<PlaylistInfoRoute> {
                                                 if (widget
                                                         .playlist.description !=
                                                     null)
-                                                  Gap(4),
+                                                  const Gap(4),
 
                                                 // Строка вида "100 треков • Ваш плейлист, 25 часов".
                                                 // TODO: Написать свою функцию для форматирования времени.
@@ -1117,7 +1115,7 @@ class _PlaylistInfoRouteState extends ConsumerState<PlaylistInfoRoute> {
                             // ignore: dead_code
                             ? widget.playlist.count
                             : filteredAudios.length +
-                                (isMobileLayout && player.loaded ? 1 : 0),
+                                (isMobile && player.loaded ? 1 : 0),
                       ),
                     ),
                   ),
@@ -1125,7 +1123,7 @@ class _PlaylistInfoRouteState extends ConsumerState<PlaylistInfoRoute> {
               ),
 
               // FAB, располагаемый поверх всего интерфейса при Mobile Layout'е, если играет не этот плейлист.
-              if (isMobileLayout && player.currentPlaylist != widget.playlist)
+              if (isMobile && player.currentPlaylist != widget.playlist)
                 Align(
                   alignment: Alignment.bottomRight,
                   child: AnimatedPadding(
@@ -1160,7 +1158,7 @@ class _PlaylistInfoRouteState extends ConsumerState<PlaylistInfoRoute> {
 
         // Данный Gap нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
         // Мы его располагаем после ListView, что бы ScrollBar не был закрыт плеером.
-        if (player.loaded && !isMobileLayout) const Gap(88),
+        if (player.loaded && !isMobile) const Gap(88),
       ],
     );
   }

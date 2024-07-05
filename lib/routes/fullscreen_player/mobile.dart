@@ -311,8 +311,8 @@ class FullscreenMediaControls extends ConsumerWidget {
     ref.watch(playerCurrentIndexProvider);
 
     final bool isFavorite = player.currentAudio!.isLiked;
-    final bool smallerLayout = MediaQuery.of(context).size.width <= 300;
-    final bool showLyricsBlock = MediaQuery.of(context).size.height > 150;
+    final bool smallerLayout = MediaQuery.sizeOf(context).width <= 300;
+    final bool showLyricsBlock = MediaQuery.sizeOf(context).height > 150;
     final bool canToggleShuffle =
         !(player.currentPlaylist?.isAudioMixPlaylist ?? false);
     final bool isRecommendationTypePlaylist =
@@ -654,20 +654,20 @@ class FullscreenPlayerMobileRoute extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     /// Указывает, что будет использоваться очень маленький размер интерфейса.
-    final bool smallerLayout = MediaQuery.of(context).size.width <= 300;
+    final bool smallerLayout = MediaQuery.sizeOf(context).width <= 300;
 
     /// Размер Padding'а для полноэкранного плеера при Mobile Layout'е.
     final double playerPadding = smallerLayout ? 10 : 20;
 
     /// Высота блока с текстом песни.
-    final double lyricsBlockHeight = MediaQuery.of(context).size.height -
+    final double lyricsBlockHeight = MediaQuery.sizeOf(context).height -
         playerPadding * 2 -
         (smallerLayout ? 95 : 220) -
         MediaQuery.of(context).systemGestureInsets.bottom -
         MediaQuery.of(context).systemGestureInsets.top;
 
     /// Указывает, что блок с текстом песни будет показан.
-    final bool showLyricsBlock = MediaQuery.of(context).size.height > 150;
+    final bool showLyricsBlock = MediaQuery.sizeOf(context).height > 150;
 
     /// [Padding] для всех элементов на данном Route.
     final EdgeInsets padding = EdgeInsets.all(

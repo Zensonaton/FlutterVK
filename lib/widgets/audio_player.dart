@@ -352,7 +352,7 @@ class BottomMusicPlayer extends HookConsumerWidget {
     final double padding = useBigLayout ? 14 : 8;
 
     // Ширина проигрывателя.
-    final double width = MediaQuery.of(context).size.width - padding * 2 - 16;
+    final double width = MediaQuery.sizeOf(context).width - padding * 2 - 16;
 
     // Размер центрального блока, в котором производится управление музыкой в Desktop Layout'е.
     final double centerBlockSize = clampDouble(

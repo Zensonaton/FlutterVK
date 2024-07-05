@@ -6,7 +6,6 @@ import "package:flutter/material.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:responsive_builder/responsive_builder.dart";
 
 import "../enums.dart";
 import "../intents.dart";
@@ -495,18 +494,16 @@ class _HomeRouteState extends ConsumerState<HomeRoute> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isMobile = isMobileLayout(context);
     final NavigationPage navigationPage =
         navigationPages.elementAt(navigationScreenIndex);
-
-    final bool isMobileLayout =
-        getDeviceType(MediaQuery.of(context).size) == DeviceScreenType.mobile;
 
     return Actions(
       actions: {
         FullscreenPlayerIntent: CallbackAction(
           onInvoke: (intent) => openFullscreenPlayer(
             context,
-            fullscreenOnDesktop: !isMobileLayout,
+            fullscreenOnDesktop: !isMobile,
           ),
         ),
       },
@@ -519,7 +516,7 @@ class _HomeRouteState extends ConsumerState<HomeRoute> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Блок для навигации.
-                if (!isMobileLayout)
+                if (!isMobile)
                   NavigationRail(
                     selectedIndex: navigationScreenIndex,
                     labelType: NavigationRailLabelType.all,
@@ -536,7 +533,7 @@ class _HomeRouteState extends ConsumerState<HomeRoute> {
                         ),
                     ],
                   ),
-                if (!isMobileLayout) const VerticalDivider(),
+                if (!isMobile) const VerticalDivider(),
 
                 // Содержимое экрана.
                 Expanded(
@@ -579,7 +576,7 @@ class _HomeRouteState extends ConsumerState<HomeRoute> {
             ),
           ],
         ),
-        bottomNavigationBar: isMobileLayout
+        bottomNavigationBar: isMobile
             ? NavigationBar(
                 selectedIndex: navigationScreenIndex,
                 destinations: [
