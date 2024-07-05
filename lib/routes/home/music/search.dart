@@ -13,8 +13,8 @@ import "package:styled_text/widgets/styled_text.dart";
 
 import "../../../api/vk/audio/search.dart";
 import "../../../consts.dart";
-import "../../../main.dart";
 import "../../../provider/l18n.dart";
+import "../../../provider/player_events.dart";
 import "../../../provider/user.dart";
 import "../../../utils.dart";
 import "../../../widgets/adaptive_dialog.dart";
@@ -87,18 +87,6 @@ class _SearchDisplayDialogState extends ConsumerState<SearchDisplayDialog> {
   void initState() {
     super.initState();
 
-    subscriptions = [
-      // Изменение состояния плеера.
-      player.playerStateStream.listen(
-        (_) => setState(() {}),
-      ),
-
-      // Изменение текущего трека.
-      player.currentIndexStream.listen(
-        (_) => setState(() {}),
-      ),
-    ];
-
     // Обработчик печати.
     controller.addListener(
       () => debouncer.value = controller.text,
@@ -112,18 +100,11 @@ class _SearchDisplayDialogState extends ConsumerState<SearchDisplayDialog> {
   }
 
   @override
-  void dispose() {
-    super.dispose();
-
-    for (StreamSubscription subscription in subscriptions) {
-      subscription.cancel();
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
     final user = ref.watch(userProvider);
     final l18n = ref.watch(l18nProvider);
+    ref.watch(playerStateProvider);
+    ref.watch(playerCurrentIndexProvider);
 
     final bool isMobileLayout =
         getDeviceType(MediaQuery.of(context).size) == DeviceScreenType.mobile;

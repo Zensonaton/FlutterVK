@@ -1,4 +1,3 @@
-import "dart:async";
 import "dart:ui";
 
 import "package:cached_network_image/cached_network_image.dart";
@@ -12,6 +11,7 @@ import "../../consts.dart";
 import "../../main.dart";
 import "../../provider/color.dart";
 import "../../provider/l18n.dart";
+import "../../provider/player_events.dart";
 import "../../provider/preferences.dart";
 import "../../provider/user.dart";
 import "../../services/cache_manager.dart";
@@ -162,43 +162,15 @@ class _PlayerImageWidget extends ConsumerWidget {
 }
 
 /// Виджет, отображающий текст песни, или изображениие трека по центру полноэкранного плеера Mobile Layout'а.
-class ImageLyricsBlock extends StatefulHookConsumerWidget {
+class ImageLyricsBlock extends HookConsumerWidget {
   const ImageLyricsBlock({
     super.key,
   });
 
   @override
-  ConsumerState<ImageLyricsBlock> createState() => _ImageLyricsBlockState();
-}
-
-class _ImageLyricsBlockState extends ConsumerState<ImageLyricsBlock> {
-  /// Подписки на изменения состояния воспроизведения трека.
-  late final List<StreamSubscription> subscriptions;
-
-  @override
-  void initState() {
-    super.initState();
-
-    subscriptions = [
-      // Изменение текущего трека.
-      player.currentIndexStream.listen(
-        (_) => setState(() {}),
-      ),
-    ];
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-
-    for (StreamSubscription subscription in subscriptions) {
-      subscription.cancel();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final preferences = ref.watch(preferencesProvider);
+    ref.watch(playerCurrentIndexProvider);
     final dragProgress = useState(0.0);
 
     const scrollWidth = _playerImageSize + 50;
@@ -326,51 +298,17 @@ class _ImageLyricsBlockState extends ConsumerState<ImageLyricsBlock> {
 }
 
 /// Кнопки, а так же информация по текущему треку полноэкранного плеера Mobile Layout'а, отображаемого снизу плеера.
-class FullscreenMediaControls extends ConsumerStatefulWidget {
+class FullscreenMediaControls extends ConsumerWidget {
   const FullscreenMediaControls({
     super.key,
   });
 
   @override
-  ConsumerState<FullscreenMediaControls> createState() =>
-      _FullscreenMediaControlsState();
-}
-
-class _FullscreenMediaControlsState
-    extends ConsumerState<FullscreenMediaControls> {
-  /// Подписки на изменения состояния воспроизведения трека.
-  late final List<StreamSubscription> subscriptions;
-
-  @override
-  void initState() {
-    super.initState();
-
-    subscriptions = [
-      // Изменение состояния плеера.
-      player.playerStateStream.listen(
-        (_) => setState(() {}),
-      ),
-
-      // Изменение текущего трека.
-      player.currentIndexStream.listen(
-        (_) => setState(() {}),
-      ),
-    ];
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-
-    for (StreamSubscription subscription in subscriptions) {
-      subscription.cancel();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final prefsNotifier = ref.read(preferencesProvider.notifier);
     final preferences = ref.watch(preferencesProvider);
+    ref.watch(playerStateProvider);
+    ref.watch(playerCurrentIndexProvider);
 
     final bool isFavorite = player.currentAudio!.isLiked;
     final bool smallerLayout = MediaQuery.of(context).size.width <= 300;

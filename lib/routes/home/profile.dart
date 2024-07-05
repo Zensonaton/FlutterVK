@@ -17,6 +17,7 @@ import "../../enums.dart";
 import "../../main.dart";
 import "../../provider/auth.dart";
 import "../../provider/l18n.dart";
+import "../../provider/player_events.dart";
 import "../../provider/preferences.dart";
 import "../../provider/spotify_api.dart";
 import "../../provider/user.dart";
@@ -75,23 +76,7 @@ class _HomeProfilePageState extends ConsumerState<HomeProfilePage> {
   void initState() {
     super.initState();
 
-    subscriptions = [
-      // Изменения запуска плеера.
-      player.loadedStateStream.listen(
-        (_) => setState(() {}),
-      ),
-    ];
-
     logExistsFuture = _logFileExists();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-
-    for (StreamSubscription subscription in subscriptions) {
-      subscription.cancel();
-    }
   }
 
   @override
@@ -101,6 +86,7 @@ class _HomeProfilePageState extends ConsumerState<HomeProfilePage> {
     final user = ref.watch(userProvider);
     final prefsNotifier = ref.read(preferencesProvider.notifier);
     final preferences = ref.watch(preferencesProvider);
+    ref.watch(playerLoadedStateProvider);
 
     final bool recommendationsConnected =
         ref.watch(secondaryTokenProvider) != null;

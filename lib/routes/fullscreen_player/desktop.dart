@@ -1,5 +1,3 @@
-import "dart:async";
-
 import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
 import "package:gap/gap.dart";
@@ -11,6 +9,7 @@ import "../../consts.dart";
 import "../../main.dart";
 import "../../provider/color.dart";
 import "../../provider/l18n.dart";
+import "../../provider/player_events.dart";
 import "../../provider/preferences.dart";
 import "../../services/cache_manager.dart";
 import "../../services/logger.dart";
@@ -97,55 +96,23 @@ class PlaylistTitleWidget extends ConsumerWidget {
 }
 
 /// Виджет, отображающий информацию по следующему треку Desktop Layout'а.
-class NextTrackInfoWidget extends ConsumerStatefulWidget {
+class NextTrackInfoWidget extends ConsumerWidget {
   const NextTrackInfoWidget({
     super.key,
   });
 
   @override
-  ConsumerState<NextTrackInfoWidget> createState() =>
-      _NextTrackInfoWidgetState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l18n = ref.watch(l18nProvider);
+    ref.watch(playerPositionProvider);
+    ref.watch(playerCurrentIndexProvider);
 
-class _NextTrackInfoWidgetState extends ConsumerState<NextTrackInfoWidget> {
-  /// Подписки на изменения состояния воспроизведения трека.
-  late final List<StreamSubscription> subscriptions;
-
-  @override
-  void initState() {
-    super.initState();
-
-    subscriptions = [
-      // Изменения позиции плеера.
-      player.positionStream.listen(
-        (_) => setState(() {}),
-      ),
-
-      // Изменение текущего трека.
-      player.currentIndexStream.listen(
-        (_) => setState(() {}),
-      ),
-    ];
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-
-    for (StreamSubscription subscription in subscriptions) {
-      subscription.cancel();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
     assert(
       player.smartNextAudio != null,
       "Next audio is not known",
     );
 
-    final l18n = ref.watch(l18nProvider);
-
+    // TODO: Настройка, что бы отключить это.
     /// Определяет по оставшейся длине трека то, стоит ли показывать надпись со следующим треком.
     final bool displayNextTrack =
         (player.smartCurrentAudio != null && player.smartNextAudio != null)
@@ -235,43 +202,15 @@ class _NextTrackInfoWidgetState extends ConsumerState<NextTrackInfoWidget> {
 }
 
 /// Блок, отображающий текст песни.
-class LyricsBlockWidget extends ConsumerStatefulWidget {
+class LyricsBlockWidget extends ConsumerWidget {
   const LyricsBlockWidget({
     super.key,
   });
 
   @override
-  ConsumerState<LyricsBlockWidget> createState() => _LyricsBlockWidgetState();
-}
-
-class _LyricsBlockWidgetState extends ConsumerState<LyricsBlockWidget> {
-  /// Подписки на изменения состояния воспроизведения трека.
-  late final List<StreamSubscription> subscriptions;
-
-  @override
-  void initState() {
-    super.initState();
-
-    subscriptions = [
-      // Изменения позиции плеера.
-      player.positionStream.listen(
-        (Duration? state) => setState(() {}),
-      ),
-    ];
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-
-    for (StreamSubscription subscription in subscriptions) {
-      subscription.cancel();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final preferences = ref.watch(preferencesProvider);
+    ref.watch(playerPositionProvider);
 
     return AnimatedOpacity(
       duration: const Duration(
@@ -324,49 +263,13 @@ class _LyricsBlockWidgetState extends ConsumerState<LyricsBlockWidget> {
 }
 
 /// Блок для полноэкранного плеера Desktop Layout'а, отображаемый снизу, который показывает информацию по текущему треку, а так же кнопки для управления плеером.
-class FullscreenMediaControls extends ConsumerStatefulWidget {
+class FullscreenMediaControls extends ConsumerWidget {
   const FullscreenMediaControls({
     super.key,
   });
 
-  @override
-  ConsumerState<FullscreenMediaControls> createState() =>
-      _FullscreenMediaControlsState();
-}
-
-class _FullscreenMediaControlsState
-    extends ConsumerState<FullscreenMediaControls> {
-  /// Подписки на изменения состояния воспроизведения трека.
-  late final List<StreamSubscription> subscriptions;
-
-  @override
-  void initState() {
-    super.initState();
-
-    subscriptions = [
-      // Изменения состояния плеера.
-      player.playerStateStream.listen(
-        (_) => setState(() {}),
-      ),
-
-      // Изменения состояния паузы/воспроизведения.
-      player.playingStream.listen(
-        (_) => setState(() {}),
-      ),
-    ];
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-
-    for (StreamSubscription subscription in subscriptions) {
-      subscription.cancel();
-    }
-  }
-
   /// Переключает состояние лайка у трека, играющий в данный момент.
-  void _toggleLike() {
+  void _toggleLike(WidgetRef ref, BuildContext context) {
     assert(
       player.currentAudio != null,
       "Current audio is null",
@@ -381,7 +284,7 @@ class _FullscreenMediaControlsState
   }
 
   /// Добавляет дизлайк для трека, который играет в данный момент.
-  void _toggleDislike() async {
+  void _toggleDislike(WidgetRef ref, BuildContext context) async {
     assert(player.currentAudio != null, "Current audio is null");
     assert(
       player.currentPlaylist!.isRecommendationTypePlaylist,
@@ -398,10 +301,11 @@ class _FullscreenMediaControlsState
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final schemeInfo = ref.watch(trackSchemeInfoProvider);
     final prefsNotifier = ref.read(preferencesProvider.notifier);
     final preferences = ref.watch(preferencesProvider);
+    ref.watch(playerStateProvider);
 
     /// Указывает, сохранён ли этот трек в лайкнутых.
     final bool isFavorite = player.currentAudio!.isLiked;
@@ -651,7 +555,7 @@ class _FullscreenMediaControlsState
                     children: [
                       // Кнопка для добавления/удаления лайка.
                       IconButton(
-                        onPressed: _toggleLike,
+                        onPressed: () => _toggleLike(ref, context),
                         icon: Icon(
                           isFavorite ? Icons.favorite : Icons.favorite_border,
                           color: Theme.of(context).colorScheme.primary,
@@ -662,7 +566,7 @@ class _FullscreenMediaControlsState
                       // Кнопка для дизлайка трека, если включён рекомендуемый плейлист.
                       if (player.currentPlaylist!.isRecommendationTypePlaylist)
                         IconButton(
-                          onPressed: _toggleDislike,
+                          onPressed: () => _toggleDislike(ref, context),
                           icon: Icon(
                             Icons.thumb_down_outlined,
                             color: Theme.of(context).colorScheme.primary,
@@ -691,7 +595,7 @@ class _FullscreenMediaControlsState
                             right: smallerButtonSpacing ? 0 : 8,
                           ),
                           child: IconButton(
-                            onPressed: _toggleLike,
+                            onPressed: () => _toggleLike(ref, context),
                             icon: Icon(
                               isFavorite
                                   ? Icons.favorite
@@ -709,7 +613,7 @@ class _FullscreenMediaControlsState
                             right: smallerButtonSpacing ? 0 : 8,
                           ),
                           child: IconButton(
-                            onPressed: _toggleDislike,
+                            onPressed: () => _toggleDislike(ref, context),
                             icon: Icon(
                               Icons.thumb_down_outlined,
                               color: Theme.of(context).colorScheme.primary,
@@ -870,14 +774,12 @@ class _FullscreenMediaControlsState
                                   (player.currentAudio!.hasLyrics ?? false)
                               ? Icons.lyrics
                               : Icons.lyrics_outlined,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withOpacity(
-                                player.currentAudio!.hasLyrics ?? false
-                                    ? 1.0
-                                    : 0.5,
-                              ),
+                          color:
+                              Theme.of(context).colorScheme.primary.withOpacity(
+                                    player.currentAudio!.hasLyrics ?? false
+                                        ? 1.0
+                                        : 0.5,
+                                  ),
                         ),
                       ),
                       Gap(smallerButtonSpacing ? 0 : 8),

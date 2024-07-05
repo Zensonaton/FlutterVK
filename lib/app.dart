@@ -23,7 +23,6 @@ import "provider/preferences.dart";
 import "provider/shared_prefs.dart";
 import "routes/home/profile.dart";
 import "services/audio_player.dart";
-import "services/logger.dart";
 import "utils.dart";
 import "widgets/loading_overlay.dart";
 

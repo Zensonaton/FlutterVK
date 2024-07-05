@@ -1,5 +1,3 @@
-import "dart:async";
-
 import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
 import "package:gap/gap.dart";
@@ -7,6 +5,7 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 
 import "../../../main.dart";
 import "../../../provider/color.dart";
+import "../../../provider/player_events.dart";
 import "../../../provider/user.dart";
 import "../../../services/cache_manager.dart";
 import "../../../widgets/fallback_audio_photo.dart";
@@ -46,50 +45,17 @@ class ColorPill extends ConsumerWidget {
 }
 
 /// Debug-меню, отображаемое в [HomeProfilePage] если включён debug-режим ([kDebugMode]), отображающая техническую информацию о цветовой схеме, полученной от цветов плеера.
-class ColorSchemeDebugMenu extends ConsumerStatefulWidget {
+class ColorSchemeDebugMenu extends ConsumerWidget {
   const ColorSchemeDebugMenu({
     super.key,
   });
 
   @override
-  ConsumerState<ColorSchemeDebugMenu> createState() =>
-      _ColorSchemeDebugMenuState();
-}
-
-class _ColorSchemeDebugMenuState extends ConsumerState<ColorSchemeDebugMenu> {
-  /// Подписки на изменения состояния воспроизведения трека.
-  late final List<StreamSubscription> subscriptions;
-
-  @override
-  void initState() {
-    super.initState();
-
-    subscriptions = [
-      // Изменения запуска плеера.
-      player.loadedStateStream.listen(
-        (_) => setState(() {}),
-      ),
-
-      // Изменения текущего трека.
-      player.currentIndexStream.listen(
-        (_) => setState(() {}),
-      ),
-    ];
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-
-    for (StreamSubscription subscription in subscriptions) {
-      subscription.cancel();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final ExtendedAudio? playingAudio = player.currentAudio;
     final schemeInfo = ref.watch(trackSchemeInfoProvider);
+    ref.watch(playerLoadedStateProvider);
+    ref.watch(playerCurrentIndexProvider);
 
     if (playingAudio == null) {
       return const Center(

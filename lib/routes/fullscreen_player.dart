@@ -22,6 +22,7 @@ import "../intents.dart";
 import "../main.dart";
 import "../provider/color.dart";
 import "../provider/l18n.dart";
+import "../provider/player_events.dart";
 import "../provider/preferences.dart";
 import "../services/cache_manager.dart";
 import "../services/logger.dart";
@@ -557,42 +558,16 @@ class _TrackLyricsBlockState extends State<TrackLyricsBlock> {
   }
 }
 
-/// Виджет, отображающий размытое фоновое изображение для полноэкранногоп плеера.
-class BlurredBackgroundImage extends StatefulWidget {
+/// Виджет, отображающий размытое фоновое изображение для полноэкранного плеера.
+class BlurredBackgroundImage extends ConsumerWidget {
   const BlurredBackgroundImage({
     super.key,
   });
 
   @override
-  State<BlurredBackgroundImage> createState() => _BlurredBackgroundImageState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(playerCurrentIndexProvider);
 
-class _BlurredBackgroundImageState extends State<BlurredBackgroundImage> {
-  late final List<StreamSubscription> subscriptions;
-
-  @override
-  void initState() {
-    super.initState();
-
-    subscriptions = [
-      // Изменение текущего трека.
-      player.currentIndexStream.listen(
-        (_) => setState(() {}),
-      ),
-    ];
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-
-    for (StreamSubscription subscription in subscriptions) {
-      subscription.cancel();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return RepaintBoundary(
       child: ImageFiltered(
         imageFilter: ImageFilter.blur(
@@ -636,11 +611,6 @@ class _FullscreenPlayerRouteState extends ConsumerState<FullscreenPlayerRoute> {
     super.initState();
 
     subscriptions = [
-      // Изменение текущего трека.
-      player.currentIndexStream.listen(
-        (_) => setState(() {}),
-      ),
-
       // Изменение состояния паузы плеера.
       player.loadedStateStream.listen(
         (bool loaded) {
@@ -666,6 +636,7 @@ class _FullscreenPlayerRouteState extends ConsumerState<FullscreenPlayerRoute> {
     final preferences = ref.watch(preferencesProvider);
     final trackImageInfo = ref.watch(trackSchemeInfoProvider);
     final l18n = ref.watch(l18nProvider);
+    ref.watch(playerCurrentIndexProvider);
 
     // Проверка на случай, если запустился плеер без активного трека.
     if (player.currentAudio == null) {

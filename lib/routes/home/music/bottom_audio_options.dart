@@ -63,9 +63,6 @@ class _TrackThumbnailDialogState extends ConsumerState<TrackThumbnailDialog> {
   /// FocusNode для фокуса поля поиска сразу после открытия данного диалога.
   final focusNode = useFocusNode();
 
-  /// Подписки на изменения состояния воспроизведения трека.
-  late final List<StreamSubscription> subscriptions;
-
   /// Debouncer для поиска.
   final debouncer = Debouncer<String>(
     const Duration(
@@ -109,13 +106,6 @@ class _TrackThumbnailDialogState extends ConsumerState<TrackThumbnailDialog> {
   void initState() {
     super.initState();
 
-    subscriptions = [
-      // Изменения состояния воспроизведения.
-      player.playerStateStream.listen(
-        (_) => setState(() {}),
-      ),
-    ];
-
     // Обработчик печати.
     controller.addListener(
       () => debouncer.value = controller.text,
@@ -134,17 +124,9 @@ class _TrackThumbnailDialogState extends ConsumerState<TrackThumbnailDialog> {
   }
 
   @override
-  void dispose() {
-    super.dispose();
-
-    for (StreamSubscription subscription in subscriptions) {
-      subscription.cancel();
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
     final l18n = ref.watch(l18nProvider);
+    ref.watch(playerStateProvider);
 
     final bool isMobileLayout =
         getDeviceType(MediaQuery.of(context).size) == DeviceScreenType.mobile;
