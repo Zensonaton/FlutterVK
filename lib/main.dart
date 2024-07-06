@@ -1,15 +1,23 @@
 import "dart:io";
 
+import "package:catcher_2/core/catcher_2.dart";
+import "package:catcher_2/handlers/console_handler.dart";
+import "package:catcher_2/handlers/file_handler.dart";
+import "package:catcher_2/mode/silent_report_mode.dart";
+import "package:catcher_2/model/catcher_2_options.dart";
+import "package:dynamic_color/dynamic_color.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:just_audio_media_kit/just_audio_media_kit.dart";
 import "package:local_notifier/local_notifier.dart";
+import "package:media_kit/media_kit.dart";
 import "package:package_info_plus/package_info_plus.dart";
 import "package:path/path.dart" as path;
 import "package:path_provider/path_provider.dart";
 import "package:responsive_builder/responsive_builder.dart";
+import "package:shared_preferences/shared_preferences.dart";
 import "package:system_tray/system_tray.dart";
 import "package:window_manager/window_manager.dart";
 
@@ -145,6 +153,10 @@ Future main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
 
+    // Загружаем SharedPreferences.
+    // TODO: Он загружается дважды.
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+
     // Инициализируем WindowManager на Desktop-платформах.
     if (isDesktop) {
       await windowManager.ensureInitialized();
@@ -236,6 +248,11 @@ Future main() async {
 
     // Инициализируем плеер.
     JustAudioMediaKit.title = "Flutter VK";
+    if (prefs.getBool("DebugPlayerLogging") ?? false) {
+      logger.i("Media kit debug logger is enabled");
+
+      JustAudioMediaKit.mpvLogLevel = MPVLogLevel.debug;
+    }
     JustAudioMediaKit.ensureInitialized();
 
     player = VKMusicPlayer();
@@ -256,14 +273,41 @@ Future main() async {
 
     // Фикс сертификатов.
     HttpOverrides.global = DevHttpOverrides();
-
-    // Запускаем само приложение.
-    runApp(
-      const ProviderScope(
-        child: EagerInitialization(
-          app: FlutterVKApp(),
-        ),
+    
+    // Запускаем само приложение, а так же делаем глобальный обработчик ошибок.
+    Catcher2(
+      debugConfig: Catcher2Options(
+        SilentReportMode(),
+        [
+          ConsoleHandler(
+            enableDeviceParameters: false,
+            enableApplicationParameters: false,
+          ),
+          if (!kIsWeb)
+            FileHandler(
+              await logFilePath(),
+            ),
+        ],
       ),
+      releaseConfig: Catcher2Options(
+        SilentReportMode(),
+        [
+          ConsoleHandler(),
+          if (!kIsWeb)
+            FileHandler(
+              await logFilePath(),
+            ),
+        ],
+      ),
+      runAppFunction: () {
+        runApp(
+          const ProviderScope(
+            child: EagerInitialization(
+              app: FlutterVKApp(),
+            ),
+          ),
+        );
+      },
     );
   } catch (e, stackTrace) {
     logger.f(

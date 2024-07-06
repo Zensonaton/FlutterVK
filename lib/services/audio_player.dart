@@ -8,6 +8,8 @@ import "package:audio_session/audio_session.dart";
 import "package:crypto/crypto.dart";
 import "package:discord_rpc/discord_rpc.dart";
 import "package:flutter/foundation.dart";
+import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:flutter_cache_manager/flutter_cache_manager.dart";
 import "package:just_audio/just_audio.dart";
 import "package:path/path.dart";
@@ -408,6 +410,28 @@ class VKMusicPlayer {
           await play();
         }
       }),
+
+      // Обработчик событий плеера.
+      _player.playbackEventStream.listen(
+        (event) {},
+        onError: (Object error, StackTrace stackTrace) {
+          if (error is PlatformException) {
+            logger.e(
+              "Player platform exception, code ${error.code}, message: ${error.message}:",
+              error: error,
+              stackTrace: stackTrace,
+            );
+          } else {
+            logger.e(
+              "Player non-platform exception:",
+              error: error,
+              stackTrace: stackTrace,
+            );
+          }
+
+          stop();
+        },
+      ),
     ];
 
     _initPlayer();

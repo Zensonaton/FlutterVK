@@ -6,6 +6,7 @@
 	"general_save": "Сохранить",
 	"general_close": "Закрыть",
 	"general_addedToQueue": "Трек добавлен в очередь.",
+	"general_restartApp": "Пожалуйста, перезагрузите приложение.",
 
 	"general_appMinimized": "Flutter VK свернулся.\nВоспользуйтесь треем или откройте приложение ещё раз, что бы вернуть окошко.",
 	"general_appMinimizedClose": "Закрыть",
@@ -334,6 +335,9 @@
 	"profile_checkBeforeFavoriteDescription": "Если включено, то при сохранении уже лайкнутого трека приложение отобразит предупреждение, подтверждающее создание дубликата",
 	"checkBeforeFavoriteWarningTitle": "Обнаружен дубликат трека",
 	"checkBeforeFavoriteWarningDescription": "Похоже, что этот трек уже лайкнут Вами. Сохранив этот трек, у Вас будет ещё одна копия этого трека.\nВы уверены, что хотите сделать дубликат данного трека?",
+
+	"profile_playerDebugLoggingTitle": "Debug-логирование плеера",
+	"profile_playerDebugLoggingDescription": "Включает вывод debug-логов media_kit плеера в файл лога.\nПри включении, производительность приложения может ухудшиться",
 
 
 	"profile_visualTitle": "Визуал",

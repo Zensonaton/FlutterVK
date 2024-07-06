@@ -657,6 +657,10 @@ class User extends _$User {
       photo50Url: prefs.getString("Photo50"),
       photoMaxUrl: prefs.getString("PhotoMax"),
     );
+    await prefs.setBool(
+      "DebugPlayerLogging",
+      settings.debugPlayerLogging,
+    );
   }
 
   /// Сохраняет вторичный токен (VK Admin) ВКонтакте в [SharedPreferences] ([sharedPrefsProvider]), а так же обновляет состояние этого Provider.
