@@ -42,6 +42,7 @@ UserPreferences _$UserPreferencesFromJson(Map<String, dynamic> json) =>
           DynamicSchemeType.tonalSpot,
       spotifyLyrics: json['SpotifyLyrics'] as bool? ?? false,
       fullscreenBigThumbnail: json['FullscreenBigThumbnail'] as bool? ?? false,
+      debugPlayerLogging: json['DebugPlayerLogging'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$UserPreferencesToJson(UserPreferences instance) =>
@@ -70,6 +71,7 @@ Map<String, dynamic> _$UserPreferencesToJson(UserPreferences instance) =>
       'DynamicSchemeType': intFromEnum(instance.dynamicSchemeType),
       'SpotifyLyrics': instance.spotifyLyrics,
       'FullscreenBigThumbnail': instance.fullscreenBigThumbnail,
+      'DebugPlayerLogging': instance.debugPlayerLogging,
     };
 
 const _$ThemeModeEnumMap = {
@@ -106,7 +108,7 @@ const _$DynamicSchemeTypeEnumMap = {
 // RiverpodGenerator
 // **************************************************************************
 
-String _$preferencesHash() => r'b3030e7bc3235cbdf6b91e562873b44a71f1bc08';
+String _$preferencesHash() => r'01265b739a534510dc9557207a027e5d9f3803cf';
 
 /// [Provider] для хранения настроек пользователя.
 ///

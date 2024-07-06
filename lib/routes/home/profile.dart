@@ -401,12 +401,11 @@ class _HomeProfilePageState extends ConsumerState<HomeProfilePage> {
                               AppLocalizations.of(context)!
                                   .profile_playerDebugLoggingDescription,
                             ),
-                            value: user.settings.checkBeforeFavorite,
+                            value: preferences.debugPlayerLogging,
                             onChanged: (bool? enabled) async {
                               if (enabled == null) return;
 
-                              user.settings.debugPlayerLogging = enabled;
-                              user.markUpdated();
+                              prefsNotifier.setDebugPlayerLogging(enabled);
 
                               // Отображаем уведомление о необходимости в перезагрузки приложения.
                               final messenger = ScaffoldMessenger.of(context);

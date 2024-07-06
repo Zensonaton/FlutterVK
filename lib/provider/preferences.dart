@@ -106,6 +106,10 @@ class UserPreferences {
   @JsonKey(name: "FullscreenBigThumbnail")
   final bool fullscreenBigThumbnail;
 
+  /// Указывает, что включено debug-логирование media_kit плеера.
+  @JsonKey(name: "DebugPlayerLogging")
+  final bool debugPlayerLogging;
+
   UserPreferences({
     this.myMusicChipEnabled = true,
     this.playlistsChipEnabled = true,
@@ -130,6 +134,7 @@ class UserPreferences {
     this.dynamicSchemeType = DynamicSchemeType.tonalSpot,
     this.spotifyLyrics = false,
     this.fullscreenBigThumbnail = false,
+    this.debugPlayerLogging = false,
   });
 
   factory UserPreferences.fromJson(Map<String, dynamic> json) =>
@@ -161,6 +166,7 @@ class UserPreferences {
     DynamicSchemeType? dynamicSchemeType,
     bool? spotifyLyrics,
     bool? fullscreenBigThumbnail,
+    bool? debugPlayerLogging,
   }) =>
       UserPreferences(
         myMusicChipEnabled: myMusicChipEnabled ?? this.myMusicChipEnabled,
@@ -191,6 +197,7 @@ class UserPreferences {
         spotifyLyrics: spotifyLyrics ?? this.spotifyLyrics,
         fullscreenBigThumbnail:
             fullscreenBigThumbnail ?? this.fullscreenBigThumbnail,
+        debugPlayerLogging: debugPlayerLogging ?? this.debugPlayerLogging,
       );
 }
 
@@ -228,6 +235,7 @@ class Preferences extends _$Preferences {
           DynamicSchemeType.values[prefs.getInt("DynamicSchemeType") ?? 0],
       spotifyLyrics: prefs.getBool("SpotifyLyrics"),
       fullscreenBigThumbnail: prefs.getBool("FullscreenBigThumbnail"),
+      debugPlayerLogging: prefs.getBool("DebugPlayerLogging"),
     );
   }
 
@@ -329,4 +337,7 @@ class Preferences extends _$Preferences {
 
   void setFullscreenBigThumbnailEnabled(bool enabled) =>
       state = state.copyWith(fullscreenBigThumbnail: enabled);
+
+  void setDebugPlayerLogging(bool enabled) =>
+      state = state.copyWith(debugPlayerLogging: enabled);
 }

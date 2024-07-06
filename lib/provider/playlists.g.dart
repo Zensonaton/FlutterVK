@@ -149,7 +149,7 @@ final madeByVKPlaylistsProvider =
 );
 
 typedef MadeByVKPlaylistsRef = AutoDisposeProviderRef<List<ExtendedPlaylist>?>;
-String _$playlistsHash() => r'f47c1e7f872fc6c7917ac4e45a689ae46c3aa529';
+String _$playlistsHash() => r'9e65d07918c670377e7c595dd4f46aa8a0526a5b';
 
 /// [Provider], хранящий в себе информацию о плейлистах пользователя.
 ///

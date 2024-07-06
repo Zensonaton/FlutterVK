@@ -5,7 +5,6 @@ import "package:catcher_2/handlers/console_handler.dart";
 import "package:catcher_2/handlers/file_handler.dart";
 import "package:catcher_2/mode/silent_report_mode.dart";
 import "package:catcher_2/model/catcher_2_options.dart";
-import "package:dynamic_color/dynamic_color.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
@@ -273,7 +272,7 @@ Future main() async {
 
     // Фикс сертификатов.
     HttpOverrides.global = DevHttpOverrides();
-    
+
     // Запускаем само приложение, а так же делаем глобальный обработчик ошибок.
     Catcher2(
       debugConfig: Catcher2Options(
