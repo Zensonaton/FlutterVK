@@ -9,7 +9,9 @@ part of 'add_dislike.dart';
 APIAudioAddDislikeResponse _$APIAudioAddDislikeResponseFromJson(
         Map<String, dynamic> json) =>
     APIAudioAddDislikeResponse(
-      json['response'] == null ? false : boolFromInt(json['response'] as int?),
+      json['response'] == null
+          ? false
+          : boolFromInt((json['response'] as num?)?.toInt()),
       json['error'] == null
           ? null
           : APIError.fromJson(json['error'] as Map<String, dynamic>),

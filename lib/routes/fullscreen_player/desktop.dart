@@ -1,15 +1,16 @@
-import "dart:async";
-
 import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
-import "package:flutter_gen/gen_l10n/app_localizations.dart";
+import "package:gap/gap.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:just_audio/just_audio.dart";
-import "package:provider/provider.dart";
 import "package:skeletonizer/skeletonizer.dart";
 
 import "../../consts.dart";
 import "../../main.dart";
-import "../../provider/user.dart";
+import "../../provider/color.dart";
+import "../../provider/l18n.dart";
+import "../../provider/player_events.dart";
+import "../../provider/preferences.dart";
 import "../../services/cache_manager.dart";
 import "../../services/logger.dart";
 import "../../utils.dart";
@@ -27,13 +28,15 @@ const double _playerPadding = 56;
 const double _lyricsWidth = 500;
 
 /// Виджет, отображающий информацию по плейлисту, который играет в данный момент в полноэкранном плеере Desktop Layout'а.
-class PlaylistTitleWidget extends StatelessWidget {
+class PlaylistTitleWidget extends ConsumerWidget {
   const PlaylistTitleWidget({
     super.key,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l18n = ref.watch(l18nProvider);
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -59,9 +62,7 @@ class PlaylistTitleWidget extends StatelessWidget {
             },
           ),
         ),
-        const SizedBox(
-          width: 14,
-        ),
+        const Gap(14),
 
         // Текст с названием плейлиста.
         Column(
@@ -70,21 +71,18 @@ class PlaylistTitleWidget extends StatelessWidget {
           children: [
             // "Воспроизведение музыки".
             Text(
-              AppLocalizations.of(context)!.music_fullscreenPlaylistNameTitle,
+              l18n.music_fullscreenPlaylistNameTitle,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: Theme.of(context)
-                    .colorScheme
-                    .onBackground
-                    .withOpacity(0.75),
+                color:
+                    Theme.of(context).colorScheme.onSurface.withOpacity(0.75),
               ),
             ),
 
             // Название плейлиста.
             Text(
               player.currentPlaylist?.title ??
-                  AppLocalizations.of(context)!
-                      .music_fullscreenFavoritePlaylistName,
+                  l18n.music_fullscreenFavoritePlaylistName,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 fontWeight: FontWeight.w500,
@@ -98,52 +96,23 @@ class PlaylistTitleWidget extends StatelessWidget {
 }
 
 /// Виджет, отображающий информацию по следующему треку Desktop Layout'а.
-class NextTrackInfoWidget extends StatefulWidget {
+class NextTrackInfoWidget extends ConsumerWidget {
   const NextTrackInfoWidget({
     super.key,
   });
 
   @override
-  State<NextTrackInfoWidget> createState() => _NextTrackInfoWidgetState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l18n = ref.watch(l18nProvider);
+    ref.watch(playerPositionProvider);
+    ref.watch(playerCurrentIndexProvider);
 
-class _NextTrackInfoWidgetState extends State<NextTrackInfoWidget> {
-  /// Подписки на изменения состояния воспроизведения трека.
-  late final List<StreamSubscription> subscriptions;
-
-  @override
-  void initState() {
-    super.initState();
-
-    subscriptions = [
-      // Изменения позиции плеера.
-      player.positionStream.listen(
-        (Duration? state) => setState(() {}),
-      ),
-
-      // Изменение текущего трека.
-      player.currentIndexStream.listen(
-        (int? index) => setState(() {}),
-      ),
-    ];
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-
-    for (StreamSubscription subscription in subscriptions) {
-      subscription.cancel();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
     assert(
       player.smartNextAudio != null,
       "Next audio is not known",
     );
 
+    // TODO: Настройка, что бы отключить это.
     /// Определяет по оставшейся длине трека то, стоит ли показывать надпись со следующим треком.
     final bool displayNextTrack =
         (player.smartCurrentAudio != null && player.smartNextAudio != null)
@@ -175,30 +144,26 @@ class _NextTrackInfoWidgetState extends State<NextTrackInfoWidget> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               // Изображение следующего трека.
-              Padding(
-                padding: const EdgeInsets.only(
-                  right: 12,
+              ClipRRect(
+                borderRadius: BorderRadius.circular(
+                  globalBorderRadius,
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(
-                    globalBorderRadius,
-                  ),
-                  child: player.smartNextAudio!.smallestThumbnail != null
-                      ? CachedNetworkImage(
-                          imageUrl: player.smartNextAudio!.smallestThumbnail!,
-                          cacheKey: "${player.smartNextAudio!.mediaKey}small",
-                          width: 32,
-                          height: 32,
-                          placeholder: (BuildContext context, String url) =>
-                              const FallbackAudioAvatar(),
-                          cacheManager: CachedAlbumImagesManager.instance,
-                        )
-                      : const FallbackAudioAvatar(
-                          width: 32,
-                          height: 32,
-                        ),
-                ),
+                child: player.smartNextAudio!.smallestThumbnail != null
+                    ? CachedNetworkImage(
+                        imageUrl: player.smartNextAudio!.smallestThumbnail!,
+                        cacheKey: "${player.smartNextAudio!.mediaKey}small",
+                        width: 32,
+                        height: 32,
+                        placeholder: (BuildContext context, String url) =>
+                            const FallbackAudioAvatar(),
+                        cacheManager: CachedAlbumImagesManager.instance,
+                      )
+                    : const FallbackAudioAvatar(
+                        width: 32,
+                        height: 32,
+                      ),
               ),
+              const Gap(12),
 
               // Его название и прочая информация.
               Column(
@@ -208,13 +173,12 @@ class _NextTrackInfoWidgetState extends State<NextTrackInfoWidget> {
                 children: [
                   // "Следующим сыграет".
                   Text(
-                    AppLocalizations.of(context)!
-                        .music_fullscreenNextTrackTitle,
+                    l18n.music_fullscreenNextTrackTitle,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: Theme.of(context)
                           .colorScheme
-                          .onBackground
+                          .onSurface
                           .withOpacity(0.75),
                     ),
                   ),
@@ -238,57 +202,27 @@ class _NextTrackInfoWidgetState extends State<NextTrackInfoWidget> {
 }
 
 /// Блок, отображающий текст песни.
-class LyricsBlockWidget extends StatefulWidget {
+class LyricsBlockWidget extends ConsumerWidget {
   const LyricsBlockWidget({
     super.key,
   });
 
   @override
-  State<LyricsBlockWidget> createState() => _LyricsBlockWidgetState();
-}
-
-class _LyricsBlockWidgetState extends State<LyricsBlockWidget> {
-  /// Подписки на изменения состояния воспроизведения трека.
-  late final List<StreamSubscription> subscriptions;
-
-  @override
-  void initState() {
-    super.initState();
-
-    subscriptions = [
-      player.positionStream.listen(
-        (Duration? position) => setState(() {}),
-      ),
-      player.sequenceStateStream.listen(
-        (SequenceState? sequence) => setState(() {}),
-      ),
-    ];
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-
-    for (StreamSubscription subscription in subscriptions) {
-      subscription.cancel();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final UserProvider user = Provider.of<UserProvider>(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final preferences = ref.watch(preferencesProvider);
+    ref.watch(playerPositionProvider);
 
     return AnimatedOpacity(
       duration: const Duration(
         milliseconds: 500,
       ),
       curve: Curves.ease,
-      opacity: user.settings.trackLyricsEnabled ? 1.0 : 0.0,
+      opacity: preferences.trackLyricsEnabled ? 1.0 : 0.0,
       child: Align(
         alignment: Alignment.topRight,
         child: SizedBox(
           width: _lyricsWidth,
-          height: MediaQuery.of(context).size.height - _playerPadding * 2 - 100,
+          height: MediaQuery.sizeOf(context).height - _playerPadding * 2 - 100,
           child: AnimatedSwitcher(
             duration: const Duration(
               milliseconds: 500,
@@ -329,50 +263,18 @@ class _LyricsBlockWidgetState extends State<LyricsBlockWidget> {
 }
 
 /// Блок для полноэкранного плеера Desktop Layout'а, отображаемый снизу, который показывает информацию по текущему треку, а так же кнопки для управления плеером.
-class FullscreenMediaControls extends StatefulWidget {
+class FullscreenMediaControls extends ConsumerWidget {
   const FullscreenMediaControls({
     super.key,
   });
 
-  @override
-  State<FullscreenMediaControls> createState() =>
-      _FullscreenMediaControlsState();
-}
-
-class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
-  /// Подписки на изменения состояния воспроизведения трека.
-  late final List<StreamSubscription> subscriptions;
-
-  @override
-  void initState() {
-    super.initState();
-
-    subscriptions = [
-      player.sequenceStateStream.listen(
-        (SequenceState? state) => setState(() {}),
-      ),
-      player.playerStateStream.listen(
-        (PlayerState? state) => setState(() {}),
-      ),
-      player.playingStream.listen(
-        (bool playing) => setState(() {}),
-      ),
-    ];
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-
-    for (StreamSubscription subscription in subscriptions) {
-      subscription.cancel();
-    }
-  }
-
   /// Переключает состояние лайка у трека, играющий в данный момент.
-  void _toggleLike() {
-    assert(player.currentAudio != null, "Current audio is null");
-    if (!networkRequiredDialog(context)) return;
+  void _toggleLike(WidgetRef ref, BuildContext context) {
+    assert(
+      player.currentAudio != null,
+      "Current audio is null",
+    );
+    if (!networkRequiredDialog(ref, context)) return;
 
     toggleTrackLikeState(
       context,
@@ -382,13 +284,13 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
   }
 
   /// Добавляет дизлайк для трека, который играет в данный момент.
-  void _toggleDislike() async {
+  void _toggleDislike(WidgetRef ref, BuildContext context) async {
     assert(player.currentAudio != null, "Current audio is null");
     assert(
       player.currentPlaylist!.isRecommendationTypePlaylist,
       "Attempted to dislike non-recommendation track",
     );
-    if (!networkRequiredDialog(context)) return;
+    if (!networkRequiredDialog(ref, context)) return;
 
     // Делаем трек дизлайкнутым.
     final bool result = await dislikeTrackState(context, player.currentAudio!);
@@ -399,22 +301,25 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final UserProvider user = Provider.of<UserProvider>(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final schemeInfo = ref.watch(trackSchemeInfoProvider);
+    final prefsNotifier = ref.read(preferencesProvider.notifier);
+    final preferences = ref.watch(preferencesProvider);
+    ref.watch(playerStateProvider);
 
     /// Указывает, сохранён ли этот трек в лайкнутых.
     final bool isFavorite = player.currentAudio!.isLiked;
 
     /// Указывает, что используется более компактный интерфейс.
-    final bool compactLayout = MediaQuery.of(context).size.width <= 1000;
+    final bool compactLayout = MediaQuery.sizeOf(context).width <= 1000;
 
     /// Указывает, что большое изображение трека должно использовать меньший максимальный размер.
     final bool compactBigFullscreenImage =
-        MediaQuery.of(context).size.width <= 1200 ||
-            MediaQuery.of(context).size.height <= 800;
+        MediaQuery.sizeOf(context).width <= 1200 ||
+            MediaQuery.sizeOf(context).height <= 800;
 
     /// Указывает, что кнопки управления будут иметь меньшее расстояние при маленьком размере интерфейса.
-    final bool smallerButtonSpacing = MediaQuery.of(context).size.width <= 800;
+    final bool smallerButtonSpacing = MediaQuery.sizeOf(context).width <= 800;
 
     /// Указывает, что кнопка для переключения shuffle работает.
     final bool canToggleShuffle =
@@ -432,10 +337,10 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
           padding: const EdgeInsets.only(
             bottom: 18,
           ),
-          width: MediaQuery.of(context).size.width -
+          width: MediaQuery.sizeOf(context).width -
               _playerPadding * 2 -
               (((player.currentAudio!.hasLyrics ?? false) &&
-                      user.settings.trackLyricsEnabled)
+                      preferences.trackLyricsEnabled)
                   ? _lyricsWidth
                   : 0) -
               50,
@@ -447,83 +352,80 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 // Изображение трека.
-                Padding(
-                  padding: const EdgeInsets.only(
-                    right: 24,
-                  ),
-                  child: Hero(
-                    tag: player.currentAudio!.mediaKey,
-                    child: AnimatedSwitcher(
+                Hero(
+                  tag: player.currentAudio!.mediaKey,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(
+                      milliseconds: 500,
+                    ),
+                    child: AnimatedContainer(
+                      key: ValueKey(
+                        player.currentAudio!.mediaKey,
+                      ),
                       duration: const Duration(
                         milliseconds: 500,
                       ),
-                      child: AnimatedContainer(
-                        key: ValueKey(
-                          player.currentAudio!.mediaKey,
-                        ),
-                        duration: const Duration(
-                          milliseconds: 500,
-                        ),
-                        curve: Curves.ease,
-                        width: 130 *
-                            ((user.settings.fullscreenBigThumbnail &&
-                                    MediaQuery.of(context).size.height > 600)
-                                ? compactBigFullscreenImage
-                                    ? 2
-                                    : 3
-                                : 1),
-                        height: 130 *
-                            ((user.settings.fullscreenBigThumbnail &&
-                                    MediaQuery.of(context).size.height > 600)
-                                ? compactBigFullscreenImage
-                                    ? 2
-                                    : 3
-                                : 1),
-                        decoration: BoxDecoration(
-                          boxShadow: [
-                            if (player.playing)
-                              BoxShadow(
-                                blurRadius: 22,
-                                spreadRadius: -3,
-                                color: Theme.of(context).colorScheme.tertiary,
-                                blurStyle: BlurStyle.outer,
-                              ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(
-                            globalBorderRadius,
-                          ),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: () {
-                                user.settings.fullscreenBigThumbnail =
-                                    !user.settings.fullscreenBigThumbnail;
-
-                                user.markUpdated();
-                              },
-                              child: player.currentAudio!.maxThumbnail != null
-                                  ? CachedNetworkImage(
-                                      imageUrl:
-                                          player.currentAudio!.maxThumbnail!,
-                                      cacheKey:
-                                          "${player.currentAudio!.mediaKey}max",
-                                      fit: BoxFit.fill,
-                                      placeholder:
-                                          (BuildContext context, String url) =>
-                                              const FallbackAudioAvatar(),
-                                      cacheManager:
-                                          CachedAlbumImagesManager.instance,
-                                    )
-                                  : const FallbackAudioAvatar(),
+                      curve: Curves.ease,
+                      width: 130 *
+                          ((preferences.fullscreenBigThumbnail &&
+                                  MediaQuery.sizeOf(context).height > 600)
+                              ? compactBigFullscreenImage
+                                  ? 2
+                                  : 3
+                              : 1),
+                      height: 130 *
+                          ((preferences.fullscreenBigThumbnail &&
+                                  MediaQuery.sizeOf(context).height > 600)
+                              ? compactBigFullscreenImage
+                                  ? 2
+                                  : 3
+                              : 1),
+                      decoration: BoxDecoration(
+                        boxShadow: [
+                          if (player.playing)
+                            BoxShadow(
+                              blurRadius: 22,
+                              spreadRadius: -3,
+                              color: (player.currentAudio?.thumbnail != null
+                                      ? schemeInfo?.frequentColor
+                                      : null) ??
+                                  Colors.blueGrey.withOpacity(0.25),
+                              blurStyle: BlurStyle.outer,
                             ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(
+                          globalBorderRadius,
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () =>
+                                prefsNotifier.setFullscreenBigThumbnailEnabled(
+                              !preferences.fullscreenBigThumbnail,
+                            ),
+                            child: player.currentAudio!.maxThumbnail != null
+                                ? CachedNetworkImage(
+                                    imageUrl:
+                                        player.currentAudio!.maxThumbnail!,
+                                    cacheKey:
+                                        "${player.currentAudio!.mediaKey}max",
+                                    fit: BoxFit.fill,
+                                    placeholder:
+                                        (BuildContext context, String url) =>
+                                            const FallbackAudioAvatar(),
+                                    cacheManager:
+                                        CachedAlbumImagesManager.instance,
+                                  )
+                                : const FallbackAudioAvatar(),
                           ),
                         ),
                       ),
                     ),
                   ),
                 ),
+                const Gap(24),
 
                 // Информация по названию трека и его исполнителю.
                 Column(
@@ -652,23 +554,19 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       // Кнопка для добавления/удаления лайка.
-                      Padding(
-                        padding: const EdgeInsets.only(
-                          right: 8,
-                        ),
-                        child: IconButton(
-                          onPressed: _toggleLike,
-                          icon: Icon(
-                            isFavorite ? Icons.favorite : Icons.favorite_border,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
+                      IconButton(
+                        onPressed: () => _toggleLike(ref, context),
+                        icon: Icon(
+                          isFavorite ? Icons.favorite : Icons.favorite_border,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
+                      const Gap(8),
 
                       // Кнопка для дизлайка трека, если включён рекомендуемый плейлист.
                       if (player.currentPlaylist!.isRecommendationTypePlaylist)
                         IconButton(
-                          onPressed: _toggleDislike,
+                          onPressed: () => _toggleDislike(ref, context),
                           icon: Icon(
                             Icons.thumb_down_outlined,
                             color: Theme.of(context).colorScheme.primary,
@@ -697,7 +595,7 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                             right: smallerButtonSpacing ? 0 : 8,
                           ),
                           child: IconButton(
-                            onPressed: _toggleLike,
+                            onPressed: () => _toggleLike(ref, context),
                             icon: Icon(
                               isFavorite
                                   ? Icons.favorite
@@ -715,7 +613,7 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                             right: smallerButtonSpacing ? 0 : 8,
                           ),
                           child: IconButton(
-                            onPressed: _toggleDislike,
+                            onPressed: () => _toggleDislike(ref, context),
                             icon: Icon(
                               Icons.thumb_down_outlined,
                               color: Theme.of(context).colorScheme.primary,
@@ -724,96 +622,79 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                         ),
 
                       // Переключение shuffle.
-                      Padding(
-                        padding: EdgeInsets.only(
-                          right: smallerButtonSpacing ? 0 : 8,
-                        ),
-                        child: StreamBuilder<bool>(
-                          stream: player.shuffleModeEnabledStream,
-                          builder: (
-                            BuildContext context,
-                            AsyncSnapshot<bool> snapshot,
-                          ) {
-                            final bool enabled = snapshot.data ?? false;
+                      StreamBuilder<bool>(
+                        stream: player.shuffleModeEnabledStream,
+                        builder: (
+                          BuildContext context,
+                          AsyncSnapshot<bool> snapshot,
+                        ) {
+                          final bool enabled = snapshot.data ?? false;
 
-                            return IconButton(
-                              onPressed: canToggleShuffle
-                                  ? () async {
-                                      await player.setShuffle(!enabled);
+                          return IconButton(
+                            onPressed: canToggleShuffle
+                                ? () async {
+                                    await player.setShuffle(!enabled);
 
-                                      user.settings.shuffleEnabled = !enabled;
-                                      user.markUpdated();
-                                    }
+                                    prefsNotifier.setShuffleEnabled(!enabled);
+                                  }
+                                : null,
+                            icon: Icon(
+                              enabled
+                                  ? Icons.shuffle_on_outlined
+                                  : Icons.shuffle,
+                              color: canToggleShuffle
+                                  ? Theme.of(context).colorScheme.primary
                                   : null,
-                              icon: Icon(
-                                enabled
-                                    ? Icons.shuffle_on_outlined
-                                    : Icons.shuffle,
-                                color: canToggleShuffle
-                                    ? Theme.of(context).colorScheme.primary
-                                    : null,
-                              ),
-                            );
-                          },
-                        ),
+                            ),
+                          );
+                        },
                       ),
+                      Gap(smallerButtonSpacing ? 0 : 8),
 
                       // Предыдущий трек.
-                      Padding(
-                        padding: EdgeInsets.only(
-                          right: smallerButtonSpacing ? 0 : 8,
+                      IconButton(
+                        onPressed: () => player.previous(
+                          allowSeekToBeginning: true,
                         ),
-                        child: IconButton(
-                          onPressed: () => player.previous(
-                            allowSeekToBeginning: true,
-                          ),
-                          icon: Icon(
-                            Icons.skip_previous,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
+                        icon: Icon(
+                          Icons.skip_previous,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
+                      Gap(smallerButtonSpacing ? 0 : 8),
 
                       // Пауза/воспроизведение.
-                      Padding(
-                        padding: EdgeInsets.only(
-                          right: smallerButtonSpacing ? 0 : 8,
-                        ),
-                        child: StreamBuilder<PlayerState>(
-                          stream: player.playerStateStream,
-                          builder: (
-                            BuildContext context,
-                            AsyncSnapshot<PlayerState> snapshot,
-                          ) {
-                            return IconButton(
-                              onPressed: () => player.togglePlay(),
-                              icon: Icon(
-                                player.playing
-                                    ? Icons.pause_circle
-                                    : Icons.play_circle,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onPrimaryContainer,
-                              ),
-                              iconSize: 50,
-                            );
-                          },
-                        ),
+                      StreamBuilder<PlayerState>(
+                        stream: player.playerStateStream,
+                        builder: (
+                          BuildContext context,
+                          AsyncSnapshot<PlayerState> snapshot,
+                        ) {
+                          return IconButton(
+                            onPressed: () => player.togglePlay(),
+                            icon: Icon(
+                              player.playing
+                                  ? Icons.pause_circle
+                                  : Icons.play_circle,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onPrimaryContainer,
+                            ),
+                            iconSize: 50,
+                          );
+                        },
                       ),
+                      Gap(smallerButtonSpacing ? 0 : 8),
 
                       // Следующий трек.
-                      Padding(
-                        padding: EdgeInsets.only(
-                          right: smallerButtonSpacing ? 0 : 8,
-                        ),
-                        child: IconButton(
-                          onPressed: () => player.next(),
-                          icon: Icon(
-                            Icons.skip_next,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
+                      IconButton(
+                        onPressed: () => player.next(),
+                        icon: Icon(
+                          Icons.skip_next,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
+                      Gap(smallerButtonSpacing ? 0 : 8),
 
                       // Повтор трека.
                       StreamBuilder<LoopMode>(
@@ -882,39 +763,30 @@ class _FullscreenMediaControlsState extends State<FullscreenMediaControls> {
                         ),
 
                       // Показ текста песни.
-                      Padding(
-                        padding: EdgeInsets.only(
-                          right: smallerButtonSpacing ? 0 : 8,
-                        ),
-                        child: IconButton(
-                          onPressed: player.currentAudio!.hasLyrics ?? false
-                              ? () {
-                                  user.settings.trackLyricsEnabled =
-                                      !user.settings.trackLyricsEnabled;
-
-                                  user.markUpdated();
-                                }
-                              : null,
-                          icon: Icon(
-                            user.settings.trackLyricsEnabled &&
-                                    (player.currentAudio!.hasLyrics ?? false)
-                                ? Icons.lyrics
-                                : Icons.lyrics_outlined,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .primary
-                                .withOpacity(
-                                  player.currentAudio!.hasLyrics ?? false
-                                      ? 1.0
-                                      : 0.5,
-                                ),
-                          ),
+                      IconButton(
+                        onPressed: player.currentAudio!.hasLyrics ?? false
+                            ? () => prefsNotifier.setTrackLyricsEnabled(
+                                  !preferences.trackLyricsEnabled,
+                                )
+                            : null,
+                        icon: Icon(
+                          preferences.trackLyricsEnabled &&
+                                  (player.currentAudio!.hasLyrics ?? false)
+                              ? Icons.lyrics
+                              : Icons.lyrics_outlined,
+                          color:
+                              Theme.of(context).colorScheme.primary.withOpacity(
+                                    player.currentAudio!.hasLyrics ?? false
+                                        ? 1.0
+                                        : 0.5,
+                                  ),
                         ),
                       ),
+                      Gap(smallerButtonSpacing ? 0 : 8),
 
                       // Выход из полноэкранного режима.
                       IconButton(
-                        onPressed: () => closePlayer(context),
+                        onPressed: () => closeFullscreenPlayer(context),
                         icon: Icon(
                           Icons.fullscreen_exit,
                           color: Theme.of(context).colorScheme.primary,

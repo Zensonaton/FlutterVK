@@ -5,7 +5,6 @@ import "dart:io";
 
 import "package:audio_service/audio_service.dart";
 import "package:audio_session/audio_session.dart";
-import "package:cached_network_image/cached_network_image.dart";
 import "package:crypto/crypto.dart";
 import "package:discord_rpc/discord_rpc.dart";
 import "package:flutter/foundation.dart";
@@ -13,20 +12,16 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_cache_manager/flutter_cache_manager.dart";
 import "package:just_audio/just_audio.dart";
-import "package:palette_generator/palette_generator.dart";
 import "package:path/path.dart";
 import "package:path_provider/path_provider.dart";
-import "package:provider/provider.dart";
 import "package:smtc_windows/smtc_windows.dart";
 
 import "../api/deezer/search.dart";
 import "../api/deezer/shared.dart";
-import "../api/vk/api.dart";
 import "../api/vk/shared.dart";
 import "../consts.dart";
 import "../main.dart";
 import "../provider/user.dart";
-import "../routes/home.dart";
 import "../utils.dart";
 import "cache_manager.dart";
 import "logger.dart";
@@ -46,7 +41,7 @@ enum MediaNotificationAction {
 /// Расширение [StreamAudioSource] для `just_audio`, который воспроизводит аудио по передаваемому [Uri], а после загрузки аудио сохраняет его в кэш.
 class CachedStreamedAudio extends StreamAudioSource {
   /// [AppLogger] для этого класса.
-  static AppLogger logger = getLogger("CachedStreamedAudio");
+  static final AppLogger logger = getLogger("CachedStreamedAudio");
 
   /// Map из [StreamSubscription], который защищает от повторной загрузки одного и того же трека.
   static LinkedHashMap<String, StreamSubscription<List<int>>> downloadQueue =
@@ -58,8 +53,8 @@ class CachedStreamedAudio extends StreamAudioSource {
   /// Трек, данные которого будут загружаться.
   final ExtendedAudio audio;
 
-  /// Объект пользователя, используемый для загрузки текста песни трека (при наличии).
-  final UserProvider? user;
+  // /// Объект пользователя, используемый для загрузки текста песни трека (при наличии).
+  // final UserProvider? user;
 
   /// Указывает, будет ли данный трек кэшироваться.
   final bool cacheTrack;
@@ -69,7 +64,7 @@ class CachedStreamedAudio extends StreamAudioSource {
 
   CachedStreamedAudio({
     required this.audio,
-    this.user,
+    // this.user,
     this.cacheTrack = false,
     this.onCached,
   });
@@ -122,8 +117,7 @@ class CachedStreamedAudio extends StreamAudioSource {
   /// Возвращает bool, олицетворяющий то, было ли произведено хоть какое-то изменение в БД.
   static Future<bool> downloadTrackData(
     ExtendedAudio audio,
-    ExtendedPlaylist playlist,
-    UserProvider user, {
+    ExtendedPlaylist playlist, {
     bool allowDeezer = false,
     bool allowSpotifyLyrics = false,
     bool saveInDB = false,
@@ -135,19 +129,19 @@ class CachedStreamedAudio extends StreamAudioSource {
 
     /// Добавляет задачу по загрузке текста песни при помощи Spotify в очередь.
     void spotifyLyricsTask() {
-      tasks.add(
-        user
-            .spotifyGetTrackLyrics(audio.artist, audio.title, audio.duration)
-            .then(
-          (lyrics) {
-            if (lyrics == null) return;
+      // tasks.add(
+      //   user
+      //       .spotifyGetTrackLyrics(audio.artist, audio.title, audio.duration)
+      //       .then(
+      //     (lyrics) {
+      //       if (lyrics == null) return;
 
-            audio.lyrics = lyrics;
-            audio.hasLyrics = true;
-            shouldUpdateDB = true;
-          },
-        ),
-      );
+      //       audio.lyrics = lyrics;
+      //       audio.hasLyrics = true;
+      //       shouldUpdateDB = true;
+      //     },
+      //   ),
+      // );
     }
 
     final FileInfo? cachedThumb =
@@ -199,19 +193,19 @@ class CachedStreamedAudio extends StreamAudioSource {
     // Если это возможно, то так же загружаем текст песни, если его ещё нет.
     if (audio.lyrics == null || audio.lyrics?.timestamps == null) {
       if (audio.hasLyrics ?? false) {
-        tasks.add(
-          user.audioGetLyrics(audio.mediaKey).then((response) {
-            raiseOnAPIError(response);
+        // tasks.add(
+        //   user.audioGetLyrics(audio.mediaKey).then((response) {
+        //     raiseOnAPIError(response);
 
-            audio.lyrics = response.response!.lyrics;
-            shouldUpdateDB = true;
+        //     audio.lyrics = response.response!.lyrics;
+        //     shouldUpdateDB = true;
 
-            // Если ВКонтакте вернул несинхронизированный текст песни, то тогда загружаем его со Spotify.
-            if (allowSpotifyLyrics && audio.lyrics?.timestamps == null) {
-              spotifyLyricsTask();
-            }
-          }),
-        );
+        //     // Если ВКонтакте вернул несинхронизированный текст песни, то тогда загружаем его со Spotify.
+        //     if (allowSpotifyLyrics && audio.lyrics?.timestamps == null) {
+        //       spotifyLyricsTask();
+        //     }
+        //   }),
+        // );
       } else if (allowSpotifyLyrics) {
         // Загружаем текст песни со Spotify, поскольку мы точно знаем, что ВК не вернёт текст песни.
 
@@ -350,8 +344,7 @@ class CachedStreamedAudio extends StreamAudioSource {
 
 /// Класс для работы с аудиоплеером.
 class VKMusicPlayer {
-  /// [AppLogger] для этого класса.
-  static AppLogger logger = getLogger("VKMusicPlayer");
+  static final AppLogger logger = getLogger("VKMusicPlayer");
 
   final AudioPlayer _player = AudioPlayer(
     handleInterruptions: false,
@@ -386,17 +379,20 @@ class VKMusicPlayer {
       ),
 
       // Обработчик изменения текущего трека.
-      sequenceStateStream.listen(
-        (SequenceState? state) async {
-          if (state == null || currentAudio == null) return;
-
-          _fakeCurrentTrackIndex = null;
-          _fakeCurrentPosition = null;
+      currentIndexStream.listen(
+        (int? index) async {
+          if (index == null || currentAudio == null) return;
 
           await updateMusicSessionTrack();
-          await updateMusicSession();
         },
       ),
+
+      // Обработчик изменения состояния плеера (пауза, воспроизведение, буферизация).
+      playerStateStream.listen((PlayerState state) async {
+        _fakeCurrentPosition = null;
+
+        await updateMusicSession();
+      }),
 
       // Обработчик громкости.
       _player.volumeStream.listen((double volume) async {
@@ -456,12 +452,6 @@ class VKMusicPlayer {
   /// Данный объект инициализируется при вызове [_initPlayer].
   AudioPlayerService? _audioService;
 
-  /// Список из значений [Audio.mediaKey], по которым была запущена задача по созданию цветовой схемы в методе [getColorSchemeAsync].
-  final List<String> _colorSchemeItemsQueue = [];
-
-  /// Кэш для объектов типа [ColorScheme] разных изображений по их [Audio.mediaKey].
-  Map<String, (ColorScheme, ColorScheme)> imageColorSchemeCache = {};
-
   /// Флаг для [_audioSession], устанавливаемый на значение true в случае, если плеер поставился на паузу из-за внешнего звонка или другой причины.
   bool _pausedExternally = false;
 
@@ -508,7 +498,9 @@ class VKMusicPlayer {
   final StreamController<bool> _loadedStateController =
       StreamController.broadcast();
 
+  /// {@template VKMusicPlayer.loadedStateStream}
   /// Stream, указывающий то, загружен ли плеер или нет. Указывает состояние поля [loaded].
+  /// {@endtemplate}
   Stream<bool> get loadedStateStream =>
       _loadedStateController.stream.asBroadcastStream();
 
@@ -518,7 +510,9 @@ class VKMusicPlayer {
   final StreamController<Duration> _seekStateController =
       StreamController.broadcast();
 
-  /// Stream, указывающий события метода [seek].
+  /// {@template VKMusicPlayer.seekStateStream}
+  /// Stream, указывающий события вызова метода [seek].
+  /// {@endtemplate}
   Stream<Duration> get seekStateStream =>
       _seekStateController.stream.asBroadcastStream();
 
@@ -529,7 +523,9 @@ class VKMusicPlayer {
   /// Если Вы желаете узнать, запущен или остановлен ли плеер (т.е., состоянеи stopped), то тогда обратитесь к полю [loaded], которое всегда true после запуска воспроизведения любого трека, и false после вызова [stop].
   bool get playing => _player.playing;
 
+  /// {@template VKMusicPlayer.playingStream}
   /// Stream, указывающий текущее состояние воспроизведения плеера.
+  /// {@endtemplate}
   Stream<bool> get playingStream => _player.playingStream.asBroadcastStream();
 
   /// Информация о том, идёт ли буферизация (или какая-либо другая загрузка, из-за которой воспроизведение может быть приостановлено).
@@ -543,14 +539,18 @@ class VKMusicPlayer {
   /// Информация о том, насколько был загружен буфер трека.
   Duration get bufferedPosition => _player.bufferedPosition;
 
+  /// {@template VKMusicPlayer.bufferedPositionStream}
   /// Stream, возвращающий информацию о том, насколько был загружен буфер трека.
+  /// {@endtemplate}
   Stream<Duration> get bufferedPositionStream =>
       _player.bufferedPositionStream.asBroadcastStream();
 
   /// Состояние громкости плеера. Возвращает процент, где 0.0 указывает выключенную громкость, а 1.0 - самая высокая громкость.
   double get volume => _player.volume;
 
+  /// {@template VKMusicPlayer.volumeStream}
   /// Stream, возвращающий события изменения громкости плеера.
+  /// {@endtemplate}
   Stream<double> get volumeStream => _player.volumeStream.asBroadcastStream();
 
   /// Возвращает прогресс воспроизведения текущего трека в виде процента, где 0.0 указывает начало трека, а 1.0 - его конец.
@@ -573,9 +573,11 @@ class VKMusicPlayer {
   /// Для полной длительности трека воспользуйтесь полем [duration]. Если Вам необходим процент (число от 0.0 до 1.0), отображающий прогресс прослушивания текущего трека, то для этого есть поле [progress].
   Duration get position => _fakeCurrentPosition ?? _player.position;
 
+  /// {@template VKMusicPlayer.positionStream}
   /// Stream, возвращающий события о изменения текущей позиции воспроизведения.
   ///
   /// Если Вам необходим процент (число от 0.0 до 1.0), отображающий прогресс прослушивания текущего трека, то для этого есть поле [progress].
+  /// {@endtemplate}
   Stream<Duration> get positionStream =>
       _player.positionStream.asBroadcastStream();
 
@@ -584,41 +586,55 @@ class VKMusicPlayer {
   /// Для полной позиции трека воспользуйтесь полем [position]. Если Вам необходим процент (число от 0.0 до 1.0), отображающий прогресс прослушивания текущего трека, то для этого есть поле [progress].
   Duration? get duration => _player.duration;
 
+  /// {@template VKMusicPlayer.durationStream}
   /// Stream, возвращающий события о изменения длительности данного трека.
   ///
   /// Если Вам необходим процент (число от 0.0 до 1.0), отображающий прогресс прослушивания текущего трека, то для этого есть поле [progress].
+  /// {@endtemplate}
   Stream<Duration?> get durationStream =>
       _player.durationStream.asBroadcastStream();
 
   /// Возвращает текущее состояние плеера.
   PlayerState get playerState => _player.playerState;
 
+  /// {@template VKMusicPlayer.playerStateStream}
   /// Stream, возвращающий события о изменении состояния плеера.
+  /// {@endtemplate}
   Stream<PlayerState> get playerStateStream =>
       _player.playerStateStream.asBroadcastStream();
 
   /// Возвращет информацию о состоянии плейлиста.
   SequenceState? get sequenceState => _player.sequenceState;
 
-  /// Stream, возвращающий события о изменении текущего плеера.
+  /// {@template VKMusicPlayer.sequenceStateStream}
+  /// Stream, возвращающий события о изменении параметров плейлиста, играющего в данный момент.
+  ///
+  /// Если Вам нужен Stream, возвращающий события при изменении текущего трека то воспользуйтесь [currentIndexStream].
+  /// {@endtemplate}
   Stream<SequenceState?> get sequenceStateStream =>
       _player.sequenceStateStream.asBroadcastStream();
 
+  /// {@template VKMusicPlayer.currentIndexStream}
   /// Stream, возвращающий события о изменении индекса текущего трека.
+  /// {@endtemplate}
   Stream<int?> get currentIndexStream =>
       _player.currentIndexStream.asBroadcastStream();
 
   /// Возвращет информацию о состоянии shuffle.
   bool get shuffleModeEnabled => _player.shuffleModeEnabled;
 
+  /// {@template VKMusicPlayer.shuffleModeEnabledStream}
   /// Stream, возвращающий события о изменении состояния shuffle.
+  /// {@endtemplate}
   Stream<bool> get shuffleModeEnabledStream =>
       _player.shuffleModeEnabledStream.asBroadcastStream();
 
   /// Возвращет информацию о состоянии повтора плейлиста.
   LoopMode get loopMode => _player.loopMode;
 
+  /// {@template VKMusicPlayer.loopModeStream}
   /// Stream, возвращающий события о изменении состояния повтора плейлиста.
+  /// {@endtemplate}
   Stream<LoopMode> get loopModeStream =>
       _player.loopModeStream.asBroadcastStream();
 
@@ -794,7 +810,7 @@ class VKMusicPlayer {
         });
       } catch (e, stackTrace) {
         logger.e(
-          "Ошибка при обработке события от SMTC: ",
+          "SMTC event error: ",
           error: e,
           stackTrace: stackTrace,
         );
@@ -1109,8 +1125,8 @@ class VKMusicPlayer {
 
   /// Callback-метод, сохраняющий информацию о том, что трек был кэширован.
   void _onTrackCached(ExtendedAudio audio, ExtendedPlaylist playlist) {
-    final UserProvider user =
-        Provider.of<UserProvider>(buildContext!, listen: false);
+    // final UserProvider user =
+    //     Provider.of<UserProvider>(buildContext!, listen: false);
 
     // Если это аудио микс, то его сохранять при кэшировании необязательно.
     if (playlist.isAudioMixPlaylist) return;
@@ -1118,7 +1134,7 @@ class VKMusicPlayer {
     audio.isCached = true;
 
     appStorage.savePlaylist(playlist.asDBPlaylist);
-    user.markUpdated(false);
+    // user.markUpdated(false);
   }
 
   /// Устанавливает плейлист [playlist] для воспроизведения музыки, указывая при этом [index], начиная с которого будет запущено воспроизведение. Если [play] равен true, то при вызове данного метода плеер автоматически начнёт воспроизводить музыку.
@@ -1293,6 +1309,9 @@ class VKMusicPlayer {
   Future<void> updateMusicSessionTrack() async {
     if (currentAudio == null) return;
 
+    // Забываем индекс фейкового трека.
+    _fakeCurrentTrackIndex = null;
+
     // Если у пользователя Windows, то посылаем SMTC обновление.
     if (Platform.isWindows) {
       if (!_smtc!.enabled) await _smtc!.enableSmtc();
@@ -1383,94 +1402,6 @@ class VKMusicPlayer {
     }
 
     _pauseStopTimer?.cancel();
-  }
-
-  /// Создаёт две цветовых схемы из цветов плеера: [Brightness.light] и [Brightness.dark].
-  ///
-  /// Данный метод при повторном вызове (если уже идёт процесс создания цветовой схемы) возвращает null. Результаты данного метода кэшируются, поэтому можно повторно вызывать этот метод, если [Audio.mediaKey] одинаков. [useBetterAlgorithm] указывает, что будет использоваться более точный, но медленный алгоритм для получения цветовой схемы.
-  Future<(ColorScheme, ColorScheme)?> getColorSchemeAsync({
-    bool useBetterAlgorithm = false,
-    bool forceReset = false,
-  }) async {
-    final AppLogger logger = getLogger("getColorSchemeAsync");
-    final Stopwatch watch = Stopwatch()..start();
-    final String cacheKey =
-        "${player.currentAudio!.mediaKey}$useBetterAlgorithm";
-
-    // Если мы делаем сброс, то удаляем все записи.
-    if (forceReset) {
-      _colorSchemeItemsQueue.remove(player.currentAudio!.mediaKey);
-
-      imageColorSchemeCache.remove(cacheKey);
-    }
-
-    // Если у изображения трека нету фотографии, либо задача уже запущена, то возвращаем null.
-    if (player.currentAudio?.smallestThumbnail == null ||
-        _colorSchemeItemsQueue.contains(
-          player.currentAudio!.mediaKey,
-        )) return null;
-
-    // Пытаемся извлечь значение цветовых схем из кэша.
-    if (imageColorSchemeCache.containsKey(cacheKey)) {
-      return imageColorSchemeCache[cacheKey];
-    }
-
-    // Задача по созданию цветовой схемы не находится в очереди, поэтому помещаем задачу в очередь.
-    _colorSchemeItemsQueue.add(cacheKey);
-
-    logger.d("Creating ColorScheme for $cacheKey");
-
-    // Загружаем изображение.
-    final ImageProvider imageProvider = CachedNetworkImageProvider(
-      player.currentAudio!.smallestThumbnail!,
-      cacheKey: cacheKey,
-      cacheManager: CachedNetworkImagesManager.instance,
-    );
-
-    ColorScheme? lightScheme;
-    ColorScheme? darkScheme;
-
-    // Если мы должны использовать качественный алгоритм, то используем метод ColorScheme.fromImageProvider().
-    if (useBetterAlgorithm) {
-      final result = await Future.wait([
-        ColorScheme.fromImageProvider(provider: imageProvider),
-        ColorScheme.fromImageProvider(
-          provider: imageProvider,
-          brightness: Brightness.dark,
-        ),
-      ]);
-
-      lightScheme = result[0];
-      darkScheme = result[1];
-    } else {
-      // Используем менее точный, но более быстрый алгоритм, используя PaletteGenerator.
-
-      // Извлекаем цвета из изображения, делая объект PaletteGenerator.
-      final PaletteGenerator palette =
-          await PaletteGenerator.fromImageProvider(imageProvider);
-
-      // Превращаем наш PaletteGenerator в цветовые схемы.
-      lightScheme = palette.dominantColor != null
-          ? ColorScheme.fromSeed(
-              seedColor: palette.dominantColor!.color,
-            )
-          : fallbackLightColorScheme;
-      darkScheme = palette.dominantColor != null
-          ? ColorScheme.fromSeed(
-              seedColor: palette.dominantColor!.color,
-              brightness: Brightness.dark,
-            )
-          : fallbackDarkColorScheme;
-    }
-
-    imageColorSchemeCache[cacheKey] = (lightScheme, darkScheme);
-
-    logger.d("Done building ColorScheme for $cacheKey, took ${watch.elapsed}");
-
-    // Удаляем из очереди.
-    _colorSchemeItemsQueue.remove(cacheKey);
-
-    return imageColorSchemeCache[cacheKey];
   }
 }
 
@@ -1581,10 +1512,10 @@ class AudioPlayerService extends BaseAudioHandler
 
   @override
   Future<void> customAction(String name, [Map<String, dynamic>? extras]) async {
-    final UserProvider user = Provider.of<UserProvider>(
-      buildContext!,
-      listen: false,
-    );
+    // final UserProvider user = Provider.of<UserProvider>(
+    //   buildContext!,
+    //   listen: false,
+    // );
 
     final MediaNotificationAction action =
         MediaNotificationAction.values.firstWhere(
@@ -1595,40 +1526,40 @@ class AudioPlayerService extends BaseAudioHandler
       case (MediaNotificationAction.shuffle):
         await _player.toggleShuffle();
 
-        user.settings.shuffleEnabled = _player.shuffleModeEnabled;
-        user.markUpdated();
+        // user.settings.shuffleEnabled = _player.shuffleModeEnabled;
+        // user.markUpdated();
 
         break;
 
       case (MediaNotificationAction.favorite):
         if (!connectivityManager.hasConnection) return;
 
-        await toggleTrackLike(
-          user,
-          _player.currentAudio!,
-          !_player.currentAudio!.isLiked,
-        );
+        // await toggleTrackLike(
+        //   user,
+        //   _player.currentAudio!,
+        //   !_player.currentAudio!.isLiked,
+        // );
 
-        await _updateEvent();
+        // await _updateEvent();
 
-        user.updatePlaylist(player.currentPlaylist!);
-        user.markUpdated(false);
+        // user.updatePlaylist(player.currentPlaylist!);
+        // user.markUpdated(false);
 
         break;
 
       case (MediaNotificationAction.dislike):
         if (!connectivityManager.hasConnection) return;
 
-        await dislikeTrack(
-          user,
-          _player.currentAudio!,
-        );
-        await player.next();
+        // await dislikeTrack(
+        //   user,
+        //   _player.currentAudio!,
+        // );
+        // await player.next();
 
-        await _updateEvent();
+        // await _updateEvent();
 
-        user.updatePlaylist(player.currentPlaylist!);
-        user.markUpdated(false);
+        // user.updatePlaylist(player.currentPlaylist!);
+        // user.markUpdated(false);
 
         break;
     }

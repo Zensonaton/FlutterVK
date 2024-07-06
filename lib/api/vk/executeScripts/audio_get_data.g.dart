@@ -9,11 +9,11 @@ part of 'audio_get_data.dart';
 APIAudioGetDataRealResponse _$APIAudioGetDataRealResponseFromJson(
         Map<String, dynamic> json) =>
     APIAudioGetDataRealResponse(
-      audioCount: json['audioCount'] as int,
+      audioCount: (json['audioCount'] as num).toInt(),
       audios: (json['audios'] as List<dynamic>)
           .map((e) => Audio.fromJson(e as Map<String, dynamic>))
           .toList(),
-      playlistsCount: json['playlistsCount'] as int,
+      playlistsCount: (json['playlistsCount'] as num).toInt(),
       playlists: (json['playlists'] as List<dynamic>)
           .map((e) => Playlist.fromJson(e as Map<String, dynamic>))
           .toList(),

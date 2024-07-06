@@ -1,7 +1,8 @@
 import "package:flutter/material.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
 
 /// Виджет, расширяющий виджет [Slider], который хранит у себя информацию о том, какое значение выбрано, и использует именно его, пока не обновится передаваемое значение.
-class ResponsiveSlider extends StatefulWidget {
+class ResponsiveSlider extends HookWidget {
   /// Значение, используемое у [Slider].
   final double value;
 
@@ -15,28 +16,18 @@ class ResponsiveSlider extends StatefulWidget {
   });
 
   @override
-  State<ResponsiveSlider> createState() => _ResponsiveSliderState();
-}
-
-class _ResponsiveSliderState extends State<ResponsiveSlider> {
-  /// Переменная, хранящая в себе временное значение [Slider]'а, используемое во время скроллинга.
-  ///
-  /// Данная переменная не null только тогда, пока пользователь меняет значение у [Slider]'а.
-  double? scrollValue;
-
-  @override
   Widget build(BuildContext context) {
+    final ValueNotifier<double?> scrollValue = useState(null);
+
     return Slider(
-      value: scrollValue ?? widget.value,
-      onChanged: (double value) {
-        setState(() => scrollValue = value);
-      },
+      value: scrollValue.value ?? value,
+      onChanged: (double value) => scrollValue.value = value,
       onChangeEnd: (double value) async {
-        if (widget.onChangeEnd != null) {
-          await widget.onChangeEnd!(value);
+        if (onChangeEnd != null) {
+          await onChangeEnd!(value);
         }
 
-        scrollValue = null;
+        scrollValue.value = null;
       },
     );
   }

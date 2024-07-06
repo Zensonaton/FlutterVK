@@ -1,8 +1,11 @@
 import "package:flutter/material.dart";
-import "package:flutter_gen/gen_l10n/app_localizations.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
 import "package:flutter_inappwebview/flutter_inappwebview.dart";
+import "package:gap/gap.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 
 import "../../consts.dart";
+import "../../provider/l18n.dart";
 import "../../utils.dart";
 import "../../widgets/dialogs.dart";
 import "../../widgets/page_route_builders.dart";
@@ -12,7 +15,7 @@ import "desktop.dart";
 /// Часть Route'а [LoginRoute], показываемая при запуске на мобильных платформах.
 ///
 /// Данный Route нельзя показывать на Desktop-платформах, поскольку inappwebview, используемый для рендеринга страницы, не поддерживается на Desktop-платформах.
-class MobileLoginWidget extends StatefulWidget {
+class MobileLoginWidget extends HookConsumerWidget {
   /// Указывает, что вместо авторизации с Kate Mobile (главный токен) будет проводиться вторичная авторизация от имени VK Admin.
   ///
   /// Используется при подключении рекомендаций ВКонтакте.
@@ -24,23 +27,17 @@ class MobileLoginWidget extends StatefulWidget {
   });
 
   @override
-  State<MobileLoginWidget> createState() => _MobileLoginWidgetState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    // InAppWebView, используемый для рендеринга Web-страницы, не поддерживается на Desktop-платформах.
+    assert(
+      isDesktop,
+      "MobileLoginWidget предназначен для работы на мобильных платформах.",
+    );
 
-class _MobileLoginWidgetState extends State<MobileLoginWidget> {
-  bool isWebViewShown = true;
+    final isWebViewShown = useState(false);
+    final l18n = ref.watch(l18nProvider);
 
-  @override
-  Widget build(BuildContext context) {
-    if (isDesktop) {
-      // Данный Route нельзя показывать на Desktop-платформах, поскольку inappwebview, используемый для рендеринга страницы, не поддерживается на Desktop-платформах.
-
-      return const Text(
-        "MobileLoginWidget предназначен для работы на мобильных платформах.",
-      );
-    }
-
-    if (!isWebViewShown) {
+    if (!isWebViewShown.value) {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -50,13 +47,11 @@ class _MobileLoginWidgetState extends State<MobileLoginWidget> {
               Icons.check_circle,
               color: Theme.of(context).colorScheme.primary,
             ),
-            const SizedBox(
-              height: 12,
-            ),
+            const Gap(12),
 
             // Текст "Авторизация успешна".
             Text(
-              AppLocalizations.of(context)!.login_mobileSuccessAuth,
+              l18n.login_mobileSuccessAuth,
               style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                     color: Theme.of(context).colorScheme.primary,
                   ),
@@ -82,13 +77,12 @@ class _MobileLoginWidgetState extends State<MobileLoginWidget> {
                     context,
                     Material3PageRoute(
                       builder: (context) => DesktopLoginWidget(
-                        useAlternateAuth: widget.useAlternateAuth,
+                        useAlternateAuth: useAlternateAuth,
                       ),
                     ),
                   ),
                   child: Text(
-                    AppLocalizations.of(context)!
-                        .login_mobileAlternateAuthTitle,
+                    l18n.login_mobileAlternateAuthTitle,
                   ),
                 ),
               ];
@@ -102,7 +96,7 @@ class _MobileLoginWidgetState extends State<MobileLoginWidget> {
         child: InAppWebView(
           initialUrlRequest: URLRequest(
             url: WebUri(
-              widget.useAlternateAuth
+              useAlternateAuth
                   ? vkMusicRecommendationsOAuthURL
                   : vkMainOAuthURL,
             ),
@@ -120,23 +114,24 @@ class _MobileLoginWidgetState extends State<MobileLoginWidget> {
             // Извлекаем access-токен из URL.
             String? token = extractAccessToken(url);
             if (token == null) {
-              isWebViewShown = true;
+              isWebViewShown.value = true;
 
               showErrorDialog(
                 context,
-                description: AppLocalizations.of(context)!.login_noTokenFound,
+                description: l18n.login_noTokenFound,
               );
 
               return;
             }
 
             // Пытаемся авторизоваться по токену.
-            setState(() => isWebViewShown = false);
+            isWebViewShown.value = false;
 
             await tryAuthorize(
+              ref,
               context,
               token,
-              widget.useAlternateAuth,
+              useAlternateAuth,
             );
           },
         ),

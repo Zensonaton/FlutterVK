@@ -2,7 +2,9 @@ import "dart:io";
 import "dart:ui";
 
 import "package:diacritic/diacritic.dart";
+import "package:dynamic_color/dynamic_color.dart";
 import "package:flutter/material.dart";
+import "package:responsive_builder/responsive_builder.dart";
 
 /// Класс для отображения Route'ов в [BottomNavigationBar], вместе с их названиями, а так же иконками.
 class NavigationPage {
@@ -128,6 +130,9 @@ DateTime? datetimeFromString(String? value) {
 /// Превращает входную строку [value] типа [DateTime] в [String].
 String stringFromdatetime(DateTime value) => value.toIso8601String();
 
+/// Превращает входное значение [value] типа [Enum] в [int].
+int intFromEnum(Enum value) => value.index;
+
 /// Превращает пустую строку ([String.isEmpty]) в null, либо возвращает тот же объект строки.
 String? emptyStringAsNull(String? value) {
   if (value == null || value.isEmpty) return null;
@@ -160,6 +165,22 @@ bool get isDesktop =>
 /// Platform.isAndroid || Platform.isIOS
 /// ```
 bool get isMobile => Platform.isAndroid || Platform.isIOS;
+
+/// Указывает, что используется Mobile Layout.
+bool isMobileLayout(BuildContext context) =>
+    getDeviceType(MediaQuery.sizeOf(context)) == DeviceScreenType.mobile;
+
+/// Указывает, что используется Desktop Layout.
+bool isDesktopLayout(BuildContext context) =>
+    getDeviceType(MediaQuery.sizeOf(context)) == DeviceScreenType.desktop;
+
+/// Указывает, что используется светлая тема ([Brightness.light]).
+bool isLightTheme(BuildContext context) =>
+    Theme.of(context).brightness == Brightness.light;
+
+/// Указывает, что используется тёмная тема ([Brightness.dark]).
+bool isDarkTheme(BuildContext context) =>
+    Theme.of(context).brightness == Brightness.dark;
 
 /// Небольшой класс для создания виджетов класса [Slider] без Padding'ов.
 ///
@@ -241,4 +262,58 @@ int fastHash(String input) {
   }
 
   return hash;
+}
+
+/// Создаёт две [ColorScheme]: [Brightness.light] и [Brightness.dark] из передаваемых от [DynamicColorBuilder] цветов.
+///
+/// Данный метод нужен для "исправления" цветов, передаваемых [DynamicColorBuilder]'ом, поскольку [DynamicColorBuilder] не поддерживает новые [ColorScheme], ввиду чего итоговый [ColorScheme] имеет тёмные оттенки.
+///
+/// Код взят и адаптирован из комментария Github Issue:
+/// https://github.com/material-foundation/flutter-packages/issues/582#issuecomment-2081174158
+(ColorScheme light, ColorScheme dark) generateDynamicColorSchemes(
+  ColorScheme lightDynamic,
+  ColorScheme darkDynamic,
+) {
+  List<Color> extractAdditionalColors(
+    ColorScheme scheme,
+  ) =>
+      [
+        scheme.surface,
+        scheme.surfaceDim,
+        scheme.surfaceBright,
+        scheme.surfaceContainerLowest,
+        scheme.surfaceContainerLow,
+        scheme.surfaceContainer,
+        scheme.surfaceContainerHigh,
+        scheme.surfaceContainerHighest,
+      ];
+
+  ColorScheme insertAdditionalColors(
+    ColorScheme scheme,
+    List<Color> additionalColours,
+  ) =>
+      scheme.copyWith(
+        surface: additionalColours[0],
+        surfaceDim: additionalColours[1],
+        surfaceBright: additionalColours[2],
+        surfaceContainerLowest: additionalColours[3],
+        surfaceContainerLow: additionalColours[4],
+        surfaceContainer: additionalColours[5],
+        surfaceContainerHigh: additionalColours[6],
+        surfaceContainerHighest: additionalColours[7],
+      );
+
+  var lightBase = ColorScheme.fromSeed(seedColor: lightDynamic.primary);
+  var darkBase = ColorScheme.fromSeed(
+    seedColor: darkDynamic.primary,
+    brightness: Brightness.dark,
+  );
+
+  var lightAdditionalColours = extractAdditionalColors(lightBase);
+  var darkAdditionalColours = extractAdditionalColors(darkBase);
+
+  var lightScheme = insertAdditionalColors(lightBase, lightAdditionalColours);
+  var darkScheme = insertAdditionalColors(darkBase, darkAdditionalColours);
+
+  return (lightScheme.harmonized(), darkScheme.harmonized());
 }

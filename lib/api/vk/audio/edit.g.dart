@@ -9,7 +9,7 @@ part of 'edit.dart';
 APIAudioEditResponse _$APIAudioEditResponseFromJson(
         Map<String, dynamic> json) =>
     APIAudioEditResponse(
-      json['response'] as int?,
+      (json['response'] as num?)?.toInt(),
       json['error'] == null
           ? null
           : APIError.fromJson(json['error'] as Map<String, dynamic>),

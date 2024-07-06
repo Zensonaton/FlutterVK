@@ -4,10 +4,10 @@ import "dart:ui";
 import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
-import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "package:fullscreen_window/fullscreen_window.dart";
-import "package:provider/provider.dart";
-import "package:responsive_builder/responsive_builder.dart";
+import "package:gap/gap.dart";
+import "package:go_router/go_router.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:scroll_to_index/scroll_to_index.dart";
 import "package:styled_text/styled_text.dart";
 import "package:visibility_detector/visibility_detector.dart";
@@ -20,7 +20,9 @@ import "../extensions.dart";
 import "../intents.dart";
 import "../main.dart";
 import "../provider/color.dart";
-import "../provider/user.dart";
+import "../provider/l18n.dart";
+import "../provider/player_events.dart";
+import "../provider/preferences.dart";
 import "../services/cache_manager.dart";
 import "../services/logger.dart";
 import "../utils.dart";
@@ -60,12 +62,7 @@ Future<void> openFullscreenPlayer(
 
   if (!context.mounted) return;
 
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => const FullscreenPlayerRoute(),
-    ),
-  );
+  context.push("/fullscreenPlayer");
 
   isFullscreenPlayerOpen = true;
 
@@ -90,7 +87,7 @@ Future<void> closeFullscreenPlayer(
 
   if (!context.mounted) return;
 
-  if (popRoute) Navigator.of(context).pop();
+  if (popRoute) context.pop();
 
   isFullscreenPlayerOpen = false;
 
@@ -179,7 +176,7 @@ Future<void> closeMiniPlayer(
     return;
   }
 
-  if (popRoute && context.mounted) Navigator.of(context).pop();
+  if (popRoute && context.mounted) context.pop();
 
   // Если приложение запущено на Desktop, то делаем окошко маленьким.
   if (isDesktop) {
@@ -328,7 +325,7 @@ class TrackLyric extends StatelessWidget {
 
 /// Виджет, отображающий текст трека.
 class TrackLyricsBlock extends StatefulWidget {
-  static AppLogger logger = getLogger("TrackLyricsBlock");
+  static final AppLogger logger = getLogger("TrackLyricsBlock");
 
   /// Отображаемый текст песни.
   final Lyrics lyrics;
@@ -560,42 +557,16 @@ class _TrackLyricsBlockState extends State<TrackLyricsBlock> {
   }
 }
 
-/// Виджет, отображающий размытое фоновое изображение для полноэкранногоп плеера.
-class BlurredBackgroundImage extends StatefulWidget {
+/// Виджет, отображающий размытое фоновое изображение для полноэкранного плеера.
+class BlurredBackgroundImage extends ConsumerWidget {
   const BlurredBackgroundImage({
     super.key,
   });
 
   @override
-  State<BlurredBackgroundImage> createState() => _BlurredBackgroundImageState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(playerCurrentIndexProvider);
 
-class _BlurredBackgroundImageState extends State<BlurredBackgroundImage> {
-  late final List<StreamSubscription> subscriptions;
-
-  @override
-  void initState() {
-    super.initState();
-
-    subscriptions = [
-      // Изменение текущего трека.
-      player.currentIndexStream.listen(
-        (int? index) => setState(() {}),
-      ),
-    ];
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-
-    for (StreamSubscription subscription in subscriptions) {
-      subscription.cancel();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return RepaintBoundary(
       child: ImageFiltered(
         imageFilter: ImageFilter.blur(
@@ -609,8 +580,8 @@ class _BlurredBackgroundImageState extends State<BlurredBackgroundImage> {
           cacheManager: CachedAlbumImagesManager.instance,
           color: Colors.black.withOpacity(0.55),
           colorBlendMode: BlendMode.darken,
-          memCacheWidth: MediaQuery.of(context).size.width.toInt(),
-          memCacheHeight: MediaQuery.of(context).size.height.toInt(),
+          memCacheWidth: MediaQuery.sizeOf(context).width.toInt(),
+          memCacheHeight: MediaQuery.sizeOf(context).height.toInt(),
         ),
       ),
     );
@@ -618,16 +589,17 @@ class _BlurredBackgroundImageState extends State<BlurredBackgroundImage> {
 }
 
 /// Route, отображающий полноэкранный плеер.
-class FullscreenPlayerRoute extends StatefulWidget {
+class FullscreenPlayerRoute extends ConsumerStatefulWidget {
   const FullscreenPlayerRoute({
     super.key,
   });
 
   @override
-  State<FullscreenPlayerRoute> createState() => _FullscreenPlayerRouteState();
+  ConsumerState<FullscreenPlayerRoute> createState() =>
+      _FullscreenPlayerRouteState();
 }
 
-class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
+class _FullscreenPlayerRouteState extends ConsumerState<FullscreenPlayerRoute> {
   final AppLogger logger = getLogger("FullscreenPlayerDesktopRoute");
 
   /// Подписки на изменения состояния воспроизведения трека.
@@ -638,14 +610,13 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
     super.initState();
 
     subscriptions = [
-      // Изменение текущего трека.
-      player.currentIndexStream.listen(
-        (int? index) => setState(() {}),
-      ),
-
       // Изменение состояния паузы плеера.
       player.loadedStateStream.listen(
-        (bool loaded) => closeFullscreenPlayer(context),
+        (bool loaded) {
+          if (loaded) return;
+
+          closeFullscreenPlayer(context);
+        },
       ),
     ];
   }
@@ -661,9 +632,12 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
 
   @override
   Widget build(BuildContext context) {
-    final UserProvider user = Provider.of<UserProvider>(context);
-    final PlayerSchemeProvider colorScheme =
-        Provider.of<PlayerSchemeProvider>(context);
+    final preferences = ref.watch(preferencesProvider);
+    final trackImageInfo = ref.watch(trackSchemeInfoProvider);
+    final l18n = ref.watch(l18nProvider);
+    ref.watch(playerCurrentIndexProvider);
+
+    final bool isMobile = isMobileLayout(context);
 
     // Проверка на случай, если запустился плеер без активного трека.
     if (player.currentAudio == null) {
@@ -674,7 +648,8 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
         ),
         child: Theme(
           data: ThemeData(
-            colorScheme: colorScheme.darkColorScheme ?? fallbackDarkColorScheme,
+            colorScheme:
+                trackImageInfo?.darkColorScheme ?? fallbackDarkColorScheme,
           ),
           child: Scaffold(
             body: Center(
@@ -682,23 +657,19 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // GIF с собакой.
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      bottom: 18,
-                    ),
-                    child: RepaintBoundary(
-                      child: Image.asset(
-                        "assets/images/dog.gif",
-                        width: 25 * 5,
-                        height: 12 * 5,
-                        fit: BoxFit.fill,
-                      ),
+                  RepaintBoundary(
+                    child: Image.asset(
+                      "assets/images/dog.gif",
+                      width: 25 * 5,
+                      height: 12 * 5,
+                      fit: BoxFit.fill,
                     ),
                   ),
+                  const Gap(18),
 
                   // Текст.
                   StyledText(
-                    text: AppLocalizations.of(context)!.music_fullscreenNoAudio,
+                    text: l18n.music_fullscreenNoAudio,
                     textAlign: TextAlign.center,
                     tags: {
                       "bold": StyledTextTag(
@@ -716,9 +687,7 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
                       ),
                     },
                   ),
-                  const SizedBox(
-                    height: 24,
-                  ),
+                  const Gap(24),
 
                   // Кнопка для выхода.
                   FilledButton.icon(
@@ -727,8 +696,7 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
                       Icons.fullscreen_exit,
                     ),
                     label: Text(
-                      AppLocalizations.of(context)!
-                          .music_fullscreenNoAudioButton,
+                      l18n.music_fullscreenNoAudioButton,
                     ),
                   ),
                 ],
@@ -739,10 +707,6 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
       );
     }
 
-    /// Указывает, что будет использоваться Mobile Layout.
-    final bool useMobileLayout =
-        getDeviceType(MediaQuery.of(context).size) == DeviceScreenType.mobile;
-
     return AnnotatedRegion(
       value: const SystemUiOverlayStyle(
         statusBarBrightness: Brightness.light,
@@ -750,7 +714,8 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
       ),
       child: Theme(
         data: ThemeData(
-          colorScheme: colorScheme.darkColorScheme ?? fallbackDarkColorScheme,
+          colorScheme:
+              trackImageInfo?.darkColorScheme ?? fallbackDarkColorScheme,
         ),
         child: Builder(
           builder: (
@@ -802,17 +767,18 @@ class _FullscreenPlayerRouteState extends State<FullscreenPlayerRoute> {
                         child: Stack(
                           children: [
                             // Размытое фоновое изображение.
+
                             if (player.currentAudio?.maxThumbnail != null &&
-                                user.settings.playerThumbAsBackground)
+                                preferences.playerThumbAsBackground)
                               SizedBox(
-                                width: MediaQuery.of(context).size.width,
-                                height: MediaQuery.of(context).size.height,
+                                width: MediaQuery.sizeOf(context).width,
+                                height: MediaQuery.sizeOf(context).height,
                                 child: const BlurredBackgroundImage(),
                               ),
 
                             // Внутреннее содержимое, зависящее от типа Layout'а.
                             SafeArea(
-                              child: useMobileLayout
+                              child: isMobile
                                   ? const FullscreenPlayerMobileRoute()
                                   : const FullscreenPlayerDesktopRoute(),
                             ),

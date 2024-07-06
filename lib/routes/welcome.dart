@@ -1,23 +1,28 @@
 import "package:flutter/material.dart";
-import "package:flutter_gen/gen_l10n/app_localizations.dart";
+import "package:gap/gap.dart";
+import "package:go_router/go_router.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:styled_text/styled_text.dart";
 import "package:url_launcher/url_launcher.dart";
 
 import "../../consts.dart";
-import "../widgets/page_route_builders.dart";
-import "login.dart";
+import "../provider/l18n.dart";
 
 /// Route, показываемый при первом входе в приложение.
-class WelcomeRoute extends StatelessWidget {
+class WelcomeRoute extends ConsumerWidget {
   const WelcomeRoute({
     super.key,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l18n = ref.watch(l18nProvider);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Flutter VK"),
+        title: const Text(
+          "Flutter VK",
+        ),
         centerTitle: true,
       ),
       resizeToAvoidBottomInset: false,
@@ -30,16 +35,16 @@ class WelcomeRoute extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // "Добро пожаловать!".
                   Text(
-                    AppLocalizations.of(context)!.welcome_welcomeTitle,
+                    l18n.welcome_welcomeTitle,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
-                  const SizedBox(
-                    height: 12,
-                  ),
+                  const Gap(12),
+
+                  // "Flutter VK - ...".
                   StyledText(
-                    text: AppLocalizations.of(context)!
-                        .welcome_welcomeDescription,
+                    text: l18n.welcome_welcomeDescription,
                     style: Theme.of(context).textTheme.bodyLarge,
                     tags: {
                       "bold": StyledTextTag(
@@ -58,23 +63,18 @@ class WelcomeRoute extends StatelessWidget {
                       ),
                     },
                   ),
-                  const SizedBox(
-                    height: 36,
-                  ),
+                  const Gap(36),
+
+                  // Продолжить.
                   Align(
                     alignment: Alignment.bottomRight,
                     child: FilledButton.icon(
-                      onPressed: () => Navigator.push(
-                        context,
-                        Material3PageRoute(
-                          builder: (context) => const LoginRoute(),
-                        ),
-                      ),
+                      onPressed: () => context.pop("/login"),
                       icon: const Icon(
                         Icons.arrow_forward_ios,
                       ),
                       label: Text(
-                        AppLocalizations.of(context)!.welcome_welcomeContinue,
+                        l18n.welcome_welcomeContinue,
                       ),
                     ),
                   ),

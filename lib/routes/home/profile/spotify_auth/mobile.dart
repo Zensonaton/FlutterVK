@@ -1,9 +1,13 @@
 import "package:collection/collection.dart";
 import "package:flutter/material.dart";
-import "package:flutter_gen/gen_l10n/app_localizations.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
 import "package:flutter_inappwebview/flutter_inappwebview.dart";
+import "package:gap/gap.dart";
+import "package:go_router/go_router.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 
 import "../../../../consts.dart";
+import "../../../../provider/l18n.dart";
 import "../../../../utils.dart";
 import "../../../../widgets/dialogs.dart";
 import "../../../../widgets/page_route_builders.dart";
@@ -12,31 +16,29 @@ import "../spotify_auth.dart";
 import "desktop.dart";
 
 /// Виджет, отображаемый при успешной авторизации.
-class SuccessAuthWidget extends StatelessWidget {
+class SuccessAuthWidget extends ConsumerWidget {
   const SuccessAuthWidget({
     super.key,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l18n = ref.watch(l18nProvider);
+
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           // Иконка.
-          Padding(
-            padding: const EdgeInsets.only(
-              bottom: 12,
-            ),
-            child: Icon(
-              Icons.check_circle,
-              color: Theme.of(context).colorScheme.primary,
-            ),
+          Icon(
+            Icons.check_circle,
+            color: Theme.of(context).colorScheme.primary,
           ),
+          const Gap(12),
 
           // Текст "Авторизация успешна".
           Text(
-            AppLocalizations.of(context)!.login_mobileSuccessAuth,
+            l18n.login_mobileSuccessAuth,
             style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                   color: Theme.of(context).colorScheme.primary,
                 ),
@@ -50,35 +52,30 @@ class SuccessAuthWidget extends StatelessWidget {
 /// Часть Route'а [LoginRoute], показываемая при запуске на мобильных платформах.
 ///
 /// Данный Route нельзя показывать на Desktop-платформах, поскольку inappwebview, используемый для рендеринга страницы, не поддерживается на Desktop-платформах.
-class MobileSpotifyLogin extends StatefulWidget {
+class MobileSpotifyLogin extends HookConsumerWidget {
   const MobileSpotifyLogin({
     super.key,
   });
 
   @override
-  State<MobileSpotifyLogin> createState() => _MobileSpotifyLoginState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    // InAppWebView, используемый для рендеринга Web-страницы, не поддерживается на Desktop-платформах.
+    assert(
+      isDesktop,
+      "MobileSpotifyLogin предназначен для работы на мобильных платформах.",
+    );
 
-class _MobileSpotifyLoginState extends State<MobileSpotifyLogin> {
-  bool isWebViewShown = true;
+    final l18n = ref.watch(l18nProvider);
 
-  @override
-  Widget build(BuildContext context) {
-    if (isDesktop) {
-      // Данный Route нельзя показывать на Desktop-платформах, поскольку inappwebview, используемый для рендеринга страницы, не поддерживается на Desktop-платформах.
-
-      return const Text(
-        "MobileSpotifyLogin предназначен для работы на мобильных платформах.",
-      );
-    }
+    final isWebViewShown = useState(true);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          AppLocalizations.of(context)!.profile_spotifyAuthTitle,
+          l18n.profile_spotifyAuthTitle,
         ),
         centerTitle: true,
-        actions: isWebViewShown
+        actions: isWebViewShown.value
             ? [
                 PopupMenuButton(
                   itemBuilder: (BuildContext context) {
@@ -92,8 +89,7 @@ class _MobileSpotifyLoginState extends State<MobileSpotifyLogin> {
                           ),
                         ),
                         child: Text(
-                          AppLocalizations.of(context)!
-                              .login_mobileAlternateAuthTitle,
+                          l18n.login_mobileAlternateAuthTitle,
                         ),
                       ),
                     ];
@@ -105,7 +101,7 @@ class _MobileSpotifyLoginState extends State<MobileSpotifyLogin> {
       resizeToAvoidBottomInset: false,
       body: SafeArea(
         maintainBottomViewPadding: true,
-        child: isWebViewShown
+        child: isWebViewShown.value
             ? InAppWebView(
                 initialUrlRequest: URLRequest(
                   url: WebUri(
@@ -121,7 +117,7 @@ class _MobileSpotifyLoginState extends State<MobileSpotifyLogin> {
                   InAppWebViewController controller,
                   WebUri? action,
                 ) async {
-                  if (action == null || !isWebViewShown) return;
+                  if (action == null || !isWebViewShown.value) return;
 
                   String url = action.toString();
                   if (url.endsWith("/")) {
@@ -149,23 +145,21 @@ class _MobileSpotifyLoginState extends State<MobileSpotifyLogin> {
                   if (spDC == null) {
                     showErrorDialog(
                       context,
-                      description: AppLocalizations.of(context)!
-                          .profile_spotifyAuthNoSPDC,
+                      description: l18n.profile_spotifyAuthNoSPDC,
                     );
 
-                    setState(() => isWebViewShown = true);
+                    isWebViewShown.value = true;
 
                     return;
                   }
 
                   // Пытаемся авторизоваться по токену.
-                  setState(() => isWebViewShown = false);
-                  final bool authorized = await spotifyAuthorize(context, spDC);
+                  isWebViewShown.value = false;
+                  final bool authorized =
+                      await spotifyAuthorize(ref, context, spDC);
 
                   // Если авторизация успешно, то выкидываем пользователя на главный экран.
-                  if (authorized && context.mounted) {
-                    Navigator.of(context).pop();
-                  }
+                  if (authorized && context.mounted) context.pop();
                 },
               )
             : const SuccessAuthWidget(),

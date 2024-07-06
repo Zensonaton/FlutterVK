@@ -1,7 +1,7 @@
 import "package:flutter/material.dart";
-import "package:provider/provider.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 
-import "../../../provider/user.dart";
+import "../../../provider/spotify_api.dart";
 import "../../../services/logger.dart";
 import "../../../utils.dart";
 import "../../../widgets/dialogs.dart";
@@ -12,21 +12,24 @@ import "spotify_auth/mobile.dart";
 /// Производит авторизацию по передаваемому значению Cookie `sp_dc` Spotify.
 ///
 /// Данный метод делает изменения в интерфейсе во время загрузки, и возвращает `true`, если авторизация прошла успешно.
-Future<bool> spotifyAuthorize(BuildContext context, String spDC) async {
+Future<bool> spotifyAuthorize(
+  WidgetRef ref,
+  BuildContext context,
+  String spDC,
+) async {
   final AppLogger logger = getLogger("spotifyAuthorize");
-  final UserProvider user = Provider.of<UserProvider>(context, listen: false);
 
   LoadingOverlay.of(context).show();
 
   try {
-    await user.updateSpotifyToken(spDC);
+    await ref.read(spotifyAPIProvider.notifier).login(spDC);
   } catch (e, stackTrace) {
-    // ignore: use_build_context_synchronously
     showLogErrorDialog(
       "Ошибка при авторизации Spotify: ",
       e,
       stackTrace,
       logger,
+      // ignore: use_build_context_synchronously
       context,
     );
 
@@ -35,11 +38,6 @@ Future<bool> spotifyAuthorize(BuildContext context, String spDC) async {
     if (context.mounted) {
       LoadingOverlay.of(context).hide();
     }
-  }
-
-  // Авторизация прошла успешно!
-  if (context.mounted) {
-    user.markUpdated();
   }
 
   return true;

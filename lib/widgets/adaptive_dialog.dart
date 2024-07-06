@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
-import "package:responsive_builder/responsive_builder.dart";
+
+import "../utils.dart";
 
 /// Виджет типа [Dialog] или [Dialog.fullscreen], который использует полноэкранный диалог на мобильной версии приложения ([Dialog.fullscreen]), и обычный [Dialog] для desktop.
 ///
@@ -20,11 +21,7 @@ class AdaptiveDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isMobileLayout =
-        getDeviceType(MediaQuery.of(context).size) == DeviceScreenType.mobile;
-
-    // Мобильный дизайн.
-    if (isMobileLayout) {
+    if (isMobileLayout(context)) {
       return Dialog.fullscreen(
         child: child,
       );
