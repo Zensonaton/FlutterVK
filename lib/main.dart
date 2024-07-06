@@ -1,5 +1,10 @@
 import "dart:io";
 
+import "package:catcher_2/core/catcher_2.dart";
+import "package:catcher_2/handlers/console_handler.dart";
+import "package:catcher_2/handlers/file_handler.dart";
+import "package:catcher_2/mode/silent_report_mode.dart";
+import "package:catcher_2/model/catcher_2_options.dart";
 import "package:dynamic_color/dynamic_color.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
@@ -8,11 +13,13 @@ import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "package:flutter_localizations/flutter_localizations.dart";
 import "package:just_audio_media_kit/just_audio_media_kit.dart";
 import "package:local_notifier/local_notifier.dart";
+import "package:media_kit/media_kit.dart";
 import "package:package_info_plus/package_info_plus.dart";
 import "package:path/path.dart" as path;
 import "package:path_provider/path_provider.dart";
 import "package:provider/provider.dart";
 import "package:responsive_builder/responsive_builder.dart";
+import "package:shared_preferences/shared_preferences.dart";
 import "package:system_tray/system_tray.dart";
 import "package:url_launcher/url_launcher.dart";
 import "package:window_manager/window_manager.dart";
@@ -134,6 +141,10 @@ Future main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
 
+    // Загружаем SharedPreferences.
+    // TODO: Он загружается дважды.
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+
     // Инициализируем WindowManager на Desktop-платформах.
     if (isDesktop) {
       await windowManager.ensureInitialized();
@@ -225,6 +236,11 @@ Future main() async {
 
     // Инициализируем плеер.
     JustAudioMediaKit.title = "Flutter VK";
+    if (prefs.getBool("DebugPlayerLogging") ?? false) {
+      logger.i("Media kit debug logger is enabled");
+
+      JustAudioMediaKit.mpvLogLevel = MPVLogLevel.debug;
+    }
     JustAudioMediaKit.ensureInitialized();
 
     player = VKMusicPlayer();
@@ -243,18 +259,46 @@ Future main() async {
 
     logger.i("Running Flutter VK v$appVersion");
 
-    runApp(
-      MultiProvider(
-        providers: [
-          ChangeNotifierProvider(
-            create: (BuildContext context) => UserProvider(false),
+    // Запускаем само приложение, а так же делаем глобальный обработчик ошибок.
+    Catcher2(
+      debugConfig: Catcher2Options(
+        SilentReportMode(),
+        [
+          ConsoleHandler(
+            enableDeviceParameters: false,
+            enableApplicationParameters: false,
           ),
-          ChangeNotifierProvider(
-            create: (BuildContext context) => PlayerSchemeProvider(),
-          ),
+          if (!kIsWeb)
+            FileHandler(
+              await logFilePath(),
+            ),
         ],
-        child: const MainApp(),
       ),
+      releaseConfig: Catcher2Options(
+        SilentReportMode(),
+        [
+          ConsoleHandler(),
+          if (!kIsWeb)
+            FileHandler(
+              await logFilePath(),
+            ),
+        ],
+      ),
+      runAppFunction: () {
+        runApp(
+          MultiProvider(
+            providers: [
+              ChangeNotifierProvider(
+                create: (BuildContext context) => UserProvider(false),
+              ),
+              ChangeNotifierProvider(
+                create: (BuildContext context) => PlayerSchemeProvider(),
+              ),
+            ],
+            child: const MainApp(),
+          ),
+        );
+      },
     );
   } catch (e, stackTrace) {
     logger.f(

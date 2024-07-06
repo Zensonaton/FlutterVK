@@ -968,6 +968,43 @@ class _HomeProfilePageState extends State<HomeProfilePage> {
                               user.markUpdated();
                             },
                           ),
+
+                          // Debug-логирование плеера.
+                          SwitchListTile(
+                            secondary: const Icon(
+                              Icons.bug_report,
+                            ),
+                            title: Text(
+                              AppLocalizations.of(context)!
+                                  .profile_playerDebugLoggingTitle,
+                            ),
+                            subtitle: Text(
+                              AppLocalizations.of(context)!
+                                  .profile_playerDebugLoggingDescription,
+                            ),
+                            value: user.settings.checkBeforeFavorite,
+                            onChanged: (bool? enabled) async {
+                              if (enabled == null) return;
+
+                              user.settings.debugPlayerLogging = enabled;
+                              user.markUpdated();
+
+                              // Отображаем уведомление о необходимости в перезагрузки приложения.
+                              final messenger = ScaffoldMessenger.of(context);
+                              if (enabled) {
+                                messenger.showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      AppLocalizations.of(context)!
+                                          .general_restartApp,
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                messenger.hideCurrentSnackBar();
+                              }
+                            },
+                          ),
                         ],
                       ),
                     ),

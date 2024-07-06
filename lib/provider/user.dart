@@ -683,6 +683,9 @@ class Settings {
 
   /// Указывает, что приложение сделало предупреждение о том, что при прослушивании рекомендаций музыки серверам ВКонтакте будет передаваться информация об этом.
   bool recommendationsStatsWarning = false;
+
+  /// Указывает, что включено debug-логирование media_kit плеера.
+  bool debugPlayerLogging = false;
 }
 
 /// Provider для получения объекта пользователя в контексте интерфейса приложения.
@@ -1033,6 +1036,10 @@ class UserProvider extends ChangeNotifier {
       "RecommendationsStatsWarning",
       settings.recommendationsStatsWarning,
     );
+    await prefs.setBool(
+      "DebugPlayerLogging",
+      settings.debugPlayerLogging,
+    );
   }
 
   /// Загружает данный объект пользователя с диска.
@@ -1091,6 +1098,7 @@ class UserProvider extends ChangeNotifier {
         prefs.getBool("FullscreenBigThumbnail") ?? false;
     settings.recommendationsStatsWarning =
         prefs.getBool("RecommendationsStatsWarning") ?? false;
+    settings.debugPlayerLogging = prefs.getBool("DebugPlayerLogging") ?? false;
 
     markUpdated(false);
 
