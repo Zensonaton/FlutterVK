@@ -1,10 +1,11 @@
 import "dart:convert";
 import "dart:io";
 
+import "package:catcher_2/utils/catcher_2_logger.dart";
 import "package:flutter/foundation.dart";
-import "package:path_provider/path_provider.dart";
-import "package:path/path.dart" as path;
 import "package:logger/logger.dart";
+import "package:path/path.dart" as path;
+import "package:path_provider/path_provider.dart";
 
 /// Возвращает объект логгера для передаваемого [owner].
 AppLogger getLogger<T>(T owner) {
@@ -191,4 +192,24 @@ class AppLogger extends Logger {
         );
 
   String? owner;
+}
+
+/// Расширение для класса [Catcher2Logger], позволяющее логировать ошибки в [AppLogger].
+class CatcherLogger extends Catcher2Logger {
+  static final AppLogger logger = getLogger("Catcher");
+
+  @override
+  void setup() {}
+
+  @override
+  void info(String message) => logger.i(message);
+
+  @override
+  void fine(String message) => logger.t(message);
+
+  @override
+  void warning(String message) => logger.w(message);
+
+  @override
+  void severe(String message) => logger.e(message);
 }

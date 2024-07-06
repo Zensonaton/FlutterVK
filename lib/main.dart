@@ -317,11 +317,8 @@ Future main() async {
             enableDeviceParameters: false,
             enableApplicationParameters: false,
           ),
-          if (!kIsWeb)
-            FileHandler(
-              await logFilePath(),
-            ),
         ],
+        logger: CatcherLogger(),
       ),
       releaseConfig: Catcher2Options(
         SilentReportMode(),
@@ -332,6 +329,7 @@ Future main() async {
               await logFilePath(),
             ),
         ],
+        logger: CatcherLogger(),
       ),
       runAppFunction: () {
         runApp(
