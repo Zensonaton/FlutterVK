@@ -438,7 +438,7 @@ class RealtimePlaylistsBlock extends HookConsumerWidget {
     ref.watch(playerStateProvider);
     ref.watch(playerLoadedStateProvider);
 
-    final bool isMobile = isMobileLayout(context);
+    final bool mobileLayout = isMobileLayout(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -462,7 +462,7 @@ class RealtimePlaylistsBlock extends HookConsumerWidget {
             ),
             child: LivePlaylistWidget(
               title: fakePlaylistNames.first,
-              bigLayout: !isMobile,
+              bigLayout: !mobileLayout,
             ),
           ),
 

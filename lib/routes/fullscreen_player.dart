@@ -637,7 +637,7 @@ class _FullscreenPlayerRouteState extends ConsumerState<FullscreenPlayerRoute> {
     final l18n = ref.watch(l18nProvider);
     ref.watch(playerCurrentIndexProvider);
 
-    final bool isMobile = isMobileLayout(context);
+    final bool mobileLayout = isMobileLayout(context);
 
     // Проверка на случай, если запустился плеер без активного трека.
     if (player.currentAudio == null) {
@@ -778,7 +778,7 @@ class _FullscreenPlayerRouteState extends ConsumerState<FullscreenPlayerRoute> {
 
                             // Внутреннее содержимое, зависящее от типа Layout'а.
                             SafeArea(
-                              child: isMobile
+                              child: mobileLayout
                                   ? const FullscreenPlayerMobileRoute()
                                   : const FullscreenPlayerDesktopRoute(),
                             ),

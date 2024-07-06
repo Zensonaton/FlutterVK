@@ -17,9 +17,8 @@ import "../../../provider/player_events.dart";
 import "../../../provider/user.dart";
 import "../../../utils.dart";
 import "../../../widgets/adaptive_dialog.dart";
+import "../../../widgets/audio_track.dart";
 import "../../../widgets/dialogs.dart";
-import "../music.dart";
-import "playlist.dart";
 
 /// Диалог, показывающий поле для глобального поиска через API ВКонтакте, а так же сами результаты поиска.
 class SearchDisplayDialog extends ConsumerStatefulWidget {
@@ -107,11 +106,11 @@ class _SearchDisplayDialogState extends ConsumerState<SearchDisplayDialog> {
     ref.watch(playerStateProvider);
     ref.watch(playerCurrentIndexProvider);
 
-    final bool isMobile = isMobileLayout(context);
+    final bool mobileLayout = isMobileLayout(context);
 
     return AdaptiveDialog(
       child: Container(
-        padding: isMobile
+        padding: mobileLayout
             ? const EdgeInsets.only(
                 top: 16,
                 left: 16,
@@ -125,7 +124,7 @@ class _SearchDisplayDialogState extends ConsumerState<SearchDisplayDialog> {
           children: [
             // Верхний "AppBar".
             Padding(
-              padding: isMobile
+              padding: mobileLayout
                   ? EdgeInsets.zero
                   : const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -135,7 +134,7 @@ class _SearchDisplayDialogState extends ConsumerState<SearchDisplayDialog> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // Кнопка "Назад".
-                  if (isMobile)
+                  if (mobileLayout)
                     Padding(
                       padding: const EdgeInsets.only(
                         right: 12,

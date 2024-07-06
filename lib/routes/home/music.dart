@@ -65,381 +65,6 @@ Future<void> loadCachedTracksInformation(
   // }
 }
 
-/// Виджет, олицетворяющий отдельный трек в списке треков.
-class AudioTrackTile extends HookConsumerWidget {
-  /// Объект типа [ExtendedAudio], олицетворяющий данный трек.
-  final ExtendedAudio audio;
-
-  /// Указывает, что этот трек сейчас выбран.
-  ///
-  /// Поле [currentlyPlaying] указывает, что плеер включён.
-  final bool selected;
-
-  /// Указывает, что плеер в данный момент включён.
-  final bool currentlyPlaying;
-
-  /// Указывает, что данный трек загружается перед тем, как начать его воспроизведение.
-  final bool isLoading;
-
-  /// Указывает, что в случае, если [selected] равен true, то у данного виджета будет эффект "свечения".
-  final bool glowIfSelected;
-
-  /// Указывает, что в случае, если трек кэширован ([ExtendedAudio.isCached]), то будет показана соответствующая иконка.
-  final bool showCachedIcon;
-
-  /// Если true, то данный виджет будет не будет иметь эффект прозрачности даже если [ExtendedAudio.canPlay] равен false.
-  final bool forceAvailable;
-
-  /// Указывает, что будет показана длительность этого трека.
-  final bool showDuration;
-
-  /// Действие, вызываемое при переключения паузы/возобновления при нажатии по иконке трека.
-  ///
-  /// В отличии от [onPlay], данный метод просто переключает то, находится трек на паузе или нет. Данный метод вызывается лишь в случае, если поле [selected] правдиво, в ином случае при нажатии на данный виджет будет вызываться событие [onPlay].
-  final Function(bool)? onPlayToggle;
-
-  /// Действие, вызываемое при "выборе" данного трека.
-  ///
-  /// В отличии от [onPlayToggle], данный метод должен "перезапустить" трек, если он в данный момент играет.
-  final VoidCallback? onPlay;
-
-  /// Действие, вызываемое при переключении состояния "лайка" данного трека.
-  ///
-  /// Если не указано, то кнопка лайка не будет показана.
-  final Function(bool)? onLikeToggle;
-
-  /// Действие, вызываемое при выборе ПКМ (или зажатии) по данном элементу.
-  ///
-  /// Чаще всего используется для открытия контекстного меню.
-  final VoidCallback? onSecondaryAction;
-
-  const AudioTrackTile({
-    super.key,
-    this.selected = false,
-    this.isLoading = false,
-    this.currentlyPlaying = false,
-    this.glowIfSelected = false,
-    this.showCachedIcon = true,
-    this.forceAvailable = false,
-    this.showDuration = true,
-    required this.audio,
-    this.onPlay,
-    this.onPlayToggle,
-    this.onLikeToggle,
-    this.onSecondaryAction,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isHovered = useState(false);
-
-    final bool selectedAndPlaying = selected && currentlyPlaying;
-
-    /// Url на изображение данного трека.
-    final String? imageUrl = audio.smallestThumbnail;
-
-    /// Цвет для текста и прочих иконок.
-    final Color color = selected
-        ? Theme.of(context).colorScheme.primary
-        : Theme.of(context).colorScheme.onSurface;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onPlay,
-        onHover:
-            onPlay != null ? (bool value) => isHovered.value = value : null,
-        borderRadius: BorderRadius.circular(
-          globalBorderRadius,
-        ),
-        onLongPress: isMobile ? onSecondaryAction : null,
-        onSecondaryTap: onSecondaryAction,
-        child: AnimatedContainer(
-          duration: const Duration(
-            milliseconds: 500,
-          ),
-          curve: Curves.ease,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(
-              globalBorderRadius,
-            ),
-            gradient: selected && glowIfSelected
-                ? LinearGradient(
-                    colors: [
-                      Theme.of(context).colorScheme.primary.withOpacity(
-                            0.075,
-                          ),
-                      Colors.transparent,
-                    ],
-                  )
-                : null,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Opacity(
-                opacity: forceAvailable || audio.canPlay ? 1.0 : 0.5,
-                child: InkWell(
-                  onTap: onPlayToggle != null || onPlay != null
-                      ? () {
-                          // Если в данный момент играет именно этот трек, то вызываем onPlayToggle.
-                          if (selected) {
-                            onPlayToggle?.call(
-                              !selectedAndPlaying,
-                            );
-
-                            return;
-                          }
-
-                          // В ином случае запускаем проигрывание этого трека.
-                          onPlay?.call();
-                        }
-                      : null,
-                  borderRadius: BorderRadius.circular(
-                    globalBorderRadius,
-                  ),
-                  child: SizedBox(
-                    width: 50,
-                    height: 50,
-                    child: Stack(
-                      children: [
-                        // Изображение трека.
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(
-                            globalBorderRadius,
-                          ),
-                          child: imageUrl != null
-                              ? CachedNetworkImage(
-                                  imageUrl: imageUrl,
-                                  cacheKey: "${audio.mediaKey}small",
-                                  width: 50,
-                                  height: 50,
-                                  memCacheWidth: (50 *
-                                          MediaQuery.of(context)
-                                              .devicePixelRatio)
-                                      .round(),
-                                  memCacheHeight: (50 *
-                                          MediaQuery.of(context)
-                                              .devicePixelRatio)
-                                      .round(),
-                                  fadeInDuration: Duration.zero,
-                                  fadeOutDuration: Duration.zero,
-                                  placeholderFadeInDuration: Duration.zero,
-                                  placeholder:
-                                      (BuildContext context, String url) =>
-                                          const FallbackAudioAvatar(),
-                                  cacheManager:
-                                      CachedAlbumImagesManager.instance,
-                                )
-                              : const FallbackAudioAvatar(),
-                        ),
-                        if (isHovered.value || selected)
-                          Center(
-                            child: Container(
-                              width: 50,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .surface
-                                    .withOpacity(0.5),
-                                borderRadius: BorderRadius.circular(
-                                  globalBorderRadius,
-                                ),
-                              ),
-                              child: !isHovered.value && selectedAndPlaying
-                                  ? Center(
-                                      child: isLoading
-                                          ? const SizedBox(
-                                              height: 25,
-                                              width: 25,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2.5,
-                                              ),
-                                            )
-                                          : RepaintBoundary(
-                                              child: Image.asset(
-                                                "assets/images/audioEqualizer.gif",
-                                                width: 18,
-                                                height: 18,
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .primary,
-                                              ),
-                                            ),
-                                    )
-                                  : Icon(
-                                      selectedAndPlaying
-                                          ? Icons.pause
-                                          : Icons.play_arrow,
-                                      color:
-                                          Theme.of(context).colorScheme.primary,
-                                    ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const Gap(8),
-
-              // Название и исполнитель трека.
-              Expanded(
-                child: Opacity(
-                  opacity: forceAvailable || audio.canPlay ? 1.0 : 0.5,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Ряд с названием трека, плашки Explicit и иконки кэша, и subtitle, при наличии.
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Название трека.
-                          Flexible(
-                            child: Text(
-                              audio.title,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                color: color,
-                              ),
-                            ),
-                          ),
-
-                          // Плашка Explicit.
-                          if (audio.isExplicit)
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                left: 4,
-                              ),
-                              child: Icon(
-                                Icons.explicit,
-                                size: 16,
-                                color: color.withOpacity(0.5),
-                              ),
-                            ),
-
-                          // Иконка кэшированного трека.
-                          if (showCachedIcon && (audio.isCached ?? false))
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                left: 4,
-                              ),
-                              child: Icon(
-                                Icons.arrow_downward,
-                                size: 16,
-                                color: color.withOpacity(0.5),
-                              ),
-                            ),
-
-                          // Прогресс загрузки трека.
-                          if (showCachedIcon &&
-                              !(audio.isCached ?? false) &&
-                              audio.downloadProgress.value > 0.0)
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                left: 4,
-                              ),
-                              child: SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: ValueListenableBuilder(
-                                  valueListenable: audio.downloadProgress,
-                                  builder: (
-                                    BuildContext context,
-                                    double value,
-                                    Widget? child,
-                                  ) {
-                                    return CircularProgressIndicator(
-                                      value: value,
-                                      strokeWidth: 2,
-                                      color: color.withOpacity(0.5),
-                                    );
-                                  },
-                                ),
-                              ),
-                            ),
-
-                          // Подпись трека.
-                          if (audio.subtitle != null)
-                            Flexible(
-                              child: Padding(
-                                padding: const EdgeInsets.only(
-                                  left: 6,
-                                ),
-                                child: Text(
-                                  audio.subtitle!,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: color.withOpacity(0.5),
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-
-                      // Исполнитель.
-                      Text(
-                        audio.artist,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: selected
-                              ? Theme.of(context).colorScheme.primary
-                              : Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Длительность трека, если включена.
-              if (showDuration)
-                Padding(
-                  padding: const EdgeInsets.only(
-                    left: 8,
-                  ),
-                  child: Text(
-                    audio.durationString,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withOpacity(0.75),
-                    ),
-                  ),
-                ),
-
-              // Кнопка для лайка, если её нужно показывать.
-              if (onLikeToggle != null)
-                Padding(
-                  padding: const EdgeInsets.only(
-                    left: 8,
-                  ),
-                  child: IconButton(
-                    onPressed: () => onLikeToggle!(
-                      !audio.isLiked,
-                    ),
-                    icon: Icon(
-                      audio.isLiked ? Icons.favorite : Icons.favorite_outline,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 /// Виджет, отображающий плейлист, как обычный так и рекомендательный.
 class AudioPlaylistWidget extends HookConsumerWidget {
   /// URL на изображение заднего фона.
@@ -899,7 +524,7 @@ class HomeMusicPage extends HookConsumerWidget {
     final preferences = ref.watch(preferencesProvider);
     final l18n = ref.watch(l18nProvider);
 
-    final bool isMobile = isMobileLayout(context);
+    final bool mobileLayout = isMobileLayout(context);
 
     /// Указывает, что у пользователя подключены рекомендации музыки от ВКонтакте.
     final bool hasRecommendations = ref.read(secondaryTokenProvider) != null;
@@ -934,7 +559,7 @@ class HomeMusicPage extends HookConsumerWidget {
               // Раздел "Моя музыка".
               if (myMusic)
                 MyMusicBlock(
-                  useTopButtons: isMobile,
+                  useTopButtons: mobileLayout,
                 ),
 
               // Раздел "Ваши плейлисты".
@@ -953,7 +578,7 @@ class HomeMusicPage extends HookConsumerWidget {
               if (byVK) const ByVKPlaylistsBlock(),
 
               // Нижняя часть интерфейса с переключателями при Mobile Layout'е.
-              if (isMobile) const ChipFilters(),
+              if (mobileLayout) const ChipFilters(),
 
               // Случай, если пользователь отключил все возможные разделы музыки.
               if (everythingIsDisabled) const EverythingIsDisabledBlock(),
@@ -969,7 +594,7 @@ class HomeMusicPage extends HookConsumerWidget {
         ]);
 
     return Scaffold(
-      appBar: isMobile
+      appBar: mobileLayout
           ? AppBar(
               title: StreamBuilder<bool>(
                 stream: connectivityManager.connectionChange,
@@ -1010,14 +635,14 @@ class HomeMusicPage extends HookConsumerWidget {
               Expanded(
                 child: ListView(
                   padding: EdgeInsets.only(
-                    left: isMobile ? 16 : 24,
-                    right: isMobile ? 16 : 24,
-                    top: isMobile ? 4 : 30,
-                    bottom: isMobile ? 20 : 30,
+                    left: mobileLayout ? 16 : 24,
+                    right: mobileLayout ? 16 : 24,
+                    top: mobileLayout ? 4 : 30,
+                    bottom: mobileLayout ? 20 : 30,
                   ),
                   children: [
                     // Часть интерфейса "Добро пожаловать", а так же кнопка поиска.
-                    if (!isMobile)
+                    if (!mobileLayout)
                       Padding(
                         padding: const EdgeInsets.only(
                           bottom: 36,
@@ -1100,11 +725,11 @@ class HomeMusicPage extends HookConsumerWidget {
                       ),
 
                     // Верхняя часть интерфейса с переключателями при Desktop Layout'е.
-                    if (!isMobile)
+                    if (!mobileLayout)
                       const ChipFilters(
                         showLabel: false,
                       ),
-                    if (!isMobile)
+                    if (!mobileLayout)
                       const Padding(
                         padding: EdgeInsets.only(
                           top: 8,
@@ -1130,14 +755,14 @@ class HomeMusicPage extends HookConsumerWidget {
                     ],
 
                     // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
-                    if (player.loaded && isMobile) const Gap(66),
+                    if (player.loaded && mobileLayout) const Gap(66),
                   ],
                 ),
               ),
 
               // Данный Gap нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
               // Мы его располагаем после ListView, что бы ScrollBar не был закрыт плеером.
-              if (player.loaded && !isMobile) const Gap(88),
+              if (player.loaded && !mobileLayout) const Gap(88),
             ],
           ),
         ),

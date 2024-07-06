@@ -494,7 +494,7 @@ class _HomeRouteState extends ConsumerState<HomeRoute> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isMobile = isMobileLayout(context);
+    final bool mobileLayout = isMobileLayout(context);
     final NavigationPage navigationPage =
         navigationPages.elementAt(navigationScreenIndex);
 
@@ -503,7 +503,7 @@ class _HomeRouteState extends ConsumerState<HomeRoute> {
         FullscreenPlayerIntent: CallbackAction(
           onInvoke: (intent) => openFullscreenPlayer(
             context,
-            fullscreenOnDesktop: !isMobile,
+            fullscreenOnDesktop: !mobileLayout,
           ),
         ),
       },
@@ -516,7 +516,7 @@ class _HomeRouteState extends ConsumerState<HomeRoute> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Блок для навигации.
-                if (!isMobile)
+                if (!mobileLayout)
                   NavigationRail(
                     selectedIndex: navigationScreenIndex,
                     labelType: NavigationRailLabelType.all,
@@ -533,7 +533,7 @@ class _HomeRouteState extends ConsumerState<HomeRoute> {
                         ),
                     ],
                   ),
-                if (!isMobile) const VerticalDivider(),
+                if (!mobileLayout) const VerticalDivider(),
 
                 // Содержимое экрана.
                 Expanded(
@@ -576,7 +576,7 @@ class _HomeRouteState extends ConsumerState<HomeRoute> {
             ),
           ],
         ),
-        bottomNavigationBar: isMobile
+        bottomNavigationBar: mobileLayout
             ? NavigationBar(
                 selectedIndex: navigationScreenIndex,
                 destinations: [

@@ -32,14 +32,6 @@ import "services/logger.dart";
 import "services/updater.dart";
 import "utils.dart";
 
-// TODO: Удалить это.
-/// Глобальный объект [BuildContext].
-///
-/// За этот костыль меня могут отпиздить, и правильно сделают. Данный BuildContext нужен, что бы можно было извлекать ключи локализации там, где BuildContext отсутствует (внутри методов initState, к примеру).
-///
-/// Источник: https://christopher.khawand.dev/posts/flutter-internationalization-without-buildcontext
-BuildContext? buildContext;
-
 /// [GlobalKey] для [Navigator], который позволяет переходить между экранами вне контекста виджета.
 ///
 /// Пример использования:

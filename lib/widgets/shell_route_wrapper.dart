@@ -75,7 +75,7 @@ class ShellRouteWrapper extends HookConsumerWidget {
       () => navigationItems.where((item) => item.showOnMobileLayout).toList(),
     );
 
-    final bool isMobile = isMobileLayout(context);
+    final bool mobileLayout = isMobileLayout(context);
     final int currentIndex =
         navigationItems.indexWhere((item) => item.path == currentPath);
     final int mobileCurrentIndex =
@@ -97,7 +97,7 @@ class ShellRouteWrapper extends HookConsumerWidget {
           Row(
             children: [
               // NavigationRail слева.
-              if (!isMobile)
+              if (!mobileLayout)
                 NavigationRail(
                   selectedIndex: currentIndex,
                   onDestinationSelected: onDestinationSelected,
@@ -133,7 +133,7 @@ class ShellRouteWrapper extends HookConsumerWidget {
           ),
         ],
       ),
-      bottomNavigationBar: isMobile
+      bottomNavigationBar: mobileLayout
           ? NavigationBar(
               selectedIndex: mobileCurrentIndex >= 0 ? mobileCurrentIndex : 2,
               onDestinationSelected: (int index) {
@@ -291,7 +291,7 @@ class _BottomMusicPlayerWrapperState
     ref.watch(playerLoopModeProvider);
     ref.watch(playerLoadedStateProvider);
 
-    final bool isMobile = isMobileLayout(context);
+    final bool mobileLayout = isMobileLayout(context);
 
     const Alignment alignment =
         Alignment.bottomLeft; // TODO: navigationPage.audioPlayerAlign,
@@ -328,13 +328,13 @@ class _BottomMusicPlayerWrapperState
                 duration: const Duration(
                   milliseconds: 500,
                 ),
-                padding: !isMobile && allowBigPlayer
+                padding: !mobileLayout && allowBigPlayer
                     ? null
                     : const EdgeInsets.all(
                         8,
                       ),
                 curve: Curves.ease,
-                width: isMobile
+                width: mobileLayout
                     ? null
                     : (allowBigPlayer
                         ? MediaQuery.sizeOf(context)
@@ -361,7 +361,7 @@ class _BottomMusicPlayerWrapperState
                   isShuffleEnabled: player.shuffleModeEnabled,
                   isRepeatEnabled: player.loopMode == LoopMode.one,
                   pauseOnMuteEnabled: preferences.pauseOnMuteEnabled,
-                  useBigLayout: !isMobile,
+                  useBigLayout: !mobileLayout,
                   onFavoriteStateToggle: (bool liked) {
                     if (!networkRequiredDialog(ref, context)) return;
 
@@ -395,8 +395,8 @@ class _BottomMusicPlayerWrapperState
                   onDismiss: () => player.stop(),
                   onFullscreen: (bool viaSwipeUp) => openFullscreenPlayer(
                     context,
-                    fullscreenOnDesktop:
-                        !isMobile && !HardwareKeyboard.instance.isShiftPressed,
+                    fullscreenOnDesktop: !mobileLayout &&
+                        !HardwareKeyboard.instance.isShiftPressed,
                   ),
                   onMiniplayer: () => openMiniPlayer(context),
                   onShuffleToggle: !isMixPlaylistPlaying

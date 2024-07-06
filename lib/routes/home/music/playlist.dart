@@ -27,12 +27,10 @@ import "../../../provider/user.dart";
 import "../../../services/cache_manager.dart";
 import "../../../services/logger.dart";
 import "../../../utils.dart";
+import "../../../widgets/audio_track.dart";
 import "../../../widgets/dialogs.dart";
 import "../../../widgets/fallback_audio_photo.dart";
 import "../../../widgets/loading_overlay.dart";
-import "../../home.dart";
-import "../music.dart";
-import "bottom_audio_options.dart";
 
 /// Загружает информацию по указанному [playlist], возвращая новую копию плейлиста с заполненными значениями.
 Future<ExtendedPlaylist> loadPlaylistData(
@@ -160,63 +158,6 @@ Future<void> onPlaylistPlayToggle(
   await player.setPlaylist(
     playlist,
     audio: playlist.audios?.randomItem(),
-  );
-}
-
-/// Создаёт виджет типа [AudioTrackTile] для отображения в [ListView.builder] или подобном.
-///
-/// [playlist] указывает, из какого [ExtendedPlaylist] должно запуститься воспроизведение треков при нажатии по созданному виджету трека.
-Widget buildListTrackWidget(
-  WidgetRef ref,
-  BuildContext context,
-  ExtendedAudio audio,
-  ExtendedPlaylist playlist, {
-  bool showCachedIcon = false,
-}) {
-  final l18n = ref.watch(l18nProvider);
-
-  return AudioTrackTile(
-    key: ValueKey(
-      audio.mediaKey,
-    ),
-    selected: audio == player.currentAudio,
-    currentlyPlaying: player.loaded && player.playing,
-    isLoading: player.buffering,
-    audio: audio,
-    glowIfSelected: true,
-    showCachedIcon: showCachedIcon,
-    onPlay: !audio.canPlay
-        ? () => showErrorDialog(
-              context,
-              title: l18n.music_trackUnavailableTitle,
-              description: l18n.music_trackUnavailableDescription,
-            )
-        : () => player.setPlaylist(
-              playlist,
-              audio: audio,
-            ),
-    onPlayToggle: (bool enabled) => player.playOrPause(enabled),
-    onLikeToggle: (bool liked) {
-      if (!networkRequiredDialog(ref, context)) return false;
-
-      return toggleTrackLikeState(
-        context,
-        audio,
-        !audio.isLiked,
-      );
-    },
-    onSecondaryAction: () => showModalBottomSheet(
-      context: context,
-      useRootNavigator: true,
-      isScrollControlled: true,
-      useSafeArea: true,
-      builder: (BuildContext context) {
-        return BottomAudioOptionsDialog(
-          audio: audio,
-          playlist: playlist,
-        );
-      },
-    ),
   );
 }
 
@@ -387,6 +328,8 @@ class PlaylistInfoRoute extends ConsumerStatefulWidget {
 class _PlaylistInfoRouteState extends ConsumerState<PlaylistInfoRoute> {
   static final AppLogger logger = getLogger("PlaylistInfoRoute");
 
+  // TODO: Переписать с использованием hook'ов.
+
   /// Подписки на изменения состояния воспроизведения трека.
   late final List<StreamSubscription> subscriptions;
 
@@ -484,10 +427,10 @@ class _PlaylistInfoRouteState extends ConsumerState<PlaylistInfoRoute> {
     final List<ExtendedAudio> filteredAudios =
         filterAudiosByName(playlistAudios, controller.text);
 
-    final bool isMobile = isMobileLayout(context);
+    final bool mobileLayout = isMobileLayout(context);
 
-    final double horizontalPadding = isMobile ? 16 : 24;
-    final double verticalPadding = isMobile ? 0 : 30;
+    final double horizontalPadding = mobileLayout ? 16 : 24;
+    final double verticalPadding = mobileLayout ? 0 : 30;
 
     const bool loading = false;
 
@@ -518,11 +461,11 @@ class _PlaylistInfoRouteState extends ConsumerState<PlaylistInfoRoute> {
                       SliverConstraints constraints,
                     ) {
                       final isExpanded =
-                          constraints.scrollOffset < 280 && !isMobile;
+                          constraints.scrollOffset < 280 && !mobileLayout;
 
                       return SliverAppBar(
                         pinned: true,
-                        expandedHeight: isMobile ? null : 260,
+                        expandedHeight: mobileLayout ? null : 260,
                         elevation: 0,
                         title: isExpanded
                             ? null
@@ -531,7 +474,7 @@ class _PlaylistInfoRouteState extends ConsumerState<PlaylistInfoRoute> {
                                     l18n.music_fullscreenFavoritePlaylistName,
                               ),
                         centerTitle: true,
-                        flexibleSpace: isMobile
+                        flexibleSpace: mobileLayout
                             ? null
                             : FlexibleSpaceBar(
                                 background: Padding(
@@ -1037,7 +980,7 @@ class _PlaylistInfoRouteState extends ConsumerState<PlaylistInfoRoute> {
                           // ignore: dead_code
                           ? widget.playlist.count
                           : filteredAudios.length +
-                              (isMobile && player.loaded ? 1 : 0),
+                              (mobileLayout && player.loaded ? 1 : 0),
                       separatorBuilder: (BuildContext context, int index) =>
                           const Gap(8),
                       itemBuilder: (BuildContext context, int index) {
@@ -1089,7 +1032,7 @@ class _PlaylistInfoRouteState extends ConsumerState<PlaylistInfoRoute> {
               ),
 
               // FAB, располагаемый поверх всего интерфейса при Mobile Layout'е, если играет не этот плейлист.
-              if (isMobile && player.currentPlaylist != widget.playlist)
+              if (mobileLayout && player.currentPlaylist != widget.playlist)
                 Align(
                   alignment: Alignment.bottomRight,
                   child: AnimatedPadding(
@@ -1124,7 +1067,7 @@ class _PlaylistInfoRouteState extends ConsumerState<PlaylistInfoRoute> {
 
         // Данный Gap нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
         // Мы его располагаем после ListView, что бы ScrollBar не был закрыт плеером.
-        if (player.loaded && !isMobile) const Gap(88),
+        if (player.loaded && !mobileLayout) const Gap(88),
       ],
     );
   }

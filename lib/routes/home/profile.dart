@@ -83,13 +83,13 @@ class _HomeProfilePageState extends ConsumerState<HomeProfilePage> {
     final l18n = ref.watch(l18nProvider);
     ref.watch(playerLoadedStateProvider);
 
-    final bool isMobile = isMobileLayout(context);
+    final bool mobileLayout = isMobileLayout(context);
     final bool recommendationsConnected =
         ref.watch(secondaryTokenProvider) != null;
     final bool spotifyConnected = ref.watch(spotifySPDCCookieProvider) != null;
 
     return Scaffold(
-      appBar: isMobile
+      appBar: mobileLayout
           ? AppBar(
               title: StreamBuilder<bool>(
                 stream: connectivityManager.connectionChange,
@@ -221,8 +221,8 @@ class _HomeProfilePageState extends ConsumerState<HomeProfilePage> {
                 // Музыкальный плеер.
                 Padding(
                   padding: EdgeInsets.only(
-                    left: !isMobile ? 10 : 0,
-                    right: !isMobile ? 18 : 0,
+                    left: !mobileLayout ? 10 : 0,
+                    right: !mobileLayout ? 18 : 0,
                   ),
                   child: Card(
                     margin: EdgeInsets.zero,
@@ -302,7 +302,7 @@ class _HomeProfilePageState extends ConsumerState<HomeProfilePage> {
                                 builder: (BuildContext context) =>
                                     const CloseActionDialog(),
                               ),
-                              trailing: !isMobile
+                              trailing: !mobileLayout
                                   ? FilledButton(
                                       onPressed: () => showDialog(
                                         context: context,
@@ -433,8 +433,8 @@ class _HomeProfilePageState extends ConsumerState<HomeProfilePage> {
                 // Визуал.
                 Padding(
                   padding: EdgeInsets.only(
-                    left: !isMobile ? 10 : 0,
-                    right: !isMobile ? 18 : 0,
+                    left: !mobileLayout ? 10 : 0,
+                    right: !mobileLayout ? 18 : 0,
                   ),
                   child: Card(
                     margin: EdgeInsets.zero,
@@ -489,7 +489,7 @@ class _HomeProfilePageState extends ConsumerState<HomeProfilePage> {
                               builder: (BuildContext context) =>
                                   const ThemeActionDialog(),
                             ),
-                            trailing: !isMobile
+                            trailing: !mobileLayout
                                 ? FilledButton(
                                     onPressed: () => showDialog(
                                       context: context,
@@ -586,7 +586,7 @@ class _HomeProfilePageState extends ConsumerState<HomeProfilePage> {
                               builder: (BuildContext context) =>
                                   const PlayerDynamicSchemeDialog(),
                             ),
-                            trailing: !isMobile
+                            trailing: !mobileLayout
                                 ? FilledButton(
                                     onPressed: () => showDialog(
                                       context: context,
@@ -619,8 +619,8 @@ class _HomeProfilePageState extends ConsumerState<HomeProfilePage> {
                 // Экспериментальные функции.
                 Padding(
                   padding: EdgeInsets.only(
-                    left: !isMobile ? 10 : 0,
-                    right: !isMobile ? 18 : 0,
+                    left: !mobileLayout ? 10 : 0,
+                    right: !mobileLayout ? 18 : 0,
                   ),
                   child: Card(
                     margin: EdgeInsets.zero,
@@ -703,7 +703,7 @@ class _HomeProfilePageState extends ConsumerState<HomeProfilePage> {
                                         },
                                       )
                                   : null,
-                              trailing: !isMobile
+                              trailing: !mobileLayout
                                   ? FilledButton(
                                       onPressed: () => showDialog(
                                         context: context,
@@ -765,8 +765,8 @@ class _HomeProfilePageState extends ConsumerState<HomeProfilePage> {
                 // О приложении.
                 Padding(
                   padding: EdgeInsets.only(
-                    left: !isMobile ? 10 : 0,
-                    right: !isMobile ? 18 : 0,
+                    left: !mobileLayout ? 10 : 0,
+                    right: !mobileLayout ? 18 : 0,
                   ),
                   child: Card(
                     margin: EdgeInsets.zero,
@@ -910,7 +910,7 @@ class _HomeProfilePageState extends ConsumerState<HomeProfilePage> {
                               builder: (BuildContext context) =>
                                   const UpdatesDialogTypeActionDialog(),
                             ),
-                            trailing: !isMobile
+                            trailing: !mobileLayout
                                 ? FilledButton(
                                     onPressed: () => showDialog(
                                       context: context,
@@ -950,7 +950,7 @@ class _HomeProfilePageState extends ConsumerState<HomeProfilePage> {
                               builder: (BuildContext context) =>
                                   const UpdatesChannelDialog(),
                             ),
-                            trailing: !isMobile
+                            trailing: !mobileLayout
                                 ? FilledButton(
                                     onPressed: () => showDialog(
                                       context: context,
@@ -1006,8 +1006,8 @@ class _HomeProfilePageState extends ConsumerState<HomeProfilePage> {
                 if (kDebugMode)
                   Padding(
                     padding: EdgeInsets.only(
-                      left: !isMobile ? 10 : 0,
-                      right: !isMobile ? 18 : 0,
+                      left: !mobileLayout ? 10 : 0,
+                      right: !mobileLayout ? 18 : 0,
                     ),
                     child: Card(
                       margin: EdgeInsets.zero,
@@ -1119,14 +1119,14 @@ class _HomeProfilePageState extends ConsumerState<HomeProfilePage> {
                   ),
 
                 // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
-                if (player.loaded && isMobile) const Gap(70),
+                if (player.loaded && mobileLayout) const Gap(70),
               ],
             ),
           ),
 
           // Данный Gap нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
           // Мы его располагаем после ListView, что бы ScrollBar не был закрыт плеером.
-          if (player.loaded && !isMobile) const Gap(88),
+          if (player.loaded && !mobileLayout) const Gap(88),
         ],
       ),
     );

@@ -26,8 +26,8 @@ import "../../../services/download_manager.dart";
 import "../../../services/logger.dart";
 import "../../../utils.dart";
 import "../../../widgets/adaptive_dialog.dart";
+import "../../../widgets/audio_track.dart";
 import "../../../widgets/dialogs.dart";
-import "../music.dart";
 import "track_info.dart";
 
 /// Диалог, помогающий пользователю заменить обложку у трека.
@@ -127,18 +127,18 @@ class _TrackThumbnailDialogState extends ConsumerState<TrackThumbnailDialog> {
     final l18n = ref.watch(l18nProvider);
     ref.watch(playerStateProvider);
 
-    final bool isMobile = isMobileLayout(context);
+    final bool mobileLayout = isMobileLayout(context);
 
     return AdaptiveDialog(
       child: Container(
         padding: EdgeInsets.all(
-          isMobile ? 16 : 24,
+          mobileLayout ? 16 : 24,
         ),
         width: 650,
         child: Column(
           children: [
             Padding(
-              padding: isMobile
+              padding: mobileLayout
                   ? EdgeInsets.zero
                   : const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -148,7 +148,7 @@ class _TrackThumbnailDialogState extends ConsumerState<TrackThumbnailDialog> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // Кнопка "Назад".
-                  if (isMobile)
+                  if (mobileLayout)
                     Padding(
                       padding: const EdgeInsets.only(
                         right: 12,
@@ -303,8 +303,8 @@ class _TrackThumbnailDialogState extends ConsumerState<TrackThumbnailDialog> {
                             deezerThumbs:
                                 ExtendedThumbnail.fromDeezerTrack(track),
                           ),
-                          selected: selectedTrack == track,
-                          onPlay: () => setState(
+                          isSelected: selectedTrack == track,
+                          onPlayToggle: () => setState(
                             () => selectedTrack = track,
                           ),
                         ),
@@ -387,6 +387,8 @@ class _TrackThumbnailDialogState extends ConsumerState<TrackThumbnailDialog> {
 /// ),
 /// ```
 class BottomAudioOptionsDialog extends ConsumerWidget {
+  static final AppLogger logger = getLogger("BottomAudioOptionsDialog");
+
   /// Трек типа [ExtendedAudio], над которым производится манипуляция.
   final ExtendedAudio audio;
 
@@ -401,7 +403,6 @@ class BottomAudioOptionsDialog extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final AppLogger logger = getLogger("BottomAudioOptionsDialog");
     final user = ref.watch(userProvider);
     final l18n = ref.watch(l18nProvider);
     ref.watch(playerStateProvider);
@@ -420,8 +421,8 @@ class BottomAudioOptionsDialog extends ConsumerWidget {
                 // Трек.
                 AudioTrackTile(
                   audio: audio,
-                  selected: audio == player.currentAudio,
-                  currentlyPlaying: player.loaded && player.playing,
+                  isSelected: audio == player.currentAudio,
+                  isPlaying: player.loaded && player.playing,
                 ),
                 const Gap(8),
 

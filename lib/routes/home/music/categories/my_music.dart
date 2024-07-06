@@ -11,8 +11,8 @@ import "../../../../provider/player_events.dart";
 import "../../../../provider/playlists.dart";
 import "../../../../provider/user.dart";
 import "../../../../utils.dart";
+import "../../../../widgets/audio_track.dart";
 import "../../../../widgets/page_route_builders.dart";
-import "../../music.dart";
 import "../playlist.dart";
 
 /// Виджет с разделом "Моя музыка"

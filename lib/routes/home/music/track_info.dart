@@ -9,9 +9,9 @@ import "../../../main.dart";
 import "../../../provider/l18n.dart";
 import "../../../provider/user.dart";
 import "../../../services/logger.dart";
+import "../../../widgets/audio_track.dart";
 import "../../../widgets/dialogs.dart";
 import "../../../widgets/loading_overlay.dart";
-import "../music.dart";
 
 /// Диалог, который позволяет пользователю отредактировать данные о треке.
 ///
@@ -66,8 +66,8 @@ class TrackInfoEditDialog extends HookConsumerWidget {
             // Открытый трек.
             AudioTrackTile(
               audio: newAudio,
-              selected: newAudio == player.currentAudio,
-              currentlyPlaying: player.loaded && player.playing,
+              isSelected: newAudio == player.currentAudio,
+              isPlaying: player.loaded && player.playing,
             ),
             const Gap(8),
 

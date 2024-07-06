@@ -13,8 +13,8 @@ import "../../../../provider/playlists.dart";
 import "../../../../provider/user.dart";
 import "../../../../services/logger.dart";
 import "../../../../utils.dart";
+import "../../../../widgets/audio_track.dart";
 import "../../../../widgets/page_route_builders.dart";
-import "../../music.dart";
 import "../playlist.dart";
 
 /// Виджет, отображающий несколько треков из плейлиста раздела "Совпадения по вкусам".
@@ -224,11 +224,11 @@ class SimillarMusicPlaylistWidget extends HookConsumerWidget {
               ),
               child: AudioTrackTile(
                 audio: audio,
-                selected: audio == player.currentAudio,
-                currentlyPlaying: player.loaded && player.playing,
+                isSelected: audio == player.currentAudio,
+                isPlaying: player.loaded && player.playing,
                 isLoading: player.buffering,
-                glowIfSelected: true,
                 forceAvailable: true,
+                showDuration: false,
               ),
             ),
           const Gap(4),
@@ -320,7 +320,9 @@ class SimillarMusicBlock extends HookConsumerWidget {
                   child: SimillarMusicPlaylistWidget(
                     name: playlist.title!,
                     simillarity: playlist.simillarity!,
-                    color: HexColor.fromHex(playlist.color!),
+                    color: HexColor.fromHex(
+                      playlist.color!,
+                    ),
                     tracks: playlist.knownTracks!,
                     selected: player.currentPlaylist == playlist,
                     currentlyPlaying: player.playing && player.loaded,

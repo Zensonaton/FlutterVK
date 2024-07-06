@@ -10,6 +10,7 @@ import "../../../provider/preferences.dart";
 import "../../../provider/user.dart";
 import "../../../services/image_to_color_scheme.dart";
 import "../../../utils.dart";
+import "../../../widgets/audio_track.dart";
 import "../../../widgets/dialogs.dart";
 import "../../../widgets/page_route_builders.dart";
 import "../../login.dart";

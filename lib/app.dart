@@ -198,12 +198,6 @@ class FlutterVKApp extends HookConsumerWidget {
             );
           },
           routerConfig: router,
-          onGenerateTitle: (BuildContext context) {
-            // TODO: Избавиться от этого.
-            buildContext = context;
-
-            return "Flutter VK";
-          },
           localizationsDelegates: const [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
