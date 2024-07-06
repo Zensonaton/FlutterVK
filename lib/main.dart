@@ -128,6 +128,18 @@ Future<void> initSystemTray() async {
   );
 }
 
+/// Используется для исправления ошибки невалидных SSL-сертификатов.
+///
+/// Источник: https://github.com/dart-lang/http/issues/458#issuecomment-932652512.
+class DevHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    return super.createHttpClient(context)
+      ..badCertificateCallback =
+          (X509Certificate cert, String host, int port) => true;
+  }
+}
+
 Future main() async {
   final AppLogger logger = getLogger("main");
 
@@ -242,6 +254,9 @@ Future main() async {
     appVersion = (await PackageInfo.fromPlatform()).version;
 
     logger.i("Running Flutter VK v$appVersion");
+
+    // Фикс сертификатов.
+    HttpOverrides.global = DevHttpOverrides();
 
     runApp(
       MultiProvider(
