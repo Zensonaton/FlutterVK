@@ -16,12 +16,15 @@ import "package:package_info_plus/package_info_plus.dart";
 import "package:path/path.dart" as path;
 import "package:path_provider/path_provider.dart";
 import "package:responsive_builder/responsive_builder.dart";
-import "package:shared_preferences/shared_preferences.dart";
 import "package:system_tray/system_tray.dart";
 import "package:window_manager/window_manager.dart";
 
 import "app.dart";
+import "consts.dart";
 import "db/db.dart";
+import "provider/l18n.dart";
+import "provider/preferences.dart";
+import "provider/shared_prefs.dart";
 import "services/audio_player.dart";
 import "services/connectivity_manager.dart";
 import "services/download_manager.dart";
@@ -74,7 +77,7 @@ final fallbackDarkColorScheme = ColorScheme.fromSeed(
 late String appVersion;
 
 /// Инициализирует запись в системном трее Windows.
-Future<void> initSystemTray() async {
+Future<void> initSystemTray(AppLocalizations l18n) async {
   assert(
     isDesktop,
     "initSystemTray() can only be called on Desktop platforms",
@@ -94,7 +97,7 @@ Future<void> initSystemTray() async {
       [
         // Показ/скрытие окна приложения.
         MenuItemLabel(
-          label: AppLocalizations.of(buildContext!)!.general_trayShowHide,
+          label: l18n.general_trayShowHide,
           onClicked: (MenuItemBase menuItem) async {
             if (await windowManager.isVisible()) {
               await windowManager.hide();
@@ -109,7 +112,7 @@ Future<void> initSystemTray() async {
 
         // Закрытие.
         MenuItemLabel(
-          label: AppLocalizations.of(buildContext!)!.general_appMinimizedClose,
+          label: l18n.general_appMinimizedClose,
           onClicked: (MenuItemBase menuItem) => exit(0),
         ),
       ],
@@ -149,12 +152,16 @@ class DevHttpOverrides extends HttpOverrides {
 Future main() async {
   final AppLogger logger = getLogger("main");
 
+  // Контейнер для provider'ов от riverpod'а.
+  final container = ProviderContainer();
+
   try {
     WidgetsFlutterBinding.ensureInitialized();
 
-    // Загружаем SharedPreferences.
-    // TODO: Он загружается дважды.
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    // Загружаем SharedPreferences, а так же Preferences provider'ы.
+    await container.read(sharedPrefsProvider.future);
+    final preferences = container.read(preferencesProvider);
+    final l18n = container.read(l18nProvider);
 
     // Инициализируем WindowManager на Desktop-платформах.
     if (isDesktop) {
@@ -186,7 +193,7 @@ Future main() async {
           }
 
           // Инициализируем иконку в трее.
-          await initSystemTray();
+          await initSystemTray(l18n);
 
           // Убираем полноэкранный режим.
           if (kDebugMode) {
@@ -247,7 +254,7 @@ Future main() async {
 
     // Инициализируем плеер.
     JustAudioMediaKit.title = "Flutter VK";
-    if (prefs.getBool("DebugPlayerLogging") ?? false) {
+    if (preferences.debugPlayerLogging) {
       logger.i("Media kit debug logger is enabled");
 
       JustAudioMediaKit.mpvLogLevel = MPVLogLevel.debug;
@@ -255,6 +262,42 @@ Future main() async {
     JustAudioMediaKit.ensureInitialized();
 
     player = VKMusicPlayer();
+
+    // Восстанавливаем состояние shuffle у плеера.
+    if (preferences.shuffleEnabled) {
+      await player.setShuffle(true);
+    }
+
+    // Переключаем состояние Discord Rich Presence.
+    if (preferences.discordRPCEnabled && isDesktop) {
+      await player.setDiscordRPCEnabled(true);
+    }
+
+    // Восстанавливаем значение настройки "пауза при отключении громкости".
+    if (preferences.pauseOnMuteEnabled) {
+      player.setPauseOnMuteEnabled(true);
+    }
+
+    // Восстанавливаем значение настройки "остановка при неактивности".
+    if (preferences.stopOnPauseEnabled) {
+      player.setStopOnPauseEnabled(true);
+    }
+
+    // На Desktop-платформах, создаём README-файл в папке кэша треков.
+    if (isDesktop) {
+      final File readmeFile = File(
+        path.join(
+          await CachedStreamedAudio.getTrackStorageDirectory(),
+          tracksCacheReadmeFileName,
+        ),
+      );
+      readmeFile.createSync(
+        recursive: true,
+      );
+      readmeFile.writeAsStringSync(
+        l18n.general_musicReadmeFileContents,
+      );
+    }
 
     // Breakpoint'ы для разных размеров экранов.
     ResponsiveSizingConfig.instance.setCustomBreakpoints(
@@ -300,8 +343,9 @@ Future main() async {
       ),
       runAppFunction: () {
         runApp(
-          const ProviderScope(
-            child: EagerInitialization(
+          UncontrolledProviderScope(
+            container: container,
+            child: const EagerInitialization(
               app: FlutterVKApp(),
             ),
           ),

@@ -4,11 +4,11 @@ import "package:dynamic_color/dynamic_color.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
 import "package:flutter_localizations/flutter_localizations.dart";
 import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:local_notifier/local_notifier.dart";
-import "package:path/path.dart" as path;
 import "package:url_launcher/url_launcher.dart";
 import "package:window_manager/window_manager.dart";
 
@@ -22,116 +22,29 @@ import "provider/navigation_router.dart";
 import "provider/preferences.dart";
 import "provider/shared_prefs.dart";
 import "routes/home/profile.dart";
-import "services/audio_player.dart";
 import "utils.dart";
 import "widgets/loading_overlay.dart";
 
-/// Wrapper для [FlutterVKApp], который загружает критически важные [Provider]'ы перед запуском основного приложения.
-class EagerInitialization extends ConsumerWidget {
-  /// Класс самого приложения.
-  final FlutterVKApp app;
-
-  const EagerInitialization({
-    super.key,
-    required this.app,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final result = ref.watch(sharedPrefsProvider);
-
-    if (result.isLoading) {
-      return const Center(
-        child: CircularProgressIndicator.adaptive(),
-      );
-    } else if (result.hasError) {
-      throw Exception(
-        result.error!.toString(),
-      );
-    }
-
-    return app;
-  }
-}
-
-/// Основной виджет главного приложения, используемый методом [runApp] внутри [main].
+/// Класс, расширяющий [WindowListener], позволяющий слушать события окна приложения.
 ///
-/// В случае, если по какой-то причине произойдёт ошибка, вместо этого класса будет вызван [runApp], но для класса [ErroredApp], который символизирует ошибку запуска приложения.
-class FlutterVKApp extends ConsumerStatefulWidget {
-  const FlutterVKApp({
-    super.key,
+/// В данном случае, данный класс заменяет метод [onWindowClose].
+class FlutterVKWindowManager extends WindowListener {
+  final WidgetRef ref;
+
+  FlutterVKWindowManager({
+    required this.ref,
   });
 
-  @override
-  ConsumerState<FlutterVKApp> createState() => _FlutterVKAppState();
-}
-
-class _FlutterVKAppState extends ConsumerState<FlutterVKApp>
-    with WindowListener {
-  void init() async {
-    final UserPreferences preferences = ref.read(preferencesProvider);
-
-    // Загружаем обработчик событий окна.
-    windowManager.addListener(this);
-
-    // Восстанавливаем состояние shuffle у плеера.
-    if (preferences.shuffleEnabled) {
-      await player.setShuffle(true);
-    }
-
-    // Переключаем состояние Discord Rich Presence.
-    if (preferences.discordRPCEnabled && isDesktop) {
-      await player.setDiscordRPCEnabled(true);
-    }
-
-    // Восстанавливаем значение настройки "пауза при отключении громкости".
-    if (preferences.pauseOnMuteEnabled) {
-      player.setPauseOnMuteEnabled(true);
-    }
-
-    // Восстанавливаем значение настройки "остановка при неактивности".
-    if (preferences.stopOnPauseEnabled) {
-      player.setStopOnPauseEnabled(true);
-    }
-
-    // На Desktop-платформах, создаём README-файл в папке кэша треков.
-    if (isDesktop) {
-      final File readmeFile = File(
-        path.join(
-          await CachedStreamedAudio.getTrackStorageDirectory(),
-          tracksCacheReadmeFileName,
-        ),
-      );
-      readmeFile.createSync(
-        recursive: true,
-      );
-      readmeFile.writeAsStringSync(
-        ref.read(l18nProvider).general_musicReadmeFileContents,
-      );
-    }
-
-    // Делаем панель навигации прозрачной.
-    SystemChrome.setEnabledSystemUIMode(
-      SystemUiMode.edgeToEdge,
-    );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-
-    init();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-
-    windowManager.removeListener(this);
-  }
-
+  /// Метод, вызываемый при попытке закрыть окно приложения.
+  ///
+  /// В этом методе обрабатывается закрытие окна в зависимости от настройки [UserPreferences.closeBehavior].
   @override
   void onWindowClose() async {
+    assert(
+      isDesktop,
+      "onWindowClose() called on non-desktop platform",
+    );
+
     final AppLocalizations l18n = ref.read(l18nProvider);
     final UserPreferences preferences = ref.read(preferencesProvider);
     final CloseBehavior behavior = preferences.closeBehavior;
@@ -173,9 +86,56 @@ class _FlutterVKAppState extends ConsumerState<FlutterVKApp>
 
     exit(0);
   }
+}
+
+/// Wrapper для [FlutterVKApp], который загружает критически важные [Provider]'ы перед запуском основного приложения.
+class EagerInitialization extends ConsumerWidget {
+  /// Класс самого приложения.
+  final FlutterVKApp app;
+
+  const EagerInitialization({
+    super.key,
+    required this.app,
+  });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final result = ref.watch(sharedPrefsProvider);
+
+    if (result.isLoading) {
+      return const Center(
+        child: CircularProgressIndicator.adaptive(),
+      );
+    } else if (result.hasError) {
+      throw Exception(
+        result.error!.toString(),
+      );
+    }
+
+    return app;
+  }
+}
+
+/// Основной виджет главного приложения, используемый методом [runApp] внутри [main].
+///
+/// В случае, если по какой-то причине произойдёт ошибка, вместо этого класса будет вызван [runApp], но для класса [ErroredApp], который символизирует ошибку запуска приложения.
+class FlutterVKApp extends HookConsumerWidget {
+  const FlutterVKApp({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    useEffect(
+      () {
+        final manager = FlutterVKWindowManager(ref: ref);
+        windowManager.addListener(manager);
+
+        return () => windowManager.removeListener(manager);
+      },
+      [],
+    );
+
     final router = ref.watch(routerProvider);
     final preferences = ref.watch(preferencesProvider);
     final trackImageInfo = ref.watch(trackSchemeInfoProvider);
@@ -185,6 +145,11 @@ class _FlutterVKAppState extends ConsumerState<FlutterVKApp>
         appwideColors ? trackImageInfo?.lightColorScheme : null;
     final playerDarkColorScheme =
         appwideColors ? trackImageInfo?.darkColorScheme : null;
+
+    // Делаем панель навигации прозрачной.
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.edgeToEdge,
+    );
 
     return DynamicColorBuilder(
       builder:
