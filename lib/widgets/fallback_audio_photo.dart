@@ -18,7 +18,7 @@ class FallbackAudioAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Theme.of(context).colorScheme.surfaceVariant,
+      color: Theme.of(context).colorScheme.surfaceContainerHighest,
       width: width,
       height: height,
       child: Center(
@@ -49,7 +49,7 @@ class FallbackAudioPlaylistAvatar extends StatelessWidget {
     return Container(
       color: favoritesPlaylist
           ? null
-          : Theme.of(context).colorScheme.surfaceVariant,
+          : Theme.of(context).colorScheme.surfaceContainerHighest,
       width: 200,
       height: 200,
       decoration: favoritesPlaylist

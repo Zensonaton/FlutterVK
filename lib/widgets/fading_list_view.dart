@@ -1,9 +1,10 @@
 import "dart:ui";
 
 import "package:flutter/material.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
 
 /// Виджет, который делает Fade-out эффект для виджетов со [ScrollController]'ами.
-class FadingListView extends StatefulWidget {
+class FadingListView extends HookWidget {
   /// [Widget], для которого будет использоваться эффект.
   final Widget child;
 
@@ -29,41 +30,34 @@ class FadingListView extends StatefulWidget {
   });
 
   @override
-  State<FadingListView> createState() => _FadingListViewState();
-}
-
-class _FadingListViewState extends State<FadingListView> {
-  double stopStart = 0.0;
-  double stopEnd = 1.0;
-
-  @override
   Widget build(BuildContext context) {
+    final stopStart = useState(0.0);
+    final stopEnd = useState(1.0);
+
     return NotificationListener(
       onNotification: (ScrollNotification scrollNotification) {
-        setState(() {
-          stopStart = clampDouble(
-            scrollNotification.metrics.pixels / widget.distanceDivider,
-            0.0,
-            1.0,
-          );
-          stopEnd = clampDouble(
-            (scrollNotification.metrics.maxScrollExtent -
-                    scrollNotification.metrics.pixels) /
-                widget.distanceDivider,
-            0.0,
-            1.0,
-          );
-        });
+        stopStart.value = clampDouble(
+          scrollNotification.metrics.pixels / distanceDivider,
+          0.0,
+          1.0,
+        );
+        stopEnd.value = clampDouble(
+          (scrollNotification.metrics.maxScrollExtent -
+                  scrollNotification.metrics.pixels) /
+              distanceDivider,
+          0.0,
+          1.0,
+        );
 
         return true;
       },
       child: ShaderMask(
         shaderCallback: (Rect rect) {
           return LinearGradient(
-            begin: widget.scrollDirection == Axis.horizontal
+            begin: scrollDirection == Axis.horizontal
                 ? Alignment.centerLeft
                 : Alignment.topCenter,
-            end: widget.scrollDirection == Axis.horizontal
+            end: scrollDirection == Axis.horizontal
                 ? Alignment.centerRight
                 : Alignment.bottomCenter,
             colors: const [
@@ -72,23 +66,22 @@ class _FadingListViewState extends State<FadingListView> {
               Colors.transparent,
               Colors.black,
             ],
-            stops: widget.reverse
+            stops: reverse
                 ? [
                     0.0,
-                    widget.strength * stopEnd,
-                    1 - widget.strength * stopStart,
+                    strength * stopEnd.value,
+                    1 - strength * stopStart.value,
                     1.0,
                   ]
                 : [
                     0.0,
-                    widget.strength * stopStart,
-                    1 - widget.strength * stopEnd,
+                    strength * stopStart.value,
+                    1 - strength * stopEnd.value,
                     1.0,
                   ],
           ).createShader(rect);
         },
         blendMode: BlendMode.dstOut,
-        child: widget.child,
       ),
     );
   }

@@ -3,17 +3,17 @@ import "dart:async";
 import "package:debounce_throttle/debounce_throttle.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
-import "package:flutter_gen/gen_l10n/app_localizations.dart";
-import "package:just_audio/just_audio.dart";
-import "package:provider/provider.dart";
-import "package:responsive_builder/responsive_builder.dart";
+import "package:gap/gap.dart";
+import "package:go_router/go_router.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:skeletonizer/skeletonizer.dart";
 import "package:styled_text/tags/styled_text_tag_action.dart";
 import "package:styled_text/widgets/styled_text.dart";
 
 import "../../../api/vk/audio/search.dart";
 import "../../../consts.dart";
-import "../../../main.dart";
+import "../../../provider/l18n.dart";
+import "../../../provider/player_events.dart";
 import "../../../provider/user.dart";
 import "../../../utils.dart";
 import "../../../widgets/adaptive_dialog.dart";
@@ -22,7 +22,7 @@ import "../music.dart";
 import "playlist.dart";
 
 /// Диалог, показывающий поле для глобального поиска через API ВКонтакте, а так же сами результаты поиска.
-class SearchDisplayDialog extends StatefulWidget {
+class SearchDisplayDialog extends ConsumerStatefulWidget {
   /// Если true, то сразу после открытия данного диалога фокус будет на [SearchBar].
   final bool focusSearchBarOnOpen;
 
@@ -32,10 +32,13 @@ class SearchDisplayDialog extends StatefulWidget {
   });
 
   @override
-  State<SearchDisplayDialog> createState() => _SearchDisplayDialogState();
+  ConsumerState<SearchDisplayDialog> createState() =>
+      _SearchDisplayDialogState();
 }
 
-class _SearchDisplayDialogState extends State<SearchDisplayDialog> {
+class _SearchDisplayDialogState extends ConsumerState<SearchDisplayDialog> {
+  // TODO: Переписать с использованием hook'ов.
+
   /// Контроллер, используемый для управления введённым в поле поиска текстом.
   final TextEditingController controller = TextEditingController();
 
@@ -64,9 +67,7 @@ class _SearchDisplayDialogState extends State<SearchDisplayDialog> {
     if (!mounted) return;
 
     // Проверяем наличие интернета.
-    if (!networkRequiredDialog(context)) return;
-
-    final UserProvider user = Provider.of<UserProvider>(context, listen: false);
+    if (!networkRequiredDialog(ref, context)) return;
 
     // Если ничего не введено, то делаем пустой Future.
     if (query.isEmpty) {
@@ -79,52 +80,13 @@ class _SearchDisplayDialogState extends State<SearchDisplayDialog> {
       return;
     }
 
-    searchFuture = user.audioSearchWithAlbums(query);
+    // searchFuture = user.audioSearchWithAlbums(query);
     setState(() {});
-  }
-
-  /// Метод, который вызывается при нажатии на клавишу клавиатуры.
-  void keyboardListener(
-    RawKeyEvent key,
-  ) {
-    // Нажатие кнопки ESC.
-    if (key.isKeyPressed(LogicalKeyboardKey.escape)) {
-      // Если в поле поиска есть текст, и это поле находится в фокусе, то ничего не делаем.
-      // "Стирание" текста находится в TextField'е.
-      if (controller.text.isNotEmpty && focusNode.hasFocus || !mounted) return;
-
-      Navigator.of(context).pop();
-
-      return;
-    }
-
-    // Нажатие комбинации CTRL+F.
-    if (key.isControlPressed && key.isKeyPressed(LogicalKeyboardKey.keyF)) {
-      controller.selection = TextSelection(
-        baseOffset: 0,
-        extentOffset: controller.text.length,
-      );
-      focusNode.requestFocus();
-
-      return;
-    }
   }
 
   @override
   void initState() {
     super.initState();
-
-    subscriptions = [
-      // Изменения состояния воспроизведения.
-      player.playerStateStream.listen(
-        (PlayerState state) => setState(() {}),
-      ),
-
-      // Изменения плейлиста.
-      player.sequenceStateStream.listen(
-        (SequenceState? state) => setState(() {}),
-      ),
-    ];
 
     // Обработчик печати.
     controller.addListener(
@@ -136,32 +98,20 @@ class _SearchDisplayDialogState extends State<SearchDisplayDialog> {
 
     // Если у пользователя ПК, то тогда устанавливаем фокус на поле поиска.
     if (isDesktop && widget.focusSearchBarOnOpen) focusNode.requestFocus();
-
-    // Обработчик нажатия кнопок клавиатуры.
-    RawKeyboard.instance.addListener(keyboardListener);
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-
-    for (StreamSubscription subscription in subscriptions) {
-      subscription.cancel();
-    }
-
-    RawKeyboard.instance.removeListener(keyboardListener);
   }
 
   @override
   Widget build(BuildContext context) {
-    final UserProvider user = Provider.of<UserProvider>(context);
+    final user = ref.watch(userProvider);
+    final l18n = ref.watch(l18nProvider);
+    ref.watch(playerStateProvider);
+    ref.watch(playerCurrentIndexProvider);
 
-    final bool isMobileLayout =
-        getDeviceType(MediaQuery.of(context).size) == DeviceScreenType.mobile;
+    final bool isMobile = isMobileLayout(context);
 
     return AdaptiveDialog(
       child: Container(
-        padding: isMobileLayout
+        padding: isMobile
             ? const EdgeInsets.only(
                 top: 16,
                 left: 16,
@@ -173,8 +123,9 @@ class _SearchDisplayDialogState extends State<SearchDisplayDialog> {
         width: 650,
         child: Column(
           children: [
+            // Верхний "AppBar".
             Padding(
-              padding: isMobileLayout
+              padding: isMobile
                   ? EdgeInsets.zero
                   : const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -184,7 +135,7 @@ class _SearchDisplayDialogState extends State<SearchDisplayDialog> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // Кнопка "Назад".
-                  if (isMobileLayout)
+                  if (isMobile)
                     Padding(
                       padding: const EdgeInsets.only(
                         right: 12,
@@ -193,7 +144,7 @@ class _SearchDisplayDialogState extends State<SearchDisplayDialog> {
                         icon: Icon(
                           Icons.adaptive.arrow_back,
                         ),
-                        onPressed: () => Navigator.of(context).pop(),
+                        onPressed: () => context.pop(),
                       ),
                     ),
 
@@ -210,8 +161,7 @@ class _SearchDisplayDialogState extends State<SearchDisplayDialog> {
                         controller: controller,
                         onChanged: (String query) => setState(() {}),
                         decoration: InputDecoration(
-                          hintText:
-                              AppLocalizations.of(context)!.music_searchText,
+                          hintText: l18n.music_searchText,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(
                               globalBorderRadius,
@@ -242,9 +192,9 @@ class _SearchDisplayDialogState extends State<SearchDisplayDialog> {
                 ],
               ),
             ),
-            const SizedBox(
-              height: 16,
-            ),
+            const Gap(16),
+
+            // Содержимое поиска.
             Expanded(
               child: FutureBuilder(
                 future: searchFuture,
@@ -262,7 +212,7 @@ class _SearchDisplayDialogState extends State<SearchDisplayDialog> {
                   // Пользователь ещё ничего не ввёл.
                   if (snapshot.connectionState == ConnectionState.none) {
                     return Text(
-                      AppLocalizations.of(context)!.music_typeToSearchText,
+                      l18n.music_typeToSearchText,
                     );
                   }
 
@@ -307,8 +257,7 @@ class _SearchDisplayDialogState extends State<SearchDisplayDialog> {
                         horizontal: 6,
                       ),
                       child: StyledText(
-                        text: AppLocalizations.of(context)!
-                            .music_zeroSearchResults,
+                        text: l18n.music_zeroSearchResults,
                         tags: {
                           "click": StyledTextActionTag(
                             (String? text, Map<String?, String?> attrs) =>
@@ -325,19 +274,21 @@ class _SearchDisplayDialogState extends State<SearchDisplayDialog> {
                   }
 
                   // Отображаем данные.
-                  return ListView.builder(
+                  return ListView.separated(
                     itemCount: audios!.length,
+                    separatorBuilder: (BuildContext context, int index) =>
+                        const Gap(trackTileSpacing),
                     itemBuilder: (BuildContext context, int index) {
                       return buildListTrackWidget(
+                        ref,
                         context,
                         audios.elementAt(index),
                         ExtendedPlaylist(
                           id: -1,
-                          ownerID: user.id!,
+                          ownerID: user.id,
                           audios: audios,
                           count: audios.length,
-                          title: AppLocalizations.of(context)!
-                              .music_searchPlaylistTitle,
+                          title: l18n.music_searchPlaylistTitle,
                           isLiveData: true,
                           areTracksLive: true,
                         ),

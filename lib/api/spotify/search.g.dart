@@ -7,7 +7,7 @@ part of 'search.dart';
 // **************************************************************************
 
 SpotifyTrack _$SpotifyTrackFromJson(Map<String, dynamic> json) => SpotifyTrack(
-      durationMS: json['duration_ms'] as int,
+      durationMS: (json['duration_ms'] as num).toInt(),
       name: json['name'] as String,
       explicit: json['explicit'] as bool,
       id: json['id'] as String,

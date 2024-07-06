@@ -3,27 +3,26 @@ import "dart:math";
 import "dart:ui";
 
 import "package:cached_network_image/cached_network_image.dart";
-import "package:collection/collection.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/rendering.dart";
 import "package:flutter/services.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
-import "package:just_audio/just_audio.dart";
-import "package:provider/provider.dart";
+import "package:gap/gap.dart";
+import "package:go_router/go_router.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:relative_time/relative_time.dart";
-import "package:responsive_builder/responsive_builder.dart";
 import "package:scroll_to_index/scroll_to_index.dart";
 import "package:skeletonizer/skeletonizer.dart";
 import "package:styled_text/tags/styled_text_tag_action.dart";
 import "package:styled_text/widgets/styled_text.dart";
 
-import "../../../api/vk/api.dart";
-import "../../../api/vk/executeScripts/mass_audio_get.dart";
 import "../../../api/vk/shared.dart";
 import "../../../consts.dart";
 import "../../../extensions.dart";
 import "../../../main.dart";
+import "../../../provider/l18n.dart";
+import "../../../provider/player_events.dart";
 import "../../../provider/user.dart";
 import "../../../services/cache_manager.dart";
 import "../../../services/logger.dart";
@@ -37,62 +36,63 @@ import "bottom_audio_options.dart";
 
 /// Загружает информацию по указанному [playlist], возвращая новую копию плейлиста с заполненными значениями.
 Future<ExtendedPlaylist> loadPlaylistData(
-  ExtendedPlaylist playlist,
-  UserProvider user, {
+  ExtendedPlaylist playlist, {
   bool forceUpdate = false,
 }) async {
-  // Если информация уже загружена, то ничего не делаем.
-  if (!forceUpdate &&
-      (playlist.audios != null &&
-          playlist.isLiveData &&
-          playlist.areTracksLive)) {
-    return playlist;
-  }
+  return playlist;
 
-  final ExtendedPlaylist newPlaylist = ExtendedPlaylist(
-    id: playlist.id,
-    ownerID: playlist.ownerID,
-    title: playlist.title,
-    description: playlist.description,
-    count: playlist.count,
-    accessKey: playlist.accessKey,
-    followers: playlist.followers,
-    plays: playlist.plays,
-    createTime: playlist.createTime,
-    updateTime: playlist.updateTime,
-    isFollowing: playlist.isFollowing,
-    subtitle: playlist.subtitle,
-    photo: playlist.photo,
-    audios: playlist.audios,
-    simillarity: playlist.simillarity,
-    color: playlist.color,
-    knownTracks: playlist.knownTracks,
-    isLiveData: true,
-    areTracksLive: true,
-    cacheTracks: playlist.cacheTracks,
-  );
+  // // Если информация уже загружена, то ничего не делаем.
+  // if (!forceUpdate &&
+  //     (playlist.audios != null &&
+  //         playlist.isLiveData &&
+  //         playlist.areTracksLive)) {
+  //   return playlist;
+  // }
 
-  final APIMassAudioGetResponse response =
-      await user.scriptMassAudioGetWithAlbums(
-    playlist.ownerID,
-    albumID: playlist.id,
-    accessKey: playlist.accessKey,
-  );
-  raiseOnAPIError(response);
+  // final ExtendedPlaylist newPlaylist = ExtendedPlaylist(
+  //   id: playlist.id,
+  //   ownerID: playlist.ownerID,
+  //   title: playlist.title,
+  //   description: playlist.description,
+  //   count: playlist.count,
+  //   accessKey: playlist.accessKey,
+  //   followers: playlist.followers,
+  //   plays: playlist.plays,
+  //   createTime: playlist.createTime,
+  //   updateTime: playlist.updateTime,
+  //   isFollowing: playlist.isFollowing,
+  //   subtitle: playlist.subtitle,
+  //   photo: playlist.photo,
+  //   audios: playlist.audios,
+  //   simillarity: playlist.simillarity,
+  //   color: playlist.color,
+  //   knownTracks: playlist.knownTracks,
+  //   isLiveData: true,
+  //   areTracksLive: true,
+  //   cacheTracks: playlist.cacheTracks,
+  // );
 
-  newPlaylist.audios = response.response!.audios
-      .map(
-        (Audio audio) => ExtendedAudio.fromAPIAudio(audio),
-      )
-      .toList();
-  newPlaylist.count = response.response!.audioCount;
-  newPlaylist.photo ??= response.response!.playlists
-      .firstWhereOrNull(
-        (item) => item.mediaKey == newPlaylist.mediaKey,
-      )
-      ?.photo;
+  // final APIMassAudioGetResponse response =
+  //     await user.scriptMassAudioGetWithAlbums(
+  //   playlist.ownerID,
+  //   albumID: playlist.id,
+  //   accessKey: playlist.accessKey,
+  // );
+  // raiseOnAPIError(response);
 
-  return newPlaylist;
+  // newPlaylist.audios = response.response!.audios
+  //     .map(
+  //       (Audio audio) => ExtendedAudio.fromAPIAudio(audio),
+  //     )
+  //     .toList();
+  // newPlaylist.count = response.response!.audioCount;
+  // newPlaylist.photo ??= response.response!.playlists
+  //     .firstWhereOrNull(
+  //       (item) => item.mediaKey == newPlaylist.mediaKey,
+  //     )
+  //     ?.photo;
+
+  // return newPlaylist;
 }
 
 /// Возвращает только те [Audio], которые совпадают по названию [query].
@@ -114,46 +114,14 @@ List<ExtendedAudio> filterAudiosByName(
       .toList();
 }
 
-/// Открывает диалог [AllowRecommendationsStatsDialog], спрашивая у пользователя то, хочет ли он отправлять информацию о прослушанных треках серверам ВКонтакте или нет. Если пользователь дал ранее разрешение на это - то данный метод ничего делать не будет.
-Future<bool> recommendationsStatsAllowedDialog(
-  BuildContext context,
-  ExtendedPlaylist playlist,
-) async {
-  final UserProvider user = Provider.of<UserProvider>(context, listen: false);
-
-  // Пользователь уже дал разрешение.
-  if (user.settings.recommendationsStatsWarning) return true;
-
-  // Это не рекомендуемый плейлист.
-  if (!playlist.isRecommendationTypePlaylist) return true;
-
-  // Спрашиваем разрешения.
-  final bool? result = await showDialog(
-    builder: (BuildContext context) => const AllowRecommendationsStatsDialog(),
-    context: context,
-  );
-
-  // Если пользователь не разрешил, то не запускаем воспроизведение.
-  if (!(result ?? false)) return false;
-
-  // Пользователь разрешил, запоминаем это.
-  user.settings.recommendationsStatsWarning = true;
-  user.markUpdated();
-
-  return true;
-}
-
 /// Метод, вызываемый при нажатии по центру плейлиста. Данный метод либо ставит плейлист на паузу, либо загружает его информацию.
 Future<void> onPlaylistPlayToggle(
+  WidgetRef ref,
   BuildContext context,
   ExtendedPlaylist playlist,
   bool playing,
 ) async {
-  final UserProvider user = Provider.of<UserProvider>(context, listen: false);
   final AppLogger logger = getLogger("onPlaylistPlayToggle");
-
-  // Уточняем, разрешает ли пользователь отправку информации для работы рекомендаций.
-  if (!(await recommendationsStatsAllowedDialog(context, playlist))) return;
 
   // Если у нас играет этот же плейлист, то тогда мы попросту должны поставить на паузу/убрать паузу.
   if (player.currentPlaylist == playlist) {
@@ -167,19 +135,16 @@ Future<void> onPlaylistPlayToggle(
     if (context.mounted) LoadingOverlay.of(context).show();
 
     try {
-      final ExtendedPlaylist newPlaylist = await loadPlaylistData(
-        playlist,
-        user,
-      );
+      await loadPlaylistData(playlist);
 
-      user.updatePlaylist(newPlaylist);
+      // user.updatePlaylist(newPlaylist);
     } catch (e, stackTrace) {
-      // ignore: use_build_context_synchronously
       showLogErrorDialog(
         "Ошибка при загрузке информации по плейлисту для запуска трека: ",
         e,
         stackTrace,
         logger,
+        // ignore: use_build_context_synchronously
         context,
       );
 
@@ -202,133 +167,61 @@ Future<void> onPlaylistPlayToggle(
 ///
 /// [playlist] указывает, из какого [ExtendedPlaylist] должно запуститься воспроизведение треков при нажатии по созданному виджету трека.
 Widget buildListTrackWidget(
+  WidgetRef ref,
   BuildContext context,
   ExtendedAudio audio,
   ExtendedPlaylist playlist, {
-  bool addBottomPadding = true,
   bool showCachedIcon = false,
 }) {
-  return Padding(
+  final l18n = ref.watch(l18nProvider);
+
+  return AudioTrackTile(
     key: ValueKey(
       audio.mediaKey,
     ),
-    padding: EdgeInsets.only(
-      bottom: addBottomPadding ? 8 : 0,
-    ),
-    child: AudioTrackTile(
-      selected: audio == player.currentAudio,
-      currentlyPlaying: player.loaded && player.playing,
-      isLoading: player.buffering,
-      audio: audio,
-      glowIfSelected: true,
-      showCachedIcon: showCachedIcon,
-      onAddToQueue: false
-          // ignore: dead_code
-          ? () async {
-              // Уточняем, разрешает ли пользователь отправку информации для работы рекомендаций.
-              if (!(await recommendationsStatsAllowedDialog(
-                context,
-                playlist,
-              ))) {
-                return;
-              }
+    selected: audio == player.currentAudio,
+    currentlyPlaying: player.loaded && player.playing,
+    isLoading: player.buffering,
+    audio: audio,
+    glowIfSelected: true,
+    showCachedIcon: showCachedIcon,
+    onPlay: !audio.canPlay
+        ? () => showErrorDialog(
+              context,
+              title: l18n.music_trackUnavailableTitle,
+              description: l18n.music_trackUnavailableDescription,
+            )
+        : () => player.setPlaylist(
+              playlist,
+              audio: audio,
+            ),
+    onPlayToggle: (bool enabled) => player.playOrPause(enabled),
+    onLikeToggle: (bool liked) {
+      if (!networkRequiredDialog(ref, context)) return false;
 
-              await player.addNextToQueue(audio);
-
-              if (!context.mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    AppLocalizations.of(context)!.general_addedToQueue,
-                  ),
-                  duration: const Duration(
-                    seconds: 3,
-                  ),
-                ),
-              );
-            }
-          : null,
-      onPlay: !audio.canPlay
-          ? () => showErrorDialog(
-                context,
-                title:
-                    AppLocalizations.of(context)!.music_trackUnavailableTitle,
-                description: AppLocalizations.of(context)!
-                    .music_trackUnavailableDescription,
-              )
-          : () async {
-              // Уточняем, разрешает ли пользователь отправку информации для работы рекомендаций.
-              if (!(await recommendationsStatsAllowedDialog(
-                context,
-                playlist,
-              ))) {
-                return;
-              }
-
-              player.setPlaylist(
-                playlist,
-                audio: audio,
-              );
-            },
-      onPlayToggle: (bool enabled) => player.playOrPause(enabled),
-      onLikeToggle: (bool liked) {
-        if (!networkRequiredDialog(context)) return false;
-
-        return toggleTrackLikeState(
-          context,
-          audio,
-          !audio.isLiked,
+      return toggleTrackLikeState(
+        context,
+        audio,
+        !audio.isLiked,
+      );
+    },
+    onSecondaryAction: () => showModalBottomSheet(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (BuildContext context) {
+        return BottomAudioOptionsDialog(
+          audio: audio,
+          playlist: playlist,
         );
       },
-      onSecondaryAction: () => showModalBottomSheet(
-        context: context,
-        useRootNavigator: true,
-        isScrollControlled: true,
-        useSafeArea: true,
-        builder: (BuildContext context) {
-          return BottomAudioOptionsDialog(
-            audio: audio,
-            playlist: playlist,
-          );
-        },
-      ),
     ),
   );
 }
 
-/// Диалог, спрашивающий у пользователя то, разрешает ли он Flutter VK делиться информацией о проигранных треках.
-class AllowRecommendationsStatsDialog extends StatelessWidget {
-  const AllowRecommendationsStatsDialog({
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialDialog(
-      icon: Icons.privacy_tip,
-      title: AppLocalizations.of(context)!.recommendationsStatsWarningTitle,
-      text:
-          AppLocalizations.of(context)!.recommendationsStatsWarningDescription,
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: Text(
-            AppLocalizations.of(context)!.general_no,
-          ),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.of(context).pop(true),
-          child: Text(
-            AppLocalizations.of(context)!.recommendationsStatsWarningAllow,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 /// Диалог, спрашивающий у пользователя разрешения на запуск кэширования плейлиста.
-class EnableCacheDialog extends StatelessWidget {
+class EnableCacheDialog extends ConsumerWidget {
   /// Плейлист, кэширование треков в котором пытаются включить.
   final ExtendedPlaylist playlist;
 
@@ -338,31 +231,35 @@ class EnableCacheDialog extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l18n = ref.watch(l18nProvider);
+
     final int aproxSizeMB =
         ((playlist.duration ?? Duration.zero).inMinutes * trackSizePerMin)
             .round();
 
     final aproxSizeString = aproxSizeMB >= 500
-        ? AppLocalizations.of(context)!.trackSizeGB(aproxSizeMB / 500)
-        : AppLocalizations.of(context)!.trackSizeMB(aproxSizeMB);
+        ? l18n.trackSizeGB(aproxSizeMB / 500)
+        : l18n.trackSizeMB(aproxSizeMB);
 
     return MaterialDialog(
       icon: Icons.file_download,
-      title: AppLocalizations.of(context)!.music_enableTrackCachingTitle,
-      text: AppLocalizations.of(context)!
-          .music_enableTrackCachingDescription(playlist.count, aproxSizeString),
+      title: l18n.music_enableTrackCachingTitle,
+      text: l18n.music_enableTrackCachingDescription(
+        playlist.count,
+        aproxSizeString,
+      ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
+          onPressed: () => context.pop(false),
           child: Text(
-            AppLocalizations.of(context)!.general_no,
+            l18n.general_no,
           ),
         ),
         FilledButton(
-          onPressed: () => Navigator.of(context).pop(true),
+          onPressed: () => context.pop(true),
           child: Text(
-            AppLocalizations.of(context)!.music_enableTrackCachingButton,
+            l18n.music_enableTrackCachingButton,
           ),
         ),
       ],
@@ -371,7 +268,7 @@ class EnableCacheDialog extends StatelessWidget {
 }
 
 /// Диалог, предупреждающий пользователя о том, что при отключении кэширования треков будет полностью удалёно всё содержимое плейлиста с памяти устройства.
-class CacheDisableWarningDialog extends StatelessWidget {
+class CacheDisableWarningDialog extends ConsumerWidget {
   /// Плейлист, кэш которого пытаются отключить.
   final ExtendedPlaylist playlist;
 
@@ -381,34 +278,36 @@ class CacheDisableWarningDialog extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l18n = ref.watch(l18nProvider);
+
     return MaterialDialog(
       icon: Icons.file_download_off,
-      title: AppLocalizations.of(context)!.music_disableTrackCachingTitle,
-      text: AppLocalizations.of(context)!.music_disableTrackCachingDescription,
+      title: l18n.music_disableTrackCachingTitle,
+      text: l18n.music_disableTrackCachingDescription,
       actions: [
         // "Нет".
         TextButton(
-          onPressed: () => Navigator.of(context).pop(null),
+          onPressed: () => context.pop(),
           child: Text(
-            AppLocalizations.of(context)!.general_no,
+            l18n.general_no,
           ),
         ),
 
         // "Остановить".
         if (downloadManager.isTaskRunningFor(playlist))
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
+            onPressed: () => context.pop(false),
             child: Text(
-              AppLocalizations.of(context)!.music_stopTrackCachingButton,
+              l18n.music_stopTrackCachingButton,
             ),
           ),
 
         // "Удалить".
         FilledButton(
-          onPressed: () => Navigator.of(context).pop(true),
+          onPressed: () => context.pop(true),
           child: Text(
-            AppLocalizations.of(context)!.music_disableTrackCachingButton,
+            l18n.music_disableTrackCachingButton,
           ),
         ),
       ],
@@ -425,10 +324,7 @@ class SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   final double maxHeight;
 
   /// Builder, используемый для создания интерфейса.
-  final Function(
-    BuildContext context,
-    double shrinkOffset,
-  ) builder;
+  final Function(BuildContext context, double shrinkOffset) builder;
 
   SliverAppBarDelegate({
     required this.minHeight,
@@ -440,10 +336,7 @@ class SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   double get minExtent => minHeight;
 
   @override
-  double get maxExtent => max(
-        maxHeight,
-        minHeight,
-      );
+  double get maxExtent => max(maxHeight, minHeight);
 
   @override
   Widget build(
@@ -458,9 +351,7 @@ class SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  bool shouldRebuild(
-    SliverAppBarDelegate oldDelegate,
-  ) {
+  bool shouldRebuild(SliverAppBarDelegate oldDelegate) {
     return maxHeight != oldDelegate.maxHeight ||
         minHeight != oldDelegate.minHeight ||
         builder != oldDelegate.builder;
@@ -468,7 +359,7 @@ class SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
 }
 
 /// Route, отображающий информацию о плейлисте: его название, треки, и прочую информацию.
-class PlaylistInfoRoute extends StatefulWidget {
+class PlaylistInfoRoute extends ConsumerStatefulWidget {
   /// Плейлист, информация о котором будет отображена.
   final ExtendedPlaylist playlist;
 
@@ -490,11 +381,11 @@ class PlaylistInfoRoute extends StatefulWidget {
   });
 
   @override
-  State<PlaylistInfoRoute> createState() => _PlaylistInfoRouteState();
+  ConsumerState<PlaylistInfoRoute> createState() => _PlaylistInfoRouteState();
 }
 
-class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
-  static AppLogger logger = getLogger("PlaylistInfoRoute");
+class _PlaylistInfoRouteState extends ConsumerState<PlaylistInfoRoute> {
+  static final AppLogger logger = getLogger("PlaylistInfoRoute");
 
   /// Подписки на изменения состояния воспроизведения трека.
   late final List<StreamSubscription> subscriptions;
@@ -508,81 +399,34 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
   /// FocusNode для фокуса поля поиска сразу после открытия данного диалога.
   final FocusNode focusNode = FocusNode();
 
-  /// Указывает, что в данный момент данные о плейлисте загружаются.
-  bool _loading = false;
-
-  /// Показывает [RefreshIndicator] во время загрузки данных с API ВКонтакте.
-  void setLoading([bool value = true]) => setState(() => _loading = value);
-
   /// Загрузка данных данного плейлиста.
   Future<void> loadPlaylist() async {
-    final UserProvider user = Provider.of<UserProvider>(context, listen: false);
-
     // Если информация по данному плейлисту не загружена, то загружаем её.
     if (widget.playlist.audios == null ||
         widget.playlist.isDataCached ||
         widget.playlist.areTracksCached && connectivityManager.hasConnection) {
-      // Отображаем анимацию загрузки лишь в случае, если список треков пустой, т.е., он не был загружен с кэша.
-      if (widget.playlist.audios == null) {
-        setLoading();
-      }
-
       try {
-        final ExtendedPlaylist newPlaylist = await loadPlaylistData(
-          widget.playlist,
-          user,
-        );
+        await loadPlaylistData(widget.playlist);
 
-        user.updatePlaylist(newPlaylist);
+        // TODO: user.updatePlaylist(newPlaylist);
       } catch (e, stackTrace) {
-        // ignore: use_build_context_synchronously
         showLogErrorDialog(
           "Ошибка при открытии плейлиста: ",
           e,
           stackTrace,
           logger,
+          // ignore: use_build_context_synchronously
           context,
         );
-      } finally {
-        if (context.mounted) {
-          setLoading(false);
-        }
       }
-    }
-  }
-
-  /// Метод, который вызывается при нажатии на клавишу клавиатуры.
-  void keyboardListener(
-    RawKeyEvent key,
-  ) {
-    // Нажатие кнопки ESC.
-    if (key.isKeyPressed(LogicalKeyboardKey.escape)) {
-      // Если в поле поиска есть текст, и это поле находится в фокусе, то ничего не делаем.
-      // "Стирание" текста находится в TextField'е.
-      if (controller.text.isNotEmpty && focusNode.hasFocus || !mounted) return;
-
-      Navigator.of(context).pop();
-
-      return;
-    }
-
-    // Нажатие комбинации CTRL+F.
-    if (key.isControlPressed && key.isKeyPressed(LogicalKeyboardKey.keyF)) {
-      controller.selection = TextSelection(
-        baseOffset: 0,
-        extentOffset: controller.text.length,
-      );
-      focusNode.requestFocus();
-
-      return;
     }
   }
 
   @override
   void initState() {
-    logger.d("Open ${widget.playlist}");
-
     super.initState();
+
+    logger.d("Open ${widget.playlist}");
 
     // Загружаем данные о плейлисте, если есть доступ к интернету.
     if (connectivityManager.hasConnection) {
@@ -590,26 +434,6 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
     }
 
     subscriptions = [
-      // Изменения запуска плеера.
-      player.loadedStateStream.listen(
-        (bool loaded) => setState(() {}),
-      ),
-
-      // Изменения состояния воспроизведения.
-      player.playerStateStream.listen(
-        (PlayerState state) => setState(() {}),
-      ),
-
-      // Пауза/воспроизведение.
-      player.playingStream.listen(
-        (bool playing) => setState(() {}),
-      ),
-
-      // Изменения плейлиста.
-      player.sequenceStateStream.listen(
-        (SequenceState? state) => setState(() {}),
-      ),
-
       // Слушаем события подключения к интернету, что бы начать загрузку треков после появления интернета.
       connectivityManager.connectionChange.listen((bool isConnected) async {
         // Если доступа к интернету нет, то ничего не делаем.
@@ -618,10 +442,7 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
         // Если данный плейлист является плейлистом "лайкнутые треки", то его обновлять не нужно (он обновится в другом месте).
         if (widget.playlist.isFavoritesPlaylist) return;
 
-        setLoading();
-
         await loadPlaylist();
-        setLoading(false);
       }),
     ];
 
@@ -641,9 +462,6 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
         });
       }
     }
-
-    // Обработчик нажатия кнопок клавиатуры.
-    RawKeyboard.instance.addListener(keyboardListener);
   }
 
   @override
@@ -653,33 +471,35 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
     for (StreamSubscription subscription in subscriptions) {
       subscription.cancel();
     }
-
-    RawKeyboard.instance.removeListener(keyboardListener);
   }
 
   @override
   Widget build(BuildContext context) {
-    final UserProvider user = Provider.of<UserProvider>(context);
+    final user = ref.watch(userProvider);
+    final l18n = ref.watch(l18nProvider);
+    ref.watch(playerLoadedStateProvider);
+    ref.watch(playerStateProvider);
 
     final List<ExtendedAudio> playlistAudios = widget.playlist.audios ?? [];
     final List<ExtendedAudio> filteredAudios =
         filterAudiosByName(playlistAudios, controller.text);
 
-    final bool isMobileLayout =
-        getDeviceType(MediaQuery.of(context).size) == DeviceScreenType.mobile;
+    final bool isMobile = isMobileLayout(context);
 
-    final double horizontalPadding = isMobileLayout ? 16 : 24;
-    final double verticalPadding = isMobileLayout ? 0 : 30;
+    final double horizontalPadding = isMobile ? 16 : 24;
+    final double verticalPadding = isMobile ? 0 : 30;
+
+    const bool loading = false;
 
     final String playlistType = widget.playlist.isRecommendationsPlaylist
-        ? AppLocalizations.of(context)!.music_recommendationPlaylistTitle
+        ? l18n.music_recommendationPlaylistTitle
         : (widget.playlist.isFavoritesPlaylist ||
-                (widget.playlist.ownerID == user.id! &&
+                (widget.playlist.ownerID == user.id &&
                     !widget.playlist.isFollowing))
-            ? AppLocalizations.of(context)!.music_ownedPlaylistTitle
-            : AppLocalizations.of(context)!.music_savedPlaylistTitle;
+            ? l18n.music_ownedPlaylistTitle
+            : l18n.music_savedPlaylistTitle;
 
-    final bool hasTracksLoaded = !widget.playlist.isEmpty && !_loading;
+    final bool hasTracksLoaded = !widget.playlist.isEmpty && !loading;
 
     return Column(
       children: [
@@ -698,21 +518,20 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                       SliverConstraints constraints,
                     ) {
                       final isExpanded =
-                          constraints.scrollOffset < 280 && !isMobileLayout;
+                          constraints.scrollOffset < 280 && !isMobile;
 
                       return SliverAppBar(
                         pinned: true,
-                        expandedHeight: isMobileLayout ? null : 260,
+                        expandedHeight: isMobile ? null : 260,
                         elevation: 0,
                         title: isExpanded
                             ? null
                             : Text(
                                 widget.playlist.title ??
-                                    AppLocalizations.of(context)!
-                                        .music_fullscreenFavoritePlaylistName,
+                                    l18n.music_fullscreenFavoritePlaylistName,
                               ),
                         centerTitle: true,
-                        flexibleSpace: isMobileLayout
+                        flexibleSpace: isMobile
                             ? null
                             : FlexibleSpaceBar(
                                 background: Padding(
@@ -768,9 +587,7 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                                         .isFavoritesPlaylist,
                                                   ),
                                           ),
-                                          const SizedBox(
-                                            width: 24,
-                                          ),
+                                          const Gap(24),
 
                                           // Название плейлиста, количество треков в нём.
                                           Expanded(
@@ -781,10 +598,7 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                                 // Название плейлиста.
                                                 SelectableText(
                                                   widget.playlist.title ??
-                                                      AppLocalizations.of(
-                                                        context,
-                                                      )!
-                                                          .music_fullscreenFavoritePlaylistName,
+                                                      l18n.music_fullscreenFavoritePlaylistName,
                                                   style: Theme.of(context)
                                                       .textTheme
                                                       .displayLarge!
@@ -795,9 +609,7 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                                             .ellipsis,
                                                       ),
                                                 ),
-                                                const SizedBox(
-                                                  height: 4,
-                                                ),
+                                                const Gap(4),
 
                                                 // Описание плейлиста, при наличии.
                                                 if (widget
@@ -811,26 +623,21 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                                           TextOverflow.ellipsis,
                                                       color: Theme.of(context)
                                                           .colorScheme
-                                                          .onBackground
+                                                          .onSurface
                                                           .withOpacity(0.9),
                                                     ),
                                                   ),
                                                 if (widget
                                                         .playlist.description !=
                                                     null)
-                                                  const SizedBox(
-                                                    height: 4,
-                                                  ),
+                                                  const Gap(4),
 
                                                 // Строка вида "100 треков • Ваш плейлист, 25 часов".
                                                 // TODO: Написать свою функцию для форматирования времени.
                                                 Skeletonizer(
-                                                  enabled: _loading,
+                                                  enabled: loading,
                                                   child: Text(
-                                                    AppLocalizations.of(
-                                                      context,
-                                                    )!
-                                                        .music_bottomPlaylistInfo(
+                                                    l18n.music_bottomPlaylistInfo(
                                                       widget.playlist.count,
                                                       playlistType,
                                                       RelativeTime.locale(
@@ -853,7 +660,7 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                                     style: TextStyle(
                                                       color: Theme.of(context)
                                                           .colorScheme
-                                                          .onBackground
+                                                          .onSurface
                                                           .withOpacity(0.8),
                                                     ),
                                                   ),
@@ -888,7 +695,7 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                         maxHeight: 54 + 8 * 2,
                         builder: (BuildContext context, double shrinkOffset) {
                           return Container(
-                            color: Theme.of(context).colorScheme.background,
+                            color: Theme.of(context).colorScheme.surface,
                             padding: const EdgeInsets.symmetric(
                               vertical: 8,
                             ),
@@ -900,7 +707,7 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                   children: [
                                     IconButton.filled(
                                       onPressed: !widget.playlist.isEmpty &&
-                                              !_loading
+                                              !loading
                                           ? () async {
                                               // Если у нас уже запущен этот же плейлист, то переключаем паузу/воспроизведение.
                                               if (player.currentPlaylist ==
@@ -935,9 +742,7 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                             : null,
                                       ),
                                     ),
-                                    const SizedBox(
-                                      width: 6,
-                                    ),
+                                    const Gap(6),
 
                                     // Кнопка для загрузки треков в кэш.
                                     IconButton(
@@ -950,6 +755,7 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                               // Пользователь пытается включить кэширование с выключенным интернетом, запрещаем ему такое.
                                               if (!cacheTracks &&
                                                   !networkRequiredDialog(
+                                                    ref,
                                                     context,
                                                   )) return;
 
@@ -984,9 +790,7 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                                     widget.playlist) {
                                                   showErrorDialog(
                                                     context,
-                                                    title: AppLocalizations.of(
-                                                      context,
-                                                    )!
+                                                    title: l18n
                                                         .music_disableTrackCachingUnavailableTitle,
                                                     description: AppLocalizations
                                                             .of(context)!
@@ -1025,7 +829,7 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                               widget.playlist.cacheTracks =
                                                   cacheTracks;
 
-                                              user.markUpdated(false);
+                                              // user.markUpdated(false);
                                               await appStorage.savePlaylist(
                                                 widget.playlist.asDBPlaylist,
                                               );
@@ -1053,7 +857,7 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                                 await downloadManager
                                                     .cachePlaylist(
                                                   widget.playlist,
-                                                  user: user,
+                                                  // user: user,
                                                   cache: widget.playlist
                                                           .cacheTracks ??
                                                       false,
@@ -1063,12 +867,12 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                                       return;
                                                     }
 
-                                                    user.markUpdated(false);
+                                                    // user.markUpdated(false);
                                                   },
                                                 );
                                               } catch (e, stackTrace) {
                                                 logger.e(
-                                                  "Ошибка при кэшировании плейлиста: ",
+                                                  "Playlist caching error: ",
                                                   error: e,
                                                   stackTrace: stackTrace,
                                                 );
@@ -1102,13 +906,11 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                                           .primary
                                                       : Theme.of(context)
                                                           .colorScheme
-                                                          .onBackground)
+                                                          .onSurface)
                                                   : null,
                                             ),
                                     ),
-                                    const SizedBox(
-                                      width: 6,
-                                    ),
+                                    const Gap(6),
                                   ],
                                 ),
 
@@ -1144,8 +946,7 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                         },
                                         decoration: InputDecoration(
                                           hintText:
-                                              AppLocalizations.of(context)!
-                                                  .music_searchTextInPlaylist(
+                                              l18n.music_searchTextInPlaylist(
                                             playlistAudios.length,
                                           ),
                                           border: OutlineInputBorder(
@@ -1155,7 +956,7 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                           ),
                                           prefixIconColor: Theme.of(context)
                                               .colorScheme
-                                              .onBackground
+                                              .onSurface
                                               .withOpacity(
                                                 hasTracksLoaded ? 1.0 : 0.5,
                                               ),
@@ -1166,9 +967,7 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                                               ? Padding(
                                                   padding:
                                                       const EdgeInsetsDirectional
-                                                          .only(
-                                                    end: 12,
-                                                  ),
+                                                          .only(end: 12),
                                                   child: IconButton(
                                                     icon: const Icon(
                                                       Icons.close,
@@ -1193,10 +992,10 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                   ),
 
                   // У пользователя нет треков в данном плейлисте.
-                  if (playlistAudios.isEmpty && !_loading)
+                  if (playlistAudios.isEmpty && !loading)
                     SliverToBoxAdapter(
                       child: Text(
-                        AppLocalizations.of(context)!.music_playlistEmpty,
+                        l18n.music_playlistEmpty,
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -1204,15 +1003,14 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                   // У пользователя есть треки, но поиск ничего не выдал.
                   if (playlistAudios.isNotEmpty &&
                       filteredAudios.isEmpty &&
-                      !_loading)
+                      !loading)
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 6,
                         ),
                         child: StyledText(
-                          text: AppLocalizations.of(context)!
-                              .music_zeroSearchResults,
+                          text: l18n.music_zeroSearchResults,
                           textAlign: TextAlign.center,
                           tags: {
                             "click": StyledTextActionTag(
@@ -1234,61 +1032,64 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                     padding: EdgeInsets.symmetric(
                       horizontal: horizontalPadding,
                     ),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (BuildContext context, int index) {
-                          // Если ничего не загружено, то отображаем Skeleton Loader вместо реального трека.
-                          if (_loading) {
-                            return Skeletonizer(
-                              child: Padding(
-                                padding: const EdgeInsets.only(
-                                  bottom: 8,
-                                ),
-                                child: AudioTrackTile(
-                                  audio: ExtendedAudio(
-                                    id: -1,
-                                    ownerID: -1,
-                                    title: fakeTrackNames[
-                                        index % fakeTrackNames.length],
-                                    artist: fakeTrackNames[
-                                        (index + 1) % fakeTrackNames.length],
-                                    duration: 60 * 3,
-                                    accessKey: "",
-                                    url: "",
-                                    date: 0,
-                                  ),
+                    sliver: SliverList.separated(
+                      itemCount: loading
+                          // ignore: dead_code
+                          ? widget.playlist.count
+                          : filteredAudios.length +
+                              (isMobile && player.loaded ? 1 : 0),
+                      separatorBuilder: (BuildContext context, int index) =>
+                          const Gap(8),
+                      itemBuilder: (BuildContext context, int index) {
+                        // Если ничего не загружено, то отображаем Skeleton Loader вместо реального трека.
+                        // ignore: dead_code
+                        if (loading) {
+                          return Skeletonizer(
+                            child: Padding(
+                              padding: const EdgeInsets.only(
+                                bottom: 8,
+                              ),
+                              child: AudioTrackTile(
+                                audio: ExtendedAudio(
+                                  id: -1,
+                                  ownerID: -1,
+                                  title: fakeTrackNames[
+                                      index % fakeTrackNames.length],
+                                  artist: fakeTrackNames[
+                                      (index + 1) % fakeTrackNames.length],
+                                  duration: 60 * 3,
+                                  accessKey: "",
+                                  url: "",
+                                  date: 0,
                                 ),
                               ),
-                            );
-                          }
-
-                          if (index == filteredAudios.length) {
-                            // Данный SizedBox нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
-                            return const SizedBox(
-                              key: ValueKey(null),
-                              height: 76,
-                            );
-                          }
-
-                          return buildListTrackWidget(
-                            context,
-                            filteredAudios.elementAt(index),
-                            widget.playlist,
-                            showCachedIcon: true,
+                            ),
                           );
-                        },
-                        childCount: _loading
-                            ? widget.playlist.count
-                            : filteredAudios.length +
-                                (isMobileLayout && player.loaded ? 1 : 0),
-                      ),
+                        }
+
+                        if (index == filteredAudios.length) {
+                          // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
+                          return const Gap(
+                            key: ValueKey(null),
+                            76,
+                          );
+                        }
+
+                        return buildListTrackWidget(
+                          ref,
+                          context,
+                          filteredAudios.elementAt(index),
+                          widget.playlist,
+                          showCachedIcon: true,
+                        );
+                      },
                     ),
                   ),
                 ],
               ),
 
               // FAB, располагаемый поверх всего интерфейса при Mobile Layout'е, если играет не этот плейлист.
-              if (isMobileLayout && player.currentPlaylist != widget.playlist)
+              if (isMobile && player.currentPlaylist != widget.playlist)
                 Align(
                   alignment: Alignment.bottomRight,
                   child: AnimatedPadding(
@@ -1309,7 +1110,7 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
                         );
                       },
                       label: Text(
-                        AppLocalizations.of(context)!.music_shuffleAndPlay,
+                        l18n.music_shuffleAndPlay,
                       ),
                       icon: const Icon(
                         Icons.shuffle,
@@ -1321,12 +1122,9 @@ class _PlaylistInfoRouteState extends State<PlaylistInfoRoute> {
           ),
         ),
 
-        // Данный SizedBox нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
+        // Данный Gap нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
         // Мы его располагаем после ListView, что бы ScrollBar не был закрыт плеером.
-        if (player.loaded && !isMobileLayout)
-          const SizedBox(
-            height: 88,
-          ),
+        if (player.loaded && !isMobile) const Gap(88),
       ],
     );
   }

@@ -1,5 +1,5 @@
 /// enum, перечисляющий поведение того, как приложение может себя ввести в случае закрытия окна. Работает только на Desktop ([isDesktop]).
-enum AppCloseBehavior {
+enum CloseBehavior {
   /// Вариант по-умолчанию: Указывает, что при нажатии на X приложение просто закроется.
   close,
 
@@ -29,4 +29,19 @@ enum UpdateBranch {
 
   /// Приложение будет загружать все обновления: release и pre-release.
   prereleases,
+}
+
+/// enum, перечисляющий типы палитры цветов обложки.
+enum DynamicSchemeType {
+  /// Вариант по-умолчанию. Использует [DynamicSchemeVariant.tonalSpot].
+  tonalSpot,
+
+  /// Нейтральные цвета. Использует [DynamicSchemeVariant.neutral]
+  neutral,
+
+  /// Яркие цвета, близкие к тому, что использует OS Android 12+. Использует [DynamicSchemeVariant.content]
+  content,
+
+  /// Монохромные цвета. Использует [DynamicSchemeVariant.monochrome].
+  monochrome,
 }

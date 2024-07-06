@@ -12,7 +12,7 @@ DeezerAPISearchResponse _$DeezerAPISearchResponseFromJson(
       data: (json['data'] as List<dynamic>)
           .map((e) => DeezerTrack.fromJson(e as Map<String, dynamic>))
           .toList(),
-      total: json['total'] as int,
+      total: (json['total'] as num).toInt(),
     );
 
 Map<String, dynamic> _$DeezerAPISearchResponseToJson(

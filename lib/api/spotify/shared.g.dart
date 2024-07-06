@@ -8,7 +8,7 @@ part of 'shared.dart';
 
 SpotifyAPIError _$SpotifyAPIErrorFromJson(Map<String, dynamic> json) =>
     SpotifyAPIError(
-      code: json['code'] as int,
+      code: (json['code'] as num).toInt(),
       message: json['message'] as String,
     );
 

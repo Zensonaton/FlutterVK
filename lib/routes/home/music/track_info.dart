@@ -1,11 +1,12 @@
 import "package:flutter/material.dart";
-import "package:flutter_gen/gen_l10n/app_localizations.dart";
-import "package:provider/provider.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
+import "package:gap/gap.dart";
+import "package:go_router/go_router.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 
-import "../../../api/vk/api.dart";
-import "../../../api/vk/audio/edit.dart";
 import "../../../api/vk/consts.dart";
 import "../../../main.dart";
+import "../../../provider/l18n.dart";
 import "../../../provider/user.dart";
 import "../../../services/logger.dart";
 import "../../../widgets/dialogs.dart";
@@ -21,7 +22,9 @@ import "../music.dart";
 ///   builder: (BuildContext context) => const TrackInfoEditDialog(...),
 /// ),
 /// ```
-class TrackInfoEditDialog extends StatefulWidget {
+class TrackInfoEditDialog extends HookConsumerWidget {
+  static final AppLogger logger = getLogger("TrackInfoEditDialog");
+
   /// Трек, данные которого будут изменяться.
   final ExtendedAudio audio;
 
@@ -31,46 +34,25 @@ class TrackInfoEditDialog extends StatefulWidget {
   });
 
   @override
-  State<TrackInfoEditDialog> createState() => _TrackInfoEditDialogState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l18n = ref.watch(l18nProvider);
 
-class _TrackInfoEditDialogState extends State<TrackInfoEditDialog> {
-  static AppLogger logger = getLogger("TrackInfoEditDialog");
-
-  /// [TextEditingController] для поля ввода названия трека.
-  final TextEditingController titleController = TextEditingController();
-
-  /// [TextEditingController] для поля ввода артиста трека.
-  final TextEditingController artistController = TextEditingController();
-
-  /// Выбранный жанр у трека.
-  late int trackGenre;
-
-  @override
-  void initState() {
-    super.initState();
-
-    titleController.text = widget.audio.title;
-    artistController.text = widget.audio.artist;
-    trackGenre = widget.audio.genreID ?? 18; // Жанр "Other".
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final UserProvider user = Provider.of<UserProvider>(context);
+    final trackTitle = useState(audio.title);
+    final trackArtist = useState(audio.artist);
+    final trackGenre = useState(audio.genreID ?? 18);
 
     // Создаём копию трека, засовывая в неё новые значения с новым именем трека и прочим.
-    final ExtendedAudio audio = ExtendedAudio(
-      title: titleController.text,
-      artist: artistController.text,
-      id: widget.audio.id,
-      ownerID: widget.audio.ownerID,
-      duration: widget.audio.duration,
-      accessKey: widget.audio.accessKey,
-      url: widget.audio.url,
-      date: widget.audio.date,
-      album: widget.audio.album,
-      isLiked: widget.audio.isLiked,
+    final ExtendedAudio newAudio = ExtendedAudio(
+      title: trackTitle.value,
+      artist: trackArtist.value,
+      id: audio.id,
+      ownerID: audio.ownerID,
+      duration: audio.duration,
+      accessKey: audio.accessKey,
+      url: audio.url,
+      date: audio.date,
+      album: audio.album,
+      isLiked: audio.isLiked,
     );
 
     return Dialog(
@@ -82,25 +64,22 @@ class _TrackInfoEditDialogState extends State<TrackInfoEditDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Открытый трек.
-            Padding(
-              padding: const EdgeInsets.only(
-                bottom: 8,
-              ),
-              child: AudioTrackTile(
-                audio: audio,
-                selected: audio == player.currentAudio,
-                currentlyPlaying: player.loaded && player.playing,
-              ),
+            AudioTrackTile(
+              audio: newAudio,
+              selected: newAudio == player.currentAudio,
+              currentlyPlaying: player.loaded && player.playing,
             ),
+            const Gap(8),
 
             // Разделитель.
             const Divider(),
 
             // Текстовое поле для изменения названия.
             TextField(
-              controller: titleController,
-              onChanged: (String _) => setState(() {}),
               decoration: InputDecoration(
+                label: Text(
+                  l18n.music_trackTitle,
+                ),
                 prefixIcon: const Padding(
                   padding: EdgeInsetsDirectional.only(
                     end: 12,
@@ -109,95 +88,90 @@ class _TrackInfoEditDialogState extends State<TrackInfoEditDialog> {
                     Icons.music_note,
                   ),
                 ),
-                label: Text(
-                  AppLocalizations.of(context)!.music_trackTitle,
-                ),
               ),
+              onChanged: (String value) => trackTitle.value = value,
             ),
 
             // Текстовое поле для изменения исполнителя.
-            Padding(
-              padding: const EdgeInsets.only(
-                bottom: 28,
-              ),
-              child: TextField(
-                controller: artistController,
-                onChanged: (String _) => setState(() {}),
-                decoration: InputDecoration(
-                  prefixIcon: const Padding(
-                    padding: EdgeInsetsDirectional.only(
-                      end: 12,
-                    ),
-                    child: Icon(
-                      Icons.album,
-                    ),
+            TextField(
+              decoration: InputDecoration(
+                prefixIcon: const Padding(
+                  padding: EdgeInsetsDirectional.only(
+                    end: 12,
                   ),
-                  label: Text(
-                    AppLocalizations.of(context)!.music_trackArtist,
+                  child: Icon(
+                    Icons.album,
                   ),
                 ),
+                label: Text(
+                  l18n.music_trackArtist,
+                ),
               ),
+              onChanged: (String value) => trackArtist.value = value,
             ),
+            const Gap(28),
 
             // Выпадающее меню с жанром.
-            Padding(
-              padding: const EdgeInsets.only(
-                bottom: 24,
+            DropdownMenu(
+              label: Text(
+                l18n.music_trackGenre,
               ),
-              child: DropdownMenu(
-                label: Text(
-                  AppLocalizations.of(context)!.music_trackGenre,
-                ),
-                onSelected: (int? genreID) {
-                  if (genreID == null) return;
+              initialSelection: trackGenre.value,
+              dropdownMenuEntries: [
+                for (MapEntry<int, String> genre in musicGenres.entries)
+                  DropdownMenuEntry(
+                    value: genre.key,
+                    label: genre.value,
+                  ),
+              ],
+              onSelected: (int? genreID) {
+                if (genreID == null) return;
 
-                  setState(() => trackGenre = genreID);
-                },
-                initialSelection: widget.audio.genreID ?? 18, // Жанр "Other".
-                dropdownMenuEntries: [
-                  for (MapEntry<int, String> genre in musicGenres.entries)
-                    DropdownMenuEntry(
-                      value: genre.key,
-                      label: genre.value,
-                    ),
-                ],
-              ),
+                trackGenre.value = genreID;
+              },
             ),
+            const Gap(24),
 
             // Кнопка для сохранения.
             Align(
               alignment: Alignment.bottomRight,
               child: FilledButton.icon(
+                icon: const Icon(
+                  Icons.edit,
+                ),
+                label: Text(
+                  l18n.general_save,
+                ),
                 onPressed: () async {
                   final LoadingOverlay overlay = LoadingOverlay.of(context);
 
-                  Navigator.of(context).pop();
+                  context.pop();
                   overlay.show();
 
                   try {
-                    final APIAudioEditResponse response = await user.audioEdit(
-                      widget.audio.ownerID,
-                      widget.audio.id,
-                      titleController.text,
-                      artistController.text,
-                      trackGenre,
-                    );
-                    raiseOnAPIError(response);
+                    // final APIAudioEditResponse response = await user.audioEdit(
+                    //   audio.ownerID,
+                    //   audio.id,
+                    //   titleController.text,
+                    //   artistController.text,
+                    //   trackGenre,
+                    // );
+                    // raiseOnAPIError(response);
 
                     // Обновляем данные о треке у пользователя.
-                    widget.audio.title = titleController.text;
-                    widget.audio.artist = artistController.text;
-                    widget.audio.genreID = trackGenre;
+                    // newAudio.title = titleController.text;
+                    // newAudio.artist = artistController.text;
+                    // newAudio.genreID = trackGenre;
 
-                    user.markUpdated(false);
+                    // user.markUpdated(false);
                   } catch (e, stackTrace) {
                     logger.e(
-                      "Ошибка при редактировании данных трека: ",
+                      "Error while modifying track info: ",
                       error: e,
                       stackTrace: stackTrace,
                     );
 
-                    if (mounted) {
+                    if (context.mounted) {
                       showErrorDialog(
                         context,
                         description: e.toString(),
@@ -207,10 +181,6 @@ class _TrackInfoEditDialogState extends State<TrackInfoEditDialog> {
                     overlay.hide();
                   }
                 },
-                icon: const Icon(Icons.edit),
-                label: Text(
-                  AppLocalizations.of(context)!.general_save,
-                ),
               ),
             ),
           ],

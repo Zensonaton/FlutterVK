@@ -49,7 +49,7 @@ class APIError {
 
 /// Объект, олицетворяющий пользователя ВКонтакте.
 @JsonSerializable()
-class User {
+class APIUser {
   /// ID пользователя.
   final int id;
 
@@ -381,7 +381,7 @@ class User {
   @override
   String toString() => "VK user $id $firstName $lastName";
 
-  User({
+  APIUser({
     required this.id,
     required this.firstName,
     required this.lastName,
@@ -465,8 +465,9 @@ class User {
     this.wallDefault,
   });
 
-  factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
-  Map<String, dynamic> toJson() => _$UserToJson(this);
+  factory APIUser.fromJson(Map<String, dynamic> json) =>
+      _$APIUserFromJson(json);
+  Map<String, dynamic> toJson() => _$APIUserToJson(this);
 }
 
 /// Объект, олицетворяющий изображения плейлиста или альбома аудиозаписи ВКонтакте.

@@ -1,14 +1,17 @@
 import "package:flutter/material.dart";
-import "package:flutter_gen/gen_l10n/app_localizations.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
+import "package:gap/gap.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:styled_text/styled_text.dart";
 import "package:url_launcher/url_launcher.dart";
 
 import "../../consts.dart";
+import "../../provider/l18n.dart";
 import "../../utils.dart";
 import "../login.dart";
 
 /// Часть Route'а [LoginRoute], показываемая при запуске на desktop-платформах.
-class DesktopLoginWidget extends StatefulWidget {
+class DesktopLoginWidget extends HookConsumerWidget {
   /// Указывает, что вместо авторизации с Kate Mobile (главный токен) будет проводиться вторичная авторизация от имени VK Admin.
   ///
   /// Используется при подключении рекомендаций ВКонтакте.
@@ -20,14 +23,11 @@ class DesktopLoginWidget extends StatefulWidget {
   });
 
   @override
-  State<DesktopLoginWidget> createState() => _DesktopLoginWidgetState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final token = useState("");
+    final String? extractedToken = extractAccessToken(token.value);
+    final l18n = ref.watch(l18nProvider);
 
-class _DesktopLoginWidgetState extends State<DesktopLoginWidget> {
-  String? token;
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -47,23 +47,18 @@ class _DesktopLoginWidgetState extends State<DesktopLoginWidget> {
                 children: [
                   // Текст "Авторизация".
                   Text(
-                    widget.useAlternateAuth
-                        ? AppLocalizations.of(context)!
-                            .login_desktopConnectRecommendationsTitle
-                        : AppLocalizations.of(context)!.login_desktopTitle,
+                    useAlternateAuth
+                        ? l18n.login_desktopConnectRecommendationsTitle
+                        : l18n.login_desktopTitle,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
-                  const SizedBox(
-                    height: 12,
-                  ),
+                  const Gap(12),
 
                   // Описание авторизации.
                   StyledText(
-                    text: widget.useAlternateAuth
-                        ? AppLocalizations.of(context)!
-                            .login_desktopConnectRecommendationsDescription
-                        : AppLocalizations.of(context)!
-                            .login_desktopDescription,
+                    text: useAlternateAuth
+                        ? l18n.login_desktopConnectRecommendationsDescription
+                        : l18n.login_desktopDescription,
                     style: Theme.of(context).textTheme.bodyLarge,
                     tags: {
                       "bold": StyledTextTag(
@@ -72,23 +67,22 @@ class _DesktopLoginWidgetState extends State<DesktopLoginWidget> {
                         ),
                       ),
                       "link": StyledTextActionTag(
-                        (String? text, Map<String?, String?> attrs) =>
-                            launchUrl(
-                          Uri.parse(
-                            widget.useAlternateAuth
-                                ? vkMusicRecommendationsOAuthURL
-                                : vkMainOAuthURL,
-                          ),
-                        ),
+                        (String? text, Map<String?, String?> attrs) {
+                          launchUrl(
+                            Uri.parse(
+                              useAlternateAuth
+                                  ? vkMusicRecommendationsOAuthURL
+                                  : vkMainOAuthURL,
+                            ),
+                          );
+                        },
                         style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                               color: Theme.of(context).colorScheme.primary,
                             ),
                       ),
                     },
                   ),
-                  const SizedBox(
-                    height: 8,
-                  ),
+                  const Gap(8),
 
                   // Поле для ввода токена.
                   TextField(
@@ -100,30 +94,27 @@ class _DesktopLoginWidgetState extends State<DesktopLoginWidget> {
                       hintText:
                           "https://oauth.vk.com/blank.html#access_token=vk1...",
                     ),
-                    onChanged: (String value) => setState(
-                      () => token = extractAccessToken(value),
-                    ),
+                    onChanged: (String text) => token.value = text,
                   ),
-                  const SizedBox(
-                    height: 36,
-                  ),
+                  const Gap(36),
 
                   // Кнопки для продолжения авторизации.
                   Align(
                     alignment: Alignment.bottomRight,
                     child: FilledButton.icon(
-                      onPressed: token != null
+                      onPressed: extractedToken != null
                           ? () => tryAuthorize(
+                                ref,
                                 context,
-                                token!,
-                                widget.useAlternateAuth,
+                                extractedToken,
+                                useAlternateAuth,
                               )
                           : null,
                       icon: const Icon(
                         Icons.arrow_forward_ios,
                       ),
                       label: Text(
-                        AppLocalizations.of(context)!.login_desktopContinue,
+                        l18n.login_desktopContinue,
                       ),
                     ),
                   ),

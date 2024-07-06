@@ -1,37 +1,34 @@
 import "dart:async";
 
-import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
-import "package:flutter_gen/gen_l10n/app_localizations.dart";
-import "package:provider/provider.dart";
-import "package:styled_text/styled_text.dart";
+import "package:go_router/go_router.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 
 import "../api/vk/api.dart";
 import "../api/vk/catalog/get_audio.dart";
-import "../api/vk/shared.dart";
 import "../api/vk/users/get.dart";
+import "../provider/auth.dart";
+import "../provider/l18n.dart";
+import "../provider/playlists.dart";
 import "../provider/user.dart";
-import "../services/cache_manager.dart";
 import "../services/logger.dart";
 import "../utils.dart";
 import "../widgets/dialogs.dart";
 import "../widgets/loading_overlay.dart";
-import "../widgets/page_route_builders.dart";
-import "home.dart";
-import "home/music.dart";
 import "login/desktop.dart";
 import "login/mobile.dart";
 
 /// Прозводит авторизацию по передаваемому [token]. Если всё в порядке, возвращает true, а так же перекидывает на главную страницу.
 Future<bool> tryAuthorize(
+  WidgetRef ref,
   BuildContext context,
   String token, [
   bool useAlternateAuth = false,
 ]) async {
-  final UserProvider user = Provider.of<UserProvider>(context, listen: false);
   final AppLogger logger = getLogger("tryAuthorize");
+  final l18n = ref.watch(l18nProvider);
 
-  logger.d("Trying to authorize (tryAuthorize) with token");
+  logger.d("Trying to authorize with token");
 
   LoadingOverlay.of(context).show();
   FocusScope.of(context).unfocus();
@@ -42,6 +39,19 @@ Future<bool> tryAuthorize(
 
     if (!context.mounted) return false;
 
+    // Проверка, одинаковый ли ID юзера при основной и не основной авторизации.
+    if (useAlternateAuth &&
+        ref.read(userProvider).id != response.response!.first.id) {
+      showErrorDialog(
+        context,
+        description: l18n.login_alternativeWrongUserID(
+          ref.read(userProvider).fullName,
+        ),
+      );
+
+      return false;
+    }
+
     // Делаем ещё один запрос, благодаря которому можно проверить, есть ли доступ к каталогам рекомендаций или нет.
     final bool musicCatalogAccess =
         (await catalog_getAudio(token)).error == null;
@@ -51,83 +61,34 @@ Future<bool> tryAuthorize(
     if (useAlternateAuth != musicCatalogAccess) {
       showErrorDialog(
         context,
-        description:
-            AppLocalizations.of(context)!.login_noMusicAccessDescription,
+        description: l18n.login_noMusicAccessDescription,
       );
 
       return false;
     }
 
-    // Если мы проводим альтернативную авторизацию, то мы должны сохранить вторичный токен.
+    // Если мы проводим альтернативную авторизацию, то мы должны сохранить вторичный токен,
+    // а так же насильно обновить список из треков.
     if (useAlternateAuth) {
-      user.recommendationsToken = token;
+      ref.read(userProvider.notifier).loginSecondary(token);
+      ref.invalidate(playlistsProvider);
 
-      user.markUpdated();
-
-      // Убираем текущий Route, что бы пользователя вернуло на главный экран.
-      Navigator.of(context).pop();
-
-      // Обновляем данные о музыке.
-      ensureUserAudioAllInformation(
-        context,
-        forceUpdate: true,
-      );
+      context.pop();
 
       return true;
     }
 
-    LoadingOverlay.of(context).hide();
-
-    User accountInfo = response.response![0];
-
     // При основной авторизации мы сохраняем основной токен.
-    user.isAuthorized = true;
-    user.mainToken = token;
-    user.id = accountInfo.id;
-    user.firstName = accountInfo.firstName;
-    user.lastName = accountInfo.lastName;
-    user.photo50Url = accountInfo.photo50;
-    user.photoMaxUrl = accountInfo.photoMax;
-    user.photoMaxOrigUrl = accountInfo.photoMaxOrig;
-
-    user.markUpdated();
-
-    // Показываем диалог, показывающий, что авторизация была произведена успешно.
-    if (context.mounted) {
-      await showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return WelcomeDialog(
-            name: "${accountInfo.firstName} ${accountInfo.lastName}",
-            userID: accountInfo.id,
-            avatarUrl:
-                (accountInfo.hasPhoto ?? false) ? accountInfo.photoMax : null,
-          );
-        },
-      );
-      await Future.delayed(
-        const Duration(
-          milliseconds: 500,
-        ),
-      );
-    }
-
-    if (context.mounted) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        Material3PageRoute(
-          builder: (context) => const HomeRoute(),
-        ),
-        (route) => false,
-      );
-    }
+    ref
+        .read(currentAuthStateProvider.notifier)
+        .login(token, response.response!.first);
   } catch (e, stackTrace) {
-    // ignore: use_build_context_synchronously
     showLogErrorDialog(
       "Ошибка при авторизации: ",
       e,
       stackTrace,
       logger,
+      // ignore: use_build_context_synchronously
       context,
     );
 
@@ -137,109 +98,6 @@ Future<bool> tryAuthorize(
   }
 
   return true;
-}
-
-/// Виджет-диалог, который открывается на несколько секунд, после чего закрывается. Данный диалог показывает аватарку пользователя (если таковая имеется), а так же его имя в тексте "Добро пожаловать, Имя!"
-class WelcomeDialog extends StatefulWidget {
-  /// Имя пользователя, который авторизовался в приложении.
-  final String name;
-
-  /// URL на аватарку пользователя.
-  final String? avatarUrl;
-
-  /// ID пользователя, который авторизовался. Важно указать это поле, если [avatarUrl] не null.
-  final int? userID;
-
-  /// Время, после которого данный виджет автоматически закроется. Если указать null, то автоматическое закрытие происходить не будет.
-  final Duration? duration;
-
-  const WelcomeDialog({
-    super.key,
-    required this.name,
-    this.avatarUrl,
-    this.userID,
-    this.duration = const Duration(seconds: 5),
-  });
-
-  @override
-  createState() => _WelcomeDialogState();
-}
-
-class _WelcomeDialogState extends State<WelcomeDialog> {
-  late Timer? _timer;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _timer = widget.duration != null
-        ? Timer(
-            widget.duration!,
-            () => Navigator.of(context).pop(),
-          )
-        : null;
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Изображение пользователя.
-            if (widget.avatarUrl != null)
-              Padding(
-                padding: const EdgeInsets.only(
-                  bottom: 18,
-                ),
-                child: CachedNetworkImage(
-                  imageUrl: widget.avatarUrl!,
-                  cacheKey: "${widget.userID}400",
-                  imageBuilder:
-                      (BuildContext context, ImageProvider imageProvider) {
-                    return Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        image: DecorationImage(
-                          image: imageProvider,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    );
-                  },
-                  cacheManager: CachedNetworkImagesManager.instance,
-                ),
-              ),
-
-            // "Добро пожаловать, Имя!".
-            StyledText(
-              text:
-                  AppLocalizations.of(context)!.login_welcomeTitle(widget.name),
-              style: Theme.of(context).textTheme.bodyLarge,
-              tags: {
-                "bold": StyledTextTag(
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 /// Route для авторизации на свою страницу ВКонтакте.

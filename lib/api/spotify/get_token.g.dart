@@ -11,7 +11,8 @@ SpotifyAPIGetTokenResponse _$SpotifyAPIGetTokenResponseFromJson(
     SpotifyAPIGetTokenResponse(
       clientID: json['clientId'] as String?,
       accessToken: json['accessToken'] as String?,
-      expirationTimestampMS: json['accessTokenExpirationTimestampMs'] as int?,
+      expirationTimestampMS:
+          (json['accessTokenExpirationTimestampMs'] as num?)?.toInt(),
       isAnonymous: json['isAnonymous'] as bool?,
       error: json['error'] == null
           ? null

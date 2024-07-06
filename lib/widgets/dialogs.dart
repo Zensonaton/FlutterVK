@@ -1,11 +1,14 @@
 import "package:flutter/material.dart";
-import "package:flutter_gen/gen_l10n/app_localizations.dart";
+import "package:gap/gap.dart";
+import "package:go_router/go_router.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 
 import "../main.dart";
+import "../provider/l18n.dart";
 import "../services/logger.dart";
 
 /// Класс для простого создания виджетов типа [Dialog], которые соответствуют дизайну Material 3 диалогам.
-class MaterialDialog extends StatelessWidget {
+class MaterialDialog extends ConsumerWidget {
   /// [IconData], используемый как содержимое иконки, располагаемая в самой верхушке диалога.
   final IconData? icon;
 
@@ -41,11 +44,13 @@ class MaterialDialog extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     assert(
       text != null || contents != null,
       "Expected text or contents to be specified",
     );
+
+    final l18n = ref.watch(l18nProvider);
 
     return Dialog(
       child: Container(
@@ -96,10 +101,7 @@ class MaterialDialog extends StatelessWidget {
               ),
 
             // Разделитель, если есть одновременно и содержимое и текста.
-            if (text != null && contents != null)
-              const SizedBox(
-                height: 8,
-              ),
+            if (text != null && contents != null) const Gap(8),
 
             // Обычное содержимое диалога.
             if (contents != null)
@@ -123,9 +125,9 @@ class MaterialDialog extends StatelessWidget {
                     children: actions ??
                         [
                           TextButton(
-                            onPressed: () => Navigator.of(context).pop(),
+                            onPressed: () => context.pop(),
                             child: Text(
-                              AppLocalizations.of(context)!.general_close,
+                              l18n.general_close,
                             ),
                           ),
                         ],
@@ -240,12 +242,13 @@ void showErrorDialog(
 /// Показывает диалог, показывающий информацию о том, что данное действие невозможно выполнить, если нет доступа к интернету.
 ///
 /// В качестве параметров принимает [context] - контекст.
-void showInternetRequiredDialog(BuildContext context) {
+void showInternetRequiredDialog(WidgetRef ref, BuildContext context) {
+  final l18n = ref.watch(l18nProvider);
+
   showErrorDialog(
     context,
-    title: AppLocalizations.of(context)!.internetConnectionRequiredTitle,
-    description:
-        AppLocalizations.of(context)!.internetConnectionRequiredDescription,
+    title: l18n.internetConnectionRequiredTitle,
+    description: l18n.internetConnectionRequiredDescription,
   );
 }
 
@@ -257,12 +260,12 @@ void showInternetRequiredDialog(BuildContext context) {
 ///
 /// var response = await get("google.com");
 /// ```
-bool networkRequiredDialog(BuildContext context) {
+bool networkRequiredDialog(WidgetRef ref, BuildContext context) {
   if (connectivityManager.hasConnection) {
     return true;
   }
 
-  showInternetRequiredDialog(context);
+  showInternetRequiredDialog(ref, context);
 
   return false;
 }
@@ -293,7 +296,7 @@ void showLogErrorDialog(
 
   if (!context.mounted) {
     logger.w(
-      "Был вызван метод showLogErrorDialog, однако context.mounted == false. Это значит, что был произведён вызов Navigator.of(...).pop() раньше времени.",
+      "showLogErrorDialog() was called while context.mounted is false",
     );
 
     return;

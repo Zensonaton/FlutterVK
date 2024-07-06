@@ -1,30 +1,31 @@
 import "package:flutter/material.dart";
-import "package:flutter_gen/gen_l10n/app_localizations.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
+import "package:gap/gap.dart";
+import "package:go_router/go_router.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:styled_text/styled_text.dart";
 import "package:url_launcher/url_launcher.dart";
 
 import "../../../../consts.dart";
+import "../../../../provider/l18n.dart";
 import "../spotify_auth.dart";
 
 /// Часть Route'а [LoginRoute], показываемая при запуске на desktop-платформах.
-class DesktopSpotifyLogin extends StatefulWidget {
+class DesktopSpotifyLogin extends HookConsumerWidget {
   const DesktopSpotifyLogin({
     super.key,
   });
 
   @override
-  State<DesktopSpotifyLogin> createState() => _DesktopSpotifyLoginState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final spDC = useState("");
 
-class _DesktopSpotifyLoginState extends State<DesktopSpotifyLogin> {
-  String spDC = "";
+    final l18n = ref.watch(l18nProvider);
 
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          AppLocalizations.of(context)!.profile_spotifyAuthTitle,
+          l18n.profile_spotifyAuthTitle,
         ),
         centerTitle: true,
       ),
@@ -32,7 +33,9 @@ class _DesktopSpotifyLoginState extends State<DesktopSpotifyLogin> {
       body: Center(
         child: Card(
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(
+              24,
+            ),
             child: SizedBox(
               width: 500,
               child: Column(
@@ -40,118 +43,94 @@ class _DesktopSpotifyLoginState extends State<DesktopSpotifyLogin> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Текст "Авторизация".
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      bottom: 12,
-                    ),
-                    child: Center(
-                      child: Text(
-                        AppLocalizations.of(context)!.login_desktopTitle,
-                        style: Theme.of(context).textTheme.titleLarge!,
-                      ),
+                  Center(
+                    child: Text(
+                      l18n.login_desktopTitle,
+                      style: Theme.of(context).textTheme.titleLarge!,
                     ),
                   ),
+                  const Gap(12),
 
                   // Описание авторизации.
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      bottom: 8,
-                    ),
-                    child: StyledText(
-                      text: AppLocalizations.of(context)!
-                          .profile_spotifyAuthDescription,
-                      style: Theme.of(context).textTheme.bodyLarge,
-                      tags: {
-                        "bold": StyledTextTag(
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
+                  StyledText(
+                    text: l18n.profile_spotifyAuthDescription,
+                    style: Theme.of(context).textTheme.bodyLarge,
+                    tags: {
+                      "bold": StyledTextTag(
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      "link": StyledTextActionTag(
+                        (String? text, Map<String?, String?> attrs) =>
+                            launchUrl(
+                          Uri.parse(
+                            spotifyAuthUrl,
                           ),
                         ),
-                        "link": StyledTextActionTag(
-                          (String? text, Map<String?, String?> attrs) =>
-                              launchUrl(
-                            Uri.parse(
-                              spotifyAuthUrl,
+                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                              color: Theme.of(context).colorScheme.primary,
                             ),
-                          ),
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyLarge!
-                              .copyWith(
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                        ),
-                      },
-                    ),
+                      ),
+                    },
                   ),
+                  const Gap(8),
 
                   // Поле для ввода токена.
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      bottom: 8,
-                    ),
-                    child: TextField(
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(
-                          Icons.key,
-                        ),
-                        hintText:
-                            "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz...",
+                  TextField(
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(
+                        Icons.key,
                       ),
-                      onChanged: (String value) => setState(
-                        () => spDC = value,
-                      ),
+                      hintText:
+                          "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz...",
                     ),
+                    onChanged: (String value) => spDC.value = value,
                   ),
+                  const Gap(8),
 
                   // Дополнительная информация для помощи.
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      bottom: 36,
-                    ),
-                    child: StyledText(
-                      text: AppLocalizations.of(context)!
-                          .profile_spotifyAuthHelpDescription,
-                      style: Theme.of(context).textTheme.bodyLarge,
-                      tags: {
-                        "link": StyledTextActionTag(
-                          (String? text, Map<String?, String?> attrs) =>
-                              launchUrl(
-                            Uri.parse(wikiSpotifySPDCcookie),
-                          ),
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyLarge!
-                              .copyWith(
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
+                  StyledText(
+                    text: l18n.profile_spotifyAuthHelpDescription,
+                    style: Theme.of(context).textTheme.bodyLarge,
+                    tags: {
+                      "link": StyledTextActionTag(
+                        (String? text, Map<String?, String?> attrs) =>
+                            launchUrl(
+                          Uri.parse(wikiSpotifySPDCcookie),
                         ),
-                      },
-                    ),
+                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                      ),
+                    },
                   ),
+                  const Gap(36),
 
                   // Кнопки для продолжения авторизации.
                   Align(
                     alignment: Alignment.bottomRight,
                     child: FilledButton.icon(
-                      onPressed: spDC.trim().length >= 75
-                          ? () async {
-                              if (!await spotifyAuthorize(context, spDC)) {
-                                return;
-                              }
-
-                              if (context.mounted) {
-                                Navigator.of(context).pop();
-                              }
-                            }
-                          : null,
                       icon: const Icon(
                         Icons.arrow_forward_ios,
                       ),
                       label: Text(
-                        AppLocalizations.of(context)!.login_desktopContinue,
+                        l18n.login_desktopContinue,
                       ),
+                      onPressed: spDC.value.trim().length >= 75
+                          ? () async {
+                              if (!await spotifyAuthorize(
+                                ref,
+                                context,
+                                spDC.value,
+                              )) {
+                                return;
+                              }
+
+                              if (context.mounted) context.pop();
+                            }
+                          : null,
                     ),
                   ),
                 ],

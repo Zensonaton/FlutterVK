@@ -1,48 +1,38 @@
 import "package:flutter/material.dart";
+import "package:riverpod_annotation/riverpod_annotation.dart";
 
-/// Provider для хранения цветовой схемы приложения, зависящая от обложки текущего трека.
-///
-/// Использование:
-/// ```dart
-/// final PlayerSchemeProvider scheme = Provider.of<PlayerSchemeProvider>(context, listen: false);
-/// ```
-///
-/// Если Вы хотите получить цветовую схему в контексте интерфейса Flutter, и хотите, что бы интерфейс сам обновлялся при изменении полей, то используйте следующий код:
-/// ```dart
-/// final PlayerSchemeProvider scheme = Provider.of<PlayerSchemeProvider>(context);
-/// ```
-class PlayerSchemeProvider extends ChangeNotifier {
-  String? _mediaKey;
+import "../enums.dart";
+import "../services/image_to_color_scheme.dart";
+import "../services/logger.dart";
+import "preferences.dart";
 
-  ColorScheme? _lightColorScheme;
-  ColorScheme? _darkColorScheme;
+part "color.g.dart";
 
-  /// Выдаёт последний известный [ColorScheme] яркости [Brightness.light].
-  ColorScheme? get lightColorScheme => _lightColorScheme;
+/// [Provider], который извлекает цветовые схемы из передаваемого изображения трека.
+@riverpod
+class TrackSchemeInfo extends _$TrackSchemeInfo {
+  static final AppLogger logger = getLogger("TrackImageInfo");
 
-  /// Выдаёт последний известный [ColorScheme] яркости [Brightness.dark].
-  ColorScheme? get darkColorScheme => _darkColorScheme;
+  @override
+  ImageSchemeExtractor? build() => null;
 
-  /// Возвращает [ColorScheme] в зависимости от параметра [brightness].
-  ColorScheme? colorScheme(Brightness brightness) =>
-      brightness == Brightness.light ? lightColorScheme : darkColorScheme;
+  /// Создаёт цветовые схемы из передаваемого [provider], обновляя [state] данного объекта.
+  Future<ImageSchemeExtractor> fromImageProvider(ImageProvider provider) async {
+    final Stopwatch watch = Stopwatch()..start();
 
-  /// Выдаёт [Audio.mediaKey], с которым ассоциирован последний [lightColorScheme] или [darkColorScheme].
-  String? get mediaKey => _mediaKey;
+    state = await ImageSchemeExtractor.fromImageProvider(
+      provider,
+      schemeVariant: {
+        DynamicSchemeType.tonalSpot: DynamicSchemeVariant.tonalSpot,
+        DynamicSchemeType.neutral: DynamicSchemeVariant.neutral,
+        DynamicSchemeType.content: DynamicSchemeVariant.content,
+        DynamicSchemeType.monochrome: DynamicSchemeVariant.monochrome,
+      }[ref.read(preferencesProvider).dynamicSchemeType]!,
+    );
+    logger.d(
+      "Took ${watch.elapsedMilliseconds}ms to create ColorScheme from image (resize ${state!.resizeDuration.inMilliseconds}ms, qzer (Isolated): ${state!.quantizeDuration.inMilliseconds}ms)",
+    );
 
-  /// Изменяет передаваемый [scheme], посылая изменения всему интерфейсу приложения. [mediaKey] используется для защиты от повторного вызова [notifyListeners].
-  void setScheme(
-    ColorScheme lightScheme,
-    ColorScheme darkScheme,
-    String mediaKey,
-  ) {
-    _lightColorScheme = lightScheme;
-    _darkColorScheme = darkScheme;
-
-    // Посылаем обновления лишь в том случае, если mediaKey изменился, т.е., изменилась обложка трека.
-    if (_mediaKey != mediaKey) {
-      notifyListeners();
-    }
-    _mediaKey = mediaKey;
+    return state!;
   }
 }

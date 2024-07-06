@@ -9,7 +9,7 @@ part of 'get.dart';
 APIAudioGetRealResponse _$APIAudioGetRealResponseFromJson(
         Map<String, dynamic> json) =>
     APIAudioGetRealResponse(
-      count: json['count'] as int,
+      count: (json['count'] as num).toInt(),
       items: (json['items'] as List<dynamic>)
           .map((e) => Audio.fromJson(e as Map<String, dynamic>))
           .toList(),

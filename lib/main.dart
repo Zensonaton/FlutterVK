@@ -1,45 +1,42 @@
 import "dart:io";
 
-import "package:dynamic_color/dynamic_color.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
-import "package:flutter/services.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
-import "package:flutter_localizations/flutter_localizations.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:just_audio_media_kit/just_audio_media_kit.dart";
 import "package:local_notifier/local_notifier.dart";
 import "package:package_info_plus/package_info_plus.dart";
 import "package:path/path.dart" as path;
 import "package:path_provider/path_provider.dart";
-import "package:provider/provider.dart";
 import "package:responsive_builder/responsive_builder.dart";
 import "package:system_tray/system_tray.dart";
-import "package:url_launcher/url_launcher.dart";
 import "package:window_manager/window_manager.dart";
 
-import "consts.dart";
+import "app.dart";
 import "db/db.dart";
-import "enums.dart";
-import "intents.dart";
-import "provider/color.dart";
-import "provider/user.dart";
-import "routes/home.dart";
-import "routes/home/profile.dart";
-import "routes/welcome.dart";
 import "services/audio_player.dart";
 import "services/connectivity_manager.dart";
 import "services/download_manager.dart";
 import "services/logger.dart";
 import "services/updater.dart";
 import "utils.dart";
-import "widgets/loading_overlay.dart";
 
+// TODO: Удалить это.
 /// Глобальный объект [BuildContext].
 ///
 /// За этот костыль меня могут отпиздить, и правильно сделают. Данный BuildContext нужен, что бы можно было извлекать ключи локализации там, где BuildContext отсутствует (внутри методов initState, к примеру).
 ///
 /// Источник: https://christopher.khawand.dev/posts/flutter-internationalization-without-buildcontext
 BuildContext? buildContext;
+
+/// [GlobalKey] для [Navigator], который позволяет переходить между экранами вне контекста виджета.
+///
+/// Пример использования:
+/// ```dart
+/// navigatorKey.currentContext?.go("/grades");
+/// ```
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 /// Объект базы данных приложения.
 late final AppStorage appStorage;
@@ -56,12 +53,14 @@ late final ConnectivityManager connectivityManager;
 /// [ColorScheme] яркости [Brightness.light], которая используется в случае, если по какой-то причине приложение не смогло получить цвета акцента, либо цвета музыкального плеера.
 final fallbackLightColorScheme = ColorScheme.fromSeed(
   seedColor: Colors.blueAccent,
+  dynamicSchemeVariant: DynamicSchemeVariant.fidelity,
 );
 
 /// [ColorScheme] яркости [Brightness.dark], которая используется в случае, если по какой-то причине приложение не смогло получить цвета акцента, либо цвета музыкального плеера.
 final fallbackDarkColorScheme = ColorScheme.fromSeed(
   seedColor: Colors.blueAccent,
   brightness: Brightness.dark,
+  dynamicSchemeVariant: DynamicSchemeVariant.fidelity,
 );
 
 /// Версия приложения.
@@ -204,7 +203,7 @@ Future main() async {
       }
     } catch (e, stackTrace) {
       logger.w(
-        "Не удалось удалить существующий файл обновления по пули ${updaterInstaller.path}: ",
+        "Error while deleting updater on path ${updaterInstaller.path}: ",
         error: e,
         stackTrace: stackTrace,
       );
@@ -258,22 +257,17 @@ Future main() async {
     // Фикс сертификатов.
     HttpOverrides.global = DevHttpOverrides();
 
+    // Запускаем само приложение.
     runApp(
-      MultiProvider(
-        providers: [
-          ChangeNotifierProvider(
-            create: (BuildContext context) => UserProvider(false),
-          ),
-          ChangeNotifierProvider(
-            create: (BuildContext context) => PlayerSchemeProvider(),
-          ),
-        ],
-        child: const MainApp(),
+      const ProviderScope(
+        child: EagerInitialization(
+          app: FlutterVKApp(),
+        ),
       ),
     );
   } catch (e, stackTrace) {
     logger.f(
-      "Ошибка при запуске приложения (main): ",
+      "Exception while running FlutterVKApp (main): ",
       error: e,
       stackTrace: stackTrace,
     );
@@ -281,337 +275,18 @@ Future main() async {
     // Пытаемся запустить errored-версию приложения.
     try {
       runApp(
-        ErroredMainApp(
-          error: e.toString(),
+        ProviderScope(
+          child: ErroredApp(
+            error: e.toString(),
+          ),
         ),
       );
     } catch (e, stackTrace) {
-      logger.w(
-        "Запустить errored-версию приложения не вышло: ",
+      logger.f(
+        "Couldn't run ErroredApp: ",
         error: e,
         stackTrace: stackTrace,
       );
     }
-  }
-}
-
-/// Основной виджет главного приложения, используемый методом [runApp] внутри [main].
-///
-/// В случае, если по какой-то причине произойдёт ошибка, вместо этого класса будет вызван [runApp], но для класса [ErroredMainApp], который символизирует ошибку запуска приложения.
-class MainApp extends StatefulWidget {
-  const MainApp({
-    super.key,
-  });
-
-  @override
-  State<MainApp> createState() => _MainAppState();
-}
-
-class _MainAppState extends State<MainApp> with WindowListener {
-  final AppLogger logger = getLogger("MainApp");
-
-  /// Виджет, который будет хранить в себе "главную" страницу, с которой и начнётся изначальная навигация пользователем.
-  Widget? home;
-
-  void init() async {
-    // Загружаем обработчик событий окна.
-    windowManager.addListener(this);
-
-    // Загружаем объект пользователя с диска.
-    final UserProvider user = Provider.of<UserProvider>(context, listen: false);
-
-    // Узнаём, куда нужно перекинуть пользователя.
-    home = await user.loadFromDisk() ? const HomeRoute() : const WelcomeRoute();
-
-    // Восстанавливаем состояние shuffle у плеера.
-    if (user.settings.shuffleEnabled) {
-      await player.setShuffle(true);
-    }
-
-    // Переключаем состояние Discord Rich Presence.
-    if (user.settings.discordRPCEnabled && isDesktop) {
-      await player.setDiscordRPCEnabled(true);
-    }
-
-    // Восстанавливаем значение настройки "пауза при отключении громкости".
-    if (user.settings.pauseOnMuteEnabled) {
-      player.setPauseOnMuteEnabled(true);
-    }
-
-    // Восстанавливаем значение настройки "остановка при неактивности".
-    if (user.settings.stopOnPauseEnabled) {
-      player.setStopOnPauseEnabled(true);
-    }
-
-    // На Desktop-платформах, создаём README-файл в папке кэша треков, если он не существует.
-    if (isDesktop) {
-      final File readmeFile = File(
-        path.join(
-          await CachedStreamedAudio.getTrackStorageDirectory(),
-          tracksCacheReadmeFileName,
-        ),
-      );
-      if (!readmeFile.existsSync()) {
-        readmeFile.createSync(
-          recursive: true,
-        );
-        readmeFile.writeAsStringSync(
-          // ignore: use_build_context_synchronously
-          AppLocalizations.of(buildContext!)!.general_musicReadmeFileContents,
-        );
-      }
-    }
-
-    user.markUpdated(false);
-
-    // Делаем панель навигации прозрачной.
-    SystemChrome.setEnabledSystemUIMode(
-      SystemUiMode.edgeToEdge,
-    );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-
-    init();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-
-    windowManager.removeListener(this);
-  }
-
-  @override
-  void onWindowClose() async {
-    final UserProvider user = Provider.of<UserProvider>(context, listen: false);
-    final AppCloseBehavior behavior = user.settings.closeBehavior;
-
-    // В зависимости от настройки "Поведение при закрытии", приложение должно либо закрыться, либо просто минимизироваться.
-    if (behavior == AppCloseBehavior.minimize ||
-        (behavior == AppCloseBehavior.minimizeIfPlaying && player.playing)) {
-      final LocalNotification notification = LocalNotification(
-        title: "Flutter VK",
-        body: AppLocalizations.of(buildContext!)!.general_appMinimized,
-        silent: true,
-        actions: [
-          LocalNotificationAction(
-            text: AppLocalizations.of(buildContext!)!.general_appMinimizedClose,
-          ),
-          LocalNotificationAction(
-            text:
-                AppLocalizations.of(buildContext!)!.general_appMinimizedRestore,
-          ),
-        ],
-      );
-      notification.onClick = windowManager.show;
-      notification.onClickAction = (int index) async {
-        if (index == 0) {
-          exit(0);
-        }
-
-        await windowManager.show();
-        await notification.close();
-      };
-
-      // Отображаем уведомление.
-      await notification.show();
-
-      // Сворачиваем приложение.
-      await windowManager.hide();
-
-      return;
-    }
-
-    exit(0);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final UserProvider user = Provider.of<UserProvider>(context);
-    final PlayerSchemeProvider colorScheme =
-        Provider.of<PlayerSchemeProvider>(context);
-
-    // Если мы ещё не загрузились, то показываем загрузку.
-    if (home == null) {
-      return const Center(
-        child: CircularProgressIndicator.adaptive(),
-      );
-    }
-
-    return DynamicColorBuilder(
-      builder: (ColorScheme? lightColorScheme, ColorScheme? darkColorScheme) {
-        final playerLightColorScheme = user.settings.playerColorsAppWide
-            ? colorScheme.lightColorScheme
-            : null;
-        final playerDarkColorScheme = user.settings.playerColorsAppWide
-            ? colorScheme.darkColorScheme
-            : null;
-
-        return MaterialApp(
-          theme: ThemeData(
-            colorScheme: playerLightColorScheme ??
-                lightColorScheme ??
-                fallbackLightColorScheme,
-          ),
-          darkTheme: ThemeData(
-            colorScheme: (playerDarkColorScheme ??
-                    darkColorScheme ??
-                    fallbackDarkColorScheme)
-                .copyWith(
-              background: user.settings.oledTheme ? Colors.black : null,
-              surface: user.settings.oledTheme ? Colors.black : null,
-            ),
-          ),
-          themeMode: user.settings.theme,
-          themeAnimationDuration: const Duration(
-            milliseconds: 500,
-          ),
-          themeAnimationCurve: Curves.ease,
-          builder: (BuildContext context, Widget? child) {
-            return LoadingOverlay(
-              child: AnnotatedRegion(
-                value: const SystemUiOverlayStyle(
-                  systemNavigationBarColor: Colors.transparent,
-                  systemNavigationBarDividerColor: Colors.transparent,
-                ),
-                child: child!,
-              ),
-            );
-          },
-          onGenerateTitle: (BuildContext context) {
-            buildContext = context;
-
-            return "Flutter VK";
-          },
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          shortcuts: {
-            // Пауза.
-            LogicalKeySet(
-              LogicalKeyboardKey.space,
-            ): const PlayPauseIntent(),
-
-            // Полноэкранный плеер.
-            LogicalKeySet(
-              LogicalKeyboardKey.f11,
-            ): const FullscreenPlayerIntent(),
-          },
-          actions: {
-            PlayPauseIntent: CallbackAction(
-              onInvoke: (intent) => player.togglePlay(),
-            ),
-          },
-          supportedLocales: const [
-            Locale("ru"),
-            Locale("en"),
-          ],
-          home: home,
-        );
-      },
-    );
-  }
-}
-
-/// Альтернативная версия класса [MainApp], вызываемая в случае, если при инициализации [MainApp] (или метода [runApp]/[main]) произошла ошибка. Данный класс отображает [MaterialApp], показывающий текст ошибки, а так же предлагающий пользователю опции для возможного решения проблемы.
-class ErroredMainApp extends StatelessWidget {
-  /// Ошибка, вызвавшая краш приложения.
-  final String error;
-
-  const ErroredMainApp({
-    super.key,
-    required this.error,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      theme: ThemeData(
-        colorScheme: fallbackLightColorScheme,
-      ),
-      darkTheme: ThemeData(
-        colorScheme: fallbackDarkColorScheme,
-        brightness: Brightness.dark,
-      ),
-      home: Scaffold(
-        body: Center(
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(
-                16,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Иконка.
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      bottom: 12,
-                    ),
-                    child: Icon(
-                      Icons.warning,
-                      color: Theme.of(context).colorScheme.error,
-                      size: 36,
-                    ),
-                  ),
-
-                  // Текст про ошибку запуска.
-                  // В данном классе мы не должны использовать локализацию, поскольку она может быть поломана.
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      bottom: 24,
-                    ),
-                    child: SelectableText(
-                      "Unfortunately, Flutter VK couldn't start up properly due to unhandled exception:\n$error\n\nPlease try to check for app updates, and/or create a Github Issue on Flutter VK Github.",
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-
-                  // Кнопки снизу.
-                  Wrap(
-                    spacing: 8,
-                    children: [
-                      // Кнопка для возможности поделиться логами.
-                      const FilledButton(
-                        onPressed: shareLogs,
-                        child: Text(
-                          "Share logs",
-                        ),
-                      ),
-
-                      // Открытие Github-репозитория.
-                      FilledButton.tonal(
-                        onPressed: () => launchUrl(
-                          Uri.parse(
-                            repoURL,
-                          ),
-                        ),
-                        child: const Text(
-                          "Open Github",
-                        ),
-                      ),
-
-                      // Кнопка для выхода.
-                      FilledButton.tonal(
-                        onPressed: () => exit(0),
-                        child: const Text(
-                          "Exit",
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }

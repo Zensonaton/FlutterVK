@@ -8,7 +8,7 @@ part of 'add.dart';
 
 APIAudioAddResponse _$APIAudioAddResponseFromJson(Map<String, dynamic> json) =>
     APIAudioAddResponse(
-      response: json['response'] as int?,
+      response: (json['response'] as num?)?.toInt(),
       error: json['error'] == null
           ? null
           : APIError.fromJson(json['error'] as Map<String, dynamic>),
