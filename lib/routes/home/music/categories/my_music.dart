@@ -33,8 +33,6 @@ class MyMusicBlock extends HookConsumerWidget {
     ref.watch(playerCurrentIndexProvider);
     ref.watch(playerLoadedStateProvider);
 
-    print('rebuild');
-
     final bool selected = player.currentPlaylist == playlist;
     final bool selectedAndPlaying = selected && player.playing;
     final int musicCount = playlist?.count ?? 0;
