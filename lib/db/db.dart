@@ -46,6 +46,8 @@ class AppStorage {
   }
 
   /// Сохраняет единственный плейлист пользователя в БД.
+  ///
+  /// Если Вам нужно сохранить множество плейлистов за раз, то воспользуйтесь методом [savePlaylists].
   Future<void> savePlaylist(DBPlaylist playlist) async {
     logger.d("Called savePlaylist for $playlist");
 
@@ -57,7 +59,11 @@ class AppStorage {
   }
 
   /// Сохраняет список из плейлистов пользователя в БД.
+  ///
+  /// Отличие этого метода от [savePlaylist] в том, что он массово сохраняет сразу много плейлистов, что может быть быстрее, нежели использование `for`-цикла с [savePlaylist].
   Future<void> savePlaylists(List<DBPlaylist> playlists) async {
+    logger.d("Called savePlaylist for ${playlists.length} playlists");
+
     final Isar isar = await _getIsar();
 
     await isar.writeTxn(() async {

@@ -18,6 +18,7 @@ import "../../services/cache_manager.dart";
 import "../../utils.dart";
 import "../../widgets/dialogs.dart";
 import "../../widgets/fallback_audio_photo.dart";
+import "../../widgets/loading_button.dart";
 import "../../widgets/responsive_slider.dart";
 import "../fullscreen_player.dart";
 import "../home.dart";
@@ -318,6 +319,57 @@ class FullscreenMediaControls extends ConsumerWidget {
     final bool isRecommendationTypePlaylist =
         player.currentPlaylist?.isRecommendationTypePlaylist ?? false;
 
+    Future<void> onLikeTap() async {
+      if (!networkRequiredDialog(ref, context)) return;
+
+      await toggleTrackLike(
+        ref,
+        player.currentAudio!,
+        !isFavorite,
+      );
+    }
+
+    Future<void> onDislikeTap() async {
+      if (!networkRequiredDialog(ref, context)) return;
+
+      // Делаем трек дизлайкнутым.
+      final bool result = await dislikeTrackState(
+        context,
+        player.currentAudio!,
+      );
+      if (!result) return;
+
+      // Запускаем следующий трек в плейлисте.
+      await player.next();
+    }
+
+    void onLyricsTap() =>
+        prefsNotifier.setTrackLyricsEnabled(!preferences.trackLyricsEnabled);
+
+    void onMiniplayerCloseTap() => closeMiniPlayer(context);
+
+    void onShuffleTap() async {
+      assert(
+        canToggleShuffle,
+        "Called onShuffleTap, but canToggleShuffle is false",
+      );
+
+      await player.toggleShuffle();
+
+      prefsNotifier.setShuffleEnabled(player.shuffleModeEnabled);
+    }
+
+    onSliderUsed(double newProgress) => player.seekNormalized(newProgress);
+
+    void onPreviousTap() => player.previous(allowSeekToBeginning: true);
+
+    void onPauseTap() => player.togglePlay();
+
+    void onNextTap() => player.next();
+
+    void onLoopTap() => player
+        .setLoop(player.loopMode == LoopMode.one ? LoopMode.all : LoopMode.one);
+
     return Column(
       children: [
         // Кнопки для лайка/дизлайка, а так же включения/отключения текста песни.
@@ -329,16 +381,8 @@ class FullscreenMediaControls extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               // Кнопка для лайка трека.
-              IconButton(
-                onPressed: () {
-                  if (!networkRequiredDialog(ref, context)) return;
-
-                  toggleTrackLikeState(
-                    context,
-                    player.currentAudio!,
-                    !isFavorite,
-                  );
-                },
+              LoadingIconButton(
+                onPressed: onLikeTap,
                 icon: Icon(
                   isFavorite ? Icons.favorite : Icons.favorite_border,
                   color: Theme.of(context).colorScheme.primary,
@@ -347,20 +391,8 @@ class FullscreenMediaControls extends ConsumerWidget {
 
               // Кнопка для дизлайка трека.
               if (isRecommendationTypePlaylist)
-                IconButton(
-                  onPressed: () async {
-                    if (!networkRequiredDialog(ref, context)) return;
-
-                    // Делаем трек дизлайкнутым.
-                    final bool result = await dislikeTrackState(
-                      context,
-                      player.currentAudio!,
-                    );
-                    if (!result) return;
-
-                    // Запускаем следующий трек в плейлисте.
-                    await player.next();
-                  },
+                LoadingIconButton(
+                  onPressed: onDislikeTap,
                   icon: Icon(
                     Icons.thumb_down_outlined,
                     color: Theme.of(context).colorScheme.primary,
@@ -451,9 +483,7 @@ class FullscreenMediaControls extends ConsumerWidget {
               if (showLyricsBlock)
                 IconButton(
                   onPressed: player.currentAudio!.hasLyrics ?? false
-                      ? () => prefsNotifier.setTrackLyricsEnabled(
-                            !preferences.trackLyricsEnabled,
-                          )
+                      ? onLyricsTap
                       : null,
                   icon: Icon(
                     preferences.trackLyricsEnabled &&
@@ -469,7 +499,7 @@ class FullscreenMediaControls extends ConsumerWidget {
               // Кнопка для выхода из плеера.
               if (!showLyricsBlock)
                 IconButton(
-                  onPressed: () => closeMiniPlayer(context),
+                  onPressed: onMiniplayerCloseTap,
                   icon: Icon(
                     Icons.picture_in_picture_alt,
                     color: Theme.of(context).colorScheme.primary,
@@ -517,10 +547,7 @@ class FullscreenMediaControls extends ConsumerWidget {
                       (BuildContext context, AsyncSnapshot<Duration> snapshot) {
                     return ResponsiveSlider(
                       value: player.progress,
-                      onChangeEnd: (double newProgress) =>
-                          player.seekNormalized(
-                        newProgress,
-                      ),
+                      onChangeEnd: onSliderUsed,
                     );
                   },
                 ),
@@ -543,13 +570,7 @@ class FullscreenMediaControls extends ConsumerWidget {
                   final enabled = snapshot.data ?? false;
 
                   return IconButton(
-                    onPressed: canToggleShuffle
-                        ? () async {
-                            await player.setShuffle(!enabled);
-
-                            prefsNotifier.setShuffleEnabled(!enabled);
-                          }
-                        : null,
+                    onPressed: canToggleShuffle ? onShuffleTap : null,
                     icon: Icon(
                       enabled ? Icons.shuffle_on_outlined : Icons.shuffle,
                       color: canToggleShuffle
@@ -565,9 +586,7 @@ class FullscreenMediaControls extends ConsumerWidget {
 
               // Запуск предыдущего трека.
               IconButton(
-                onPressed: () => player.previous(
-                  allowSeekToBeginning: true,
-                ),
+                onPressed: onPreviousTap,
                 icon: Icon(
                   Icons.skip_previous,
                   color: Theme.of(context).colorScheme.primary,
@@ -584,9 +603,7 @@ class FullscreenMediaControls extends ConsumerWidget {
                   final bool playing = snapshot.data ?? false;
 
                   return IconButton(
-                    onPressed: () => player.playOrPause(
-                      !playing,
-                    ),
+                    onPressed: onPauseTap,
                     icon: Icon(
                       smallerLayout
                           ? (playing ? Icons.pause : Icons.play_arrow)
@@ -605,7 +622,7 @@ class FullscreenMediaControls extends ConsumerWidget {
 
               // Запуск следующего трека.
               IconButton(
-                onPressed: () => player.next(),
+                onPressed: onNextTap,
                 icon: Icon(
                   Icons.skip_next,
                   color: Theme.of(context).colorScheme.primary,
@@ -623,9 +640,7 @@ class FullscreenMediaControls extends ConsumerWidget {
                   final LoopMode loopMode = snapshot.data ?? LoopMode.all;
 
                   return IconButton(
-                    onPressed: () => player.setLoop(
-                      loopMode == LoopMode.one ? LoopMode.all : LoopMode.one,
-                    ),
+                    onPressed: onLoopTap,
                     icon: Icon(
                       loopMode == LoopMode.one
                           ? Icons.repeat_on_outlined

@@ -27,6 +27,17 @@ class PlaylistsState {
   /// Количество всех созданых плейлистов пользователя (те, что находятся в разделе "Ваши плейлисты").
   final int? playlistsCount;
 
+  PlaylistsState copyWith({
+    bool? fromAPI,
+    List<ExtendedPlaylist>? playlists,
+    int? playlistsCount,
+  }) =>
+      PlaylistsState(
+        fromAPI: fromAPI ?? this.fromAPI,
+        playlists: playlists ?? this.playlists,
+        playlistsCount: playlistsCount ?? this.playlistsCount,
+      );
+
   @override
   bool operator ==(covariant PlaylistsState other) {
     if (identical(this, other)) return true;
@@ -85,13 +96,18 @@ class Playlists extends _$Playlists {
     state = const AsyncLoading();
 
     // FIXME: Неиспользованные ключи локализации: music_basicDataLoadError, music_recommendationsDataLoadError.
-    // FIXME: При получении плейлистов с БД, записи в БД забываются. Нужно merge'ить плейлисты.
 
     // Загружаем плейлисты из локальной БД, если они не были загружены ранее.
     if (!state.hasValue || !(state.value?.fromAPI ?? false)) {
+      final Stopwatch watch = Stopwatch()..start();
       final PlaylistsState? playlistsState =
           await ref.read(dbPlaylistsProvider.future);
+
       if (playlistsState != null) {
+        logger.d(
+          "Took ${watch.elapsedMilliseconds}ms to load playlists from Isar DB",
+        );
+
         state = AsyncData(playlistsState);
       }
     }
@@ -112,19 +128,20 @@ class Playlists extends _$Playlists {
       ...recommendedPlaylists,
     ];
 
+    // Если state не был установлен, то устанавливаем его.
     state = AsyncData(
       PlaylistsState(
-        playlists: playlists,
+        playlists: state.value?.playlists ?? [],
         fromAPI: true,
         playlistsCount: userPlaylists.$2,
       ),
     );
 
-    // Загружаем эти плейлисты в БД.
-    await appStorage.savePlaylists(
-      playlists
-          .map((ExtendedPlaylist playlist) => playlist.asDBPlaylist)
-          .toList(),
+    // Обновляем плейлисты. Данный метод обновит UI и сохранит в БД, если плейлисты отличаются от тех, что уже есть.
+    await updatePlaylists(
+      playlists,
+      saveInDB: true,
+      fromAPI: true,
     );
 
     return state.value;
@@ -361,6 +378,209 @@ class Playlists extends _$Playlists {
       ...parseSimillarPlaylists(response),
       ...parseMadeByVKPlaylists(response) ?? [],
     ];
+  }
+
+  /// Обновляет состояние данного Provider, объединяя новую и старую версию плейлиста, а после чего сохраняет его в БД, если [saveInDB] правдив.
+  ///
+  /// Возвращает то, отличается ли старая версия плейлиста от новой.
+  Future<bool> updatePlaylist(
+    ExtendedPlaylist playlist, {
+    bool saveInDB = false,
+    bool fromAPI = false,
+  }) async {
+    assert(
+      state.value != null,
+      "State was not set before calling updatePlaylist",
+    );
+
+    final List<ExtendedPlaylist> allPlaylists = state.value?.playlists ?? [];
+    final ExtendedPlaylist? existingPlaylist = allPlaylists.firstWhereOrNull(
+      (ExtendedPlaylist plist) =>
+          plist.id == playlist.id && plist.ownerID == playlist.ownerID,
+    );
+
+    // Если передаваемого плейлиста ещё нету в списке плейлистов, то просто сохраняем его.
+    if (existingPlaylist == null) {
+      allPlaylists.add(playlist);
+
+      // Обновляем состояние.
+      state = AsyncData(
+        state.value?.copyWith(
+          playlists: allPlaylists,
+        ),
+      );
+
+      // Сохраняем в БД.
+      if (saveInDB) {
+        await appStorage.savePlaylist(playlist.asDBPlaylist);
+      }
+
+      return true;
+    }
+
+    // Такой же плейлист уже существует в списке плейлистов.
+    // Объединяем старые и новые данные у плейлиста.
+    // Но для начала проверим, отличаются ли поля у этого плейлиста (кроме списка треков).
+    bool playlistChanged = (existingPlaylist.count != playlist.count ||
+        existingPlaylist.title != playlist.title ||
+        existingPlaylist.description != playlist.description ||
+        existingPlaylist.subtitle != playlist.subtitle ||
+        (existingPlaylist.cacheTracks ?? false) !=
+            (playlist.cacheTracks ?? false) ||
+        existingPlaylist.areTracksLive != playlist.areTracksLive ||
+        existingPlaylist.backgroundAnimationUrl !=
+            playlist.backgroundAnimationUrl ||
+        existingPlaylist.isLiveData != playlist.isLiveData ||
+        existingPlaylist.photo != playlist.photo);
+
+    // Проходимся по всем трекам в передаваемом плейлисте.
+    final List<ExtendedAudio> newAudios = [];
+    if (playlist.audios != null) {
+      final List<ExtendedAudio> existingAudios = existingPlaylist.audios ?? [];
+
+      for (ExtendedAudio givenAudio in [...playlist.audios!]) {
+        final ExtendedAudio? existingAudio = existingAudios
+            .firstWhereOrNull((oldAudio) => oldAudio == givenAudio);
+
+        // Трек не найден, добавляем его.
+        if (existingAudio == null) {
+          newAudios.add(givenAudio);
+
+          playlistChanged = true;
+
+          continue;
+        }
+
+        // Если трек не отличается, то ничего не меняем.
+        if (existingAudio.title == givenAudio.title &&
+            existingAudio.artist == givenAudio.artist &&
+            (existingAudio.isCached ?? false) ==
+                (givenAudio.isCached ?? false) &&
+            (existingAudio.album == givenAudio.album ||
+                givenAudio.album == null) &&
+            existingAudio.hasLyrics == givenAudio.hasLyrics &&
+            existingAudio.lyrics == givenAudio.lyrics) {
+          newAudios.add(givenAudio);
+
+          continue;
+        }
+
+        newAudios.add(
+          existingAudio.copyWith(
+            title: givenAudio.title,
+            artist: givenAudio.artist,
+            url: givenAudio.url,
+            isCached: givenAudio.isCached,
+            album: givenAudio.album,
+            hasLyrics: givenAudio.hasLyrics,
+            lyrics: givenAudio.lyrics,
+            vkThumbs: givenAudio.vkThumbs,
+          ),
+        );
+
+        playlistChanged = true;
+      }
+
+      // Проходимся по тому списку треков, которые кэшированы, но больше нет в плейлисте.
+      final List<ExtendedAudio> removedAudios = existingAudios
+          .where(
+            (audio) =>
+                (audio.isCached ?? false) && !playlist.audios!.contains(audio),
+          )
+          .toList();
+
+      // Проходимся по списку из "удалённых" из плейлиста треков.
+      for (ExtendedAudio audio in removedAudios) {
+        logger.d("$audio should be deleted");
+
+        playlistChanged = true;
+      }
+    }
+
+    // Мы закончили проходиться по списку треков.
+
+    // Если плейлист, по-итогу, отличается, то обновляем state и сохраняем в БД.
+    if (playlistChanged) {
+      // Создаём копию плейлиста. Из-за reference'ов, мы должны создать новый ExtendedPlaylist.
+      //
+      // Если не делать копию плейлиста, то Riverpod сравнивает старую (но с новыми полями) и новую версию плейлистов,
+      // и из-за этого происходит сравнение между совершенно одинаковыми полями, из-за чего Riverpod
+      // отказывается обновлять свои provider'ы, и интерфейс не rebuild'ится, несмотря на то что изменения, очевидно, есть.
+      final ExtendedPlaylist newPlaylist = existingPlaylist.copyWith(
+        count: playlist.count,
+        title: playlist.title,
+        description: playlist.description,
+        subtitle: playlist.subtitle,
+        cacheTracks: playlist.cacheTracks,
+        photo: playlist.photo,
+        createTime: playlist.createTime,
+        updateTime: playlist.updateTime,
+        followers: playlist.followers,
+        areTracksLive: playlist.areTracksLive,
+        backgroundAnimationUrl: playlist.backgroundAnimationUrl,
+        isLiveData: playlist.isLiveData,
+        audios: newAudios,
+      );
+
+      // Обновляем плейлист.
+      allPlaylists.removeWhere(
+        (a) => a.id == playlist.id && a.ownerID == playlist.ownerID,
+      );
+      allPlaylists.add(newPlaylist);
+
+      // Обновляем состояние интерфейса.
+      state = AsyncData(
+        state.value!.copyWith(
+          playlists: allPlaylists,
+        ),
+      );
+
+      // Сохраняем в БД.
+      if (saveInDB) {
+        await appStorage.savePlaylist(existingPlaylist.asDBPlaylist);
+      }
+    }
+
+    if (playlistChanged) {
+      logger.d("Playlist has changed");
+    }
+
+    return playlistChanged;
+  }
+
+  /// Обновляет состояние данного Provider, объединяя новые и старые версии плейлистров, а после чего сохраняет их в БД, если [saveInDB] правдив.
+  ///
+  /// Возвращает то, был ли изменён хотя бы один из плейлистов после объединения.
+  Future<bool> updatePlaylists(
+    List<ExtendedPlaylist> newPlaylists, {
+    bool saveInDB = false,
+    bool fromAPI = false,
+  }) async {
+    final List<ExtendedPlaylist> changedPlaylists = [];
+    for (ExtendedPlaylist playlist in newPlaylists) {
+      final bool changed = await updatePlaylist(
+        playlist,
+        fromAPI: fromAPI,
+      );
+
+      // Если этот плейлист считается изменённым, то запоминаем его что бы потом массово сохранить.
+      if (changed) {
+        changedPlaylists.add(playlist);
+      }
+    }
+
+    // Если у нас есть несохранённые плейлисты, то массово сохраняем их.
+    if (changedPlaylists.isNotEmpty) {
+      await appStorage.savePlaylists(
+        changedPlaylists
+            .map(
+              (playlist) => playlist.asDBPlaylist,
+            )
+            .toList(),
+      );
+    }
+
+    return changedPlaylists.isNotEmpty;
   }
 }
 

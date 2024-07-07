@@ -33,6 +33,8 @@ class MyMusicBlock extends HookConsumerWidget {
     ref.watch(playerCurrentIndexProvider);
     ref.watch(playerLoadedStateProvider);
 
+    print('rebuild');
+
     final bool selected = player.currentPlaylist == playlist;
     final bool selectedAndPlaying = selected && player.playing;
     final int musicCount = playlist?.count ?? 0;
@@ -147,8 +149,10 @@ class MyMusicBlock extends HookConsumerWidget {
           ],
 
         // Skeleton loader.
-        if (playlist?.audios == null) ...[
-          for (int index = 0; index < 10; index++)
+        if (playlist?.audios == null)
+          for (int index = 0;
+              index < (playlist?.count ?? 10).clamp(0, 10);
+              index++) ...[
             Skeletonizer(
               child: AudioTrackTile(
                 audio: ExtendedAudio(
@@ -162,8 +166,8 @@ class MyMusicBlock extends HookConsumerWidget {
                 ),
               ),
             ),
-          const Gap(8),
-        ],
+            const Gap(8),
+          ],
 
         // Кнопки для управления (снизу, если useTopButtons = false).
         if (!useTopButtons) const Gap(4),

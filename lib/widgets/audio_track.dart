@@ -71,8 +71,8 @@ Widget buildListTrackWidget(
     onLikeTap: () async {
       if (!networkRequiredDialog(ref, context)) return;
 
-      await toggleTrackLikeState(
-        context,
+      await toggleTrackLike(
+        ref,
         audio,
         !audio.isLiked,
       );

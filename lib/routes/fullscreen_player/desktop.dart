@@ -269,15 +269,15 @@ class FullscreenMediaControls extends ConsumerWidget {
   });
 
   /// Переключает состояние лайка у трека, играющий в данный момент.
-  void _toggleLike(WidgetRef ref, BuildContext context) {
+  void _toggleLike(WidgetRef ref, BuildContext context) async {
     assert(
       player.currentAudio != null,
       "Current audio is null",
     );
     if (!networkRequiredDialog(ref, context)) return;
 
-    toggleTrackLikeState(
-      context,
+    await toggleTrackLike(
+      ref,
       player.currentAudio!,
       !player.currentAudio!.isLiked,
     );

@@ -301,7 +301,7 @@ class _TrackThumbnailDialogState extends ConsumerState<TrackThumbnailDialog> {
                             url: "",
                             date: 0,
                             deezerThumbs:
-                                ExtendedThumbnail.fromDeezerTrack(track),
+                                ExtendedThumbnails.fromDeezerTrack(track),
                           ),
                           isSelected: selectedTrack == track,
                           onPlayToggle: () => setState(
@@ -325,7 +325,7 @@ class _TrackThumbnailDialogState extends ConsumerState<TrackThumbnailDialog> {
                         // Заменяем обложки.
                         widget.audio.deezerThumbs = null;
                         widget.audio.vkThumbs =
-                            ExtendedThumbnail.fromDeezerTrack(selectedTrack!);
+                            ExtendedThumbnails.fromDeezerTrack(selectedTrack!);
 
                         // Удаляем кэшированные обложки.
                         CachedAlbumImagesManager.instance

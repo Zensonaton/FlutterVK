@@ -283,7 +283,6 @@ class _BottomMusicPlayerWrapperState
 
   @override
   Widget build(BuildContext context) {
-    final preferences = ref.watch(preferencesProvider);
     final trackImageInfo = ref.watch(trackSchemeInfoProvider);
     ref.watch(playerCurrentIndexProvider);
     ref.watch(playerStateProvider);
@@ -349,24 +348,23 @@ class _BottomMusicPlayerWrapperState
                   scheme: trackImageInfo
                           ?.colorScheme(Theme.of(context).brightness) ??
                       Theme.of(context).colorScheme,
-                  favoriteState: player.currentAudio != null
-                      ? player.currentAudio!.isLiked
-                      : false,
-                  playbackState: player.playing,
                   progress: player.progress,
                   volume: player.volume,
                   position: player.position,
                   duration: player.duration ?? Duration.zero,
+                  isPlaying: player.playing,
                   isBuffering: player.buffering,
                   isShuffleEnabled: player.shuffleModeEnabled,
                   isRepeatEnabled: player.loopMode == LoopMode.one,
-                  pauseOnMuteEnabled: preferences.pauseOnMuteEnabled,
+                  isLiked: player.currentAudio != null
+                      ? player.currentAudio!.isLiked
+                      : false,
                   useBigLayout: !mobileLayout,
-                  onFavoriteStateToggle: (bool liked) {
+                  onLikeTap: () async {
                     if (!networkRequiredDialog(ref, context)) return;
 
-                    toggleTrackLikeState(
-                      context,
+                    await toggleTrackLike(
+                      ref,
                       player.currentAudio!,
                       !player.currentAudio!.isLiked,
                     );
@@ -377,18 +375,15 @@ class _BottomMusicPlayerWrapperState
                           ? () async {
                               if (!networkRequiredDialog(ref, context)) return;
 
-                              // Делаем трек дизлайкнутым.
-                              final bool result = await dislikeTrackState(
-                                context,
+                              await dislikeTrack(
+                                ref,
                                 player.currentAudio!,
                               );
-                              if (!result) return;
 
-                              // Запускаем следующий трек в плейлисте.
                               await player.next();
                             }
                           : null,
-                  onPlayStateToggle: (_) => player.togglePlay(),
+                  onPlayStateToggle: () => player.togglePlay(),
                   onProgressChange: (double progress) =>
                       player.seekNormalized(progress),
                   onVolumeChange: (double volume) => player.setVolume(volume),
@@ -400,23 +395,22 @@ class _BottomMusicPlayerWrapperState
                   ),
                   onMiniplayer: () => openMiniPlayer(context),
                   onShuffleToggle: !isMixPlaylistPlaying
-                      ? (bool enabled) async {
-                          await player.setShuffle(enabled);
+                      ? () async {
+                          await player.toggleShuffle();
 
                           ref
                               .read(preferencesProvider.notifier)
-                              .setShuffleEnabled(enabled);
+                              .setShuffleEnabled(player.shuffleModeEnabled);
                         }
                       : null,
-                  onRepeatToggle: (_) => player.setLoop(
+                  onRepeatToggle: () => player.setLoop(
                     player.loopMode == LoopMode.all
                         ? LoopMode.one
                         : LoopMode.all,
                   ),
                   onNextTrack: () => player.next(),
-                  onPreviousTrack: () => player.previous(
-                    allowSeekToBeginning: true,
-                  ),
+                  onPreviousTrack: () =>
+                      player.previous(allowSeekToBeginning: true),
                 ),
               ),
             ),

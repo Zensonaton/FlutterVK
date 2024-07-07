@@ -8,7 +8,6 @@ import "package:audio_session/audio_session.dart";
 import "package:crypto/crypto.dart";
 import "package:discord_rpc/discord_rpc.dart";
 import "package:flutter/foundation.dart";
-import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_cache_manager/flutter_cache_manager.dart";
 import "package:just_audio/just_audio.dart";
@@ -151,7 +150,7 @@ class CachedStreamedAudio extends StreamAudioSource {
 
     // Если файлы обложек уже загружены, то ничего не делаем.
     if (cachedThumb == null || audio.thumbnail == null) {
-      ExtendedThumbnail? thumbs = audio.thumbnail;
+      ExtendedThumbnails? thumbs = audio.thumbnail;
 
       // Если мы можем загрузить обложки с Deezer, то получаем их URL.
       if (allowDeezer && thumbs == null) {
@@ -168,7 +167,7 @@ class CachedStreamedAudio extends StreamAudioSource {
         }
 
         // Всё ок, запоминаем новую обложку трека.
-        thumbs = ExtendedThumbnail.fromDeezerTrack(deezerTrack);
+        thumbs = ExtendedThumbnails.fromDeezerTrack(deezerTrack);
         audio.deezerThumbs = thumbs;
         shouldUpdateDB = true;
       }

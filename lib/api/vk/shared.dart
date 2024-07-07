@@ -526,9 +526,22 @@ class Thumbnails {
   /// Возвращает копию данного класса в виде объекта [DBThumbnails].
   DBThumbnails get asDBThumbnails => DBThumbnails.fromAPIPhoto(this);
 
-  /// Возвращает копию данного класса в виде объекта [ExtendedThumbnail].
-  ExtendedThumbnail get asExtendedThumbnail =>
-      ExtendedThumbnail.fromThumbnail(this);
+  /// Возвращает копию данного класса в виде объекта [ExtendedThumbnails].
+  ExtendedThumbnails get asExtendedThumbnail =>
+      ExtendedThumbnails.fromThumbnail(this);
+
+  @override
+  bool operator ==(covariant Thumbnails other) {
+    if (identical(this, other)) return true;
+
+    return other.runtimeType == Thumbnails &&
+        other.width == width &&
+        other.height == height &&
+        other.photo34 == photo34;
+  }
+
+  @override
+  int get hashCode => width.hashCode ^ height.hashCode ^ photo34.hashCode;
 
   @override
   String toString() => "Thumbnails $width*$height";

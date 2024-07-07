@@ -12,6 +12,7 @@ import "../provider/user.dart";
 import "../services/cache_manager.dart";
 import "../utils.dart";
 import "fallback_audio_photo.dart";
+import "loading_button.dart";
 import "responsive_slider.dart";
 import "scrollable_slider.dart";
 
@@ -231,10 +232,10 @@ class BottomMusicPlayer extends HookConsumerWidget {
   final ColorScheme scheme;
 
   /// Указывает, что в данный момент трек воспроизводится.
-  final bool playbackState;
+  final bool isPlaying;
 
   /// Указывает, что трек в данный момент лайкнут.
-  final bool favoriteState;
+  final bool isLiked;
 
   /// Указывает прогресс прослушивания трека.
   ///
@@ -256,22 +257,19 @@ class BottomMusicPlayer extends HookConsumerWidget {
   /// Указывает, что у плеера включён режим повтора текущего трека.
   final bool isRepeatEnabled;
 
-  /// Указывает, что настройка "Пауза при отключении громкости" включена.
-  final bool pauseOnMuteEnabled;
-
   /// Указывает громкость у проигрывателя.
   ///
   /// В данном поле указано число от 0.0 до 1.0.
   final double volume;
 
   /// Метод, вызываемый при переключении состояния паузы.
-  final ValueSetter<bool>? onPlayStateToggle;
+  final VoidCallback? onPlayStateToggle;
 
   /// Метод, вызываемый при изменения состояния "лайка" трека.
-  final ValueSetter<bool>? onFavoriteStateToggle;
+  final AsyncCallback? onLikeTap;
 
   /// Метод, вызываемый при нажатии кнопки "дизлайка" у трека.
-  final VoidCallback? onDislike;
+  final AsyncCallback? onDislike;
 
   /// Метод, вызываемый при попытке запустить следующий трек (свайп влево).
   final VoidCallback? onNextTrack;
@@ -282,10 +280,10 @@ class BottomMusicPlayer extends HookConsumerWidget {
   /// Метод, вызываемый при переключении режима случайного выбора треков.
   ///
   /// Если не указать, то кнопка будет неактивна.
-  final ValueSetter<bool>? onShuffleToggle;
+  final VoidCallback? onShuffleToggle;
 
   /// Метод, вызываемый при переключении повтора трека.
-  final ValueSetter<bool>? onRepeatToggle;
+  final VoidCallback? onRepeatToggle;
 
   /// Метод, вызываемый при открытии мини плеера.
   final VoidCallback? onMiniplayer;
@@ -317,18 +315,17 @@ class BottomMusicPlayer extends HookConsumerWidget {
     this.previousAudio,
     this.nextAudio,
     required this.scheme,
-    this.playbackState = false,
-    this.favoriteState = false,
+    this.isPlaying = false,
+    this.isLiked = false,
     this.isBuffering = false,
     this.isShuffleEnabled = false,
     this.isRepeatEnabled = false,
-    this.pauseOnMuteEnabled = false,
     this.volume = 1.0,
     this.progress = 0.0,
     this.position = Duration.zero,
     this.duration = Duration.zero,
     this.onPlayStateToggle,
-    this.onFavoriteStateToggle,
+    this.onLikeTap,
     this.onDislike,
     this.onNextTrack,
     this.onPreviousTrack,
@@ -386,18 +383,18 @@ class BottomMusicPlayer extends HookConsumerWidget {
     /// Кнопка для паузы и/ли воспроизведения музыки.
     final Widget playPauseButton = useBigLayout
         ? IconButton(
-            onPressed: () => onPlayStateToggle?.call(!playbackState),
+            onPressed: onPlayStateToggle,
             iconSize: 48,
             padding: EdgeInsets.zero,
             icon: Icon(
-              playbackState ? Icons.pause_circle : Icons.play_circle,
+              isPlaying ? Icons.pause_circle : Icons.play_circle,
               color: scheme.onPrimaryContainer,
             ),
           )
         : IconButton(
-            onPressed: () => onPlayStateToggle?.call(!playbackState),
+            onPressed: onPlayStateToggle,
             icon: Icon(
-              playbackState ? Icons.pause : Icons.play_arrow,
+              isPlaying ? Icons.pause : Icons.play_arrow,
               color: scheme.onPrimaryContainer,
             ),
           );
@@ -425,7 +422,7 @@ class BottomMusicPlayer extends HookConsumerWidget {
       ),
       decoration: BoxDecoration(
         color: scheme.primaryContainer.darken(
-          playbackState ? 0 : 0.15,
+          isPlaying ? 0 : 0.15,
         ),
         borderRadius: useBigLayout
             ? null
@@ -433,10 +430,10 @@ class BottomMusicPlayer extends HookConsumerWidget {
                 globalBorderRadius,
               ),
         boxShadow: [
-          if (playbackState)
+          if (isPlaying)
             BoxShadow(
               color: scheme.secondaryContainer,
-              blurRadius: playbackState ? 50 : 0,
+              blurRadius: isPlaying ? 50 : 0,
               blurStyle: BlurStyle.outer,
             ),
         ],
@@ -510,7 +507,7 @@ class BottomMusicPlayer extends HookConsumerWidget {
                                   curve: Curves.ease,
                                   decoration: BoxDecoration(
                                     boxShadow: [
-                                      if (playbackState)
+                                      if (isPlaying)
                                         BoxShadow(
                                           blurRadius: 10,
                                           spreadRadius: -3,
@@ -630,11 +627,10 @@ class BottomMusicPlayer extends HookConsumerWidget {
 
                           // Кнопка для лайка (в Desktop Layout'е).
                           if (useBigLayout)
-                            IconButton(
-                              onPressed: () =>
-                                  onFavoriteStateToggle?.call(!favoriteState),
+                            LoadingIconButton(
+                              onPressed: onLikeTap,
                               icon: Icon(
-                                favoriteState
+                                isLiked
                                     ? Icons.favorite
                                     : Icons.favorite_outline,
                                 color: scheme.onPrimaryContainer,
@@ -739,10 +735,8 @@ class BottomMusicPlayer extends HookConsumerWidget {
                               children: [
                                 // Кнопка для переключения shuffle.
                                 IconButton(
-                                  onPressed: canToggleShuffle
-                                      ? () => onShuffleToggle
-                                          ?.call(!isShuffleEnabled)
-                                      : null,
+                                  onPressed:
+                                      canToggleShuffle ? onShuffleToggle : null,
                                   icon: Icon(
                                     isShuffleEnabled
                                         ? Icons.shuffle_on_outlined
@@ -776,8 +770,7 @@ class BottomMusicPlayer extends HookConsumerWidget {
 
                                 // Кнопка повтора.
                                 IconButton(
-                                  onPressed: () =>
-                                      onRepeatToggle?.call(!isRepeatEnabled),
+                                  onPressed: onRepeatToggle,
                                   icon: Icon(
                                     isRepeatEnabled
                                         ? Icons.repeat_on_outlined
@@ -892,11 +885,10 @@ class BottomMusicPlayer extends HookConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     // Кнопка лайка.
-                    IconButton(
-                      onPressed: () =>
-                          onFavoriteStateToggle?.call(!favoriteState),
+                    LoadingIconButton(
+                      onPressed: onLikeTap,
                       icon: Icon(
-                        favoriteState ? Icons.favorite : Icons.favorite_outline,
+                        isLiked ? Icons.favorite : Icons.favorite_outline,
                         color: scheme.onPrimaryContainer,
                       ),
                     ),
@@ -934,7 +926,7 @@ class BottomMusicPlayer extends HookConsumerWidget {
                   child: BottomMusicProgressBar(
                     scheme: scheme,
                     isBuffering: isBuffering,
-                    playbackState: playbackState,
+                    playbackState: isPlaying,
                     progress: progress,
                   ),
                 ),

@@ -1,4 +1,5 @@
 import "package:audio_service/audio_service.dart";
+import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:shared_preferences/shared_preferences.dart";
@@ -250,6 +251,61 @@ class ExtendedPlaylist {
   /// Возвращает копию данного класса в виде объекта [DBPlaylist].
   DBPlaylist get asDBPlaylist => DBPlaylist.fromExtendedPlaylist(this);
 
+  /// Делает копию этого класа с новыми передаваемыми значениями.
+  ExtendedPlaylist copyWith({
+    int? id,
+    int? ownerID,
+    String? title,
+    String? description,
+    int? count,
+    String? accessKey,
+    int? followers,
+    int? plays,
+    int? createTime,
+    int? updateTime,
+    bool? isFollowing,
+    String? subtitle,
+    Thumbnails? photo,
+    List<ExtendedAudio>? audios,
+    bool? isMoodPlaylist,
+    bool? isAudioMixPlaylist,
+    String? mixID,
+    String? backgroundAnimationUrl,
+    double? simillarity,
+    String? color,
+    List<ExtendedAudio>? knownTracks,
+    bool? isLiveData,
+    bool? areTracksLive,
+    bool? cacheTracks,
+  }) =>
+      ExtendedPlaylist(
+        id: id ?? this.id,
+        ownerID: ownerID ?? this.ownerID,
+        title: title ?? this.title,
+        description: description ?? this.description,
+        count: count ?? this.count,
+        accessKey: accessKey ?? this.accessKey,
+        followers: followers ?? this.followers,
+        plays: plays ?? this.plays,
+        createTime: createTime ?? this.createTime,
+        updateTime: updateTime ?? this.updateTime,
+        isFollowing: isFollowing ?? this.isFollowing,
+        subtitle: subtitle ?? this.subtitle,
+        photo: photo ?? this.photo,
+        audios: audios ?? this.audios,
+        isMoodPlaylist: isMoodPlaylist ?? this.isMoodPlaylist,
+        isAudioMixPlaylist: isAudioMixPlaylist ?? this.isAudioMixPlaylist,
+        mixID: mixID ?? this.mixID,
+        backgroundAnimationUrl:
+            backgroundAnimationUrl ?? this.backgroundAnimationUrl,
+        simillarity: simillarity ?? this.simillarity,
+        color: color ?? this.color,
+        knownTracks: knownTracks ?? this.knownTracks,
+        isLiveData: isLiveData ?? this.isLiveData,
+        areTracksLive: areTracksLive ?? this.areTracksLive,
+        cacheTracks: cacheTracks ?? this.cacheTracks,
+      );
+
   /// Возвращает строку, которая используется как идентификатор пользователя и медиа.
   String get mediaKey => "${ownerID}_$id";
 
@@ -264,12 +320,11 @@ class ExtendedPlaylist {
     return other.runtimeType == ExtendedPlaylist &&
         other.id == id &&
         other.ownerID == ownerID &&
-        other.isDataCached == isDataCached &&
-        other.areTracksCached == areTracksCached;
+        other.isLiveData == isLiveData;
   }
 
   @override
-  int get hashCode => mediaKey.hashCode;
+  int get hashCode => audios.hashCode;
 
   ExtendedPlaylist({
     required this.id,
@@ -300,7 +355,7 @@ class ExtendedPlaylist {
 }
 
 /// Класс, выступающий в роли упрощённой версии класса [Thumbnails].
-class ExtendedThumbnail {
+class ExtendedThumbnails {
   /// URL на изображение альбома самого маленького размера. Рекомендуется использовать там, где нужно самое маленькое изображение трека: в списке треков, миниплеере и так далее.
   ///
   /// Размеры изображений, в зависимости от источника:
@@ -330,10 +385,10 @@ class ExtendedThumbnail {
   final String photoMax;
 
   /// Создаёт из передаваемого объекта [DBExtendedThumbnail] объект данного класа.
-  static ExtendedThumbnail fromDBExtendedThumbnail(
+  static ExtendedThumbnails fromDBExtendedThumbnail(
     DBExtendedThumbnail thumbnail,
   ) =>
-      ExtendedThumbnail(
+      ExtendedThumbnails(
         photoSmall: thumbnail.photoSmall!,
         photoMedium: thumbnail.photoMedium!,
         photoBig: thumbnail.photoBig!,
@@ -345,8 +400,8 @@ class ExtendedThumbnail {
       DBExtendedThumbnail.fromExtendedThumbnail(this);
 
   /// Создаёт из передаваемого объекта [Thumbnails] объект данного класа.
-  static ExtendedThumbnail fromThumbnail(Thumbnails thumbnails) =>
-      ExtendedThumbnail(
+  static ExtendedThumbnails fromThumbnail(Thumbnails thumbnails) =>
+      ExtendedThumbnails(
         photoSmall: thumbnails.photo68!,
         photoMedium: thumbnails.photo270!,
         photoBig: thumbnails.photo600!,
@@ -354,8 +409,8 @@ class ExtendedThumbnail {
       );
 
   /// Создаёт из передаваемого объекта [DeezerTrack] объект данного класса.
-  static ExtendedThumbnail fromDeezerTrack(DeezerTrack track) =>
-      ExtendedThumbnail(
+  static ExtendedThumbnails fromDeezerTrack(DeezerTrack track) =>
+      ExtendedThumbnails(
         photoSmall: track.album.coverSmall!,
         photoMedium: track.album.coverMedium!,
         photoBig: track.album.coverBig!,
@@ -363,9 +418,9 @@ class ExtendedThumbnail {
       );
 
   @override
-  String toString() => "DBExtendedThumbnails";
+  String toString() => "ExtendedThumbnails";
 
-  ExtendedThumbnail({
+  ExtendedThumbnails({
     required this.photoSmall,
     required this.photoMedium,
     required this.photoBig,
@@ -414,18 +469,18 @@ class ExtendedAudio {
   Album? album;
 
   /// Информация об обложке данного трека, полученного с ВКонтакте.
-  ExtendedThumbnail? vkThumbs;
+  ExtendedThumbnails? vkThumbs;
 
   /// Информация об обложке данного трека, полученного с Deezer.
-  ExtendedThumbnail? deezerThumbs;
+  ExtendedThumbnails? deezerThumbs;
 
-  /// Возвращает объект типа [ExtendedThumbnail], берущий значение с переменной [vkThumbs] или [deezerThumbs].
-  ExtendedThumbnail? get thumbnail => vkThumbs ?? deezerThumbs;
+  /// Возвращает объект типа [ExtendedThumbnails], берущий значение с переменной [vkThumbs] или [deezerThumbs].
+  ExtendedThumbnails? get thumbnail => vkThumbs ?? deezerThumbs;
 
-  /// Возвращает URL самой маленькой обложки ([ExtendedThumbnail.photoSmall]) из переменной [vkThumbs] либо [deezerThumbs].
+  /// Возвращает URL самой маленькой обложки ([ExtendedThumbnails.photoSmall]) из переменной [vkThumbs] либо [deezerThumbs].
   String? get smallestThumbnail => thumbnail?.photoSmall;
 
-  /// Возвращает URL самой большой обложки ([ExtendedThumbnail.photoMax]) из переменной [vkThumbs] либо [deezerThumbs].
+  /// Возвращает URL самой большой обложки ([ExtendedThumbnails.photoMax]) из переменной [vkThumbs] либо [deezerThumbs].
   String? get maxThumbnail => thumbnail?.photoMax;
 
   /// Указывает наличие текста песни.
@@ -562,6 +617,50 @@ class ExtendedAudio {
         isCached: audio.isCached ?? false,
       );
 
+  /// Возвращает копию данного объекта с новыми передаваемыми значениями.
+  ExtendedAudio copyWith({
+    int? id,
+    int? ownerID,
+    String? artist,
+    String? title,
+    int? duration,
+    String? subtitle,
+    String? accessKey,
+    bool? isExplicit,
+    bool? isRestricted,
+    String? url,
+    int? date,
+    Album? album,
+    ExtendedThumbnails? vkThumbs,
+    ExtendedThumbnails? deezerThumbs,
+    bool? hasLyrics,
+    int? genreID,
+    Lyrics? lyrics,
+    bool? isLiked,
+    bool? isCached,
+  }) =>
+      ExtendedAudio(
+        id: id ?? this.id,
+        ownerID: ownerID ?? this.ownerID,
+        artist: artist ?? this.artist,
+        title: title ?? this.title,
+        duration: duration ?? this.duration,
+        subtitle: subtitle ?? this.subtitle,
+        accessKey: accessKey ?? this.accessKey,
+        isExplicit: isExplicit ?? this.isExplicit,
+        isRestricted: isRestricted ?? this.isRestricted,
+        url: url ?? this.url,
+        date: date ?? this.date,
+        album: album ?? this.album,
+        vkThumbs: vkThumbs ?? this.vkThumbs,
+        deezerThumbs: deezerThumbs ?? this.deezerThumbs,
+        hasLyrics: hasLyrics ?? this.hasLyrics,
+        genreID: genreID ?? this.genreID,
+        lyrics: lyrics ?? this.lyrics,
+        isLiked: isLiked ?? this.isLiked,
+        isCached: isCached ?? this.isCached,
+      );
+
   /// Возвращает копию данного класса в виде объекта [DBAudio].
   DBAudio get asDBAudio => DBAudio.fromExtendedAudio(this);
 
@@ -672,137 +771,6 @@ class User extends _$User {
     ref.invalidateSelf();
     ref.invalidate(secondaryTokenProvider);
   }
-
-//   /// Вставляет в [allPlaylists] указанный плейлист [playlists], объеденяя старые и новые поля. Если плейлист не существовал ранее, то он будет создан. [saveToDB] указывает, будет ли изменение сохранено в БД Isar.
-//   void updatePlaylist(
-//     ExtendedPlaylist playlist, {
-//     bool saveToDB = true,
-//   }) async {
-//     ExtendedPlaylist? existingPlaylist = allPlaylists[playlist.mediaKey];
-
-//     // Не позволяем пользователю сохранить плейлист "Музыка из результатов поиска".
-//     if (playlist.ownerID == id! && playlist.id == -1) {
-//       logger.w(
-//         "Attempted to call updatePlaylist for 'search results' playlist!",
-//         stackTrace: StackTrace.current,
-//       );
-
-//       return;
-//     }
-
-//     if (existingPlaylist == null) {
-//       // Ранее такового плейлиста не было, просто сохраняем и ничего не делаем.
-
-//       existingPlaylist = playlist;
-//     } else {
-//       // Мы должны сделать объединение полей из старого и нового плейлиста.
-
-//       existingPlaylist.count = playlist.count;
-//       existingPlaylist.title = playlist.title;
-//       existingPlaylist.description = playlist.description;
-//       existingPlaylist.subtitle = playlist.subtitle;
-//       existingPlaylist.cacheTracks =
-//           playlist.cacheTracks ?? existingPlaylist.cacheTracks;
-//       existingPlaylist.photo = playlist.photo;
-//       existingPlaylist.createTime = playlist.createTime;
-//       existingPlaylist.updateTime = playlist.updateTime;
-//       existingPlaylist.followers = playlist.followers;
-//       existingPlaylist.isLiveData = playlist.isLiveData;
-//       existingPlaylist.areTracksLive = playlist.areTracksLive;
-//       existingPlaylist.backgroundAnimationUrl = playlist.backgroundAnimationUrl;
-
-//       // Проходимся по новому списку треков, если он вообще был передан.
-//       if (playlist.audios != null) {
-//         // Создаём отдельный List с shadow copy списка треков.
-//         final List<ExtendedAudio> newAudios = [...playlist.audios!];
-//         final List<ExtendedAudio> oldAudios = existingPlaylist.audios ?? [];
-//         existingPlaylist.audios = [];
-
-//         for (ExtendedAudio audio in newAudios) {
-//           ExtendedAudio newAudio =
-//               oldAudios.firstWhereOrNull((oldAudio) => oldAudio == audio) ??
-//                   audio;
-
-//           newAudio.title = audio.title;
-//           newAudio.artist = audio.artist;
-//           newAudio.url ??= audio.url;
-//           newAudio.isCached = audio.isCached ?? newAudio.isCached;
-//           newAudio.album ??= audio.album;
-//           newAudio.hasLyrics ??= audio.hasLyrics;
-//           newAudio.lyrics ??= audio.lyrics;
-//           newAudio.vkThumbs ??= audio.vkThumbs;
-
-//           existingPlaylist.audios!.add(newAudio);
-//         }
-
-//         // Проходимся по тому списку треков, которые кэшированы, но больше нет в плейлисте.
-//         final List<ExtendedAudio> removedAudios = oldAudios
-//             .where(
-//               (audio) =>
-//                   (audio.isCached ?? false) &&
-//                   !existingPlaylist!.audios!.contains(audio),
-//             )
-//             .toList();
-
-//         for (ExtendedAudio audio in removedAudios) {
-//           logger.d("Audio $audio will be deleted");
-
-//           // Удаляем трек из кэша.
-//           try {
-//             CachedStreamedAudio(audio: audio).delete();
-
-//             audio.isCached = false;
-//           } catch (e) {
-//             // No-op.
-//           }
-//         }
-//       }
-//     }
-
-//     // Сохраняем новый плейлист, очищая кэш плейлистов в памяти.
-//     allPlaylists[playlist.mediaKey] = existingPlaylist;
-//     _favoritesPlaylist = null;
-//     _regularPlaylists = null;
-//     _moodPlaylists = null;
-//     _audioMixPlaylists = null;
-//     _recommendationPlaylists = null;
-//     _simillarPlaylists = null;
-//     _madeByVKPlaylists = null;
-
-//     // Сохраняем в БД.
-//     if (saveToDB) {
-//       await appStorage.savePlaylists(
-//         allPlaylists.values
-//             .map(
-//               (playlist) => playlist.asDBPlaylist,
-//             )
-//             .toList(),
-//       );
-//     }
-//   }
-
-//   /// Вставляет в [allPlaylists] указанный список из плейлистов [playlists], объеденяя старые и новые поля. Если какой то из плейлистов [playlists] не существовал ранее, то он будет создан. [saveToDB] указывает, будет ли изменение сохранено в БД Isar.
-//   void updatePlaylists(
-//     List<ExtendedPlaylist> playlists, {
-//     bool saveToDB = true,
-//   }) async {
-//     for (ExtendedPlaylist playlist in playlists) {
-//       updatePlaylist(
-//         playlist,
-//         saveToDB: false,
-//       );
-//     }
-
-//     if (saveToDB) {
-//       await appStorage.savePlaylists(
-//         allPlaylists.values
-//             .map(
-//               (playlist) => playlist.asDBPlaylist,
-//             )
-//             .toList(),
-//       );
-//     }
-//   }
 
   /// Возвращает основной токен.
   String? get _mainToken => ref.read(tokenProvider);

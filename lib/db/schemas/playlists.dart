@@ -7,7 +7,7 @@ import "../../utils.dart";
 
 part "playlists.g.dart";
 
-/// Класс, олицетворяющий копию класса [ExtendedThumbnail].
+/// Класс, олицетворяющий копию класса [ExtendedThumbnails].
 @Embedded()
 class DBExtendedThumbnail {
   /// URL на изображение альбома самого маленького размера. Рекомендуется использовать там, где нужно самое маленькое изображение трека: в списке треков, миниплеере и так далее.
@@ -22,9 +22,9 @@ class DBExtendedThumbnail {
   /// URL на изображение альбома самого большого размера из всех. Именно это изображение имеет самое высокое качество, и поэтому его рекомендуется использовать в полноэкранном плеере.
   final String? photoMax;
 
-  /// Создаёт из передаваемого объекта [ExtendedThumbnail] объект данного класа.
+  /// Создаёт из передаваемого объекта [ExtendedThumbnails] объект данного класа.
   static DBExtendedThumbnail fromExtendedThumbnail(
-    ExtendedThumbnail thumbnail,
+    ExtendedThumbnails thumbnail,
   ) =>
       DBExtendedThumbnail(
         photoSmall: thumbnail.photoSmall,
@@ -33,10 +33,10 @@ class DBExtendedThumbnail {
         photoMax: thumbnail.photoMax,
       );
 
-  /// Возвращает копию данного класса в виде объекта [ExtendedThumbnail].
+  /// Возвращает копию данного класса в виде объекта [ExtendedThumbnails].
   @Ignore()
-  ExtendedThumbnail get asExtendedThumbnails =>
-      ExtendedThumbnail.fromDBExtendedThumbnail(this);
+  ExtendedThumbnails get asExtendedThumbnails =>
+      ExtendedThumbnails.fromDBExtendedThumbnail(this);
 
   @override
   String toString() => "DBExtendedThumbnails";

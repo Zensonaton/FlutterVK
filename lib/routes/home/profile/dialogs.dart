@@ -354,7 +354,7 @@ class PlayerDynamicSchemeDialog extends ConsumerWidget {
                     audio: ExtendedAudio(
                       title: title,
                       artist: artist,
-                      deezerThumbs: ExtendedThumbnail(
+                      deezerThumbs: ExtendedThumbnails(
                         photoBig: url,
                         photoMax: url,
                         photoMedium: url,
