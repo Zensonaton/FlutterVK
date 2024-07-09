@@ -16,6 +16,7 @@ import "../../consts.dart";
 import "../../main.dart";
 import "../../provider/auth.dart";
 import "../../provider/l18n.dart";
+import "../../provider/player_events.dart";
 import "../../provider/playlists.dart";
 import "../../provider/preferences.dart";
 import "../../provider/user.dart";
@@ -606,10 +607,11 @@ class ChipFilters extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final prefsNotifier = ref.read(preferencesProvider.notifier);
     final preferences = ref.watch(preferencesProvider);
+    final secondaryToken = ref.read(secondaryTokenProvider);
     final l18n = ref.watch(l18nProvider);
+    ref.watch(playerLoadedStateProvider);
 
-    /// Указывают, включены ли рекомендации.
-    final bool hasRecommendations = ref.read(secondaryTokenProvider) != null;
+    final bool hasRecommendations = secondaryToken != null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -762,6 +764,7 @@ class HomeMusicPage extends HookConsumerWidget {
     final user = ref.watch(userProvider);
     final preferences = ref.watch(preferencesProvider);
     final l18n = ref.watch(l18nProvider);
+    ref.watch(playerLoadedStateProvider);
 
     final bool mobileLayout = isMobileLayout(context);
 
@@ -994,14 +997,16 @@ class HomeMusicPage extends HookConsumerWidget {
                     ],
 
                     // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
-                    if (player.loaded && mobileLayout) const Gap(66),
+                    if (player.loaded && mobileLayout)
+                      const Gap(mobileMiniPlayerHeight),
                   ],
                 ),
               ),
 
               // Данный Gap нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
               // Мы его располагаем после ListView, что бы ScrollBar не был закрыт плеером.
-              if (player.loaded && !mobileLayout) const Gap(88),
+              if (player.loaded && !mobileLayout)
+                const Gap(desktopMiniPlayerHeight),
             ],
           ),
         ),

@@ -381,23 +381,26 @@ class BottomMusicPlayer extends HookConsumerWidget {
         : false;
 
     /// Кнопка для паузы и/ли воспроизведения музыки.
-    final Widget playPauseButton = useBigLayout
-        ? IconButton(
-            onPressed: onPlayStateToggle,
-            iconSize: 48,
-            padding: EdgeInsets.zero,
-            icon: Icon(
-              isPlaying ? Icons.pause_circle : Icons.play_circle,
-              color: scheme.onPrimaryContainer,
+    final Widget playPauseButton = GestureDetector(
+      onLongPress: onDismiss,
+      child: useBigLayout
+          ? IconButton(
+              onPressed: onPlayStateToggle,
+              iconSize: 48,
+              padding: EdgeInsets.zero,
+              icon: Icon(
+                isPlaying ? Icons.pause_circle : Icons.play_circle,
+                color: scheme.onPrimaryContainer,
+              ),
+            )
+          : IconButton(
+              onPressed: onPlayStateToggle,
+              icon: Icon(
+                isPlaying ? Icons.pause : Icons.play_arrow,
+                color: scheme.onPrimaryContainer,
+              ),
             ),
-          )
-        : IconButton(
-            onPressed: onPlayStateToggle,
-            icon: Icon(
-              isPlaying ? Icons.pause : Icons.play_arrow,
-              color: scheme.onPrimaryContainer,
-            ),
-          );
+    );
 
     /// Указывает, что кнопка для переключения shuffle работает.
     final bool canToggleShuffle = onShuffleToggle != null;

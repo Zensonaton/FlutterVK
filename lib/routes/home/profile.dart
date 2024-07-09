@@ -1004,7 +1004,7 @@ class _HomeProfilePageState extends ConsumerState<HomeProfilePage> {
                 const Gap(16),
 
                 // Debug-опции.
-                if (kDebugMode)
+                if (kDebugMode) ...[
                   Padding(
                     padding: EdgeInsets.only(
                       left: !mobileLayout ? 10 : 0,
@@ -1134,16 +1134,20 @@ class _HomeProfilePageState extends ConsumerState<HomeProfilePage> {
                       ),
                     ),
                   ),
+                  const Gap(16),
+                ],
 
                 // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
-                if (player.loaded && mobileLayout) const Gap(70),
+                if (player.loaded && mobileLayout)
+                  const Gap(mobileMiniPlayerHeight),
               ],
             ),
           ),
 
           // Данный Gap нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
           // Мы его располагаем после ListView, что бы ScrollBar не был закрыт плеером.
-          if (player.loaded && !mobileLayout) const Gap(88),
+          if (player.loaded && !mobileLayout)
+            const Gap(desktopMiniPlayerHeight),
         ],
       ),
     );

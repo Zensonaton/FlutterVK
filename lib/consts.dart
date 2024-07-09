@@ -95,6 +95,12 @@ const List<String> fakeTrackLyrics = [
 /// Значение от 0.0 до 1.0, указывающее то, начиная с какого процента "прослушанности" трека появляется надпись "Сыграет следующим: Артист - Трек" в интерфейсе проигрывателя.
 const double nextPlayingTextProgress = 0.85;
 
+/// Высота мини-плеера снизу при Desktop Layout'е.
+const double desktopMiniPlayerHeight = 88;
+
+/// Высота мини-плеера снизу при Mobile Layout'е (без учёта верхнего Padding'а в 8)
+const double mobileMiniPlayerHeight = 74;
+
 /// URL на страницу с авторизацией Spotify.
 const String spotifyAuthUrl = "https://accounts.spotify.com";
 

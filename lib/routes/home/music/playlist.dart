@@ -818,10 +818,8 @@ class PlaylistInfoRoute extends HookConsumerWidget {
                       horizontal: horizontalPadding,
                     ),
                     sliver: SliverList.separated(
-                      itemCount: loading
-                          ? playlist.count
-                          : filteredAudios.length +
-                              (mobileLayout && player.loaded ? 1 : 0),
+                      itemCount:
+                          loading ? playlist.count : filteredAudios.length,
                       separatorBuilder: (BuildContext context, int index) {
                         return const Gap(8);
                       },
@@ -846,14 +844,6 @@ class PlaylistInfoRoute extends HookConsumerWidget {
                           );
                         }
 
-                        if (index == filteredAudios.length) {
-                          // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
-                          return const Gap(
-                            key: ValueKey(null),
-                            76,
-                          );
-                        }
-
                         return buildListTrackWidget(
                           ref,
                           context,
@@ -864,6 +854,13 @@ class PlaylistInfoRoute extends HookConsumerWidget {
                       },
                     ),
                   ),
+
+                  // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
+                  if (player.loaded && mobileLayout)
+                    const SliverGap(mobileMiniPlayerHeight),
+
+                  // Небольшой Gap, что бы интерфейс был не слишком сжат.
+                  const SliverGap(8),
                 ],
               ),
 
@@ -896,7 +893,7 @@ class PlaylistInfoRoute extends HookConsumerWidget {
 
         // Данный Gap нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
         // Мы его располагаем после ListView, что бы ScrollBar не был закрыт плеером.
-        if (player.loaded && !mobileLayout) const Gap(88),
+        if (player.loaded && !mobileLayout) const Gap(desktopMiniPlayerHeight),
       ],
     );
   }
