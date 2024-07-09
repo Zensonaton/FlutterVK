@@ -35,7 +35,7 @@ Widget buildListTrackWidget(
   final bool isSelected = audio == player.currentAudio;
 
   return AudioTrackTile(
-    isSelected: isSelected,
+    isSelected: isSelected && player.loaded,
     isPlaying: player.loaded && player.playing,
     isLoading: isSelected && player.buffering,
     audio: audio,

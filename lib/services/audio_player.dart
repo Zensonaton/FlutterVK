@@ -520,7 +520,7 @@ class VKMusicPlayer {
   ///
   /// Учтите, что это поле может быть true даже в том случае, если идёт буферизация (см. [buffering]).
   ///
-  /// Если Вы желаете узнать, запущен или остановлен ли плеер (т.е., состоянеи stopped), то тогда обратитесь к полю [loaded], которое всегда true после запуска воспроизведения любого трека, и false после вызова [stop].
+  /// Если Вы желаете узнать, запущен или остановлен ли плеер (т.е., состоянии stopped), то тогда обратитесь к полю [loaded], которое всегда true после запуска воспроизведения любого трека, и false после вызова [stop].
   bool get playing => _player.playing;
 
   /// {@template VKMusicPlayer.playingStream}
@@ -1040,15 +1040,15 @@ class VKMusicPlayer {
   ///
   /// Данный метод стоит вызывать только в случае, когда пользователь остановил воспроизведение, к примеру, убив приложение или свернув уведомление. Для паузы стоит воспользоваться методом [pause].
   Future<void> stop() async {
+    _playlist = null;
+    _queue = null;
+    _audiosQueue = null;
+
     _setPlayerLoaded(false);
 
     await _player.pause();
     await _player.stop();
     await stopMusicSession();
-
-    _playlist = null;
-    _queue = null;
-    _audiosQueue = null;
   }
 
   /// Полностью освобождает ресурсы, занятые данным плеером.
