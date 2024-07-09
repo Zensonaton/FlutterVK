@@ -1199,7 +1199,7 @@ class VKMusicPlayer {
       _queue!,
       initialIndex: randomTrack && playlist.audios != null
           ? Random().nextInt(playlist.audios!.length)
-          : index,
+          : index ?? 0,
     );
 
     // Если разрешено, сразу же запускаем воспроизведение.

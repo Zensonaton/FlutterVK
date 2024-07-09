@@ -16,10 +16,11 @@ import "../../services/logger.dart";
 import "../../utils.dart";
 import "../../widgets/dialogs.dart";
 import "../../widgets/fallback_audio_photo.dart";
+import "../../widgets/loading_button.dart";
 import "../../widgets/responsive_slider.dart";
 import "../../widgets/scrollable_slider.dart";
 import "../fullscreen_player.dart";
-import "../home.dart";
+import "../home/music.dart";
 
 /// Размер Padding'а для полноэкранного плеера при Desktop Layout'е.
 const double _playerPadding = 56;
@@ -269,18 +270,15 @@ class FullscreenMediaControls extends ConsumerWidget {
   });
 
   /// Переключает состояние лайка у трека, играющий в данный момент.
-  void _toggleLike(
+  Future<void> _toggleLike(
     WidgetRef ref,
     BuildContext context,
     bool checkDuplicate,
   ) async {
-    assert(
-      player.currentAudio != null,
-      "Current audio is null",
-    );
+    assert(player.currentAudio != null, "Current audio is null");
     if (!networkRequiredDialog(ref, context)) return;
 
-    if (player.currentAudio!.isLiked && checkDuplicate) {
+    if (!player.currentAudio!.isLiked && checkDuplicate) {
       if (!await checkForDuplicates(ref, context, player.currentAudio!)) return;
     }
     await toggleTrackLike(
@@ -292,7 +290,7 @@ class FullscreenMediaControls extends ConsumerWidget {
   }
 
   /// Добавляет дизлайк для трека, который играет в данный момент.
-  void _toggleDislike(WidgetRef ref, BuildContext context) async {
+  Future<void> _toggleDislike(WidgetRef ref, BuildContext context) async {
     assert(player.currentAudio != null, "Current audio is null");
     assert(
       player.currentPlaylist!.isRecommendationTypePlaylist,
@@ -561,7 +559,7 @@ class FullscreenMediaControls extends ConsumerWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       // Кнопка для добавления/удаления лайка.
-                      IconButton(
+                      LoadingIconButton(
                         onPressed: () => _toggleLike(ref, context, true),
                         icon: Icon(
                           isFavorite ? Icons.favorite : Icons.favorite_border,
@@ -572,7 +570,7 @@ class FullscreenMediaControls extends ConsumerWidget {
 
                       // Кнопка для дизлайка трека, если включён рекомендуемый плейлист.
                       if (player.currentPlaylist!.isRecommendationTypePlaylist)
-                        IconButton(
+                        LoadingIconButton(
                           onPressed: () => _toggleDislike(ref, context),
                           icon: Icon(
                             Icons.thumb_down_outlined,

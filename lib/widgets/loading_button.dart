@@ -2,10 +2,17 @@ import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 
-/// TODO: DOC
+/// Виджет, отображающий [CircularProgressIndicator] во время выполнения Future, указанного в [AsyncCallback].
 class LoadingIconButton extends HookWidget {
+  /// Виджет, отображаемый как иконка, если загрузка не идёт.
   final Widget icon;
+
+  /// Метод, вызываемый при нажатии на эту кнопку.
+  ///
+  /// Во время выполнения этого Future, [icon] будет заменён [CircularProgressIndicator].
   final AsyncCallback? onPressed;
+
+  /// Цвет для [CircularProgressIndicator].
   final Color? color;
 
   const LoadingIconButton({

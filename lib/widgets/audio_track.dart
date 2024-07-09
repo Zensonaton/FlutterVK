@@ -14,7 +14,7 @@ import "../provider/color.dart";
 import "../provider/l18n.dart";
 import "../provider/preferences.dart";
 import "../provider/user.dart";
-import "../routes/home.dart";
+import "../routes/home/music.dart";
 import "../routes/home/music/bottom_audio_options.dart";
 import "../services/cache_manager.dart";
 import "dialogs.dart";

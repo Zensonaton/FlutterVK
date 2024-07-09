@@ -1,7 +1,6 @@
 import "package:flutter/material.dart";
 
 import "../../utils.dart";
-import "../home.dart";
 
 /// Виджет для поиска диалогов и/ли сообщения.
 class MessagesSearchBar extends StatelessWidget {

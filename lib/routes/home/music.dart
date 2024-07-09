@@ -4,8 +4,14 @@ import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:gap/gap.dart";
+import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
+import "../../api/vk/api.dart";
+import "../../api/vk/audio/add.dart";
+import "../../api/vk/audio/add_dislike.dart";
+import "../../api/vk/audio/delete.dart";
+import "../../api/vk/audio/restore.dart";
 import "../../consts.dart";
 import "../../main.dart";
 import "../../provider/auth.dart";
@@ -13,7 +19,9 @@ import "../../provider/l18n.dart";
 import "../../provider/playlists.dart";
 import "../../provider/preferences.dart";
 import "../../provider/user.dart";
+import "../../services/audio_player.dart";
 import "../../services/cache_manager.dart";
+import "../../services/logger.dart";
 import "../../utils.dart";
 import "../../widgets/dialogs.dart";
 import "../../widgets/fallback_audio_photo.dart";
@@ -25,6 +33,237 @@ import "music/categories/recommended_playlists.dart";
 import "music/categories/simillar_music.dart";
 import "music/search.dart";
 import "profile/dialogs.dart";
+
+/// Диалог, предупреждающий о том, что трек уже сохранён.
+class DuplicateWarningDialog extends ConsumerWidget {
+  const DuplicateWarningDialog({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l18n = ref.watch(l18nProvider);
+
+    return MaterialDialog(
+      icon: Icons.copy,
+      title: l18n.checkBeforeFavoriteWarningTitle,
+      text: l18n.checkBeforeFavoriteWarningDescription,
+      actions: [
+        TextButton(
+          child: Text(
+            l18n.general_no,
+          ),
+          onPressed: () => context.pop(false),
+        ),
+        FilledButton(
+          child: Text(
+            l18n.general_yes,
+          ),
+          onPressed: () => context.pop(true),
+        ),
+      ],
+    );
+  }
+}
+
+/// Проверяет то, существует ли похожий трек в [playlist], и если да, то показывает диалог, спрашивающий у пользователя то, хочет он сохранить трек или нет.
+///
+/// Возвращает true, если пользователь разрешил сохранение дубликата либо дубликата и вовсе не было, либо false, если пользователь не разрешил.
+Future<bool> checkForDuplicates(
+  WidgetRef ref,
+  BuildContext context,
+  ExtendedAudio audio,
+) async {
+  final favorites = ref.read(favoritesPlaylistProvider)!;
+
+  final bool isDuplicate = favorites.audios!.any(
+    (favAudio) =>
+        favAudio.isLiked &&
+        favAudio.title == audio.title &&
+        favAudio.artist == audio.artist &&
+        favAudio.album == audio.album,
+  );
+
+  if (!isDuplicate) return true;
+
+  final bool? duplicateDialogResult = await showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return const DuplicateWarningDialog();
+    },
+  );
+
+  return duplicateDialogResult ?? false;
+}
+
+/// Меняет состояние "лайка" у передаваемого трека.
+///
+/// Если [isLiked] = true, то трек будет восстановлен (если он был удалён ранее), либо же лайкнут. В ином же случае, трек будет удалён из лайкнутых.
+Future<void> toggleTrackLike(
+  WidgetRef ref,
+  ExtendedAudio audio,
+  bool isLiked, {
+  ExtendedPlaylist? sourcePlaylist,
+}) async {
+  final AppLogger logger = getLogger("toggleTrackLike");
+
+  final favsPlaylist = ref.read(favoritesPlaylistProvider);
+  final userNotifier = ref.read(userProvider.notifier);
+  final playlistsNotifier = ref.read(playlistsProvider.notifier);
+  final user = ref.read(userProvider);
+  assert(
+    favsPlaylist != null,
+    "Favorites playlist is null",
+  );
+
+  // Новый объект ExtendedAudio, хранящий в себе новую версию трека после лайка/дизлайка.
+  ExtendedAudio newAudio = audio.copyWith();
+
+  // Список из плейлистов, которые должны быть сохранены.
+  List<ExtendedPlaylist> playlistsModified = [];
+
+  if (isLiked) {
+    // Пользователь попытался лайкнуть трек.
+
+    // Здесь мы должны проверить, пытается ли пользователь восстановить ранее удалённый трек или нет.
+    final bool shouldRestore = favsPlaylist!.audios!.contains(newAudio);
+
+    // Если пользователь пытается восстановить трек, то вызываем audio.restore,
+    // в ином случае просто добавляем его методом audio.add.
+    int newTrackID;
+    if (shouldRestore) {
+      newTrackID = newAudio.id;
+
+      // Восстанавливаем трек.
+      final APIAudioRestoreResponse response = await userNotifier.audioRestore(
+        newTrackID,
+        ownerID: newAudio.ownerID,
+      );
+      raiseOnAPIError(response);
+
+      // TODO: Обработчик ошибки #15: cannot restore too late
+    } else {
+      // Сохраняем трек как лайкнутый.
+      final APIAudioAddResponse response = await userNotifier.audioAdd(
+        newAudio.id,
+        newAudio.ownerID,
+      );
+      raiseOnAPIError(response);
+
+      newTrackID = response.response!;
+
+      newAudio = newAudio.copyWith(
+        savedFromPlaylist: true,
+        relativeID: newTrackID,
+        relativeOwnerID: user.id,
+        savedPlaylistID: sourcePlaylist?.id,
+        savedPlaylistOwnerID: sourcePlaylist?.ownerID,
+      );
+    }
+
+    // Прекрасно, трек был добавлен либо восстановлён.
+    // Запоминаем новую версию плейлиста с лайкнутыми треками.
+    playlistsModified.add(
+      favsPlaylist
+          .copyWithNewAudio(
+            newAudio.copyWith(isLiked: true),
+          )
+          .copyWith(
+            count: favsPlaylist.count + 1,
+          ),
+    );
+
+    // Меняем второй плейлист, откуда этот трек был взят.
+    // Здесь мы не трогаем playlistsModified, поскольку сохранять в БД такое изменение не нужно.
+    if (sourcePlaylist != null) {
+      await playlistsNotifier.updatePlaylist(
+        sourcePlaylist.copyWithNewAudio(
+          audio.copyWith(
+            isLiked: true,
+            relativeID: newTrackID,
+            relativeOwnerID: user.id,
+          ),
+        ),
+      );
+    }
+  } else {
+    // Пользователь пытается удалить трек.
+
+    // Удаляем трек из лайкнутых.
+    final APIAudioDeleteResponse response = await userNotifier.audioDelete(
+      audio.savedFromPlaylist ? audio.relativeID! : audio.id,
+      audio.savedFromPlaylist ? audio.relativeOwnerID! : audio.ownerID,
+    );
+    raiseOnAPIError(response);
+
+    // Если это возможно, то удаляем трек из кэша.
+    try {
+      CachedStreamedAudio(audio: audio).delete();
+
+      newAudio = audio.copyWith(isCached: false);
+    } catch (error, stackTrace) {
+      logger.w(
+        "Couldn't delete cached track after dislike: ",
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    // Запоминаем новую версию плейлиста с удалённым треком.
+    playlistsModified.add(
+      favsPlaylist!
+          .copyWithNewAudio(
+            newAudio.copyWith(
+              isLiked: false,
+              savedFromPlaylist: false,
+            ),
+          )
+          .copyWith(
+            count: favsPlaylist.count - 1,
+          ),
+    );
+
+    // Удаляем лайкнутый трек из сохранённого ранее плейлиста.
+    if (newAudio.savedFromPlaylist) {
+      final ExtendedPlaylist? savedPlaylist = playlistsNotifier.getPlaylist(
+        newAudio.savedPlaylistOwnerID!,
+        newAudio.savedPlaylistID!,
+      );
+      assert(
+        savedPlaylist != null,
+        "Attempted to delete track with non-existing parent playlist",
+      );
+
+      playlistsModified.add(
+        savedPlaylist!.copyWithNewAudio(
+          newAudio.copyWith(
+            isLiked: false,
+            savedFromPlaylist: false,
+          ),
+        ),
+      );
+    }
+  }
+
+  await playlistsNotifier.updatePlaylists(playlistsModified, saveInDB: true);
+}
+
+/// Помечает передаваемый трек [audio] как дизлайкнутый.
+Future<void> dislikeTrack(
+  WidgetRef ref,
+  ExtendedAudio audio,
+) async {
+  final user = ref.read(userProvider.notifier);
+
+  final APIAudioAddDislikeResponse response =
+      await user.audioAddDislike([audio.mediaKey]);
+  raiseOnAPIError(response);
+
+  assert(
+    response.response,
+    "Track is not disliked: ${response.response}",
+  );
+}
 
 /// Загружает полную информацию по всем плейлистам, у которых ранее было включено кэширование, загружая список их треков, и после чего запускает процесс кэширования.
 Future<void> loadCachedTracksInformation(

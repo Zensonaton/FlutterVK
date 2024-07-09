@@ -2,6 +2,7 @@ import "dart:async";
 
 import "package:audio_service/audio_service.dart";
 import "package:cached_network_image/cached_network_image.dart";
+import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
@@ -9,15 +10,22 @@ import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:just_audio/just_audio.dart";
 
+import "../api/vk/api.dart";
+import "../api/vk/audio/get_stream_mix_audios.dart";
+import "../api/vk/audio/send_start_event.dart";
+import "../enums.dart";
 import "../main.dart";
 import "../provider/color.dart";
+import "../provider/l18n.dart";
 import "../provider/player_events.dart";
 import "../provider/preferences.dart";
 import "../provider/user.dart";
 import "../routes/fullscreen_player.dart";
-import "../routes/home.dart";
+import "../routes/home/music.dart";
+import "../routes/home/music/categories/realtime_playlists.dart";
 import "../services/cache_manager.dart";
 import "../services/logger.dart";
+import "../services/updater.dart";
 import "../utils.dart";
 import "audio_player.dart";
 import "dialogs.dart";
@@ -57,7 +65,11 @@ class NavigationItem {
 }
 
 /// Виджет, который содержит в себе [Scaffold] с [NavigationRail] или [BottomNavigationBar] в зависимости от того, какой используется Layout: Desktop ([isDesktopLayout]) или Mobile ([isMobileLayout]), а так же мини-плеер снизу ([BottomMusicPlayerWrapper]).
+///
+/// Данный виджет так же подписывается на некоторые события, по типу проверки на наличия новых обновлений.
 class ShellRouteWrapper extends HookConsumerWidget {
+  static final AppLogger logger = getLogger("ShellRouteWrapper");
+
   final Widget child;
   final String currentPath;
   final List<NavigationItem> navigationItems;
@@ -69,8 +81,57 @@ class ShellRouteWrapper extends HookConsumerWidget {
     required this.navigationItems,
   });
 
+  /// Проверяет на наличие обновлений, и дальше предлагает пользователю обновиться, если есть новое обновление.
+  void checkForUpdates(WidgetRef ref, BuildContext context) {
+    final preferences = ref.read(preferencesProvider);
+
+    // Проверяем, есть ли разрешение на обновления, а так же работу интернета.
+    if (preferences.updatePolicy == UpdatePolicy.disabled ||
+        !connectivityManager.hasConnection) return;
+
+    // Проверяем на наличие обновлений.
+    Updater.checkForUpdates(
+      context,
+      allowPre: preferences.updateBranch == UpdateBranch.prereleases,
+      useSnackbarOnUpdate: preferences.updatePolicy == UpdatePolicy.popup,
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l18n = ref.watch(l18nProvider);
+
+    useEffect(
+      () {
+        // Проверяем на наличие обновлений, если мы не в debug-режиме.
+        if (!kDebugMode) checkForUpdates(ref, context);
+
+        // Слушаем события подключения к интернету.
+        final subscription =
+            connectivityManager.connectionChange.listen((bool isConnected) {
+          logger.d("Network connectivity state: $isConnected");
+
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              duration: Duration(
+                seconds: isConnected ? 2 : 6,
+              ),
+              content: Text(
+                isConnected
+                    ? l18n.internetConnectionRestoredDescription
+                    : l18n.noInternetConnectionDescription,
+              ),
+            ),
+          );
+        });
+
+        return subscription.cancel;
+      },
+      [],
+    );
+
     final List<NavigationItem> mobileNavigationItems = useMemoized(
       () => navigationItems.where((item) => item.showOnMobileLayout).toList(),
     );
@@ -188,107 +249,167 @@ class ShellRouteWrapper extends HookConsumerWidget {
 /// Виджет, являющийся wrapper'ом для [BottomMusicPlayer], который добавляет обработку для различных событий.
 ///
 /// Данный виджет так же регистрирует listener'ы для некоторых событий плеера, благодаря чему появляется поддержка кэширования, получения цветов обложек и прочего.
-class BottomMusicPlayerWrapper extends StatefulHookConsumerWidget {
+class BottomMusicPlayerWrapper extends HookConsumerWidget {
+  static final AppLogger logger = getLogger("BottomMusicPlayerWrapper");
+
   const BottomMusicPlayerWrapper({
     super.key,
   });
 
   @override
-  ConsumerState<BottomMusicPlayerWrapper> createState() =>
-      _BottomMusicPlayerWrapperState();
-}
-
-class _BottomMusicPlayerWrapperState
-    extends ConsumerState<BottomMusicPlayerWrapper> {
-  static final AppLogger logger = getLogger("BottomMusicPlayerWrapper");
-
-  late final List<StreamSubscription> subscriptions;
-
-  @override
-  void initState() {
-    super.initState();
-
-    subscriptions = [
-      // Слушаем события нажатия на медиа-уведомление.
-      AudioService.notificationClicked.listen((tapped) {
-        logger.d("Handling player notification clicked event");
-
-        // AudioService иногда создаёт это событие при запуске плеера. Такой случай мы игнорируем.
-        if (!tapped) return;
-
-        // Если плеер не загружен, то ничего не делаем.
-        if (!player.loaded) return;
-
-        openFullscreenPlayer(context);
-      }),
-
-      // Слушаем события изменения текущего трека в плеере, что бы загружать обложку, текст песни, а так же создание цветовой схемы.
-      player.currentIndexStream.listen((int? index) async {
-        if (index == null || !player.loaded) return;
-
-        final ExtendedAudio audio = player.currentAudio!;
-
-        /// Внутренний метод, который создаёт [ColorScheme], после чего сохраняет его внутрь [PlayerSchemeProvider].
-        void getColorScheme() async {
-          // Если обложек у трека нету, то ничего не делаем.
-          if (audio.thumbnail == null) return;
-
-          // Загружаем изображение трека.
-          final CachedNetworkImageProvider imageProvider =
-              CachedNetworkImageProvider(
-            player.currentAudio!.smallestThumbnail!,
-            cacheKey: audio.mediaKey,
-            cacheManager: CachedAlbumImagesManager.instance,
-          );
-
-          // Заставляем плеер извлекать цветовую схему из обложки трека.
-          ref
-              .read(trackSchemeInfoProvider.notifier)
-              .fromImageProvider(imageProvider);
-        }
-
-        // Загружаем информацию по треку, если есть соединение с интернетом.
-        if (connectivityManager.hasConnection) {
-          // TODO
-
-          // CachedStreamedAudio.downloadTrackData(
-          //   audio,
-          //   player.currentPlaylist!,
-          //   allowDeezer: preferences.deezerThumbnails,
-          //   allowSpotifyLyrics: preferences.spotifyLyrics &&
-          //       ref.read(spotifySPDCCookieProvider) != null,
-          //   saveInDB: true,
-          // ).then((updatedDB) async {
-          //   // Делаем так, что бы плеер обновил обложку трека.
-          //   await player.updateMusicSessionTrack();
-
-          //   getColorScheme();
-          // });
-        }
-
-        // Запускаем задачу по получению цветовой схемы.
-        getColorScheme();
-      }),
-    ];
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-
-    for (StreamSubscription subscription in subscriptions) {
-      subscription.cancel();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final trackImageInfo = ref.watch(trackSchemeInfoProvider);
+    final l18n = ref.watch(l18nProvider);
+    final user = ref.read(userProvider.notifier);
     ref.watch(playerCurrentIndexProvider);
     ref.watch(playerStateProvider);
     ref.watch(playerVolumeProvider);
     ref.watch(playerLoopModeProvider);
     ref.watch(playerLoadedStateProvider);
+
+    useEffect(
+      () {
+        final List<StreamSubscription> subscriptions = [
+          // Слушаем события нажатия на медиа-уведомление.
+          AudioService.notificationClicked.listen((tapped) {
+            logger.d("Handling player notification clicked event");
+
+            // AudioService иногда создаёт это событие при запуске плеера. Такой случай мы игнорируем.
+            // Если плеер не загружен, то ничего не делаем.
+            if (!tapped || !player.loaded) return;
+
+            openFullscreenPlayer(context);
+          }),
+
+          // Слушаем события изменения текущего трека в плеере, что бы загружать обложку, текст песни, а так же создание цветовой схемы.
+          player.currentIndexStream.listen((int? index) async {
+            if (index == null || !player.loaded) return;
+
+            final ExtendedAudio audio = player.currentAudio!;
+
+            /// Внутренний метод, который создаёт [ColorScheme], после чего сохраняет его внутрь [PlayerSchemeProvider].
+            void getColorScheme() async {
+              // Если обложек у трека нету, то ничего не делаем.
+              if (audio.thumbnail == null) return;
+
+              // Загружаем изображение трека.
+              final CachedNetworkImageProvider imageProvider =
+                  CachedNetworkImageProvider(
+                player.currentAudio!.smallestThumbnail!,
+                cacheKey: audio.mediaKey,
+                cacheManager: CachedAlbumImagesManager.instance,
+              );
+
+              // Заставляем плеер извлекать цветовую схему из обложки трека.
+              ref
+                  .read(trackSchemeInfoProvider.notifier)
+                  .fromImageProvider(imageProvider);
+            }
+
+            // Запускаем задачу по получению цветовой схемы.
+            getColorScheme();
+          }),
+
+          // Слушаем события изменения текущего трека, что бы в случае, если запущен рекомендательный плейлист, мы передавали информацию об этом ВКонтакте.
+          player.currentIndexStream.listen((int? index) async {
+            if (index == null) return;
+
+            // Если нет доступа к интернету, то ничего не делаем.
+            if (!connectivityManager.hasConnection) return;
+
+            // Если это не рекомендуемый плейлист, то ничего не делаем.
+            if (!(player.currentPlaylist?.isRecommendationTypePlaylist ??
+                false)) {
+              return;
+            }
+
+            // Делаем API-запрос, передавая информацию серверам ВКонтакте.
+            try {
+              final APIAudioSendStartEventResponse response =
+                  await user.audioSendStartEvent(player.currentAudio!.mediaKey);
+              raiseOnAPIError(response);
+            } catch (e, stackTrace) {
+              logger.w(
+                "Couldn't notify VK about track listening state: ",
+                error: e,
+                stackTrace: stackTrace,
+              );
+            }
+          }),
+
+          // Отдельно слушаем события изменения индекса текущего трека, что бы добавлять треки в реальном времени, если это аудио микс.
+          player.currentIndexStream.listen((int? index) async {
+            if (index == null ||
+                !player.loaded ||
+                !(player.currentPlaylist?.isAudioMixPlaylist ?? false)) return;
+
+            final int count = player.currentPlaylist!.count;
+            final int tracksLeft = count - index;
+            final int tracksToAdd = tracksLeft <= minMixAudiosCount
+                ? (minMixAudiosCount - tracksLeft)
+                : 0;
+
+            logger.d(
+              "Mix index: $index/$count, should add $tracksToAdd tracks",
+            );
+
+            // Если у нас достаточно треков в очереди, то ничего не делаем.
+            if (tracksToAdd <= 0) return;
+
+            logger.d("Adding $tracksToAdd tracks to mix queue");
+            try {
+              final APIAudioGetStreamMixAudiosResponse response = await user
+                  .audioGetStreamMixAudiosWithAlbums(count: tracksToAdd);
+              raiseOnAPIError(response);
+
+              final List<ExtendedAudio> newAudios = response.response!
+                  .map(
+                    (audio) => ExtendedAudio.fromAPIAudio(audio),
+                  )
+                  .toList();
+
+              // Добавляем треки в объект плейлиста.
+              player.currentPlaylist!.audios!.addAll(newAudios);
+              player.currentPlaylist!.count += response.response!.length;
+
+              // Добавляем треки в очередь воспроизведения плеера.
+              for (ExtendedAudio audio in newAudios) {
+                await player.addToQueueEnd(audio);
+              }
+            } catch (e, stackTrace) {
+              logger.e(
+                "Couldn't load audio mix tracks: ",
+                error: e,
+                stackTrace: stackTrace,
+              );
+
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      l18n.musicMixAudiosAddError(e.toString()),
+                    ),
+                  ),
+                );
+              }
+
+              return;
+            }
+
+            logger.d(
+              "Successfully added $tracksToAdd tracks to mix queue (current: ${player.currentPlaylist!.count})",
+            );
+          }),
+        ];
+
+        return () {
+          for (StreamSubscription subscription in subscriptions) {
+            subscription.cancel();
+          }
+        };
+      },
+      [],
+    );
 
     final bool mobileLayout = isMobileLayout(context);
 

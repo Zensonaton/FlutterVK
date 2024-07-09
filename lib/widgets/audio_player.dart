@@ -639,7 +639,7 @@ class BottomMusicPlayer extends HookConsumerWidget {
 
                           // Кнопка для дизлайка (в Desktop Layout'е).
                           if (useBigLayout && onDislike != null)
-                            IconButton(
+                            LoadingIconButton(
                               onPressed: onDislike,
                               icon: Icon(
                                 Icons.thumb_down_outlined,
@@ -895,7 +895,7 @@ class BottomMusicPlayer extends HookConsumerWidget {
 
                     // Кнопка для дизлайка.
                     if (onDislike != null)
-                      IconButton(
+                      LoadingIconButton(
                         onPressed: onDislike,
                         icon: Icon(
                           Icons.thumb_down_outlined,
