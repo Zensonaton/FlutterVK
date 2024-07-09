@@ -69,7 +69,7 @@ class WelcomeRoute extends ConsumerWidget {
                   Align(
                     alignment: Alignment.bottomRight,
                     child: FilledButton.icon(
-                      onPressed: () => context.pop("/login"),
+                      onPressed: () => context.push("/login"),
                       icon: const Icon(
                         Icons.arrow_forward_ios,
                       ),

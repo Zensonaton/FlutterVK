@@ -6,7 +6,7 @@ part of 'spotify_api.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$spotifySPDCCookieHash() => r'4c1f277c61c744a807f9dad3654b4aa1d64e6949';
+String _$spotifySPDCCookieHash() => r'e73fcf7c1ef63b65106f69ed3019c50a5117b6b3';
 
 /// Возвращает значение Cookie `sp_dc` для Spotify.
 ///
@@ -23,7 +23,7 @@ final spotifySPDCCookieProvider = AutoDisposeProvider<String?>.internal(
 );
 
 typedef SpotifySPDCCookieRef = AutoDisposeProviderRef<String?>;
-String _$spotifyAPIHash() => r'15a4eedde421e8b0d40989b0facaa3c3a1a55a16';
+String _$spotifyAPIHash() => r'26ba13c26bf7b7779e7c5ba8dd87d6d23fd50d95';
 
 /// [Provider] для работы с API Spotify.
 ///

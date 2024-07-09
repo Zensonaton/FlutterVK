@@ -108,7 +108,7 @@ const _$DynamicSchemeTypeEnumMap = {
 // RiverpodGenerator
 // **************************************************************************
 
-String _$preferencesHash() => r'01265b739a534510dc9557207a027e5d9f3803cf';
+String _$preferencesHash() => r'b05ae61ecc33f6a591ac0a512f088138503b6424';
 
 /// [Provider] для хранения настроек пользователя.
 ///

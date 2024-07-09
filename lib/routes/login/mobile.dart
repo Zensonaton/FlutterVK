@@ -30,11 +30,11 @@ class MobileLoginWidget extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // InAppWebView, используемый для рендеринга Web-страницы, не поддерживается на Desktop-платформах.
     assert(
-      isDesktop,
+      isMobile,
       "MobileLoginWidget предназначен для работы на мобильных платформах.",
     );
 
-    final isWebViewShown = useState(false);
+    final isWebViewShown = useState(true);
     final l18n = ref.watch(l18nProvider);
 
     if (!isWebViewShown.value) {
@@ -114,7 +114,7 @@ class MobileLoginWidget extends HookConsumerWidget {
             // Извлекаем access-токен из URL.
             String? token = extractAccessToken(url);
             if (token == null) {
-              isWebViewShown.value = true;
+              isWebViewShown.value = false;
 
               showErrorDialog(
                 context,

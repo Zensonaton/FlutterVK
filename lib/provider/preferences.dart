@@ -206,7 +206,7 @@ class UserPreferences {
 class Preferences extends _$Preferences {
   @override
   UserPreferences build() {
-    final SharedPreferences prefs = ref.read(sharedPrefsProvider).requireValue;
+    final SharedPreferences prefs = ref.read(sharedPrefsProvider);
 
     return UserPreferences().copyWith(
       myMusicChipEnabled: prefs.getBool("MyMusicChipEnabled"),
@@ -241,7 +241,7 @@ class Preferences extends _$Preferences {
 
   @override
   set state(UserPreferences newState) {
-    final SharedPreferences prefs = ref.read(sharedPrefsProvider).requireValue;
+    final SharedPreferences prefs = ref.read(sharedPrefsProvider);
 
     final Map<String, dynamic> oldJson = state.toJson();
     final Map<String, dynamic> json = newState.toJson();

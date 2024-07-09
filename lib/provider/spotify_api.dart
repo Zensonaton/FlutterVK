@@ -42,7 +42,7 @@ class SpotifyAPI extends _$SpotifyAPI {
 
   @override
   SpotifyAuthData build() {
-    final SharedPreferences prefs = ref.read(sharedPrefsProvider).requireValue;
+    final SharedPreferences prefs = ref.read(sharedPrefsProvider);
 
     return SpotifyAuthData(
       spDC: prefs.getString("sp_dc"),
@@ -51,7 +51,7 @@ class SpotifyAPI extends _$SpotifyAPI {
 
   /// Проверяет валидность Cookie `sp_dc` от Spotify в [SharedPreferences] ([sharedPrefsProvider]), а так же обновляет состояние этого Provider.
   Future<void> login(String spDC) async {
-    final SharedPreferences prefs = ref.read(sharedPrefsProvider).requireValue;
+    final SharedPreferences prefs = ref.read(sharedPrefsProvider);
 
     state.spDC = spDC;
     await refreshToken();
@@ -197,7 +197,7 @@ class SpotifyAPI extends _$SpotifyAPI {
 /// Возвращает значение Cookie `sp_dc` для Spotify.
 @riverpod
 String? spotifySPDCCookie(SpotifySPDCCookieRef ref) {
-  final SharedPreferences prefs = ref.read(sharedPrefsProvider).requireValue;
+  final SharedPreferences prefs = ref.read(sharedPrefsProvider);
 
   return prefs.getString("sp_dc");
 }

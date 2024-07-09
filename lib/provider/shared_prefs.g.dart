@@ -6,14 +6,13 @@ part of 'shared_prefs.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$sharedPrefsHash() => r'e7568adf44b288797582331b137bcc68b1e993b7';
+String _$sharedPrefsHash() => r'394954be62ac9fcd757598b97278fd4215bc6410';
 
 /// [Provider] для [SharedPreferences], позволяющий получить доступ к хранилищу настроек.
 ///
 /// Copied from [sharedPrefs].
 @ProviderFor(sharedPrefs)
-final sharedPrefsProvider =
-    AutoDisposeFutureProvider<SharedPreferences>.internal(
+final sharedPrefsProvider = Provider<SharedPreferences>.internal(
   sharedPrefs,
   name: r'sharedPrefsProvider',
   debugGetCreateSourceHash:
@@ -22,6 +21,6 @@ final sharedPrefsProvider =
   allTransitiveDependencies: null,
 );
 
-typedef SharedPrefsRef = AutoDisposeFutureProviderRef<SharedPreferences>;
+typedef SharedPrefsRef = ProviderRef<SharedPreferences>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

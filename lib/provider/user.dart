@@ -794,7 +794,7 @@ class User extends _$User {
       "Attempted to read userProvider without authorization ($state)",
     );
 
-    final SharedPreferences prefs = ref.read(sharedPrefsProvider).requireValue;
+    final SharedPreferences prefs = ref.read(sharedPrefsProvider);
 
     return UserData(
       id: prefs.getInt("ID")!,
@@ -809,7 +809,7 @@ class User extends _$User {
   ///
   /// Если Вы желаете сохранить не вторичный, а основной токен (Kate Mobile), то воспользуйтесь [currentAuthStateProvider].
   Future<void> loginSecondary(String token) async {
-    final SharedPreferences prefs = ref.read(sharedPrefsProvider).requireValue;
+    final SharedPreferences prefs = ref.read(sharedPrefsProvider);
 
     // Авторизуем пользователя, и сохраняем флаг авторизации в [SharedPreferences].
     prefs.setString("RecommendationsToken", token);

@@ -21,7 +21,7 @@ part "auth.g.dart";
 class CurrentAuthState extends _$CurrentAuthState {
   @override
   AuthState build() {
-    final SharedPreferences prefs = ref.watch(sharedPrefsProvider).requireValue;
+    final SharedPreferences prefs = ref.watch(sharedPrefsProvider);
     final bool isAuthorized = prefs.getBool("IsAuthorized") ?? false;
 
     return isAuthorized ? AuthState.authenticated : AuthState.unauthenticated;
@@ -31,7 +31,7 @@ class CurrentAuthState extends _$CurrentAuthState {
   ///
   /// Для выхода из аккаунта используйте метод [logout].
   Future<void> login(String token, APIUser info) async {
-    final SharedPreferences prefs = ref.read(sharedPrefsProvider).requireValue;
+    final SharedPreferences prefs = ref.read(sharedPrefsProvider);
 
     // Сохраняем токен.
     prefs.setString("Token", token);
@@ -49,7 +49,7 @@ class CurrentAuthState extends _$CurrentAuthState {
 
   /// Деавторизует пользователя, удаляя токен из [SharedPreferences] ([sharedPrefsProvider]), а так же обновляет состояние этого Provider.
   void logout() async {
-    final SharedPreferences prefs = ref.read(sharedPrefsProvider).requireValue;
+    final SharedPreferences prefs = ref.read(sharedPrefsProvider);
 
     await player.stop();
     prefs.clear();
@@ -81,17 +81,17 @@ enum AuthState {
   ///
   /// Чаще всего существует лишь некоторое время, пока не будет получено состояние авторизации пользователя, после чего оно сменяется на [unauthenticated] или [authenticated].
   unknown(
-    redirectPath: "/",
+    redirectPath: "/welcome",
     allowedPaths: [
-      "/",
+      "/welcome",
     ],
   ),
 
   /// [AuthState], отображающий состояние авторизации пользователя, когда он не авторизован.
   unauthenticated(
-    redirectPath: "/",
+    redirectPath: "/welcome",
     allowedPaths: [
-      "/",
+      "/welcome",
       "/login",
     ],
   ),
@@ -122,7 +122,7 @@ enum AuthState {
 /// Возвращает основной токен (Kate Mobile) для ВКонтакте.
 @riverpod
 String? token(TokenRef ref) {
-  final SharedPreferences prefs = ref.read(sharedPrefsProvider).requireValue;
+  final SharedPreferences prefs = ref.read(sharedPrefsProvider);
 
   return prefs.getString("Token");
 }
@@ -130,7 +130,7 @@ String? token(TokenRef ref) {
 /// Возвращает вторичный токен (VK Admin) для ВКонтакте.
 @riverpod
 String? secondaryToken(SecondaryTokenRef ref) {
-  final SharedPreferences prefs = ref.read(sharedPrefsProvider).requireValue;
+  final SharedPreferences prefs = ref.read(sharedPrefsProvider);
 
   return prefs.getString("RecommendationsToken");
 }

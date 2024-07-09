@@ -121,7 +121,7 @@ GoRouter router(RouterRef ref) {
     },
     routes: [
       GoRoute(
-        path: "/",
+        path: "/welcome",
         pageBuilder: (BuildContext context, GoRouterState state) {
           return buildPageWithDefaultTransition(
             context: context,

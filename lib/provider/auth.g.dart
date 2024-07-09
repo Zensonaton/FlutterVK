@@ -6,7 +6,7 @@ part of 'auth.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$tokenHash() => r'd3157a000e2c022d6d0f54985a36d6f59b60b9bf';
+String _$tokenHash() => r'1ce76c440f04284d8e03515767ed37ff2d7251e8';
 
 /// Возвращает основной токен (Kate Mobile) для ВКонтакте.
 ///
@@ -22,7 +22,7 @@ final tokenProvider = AutoDisposeProvider<String?>.internal(
 );
 
 typedef TokenRef = AutoDisposeProviderRef<String?>;
-String _$secondaryTokenHash() => r'086f3f28514feba48741b8ec386775178b295552';
+String _$secondaryTokenHash() => r'2f2043e60ee54766ea1bc82aba3896b2643be0d7';
 
 /// Возвращает вторичный токен (VK Admin) для ВКонтакте.
 ///
@@ -39,7 +39,7 @@ final secondaryTokenProvider = AutoDisposeProvider<String?>.internal(
 );
 
 typedef SecondaryTokenRef = AutoDisposeProviderRef<String?>;
-String _$currentAuthStateHash() => r'4faced97d2c4858090718b7959545e35784773bf';
+String _$currentAuthStateHash() => r'19469abb5b7ad0722c4af267d5fa197248aa7cc6';
 
 /// [Provider] для хранения состояния авторизации пользователя. Позволяет авторизовывать и деавторизовывать пользователя.
 ///

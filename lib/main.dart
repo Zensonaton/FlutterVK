@@ -16,6 +16,7 @@ import "package:package_info_plus/package_info_plus.dart";
 import "package:path/path.dart" as path;
 import "package:path_provider/path_provider.dart";
 import "package:responsive_builder/responsive_builder.dart";
+import "package:shared_preferences/shared_preferences.dart";
 import "package:system_tray/system_tray.dart";
 import "package:window_manager/window_manager.dart";
 
@@ -144,14 +145,18 @@ class DevHttpOverrides extends HttpOverrides {
 Future main() async {
   final AppLogger logger = getLogger("main");
 
-  // Контейнер для provider'ов от riverpod'а.
-  final container = ProviderContainer();
-
   try {
     WidgetsFlutterBinding.ensureInitialized();
 
     // Загружаем SharedPreferences, а так же Preferences provider'ы.
-    await container.read(sharedPrefsProvider.future);
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Контейнер для provider'ов от riverpod'а.
+    final container = ProviderContainer(
+      overrides: [
+        sharedPrefsProvider.overrideWith((_) => prefs),
+      ],
+    );
     final preferences = container.read(preferencesProvider);
     final l18n = container.read(l18nProvider);
 

@@ -20,7 +20,6 @@ import "provider/color.dart";
 import "provider/l18n.dart";
 import "provider/navigation_router.dart";
 import "provider/preferences.dart";
-import "provider/shared_prefs.dart";
 import "routes/home/profile.dart";
 import "utils.dart";
 import "widgets/loading_overlay.dart";
@@ -100,17 +99,7 @@ class EagerInitialization extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final result = ref.watch(sharedPrefsProvider);
-
-    if (result.isLoading) {
-      return const Center(
-        child: CircularProgressIndicator.adaptive(),
-      );
-    } else if (result.hasError) {
-      throw Exception(
-        result.error!.toString(),
-      );
-    }
+    // В данный момент, этот метод ничего не делает.
 
     return app;
   }
