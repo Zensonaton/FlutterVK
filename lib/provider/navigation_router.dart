@@ -6,12 +6,15 @@ import "package:riverpod_annotation/riverpod_annotation.dart";
 import "../main.dart";
 import "../routes/fullscreen_player.dart";
 import "../routes/home/music.dart";
+import "../routes/home/music/playlist.dart";
 import "../routes/home/profile.dart";
 import "../routes/login.dart";
 import "../routes/welcome.dart";
 import "../widgets/shell_route_wrapper.dart";
 import "auth.dart";
 import "l18n.dart";
+import "playlists.dart";
+import "user.dart";
 
 part "navigation_router.g.dart";
 
@@ -63,6 +66,31 @@ GoRouter router(RouterRef ref) {
       icon: Icons.home_outlined,
       selectedIcon: Icons.home,
       label: l18n.music_label,
+      routes: [
+        GoRoute(
+          path: "playlist/:owner_id/:id",
+          pageBuilder: (BuildContext context, GoRouterState state) {
+            final ExtendedPlaylist? playlist =
+                ref.read(playlistsProvider.notifier).getPlaylist(
+                      int.parse(state.pathParameters["owner_id"]!),
+                      int.parse(state.pathParameters["id"]!),
+                    );
+            assert(
+              playlist != null,
+              "Playlist not found",
+            );
+
+            return buildPageWithDefaultTransition(
+              context: context,
+              state: state,
+              child: PlaylistInfoRoute(
+                ownerID: playlist!.ownerID,
+                id: playlist.id,
+              ),
+            );
+          },
+        ),
+      ],
     ),
     NavigationItem(
       path: "/profile",
@@ -83,7 +111,8 @@ GoRouter router(RouterRef ref) {
 
       // Проверяем, может ли пользователь попасть в этот route.
       // Если нет, то насильно пересылаем (редиректим) его в другое место.
-      if (!authState.allowedPaths.contains(state.fullPath)) {
+      if (!authState.allowedPaths
+          .any((path) => state.fullPath!.startsWith(path))) {
         return authState.redirectPath;
       }
 
@@ -96,8 +125,8 @@ GoRouter router(RouterRef ref) {
         pageBuilder: (BuildContext context, GoRouterState state) {
           return buildPageWithDefaultTransition(
             context: context,
-            child: const WelcomeRoute(),
             state: state,
+            child: const WelcomeRoute(),
           );
         },
       ),
@@ -106,14 +135,14 @@ GoRouter router(RouterRef ref) {
         pageBuilder: (BuildContext context, GoRouterState state) {
           return buildPageWithDefaultTransition(
             context: context,
-            child: const LoginRoute(),
             state: state,
+            child: const LoginRoute(),
           );
         },
       ),
       ShellRoute(
         builder: (_, state, child) => ShellRouteWrapper(
-          currentPath: state.uri.path,
+          currentPath: state.fullPath!,
           navigationItems: navigationItems,
           child: child,
         ),
@@ -125,9 +154,9 @@ GoRouter router(RouterRef ref) {
                 pageBuilder: (BuildContext context, GoRouterState state) =>
                     buildPageWithDefaultTransition(
                   context: context,
-                  child: item.body!(context),
                   state: state,
                   transitionType: SharedAxisTransitionType.vertical,
+                  child: item.body!(context),
                 ),
                 routes: item.routes,
               ),

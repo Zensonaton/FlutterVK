@@ -12,6 +12,7 @@ import "../consts.dart";
 import "../main.dart";
 import "../provider/color.dart";
 import "../provider/l18n.dart";
+import "../provider/preferences.dart";
 import "../provider/user.dart";
 import "../routes/home.dart";
 import "../routes/home/music/bottom_audio_options.dart";
@@ -34,9 +35,6 @@ Widget buildListTrackWidget(
   final bool isSelected = audio == player.currentAudio;
 
   return AudioTrackTile(
-    key: ValueKey(
-      audio.id,
-    ),
     isSelected: isSelected,
     isPlaying: player.loaded && player.playing,
     isLoading: isSelected && player.buffering,
@@ -65,16 +63,20 @@ Widget buildListTrackWidget(
       // Запускаем воспроизведение.
       await player.setPlaylist(
         playlist,
-        audio: audio,
+        index: playlist.audios!.indexOf(audio),
       );
     },
     onLikeTap: () async {
       if (!networkRequiredDialog(ref, context)) return;
 
+      if (!audio.isLiked && ref.read(preferencesProvider).checkBeforeFavorite) {
+        if (!await checkForDuplicates(ref, context, audio)) return;
+      }
       await toggleTrackLike(
         ref,
         audio,
         !audio.isLiked,
+        sourcePlaylist: playlist,
       );
     },
     onSecondaryAction: () => showModalBottomSheet(

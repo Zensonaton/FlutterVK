@@ -9,6 +9,7 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 
 import "../api/vk/api.dart";
 import "../api/vk/audio/add.dart";
+import "../api/vk/audio/add_dislike.dart";
 import "../api/vk/audio/delete.dart";
 import "../api/vk/audio/restore.dart";
 import "../enums.dart";
@@ -23,7 +24,6 @@ import "../services/logger.dart";
 import "../services/updater.dart";
 import "../utils.dart";
 import "../widgets/dialogs.dart";
-import "../widgets/loading_overlay.dart";
 import "fullscreen_player.dart";
 import "home/music/categories/realtime_playlists.dart";
 
@@ -59,212 +59,203 @@ class DuplicateWarningDialog extends ConsumerWidget {
   }
 }
 
+/// Проверяет то, существует ли похожий трек в [playlist], и если да, то показывает диалог, спрашивающий у пользователя то, хочет он сохранить трек или нет.
+///
+/// Возвращает true, если пользователь разрешил сохранение дубликата либо дубликата и вовсе не было, либо false, если пользователь не разрешил.
+Future<bool> checkForDuplicates(
+  WidgetRef ref,
+  BuildContext context,
+  ExtendedAudio audio,
+) async {
+  final favorites = ref.read(favoritesPlaylistProvider)!;
+
+  final bool isDuplicate = favorites.audios!.any(
+    (favAudio) =>
+        favAudio.isLiked &&
+        favAudio.title == audio.title &&
+        favAudio.artist == audio.artist &&
+        favAudio.album == audio.album,
+  );
+
+  if (!isDuplicate) return true;
+
+  final bool? duplicateDialogResult = await showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return const DuplicateWarningDialog();
+    },
+  );
+
+  return duplicateDialogResult ?? false;
+}
+
 /// Меняет состояние "лайка" у передаваемого трека.
 ///
 /// Если [isLiked] = true, то трек будет восстановлен (если он был удалён ранее), либо же лайкнут. В ином же случае, трек будет удалён из лайкнутых.
 Future<void> toggleTrackLike(
   WidgetRef ref,
   ExtendedAudio audio,
-  bool isLiked,
-) async {
+  bool isLiked, {
+  ExtendedPlaylist? sourcePlaylist,
+}) async {
   final AppLogger logger = getLogger("toggleTrackLike");
 
-  final playlist = ref.read(favoritesPlaylistProvider);
+  final favsPlaylist = ref.read(favoritesPlaylistProvider);
   final userNotifier = ref.read(userProvider.notifier);
+  final playlistsNotifier = ref.read(playlistsProvider.notifier);
   final user = ref.read(userProvider);
   assert(
-    playlist != null,
+    favsPlaylist != null,
     "Favorites playlist is null",
   );
 
+  // Новый объект ExtendedAudio, хранящий в себе новую версию трека после лайка/дизлайка.
+  ExtendedAudio newAudio = audio.copyWith();
+
+  // Список из плейлистов, которые должны быть сохранены.
+  List<ExtendedPlaylist> playlistsModified = [];
+
   if (isLiked) {
     // Пользователь попытался лайкнуть трек.
-    // Здесь мы должны проверить, пытается ли пользователь восстановить ранее удалённый трек или нет.
-    final bool shouldRestore = playlist!.audios!.contains(audio);
 
-    audio.isLiked = true;
+    // Здесь мы должны проверить, пытается ли пользователь восстановить ранее удалённый трек или нет.
+    final bool shouldRestore = favsPlaylist!.audios!.contains(newAudio);
 
     // Если пользователь пытается восстановить трек, то вызываем audio.restore,
     // в ином случае просто добавляем его методом audio.add.
+    int newTrackID;
     if (shouldRestore) {
+      newTrackID = newAudio.id;
+
       // Восстанавливаем трек.
       final APIAudioRestoreResponse response = await userNotifier.audioRestore(
-        audio.id,
-        ownerID: audio.ownerID,
+        newTrackID,
+        ownerID: newAudio.ownerID,
       );
       raiseOnAPIError(response);
+
+      // TODO: Обработчик ошибки #15: cannot restore too late
     } else {
       // Сохраняем трек как лайкнутый.
       final APIAudioAddResponse response = await userNotifier.audioAdd(
-        audio.id,
-        audio.ownerID,
+        newAudio.id,
+        newAudio.ownerID,
       );
       raiseOnAPIError(response);
 
-      audio.oldID = audio.id;
-      audio.oldOwnerID = audio.ownerID;
+      newTrackID = response.response!;
 
-      audio.id = response.response!;
-      audio.ownerID = user.id;
+      newAudio = newAudio.copyWith(
+        savedFromPlaylist: true,
+        relativeID: newTrackID,
+        relativeOwnerID: user.id,
+        savedPlaylistID: sourcePlaylist?.id,
+        savedPlaylistOwnerID: sourcePlaylist?.ownerID,
+      );
     }
 
     // Прекрасно, трек был добавлен либо восстановлён.
-    // Теперь нам нужно запомнить то, что трек лайкнут.
-    audio.isLiked = true;
+    // Запоминаем новую версию плейлиста с лайкнутыми треками.
+    playlistsModified.add(
+      favsPlaylist
+          .copyWithNewAudio(
+            newAudio.copyWith(isLiked: true),
+          )
+          .copyWith(
+            count: favsPlaylist.count + 1,
+          ),
+    );
 
-    // Добавляем трек в список фаворитов.
-    playlist.count += 1;
+    // Меняем второй плейлист, откуда этот трек был взят.
+    // Здесь мы не трогаем playlistsModified, поскольку сохранять в БД такое изменение не нужно.
+    if (sourcePlaylist != null) {
+      await playlistsNotifier.updatePlaylist(
+        sourcePlaylist.copyWithNewAudio(
+          audio.copyWith(
+            isLiked: true,
+            relativeID: newTrackID,
+            relativeOwnerID: user.id,
+          ),
+        ),
+      );
+    }
+  } else {
+    // Пользователь пытается удалить трек.
 
-    // Убеждаемся, что трек не существует в списке, после чего добавляем его в самое начало.
-    if (!playlist.audios!.contains(audio)) {
-      playlist.audios!.insert(0, audio);
+    // Удаляем трек из лайкнутых.
+    final APIAudioDeleteResponse response = await userNotifier.audioDelete(
+      audio.savedFromPlaylist ? audio.relativeID! : audio.id,
+      audio.savedFromPlaylist ? audio.relativeOwnerID! : audio.ownerID,
+    );
+    raiseOnAPIError(response);
+
+    // Если это возможно, то удаляем трек из кэша.
+    try {
+      CachedStreamedAudio(audio: audio).delete();
+
+      newAudio = audio.copyWith(isCached: false);
+    } catch (error, stackTrace) {
+      logger.w(
+        "Couldn't delete cached track after dislike: ",
+        error: error,
+        stackTrace: stackTrace,
+      );
     }
 
-    return;
-  }
-
-  // Пользователь пытается удалить трек.
-
-  // Удаляем трек из лайкнутых.
-  final APIAudioDeleteResponse response = await userNotifier.audioDelete(
-    audio.id,
-    audio.ownerID,
-  );
-  raiseOnAPIError(response);
-
-  // Всё ок, помечаем трек как не лайкнутый.
-  playlist!.count -= 1;
-  audio.isLiked = false;
-
-  // Если это возможно, то удаляем трек из кэша.
-  try {
-    CachedStreamedAudio(audio: audio).delete();
-
-    audio.isCached = false;
-  } catch (e) {
-    logger.w(
-      "Couldn't delete cached track after dislike: ",
-      error: e,
+    // Запоминаем новую версию плейлиста с удалённым треком.
+    playlistsModified.add(
+      favsPlaylist!
+          .copyWithNewAudio(
+            newAudio.copyWith(
+              isLiked: false,
+              savedFromPlaylist: false,
+            ),
+          )
+          .copyWith(
+            count: favsPlaylist.count - 1,
+          ),
     );
+
+    // Удаляем лайкнутый трек из сохранённого ранее плейлиста.
+    if (newAudio.savedFromPlaylist) {
+      final ExtendedPlaylist? savedPlaylist = playlistsNotifier.getPlaylist(
+        newAudio.savedPlaylistOwnerID!,
+        newAudio.savedPlaylistID!,
+      );
+      assert(
+        savedPlaylist != null,
+        "Attempted to delete track with non-existing parent playlist",
+      );
+
+      playlistsModified.add(
+        savedPlaylist!.copyWithNewAudio(
+          newAudio.copyWith(
+            isLiked: false,
+            savedFromPlaylist: false,
+          ),
+        ),
+      );
+    }
   }
+
+  await playlistsNotifier.updatePlaylists(playlistsModified, saveInDB: true);
 }
-
-// /// Меняет состояние "лайка" у передаваемого трека [audio]. При вызове, начинается анимация загрузки ([LoadingOverlay]).
-// ///
-// /// Если [checkBeforeSaving] равен true, то в случае дубликата трека появится диалог, подтверждающий создание дубликата.
-// Future<void> toggleTrackLikeState(
-//   WidgetRef ref,
-//   BuildContext context,
-//   ExtendedAudio audio,
-//   bool isFavorite, {
-//   bool checkBeforeSaving = true,
-// }) async {
-//   final AppLogger logger = getLogger("toggleTrackLikeState");
-//   final playlist = ref.read(favoritesPlaylistProvider);
-
-//   assert(
-//     playlist != null,
-//     "Favorites playlist is null",
-//   );
-
-//   // Если это разрешено, то проверяем, есть ли такой трек в лайкнутых.
-//   if (isFavorite && checkBeforeSaving) {
-//     final bool isDuplicate = playlist!.audios!.any(
-//       (favAudio) =>
-//           favAudio.isLiked &&
-//           favAudio.title == audio.title &&
-//           favAudio.artist == audio.artist &&
-//           favAudio.album == audio.album,
-//     );
-
-//     // Если это дубликат, то показываем предупреждение об этом.
-//     if (isDuplicate) {
-//       final bool? duplicateDialogResult = await showDialog(
-//         context: context,
-//         builder: (BuildContext context) {
-//           return const DuplicateWarningDialog();
-//         },
-//       );
-
-//       if (!(duplicateDialogResult ?? false)) return;
-//     }
-//   }
-
-//   if (!context.mounted) return;
-//   LoadingOverlay.of(context).show();
-
-//   try {
-//     // Делаем API запросы для удаления/добавления трека.
-//     await toggleTrackLike(
-//       ref,
-//       audio,
-//       isFavorite,
-//     );
-//   } catch (e, stackTrace) {
-//     showLogErrorDialog(
-//       "Ошибка при попытке сделать трек лайкнутым/дизлайкнутым (новое состояние: $isFavorite): ",
-//       e,
-//       stackTrace,
-//       logger,
-//       // ignore: use_build_context_synchronously
-//       context,
-//     );
-//   } finally {
-//     if (context.mounted) LoadingOverlay.of(context).hide();
-//   }
-// }
 
 /// Помечает передаваемый трек [audio] как дизлайкнутый.
 Future<void> dislikeTrack(
   WidgetRef ref,
   ExtendedAudio audio,
 ) async {
-  // TODO
+  final user = ref.read(userProvider.notifier);
 
-  // final APIAudioAddDislikeResponse response =
-  //     await user.audioAddDislike([audio.mediaKey]);
-  // raiseOnAPIError(response);
+  final APIAudioAddDislikeResponse response =
+      await user.audioAddDislike([audio.mediaKey]);
+  raiseOnAPIError(response);
 
-  // assert(
-  //   response.response,
-  //   "Track is not disliked: ${response.response}",
-  // );
-}
-
-/// Помечает передаваемый трек [audio] как дизлайкнутый. При вызове, начинается анимация загрузки ([LoadingOverlay]).
-///
-/// Возвращает то, был ли запрос успешен.
-@Deprecated("Не стоит использовать state-версию")
-Future<bool> dislikeTrackState(
-  BuildContext context,
-  ExtendedAudio audio,
-) async {
-  // ignore: unused_local_variable
-  final AppLogger logger = getLogger("addDislikeTrackState");
-
-  return false;
-  // TODO
-
-  // LoadingOverlay.of(context).show();
-
-  // try {
-  //   await dislikeTrack(user, audio);
-
-  //   return true;
-  // } catch (e, stackTrace) {
-  //   showLogErrorDialog(
-  //     "Ошибка при дизлайке трека: ",
-  //     e,
-  //     stackTrace,
-  //     logger,
-  //     // ignore: use_build_context_synchronously
-  //     context,
-  //   );
-
-  //   return false;
-  // } finally {
-  //   if (context.mounted) LoadingOverlay.of(context).hide();
-  // }
+  assert(
+    response.response,
+    "Track is not disliked: ${response.response}",
+  );
 }
 
 /// Route, показываемый как "домашняя страница", где расположена навигация между разными частями приложения.

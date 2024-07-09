@@ -6,14 +6,14 @@ import "schemas/playlists.dart";
 
 /// Класс для работы с базой данных Isar, используемого для хранения persistent-данных пользователя.
 class AppStorage {
-  String? _dbDirectoryPath;
-
-  Isar? _isar;
+  static final AppLogger logger = getLogger("AppStorage");
 
   /// Название файла базы данных Isar.
   static String isarDBName = "flutter-vk";
 
-  static AppLogger logger = getLogger("AppStorage");
+  String? _dbDirectoryPath;
+
+  Isar? _isar;
 
   /// Возвращает путь к папке, в которой будут храниться файлы баз данных Isar.
   Future<String> getDBDirectoryPath() async {
@@ -79,5 +79,24 @@ class AppStorage {
       deleteFromDisk: true,
     );
     _isar = null;
+  }
+
+  /// Возвращает все записи из БД в виде JSON-объекта.
+  Future<List<Map<String, dynamic>>> exportAsJSON() async {
+    final Isar isar = await _getIsar();
+
+    return await isar.dBPlaylists.where().exportJson();
+  }
+
+  /// Импортирует содержимое как JSON-объект, ранее экспортированного при помощи метода [exportAsJSON].
+  ///
+  /// Учтите, что используя этот метод, содержимое БД удаляется.
+  Future<void> importFromJSON(List<Map<String, dynamic>> json) async {
+    final Isar isar = await _getIsar();
+
+    await isar.writeTxn(() async {
+      await isar.dBPlaylists.clear();
+      await isar.dBPlaylists.importJson(json);
+    });
   }
 }

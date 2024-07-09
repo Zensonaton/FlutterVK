@@ -1,8 +1,8 @@
 import "dart:async";
 
-import "package:debounce_throttle/debounce_throttle.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
 import "package:gap/gap.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
@@ -21,7 +21,7 @@ import "../../../widgets/audio_track.dart";
 import "../../../widgets/dialogs.dart";
 
 /// Диалог, показывающий поле для глобального поиска через API ВКонтакте, а так же сами результаты поиска.
-class SearchDisplayDialog extends ConsumerStatefulWidget {
+class SearchDisplayDialog extends HookConsumerWidget {
   /// Если true, то сразу после открытия данного диалога фокус будет на [SearchBar].
   final bool focusSearchBarOnOpen;
 
@@ -31,76 +31,57 @@ class SearchDisplayDialog extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<SearchDisplayDialog> createState() =>
-      _SearchDisplayDialogState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final controller = useTextEditingController(text: "");
+    final focusNode = useFocusNode();
+    final ValueNotifier<Future<APIAudioSearchResponse>?> searchFuture =
+        useState(null);
+    final debouncedInput = useDebounced(
+      controller.text,
+      const Duration(milliseconds: 500),
+    );
+    useValueListenable(controller);
 
-class _SearchDisplayDialogState extends ConsumerState<SearchDisplayDialog> {
-  // TODO: Переписать с использованием hook'ов.
+    void onSearch() {
+      if (!context.mounted && !networkRequiredDialog(ref, context)) return;
 
-  /// Контроллер, используемый для управления введённым в поле поиска текстом.
-  final TextEditingController controller = TextEditingController();
+      final String query = controller.text.trim();
 
-  /// FocusNode для фокуса поля поиска сразу после открытия данного диалога.
-  final FocusNode focusNode = FocusNode();
+      // Если ничего не введено, то делаем пустой Future.
+      if (query.isEmpty) {
+        if (searchFuture.value != null) {
+          searchFuture.value = null;
+        }
 
-  /// Подписки на изменения состояния воспроизведения трека.
-  late final List<StreamSubscription> subscriptions;
-
-  /// Debouncer для поиска.
-  final debouncer = Debouncer<String>(
-    const Duration(
-      seconds: 1,
-    ),
-    initialValue: "",
-  );
-
-  /// Текущий Future по поиску через API ВКонтакте. Может отсутствовать, если ничего не было введено в поиск.
-  Future<APIAudioSearchResponse>? searchFuture;
-
-  /// Метод, который вызывается при печати в поле поиска.
-  ///
-  /// Данный метод вызывается с учётом debouncing'а.
-  void onDebounce(String query) {
-    // Если мы вышли из текущего Route, то ничего не делаем.
-    if (!mounted) return;
-
-    // Проверяем наличие интернета.
-    if (!networkRequiredDialog(ref, context)) return;
-
-    // Если ничего не введено, то делаем пустой Future.
-    if (query.isEmpty) {
-      if (searchFuture != null) {
-        setState(
-          () => searchFuture = null,
-        );
+        return;
       }
 
-      return;
+      // Делаем запрос по получению результатов поиска.
+      searchFuture.value =
+          ref.read(userProvider.notifier).audioSearchWithAlbums(query);
     }
 
-    // searchFuture = user.audioSearchWithAlbums(query);
-    setState(() {});
-  }
+    void onSearchClear() => controller.clear();
 
-  @override
-  void initState() {
-    super.initState();
+    useEffect(
+      () {
+        // Если у пользователя ПК, то тогда устанавливаем фокус на поле поиска.
+        if (isDesktop && focusSearchBarOnOpen) focusNode.requestFocus();
 
-    // Обработчик печати.
-    controller.addListener(
-      () => debouncer.value = controller.text,
+        return null;
+      },
+      [],
+    );
+    useEffect(
+      () {
+        if (debouncedInput == null) return;
+        onSearch();
+
+        return null;
+      },
+      [debouncedInput],
     );
 
-    // Обработчик событий поиска, испускаемых Debouncer'ом, если пользователь остановил печать.
-    debouncer.values.listen(onDebounce);
-
-    // Если у пользователя ПК, то тогда устанавливаем фокус на поле поиска.
-    if (isDesktop && widget.focusSearchBarOnOpen) focusNode.requestFocus();
-  }
-
-  @override
-  Widget build(BuildContext context) {
     final user = ref.watch(userProvider);
     final l18n = ref.watch(l18nProvider);
     ref.watch(playerStateProvider);
@@ -122,7 +103,7 @@ class _SearchDisplayDialogState extends ConsumerState<SearchDisplayDialog> {
         width: 650,
         child: Column(
           children: [
-            // Верхний "AppBar".
+            // Верхний AppBar.
             Padding(
               padding: mobileLayout
                   ? EdgeInsets.zero
@@ -158,7 +139,7 @@ class _SearchDisplayDialogState extends ConsumerState<SearchDisplayDialog> {
                       child: TextField(
                         focusNode: focusNode,
                         controller: controller,
-                        onChanged: (String query) => setState(() {}),
+                        onEditingComplete: onSearch,
                         decoration: InputDecoration(
                           hintText: l18n.music_searchText,
                           border: OutlineInputBorder(
@@ -178,9 +159,7 @@ class _SearchDisplayDialogState extends ConsumerState<SearchDisplayDialog> {
                                     icon: const Icon(
                                       Icons.close,
                                     ),
-                                    onPressed: () => setState(
-                                      () => controller.clear(),
-                                    ),
+                                    onPressed: onSearchClear,
                                   ),
                                 )
                               : null,
@@ -196,7 +175,7 @@ class _SearchDisplayDialogState extends ConsumerState<SearchDisplayDialog> {
             // Содержимое поиска.
             Expanded(
               child: FutureBuilder(
-                future: searchFuture,
+                future: searchFuture.value,
                 builder: (
                   BuildContext context,
                   AsyncSnapshot<APIAudioSearchResponse> snapshot,
@@ -219,28 +198,26 @@ class _SearchDisplayDialogState extends ConsumerState<SearchDisplayDialog> {
                   if (snapshot.connectionState == ConnectionState.waiting ||
                       snapshot.hasError ||
                       !(snapshot.hasData && snapshot.data!.error == null)) {
-                    return ListView.builder(
+                    return ListView.separated(
                       itemCount: 50,
                       physics: const NeverScrollableScrollPhysics(),
+                      separatorBuilder: (BuildContext context, int index) {
+                        return const Gap(trackTileSpacing);
+                      },
                       itemBuilder: (BuildContext context, int index) {
                         return Skeletonizer(
-                          child: Padding(
-                            padding: const EdgeInsets.only(
-                              bottom: 8,
-                            ),
-                            child: AudioTrackTile(
-                              audio: ExtendedAudio(
-                                id: -1,
-                                ownerID: -1,
-                                title: fakeTrackNames[
-                                    index % fakeTrackNames.length],
-                                artist: fakeTrackNames[
-                                    (index + 1) % fakeTrackNames.length],
-                                duration: 60 * 3,
-                                accessKey: "",
-                                url: "",
-                                date: 0,
-                              ),
+                          child: AudioTrackTile(
+                            audio: ExtendedAudio(
+                              id: -1,
+                              ownerID: -1,
+                              title:
+                                  fakeTrackNames[index % fakeTrackNames.length],
+                              artist: fakeTrackNames[
+                                  (index + 1) % fakeTrackNames.length],
+                              duration: 60 * 3,
+                              accessKey: "",
+                              url: "",
+                              date: 0,
                             ),
                           ),
                         );
@@ -260,9 +237,7 @@ class _SearchDisplayDialogState extends ConsumerState<SearchDisplayDialog> {
                         tags: {
                           "click": StyledTextActionTag(
                             (String? text, Map<String?, String?> attrs) =>
-                                setState(
-                              () => controller.clear(),
-                            ),
+                                onSearchClear(),
                             style: TextStyle(
                               color: Theme.of(context).colorScheme.primary,
                             ),
@@ -275,8 +250,9 @@ class _SearchDisplayDialogState extends ConsumerState<SearchDisplayDialog> {
                   // Отображаем данные.
                   return ListView.separated(
                     itemCount: audios!.length,
-                    separatorBuilder: (BuildContext context, int index) =>
-                        const Gap(trackTileSpacing),
+                    separatorBuilder: (BuildContext context, int index) {
+                      return const Gap(trackTileSpacing);
+                    },
                     itemBuilder: (BuildContext context, int index) {
                       return buildListTrackWidget(
                         ref,

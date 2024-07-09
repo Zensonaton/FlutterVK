@@ -77,9 +77,9 @@ class ShellRouteWrapper extends HookConsumerWidget {
 
     final bool mobileLayout = isMobileLayout(context);
     final int currentIndex =
-        navigationItems.indexWhere((item) => item.path == currentPath);
-    final int mobileCurrentIndex =
-        mobileNavigationItems.indexWhere((item) => item.path == currentPath);
+        navigationItems.indexWhere((item) => currentPath.startsWith(item.path));
+    final int mobileCurrentIndex = mobileNavigationItems
+        .indexWhere((item) => currentPath.startsWith(item.path));
 
     /// TODO: Проверка на то, что мы попали на недопустимую страницу.
 
@@ -363,10 +363,19 @@ class _BottomMusicPlayerWrapperState
                   onLikeTap: () async {
                     if (!networkRequiredDialog(ref, context)) return;
 
+                    if (!player.currentAudio!.isLiked &&
+                        ref.read(preferencesProvider).checkBeforeFavorite) {
+                      if (!await checkForDuplicates(
+                        ref,
+                        context,
+                        player.currentAudio!,
+                      )) return;
+                    }
                     await toggleTrackLike(
                       ref,
                       player.currentAudio!,
                       !player.currentAudio!.isLiked,
+                      sourcePlaylist: player.currentPlaylist,
                     );
                   },
                   onDislike:

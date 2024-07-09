@@ -100,9 +100,10 @@ enum AuthState {
   authenticated(
     redirectPath: "/music",
     allowedPaths: [
-      "/home",
+      "/music",
       "/profile",
       "/fullscreenPlayer",
+      "/playlist",
     ],
   );
 

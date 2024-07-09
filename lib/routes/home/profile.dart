@@ -26,7 +26,8 @@ import "../../services/updater.dart";
 import "../../utils.dart";
 import "../../widgets/dialogs.dart";
 import "../../widgets/page_route_builders.dart";
-import "profile/color_debug_menu.dart";
+import "profile/debug/colorscheme.dart";
+import "profile/debug/playlists_viewer.dart";
 import "profile/dialogs.dart";
 
 /// Вызывает окно, дающее пользователю возможность поделиться файлом логов приложения ([logFilePath]), либо же открывающее проводник (`explorer.exe`) с файлом логов (на OS Windows).
@@ -1096,6 +1097,22 @@ class _HomeProfilePageState extends ConsumerState<HomeProfilePage> {
                                 Material3PageRoute(
                                   builder: (BuildContext context) =>
                                       const ColorSchemeDebugMenu(),
+                                ),
+                              ),
+                            ),
+
+                            // Debug-меню для отображения всех плейлистов.
+                            ListTile(
+                              leading: const Icon(
+                                Icons.art_track_outlined,
+                              ),
+                              title: const Text(
+                                "Playlists viewer",
+                              ),
+                              onTap: () => Navigator.of(context).push(
+                                Material3PageRoute(
+                                  builder: (BuildContext context) =>
+                                      const PlaylistsViewerDebugMenu(),
                                 ),
                               ),
                             ),

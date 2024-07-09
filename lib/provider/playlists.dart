@@ -1,4 +1,5 @@
 import "package:collection/collection.dart";
+import "package:flutter/foundation.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 
 import "../api/vk/api.dart";
@@ -40,15 +41,14 @@ class PlaylistsState {
 
   @override
   bool operator ==(covariant PlaylistsState other) {
-    if (identical(this, other)) return true;
-
     return other.fromAPI == fromAPI &&
         other.playlistsCount == playlistsCount &&
-        other.playlists == playlists;
+        listEquals(other.playlists, playlists);
   }
 
   @override
-  int get hashCode => playlists.hashCode;
+  int get hashCode =>
+      playlists.hashCode ^ fromAPI.hashCode ^ playlistsCount.hashCode;
 
   PlaylistsState({
     this.fromAPI = false,
@@ -98,7 +98,7 @@ class Playlists extends _$Playlists {
     // FIXME: Неиспользованные ключи локализации: music_basicDataLoadError, music_recommendationsDataLoadError.
 
     // Загружаем плейлисты из локальной БД, если они не были загружены ранее.
-    if (!state.hasValue || !(state.value?.fromAPI ?? false)) {
+    if (!(state.unwrapPrevious().value?.fromAPI ?? false)) {
       final Stopwatch watch = Stopwatch()..start();
       final PlaylistsState? playlistsState =
           await ref.read(dbPlaylistsProvider.future);
@@ -459,7 +459,8 @@ class Playlists extends _$Playlists {
             (existingAudio.album == givenAudio.album ||
                 givenAudio.album == null) &&
             existingAudio.hasLyrics == givenAudio.hasLyrics &&
-            existingAudio.lyrics == givenAudio.lyrics) {
+            existingAudio.lyrics == givenAudio.lyrics &&
+            existingAudio.isLiked == givenAudio.isLiked) {
           newAudios.add(givenAudio);
 
           continue;
@@ -475,6 +476,7 @@ class Playlists extends _$Playlists {
             hasLyrics: givenAudio.hasLyrics,
             lyrics: givenAudio.lyrics,
             vkThumbs: givenAudio.vkThumbs,
+            isLiked: givenAudio.isLiked,
           ),
         );
 
@@ -539,10 +541,10 @@ class Playlists extends _$Playlists {
       if (saveInDB) {
         await appStorage.savePlaylist(existingPlaylist.asDBPlaylist);
       }
-    }
 
-    if (playlistChanged) {
       logger.d("Playlist has changed");
+    } else {
+      logger.d("No changes to the playlist");
     }
 
     return playlistChanged;
@@ -581,6 +583,79 @@ class Playlists extends _$Playlists {
     }
 
     return changedPlaylists.isNotEmpty;
+  }
+
+  /// Устанавливает значение данного Provider по передаваемому списку из [ExtendedPlaylist].
+  ///
+  /// Данный метод используется лишь в тех случаях, при которых БД Isar был изменён каким-то образом. Если Вы хотите сохранить уже имеющийся плейлист, то воспользуйтесь методом [updatePlaylist] или [updatePlaylists].
+  void setPlaylists(
+    List<ExtendedPlaylist> playlists, {
+    bool? fromAPI,
+    bool invalidateDBProvider = false,
+  }) {
+    if (invalidateDBProvider) {
+      ref.invalidate(dbPlaylistsProvider);
+    }
+
+    state = AsyncData(
+      state.value!.copyWith(
+        playlists: playlists,
+        fromAPI: fromAPI,
+      ),
+    );
+  }
+
+  /// Возвращает плейлист с лайкнутыми треками.
+  ExtendedPlaylist? getFavoritesPlaylist() =>
+      state.value?.playlists.firstWhereOrNull(
+        (playlist) => playlist.isFavoritesPlaylist,
+      );
+
+  /// Возвращает плейлист по передаваемому [ownerID] и [id].
+  ExtendedPlaylist? getPlaylist(int ownerID, int id) =>
+      state.value?.playlists.firstWhereOrNull(
+        (playlist) => playlist.ownerID == ownerID && playlist.id == id,
+      );
+
+  /// Загружает информацию с API ВКонтакте по [playlist], если она не была загружена ранее, и обновляет state данного объекта.
+  Future<void> loadPlaylist(ExtendedPlaylist playlist) async {
+    final user = ref.read(userProvider.notifier);
+
+    // Если информация по плейлисту уже загружена, то ничего не делаем.
+    if (playlist.isFavoritesPlaylist ||
+        (playlist.audios != null &&
+            playlist.isLiveData &&
+            playlist.areTracksLive)) {
+      return;
+    }
+
+    logger.d("Loading data for $playlist");
+
+    final APIMassAudioGetResponse response =
+        await user.scriptMassAudioGetWithAlbums(
+      playlist.ownerID,
+      albumID: playlist.id,
+      accessKey: playlist.accessKey,
+    );
+    raiseOnAPIError(response);
+
+    await updatePlaylist(
+      playlist.copyWith(
+        photo: response.response!.playlists
+            .firstWhereOrNull(
+              (item) => item.mediaKey == playlist.mediaKey,
+            )
+            ?.photo,
+        audios: response.response!.audios
+            .map(
+              (item) => ExtendedAudio.fromAPIAudio(item),
+            )
+            .toList(),
+        count: response.response!.audioCount,
+        isLiveData: true,
+        areTracksLive: true,
+      ),
+    );
   }
 }
 
@@ -691,4 +766,12 @@ List<ExtendedPlaylist>? madeByVKPlaylists(MadeByVKPlaylistsRef ref) {
   if (playlists.isEmpty && !state.fromAPI) return null;
 
   return playlists;
+}
+
+/// [Provider], возвращающий [ExtendedPlaylist] по передаваемому [ownerID] и [id] плейлиста.
+@riverpod
+ExtendedPlaylist? getPlaylist(GetPlaylistRef ref, int ownerID, int id) {
+  ref.watch(playlistsProvider);
+
+  return ref.read(playlistsProvider.notifier).getPlaylist(ownerID, id);
 }

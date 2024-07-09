@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:gap/gap.dart";
+import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:skeletonizer/skeletonizer.dart";
 
@@ -14,7 +15,6 @@ import "../../../../provider/user.dart";
 import "../../../../services/logger.dart";
 import "../../../../utils.dart";
 import "../../../../widgets/audio_track.dart";
-import "../../../../widgets/page_route_builders.dart";
 import "../playlist.dart";
 
 /// Виджет, отображающий несколько треков из плейлиста раздела "Совпадения по вкусам".
@@ -326,13 +326,8 @@ class SimillarMusicBlock extends HookConsumerWidget {
                     tracks: playlist.knownTracks!,
                     selected: player.currentPlaylist == playlist,
                     currentlyPlaying: player.playing && player.loaded,
-                    onOpen: () => Navigator.push(
-                      context,
-                      Material3PageRoute(
-                        builder: (context) => PlaylistInfoRoute(
-                          playlist: playlist,
-                        ),
-                      ),
+                    onOpen: () => context.push(
+                      "/music/playlist/${playlist.ownerID}/${playlist.id}",
                     ),
                     onPlayToggle: (bool playing) => onPlaylistPlayToggle(
                       ref,

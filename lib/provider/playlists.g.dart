@@ -149,7 +149,185 @@ final madeByVKPlaylistsProvider =
 );
 
 typedef MadeByVKPlaylistsRef = AutoDisposeProviderRef<List<ExtendedPlaylist>?>;
-String _$playlistsHash() => r'0746cadba8f7482fedb359326c06045cf12a62fa';
+String _$getPlaylistHash() => r'63afe756e91a2d5e00591af4ac15e8f66f3f93c9';
+
+/// Copied from Dart SDK
+class _SystemHash {
+  _SystemHash._();
+
+  static int combine(int hash, int value) {
+    // ignore: parameter_assignments
+    hash = 0x1fffffff & (hash + value);
+    // ignore: parameter_assignments
+    hash = 0x1fffffff & (hash + ((0x0007ffff & hash) << 10));
+    return hash ^ (hash >> 6);
+  }
+
+  static int finish(int hash) {
+    // ignore: parameter_assignments
+    hash = 0x1fffffff & (hash + ((0x03ffffff & hash) << 3));
+    // ignore: parameter_assignments
+    hash = hash ^ (hash >> 11);
+    return 0x1fffffff & (hash + ((0x00003fff & hash) << 15));
+  }
+}
+
+/// [Provider], возвращающий [ExtendedPlaylist] по передаваемому [ownerID] и [id] плейлиста.
+///
+/// Copied from [getPlaylist].
+@ProviderFor(getPlaylist)
+const getPlaylistProvider = GetPlaylistFamily();
+
+/// [Provider], возвращающий [ExtendedPlaylist] по передаваемому [ownerID] и [id] плейлиста.
+///
+/// Copied from [getPlaylist].
+class GetPlaylistFamily extends Family<ExtendedPlaylist?> {
+  /// [Provider], возвращающий [ExtendedPlaylist] по передаваемому [ownerID] и [id] плейлиста.
+  ///
+  /// Copied from [getPlaylist].
+  const GetPlaylistFamily();
+
+  /// [Provider], возвращающий [ExtendedPlaylist] по передаваемому [ownerID] и [id] плейлиста.
+  ///
+  /// Copied from [getPlaylist].
+  GetPlaylistProvider call(
+    int ownerID,
+    int id,
+  ) {
+    return GetPlaylistProvider(
+      ownerID,
+      id,
+    );
+  }
+
+  @override
+  GetPlaylistProvider getProviderOverride(
+    covariant GetPlaylistProvider provider,
+  ) {
+    return call(
+      provider.ownerID,
+      provider.id,
+    );
+  }
+
+  static const Iterable<ProviderOrFamily>? _dependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
+
+  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
+      _allTransitiveDependencies;
+
+  @override
+  String? get name => r'getPlaylistProvider';
+}
+
+/// [Provider], возвращающий [ExtendedPlaylist] по передаваемому [ownerID] и [id] плейлиста.
+///
+/// Copied from [getPlaylist].
+class GetPlaylistProvider extends AutoDisposeProvider<ExtendedPlaylist?> {
+  /// [Provider], возвращающий [ExtendedPlaylist] по передаваемому [ownerID] и [id] плейлиста.
+  ///
+  /// Copied from [getPlaylist].
+  GetPlaylistProvider(
+    int ownerID,
+    int id,
+  ) : this._internal(
+          (ref) => getPlaylist(
+            ref as GetPlaylistRef,
+            ownerID,
+            id,
+          ),
+          from: getPlaylistProvider,
+          name: r'getPlaylistProvider',
+          debugGetCreateSourceHash:
+              const bool.fromEnvironment('dart.vm.product')
+                  ? null
+                  : _$getPlaylistHash,
+          dependencies: GetPlaylistFamily._dependencies,
+          allTransitiveDependencies:
+              GetPlaylistFamily._allTransitiveDependencies,
+          ownerID: ownerID,
+          id: id,
+        );
+
+  GetPlaylistProvider._internal(
+    super._createNotifier, {
+    required super.name,
+    required super.dependencies,
+    required super.allTransitiveDependencies,
+    required super.debugGetCreateSourceHash,
+    required super.from,
+    required this.ownerID,
+    required this.id,
+  }) : super.internal();
+
+  final int ownerID;
+  final int id;
+
+  @override
+  Override overrideWith(
+    ExtendedPlaylist? Function(GetPlaylistRef provider) create,
+  ) {
+    return ProviderOverride(
+      origin: this,
+      override: GetPlaylistProvider._internal(
+        (ref) => create(ref as GetPlaylistRef),
+        from: from,
+        name: null,
+        dependencies: null,
+        allTransitiveDependencies: null,
+        debugGetCreateSourceHash: null,
+        ownerID: ownerID,
+        id: id,
+      ),
+    );
+  }
+
+  @override
+  AutoDisposeProviderElement<ExtendedPlaylist?> createElement() {
+    return _GetPlaylistProviderElement(this);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is GetPlaylistProvider &&
+        other.ownerID == ownerID &&
+        other.id == id;
+  }
+
+  @override
+  int get hashCode {
+    var hash = _SystemHash.combine(0, runtimeType.hashCode);
+    hash = _SystemHash.combine(hash, ownerID.hashCode);
+    hash = _SystemHash.combine(hash, id.hashCode);
+
+    return _SystemHash.finish(hash);
+  }
+}
+
+mixin GetPlaylistRef on AutoDisposeProviderRef<ExtendedPlaylist?> {
+  /// The parameter `ownerID` of this provider.
+  int get ownerID;
+
+  /// The parameter `id` of this provider.
+  int get id;
+}
+
+class _GetPlaylistProviderElement
+    extends AutoDisposeProviderElement<ExtendedPlaylist?> with GetPlaylistRef {
+  _GetPlaylistProviderElement(super.provider);
+
+  @override
+  int get ownerID => (origin as GetPlaylistProvider).ownerID;
+  @override
+  int get id => (origin as GetPlaylistProvider).id;
+}
+
+String _$playlistsHash() => r'43c83d94955549f49ddf19ac880c034080688de0';
 
 /// [Provider], хранящий в себе информацию о плейлистах пользователя.
 ///

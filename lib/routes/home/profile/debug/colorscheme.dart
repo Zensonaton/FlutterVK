@@ -3,12 +3,12 @@ import "package:flutter/material.dart";
 import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
-import "../../../main.dart";
-import "../../../provider/color.dart";
-import "../../../provider/player_events.dart";
-import "../../../provider/user.dart";
-import "../../../services/cache_manager.dart";
-import "../../../widgets/fallback_audio_photo.dart";
+import "../../../../main.dart";
+import "../../../../provider/color.dart";
+import "../../../../provider/player_events.dart";
+import "../../../../provider/user.dart";
+import "../../../../services/cache_manager.dart";
+import "../../../../widgets/fallback_audio_photo.dart";
 
 /// Небольшой контейнер с цветом.
 class ColorPill extends ConsumerWidget {

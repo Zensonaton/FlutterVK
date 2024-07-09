@@ -322,10 +322,16 @@ class FullscreenMediaControls extends ConsumerWidget {
     Future<void> onLikeTap() async {
       if (!networkRequiredDialog(ref, context)) return;
 
+      if (!isFavorite && preferences.checkBeforeFavorite) {
+        if (!await checkForDuplicates(ref, context, player.currentAudio!)) {
+          return;
+        }
+      }
       await toggleTrackLike(
         ref,
         player.currentAudio!,
         !isFavorite,
+        sourcePlaylist: player.currentPlaylist,
       );
     }
 
@@ -333,11 +339,7 @@ class FullscreenMediaControls extends ConsumerWidget {
       if (!networkRequiredDialog(ref, context)) return;
 
       // Делаем трек дизлайкнутым.
-      final bool result = await dislikeTrackState(
-        context,
-        player.currentAudio!,
-      );
-      if (!result) return;
+      await dislikeTrack(ref, player.currentAudio!);
 
       // Запускаем следующий трек в плейлисте.
       await player.next();

@@ -50,8 +50,8 @@ class CacheItem {
     // );
 
     // Запоминаем то, что трек кэширован.
-    audio.isCached = true;
-    audio.downloadProgress.value = 0.0;
+    // audio.isCached = true;
+    // audio.downloadProgress.value = 0.0;
 
     // Сохраняем изменения.
     appStorage.savePlaylist(playlist.asDBPlaylist);
@@ -76,9 +76,9 @@ class CacheItem {
         trackFile.deleteSync();
       }
 
-      // Запоминаем то, что трек удалён из кэша.
-      audio.isCached = false;
-      audio.downloadProgress.value = 0.0;
+      // // Запоминаем то, что трек удалён из кэша.
+      // audio.isCached = false;
+      // audio.downloadProgress.value = 0.0;
 
       return;
     }
@@ -86,8 +86,8 @@ class CacheItem {
     // Если трек уже загружен, то запоминаем это.
     if (trackFileExists) {
       // Запоминаем то, что трек кэширован.
-      audio.isCached = true;
-      audio.downloadProgress.value = 0.0;
+      // audio.isCached = true;
+      // audio.downloadProgress.value = 0.0;
 
       return;
     }

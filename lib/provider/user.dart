@@ -1,6 +1,5 @@
 import "package:audio_service/audio_service.dart";
 import "package:flutter/foundation.dart";
-import "package:flutter/material.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:shared_preferences/shared_preferences.dart";
 
@@ -132,7 +131,7 @@ class ExtendedPlaylist {
   /// Указывает, что данный плейлист был загружен с API ВКонтакте. Если данное поле false, то это значит, что все данные из этого плейлиста являются кешированными (т.е., загружены из БД Isar).
   ///
   /// Не стоит путать с [areTracksLive], данное поле указывает только то, что основная информация о плейлисте (его количество прослушиваний, изображение, ...) была загружена с API ВКонтакте, данное поле не отображает состояние загрузки треков в данном плейлисте.
-  bool isLiveData;
+  final bool isLiveData;
 
   /// Указывает, что данный плейлист был загружен с БД Isar, т.е., данные этого плейлиста являются кэшированными.
   ///
@@ -142,7 +141,7 @@ class ExtendedPlaylist {
   /// Указывает, что треки данного плейлиста были загружены с API ВКонтакте. Если данное поле false, то это значит, что все треки из этого плейлиста являются кешированными (т.е., загружены из БД Isar).
   ///
   /// Не стоит путать с [isLiveData], данное поле указывает только то, что треки в данном плейлисте были загружены с API ВКонтакте, данное поле не отображает состояние загруженности данных о самом плейлисте.
-  bool areTracksLive;
+  final bool areTracksLive;
 
   /// Указывает, что треки данного плейлиста были загружены с БД Isar, т.е., данные этого плейлиста являются кэшированными.
   ///
@@ -150,7 +149,7 @@ class ExtendedPlaylist {
   bool get areTracksCached => !areTracksLive;
 
   /// Указывает, что в данном плейлисте разрешено кэширование треков.
-  bool? cacheTracks;
+  final bool? cacheTracks;
 
   /// Возвращает длительность всего плейлиста. Если список треков ещё не был получен, то возвращает null.
   Duration? get duration {
@@ -306,6 +305,27 @@ class ExtendedPlaylist {
         cacheTracks: cacheTracks ?? this.cacheTracks,
       );
 
+  /// Возвращает копию этого плейлиста с добавленным треком [audio] в начало плейлиста. Если этот трек уже есть, то заменяет его новым.
+  ExtendedPlaylist copyWithNewAudio(ExtendedAudio audio) {
+    List<ExtendedAudio> newAudios = [...audios!];
+
+    // Пытаемся найти индекс трека.
+    final int index = newAudios.indexWhere(
+      (item) => item.ownerID == audio.ownerID && item.id == audio.id,
+    );
+
+    // Если такого трека нет, то просто добавляем его в начале.
+    if (index == -1) {
+      newAudios.insert(0, audio);
+    } else {
+      // Удаляем старый трек и вставляем новый.
+      newAudios.removeAt(index);
+      newAudios.insert(index, audio);
+    }
+
+    return copyWith(audios: newAudios);
+  }
+
   /// Возвращает строку, которая используется как идентификатор пользователя и медиа.
   String get mediaKey => "${ownerID}_$id";
 
@@ -320,7 +340,9 @@ class ExtendedPlaylist {
     return other.runtimeType == ExtendedPlaylist &&
         other.id == id &&
         other.ownerID == ownerID &&
-        other.isLiveData == isLiveData;
+        other.isLiveData == isLiveData &&
+        other.areTracksLive == areTracksLive &&
+        listEquals(other.audios, audios);
   }
 
   @override
@@ -431,16 +453,16 @@ class ExtendedThumbnails {
 /// Класс, копирующий поля объекта [Audio] от API ВКонтакте, добавляя некоторые новые поля.
 class ExtendedAudio {
   /// ID аудиозаписи.
-  int id;
+  final int id;
 
   /// ID владельца аудиозаписи.
-  int ownerID;
+  final int ownerID;
 
   /// Имя исполнителя.
-  String artist;
+  final String artist;
 
   /// Название аудиозаписи.
-  String title;
+  final String title;
 
   /// Длительность аудиозаписи в секундах.
   final int duration;
@@ -449,7 +471,7 @@ class ExtendedAudio {
   final String? subtitle;
 
   /// Ключ доступа.
-  String accessKey;
+  final String accessKey;
 
   /// Указывает, если это Explicit-аудиозапись.
   final bool isExplicit;
@@ -460,19 +482,19 @@ class ExtendedAudio {
   /// URL на `mp3` данной аудиозаписи.
   ///
   /// Очень часто он отсутствует, выдавая пустую строку.
-  String? url;
+  final String? url;
 
   /// Timestamp добавления аудиозаписи.
   final int date;
 
   /// Информация об альбоме данной аудиозаписи.
-  Album? album;
+  final Album? album;
 
   /// Информация об обложке данного трека, полученного с ВКонтакте.
-  ExtendedThumbnails? vkThumbs;
+  final ExtendedThumbnails? vkThumbs;
 
   /// Информация об обложке данного трека, полученного с Deezer.
-  ExtendedThumbnails? deezerThumbs;
+  final ExtendedThumbnails? deezerThumbs;
 
   /// Возвращает объект типа [ExtendedThumbnails], берущий значение с переменной [vkThumbs] или [deezerThumbs].
   ExtendedThumbnails? get thumbnail => vkThumbs ?? deezerThumbs;
@@ -484,28 +506,18 @@ class ExtendedAudio {
   String? get maxThumbnail => thumbnail?.photoMax;
 
   /// Указывает наличие текста песни.
-  bool? hasLyrics;
+  final bool? hasLyrics;
 
   /// ID жанра аудиозаписи. Список жанров описан [здесь](https://dev.vk.com/ru/reference/objects/audio-genres).
-  int? genreID;
+  final int? genreID;
 
   /// Информация о тексте песни.
-  Lyrics? lyrics;
-
-  /// ID трека ([id]) до его добавления в список фаворитов.
-  ///
-  /// Данное поле устанавливается приложением (оно не передаётся API ВКонтакте) при добавлении трека в списка "любимых треков", поскольку оригинальное поле [id] заменяется новым значением.
-  int? oldID;
-
-  /// ID владельца трека ([ownerID]) до его добавления в список фаворитов.
-  ///
-  /// Данное поле устанавливается приложением (оно не передаётся API ВКонтакте) при добавлении трека в списка "любимых треков", поскольку оригинальное поле [ownerID] заменяется значением ID владельца текущей страницы.
-  int? oldOwnerID;
+  final Lyrics? lyrics;
 
   /// Указывает, что данный трек лайкнут (если находится в плейлисте "любимые треки").
   ///
   /// Данное поле может стать false только в том случае, если пользователь удалил трек, который ранее был лайкнутым.
-  bool isLiked;
+  final bool isLiked;
 
   String? _normalizedName;
 
@@ -528,7 +540,7 @@ class ExtendedAudio {
   }
 
   /// Указывает, кэширован ли данный трек.
-  bool? isCached;
+  final bool? isCached;
 
   /// Указывает, возможно ли воспроизвести данный трек. Данное поле проверяет наличие интернета и существование Url на mp3 файл, либо же то, что трек кэширован.
   bool get canPlay =>
@@ -538,6 +550,25 @@ class ExtendedAudio {
   ///
   /// Указывает значение от 0.0 до 1.0.
   final ValueNotifier<double> downloadProgress = ValueNotifier(0.0);
+
+  /// Указывает, что данный трек был сохранён из другого плейлиста, и значит, что вместо [id] (и его подобным) стоит пользоваться [relativeID].
+  final bool savedFromPlaylist;
+
+  /// Значение, используемое как [id], обозначающее ID этого трека относительно этого пользователя после сохранения трека ([toggleTrackLike]).
+  ///
+  /// После удаления трека, это поле должно быть равно null.
+  final int? relativeID;
+
+  /// Значение, используемое как [ownerID], обозначающее ID этого трека относительно этого пользователя после сохранения трека ([toggleTrackLike]).
+  ///
+  /// После удаления трека, это поле должно быть равно null.
+  final int? relativeOwnerID;
+
+  /// ID плейлиста, из которого этот трек был сохранён.
+  final int? savedPlaylistID;
+
+  /// ID владельца плейлиста, из которого этот трек был сохранён.
+  final int? savedPlaylistOwnerID;
 
   /// Возвращает данный объект как [MediaItem] для аудио плеера.
   MediaItem get asMediaItem {
@@ -638,6 +669,11 @@ class ExtendedAudio {
     Lyrics? lyrics,
     bool? isLiked,
     bool? isCached,
+    bool? savedFromPlaylist,
+    int? relativeID,
+    int? relativeOwnerID,
+    int? savedPlaylistID,
+    int? savedPlaylistOwnerID,
   }) =>
       ExtendedAudio(
         id: id ?? this.id,
@@ -659,6 +695,11 @@ class ExtendedAudio {
         lyrics: lyrics ?? this.lyrics,
         isLiked: isLiked ?? this.isLiked,
         isCached: isCached ?? this.isCached,
+        savedFromPlaylist: savedFromPlaylist ?? this.savedFromPlaylist,
+        relativeID: relativeID ?? this.relativeID,
+        relativeOwnerID: relativeOwnerID ?? this.relativeOwnerID,
+        savedPlaylistID: savedPlaylistID ?? this.savedPlaylistID,
+        savedPlaylistOwnerID: savedPlaylistOwnerID ?? this.savedPlaylistOwnerID,
       );
 
   /// Возвращает копию данного класса в виде объекта [DBAudio].
@@ -676,7 +717,8 @@ class ExtendedAudio {
 
     return other.runtimeType == ExtendedAudio &&
         other.id == id &&
-        other.ownerID == ownerID;
+        other.ownerID == ownerID &&
+        other.isLiked == isLiked;
   }
 
   @override
@@ -702,6 +744,11 @@ class ExtendedAudio {
     this.lyrics,
     this.isLiked = false,
     this.isCached,
+    this.savedFromPlaylist = false,
+    this.relativeID,
+    this.relativeOwnerID,
+    this.savedPlaylistID,
+    this.savedPlaylistOwnerID,
   });
 }
 

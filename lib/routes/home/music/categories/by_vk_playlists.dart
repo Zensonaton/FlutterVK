@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:gap/gap.dart";
+import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:skeletonizer/skeletonizer.dart";
 
@@ -11,7 +12,6 @@ import "../../../../provider/playlists.dart";
 import "../../../../provider/user.dart";
 import "../../../../services/logger.dart";
 import "../../../../utils.dart";
-import "../../../../widgets/page_route_builders.dart";
 import "../../music.dart";
 import "../playlist.dart";
 
@@ -84,13 +84,8 @@ class ByVKPlaylistsBlock extends HookConsumerWidget {
                     description: playlist.description,
                     selected: player.currentPlaylist == playlist,
                     currentlyPlaying: player.playing && player.loaded,
-                    onOpen: () => Navigator.push(
-                      context,
-                      Material3PageRoute(
-                        builder: (context) => PlaylistInfoRoute(
-                          playlist: playlist,
-                        ),
-                      ),
+                    onOpen: () => context.push(
+                      "/music/playlist/${playlist.ownerID}/${playlist.id}",
                     ),
                     onPlayToggle: (bool playing) => onPlaylistPlayToggle(
                       ref,

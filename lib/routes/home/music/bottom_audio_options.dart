@@ -322,10 +322,10 @@ class _TrackThumbnailDialogState extends ConsumerState<TrackThumbnailDialog> {
               child: FilledButton.icon(
                 onPressed: selectedTrack != null
                     ? () async {
-                        // Заменяем обложки.
-                        widget.audio.deezerThumbs = null;
-                        widget.audio.vkThumbs =
-                            ExtendedThumbnails.fromDeezerTrack(selectedTrack!);
+                        // // Заменяем обложки.
+                        // widget.audio.deezerThumbs = null;
+                        // widget.audio.vkThumbs =
+                        //     ExtendedThumbnails.fromDeezerTrack(selectedTrack!);
 
                         // Удаляем кэшированные обложки.
                         CachedAlbumImagesManager.instance

@@ -2,6 +2,7 @@ import "dart:async";
 import "dart:collection";
 import "dart:convert";
 import "dart:io";
+import "dart:math";
 
 import "package:audio_service/audio_service.dart";
 import "package:audio_session/audio_session.dart";
@@ -166,10 +167,10 @@ class CachedStreamedAudio extends StreamAudioSource {
           return false;
         }
 
-        // Всё ок, запоминаем новую обложку трека.
-        thumbs = ExtendedThumbnails.fromDeezerTrack(deezerTrack);
-        audio.deezerThumbs = thumbs;
-        shouldUpdateDB = true;
+        // // Всё ок, запоминаем новую обложку трека.
+        // thumbs = ExtendedThumbnails.fromDeezerTrack(deezerTrack);
+        // audio.deezerThumbs = thumbs;
+        // shouldUpdateDB = true;
       }
 
       // Загружаем обложки, либо с API ВКонтакте, либо Deezer.
@@ -1130,23 +1131,32 @@ class VKMusicPlayer {
     // Если это аудио микс, то его сохранять при кэшировании необязательно.
     if (playlist.isAudioMixPlaylist) return;
 
-    audio.isCached = true;
+    // audio.isCached = true;
 
     appStorage.savePlaylist(playlist.asDBPlaylist);
     // user.markUpdated(false);
   }
 
-  /// Устанавливает плейлист [playlist] для воспроизведения музыки, указывая при этом [index], начиная с которого будет запущено воспроизведение. Если [play] равен true, то при вызове данного метода плеер автоматически начнёт воспроизводить музыку.
+  /// Устанавливает плейлист [playlist] для воспроизведения музыки, указывая при этом [index], начиная с которого будет запущено воспроизведение, либо же рандомный трек, если [randomTrack] правдив.
+  ///
+  /// Если [play] равен true, то при вызове данного метода плеер автоматически начнёт воспроизводить музыку.
   Future<void> setPlaylist(
     ExtendedPlaylist playlist, {
     bool play = true,
-    ExtendedAudio? audio,
+    int? index,
+    bool randomTrack = false,
     bool setLoopAll = true,
   }) async {
     assert(
       playlist.audios != null,
       "audios of ExtendedPlaylist is null",
     );
+    if (randomTrack) {
+      assert(
+        index == null,
+        "randomTrack and index cannot be specified together",
+      );
+    }
 
     // Создаём список из треков в плейлисте, которые можно воспроизвести.
     final List<ExtendedAudio> audios = playlist.audios!
@@ -1187,7 +1197,9 @@ class VKMusicPlayer {
     // Отправляем плееру очередь из треков.
     await _player.setAudioSource(
       _queue!,
-      initialIndex: audios.contains(audio) ? audios.indexOf(audio!) : 0,
+      initialIndex: randomTrack && playlist.audios != null
+          ? Random().nextInt(playlist.audios!.length)
+          : index,
     );
 
     // Если разрешено, сразу же запускаем воспроизведение.

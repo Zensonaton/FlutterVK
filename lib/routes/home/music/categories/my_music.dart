@@ -1,10 +1,10 @@
 import "package:flutter/material.dart";
 import "package:gap/gap.dart";
+import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:skeletonizer/skeletonizer.dart";
 
 import "../../../../consts.dart";
-import "../../../../extensions.dart";
 import "../../../../main.dart";
 import "../../../../provider/l18n.dart";
 import "../../../../provider/player_events.dart";
@@ -12,8 +12,6 @@ import "../../../../provider/playlists.dart";
 import "../../../../provider/user.dart";
 import "../../../../utils.dart";
 import "../../../../widgets/audio_track.dart";
-import "../../../../widgets/page_route_builders.dart";
-import "../playlist.dart";
 
 /// Виджет с разделом "Моя музыка"
 class MyMusicBlock extends HookConsumerWidget {
@@ -33,6 +31,21 @@ class MyMusicBlock extends HookConsumerWidget {
     ref.watch(playerCurrentIndexProvider);
     ref.watch(playerLoadedStateProvider);
 
+    void onPlayPressed() async {
+      // Если данный плейлист уже играет, то просто ставим на паузу/воспроизведение.
+      if (player.currentPlaylist == playlist) {
+        await player.togglePlay();
+
+        return;
+      }
+
+      await player.setShuffle(true);
+
+      await player.setPlaylist(
+        playlist!,
+      );
+    }
+
     final bool selected = player.currentPlaylist == playlist;
     final bool selectedAndPlaying = selected && player.playing;
     final int musicCount = playlist?.count ?? 0;
@@ -46,23 +59,6 @@ class MyMusicBlock extends HookConsumerWidget {
       children: [
         // "Перемешать".
         FilledButton.icon(
-          onPressed: playlist?.audios != null
-              ? () async {
-                  // Если данный плейлист уже играет, то просто ставим на паузу/воспроизведение.
-                  if (player.currentPlaylist == playlist) {
-                    await player.togglePlay();
-
-                    return;
-                  }
-
-                  await player.setShuffle(true);
-
-                  await player.setPlaylist(
-                    playlist!,
-                    audio: playlist.audios!.randomItem(),
-                  );
-                }
-              : null,
           icon: Icon(
             selectedAndPlaying ? Icons.pause : Icons.play_arrow,
           ),
@@ -73,18 +69,14 @@ class MyMusicBlock extends HookConsumerWidget {
                     : l18n.music_shuffleAndPlayResume
                 : l18n.music_shuffleAndPlay,
           ),
+          onPressed: playlist?.audios != null ? onPlayPressed : null,
         ),
 
         // "Все треки".
         FilledButton.tonalIcon(
           onPressed: playlist?.audios != null
-              ? () => Navigator.push(
-                    context,
-                    Material3PageRoute(
-                      builder: (context) => PlaylistInfoRoute(
-                        playlist: playlist!,
-                      ),
-                    ),
+              ? () => context.push(
+                    "/music/playlist/${playlist!.ownerID}/${playlist.id}",
                   )
               : null,
           icon: const Icon(

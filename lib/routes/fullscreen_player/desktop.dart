@@ -269,17 +269,25 @@ class FullscreenMediaControls extends ConsumerWidget {
   });
 
   /// Переключает состояние лайка у трека, играющий в данный момент.
-  void _toggleLike(WidgetRef ref, BuildContext context) async {
+  void _toggleLike(
+    WidgetRef ref,
+    BuildContext context,
+    bool checkDuplicate,
+  ) async {
     assert(
       player.currentAudio != null,
       "Current audio is null",
     );
     if (!networkRequiredDialog(ref, context)) return;
 
+    if (player.currentAudio!.isLiked && checkDuplicate) {
+      if (!await checkForDuplicates(ref, context, player.currentAudio!)) return;
+    }
     await toggleTrackLike(
       ref,
       player.currentAudio!,
       !player.currentAudio!.isLiked,
+      sourcePlaylist: player.currentPlaylist,
     );
   }
 
@@ -293,8 +301,7 @@ class FullscreenMediaControls extends ConsumerWidget {
     if (!networkRequiredDialog(ref, context)) return;
 
     // Делаем трек дизлайкнутым.
-    final bool result = await dislikeTrackState(context, player.currentAudio!);
-    if (!result) return;
+    await dislikeTrack(ref, player.currentAudio!);
 
     // Запускаем следующий трек в плейлисте.
     await player.next();
@@ -555,7 +562,7 @@ class FullscreenMediaControls extends ConsumerWidget {
                     children: [
                       // Кнопка для добавления/удаления лайка.
                       IconButton(
-                        onPressed: () => _toggleLike(ref, context),
+                        onPressed: () => _toggleLike(ref, context, true),
                         icon: Icon(
                           isFavorite ? Icons.favorite : Icons.favorite_border,
                           color: Theme.of(context).colorScheme.primary,
@@ -595,7 +602,7 @@ class FullscreenMediaControls extends ConsumerWidget {
                             right: smallerButtonSpacing ? 0 : 8,
                           ),
                           child: IconButton(
-                            onPressed: () => _toggleLike(ref, context),
+                            onPressed: () => _toggleLike(ref, context, true),
                             icon: Icon(
                               isFavorite
                                   ? Icons.favorite
