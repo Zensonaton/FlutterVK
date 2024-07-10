@@ -721,9 +721,7 @@ class BottomMusicPlayer extends HookConsumerWidget {
                               child: FittedBox(
                                 fit: BoxFit.scaleDown,
                                 child: Text(
-                                  secondsAsString(
-                                    position.inSeconds,
-                                  ),
+                                  secondsAsString(position.inSeconds),
                                   style: TextStyle(
                                     color: scheme.onPrimaryContainer
                                         .withOpacity(0.75),

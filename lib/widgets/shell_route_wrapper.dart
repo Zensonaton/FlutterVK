@@ -264,6 +264,7 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
     ref.watch(playerCurrentIndexProvider);
     ref.watch(playerStateProvider);
     ref.watch(playerVolumeProvider);
+    ref.watch(playerShuffleModeEnabledProvider);
     ref.watch(playerLoopModeProvider);
     ref.watch(playerLoadedStateProvider);
 
