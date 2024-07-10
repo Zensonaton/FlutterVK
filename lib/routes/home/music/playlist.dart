@@ -242,6 +242,7 @@ class PlaylistInfoRoute extends HookConsumerWidget {
     final playlist = ref.watch(getPlaylistProvider(ownerID, id))!;
     final user = ref.watch(userProvider);
     final l18n = ref.watch(l18nProvider);
+    ref.watch(playerCurrentIndexProvider);
     ref.watch(playerLoadedStateProvider);
     ref.watch(playerStateProvider);
 

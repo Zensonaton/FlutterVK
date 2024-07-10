@@ -24,6 +24,7 @@ import "app.dart";
 import "consts.dart";
 import "db/db.dart";
 import "provider/l18n.dart";
+import "provider/observer.dart";
 import "provider/preferences.dart";
 import "provider/shared_prefs.dart";
 import "services/audio_player.dart";
@@ -155,6 +156,9 @@ Future main() async {
     final container = ProviderContainer(
       overrides: [
         sharedPrefsProvider.overrideWith((_) => prefs),
+      ],
+      observers: [
+        FlutterVKProviderObserver(),
       ],
     );
     final preferences = container.read(preferencesProvider);
