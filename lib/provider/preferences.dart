@@ -98,10 +98,6 @@ class UserPreferences {
   @JsonKey(name: "DynamicSchemeType", toJson: intFromEnum)
   final DynamicSchemeType dynamicSchemeType;
 
-  /// Указывает, что приложение сможет загружать тексты песен со Spotify.
-  @JsonKey(name: "SpotifyLyrics")
-  final bool spotifyLyrics;
-
   /// Указывает, что полноэкранный плеер будет использовать изображение большого размера при Desktop Layout'е.
   @JsonKey(name: "FullscreenBigThumbnail")
   final bool fullscreenBigThumbnail;
@@ -132,7 +128,6 @@ class UserPreferences {
     this.updateBranch = UpdateBranch.releasesOnly,
     this.deezerThumbnails = false,
     this.dynamicSchemeType = DynamicSchemeType.tonalSpot,
-    this.spotifyLyrics = false,
     this.fullscreenBigThumbnail = false,
     this.debugPlayerLogging = false,
   });
@@ -164,7 +159,6 @@ class UserPreferences {
     UpdateBranch? updateBranch,
     bool? deezerThumbnails,
     DynamicSchemeType? dynamicSchemeType,
-    bool? spotifyLyrics,
     bool? fullscreenBigThumbnail,
     bool? debugPlayerLogging,
   }) =>
@@ -194,7 +188,6 @@ class UserPreferences {
         updateBranch: updateBranch ?? this.updateBranch,
         deezerThumbnails: deezerThumbnails ?? this.deezerThumbnails,
         dynamicSchemeType: dynamicSchemeType ?? this.dynamicSchemeType,
-        spotifyLyrics: spotifyLyrics ?? this.spotifyLyrics,
         fullscreenBigThumbnail:
             fullscreenBigThumbnail ?? this.fullscreenBigThumbnail,
         debugPlayerLogging: debugPlayerLogging ?? this.debugPlayerLogging,
@@ -233,7 +226,6 @@ class Preferences extends _$Preferences {
       deezerThumbnails: prefs.getBool("DeezerThumbnails"),
       dynamicSchemeType:
           DynamicSchemeType.values[prefs.getInt("DynamicSchemeType") ?? 0],
-      spotifyLyrics: prefs.getBool("SpotifyLyrics"),
       fullscreenBigThumbnail: prefs.getBool("FullscreenBigThumbnail"),
       debugPlayerLogging: prefs.getBool("DebugPlayerLogging"),
     );
@@ -331,9 +323,6 @@ class Preferences extends _$Preferences {
 
   void setDynamicSchemeType(DynamicSchemeType dynamicScheme) =>
       state = state.copyWith(dynamicSchemeType: dynamicScheme);
-
-  void setSpotifyLyricsEnabled(bool enabled) =>
-      state = state.copyWith(spotifyLyrics: enabled);
 
   void setFullscreenBigThumbnailEnabled(bool enabled) =>
       state = state.copyWith(fullscreenBigThumbnail: enabled);

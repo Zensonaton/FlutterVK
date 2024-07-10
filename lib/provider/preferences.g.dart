@@ -22,7 +22,7 @@ UserPreferences _$UserPreferencesFromJson(Map<String, dynamic> json) =>
       stopOnPauseEnabled: json['StopOnPauseEnabled'] as bool? ?? true,
       playerThumbAsBackground: json['PlayerThumbAsBackground'] as bool? ?? true,
       trackLyricsEnabled: json['TrackLyricsEnabled'] as bool? ?? true,
-      playerColorsAppWide: json['PlayerColorsAppWide'] as bool? ?? false,
+      playerColorsAppWide: json['PlayerColorsAppWide'] as bool? ?? true,
       theme: $enumDecodeNullable(_$ThemeModeEnumMap, json['Theme']) ??
           ThemeMode.system,
       oledTheme: json['OLEDTheme'] as bool? ?? false,
@@ -40,7 +40,6 @@ UserPreferences _$UserPreferencesFromJson(Map<String, dynamic> json) =>
       dynamicSchemeType: $enumDecodeNullable(
               _$DynamicSchemeTypeEnumMap, json['DynamicSchemeType']) ??
           DynamicSchemeType.tonalSpot,
-      spotifyLyrics: json['SpotifyLyrics'] as bool? ?? false,
       fullscreenBigThumbnail: json['FullscreenBigThumbnail'] as bool? ?? false,
       debugPlayerLogging: json['DebugPlayerLogging'] as bool? ?? false,
     );
@@ -69,7 +68,6 @@ Map<String, dynamic> _$UserPreferencesToJson(UserPreferences instance) =>
       'UpdateBranch': intFromEnum(instance.updateBranch),
       'DeezerThumbnails': instance.deezerThumbnails,
       'DynamicSchemeType': intFromEnum(instance.dynamicSchemeType),
-      'SpotifyLyrics': instance.spotifyLyrics,
       'FullscreenBigThumbnail': instance.fullscreenBigThumbnail,
       'DebugPlayerLogging': instance.debugPlayerLogging,
     };
@@ -108,7 +106,7 @@ const _$DynamicSchemeTypeEnumMap = {
 // RiverpodGenerator
 // **************************************************************************
 
-String _$preferencesHash() => r'b05ae61ecc33f6a591ac0a512f088138503b6424';
+String _$preferencesHash() => r'25b3ca00eb01de0d6a1b49ee73a557a94370cb03';
 
 /// [Provider] для хранения настроек пользователя.
 ///

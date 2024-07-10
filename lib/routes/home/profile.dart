@@ -17,7 +17,6 @@ import "../../provider/auth.dart";
 import "../../provider/l18n.dart";
 import "../../provider/player_events.dart";
 import "../../provider/preferences.dart";
-import "../../provider/spotify_api.dart";
 import "../../provider/user.dart";
 import "../../services/cache_manager.dart";
 import "../../services/logger.dart";
@@ -233,7 +232,6 @@ class HomeProfilePage extends HookConsumerWidget {
     final bool mobileLayout = isMobileLayout(context);
     final bool recommendationsConnected =
         ref.watch(secondaryTokenProvider) != null;
-    final bool spotifyConnected = ref.watch(spotifySPDCCookieProvider) != null;
 
     return Scaffold(
       appBar: mobileLayout
@@ -628,38 +626,6 @@ class HomeProfilePage extends HookConsumerWidget {
                             }
                           : null,
                     ),
-
-                    // Тексты песен из Spotify, если авторизация не пройдена.
-                    if (!spotifyConnected)
-                      SettingWithDialog(
-                        icon: Icons.lyrics,
-                        title: l18n.profile_spotifyLyricsTitle,
-                        subtitle: l18n.profile_spotifyLyricsDescription,
-                        dialog: const SpotifyLyricsDialog(),
-                        settingText: l18n.profile_spotifyLyricsAuthorizeButton,
-                      ),
-
-                    // Тексты песен из Spotify, если авторизация пройдена.
-                    if (spotifyConnected)
-                      SwitchListTile(
-                        secondary: const Icon(
-                          Icons.lyrics,
-                        ),
-                        title: Text(
-                          l18n.profile_spotifyLyricsTitle,
-                        ),
-                        subtitle: Text(
-                          l18n.profile_spotifyLyricsDescription,
-                        ),
-                        value: preferences.spotifyLyrics,
-                        onChanged: recommendationsConnected
-                            ? (bool? enabled) async {
-                                if (enabled == null) return;
-
-                                prefsNotifier.setSpotifyLyricsEnabled(enabled);
-                              }
-                            : null,
-                      ),
 
                     // Экспорт списка треков.
                     ListTile(

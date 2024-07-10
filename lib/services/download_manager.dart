@@ -45,8 +45,6 @@ class CacheItem {
     //   playlist,
     //   user,
     //   allowDeezer: user.settings.deezerThumbnails,
-    //   allowSpotifyLyrics:
-    //       user.settings.spotifyLyrics && user.spDCcookie != null,
     // );
 
     // Запоминаем то, что трек кэширован.

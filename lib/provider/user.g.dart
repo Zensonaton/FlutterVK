@@ -6,7 +6,7 @@ part of 'user.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$userHash() => r'7ddbda802915febdceee321c33dbda10580c8575';
+String _$userHash() => r'8cbb836cbc55a9f8d21eb92bb141c166f244e428';
 
 /// [Provider] для получения данных о пользователе ВКонтакте, авторизованного во Flutter VK.
 ///

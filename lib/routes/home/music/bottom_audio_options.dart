@@ -343,8 +343,6 @@ class _TrackThumbnailDialogState extends ConsumerState<TrackThumbnailDialog> {
                         //   widget.playlist,
                         //   user,
                         //   allowDeezer: user.settings.deezerThumbnails,
-                        //   allowSpotifyLyrics: user.settings.spotifyLyrics &&
-                        //       user.spDCcookie != null,
                         //   saveInDB: true,
                         // );
 

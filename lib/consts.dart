@@ -100,10 +100,3 @@ const double desktopMiniPlayerHeight = 88;
 
 /// Высота мини-плеера снизу при Mobile Layout'е (без учёта верхнего Padding'а в 8)
 const double mobileMiniPlayerHeight = 74;
-
-/// URL на страницу с авторизацией Spotify.
-const String spotifyAuthUrl = "https://accounts.spotify.com";
-
-/// URL на страницу с информацией по получению значения Cookie `sp_dc` из браузера.
-const String wikiSpotifySPDCcookie =
-    "https://github.com/Zensonaton/FlutterVK/wiki/Получение-значения-sp_dc-для-авторизации-Spotify";

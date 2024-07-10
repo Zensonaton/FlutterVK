@@ -119,30 +119,12 @@ class CachedStreamedAudio extends StreamAudioSource {
     ExtendedAudio audio,
     ExtendedPlaylist playlist, {
     bool allowDeezer = false,
-    bool allowSpotifyLyrics = false,
     bool saveInDB = false,
   }) async {
     logger.d("Called downloadTrackData for $audio");
 
     final List<Future> tasks = [];
     bool shouldUpdateDB = false;
-
-    /// Добавляет задачу по загрузке текста песни при помощи Spotify в очередь.
-    void spotifyLyricsTask() {
-      // tasks.add(
-      //   user
-      //       .spotifyGetTrackLyrics(audio.artist, audio.title, audio.duration)
-      //       .then(
-      //     (lyrics) {
-      //       if (lyrics == null) return;
-
-      //       audio.lyrics = lyrics;
-      //       audio.hasLyrics = true;
-      //       shouldUpdateDB = true;
-      //     },
-      //   ),
-      // );
-    }
 
     final FileInfo? cachedThumb =
         await CachedAlbumImagesManager.instance.getFileFromCache(
@@ -199,17 +181,8 @@ class CachedStreamedAudio extends StreamAudioSource {
 
         //     audio.lyrics = response.response!.lyrics;
         //     shouldUpdateDB = true;
-
-        //     // Если ВКонтакте вернул несинхронизированный текст песни, то тогда загружаем его со Spotify.
-        //     if (allowSpotifyLyrics && audio.lyrics?.timestamps == null) {
-        //       spotifyLyricsTask();
-        //     }
         //   }),
         // );
-      } else if (allowSpotifyLyrics) {
-        // Загружаем текст песни со Spotify, поскольку мы точно знаем, что ВК не вернёт текст песни.
-
-        spotifyLyricsTask();
       }
     }
 

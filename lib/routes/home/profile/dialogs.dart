@@ -15,7 +15,6 @@ import "../../../widgets/dialogs.dart";
 import "../../../widgets/page_route_builders.dart";
 import "../../login.dart";
 import "../music.dart";
-import "spotify_auth.dart";
 
 /// Диалог, подтверждающий у пользователя действие для выхода из аккаунта на экране [HomeProfilePage].
 ///
@@ -575,54 +574,6 @@ class UpdatesChannelDialog extends ConsumerWidget {
           value: UpdateBranch.prereleases,
           groupValue: preferences.updateBranch,
           onChanged: onValueChanged,
-        ),
-      ],
-    );
-  }
-}
-
-/// Диалог, предупреждающий пользователя перед подключением функции "Тексты песен из Spotify".
-///
-/// Пример использования:
-/// ```dart
-/// showDialog(
-/// 	context: context,
-/// 	builder: (context) => const SpotifyLyricsDialog()
-/// );
-/// ```
-class SpotifyLyricsDialog extends ConsumerWidget {
-  const SpotifyLyricsDialog({
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l18n = ref.watch(l18nProvider);
-
-    return MaterialDialog(
-      icon: Icons.lyrics,
-      title: l18n.profile_spotifyLyricsAuthorizeTitle,
-      text: l18n.profile_spotifyLyricsAuthorizeDescription,
-      actions: [
-        TextButton(
-          onPressed: () => context.pop(),
-          child: Text(
-            l18n.general_close,
-          ),
-        ),
-        FilledButton(
-          onPressed: () {
-            context.pop();
-
-            Navigator.of(context).push(
-              Material3PageRoute(
-                builder: (BuildContext context) => const SpotifyLoginRoute(),
-              ),
-            );
-          },
-          child: Text(
-            l18n.profile_spotifyLyricsAuthorizeButton,
-          ),
         ),
       ],
     );
