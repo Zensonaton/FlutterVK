@@ -157,18 +157,22 @@ class _HomeProfilePageState extends ConsumerState<HomeProfilePage> {
                         textAlign: TextAlign.center,
                       ),
 
-                      // ID ВКонтакте.
-                      SelectableText(
-                        "ID ${user.id}",
-                        style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withOpacity(0.5),
-                            ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const Gap(16),
+                      // @domain пользователя.
+                      if (user.domain != null) ...[
+                        SelectableText(
+                          "@${user.domain}",
+                          style:
+                              Theme.of(context).textTheme.titleSmall!.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withOpacity(0.5),
+                                  ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const Gap(8),
+                      ],
+                      const Gap(8),
 
                       // Выход из аккаунта.
                       FilledButton.tonalIcon(
@@ -1048,6 +1052,23 @@ class _HomeProfilePageState extends ConsumerState<HomeProfilePage> {
                                   ),
                                 ],
                               ),
+                            ),
+
+                            // Кнопка для копирования Kate Mobile токена.
+                            ListTile(
+                              leading: const Icon(
+                                Icons.person,
+                              ),
+                              title: const Text(
+                                "Copy user ID",
+                              ),
+                              onTap: () {
+                                Clipboard.setData(
+                                  ClipboardData(
+                                    text: user.id.toString(),
+                                  ),
+                                );
+                              },
                             ),
 
                             // Кнопка для копирования Kate Mobile токена.

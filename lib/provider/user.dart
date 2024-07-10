@@ -756,7 +756,7 @@ class ExtendedAudio {
 ///
 /// Для получения данных воспользуйтесь [Provider]'ом [userProvider].
 class UserData {
-  /// Указывает ID данного пользователя.
+  /// ID пользователя.
   int id;
 
   /// Имя пользователя.
@@ -765,8 +765,11 @@ class UserData {
   /// Фамилия пользователя.
   String lastName;
 
-  /// Возвращает имя и фамилию пользователя.
+  /// Возвращает имя и фамилию пользователя в формате `Имя Фамилия`.
   String get fullName => "$firstName $lastName";
+
+  /// @domain пользователя.
+  String? domain;
 
   /// URL к квадратной фотографии с шириной в 50 пикселей.
   String? photo50Url;
@@ -778,6 +781,7 @@ class UserData {
     required this.id,
     required this.firstName,
     required this.lastName,
+    this.domain,
     this.photo50Url,
     this.photoMaxUrl,
   });
@@ -800,6 +804,7 @@ class User extends _$User {
       id: prefs.getInt("ID")!,
       firstName: prefs.getString("FirstName")!,
       lastName: prefs.getString("LastName")!,
+      domain: prefs.getString("Domain"),
       photo50Url: prefs.getString("Photo50"),
       photoMaxUrl: prefs.getString("PhotoMax"),
     );

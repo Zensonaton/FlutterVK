@@ -39,6 +39,7 @@ class CurrentAuthState extends _$CurrentAuthState {
     prefs.setInt("ID", info.id);
     prefs.setString("FirstName", info.firstName);
     prefs.setString("LastName", info.lastName);
+    if (info.domain != null) prefs.setString("Domain", info.domain!);
     if (info.photo50 != null) prefs.setString("Photo50", info.photo50!);
     if (info.photoMax != null) prefs.setString("PhotoMax", info.photoMax!);
 
