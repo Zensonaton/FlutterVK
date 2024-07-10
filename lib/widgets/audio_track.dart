@@ -61,10 +61,7 @@ Widget buildListTrackWidget(
       }
 
       // Запускаем воспроизведение.
-      await player.setPlaylist(
-        playlist,
-        index: playlist.audios!.indexOf(audio),
-      );
+      await player.setPlaylist(playlist, selectedTrack: audio);
     },
     onLikeTap: () async {
       if (!networkRequiredDialog(ref, context)) return;

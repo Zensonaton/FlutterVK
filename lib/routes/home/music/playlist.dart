@@ -453,10 +453,7 @@ class PlaylistInfoRoute extends HookConsumerWidget {
         return;
       }
 
-      await player.setPlaylist(
-        playlist,
-        index: playlist.audios!.indexOf(filteredAudios.first),
-      );
+      await player.setPlaylist(playlist, selectedTrack: filteredAudios.first);
     }
 
     return Column(

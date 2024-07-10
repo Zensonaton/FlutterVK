@@ -1110,13 +1110,13 @@ class VKMusicPlayer {
     // user.markUpdated(false);
   }
 
-  /// Устанавливает плейлист [playlist] для воспроизведения музыки, указывая при этом [index], начиная с которого будет запущено воспроизведение, либо же рандомный трек, если [randomTrack] правдив.
+  /// Устанавливает плейлист [playlist] для воспроизведения музыки, указывая при этом [selectedTrack], начиная с которого будет запущено воспроизведение, либо же рандомный трек, если [randomTrack] правдив.
   ///
   /// Если [play] равен true, то при вызове данного метода плеер автоматически начнёт воспроизводить музыку.
   Future<void> setPlaylist(
     ExtendedPlaylist playlist, {
     bool play = true,
-    int? index,
+    ExtendedAudio? selectedTrack,
     bool randomTrack = false,
     bool setLoopAll = true,
   }) async {
@@ -1126,7 +1126,7 @@ class VKMusicPlayer {
     );
     if (randomTrack) {
       assert(
-        index == null,
+        selectedTrack == null,
         "randomTrack and index cannot be specified together",
       );
     }
@@ -1170,9 +1170,11 @@ class VKMusicPlayer {
     // Отправляем плееру очередь из треков.
     await _player.setAudioSource(
       _queue!,
-      initialIndex: randomTrack && playlist.audios != null
-          ? Random().nextInt(playlist.audios!.length)
-          : index ?? 0,
+      initialIndex: selectedTrack != null
+          ? audios.indexOf(selectedTrack)
+          : randomTrack && playlist.audios != null
+              ? Random().nextInt(audios.length)
+              : 0,
     );
 
     // Если разрешено, сразу же запускаем воспроизведение.
