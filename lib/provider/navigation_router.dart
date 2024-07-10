@@ -63,8 +63,8 @@ GoRouter router(RouterRef ref) {
     NavigationItem(
       path: "/music",
       body: (_) => const HomeMusicPage(),
-      icon: Icons.music_note,
-      selectedIcon: Icons.music_note_outlined,
+      icon: Icons.music_note_outlined,
+      selectedIcon: Icons.music_note,
       label: l18n.music_label,
       routes: [
         GoRoute(
