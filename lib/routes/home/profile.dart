@@ -336,7 +336,7 @@ class HomeProfilePage extends HookConsumerWidget {
                 ),
 
                 // Подключение рекомендаций.
-                if (recommendationsConnected)
+                if (!recommendationsConnected)
                   ListTile(
                     title: Text(
                       l18n.music_connectRecommendationsChipTitle,
