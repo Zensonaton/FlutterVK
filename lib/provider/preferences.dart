@@ -123,7 +123,7 @@ class UserPreferences {
     this.stopOnPauseEnabled = true,
     this.playerThumbAsBackground = true,
     this.trackLyricsEnabled = true,
-    this.playerColorsAppWide = false,
+    this.playerColorsAppWide = true,
     this.theme = ThemeMode.system,
     this.oledTheme = false,
     this.closeBehavior = CloseBehavior.close,

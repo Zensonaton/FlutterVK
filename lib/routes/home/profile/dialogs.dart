@@ -557,7 +557,7 @@ class UpdatesChannelDialog extends ConsumerWidget {
     }
 
     return MaterialDialog(
-      icon: Icons.update,
+      icon: Icons.route,
       title: l18n.profile_updatesBranchTitle,
       contents: [
         RadioListTile.adaptive(

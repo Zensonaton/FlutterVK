@@ -551,7 +551,7 @@ class AudioTrackTile extends HookConsumerWidget {
                 AudioTrackImage(
                   imageUrl: audio.smallestThumbnail,
                   cacheKey: "${audio.mediaKey}small",
-                  isAvailable: audio.canPlay,
+                  isAvailable: forceAvailable || audio.canPlay,
                   isSelected: isSelected,
                   isPlaying: isPlaying,
                   isLoading: isLoading,
@@ -565,7 +565,7 @@ class AudioTrackTile extends HookConsumerWidget {
                     title: audio.title,
                     artist: audio.artist,
                     subtitle: audio.subtitle,
-                    isAvailable: audio.canPlay,
+                    isAvailable: forceAvailable || audio.canPlay,
                     isExplicit: audio.isExplicit,
                     isSelected: isSelected,
                   ),

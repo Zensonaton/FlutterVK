@@ -317,43 +317,42 @@
 	"profile_musicPlayerTitle": "Музыкальный плеер",
 
 	"profile_discordRPCTitle": "Discord Rich Presence",
-	"profile_discordRPCDescription": "Включает трансляцию текущего трека в Discord",
+	"profile_discordRPCDescription": "Транслирует играющий трек в Discord",
 
-	"profile_closeActionTitle": "Поведение при закрытии",
-	"profile_closeActionDescription": "Определяет то, как поведёт себя приложение в случае нажатия на «крестик» для закрытия окна",
+	"profile_closeActionTitle": "Действие при закрытии",
+	"profile_closeActionDescription": "Определяет, закроется ли приложение при закрытии окна",
 	"profile_closeActionClose": "Закрыться",
 	"profile_closeActionMinimize": "Свернуться",
 	"profile_closeActionMinimizeIfPlaying": "Свернуться, если играет музыка",
 
-	"profile_pauseOnMuteTitle": "Пауза при отключении громкости",
-	"profile_pauseOnMuteDescription": "Данная опция указывает, будет ли плеер ставиться на паузу при установке минимальной громкости в плеере",
+	"profile_pauseOnMuteTitle": "Пауза при минимальной громкости",
+	"profile_pauseOnMuteDescription": "Поставив громкость на минимум, воспроизведение приостановится",
 
 	"profile_stopOnLongPauseTitle": "Остановка при неактивности",
-	"profile_stopOnLongPauseDescription": "Включив эту опцию, сессия воспроизведения будет автоматически завершаться в случае установки паузы у плеера",
+	"profile_stopOnLongPauseDescription": "Плеер перестанет играть при долгой паузе",
 
-	"profile_checkBeforeFavoriteTitle": "Предупреждение при сохранении лайкнутого трека",
-	"profile_checkBeforeFavoriteDescription": "Если включено, то при сохранении уже лайкнутого трека приложение отобразит предупреждение, подтверждающее создание дубликата",
+	"profile_checkBeforeFavoriteTitle": "Предупреждение при дубликате лайка",
+	"profile_checkBeforeFavoriteDescription": "Вы увидите предупреждение о том, что трек уже лайкнут, что бы не сохранить его дважды",
 	"checkBeforeFavoriteWarningTitle": "Обнаружен дубликат трека",
 	"checkBeforeFavoriteWarningDescription": "Похоже, что этот трек уже лайкнут Вами. Сохранив этот трек, у Вас будет ещё одна копия этого трека.\nВы уверены, что хотите сделать дубликат данного трека?",
 
 	"profile_playerDebugLoggingTitle": "Debug-логирование плеера",
-	"profile_playerDebugLoggingDescription": "Включает вывод debug-логов media_kit плеера в файл лога.\nПри включении, производительность приложения может ухудшиться",
+	"profile_playerDebugLoggingDescription": "Включает вывод технических данных музыкального плеера в лог. Включение может привести к понижению производительности",
 
 
-	"profile_visualTitle": "Визуал",
+	"profile_visualTitle": "Визуал, косметические настройки",
 
 	"profile_themeTitle": "Тема",
 	"profile_themeSystem": "Системная",
 	"profile_themeLight": "Светлая",
 	"profile_themeDark": "Тёмная",
 
-	"profile_oledThemeTitle": "OLED тема",
-	"profile_oledThemeDescription": "Работает только если включена тёмная тема. Помогает сохранить заряд аккумулятора на устройствах с OLED-дисплеями",
+	"profile_oledThemeTitle": "OLED-тема",
+	"profile_oledThemeDescription": "Ещё больше тьмы! Помогает сохранять заряд аккумулятора на устройствах с OLED-дисплеями",
 
-	"profile_useThumbnailAsBackgroundTitle": "Изображение трека как фон",
-	"profile_useThumbnailAsBackgroundDescription": "Работает в полноэкранном плеере",
+	"profile_useThumbnailAsBackgroundTitle": "Изображение трека как фон полноэкранного плеера",
 
-	"profile_usePlayerColorsAppWideTitle": "Использование цветов плеера по всему приложению",
+	"profile_usePlayerColorsAppWideTitle": "Цвета трека по всему приложению",
 
 	"profile_playerDynamicColorSchemeTypeTitle": "Тип палитры цветов обложки",
 	"profile_playerDynamicColorSchemeTypeDescription": "Задаёт тип палитры, которая используется для цветов обложки играющего трека",
@@ -365,11 +364,11 @@
 
 	"profile_experimentalTitle": "Экспериментальные функции",
 
-	"profile_deezerThumbnailsTitle": "Загрузка отсутствующих обложек из Deezer",
-	"profile_deezerThumbnailsDescription": "Если ВКонтакте не вернул обложку трека, то приложение будет пытаться загрузить обложку из Deezer.\nМожет выдавать неправильные обложки, а так же есть риск IP-бана в Deezer",
+	"profile_deezerThumbnailsTitle": "Обложки Deezer",
+	"profile_deezerThumbnailsDescription": "Загружает обложки для треков из Deezer, если у трека её нет.\nИногда может выдавать неправильные обложки",
 
 	"profile_spotifyLyricsTitle": "Тексты песен из Spotify",
-	"profile_spotifyLyricsDescription": "При включении, приложение будет загружать тексты песен из Spotify в случае, если ВКонтакте не вернул информацию о тексте песни",
+	"profile_spotifyLyricsDescription": "Дополнительно подгружает тексты песен из Spotify",
 
 	"profile_spotifyLyricsAuthorizeButton": "Авторизоваться",
 
@@ -394,33 +393,33 @@
 	"profile_exportMusicListShareTitle": "Поделиться",
 
 
-	"profile_aboutTitle": "О приложении",
+	"profile_aboutTitle": "О Flutter VK",
 
 	"profile_shareLogsTitle": "Поделиться файлом логов",
-	"profile_shareLogsDescription": "Содержит техническую информацию для отладки ошибок приложения",
+	"profile_shareLogsDescription": "Техническая информация для отладки ошибок",
 	"profile_shareLogsNoLogsDescription": "Недоступно, поскольку файл логов пуст",
 
-	"profile_resetDBTitle": "Сбросить базу данных",
-	"profile_resetDBDescription": "Удаляет копию базы данных треков, хранимую на этом устройстве",
-	"profile_resetDBDialogTitle": "Сброс базы данных",
-	"profile_resetDBDialogDescription": "Продолжив, Flutter VK удалит локальную базу данных треков, хранимую на данном устройстве. Пожалуйста, не делайте этого без острой необходимости.\n\nВаши треки (как лайкнутые, так и кэшированные) не будут удалены, однако Вам придётся по-новой запустить процесс кэшировани на ранее кэшированных плейлистах.",
+	"profile_resetDBTitle": "Сбросить базу треков",
+	"profile_resetDBDescription": "Очищает локальную копию базы данных треков, хранимую на этом устройстве",
+	"profile_resetDBDialogTitle": "Сброс базы данных треков",
+	"profile_resetDBDialogDescription": "Продолжив, Flutter VK удалит базу данных треков, хранимую на этом устройстве. Пожалуйста, не делайте этого без острой необходимости.\n\nВаши треки (как лайкнутые, так и кэшированные) не будут удалены, однако Вам придётся по-новой запустить процесс кэшировани на ранее кэшированных плейлистах.",
 	"profile_resetDBDialogReset": "Сбросить",
 
-	"profile_updatesPolicyTitle": "Отображение новых обновлений",
-	"profile_updatesPolicyDescription": "Определяет, какой вид информирования будет о новых обновлениях после захода в приложение",
+	"profile_updatesPolicyTitle": "Вид новых обновлений",
+	"profile_updatesPolicyDescription": "Определяет то, как приложение будет раздражать Вас, напоминая о новом обновлении",
 	"profile_updatesPolicyDialog": "Диалог",
 	"profile_updatesPolicyPopup": "Надпись снизу",
 	"profile_updatesPolicyDisabled": "Отключено",
 
 	"profile_disableUpdatesWarningTitle": "Отключение обновлений",
 	"profile_disableUpdatesWarningDescription": "Похоже, что Вы пытаетесь отключить обновления приложения. Делать это не рекомендуется, поскольку в будущих версиях могут быть исправлены баги, а так же могут добавляться новые функции.\n\nЕсли Вас раздражает полноэкранный диалог, мешающий пользованию приложения, то попробуйте поменять эту настройку на значение \"Надпись снизу\": Такой вариант не будет мешать Вам.",
-	"profile_disableUpdatesWarningDisable": "Отключить",
+	"profile_disableUpdatesWarningDisable": "Всё равно отключить",
 
 	"profile_updatesDisabledText": "Обновления приложения отключены. Вы можете проверять на наличие обновлений вручную, нажав на кнопку \"О приложении\" на странице профиля.",
 
 	"profile_updatesBranchTitle": "Канал обновлений",
-	"profile_updatesBranchDescription": "Указывает, какой канал для обновлений используется.\nБета-канал имеет более частые билды, однако они могут быть менее стабильными",
-	"profile_updatesBranchReleases": "Основные",
+	"profile_updatesBranchDescription": "Бета-канал имеет более частые, но менее стабильные билды",
+	"profile_updatesBranchReleases": "Основные (по-умолчанию)",
 	"profile_updatesBranchPrereleases": "Бета",
 
 	"updateAvailableTitle": "Доступно обновление Flutter VK",
@@ -454,11 +453,11 @@
 
 	"noUpdatesAvailableTitle": "Установлена актуальная версия приложения.",
 
-	"profile_githubTitle": "Github-репозиторий проекта",
-	"profile_githubDescription": "Дополнительная информация, исходный код, Github Issues расположены именно в репозитории Flutter VK",
+	"profile_githubTitle": "Исходный код проекта",
+	"profile_githubDescription": "Нажав сюда, мы отправим Вас в прекрасный Github-репозиторий приложения Flutter VK",
 
 	"profile_appVersionTitle": "О приложении",
-	"profile_appVersionDescription": "Версия приложения: {version}. Нажмите сюда, что бы проверить на наличие новых обновлений",
+	"profile_appVersionDescription": "Установленная версия приложения: {version}.\nНажмите сюда, что бы проверить на наличие новых обновлений",
 	"@profile_appVersionDescription": {
 		"placeholders": {
 			"version": {
