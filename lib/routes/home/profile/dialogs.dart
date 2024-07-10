@@ -2,10 +2,12 @@ import "package:flutter/material.dart";
 import "package:gap/gap.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:share_plus/share_plus.dart";
 
 import "../../../enums.dart";
 import "../../../provider/auth.dart";
 import "../../../provider/l18n.dart";
+import "../../../provider/playlists.dart";
 import "../../../provider/preferences.dart";
 import "../../../provider/user.dart";
 import "../../../services/image_to_color_scheme.dart";
@@ -589,55 +591,50 @@ class UpdatesChannelDialog extends ConsumerWidget {
 /// 	builder: (context) => const ExportTracksListDialog()
 /// );
 /// ```
-class ExportTracksListDialog extends StatelessWidget {
+class ExportTracksListDialog extends ConsumerWidget {
   const ExportTracksListDialog({
     super.key,
   });
 
   @override
-  Widget build(BuildContext context) {
-    return const Placeholder();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l18n = ref.watch(l18nProvider);
+    final playlist = ref.watch(favoritesPlaylistProvider);
+    assert(playlist?.audios != null, "Expected tracks list to be loaded");
 
-    // final UserProvider user = Provider.of<UserProvider>(context);
+    final String exportContents = playlist!.audios!
+        .map((ExtendedAudio audio) => "${audio.artist} • ${audio.title}")
+        .join("\n\n");
 
-    // assert(
-    //   user.favoritesPlaylist?.audios != null,
-    //   "Expected tracks list to be loaded",
-    // );
-
-    // final String exportContents = user.favoritesPlaylist!.audios!
-    //     .map((ExtendedAudio audio) => "${audio.artist} • ${audio.title}")
-    //     .join("\n\n");
-
-    // return MaterialDialog(
-    //   icon: Icons.my_library_music,
-    //   title: l18n.profile_exportMusicListTitle,
-    //   text: l18n.profile_exportMusicListDescription(
-    //     user.favoritesPlaylist!.audios!.length,
-    //   ),
-    //   contents: [
-    //     SelectableText(
-    //       exportContents,
-    //     ),
-    //   ],
-    //   actions: [
-    //     TextButton(
-    //       onPressed: () => context.pop(),
-    //       child: Text(
-    //         l18n.general_close,
-    //       ),
-    //     ),
-    //     FilledButton.icon(
-    //       onPressed: () => Share.share(exportContents),
-    //       icon: const Icon(
-    //         Icons.share,
-    //       ),
-    //       label: Text(
-    //         l18n.profile_exportMusicListShareTitle,
-    //       ),
-    //     ),
-    //   ],
-    // );
+    return MaterialDialog(
+      icon: Icons.my_library_music,
+      title: l18n.profile_exportMusicListTitle,
+      text: l18n.profile_exportMusicListDescription(
+        playlist.count,
+      ),
+      contents: [
+        SelectableText(
+          exportContents,
+        ),
+      ],
+      actions: [
+        TextButton(
+          onPressed: () => context.pop(),
+          child: Text(
+            l18n.general_close,
+          ),
+        ),
+        FilledButton.icon(
+          onPressed: () => Share.share(exportContents),
+          icon: const Icon(
+            Icons.share,
+          ),
+          label: Text(
+            l18n.profile_exportMusicListShareTitle,
+          ),
+        ),
+      ],
+    );
   }
 }
 
