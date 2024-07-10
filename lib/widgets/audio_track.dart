@@ -109,6 +109,11 @@ class AudioTrackImage extends HookWidget {
   /// Если отсутствует, то использоваться кэш не будет.
   final String? cacheKey;
 
+  /// Доступен ли трек.
+  ///
+  /// Если false, то текст становится серым.
+  final bool isAvailable;
+
   /// Указывает, что этот трек сейчас выбран.
   ///
   /// Не стоит путать с полем [isPlaying]: оно указывает, что плеер включён.
@@ -127,6 +132,7 @@ class AudioTrackImage extends HookWidget {
     super.key,
     this.imageUrl,
     this.cacheKey,
+    this.isAvailable = true,
     this.isSelected = false,
     this.isLoading = false,
     this.isPlaying = false,
@@ -185,7 +191,7 @@ class AudioTrackImage extends HookWidget {
           borderRadius: BorderRadius.circular(
             globalBorderRadius,
           ),
-          child: isLoading || isSelected || isHovered
+          child: isLoading || isSelected || isHovered || !isAvailable
               ? Container(
                   foregroundDecoration: const BoxDecoration(
                     color: Colors.black54,
@@ -234,8 +240,13 @@ class AudioTrackImage extends HookWidget {
 
 /// Виджет, являющийся частью [AudioTrackTitle], который либо использует [Text], либо [StyledText] в зависимости от того, указан [subtitle] или нет.
 class TrackTitleWithSubtitle extends StatelessWidget {
+  /// Название трека.
   final String title;
+
+  /// Подпись трека. Может отсутствовать.
   final String? subtitle;
+
+  /// Цвет текста.
   final Color color;
 
   const TrackTitleWithSubtitle({
@@ -331,7 +342,7 @@ class AudioTrackTitle extends ConsumerWidget {
               child: TrackTitleWithSubtitle(
                 title: title,
                 subtitle: subtitle,
-                color: primaryTextColor,
+                color: primaryTextColor.withOpacity(isAvailable ? 1.0 : 0.5),
               ),
             ),
 
@@ -352,7 +363,7 @@ class AudioTrackTitle extends ConsumerWidget {
           artist,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
-            color: primaryTextColor.withOpacity(0.9),
+            color: primaryTextColor.withOpacity(isAvailable ? 0.9 : 0.5),
           ),
         ),
       ],
@@ -398,13 +409,14 @@ class AudioTrackOtherInfo extends ConsumerWidget {
     return Row(
       children: [
         // Иконка кэша, при наличии.
-        if (isCached)
+        if (isCached) ...[
           Icon(
             Icons.arrow_downward,
             size: 18,
             color: color.withOpacity(0.75),
           ),
-        const Gap(14),
+          const Gap(14),
+        ],
 
         // Блок с длительностью трека, а так же иконкой кэша.
         // Длительность трека.
@@ -422,10 +434,10 @@ class AudioTrackOtherInfo extends ConsumerWidget {
           LoadingIconButton(
             icon: Icon(
               isFavorite ? Icons.favorite : Icons.favorite_outline,
-              color: color,
+              color: scheme.primary,
             ),
             onPressed: onLikeTap,
-            color: color,
+            color: scheme.primary,
           ),
         ],
       ],
@@ -477,8 +489,6 @@ class AudioTrackTile extends HookConsumerWidget {
   ///
   /// Чаще всего используется для открытия контекстного меню.
   final VoidCallback? onSecondaryAction;
-
-  // TODO: Использовать кэширование?
 
   const AudioTrackTile({
     super.key,
@@ -541,6 +551,7 @@ class AudioTrackTile extends HookConsumerWidget {
                 AudioTrackImage(
                   imageUrl: audio.smallestThumbnail,
                   cacheKey: "${audio.mediaKey}small",
+                  isAvailable: audio.canPlay,
                   isSelected: isSelected,
                   isPlaying: isPlaying,
                   isLoading: isLoading,
