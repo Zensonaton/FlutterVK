@@ -893,56 +893,59 @@ class HomeMusicPage extends HookConsumerWidget {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                // Аватарка пользователя.
-                                // TODO: Избавиться от анимации изменения размера плеера.
-                                if (user.photoMaxUrl != null)
-                                  Padding(
-                                    padding: const EdgeInsets.only(
-                                      right: 18,
-                                    ),
-                                    child: CachedNetworkImage(
-                                      imageUrl: user.photoMaxUrl!,
-                                      cacheKey: "${user.id}400",
-                                      imageBuilder: (
-                                        BuildContext context,
-                                        ImageProvider imageProvider,
-                                      ) {
-                                        return Container(
-                                          width: 40,
-                                          height: 40,
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            image: DecorationImage(
-                                              image: imageProvider,
-                                              fit: BoxFit.cover,
+                            Expanded(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // Аватарка пользователя.
+                                  // TODO: Избавиться от анимации изменения размера плеера.
+                                  if (user.photoMaxUrl != null)
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                        right: 18,
+                                      ),
+                                      child: CachedNetworkImage(
+                                        imageUrl: user.photoMaxUrl!,
+                                        cacheKey: "${user.id}400",
+                                        imageBuilder: (
+                                          BuildContext context,
+                                          ImageProvider imageProvider,
+                                        ) {
+                                          return Container(
+                                            width: 40,
+                                            height: 40,
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              image: DecorationImage(
+                                                image: imageProvider,
+                                                fit: BoxFit.cover,
+                                              ),
                                             ),
-                                          ),
-                                        );
-                                      },
-                                      cacheManager:
-                                          CachedNetworkImagesManager.instance,
+                                          );
+                                        },
+                                        cacheManager:
+                                            CachedNetworkImagesManager.instance,
+                                      ),
                                     ),
-                                  ),
 
-                                // Текст "Добро пожаловать".
-                                Flexible(
-                                  child: Text(
-                                    l18n.music_welcomeTitle(
-                                      user.firstName,
+                                  // Текст "Добро пожаловать".
+                                  Flexible(
+                                    child: Text(
+                                      l18n.music_welcomeTitle(
+                                        user.firstName,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .displayMedium!
+                                          .copyWith(
+                                            fontWeight: FontWeight.w500,
+                                          ),
                                     ),
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .displayMedium!
-                                        .copyWith(
-                                          fontWeight: FontWeight.w500,
-                                        ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
 
                             // Поиск.
