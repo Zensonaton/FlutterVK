@@ -349,7 +349,7 @@ class AudioTrackTitle extends ConsumerWidget {
               Icon(
                 Icons.explicit,
                 size: 18,
-                color: primaryIconColor,
+                color: primaryIconColor.withOpacity(isAvailable ? 0.75 : 0.3),
               ),
             ],
           ],
