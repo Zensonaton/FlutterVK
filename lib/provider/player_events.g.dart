@@ -44,6 +44,26 @@ final playerSeekStateProvider = AutoDisposeStreamProvider<Duration>.internal(
 );
 
 typedef PlayerSeekStateRef = AutoDisposeStreamProviderRef<Duration>;
+String _$playerPlayingStateHash() =>
+    r'02e1ea173812d7b812e06275b155649226bca744';
+
+/// [Provider] для получения значения [VKMusicPlayer.playingStream].
+///
+/// {@macro VKMusicPlayer.playingStream}
+///
+/// Copied from [playerPlayingState].
+@ProviderFor(playerPlayingState)
+final playerPlayingStateProvider = AutoDisposeStreamProvider<bool>.internal(
+  playerPlayingState,
+  name: r'playerPlayingStateProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$playerPlayingStateHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef PlayerPlayingStateRef = AutoDisposeStreamProviderRef<bool>;
 String _$playerBufferedPositionHash() =>
     r'956ebae9f4618b23c4b8105d1256ea61d203ad71';
 

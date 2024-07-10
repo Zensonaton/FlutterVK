@@ -19,6 +19,13 @@ Stream<bool> playerLoadedState(PlayerLoadedStateRef ref) =>
 Stream<Duration> playerSeekState(PlayerSeekStateRef ref) =>
     player.seekStateStream;
 
+/// [Provider] для получения значения [VKMusicPlayer.playingStream].
+///
+/// {@macro VKMusicPlayer.playingStream}
+@riverpod
+Stream<bool> playerPlayingState(PlayerPlayingStateRef ref) =>
+    player.playingStream;
+
 /// [Provider] для получения значения [VKMusicPlayer.bufferedPositionStream].
 ///
 /// {@macro VKMusicPlayer.bufferedPositionStream}
