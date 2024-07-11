@@ -346,14 +346,17 @@ class VKMusicPlayer {
       // События паузы/воспроизведения.
       _player.playingStream.listen(
         (bool playing) async {
-          if (playing && !_loaded) {
+          if (!playing) return;
+
+          // Если установлена пауза ввиду функции "пауза при минимальной громкости", то убираем флаг.
+          _pausedDueMute = false;
+
+          // Если мы запустили воспроизведение, но плеер ещё не был загружен, то помечаем это.
+          if (!loaded) {
             _setPlayerLoaded(true);
 
             await startMusicSession();
           }
-
-          // Обновляем состояние воспроизведения.
-          await updateMusicSession();
         },
       ),
 
@@ -379,9 +382,7 @@ class VKMusicPlayer {
 
         // Случай постановления на паузу ввиду нуливой громкости.
         if (playing && volume == 0.0) {
-          logger.d(
-            "Pausing player, because pauseOnMute is enabled, and volume is $volume",
-          );
+          logger.d("Player is muted, pausing");
           _pausedDueMute = true;
 
           await pause();
@@ -1420,7 +1421,7 @@ class VKMusicPlayer {
     // Запускаем таймер паузы, если установлена пауза.
     _pauseStopTimer?.cancel();
 
-    if (!playing && _loaded && _allowStopOnPause) {
+    if (_allowStopOnPause && _loaded && !playing) {
       logger.d("Starting stopOnPause timer for $stopOnPauseTimerDuration");
 
       // Запускаем таймер.
