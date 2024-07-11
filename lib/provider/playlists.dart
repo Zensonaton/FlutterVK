@@ -469,7 +469,8 @@ class Playlists extends _$Playlists {
                 givenAudio.album == null) &&
             existingAudio.hasLyrics == givenAudio.hasLyrics &&
             existingAudio.lyrics == givenAudio.lyrics &&
-            existingAudio.isLiked == givenAudio.isLiked) {
+            existingAudio.isLiked == givenAudio.isLiked &&
+            existingAudio.frequentColorInt == givenAudio.frequentColorInt) {
           newAudios.add(givenAudio);
 
           continue;
@@ -486,6 +487,10 @@ class Playlists extends _$Playlists {
             lyrics: givenAudio.lyrics,
             vkThumbs: givenAudio.vkThumbs,
             isLiked: givenAudio.isLiked,
+            colorCount: givenAudio.colorCount,
+            colorInts: givenAudio.colorInts,
+            scoredColorInts: givenAudio.scoredColorInts,
+            frequentColorInt: givenAudio.frequentColorInt,
           ),
         );
 
@@ -551,7 +556,7 @@ class Playlists extends _$Playlists {
 
       // Сохраняем в БД.
       if (saveInDB) {
-        await appStorage.savePlaylist(existingPlaylist.asDBPlaylist);
+        await appStorage.savePlaylist(newPlaylist.asDBPlaylist);
       }
 
       logger.d("Playlist has changed");

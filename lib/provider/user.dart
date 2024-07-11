@@ -570,6 +570,18 @@ class ExtendedAudio {
   /// ID владельца плейлиста, из которого этот трек был сохранён.
   final int? savedPlaylistOwnerID;
 
+  /// {@macro ImageSchemeExtractor.colorInts}
+  final Map<int, int?>? colorInts;
+
+  /// {@macro ImageSchemeExtractor.scoredColorInts}
+  final List<int>? scoredColorInts;
+
+  /// {@macro ImageSchemeExtractor.frequentColorInt}
+  final int? frequentColorInt;
+
+  /// {@macro ImageSchemeExtractor.colorCount}
+  final int? colorCount;
+
   /// Возвращает данный объект как [MediaItem] для аудио плеера.
   MediaItem get asMediaItem {
     final String mediaTitle = subtitle != null ? "$title ($subtitle)" : title;
@@ -646,6 +658,12 @@ class ExtendedAudio {
         lyrics: audio.lyrics?.asLyrics,
         isLiked: isLiked,
         isCached: audio.isCached ?? false,
+        colorInts: audio.colorInts != null
+            ? Map.fromIterable(audio.colorInts!, key: (item) => item)
+            : null,
+        scoredColorInts: audio.scoredColorInts,
+        frequentColorInt: audio.frequentColorInt,
+        colorCount: audio.colorCount,
       );
 
   /// Возвращает копию данного объекта с новыми передаваемыми значениями.
@@ -674,6 +692,10 @@ class ExtendedAudio {
     int? relativeOwnerID,
     int? savedPlaylistID,
     int? savedPlaylistOwnerID,
+    Map<int, int?>? colorInts,
+    List<int>? scoredColorInts,
+    int? frequentColorInt,
+    int? colorCount,
   }) =>
       ExtendedAudio(
         id: id ?? this.id,
@@ -700,6 +722,10 @@ class ExtendedAudio {
         relativeOwnerID: relativeOwnerID ?? this.relativeOwnerID,
         savedPlaylistID: savedPlaylistID ?? this.savedPlaylistID,
         savedPlaylistOwnerID: savedPlaylistOwnerID ?? this.savedPlaylistOwnerID,
+        colorInts: colorInts ?? this.colorInts,
+        scoredColorInts: scoredColorInts ?? this.scoredColorInts,
+        frequentColorInt: frequentColorInt ?? this.frequentColorInt,
+        colorCount: colorCount ?? this.colorCount,
       );
 
   /// Возвращает копию данного класса в виде объекта [DBAudio].
@@ -749,6 +775,10 @@ class ExtendedAudio {
     this.relativeOwnerID,
     this.savedPlaylistID,
     this.savedPlaylistOwnerID,
+    this.colorInts,
+    this.scoredColorInts,
+    this.frequentColorInt,
+    this.colorCount,
   });
 }
 

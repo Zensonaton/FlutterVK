@@ -8,12 +8,15 @@ import "package:material_color_utilities/material_color_utilities.dart";
 import "package:material_color_utilities/scheme/scheme_fruit_salad.dart";
 import "package:material_color_utilities/scheme/scheme_rainbow.dart";
 
+import "../enums.dart";
 import "logger.dart";
 
 /// Процент того, сколько должен занимать единственный цвет ([ImageSchemeExtractor.shouldCastShadow]), что бы не позволить ему отбрасывать тень ("свечение").
+@Deprecated("Функционал определения наличия тени больше не используется")
 const double shadowFrequentColorThreshold = 0.5;
 
 /// Процент яркости ([Color.computeLuminance]), который проверяется с целью определения того, должна ли отбрасываться тень от обложки или нет.
+@Deprecated("Функционал определения наличия тени больше не используется")
 const double shadowColorLiminanceThreshold = 0.25;
 
 /// Класс, извлекающий цвета из обложек треков.
@@ -22,30 +25,22 @@ const double shadowColorLiminanceThreshold = 0.25;
 class ImageSchemeExtractor {
   static final AppLogger logger = getLogger("ImageSchemeExtractor");
 
-  /// [ColorScheme] типа [Brightness.light], созданный из цветов передаваемого изображения.
-  final ColorScheme lightColorScheme;
-
-  /// [ColorScheme] типа [Brightness.dark], созданный из цветов передаваемого изображения.
-  final ColorScheme darkColorScheme;
-
+  /// {@template ImageSchemeExtractor.colorInts}
   /// [Map] из извлечённых цветов обложки трека, где каждый цвет является типом [int], а так же количеством этого цвета.
+  /// {@endtemplate}
   ///
-  /// Не путай с [scoredColorInts] или [getScoredColors], здесь хранятся цвета до вызова метода [Score.score].
+  /// Не путай с [scoredColorInts] или [getScoredColors], здесь хранятся цвета до вызова метода [Score.score], и соответственно здесь перечислено количество повторений большинства цветов.
   ///
   /// Если Вам нужен список цветов типа [Color], то обратитесь к методу [getColors].
-  final Map<int, int> colorInts;
+  final Map<int, int?> colorInts;
 
   /// Отсортированный [List] из извлечённых цветов обложки трека.
-  Map<Color, int> getColors() => colorInts.map(
-        (int color, int count) => MapEntry<Color, int>(
-          Color(
-            color,
-          ),
-          count,
-        ),
-      );
+  Map<Color, int?> getColors() =>
+      colorInts.map((int color, int? count) => MapEntry(Color(color), count));
 
+  /// {@template ImageSchemeExtractor.scoredColorInts}
   /// Отсортированный [List] из самых частых цветов в изображении, где каждый цвет является типом [int].
+  /// {@endtemplate}
   ///
   /// Если Вам нужен список цветов типа [Color], то обратитесь к методу [getScoredColors].
   final List<int> scoredColorInts;
@@ -54,45 +49,40 @@ class ImageSchemeExtractor {
   List<Color> getScoredColors() =>
       scoredColorInts.map((int intColor) => Color(intColor)).toList();
 
+  /// {@template ImageSchemeExtractor.frequentColorInt}
   /// Самый частый цвет из всех цветов.
-  final Color frequentColor;
+  /// {@endtemplate}
+  ///
+  /// Если Вам нужен цвет, то обратитесь к методу [frequentColor].
+  final int frequentColorInt;
 
-  /// Количество повторений [frequentColor].
-  final int frequentColorCount;
+  /// Самый частый цвет в изображении.
+  Color get frequentColor => Color(frequentColorInt);
 
-  /// Общее количество цветов (в том числе и дубликаты).
+  /// Количество повторений [frequentColorInt].
+  int get frequentColorCount => colorInts[frequentColorInt]!;
+
+  /// {@template ImageSchemeExtractor.colorCount}
+  /// Общее количество цветов, включая дубликаты.
+  /// {@endtemplate}
   final int colorCount;
 
-  /// Вычисляет процент того, сколько занимает [frequentColor] от [colorCount].
+  /// Вычисляет процент того, сколько занимает [frequentColorInt] от [colorCount].
   double get frequentColorPercentage => frequentColorCount / colorCount;
 
-  // Указывает, должна ли эта обложка отбрасывать тень ("свечение").
-  final bool shouldCastShadow;
-
   /// [Duration], которое было затрачено на преобразование [ImageProvider] в объект типа [ui.Image].
-  final Duration resizeDuration;
+  final Duration? resizeDuration;
 
   /// [Duration], которое было затрачено на получение цветов из изображения.
-  final Duration quantizeDuration;
-
-  /// Выдаёт [ColorScheme] в зависимости от передаваемого [Brightness].
-  ColorScheme? colorScheme(Brightness brightness) {
-    if (brightness == Brightness.dark) return darkColorScheme;
-
-    return lightColorScheme;
-  }
+  final Duration? quantizeDuration;
 
   ImageSchemeExtractor({
-    required this.lightColorScheme,
-    required this.darkColorScheme,
     required this.colorInts,
     required this.scoredColorInts,
-    required this.frequentColor,
-    required this.frequentColorCount,
+    required this.frequentColorInt,
     required this.colorCount,
-    required this.shouldCastShadow,
-    required this.resizeDuration,
-    required this.quantizeDuration,
+    this.resizeDuration,
+    this.quantizeDuration,
   });
 
   /// Преобразует [ImageProvider] в [ui.Image].
@@ -183,74 +173,6 @@ class ImageSchemeExtractor {
     return scaledImage;
   }
 
-  static int _getArgbFromAbgr(int abgr) {
-    const int exceptRMask = 0xFF00FFFF;
-    const int onlyRMask = ~exceptRMask;
-    const int exceptBMask = 0xFFFFFF00;
-    const int onlyBMask = ~exceptBMask;
-    final int r = (abgr & onlyRMask) >> 16;
-    final int b = abgr & onlyBMask;
-
-    return (abgr & exceptRMask & exceptBMask) | (b << 16) | r;
-  }
-
-  static DynamicScheme _buildDynamicScheme(
-    Brightness brightness,
-    Color seedColor,
-    DynamicSchemeVariant schemeVariant,
-  ) {
-    final bool isDark = brightness == Brightness.dark;
-    final Hct sourceColor = Hct.fromInt(seedColor.value);
-
-    return switch (schemeVariant) {
-      DynamicSchemeVariant.tonalSpot => SchemeTonalSpot(
-          sourceColorHct: sourceColor,
-          isDark: isDark,
-          contrastLevel: 0.0,
-        ),
-      DynamicSchemeVariant.fidelity => SchemeFidelity(
-          sourceColorHct: sourceColor,
-          isDark: isDark,
-          contrastLevel: 0.0,
-        ),
-      DynamicSchemeVariant.content => SchemeContent(
-          sourceColorHct: sourceColor,
-          isDark: isDark,
-          contrastLevel: 0.0,
-        ),
-      DynamicSchemeVariant.monochrome => SchemeMonochrome(
-          sourceColorHct: sourceColor,
-          isDark: isDark,
-          contrastLevel: 0.0,
-        ),
-      DynamicSchemeVariant.neutral => SchemeNeutral(
-          sourceColorHct: sourceColor,
-          isDark: isDark,
-          contrastLevel: 0.0,
-        ),
-      DynamicSchemeVariant.vibrant => SchemeVibrant(
-          sourceColorHct: sourceColor,
-          isDark: isDark,
-          contrastLevel: 0.0,
-        ),
-      DynamicSchemeVariant.expressive => SchemeExpressive(
-          sourceColorHct: sourceColor,
-          isDark: isDark,
-          contrastLevel: 0.0,
-        ),
-      DynamicSchemeVariant.rainbow => SchemeRainbow(
-          sourceColorHct: sourceColor,
-          isDark: isDark,
-          contrastLevel: 0.0,
-        ),
-      DynamicSchemeVariant.fruitSalad => SchemeFruitSalad(
-          sourceColorHct: sourceColor,
-          isDark: isDark,
-          contrastLevel: 0.0,
-        ),
-    };
-  }
-
   /// Создаёт [ColorScheme] по передаваемому [baseColor] и другим параметрам.
   ///
   /// Если у Вас нет [baseColor], то воспользуйтесь методом [fromImageProvider].
@@ -259,11 +181,65 @@ class ImageSchemeExtractor {
     Brightness brightness,
     DynamicSchemeVariant schemeVariant,
   ) {
-    final DynamicScheme scheme = _buildDynamicScheme(
-      brightness,
-      baseColor,
-      schemeVariant,
-    );
+    DynamicScheme buildDynamicScheme(
+      Brightness brightness,
+      Color seedColor,
+      DynamicSchemeVariant schemeVariant,
+    ) {
+      final bool isDark = brightness == Brightness.dark;
+      final Hct sourceColor = Hct.fromInt(seedColor.value);
+
+      return switch (schemeVariant) {
+        DynamicSchemeVariant.tonalSpot => SchemeTonalSpot(
+            sourceColorHct: sourceColor,
+            isDark: isDark,
+            contrastLevel: 0.0,
+          ),
+        DynamicSchemeVariant.fidelity => SchemeFidelity(
+            sourceColorHct: sourceColor,
+            isDark: isDark,
+            contrastLevel: 0.0,
+          ),
+        DynamicSchemeVariant.content => SchemeContent(
+            sourceColorHct: sourceColor,
+            isDark: isDark,
+            contrastLevel: 0.0,
+          ),
+        DynamicSchemeVariant.monochrome => SchemeMonochrome(
+            sourceColorHct: sourceColor,
+            isDark: isDark,
+            contrastLevel: 0.0,
+          ),
+        DynamicSchemeVariant.neutral => SchemeNeutral(
+            sourceColorHct: sourceColor,
+            isDark: isDark,
+            contrastLevel: 0.0,
+          ),
+        DynamicSchemeVariant.vibrant => SchemeVibrant(
+            sourceColorHct: sourceColor,
+            isDark: isDark,
+            contrastLevel: 0.0,
+          ),
+        DynamicSchemeVariant.expressive => SchemeExpressive(
+            sourceColorHct: sourceColor,
+            isDark: isDark,
+            contrastLevel: 0.0,
+          ),
+        DynamicSchemeVariant.rainbow => SchemeRainbow(
+            sourceColorHct: sourceColor,
+            isDark: isDark,
+            contrastLevel: 0.0,
+          ),
+        DynamicSchemeVariant.fruitSalad => SchemeFruitSalad(
+            sourceColorHct: sourceColor,
+            isDark: isDark,
+            contrastLevel: 0.0,
+          ),
+      };
+    }
+
+    final DynamicScheme scheme =
+        buildDynamicScheme(brightness, baseColor, schemeVariant);
 
     return ColorScheme(
       brightness: brightness,
@@ -344,14 +320,24 @@ class ImageSchemeExtractor {
     );
   }
 
-  /// Извлекает [ColorScheme], а так же цвета из передаваемого [ImageProvider].
+  /// Извлекает основные цвета из передаваемого [ImageProvider].
   ///
   /// Является модифицированной версией метода [ColorScheme.fromImageProvider], которая выполняет некоторые части в отдельном Isolate для улучшенной производительности.
   static Future<ImageSchemeExtractor> fromImageProvider(
     ImageProvider provider, {
-    DynamicSchemeVariant schemeVariant = DynamicSchemeVariant.tonalSpot,
     bool resizeImage = false,
   }) async {
+    int getArgbFromAbgr(int abgr) {
+      const int exceptRMask = 0xFF00FFFF;
+      const int onlyRMask = ~exceptRMask;
+      const int exceptBMask = 0xFFFFFF00;
+      const int onlyBMask = ~exceptBMask;
+      final int r = (abgr & onlyRMask) >> 16;
+      final int b = abgr & onlyBMask;
+
+      return (abgr & exceptRMask & exceptBMask) | (b << 16) | r;
+    }
+
     // Получаем объект типа [ui.Image], из которого уже можно извлекать цвета.
     final Stopwatch scaleWatch = Stopwatch()..start();
     final ui.Image scaledImage = await (resizeImage
@@ -365,51 +351,24 @@ class ImageSchemeExtractor {
         (await scaledImage.toByteData())!.buffer.asUint32List();
 
     // Получаем объект, состоящий из:
-    // - ColorScheme светлый,
-    // - ColorScheme тёмный,
-    // - Map<Color, количество цветов>,
-    // - List<int> scored-цвета,
+    // - Map<Color, количество>,
+    // - List<Color> scored-цвета,
     // - Самый частый Color,
-    // - Количество повторений этого частого Color,
     // - Общее количество цветов,
-    // - bool, отображающий то, нужно ли отбрасывать тень ("свечение").
-    final (
-      ColorScheme,
-      ColorScheme,
-      Map<int, int>,
-      List<int>,
-      Color,
-      int,
-      int,
-      bool,
-    ) result = await compute(
+    //
+    // Все цвета (Color) возвращаются в виде int.
+    final (Map<int, int>, List<int>, int, int) result = await compute(
       (Uint32List bytes) async {
         // Производим Quantizer.
-        final QuantizerResult quantizerResult =
-            await QuantizerCelebi().quantize(
-          bytes,
-          128,
-          returnInputPixelToClusterPixel: true,
-        );
+        final QuantizerResult quantizerResult = await QuantizerCelebi()
+            .quantize(bytes, 128, returnInputPixelToClusterPixel: true);
         final Map<int, int> colorToCount = quantizerResult.colorToCount.map(
           (int key, int value) =>
-              MapEntry<int, int>(_getArgbFromAbgr(key), value),
+              MapEntry<int, int>(getArgbFromAbgr(key), value),
         );
 
         // Получаем список из самых "частых" цветов.
-        final List<int> scoredResults = Score.score(
-          colorToCount,
-          desired: 12,
-        );
-        final ui.Color baseColor = Color(
-          scoredResults.first,
-        );
-
-        // Создаём светлую и тёмную цветовые схемы.
-        final ColorScheme lightColorScheme =
-            buildColorScheme(baseColor, Brightness.light, schemeVariant);
-        final ColorScheme darkColorScheme =
-            buildColorScheme(baseColor, Brightness.dark, schemeVariant);
+        final List<int> scoredResults = Score.score(colorToCount, desired: 12);
 
         // Ищем самый частый цвет из всех цветов, а так же общее количество цветов.
         int totalColors = 0;
@@ -425,39 +384,35 @@ class ImageSchemeExtractor {
           }
         }
 
-        // Вычисляем то, нужно ли нам отображать тень ("свечение") от этой обложки в зависимости от цветов.
-        final double frequentColorPercentage = largestColorCount / totalColors;
-        final Color frequentColor = Color(mostFrequentColor);
-        final bool shouldCastShadow = frequentColorPercentage <
-                shadowFrequentColorThreshold ||
-            frequentColor.computeLuminance() > shadowColorLiminanceThreshold;
-
-        return (
-          lightColorScheme,
-          darkColorScheme,
-          colorToCount,
-          scoredResults,
-          frequentColor,
-          largestColorCount,
-          totalColors,
-          shouldCastShadow,
-        );
+        return (colorToCount, scoredResults, mostFrequentColor, totalColors);
       },
       imageBytes,
     );
 
     quantizerTimer.stop();
     return ImageSchemeExtractor(
-      lightColorScheme: result.$1,
-      darkColorScheme: result.$2,
-      colorInts: result.$3,
-      scoredColorInts: result.$4,
-      frequentColor: result.$5,
-      frequentColorCount: result.$6,
-      colorCount: result.$7,
-      shouldCastShadow: result.$8,
+      colorInts: result.$1,
+      scoredColorInts: result.$2,
+      frequentColorInt: result.$3,
+      colorCount: result.$4,
       resizeDuration: scaleWatch.elapsed,
       quantizeDuration: quantizerTimer.elapsed,
     );
   }
+
+  /// Создаёт [ColorScheme] по передаваемому [DynamicSchemeType] и [Brightness] из цветов данного класса.
+  ColorScheme createScheme(
+    Brightness brightness, {
+    DynamicSchemeType schemeVariant = DynamicSchemeType.tonalSpot,
+  }) =>
+      buildColorScheme(
+        Color(scoredColorInts.first),
+        brightness,
+        {
+          DynamicSchemeType.tonalSpot: DynamicSchemeVariant.tonalSpot,
+          DynamicSchemeType.neutral: DynamicSchemeVariant.neutral,
+          DynamicSchemeType.content: DynamicSchemeVariant.content,
+          DynamicSchemeType.monochrome: DynamicSchemeVariant.monochrome,
+        }[schemeVariant]!,
+      );
 }

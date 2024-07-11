@@ -6,7 +6,7 @@ part of 'color.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$trackSchemeInfoHash() => r'c4c0d6e9dd66e6d20c3860905cfe3742fd28c06a';
+String _$trackSchemeInfoHash() => r'957729cdc6dc896c9b0e43e66b78ea072a62e771';
 
 /// [Provider], который извлекает цветовые схемы из передаваемого изображения трека.
 ///

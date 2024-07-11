@@ -125,20 +125,32 @@ class FlutterVKApp extends HookConsumerWidget {
       [],
     );
 
+    // Делаем панель навигации прозрачной.
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+
     final router = ref.watch(routerProvider);
     final preferences = ref.watch(preferencesProvider);
-    final trackImageInfo = ref.watch(trackSchemeInfoProvider);
+    final schemeInfo = ref.watch(trackSchemeInfoProvider);
 
     final bool appwideColors = preferences.playerColorsAppWide;
-    final playerLightColorScheme =
-        appwideColors ? trackImageInfo?.lightColorScheme : null;
-    final playerDarkColorScheme =
-        appwideColors ? trackImageInfo?.darkColorScheme : null;
-
-    // Делаем панель навигации прозрачной.
-    SystemChrome.setEnabledSystemUIMode(
-      SystemUiMode.edgeToEdge,
-    );
+    final playerLightColorScheme = appwideColors
+        ? useMemoized(
+            () => schemeInfo?.createScheme(
+              Brightness.light,
+              schemeVariant: preferences.dynamicSchemeType,
+            ),
+            [schemeInfo, preferences.dynamicSchemeType],
+          )
+        : null;
+    final playerDarkColorScheme = appwideColors
+        ? useMemoized(
+            () => schemeInfo?.createScheme(
+              Brightness.dark,
+              schemeVariant: preferences.dynamicSchemeType,
+            ),
+            [schemeInfo, preferences.dynamicSchemeType],
+          )
+        : null;
 
     return DynamicColorBuilder(
       builder:

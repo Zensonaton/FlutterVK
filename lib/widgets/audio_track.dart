@@ -506,12 +506,17 @@ class AudioTrackTile extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isHovered = useState(false);
 
-    final ColorScheme scheme = ((isSelected
-            ? ref
-                .watch(trackSchemeInfoProvider)
-                ?.colorScheme(Theme.of(context).brightness)
-            : null) ??
-        Theme.of(context).colorScheme);
+    final schemeInfo = ref.watch(trackSchemeInfoProvider);
+    final preferences = ref.watch(preferencesProvider);
+    final brightness = Theme.of(context).brightness;
+
+    // FIXME: Нужно каким-то образом оптимизировать это.
+    final ColorScheme scheme = (!isSelected || schemeInfo == null)
+        ? Theme.of(context).colorScheme
+        : schemeInfo.createScheme(
+            brightness,
+            schemeVariant: preferences.dynamicSchemeType,
+          );
 
     return Theme(
       data: ThemeData(

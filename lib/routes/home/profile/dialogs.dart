@@ -350,7 +350,7 @@ class PlayerDynamicSchemeDialog extends ConsumerWidget {
               children: [
                 // Сам трек.
                 SizedBox(
-                  width: 210,
+                  width: 220,
                   child: AudioTrackTile(
                     audio: ExtendedAudio(
                       title: title,

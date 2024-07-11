@@ -1,10 +1,8 @@
 import "package:flutter/material.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 
-import "../enums.dart";
 import "../services/image_to_color_scheme.dart";
 import "../services/logger.dart";
-import "preferences.dart";
 
 part "color.g.dart";
 
@@ -20,17 +18,26 @@ class TrackSchemeInfo extends _$TrackSchemeInfo {
   Future<ImageSchemeExtractor> fromImageProvider(ImageProvider provider) async {
     final Stopwatch watch = Stopwatch()..start();
 
-    state = await ImageSchemeExtractor.fromImageProvider(
-      provider,
-      schemeVariant: {
-        DynamicSchemeType.tonalSpot: DynamicSchemeVariant.tonalSpot,
-        DynamicSchemeType.neutral: DynamicSchemeVariant.neutral,
-        DynamicSchemeType.content: DynamicSchemeVariant.content,
-        DynamicSchemeType.monochrome: DynamicSchemeVariant.monochrome,
-      }[ref.read(preferencesProvider).dynamicSchemeType]!,
-    );
+    state = await ImageSchemeExtractor.fromImageProvider(provider);
     logger.d(
-      "Took ${watch.elapsedMilliseconds}ms to create ColorScheme from image (resize ${state!.resizeDuration.inMilliseconds}ms, qzer (Isolated): ${state!.quantizeDuration.inMilliseconds}ms)",
+      "Took ${watch.elapsedMilliseconds}ms to create ColorScheme from image (resize ${state!.resizeDuration?.inMilliseconds}ms, qzer (Isolated): ${state!.quantizeDuration?.inMilliseconds}ms)",
+    );
+
+    return state!;
+  }
+
+  /// Обновляет [state] данного объекта по передаваемым цветам, ранее извлечённых при помощи метода [fromImageProvider].
+  Future<ImageSchemeExtractor> fromColors({
+    required Map<int, int?> colorInts,
+    required List<int> scoredColorInts,
+    required int frequentColorInt,
+    required int colorCount,
+  }) async {
+    state = ImageSchemeExtractor(
+      colorInts: colorInts,
+      scoredColorInts: scoredColorInts,
+      frequentColorInt: frequentColorInt,
+      colorCount: colorCount,
     );
 
     return state!;

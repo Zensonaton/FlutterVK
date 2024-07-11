@@ -105,7 +105,7 @@ class ColorSchemeDebugMenu extends ConsumerWidget {
 
           // Время, затраченное на получение цветов.
           Text(
-            "Resize: ${schemeInfo.resizeDuration.inMilliseconds}ms, Quantize (non-UI blocking): ${schemeInfo.quantizeDuration.inMilliseconds}ms",
+            "Resize: ${schemeInfo.resizeDuration?.inMilliseconds}ms, Quantize (non-UI blocking): ${schemeInfo.quantizeDuration?.inMilliseconds}ms",
           ),
           const Gap(20),
 
@@ -131,7 +131,7 @@ class ColorSchemeDebugMenu extends ConsumerWidget {
 
           // Самый частый цвет, а так же общее количество цветов.
           Text(
-            "Total colors (duplicated included): ${schemeInfo.colorCount}, frequent color percentage: ${(schemeInfo.frequentColorPercentage * 100).round()}%, should cast shadow: ${schemeInfo.shouldCastShadow}",
+            "Total colors (duplicated included): ${schemeInfo.colorCount}, frequent color percentage: ${(schemeInfo.frequentColorPercentage * 100).round()}%",
           ),
           const Gap(8),
           SelectionArea(

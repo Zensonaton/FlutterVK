@@ -4,6 +4,7 @@ import "dart:ui";
 import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
 import "package:fullscreen_window/fullscreen_window.dart";
 import "package:gap/gap.dart";
 import "package:go_router/go_router.dart";
@@ -591,7 +592,7 @@ class BlurredBackgroundImage extends ConsumerWidget {
 }
 
 /// Route, отображающий полноэкранный плеер.
-class FullscreenPlayerRoute extends ConsumerStatefulWidget {
+class FullscreenPlayerRoute extends StatefulHookConsumerWidget {
   const FullscreenPlayerRoute({
     super.key,
   });
@@ -602,8 +603,6 @@ class FullscreenPlayerRoute extends ConsumerStatefulWidget {
 }
 
 class _FullscreenPlayerRouteState extends ConsumerState<FullscreenPlayerRoute> {
-  final AppLogger logger = getLogger("FullscreenPlayerDesktopRoute");
-
   /// Подписки на изменения состояния воспроизведения трека.
   late final List<StreamSubscription> subscriptions;
 
@@ -639,6 +638,10 @@ class _FullscreenPlayerRouteState extends ConsumerState<FullscreenPlayerRoute> {
     final l18n = ref.watch(l18nProvider);
     ref.watch(playerCurrentIndexProvider);
 
+    final ColorScheme? scheme = useMemoized(
+      () => trackImageInfo?.createScheme(Brightness.dark),
+      [trackImageInfo],
+    );
     final bool mobileLayout = isMobileLayout(context);
 
     // Проверка на случай, если запустился плеер без активного трека.
@@ -650,8 +653,7 @@ class _FullscreenPlayerRouteState extends ConsumerState<FullscreenPlayerRoute> {
         ),
         child: Theme(
           data: ThemeData(
-            colorScheme:
-                trackImageInfo?.darkColorScheme ?? fallbackDarkColorScheme,
+            colorScheme: scheme ?? fallbackDarkColorScheme,
           ),
           child: Scaffold(
             body: Center(
@@ -716,8 +718,7 @@ class _FullscreenPlayerRouteState extends ConsumerState<FullscreenPlayerRoute> {
       ),
       child: Theme(
         data: ThemeData(
-          colorScheme:
-              trackImageInfo?.darkColorScheme ?? fallbackDarkColorScheme,
+          colorScheme: scheme ?? fallbackDarkColorScheme,
         ),
         child: Builder(
           builder: (

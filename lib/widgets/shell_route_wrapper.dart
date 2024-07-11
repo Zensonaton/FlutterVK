@@ -180,7 +180,6 @@ class ShellRouteWrapper extends HookConsumerWidget {
                         disabled: item.body == null,
                       ),
                   ],
-                  // TODO: Настройка, что бы дать юзеру возможность расширить NavigatorRail. (extended)
                 ),
 
               // Само содержимое страницы.
@@ -263,6 +262,7 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
     final trackImageInfo = ref.watch(trackSchemeInfoProvider);
     final l18n = ref.watch(l18nProvider);
     final user = ref.read(userProvider.notifier);
+    final preferences = ref.watch(preferencesProvider);
     ref.watch(playerCurrentIndexProvider);
     ref.watch(playerStateProvider);
     ref.watch(playerVolumeProvider);
@@ -297,12 +297,28 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
             final userNotifier = ref.read(userProvider.notifier);
             final playlistsNotifier = ref.read(playlistsProvider.notifier);
 
+            // TODO: Сохранять треки в БД по-другому, что бы избежать кучи записей за раз.
+
             /// Метод, создающий цветовую схему из обложки трека, если таковая имеется.
             void getColorScheme() async {
               if (audio.thumbnail == null) return;
 
+              // Если цвета обложки уже были получены, и они хранятся в БД, то просто загружаем их.
+              if (audio.colorCount != null) {
+                logger.d("Image colors are loaded from DB");
+
+                schemeInfoNotifier.fromColors(
+                  colorInts: audio.colorInts!,
+                  scoredColorInts: audio.scoredColorInts!,
+                  frequentColorInt: audio.frequentColorInt!,
+                  colorCount: audio.colorCount!,
+                );
+
+                return;
+              }
+
               // Заставляем плеер извлекать цветовую схему из обложки трека.
-              schemeInfoNotifier.fromImageProvider(
+              final schemeInfo = await schemeInfoNotifier.fromImageProvider(
                 CachedNetworkImageProvider(
                   audio.smallestThumbnail!,
                   cacheKey: "${audio.mediaKey}small",
@@ -310,7 +326,18 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
                 ),
               );
 
-              // TODO: Сохранить цвета в БД.
+              // Сохраняем цвета в БД.
+              playlistsNotifier.updatePlaylist(
+                playlist.copyWithNewAudio(
+                  audio.copyWith(
+                    colorInts: schemeInfo.colorInts,
+                    colorCount: schemeInfo.colorCount,
+                    scoredColorInts: schemeInfo.scoredColorInts,
+                    frequentColorInt: schemeInfo.frequentColorInt,
+                  ),
+                ),
+                saveInDB: true,
+              );
             }
 
             /// Метод, загружающий текст трека.
@@ -325,7 +352,9 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
               // Сохраняем в БД.
               playlistsNotifier.updatePlaylist(
                 playlist.copyWithNewAudio(
-                  audio.copyWith(lyrics: response.response?.lyrics),
+                  audio.copyWith(
+                    lyrics: response.response?.lyrics,
+                  ),
                 ),
                 saveInDB: true,
               );
@@ -439,6 +468,15 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
       [],
     );
 
+    final brightness = Theme.of(context).brightness;
+    final ColorScheme? scheme = useMemoized(
+      () => trackImageInfo?.createScheme(
+        brightness,
+        schemeVariant: preferences.dynamicSchemeType,
+      ),
+      [brightness, trackImageInfo, preferences.dynamicSchemeType],
+    );
+
     final bool mobileLayout = isMobileLayout(context);
 
     const Alignment alignment =
@@ -494,9 +532,7 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
                   audio: player.smartCurrentAudio,
                   nextAudio: player.smartNextAudio,
                   previousAudio: player.smartPreviousAudio,
-                  scheme: trackImageInfo
-                          ?.colorScheme(Theme.of(context).brightness) ??
-                      Theme.of(context).colorScheme,
+                  scheme: scheme ?? Theme.of(context).colorScheme,
                   progress: player.progress,
                   volume: player.volume,
                   position: player.position,

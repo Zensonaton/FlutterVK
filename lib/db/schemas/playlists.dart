@@ -319,6 +319,18 @@ class DBAudio {
   /// Указывает, кэширован ли данный трек.
   final bool? isCached;
 
+  /// {@macro ImageSchemeExtractor.colorInts}
+  final List<int>? colorInts;
+
+  /// {@macro ImageSchemeExtractor.scoredColorInts}
+  final List<int>? scoredColorInts;
+
+  /// {@macro ImageSchemeExtractor.frequentColorInt}
+  final int? frequentColorInt;
+
+  /// {@macro ImageSchemeExtractor.colorCount}
+  final int? colorCount;
+
   /// Создаёт из передаваемого объекта [ExtendedAudio] объект данного класа.
   static DBAudio fromExtendedAudio(ExtendedAudio audio) => DBAudio(
         id: audio.id,
@@ -338,6 +350,10 @@ class DBAudio {
         vkThumbs: audio.vkThumbs?.asDBExtendedThumbnail,
         deezerThumbs: audio.deezerThumbs?.asDBExtendedThumbnail,
         isCached: audio.isCached,
+        colorInts: audio.colorInts?.keys.toList(),
+        scoredColorInts: audio.scoredColorInts,
+        frequentColorInt: audio.frequentColorInt,
+        colorCount: audio.colorCount,
       );
 
   /// Возвращает копию данного класса в виде объекта [ExtendedAudio].
@@ -381,6 +397,10 @@ class DBAudio {
     this.lyrics,
     this.genreID,
     this.isCached,
+    this.colorInts,
+    this.scoredColorInts,
+    this.frequentColorInt,
+    this.colorCount,
   });
 }
 
