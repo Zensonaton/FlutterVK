@@ -15,6 +15,7 @@ import "../../services/cache_manager.dart";
 import "../../services/logger.dart";
 import "../../utils.dart";
 import "../../widgets/dialogs.dart";
+import "../../widgets/fading_list_view.dart";
 import "../../widgets/fallback_audio_photo.dart";
 import "../../widgets/loading_button.dart";
 import "../../widgets/responsive_slider.dart";
@@ -155,8 +156,9 @@ class NextTrackInfoWidget extends ConsumerWidget {
                         cacheKey: "${player.smartNextAudio!.mediaKey}small",
                         width: 32,
                         height: 32,
-                        placeholder: (BuildContext context, String url) =>
-                            const FallbackAudioAvatar(),
+                        placeholder: (BuildContext context, String url) {
+                          return const FallbackAudioAvatar();
+                        },
                         cacheManager: CachedAlbumImagesManager.instance,
                       )
                     : const FallbackAudioAvatar(
@@ -236,20 +238,28 @@ class LyricsBlockWidget extends ConsumerWidget {
                         ),
                         lyrics: player.currentAudio!.lyrics!,
                       )
-                    : ListView.builder(
-                        key: const ValueKey(
-                          "skeleton",
+                    : ScrollConfiguration(
+                        behavior: ScrollConfiguration.of(context).copyWith(
+                          scrollbars: false,
                         ),
-                        itemCount: 50,
-                        itemBuilder: (BuildContext context, int index) {
-                          return Skeletonizer(
-                            child: TrackLyric(
-                              line: fakeTrackLyrics[
-                                  index % fakeTrackLyrics.length],
-                              isActive: false,
+                        child: FadingListView(
+                          child: ListView.builder(
+                            key: const ValueKey(
+                              "skeleton",
                             ),
-                          );
-                        },
+                            itemCount: 50,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemBuilder: (BuildContext context, int index) {
+                              return Skeletonizer(
+                                child: TrackLyric(
+                                  line: fakeTrackLyrics[
+                                      index % fakeTrackLyrics.length],
+                                  isActive: false,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
                       )
                 : const SizedBox(
                     key: ValueKey(
@@ -311,6 +321,7 @@ class FullscreenMediaControls extends ConsumerWidget {
     final prefsNotifier = ref.read(preferencesProvider.notifier);
     final preferences = ref.watch(preferencesProvider);
     ref.watch(playerStateProvider);
+    ref.watch(playerPlaylistModificationsProvider);
 
     /// Указывает, сохранён ли этот трек в лайкнутых.
     final bool isFavorite = player.currentAudio!.isLiked;

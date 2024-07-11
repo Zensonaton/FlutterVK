@@ -1,3 +1,5 @@
+import "dart:async";
+
 import "package:collection/collection.dart";
 import "package:flutter/foundation.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
@@ -17,6 +19,13 @@ part "playlists.g.dart";
 
 /// Хранит в себе состояние загруженности плейлистов.
 class PlaylistsState {
+  static final StreamController<ExtendedPlaylist>
+      playlistModificationsController = StreamController.broadcast();
+
+  /// Stream, указывающий события изменения плейлиста.
+  static Stream<ExtendedPlaylist> get playlistModificationsStream =>
+      playlistModificationsController.stream.asBroadcastStream();
+
   /// Указывает, загружены ли плейлисты через API ВКонтакте.
   ///
   /// Если false, то значит, что плейлисты кэшированы.
@@ -536,6 +545,9 @@ class Playlists extends _$Playlists {
           playlists: allPlaylists,
         ),
       );
+
+      // Отправляем событие об изменении плейлиста.
+      PlaylistsState.playlistModificationsController.add(newPlaylist);
 
       // Сохраняем в БД.
       if (saveInDB) {

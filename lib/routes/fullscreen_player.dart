@@ -419,6 +419,8 @@ class _TrackLyricsBlockState extends State<TrackLyricsBlock> {
 
     // Слушаем события скроллинга.
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!controller.hasClients) return;
+
       controller.position.isScrollingNotifier.addListener(onScroll);
     });
 

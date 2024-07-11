@@ -82,6 +82,7 @@ class FadingListView extends HookWidget {
           ).createShader(rect);
         },
         blendMode: BlendMode.dstOut,
+        child: child,
       ),
     );
   }

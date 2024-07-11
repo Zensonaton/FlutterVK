@@ -11,6 +11,7 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:just_audio/just_audio.dart";
 
 import "../api/vk/api.dart";
+import "../api/vk/audio/get_lyrics.dart";
 import "../api/vk/audio/get_stream_mix_audios.dart";
 import "../api/vk/audio/send_start_event.dart";
 import "../enums.dart";
@@ -18,6 +19,7 @@ import "../main.dart";
 import "../provider/color.dart";
 import "../provider/l18n.dart";
 import "../provider/player_events.dart";
+import "../provider/playlists.dart";
 import "../provider/preferences.dart";
 import "../provider/user.dart";
 import "../routes/fullscreen_player.dart";
@@ -267,6 +269,7 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
     ref.watch(playerShuffleModeEnabledProvider);
     ref.watch(playerLoopModeProvider);
     ref.watch(playerLoadedStateProvider);
+    ref.watch(playerPlaylistModificationsProvider);
 
     useEffect(
       () {
@@ -286,29 +289,53 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
           player.currentIndexStream.listen((int? index) async {
             if (index == null || !player.loaded) return;
 
-            final ExtendedAudio audio = player.currentAudio!;
+            final ExtendedPlaylist playlist =
+                player.currentPlaylist!.copyWith();
+            final ExtendedAudio audio = player.currentAudio!.copyWith();
+            final schemeInfoNotifier =
+                ref.read(trackSchemeInfoProvider.notifier);
+            final userNotifier = ref.read(userProvider.notifier);
+            final playlistsNotifier = ref.read(playlistsProvider.notifier);
 
-            /// Внутренний метод, который создаёт [ColorScheme], после чего сохраняет его внутрь [PlayerSchemeProvider].
+            /// Метод, создающий цветовую схему из обложки трека, если таковая имеется.
             void getColorScheme() async {
-              // Если обложек у трека нету, то ничего не делаем.
               if (audio.thumbnail == null) return;
 
-              // Загружаем изображение трека.
-              final CachedNetworkImageProvider imageProvider =
-                  CachedNetworkImageProvider(
-                player.currentAudio!.smallestThumbnail!,
-                cacheKey: audio.mediaKey,
-                cacheManager: CachedAlbumImagesManager.instance,
+              // Заставляем плеер извлекать цветовую схему из обложки трека.
+              schemeInfoNotifier.fromImageProvider(
+                CachedNetworkImageProvider(
+                  audio.smallestThumbnail!,
+                  cacheKey: "${audio.mediaKey}small",
+                  cacheManager: CachedAlbumImagesManager.instance,
+                ),
               );
 
-              // Заставляем плеер извлекать цветовую схему из обложки трека.
-              ref
-                  .read(trackSchemeInfoProvider.notifier)
-                  .fromImageProvider(imageProvider);
+              // TODO: Сохранить цвета в БД.
+            }
+
+            /// Метод, загружающий текст трека.
+            void getLyrics() async {
+              if (!(audio.hasLyrics ?? false) || audio.lyrics != null) return;
+
+              // Загружаем текст песни.
+              final APIAudioGetLyricsResponse response =
+                  await userNotifier.audioGetLyrics(audio.mediaKey);
+              raiseOnAPIError(response);
+
+              // Сохраняем в БД.
+              playlistsNotifier.updatePlaylist(
+                playlist.copyWithNewAudio(
+                  audio.copyWith(lyrics: response.response?.lyrics),
+                ),
+                saveInDB: true,
+              );
             }
 
             // Запускаем задачу по получению цветовой схемы.
             getColorScheme();
+
+            // Загружаем текст песни.
+            getLyrics();
           }),
 
           // Слушаем события изменения текущего трека, что бы в случае, если запущен рекомендательный плейлист, мы передавали информацию об этом ВКонтакте.

@@ -11,6 +11,7 @@ import "package:discord_rpc/discord_rpc.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/services.dart";
 import "package:flutter_cache_manager/flutter_cache_manager.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:just_audio/just_audio.dart";
 import "package:path/path.dart";
 import "package:path_provider/path_provider.dart";
@@ -21,6 +22,7 @@ import "../api/deezer/shared.dart";
 import "../api/vk/shared.dart";
 import "../consts.dart";
 import "../main.dart";
+import "../provider/playlists.dart";
 import "../provider/user.dart";
 import "../utils.dart";
 import "cache_manager.dart";
@@ -335,7 +337,11 @@ class VKMusicPlayer {
   ConcatenatingAudioSource? _queue;
   List<ExtendedAudio>? _audiosQueue;
 
-  VKMusicPlayer() {
+  final Ref ref;
+
+  VKMusicPlayer({
+    required this.ref,
+  }) {
     _subscriptions = [
       // События паузы/воспроизведения.
       _player.playingStream.listen(
@@ -405,6 +411,24 @@ class VKMusicPlayer {
           stop();
         },
       ),
+
+      // Обработчик событий изменения плейлистов.
+      PlaylistsState.playlistModificationsStream
+          .listen((ExtendedPlaylist playlist) {
+        final bool isCurrent = playlist.ownerID == currentPlaylist?.ownerID &&
+            playlist.id == currentPlaylist?.id;
+
+        // Если играет не этот плейлист, то ничего не делаем.
+        if (!isCurrent) return;
+
+        logger.d("Player detected playlist modification");
+
+        // Устанавливаем новый плейлист.
+        _silentSetPlaylist(playlist, mergeWithOldQueue: true);
+
+        // Создаём событие об изменении текущего трека.
+        _playlistModificationsController.add(playlist);
+      }),
     ];
 
     _initPlayer();
@@ -476,6 +500,15 @@ class VKMusicPlayer {
   /// {@endtemplate}
   Stream<bool> get loadedStateStream =>
       _loadedStateController.stream.asBroadcastStream();
+
+  final StreamController<ExtendedPlaylist> _playlistModificationsController =
+      StreamController.broadcast();
+
+  /// {@template VKMusicPlayer.playlistModificationsStream}
+  /// Stream, указывающий то, что произошло событие изменения текущего плейлиста.
+  /// {@endtemplate}
+  Stream<ExtendedPlaylist> get playlistModificationsStream =>
+      _playlistModificationsController.stream.asBroadcastStream();
 
   /// Фейковое время для [seek]'а. Используется, что бы значение прослушанности трека после вызова [seek] происходило мгновенно.
   Duration? _fakeCurrentPosition;
@@ -1110,26 +1143,17 @@ class VKMusicPlayer {
     // user.markUpdated(false);
   }
 
-  /// Устанавливает плейлист [playlist] для воспроизведения музыки, указывая при этом [selectedTrack], начиная с которого будет запущено воспроизведение, либо же рандомный трек, если [randomTrack] правдив.
+  /// Тихо устанавливает плейлист [playlist], не передавая изменения в низкоуровневый плеер. [mergeWithOldQueue] указывает, что очередь из треков (отвечающая за отображение треков в UI) будет заменена таким образом, что бы индексы не смешивались.
   ///
-  /// Если [play] равен true, то при вызове данного метода плеер автоматически начнёт воспроизводить музыку.
-  Future<void> setPlaylist(
+  /// Вместо этого метода стоит воспользоваться методом [setPlaylist].
+  void _silentSetPlaylist(
     ExtendedPlaylist playlist, {
-    bool play = true,
-    ExtendedAudio? selectedTrack,
-    bool randomTrack = false,
-    bool setLoopAll = true,
+    bool mergeWithOldQueue = false,
   }) async {
     assert(
       playlist.audios != null,
       "audios of ExtendedPlaylist is null",
     );
-    if (randomTrack) {
-      assert(
-        selectedTrack == null,
-        "randomTrack and index cannot be specified together",
-      );
-    }
 
     // Создаём список из треков в плейлисте, которые можно воспроизвести.
     final List<ExtendedAudio> audios = playlist.audios!
@@ -1142,9 +1166,42 @@ class VKMusicPlayer {
     if (audios.isEmpty) return;
 
     _playlist = playlist;
-    _audiosQueue = [...audios];
+
+    // Если нам нужно объеденить со старой очередью треков, то делаем это.
+    if (mergeWithOldQueue && _audiosQueue != null) {
+      for (int index = 0; index < _audiosQueue!.length; index++) {
+        final ExtendedAudio oldAudio = _audiosQueue![index];
+
+        _audiosQueue![index] = audios.firstWhere(
+          (ExtendedAudio item) =>
+              item.ownerID == oldAudio.ownerID && item.id == oldAudio.id,
+        );
+      }
+    } else {
+      _audiosQueue = [...audios];
+    }
+  }
+
+  /// Устанавливает плейлист [playlist] для воспроизведения музыки, указывая при этом [selectedTrack], начиная с которого будет запущено воспроизведение, либо же рандомный трек, если [randomTrack] правдив.
+  ///
+  /// Если [play] равен true, то при вызове данного метода плеер автоматически начнёт воспроизводить музыку.
+  Future<void> setPlaylist(
+    ExtendedPlaylist playlist, {
+    bool play = true,
+    ExtendedAudio? selectedTrack,
+    bool randomTrack = false,
+    bool setLoopAll = true,
+  }) async {
+    if (randomTrack) {
+      assert(
+        selectedTrack == null,
+        "randomTrack and index cannot be specified together",
+      );
+    }
+
+    _silentSetPlaylist(playlist);
     _queue = ConcatenatingAudioSource(
-      children: audios.map(
+      children: _audiosQueue!.map(
         (ExtendedAudio audio) {
           final bool cacheTrack = playlist.cacheTracks ?? false;
 
@@ -1171,9 +1228,9 @@ class VKMusicPlayer {
     await _player.setAudioSource(
       _queue!,
       initialIndex: selectedTrack != null
-          ? audios.indexOf(selectedTrack)
+          ? _audiosQueue!.indexOf(selectedTrack)
           : randomTrack && playlist.audios != null
-              ? Random().nextInt(audios.length)
+              ? Random().nextInt(_audiosQueue!.length)
               : 0,
     );
 

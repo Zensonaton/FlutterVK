@@ -2,6 +2,7 @@ import "package:just_audio/just_audio.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 
 import "../main.dart";
+import "user.dart";
 
 part "player_events.g.dart";
 
@@ -11,6 +12,15 @@ part "player_events.g.dart";
 @riverpod
 Stream<bool> playerLoadedState(PlayerLoadedStateRef ref) =>
     player.loadedStateStream;
+
+/// [Provider] для получения значения [VKMusicPlayer.playlistModificationsStream].
+///
+/// {@macro VKMusicPlayer.playlistModificationsStream}
+@riverpod
+Stream<ExtendedPlaylist> playerPlaylistModifications(
+  PlayerPlaylistModificationsRef ref,
+) =>
+    player.playlistModificationsStream;
 
 /// [Provider] для получения значения [VKMusicPlayer.seekStateStream].
 ///
