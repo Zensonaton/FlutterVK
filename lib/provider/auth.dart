@@ -7,6 +7,7 @@ import "../api/vk/shared.dart";
 import "../main.dart";
 import "../services/audio_player.dart";
 import "../services/cache_manager.dart";
+import "playlists.dart";
 import "shared_prefs.dart";
 
 part "auth.g.dart";
@@ -59,6 +60,9 @@ class CurrentAuthState extends _$CurrentAuthState {
     CachedNetworkImagesManager.instance.emptyCache();
     CachedAlbumImagesManager.instance.emptyCache();
 
+    // Очищаем локальную базу данных.
+    await appStorage.resetDB();
+
     // Удаляем папку с кэшированными треками, если такие вообще есть.
     final Directory tracksDirectory = Directory(
       await CachedStreamedAudio.getTrackStorageDirectory(),
@@ -68,11 +72,12 @@ class CurrentAuthState extends _$CurrentAuthState {
       tracksDirectory.deleteSync(recursive: true);
     }
 
-    // Очищаем локальную базу данных.
-    appStorage.resetDB();
-
-    // Обновляем состояние авторизации, а так же Access-токен.
-    ref.invalidateSelf();
+    // Сбрасываем различные состояния.
+    ref.read(playlistsProvider.notifier).reset();
+    ref
+      ..invalidateSelf()
+      ..invalidate(dbPlaylistsProvider)
+      ..invalidate(playlistsProvider);
   }
 }
 

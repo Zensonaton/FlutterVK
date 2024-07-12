@@ -107,7 +107,7 @@ class Playlists extends _$Playlists {
     // FIXME: Неиспользованные ключи локализации: music_basicDataLoadError, music_recommendationsDataLoadError.
 
     // Загружаем плейлисты из локальной БД, если они не были загружены ранее.
-    if (!(state.unwrapPrevious().value?.fromAPI ?? false)) {
+    if (!(state.unwrapPrevious().valueOrNull?.fromAPI ?? false)) {
       final Stopwatch watch = Stopwatch()..start();
       final PlaylistsState? playlistsState =
           await ref.read(dbPlaylistsProvider.future);
@@ -634,6 +634,9 @@ class Playlists extends _$Playlists {
         (playlist) => playlist.ownerID == ownerID && playlist.id == id,
       );
 
+  /// Сбрасывает [state] данного Provider, сбрасывая список всех плейлистов.
+  void reset() => state = const AsyncLoading();
+
   /// Загружает информацию с API ВКонтакте по [playlist], если она не была загружена ранее, и обновляет state данного объекта.
   Future<void> loadPlaylist(ExtendedPlaylist playlist) async {
     final user = ref.read(userProvider.notifier);
@@ -679,7 +682,8 @@ class Playlists extends _$Playlists {
 /// [Provider], возвращающий [ExtendedPlaylist], характеризующий фейковый плейлист "Любимая музыка".
 @riverpod
 ExtendedPlaylist? favoritesPlaylist(FavoritesPlaylistRef ref) {
-  final PlaylistsState? state = ref.watch(playlistsProvider).value;
+  final PlaylistsState? state =
+      ref.watch(playlistsProvider).unwrapPrevious().valueOrNull;
   if (state == null) return null;
 
   return state.playlists.firstWhereOrNull(
@@ -690,7 +694,8 @@ ExtendedPlaylist? favoritesPlaylist(FavoritesPlaylistRef ref) {
 /// [Provider], возвращающий список плейлистов ([ExtendedPlaylist]) пользователя.
 @riverpod
 List<ExtendedPlaylist>? userPlaylists(UserPlaylistsRef ref) {
-  final PlaylistsState? state = ref.watch(playlistsProvider).value;
+  final PlaylistsState? state =
+      ref.watch(playlistsProvider).unwrapPrevious().valueOrNull;
   if (state == null) return null;
 
   final List<ExtendedPlaylist> playlists = state.playlists
@@ -706,7 +711,8 @@ List<ExtendedPlaylist>? userPlaylists(UserPlaylistsRef ref) {
 /// [Provider], возвращающий список рекомендуемых плейлистов ([ExtendedPlaylist]) пользователя типа "VK Mix".
 @riverpod
 List<ExtendedPlaylist>? mixPlaylists(MixPlaylistsRef ref) {
-  final PlaylistsState? state = ref.watch(playlistsProvider).value;
+  final PlaylistsState? state =
+      ref.watch(playlistsProvider).unwrapPrevious().valueOrNull;
   if (state == null) return null;
 
   final List<ExtendedPlaylist> playlists = state.playlists
@@ -722,7 +728,8 @@ List<ExtendedPlaylist>? mixPlaylists(MixPlaylistsRef ref) {
 /// [Provider], возвращающий список рекомендуемых плейлистов ([ExtendedPlaylist]) пользователя по настроению.
 @riverpod
 List<ExtendedPlaylist>? moodPlaylists(MoodPlaylistsRef ref) {
-  final PlaylistsState? state = ref.watch(playlistsProvider).value;
+  final PlaylistsState? state =
+      ref.watch(playlistsProvider).unwrapPrevious().valueOrNull;
   if (state == null) return null;
 
   final List<ExtendedPlaylist> playlists = state.playlists
@@ -738,7 +745,8 @@ List<ExtendedPlaylist>? moodPlaylists(MoodPlaylistsRef ref) {
 /// [Provider], возвращающий список рекомендуемых плейлистов ([ExtendedPlaylist]) пользователя типа "Плейлист дня 1" и подобные.
 @riverpod
 List<ExtendedPlaylist>? recommendedPlaylists(RecommendedPlaylistsRef ref) {
-  final PlaylistsState? state = ref.watch(playlistsProvider).value;
+  final PlaylistsState? state =
+      ref.watch(playlistsProvider).unwrapPrevious().valueOrNull;
   if (state == null) return null;
 
   final List<ExtendedPlaylist> playlists = state.playlists
@@ -755,7 +763,8 @@ List<ExtendedPlaylist>? recommendedPlaylists(RecommendedPlaylistsRef ref) {
 /// [Provider], возвращающий список рекомендуемых плейлистов ([ExtendedPlaylist]) пользователя, которые имеют схожести с другими плейлистами пользователя ВКонтакте.
 @riverpod
 List<ExtendedPlaylist>? simillarPlaylists(SimillarPlaylistsRef ref) {
-  final PlaylistsState? state = ref.watch(playlistsProvider).value;
+  final PlaylistsState? state =
+      ref.watch(playlistsProvider).unwrapPrevious().valueOrNull;
   if (state == null) return null;
 
   final List<ExtendedPlaylist> playlists = state.playlists
@@ -772,7 +781,8 @@ List<ExtendedPlaylist>? simillarPlaylists(SimillarPlaylistsRef ref) {
 /// [Provider], возвращающий список рекомендуемых плейлистов ([ExtendedPlaylist]) от ВКонтакте.
 @riverpod
 List<ExtendedPlaylist>? madeByVKPlaylists(MadeByVKPlaylistsRef ref) {
-  final PlaylistsState? state = ref.watch(playlistsProvider).value;
+  final PlaylistsState? state =
+      ref.watch(playlistsProvider).unwrapPrevious().valueOrNull;
   if (state == null) return null;
 
   final List<ExtendedPlaylist> playlists = state.playlists
