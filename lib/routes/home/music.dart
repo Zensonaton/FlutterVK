@@ -866,18 +866,15 @@ class HomeMusicPage extends HookConsumerWidget {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Expanded(
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  // Аватарка пользователя.
-                                  // TODO: Избавиться от анимации изменения размера плеера.
-                                  if (user.photoMaxUrl != null)
-                                    Padding(
-                                      padding: const EdgeInsets.only(
-                                        right: 18,
-                                      ),
-                                      child: CachedNetworkImage(
+                            Flexible(
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    // Аватарка пользователя.
+                                    if (user.photoMaxUrl != null) ...[
+                                      CachedNetworkImage(
                                         imageUrl: user.photoMaxUrl!,
                                         cacheKey: "${user.id}400",
                                         imageBuilder: (
@@ -899,15 +896,15 @@ class HomeMusicPage extends HookConsumerWidget {
                                         cacheManager:
                                             CachedNetworkImagesManager.instance,
                                       ),
-                                    ),
+                                      const Gap(18),
+                                    ],
 
-                                  // Текст "Добро пожаловать".
-                                  Flexible(
-                                    child: Text(
+                                    // Текст "Добро пожаловать".
+                                    Text(
                                       l18n.music_welcomeTitle(
                                         user.firstName,
                                       ),
-                                      maxLines: 2,
+                                      maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: Theme.of(context)
                                           .textTheme
@@ -916,10 +913,11 @@ class HomeMusicPage extends HookConsumerWidget {
                                             fontWeight: FontWeight.w500,
                                           ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
+                            const Gap(18),
 
                             // Поиск.
                             IconButton.filledTonal(
