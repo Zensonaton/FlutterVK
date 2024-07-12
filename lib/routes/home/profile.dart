@@ -585,6 +585,7 @@ class HomeProfilePage extends HookConsumerWidget {
                       subtitle:
                           l18n.profile_playerDynamicColorSchemeTypeDescription,
                       dialog: const PlayerDynamicSchemeDialog(),
+                      enabled: recommendationsConnected,
                       settingText: {
                         DynamicSchemeType.tonalSpot:
                             l18n.profile_playerDynamicColorSchemeTonalSpot,
