@@ -8,6 +8,7 @@ import "../../consts.dart";
 import "../../provider/l18n.dart";
 import "../../utils.dart";
 import "../../widgets/dialogs.dart";
+import "../../widgets/page_route_builders.dart";
 import "../login.dart";
 import "desktop.dart";
 
@@ -74,8 +75,8 @@ class MobileLoginWidget extends HookConsumerWidget {
                   value: true,
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (_) => DesktopLoginWidget(
+                    Material3PageRoute(
+                      builder: (context) => DesktopLoginWidget(
                         useAlternateAuth: useAlternateAuth,
                       ),
                     ),

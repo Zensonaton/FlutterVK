@@ -1,6 +1,5 @@
 import "dart:io";
 
-import "package:animations/animations.dart";
 import "package:dynamic_color/dynamic_color.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
@@ -153,15 +152,6 @@ class FlutterVKApp extends HookConsumerWidget {
           )
         : null;
 
-    final PageTransitionsTheme pageTransitionsTheme = PageTransitionsTheme(
-      builders: {
-        for (TargetPlatform platform in TargetPlatform.values)
-          platform: const SharedAxisPageTransitionsBuilder(
-            transitionType: SharedAxisTransitionType.horizontal,
-          ),
-      },
-    );
-
     return DynamicColorBuilder(
       builder:
           (ColorScheme? lightDynamicScheme, ColorScheme? darkDynamicScheme) {
@@ -177,13 +167,11 @@ class FlutterVKApp extends HookConsumerWidget {
 
         return MaterialApp.router(
           theme: ThemeData(
-            pageTransitionsTheme: pageTransitionsTheme,
             colorScheme: playerLightColorScheme ??
                 lightDynamicSchemeFixed ??
                 fallbackLightColorScheme,
           ),
           darkTheme: ThemeData(
-            pageTransitionsTheme: pageTransitionsTheme,
             colorScheme: (playerDarkColorScheme ??
                     darkDynamicSchemeFixed ??
                     fallbackDarkColorScheme)
