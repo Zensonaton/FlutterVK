@@ -312,6 +312,7 @@ class FullscreenMediaControls extends ConsumerWidget {
     final preferences = ref.watch(preferencesProvider);
     ref.watch(playerStateProvider);
     ref.watch(playerCurrentIndexProvider);
+    ref.watch(playerPlaylistModificationsProvider);
 
     final bool isFavorite = player.currentAudio!.isLiked;
     final bool smallerLayout = MediaQuery.sizeOf(context).width <= 300;
