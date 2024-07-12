@@ -210,7 +210,7 @@ Future<void> toggleTrackLike(
       );
     }
 
-    // Запоминаем новую версию плейлиста с удалённым треком.
+    // Запоминаем новую версию плейлиста "любимые треки" с удалённым треком.
     playlistsModified.add(
       favsPlaylist!
           .copyWithNewAudio(
@@ -223,6 +223,18 @@ Future<void> toggleTrackLike(
             count: favsPlaylist.count - 1,
           ),
     );
+
+    // Если мы не трогали плейлист "любимые" треки, то модифицируем его.
+    if (sourcePlaylist != null) {
+      playlistsModified.add(
+        sourcePlaylist.copyWithNewAudio(
+          newAudio.copyWith(
+            isLiked: false,
+            savedFromPlaylist: false,
+          ),
+        ),
+      );
+    }
 
     // Удаляем лайкнутый трек из сохранённого ранее плейлиста.
     if (newAudio.savedFromPlaylist) {
@@ -264,45 +276,6 @@ Future<void> dislikeTrack(
     response.response,
     "Track is not disliked: ${response.response}",
   );
-}
-
-/// Загружает полную информацию по всем плейлистам, у которых ранее было включено кэширование, загружая список их треков, и после чего запускает процесс кэширования.
-Future<void> loadCachedTracksInformation(
-  BuildContext context, {
-  bool saveToDB = true,
-  bool forceUpdate = false,
-}) async {
-  // TODO
-
-  // final UserProvider user = Provider.of<UserProvider>(context, listen: false);
-  // final AppLogger logger = getLogger("loadCachedTracksInformation");
-
-  // // Извлекаем список треков у тех плейлистов, у которых включено кэширование.
-  // for (ExtendedPlaylist playlist in user.allPlaylists.values) {
-  //   // Плейлисты, у которых уже загружен список треков должны быть пропущены.
-  //   if (playlist.areTracksLive) continue;
-
-  //   // Плейлисты с отключенным кэшированием пропускаем.
-  //   if (!(playlist.cacheTracks ?? false)) continue;
-
-  //   logger.d("Found $playlist with enabled caching, downloading full data");
-
-  //   // Загружаем информацию по данному плейлисту.
-  //   final ExtendedPlaylist newPlaylist = await loadPlaylistData(
-  //     playlist,
-  //     user,
-  //   );
-
-  //   user.updatePlaylist(
-  //     newPlaylist,
-  //     saveToDB: saveToDB,
-  //   );
-
-  //   // Запускаем задачу по кэшированию этого плейлиста.
-  //   downloadManager.cachePlaylist(user: user, newPlaylist);
-
-  //   user.markUpdated(false);
-  // }
 }
 
 /// Виджет, отображающий плейлист, как обычный так и рекомендательный.

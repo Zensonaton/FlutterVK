@@ -79,6 +79,9 @@ class ExtendedPlaylist {
   /// Указывает, что данный плейлист является плейлистом с "любимыми" треками пользователя.
   bool get isFavoritesPlaylist => id == 0;
 
+  /// Указывает, что данный плейлист является фейковым плейлистом с результатами поиска.
+  bool get isSearchResultsPlaylist => id == -1;
+
   /// Указывает, что данный плейлист является обычным плейлистом пользователя, который он либо создал либо сохранил.
   bool get isRegularPlaylist =>
       id > 0 &&
@@ -94,7 +97,8 @@ class ExtendedPlaylist {
   final bool isAudioMixPlaylist;
 
   /// Указывает, что данный плейлист является плейлистом из рекомендаций.
-  bool get isRecommendationsPlaylist => id < 0 && !isMoodPlaylist;
+  bool get isRecommendationsPlaylist =>
+      id < 0 && !isMoodPlaylist && !isSearchResultsPlaylist;
 
   /// Указывает, что данный плейлист является плейлистом из раздела "Совпадения по вкусам".
   bool get isSimillarPlaylist => simillarity != null;

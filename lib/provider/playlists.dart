@@ -555,7 +555,7 @@ class Playlists extends _$Playlists {
       PlaylistsState.playlistModificationsController.add(newPlaylist);
 
       // Сохраняем в БД.
-      if (saveInDB) {
+      if (saveInDB && !newPlaylist.isSearchResultsPlaylist) {
         await appStorage.savePlaylist(newPlaylist.asDBPlaylist);
       }
 
@@ -592,6 +592,7 @@ class Playlists extends _$Playlists {
     if (changedPlaylists.isNotEmpty) {
       await appStorage.savePlaylists(
         changedPlaylists
+            .where((playlist) => !playlist.isSearchResultsPlaylist)
             .map(
               (playlist) => playlist.asDBPlaylist,
             )
@@ -688,6 +689,18 @@ ExtendedPlaylist? favoritesPlaylist(FavoritesPlaylistRef ref) {
 
   return state.playlists.firstWhereOrNull(
     (ExtendedPlaylist playlist) => playlist.isFavoritesPlaylist,
+  );
+}
+
+/// [Provider], возвращающий [ExtendedPlaylist], характеризующий фейковый плейлист "Музыка из результатов поиска".
+@riverpod
+ExtendedPlaylist? searchResultsPlaylist(SearchResultsPlaylistRef ref) {
+  final PlaylistsState? state =
+      ref.watch(playlistsProvider).unwrapPrevious().valueOrNull;
+  if (state == null) return null;
+
+  return state.playlists.firstWhereOrNull(
+    (ExtendedPlaylist playlist) => playlist.isSearchResultsPlaylist,
   );
 }
 

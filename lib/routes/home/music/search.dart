@@ -10,10 +10,11 @@ import "package:skeletonizer/skeletonizer.dart";
 import "package:styled_text/tags/styled_text_tag_action.dart";
 import "package:styled_text/widgets/styled_text.dart";
 
-import "../../../api/vk/audio/search.dart";
+import "../../../api/vk/api.dart";
 import "../../../consts.dart";
 import "../../../provider/l18n.dart";
 import "../../../provider/player_events.dart";
+import "../../../provider/playlists.dart";
 import "../../../provider/user.dart";
 import "../../../utils.dart";
 import "../../../widgets/adaptive_dialog.dart";
@@ -32,9 +33,16 @@ class SearchDisplayDialog extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final controller = useTextEditingController(text: "");
+    final l18n = ref.watch(l18nProvider);
+    final user = ref.watch(userProvider);
+    final userNotifier = ref.read(userProvider.notifier);
+    final playlist = ref.watch(searchResultsPlaylistProvider);
+    ref.watch(playerStateProvider);
+    ref.watch(playerCurrentIndexProvider);
+
+    final controller = useTextEditingController();
     final focusNode = useFocusNode();
-    final ValueNotifier<Future<APIAudioSearchResponse>?> searchFuture =
+    final ValueNotifier<Future<ExtendedPlaylist>?> searchFuture =
         useState(null);
     final debouncedInput = useDebounced(
       controller.text,
@@ -45,7 +53,32 @@ class SearchDisplayDialog extends HookConsumerWidget {
     void onSearch() {
       if (!context.mounted && !networkRequiredDialog(ref, context)) return;
 
+      final l18n = ref.read(l18nProvider);
       final String query = controller.text.trim();
+
+      Future<ExtendedPlaylist> search() async {
+        final response = await userNotifier.audioSearchWithAlbums(query);
+        raiseOnAPIError(response);
+
+        // Создаём фейковый плейлист с треками.
+        final List<ExtendedAudio> audios = response.response!.items
+            .map((item) => ExtendedAudio.fromAPIAudio(item))
+            .toList();
+        final ExtendedPlaylist playlist = ExtendedPlaylist(
+          id: -1,
+          ownerID: user.id,
+          audios: audios,
+          count: audios.length,
+          title: l18n.music_searchPlaylistTitle,
+          isLiveData: true,
+          areTracksLive: true,
+        );
+
+        // Запоминаем этот плейлист.
+        await ref.read(playlistsProvider.notifier).updatePlaylist(playlist);
+
+        return playlist;
+      }
 
       // Если ничего не введено, то делаем пустой Future.
       if (query.isEmpty) {
@@ -57,8 +90,7 @@ class SearchDisplayDialog extends HookConsumerWidget {
       }
 
       // Делаем запрос по получению результатов поиска.
-      searchFuture.value =
-          ref.read(userProvider.notifier).audioSearchWithAlbums(query);
+      searchFuture.value = search();
     }
 
     void onSearchClear() => controller.clear();
@@ -81,11 +113,6 @@ class SearchDisplayDialog extends HookConsumerWidget {
       },
       [debouncedInput],
     );
-
-    final user = ref.watch(userProvider);
-    final l18n = ref.watch(l18nProvider);
-    ref.watch(playerStateProvider);
-    ref.watch(playerCurrentIndexProvider);
 
     final bool mobileLayout = isMobileLayout(context);
 
@@ -178,14 +205,9 @@ class SearchDisplayDialog extends HookConsumerWidget {
                 future: searchFuture.value,
                 builder: (
                   BuildContext context,
-                  AsyncSnapshot<APIAudioSearchResponse> snapshot,
+                  AsyncSnapshot<ExtendedPlaylist> snapshot,
                 ) {
-                  final List<ExtendedAudio>? audios =
-                      snapshot.data?.response?.items
-                          .map(
-                            (audio) => ExtendedAudio.fromAPIAudio(audio),
-                          )
-                          .toList();
+                  final List<ExtendedAudio>? audios = playlist?.audios;
 
                   // Пользователь ещё ничего не ввёл.
                   if (snapshot.connectionState == ConnectionState.none) {
@@ -196,8 +218,7 @@ class SearchDisplayDialog extends HookConsumerWidget {
 
                   // Информация по данному плейлисту ещё не была загружена.
                   if (snapshot.connectionState == ConnectionState.waiting ||
-                      snapshot.hasError ||
-                      !(snapshot.hasData && snapshot.data!.error == null)) {
+                      snapshot.hasError) {
                     return ListView.separated(
                       itemCount: 50,
                       physics: const NeverScrollableScrollPhysics(),
@@ -226,8 +247,7 @@ class SearchDisplayDialog extends HookConsumerWidget {
                   }
 
                   // Ничего не найдено.
-                  if (snapshot.hasData &&
-                      snapshot.data!.response!.items.isEmpty) {
+                  if (snapshot.hasData && audios!.isEmpty) {
                     return Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 6,
@@ -258,15 +278,7 @@ class SearchDisplayDialog extends HookConsumerWidget {
                         ref,
                         context,
                         audios.elementAt(index),
-                        ExtendedPlaylist(
-                          id: -1,
-                          ownerID: user.id,
-                          audios: audios,
-                          count: audios.length,
-                          title: l18n.music_searchPlaylistTitle,
-                          isLiveData: true,
-                          areTracksLive: true,
-                        ),
+                        playlist!,
                       );
                     },
                   );

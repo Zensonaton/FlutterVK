@@ -39,7 +39,7 @@ final secondaryTokenProvider = AutoDisposeProvider<String?>.internal(
 );
 
 typedef SecondaryTokenRef = AutoDisposeProviderRef<String?>;
-String _$currentAuthStateHash() => r'af79018339d3322d9aa0ba211b67ad93d05df740';
+String _$currentAuthStateHash() => r'dcaf94b7403981ef8bfb62c8bc616bb49d20f750';
 
 /// [Provider] для хранения состояния авторизации пользователя. Позволяет авторизовывать и деавторизовывать пользователя.
 ///

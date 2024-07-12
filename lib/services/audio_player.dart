@@ -6,19 +6,17 @@ import "dart:math";
 
 import "package:audio_service/audio_service.dart";
 import "package:audio_session/audio_session.dart";
+import "package:collection/collection.dart";
 import "package:crypto/crypto.dart";
 import "package:discord_rpc/discord_rpc.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/services.dart";
-import "package:flutter_cache_manager/flutter_cache_manager.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:just_audio/just_audio.dart";
 import "package:path/path.dart";
 import "package:path_provider/path_provider.dart";
 import "package:smtc_windows/smtc_windows.dart";
 
-import "../api/deezer/search.dart";
-import "../api/deezer/shared.dart";
 import "../api/vk/shared.dart";
 import "../consts.dart";
 import "../main.dart";
@@ -55,9 +53,6 @@ class CachedStreamedAudio extends StreamAudioSource {
   /// Трек, данные которого будут загружаться.
   final ExtendedAudio audio;
 
-  // /// Объект пользователя, используемый для загрузки текста песни трека (при наличии).
-  // final UserProvider? user;
-
   /// Указывает, будет ли данный трек кэшироваться.
   final bool cacheTrack;
 
@@ -66,7 +61,6 @@ class CachedStreamedAudio extends StreamAudioSource {
 
   CachedStreamedAudio({
     required this.audio,
-    // this.user,
     this.cacheTrack = false,
     this.onCached,
   });
@@ -110,93 +104,6 @@ class CachedStreamedAudio extends StreamAudioSource {
     } catch (e) {
       // No-op.
     }
-  }
-
-  /// Загружает обложки, текст, а так же прочую информацию о треке.
-  ///
-  /// Данный метод обычно вызывается после загрузки самого трека. Данный метод загружает изображения треков разных размеров, помещая их в [CachedNetworkImagesManager].
-  ///
-  /// Возвращает bool, олицетворяющий то, было ли произведено хоть какое-то изменение в БД.
-  static Future<bool> downloadTrackData(
-    ExtendedAudio audio,
-    ExtendedPlaylist playlist, {
-    bool allowDeezer = false,
-    bool saveInDB = false,
-  }) async {
-    logger.d("Called downloadTrackData for $audio");
-
-    final List<Future> tasks = [];
-    bool shouldUpdateDB = false;
-
-    final FileInfo? cachedThumb =
-        await CachedAlbumImagesManager.instance.getFileFromCache(
-      "${audio.mediaKey}max",
-    );
-
-    // Если файлы обложек уже загружены, то ничего не делаем.
-    if (cachedThumb == null || audio.thumbnail == null) {
-      ExtendedThumbnails? thumbs = audio.thumbnail;
-
-      // Если мы можем загрузить обложки с Deezer, то получаем их URL.
-      if (allowDeezer && thumbs == null) {
-        final DeezerTrack? deezerTrack = await deezer_search_closest(
-          audio.artist,
-          audio.title,
-          album: audio.album?.title,
-          duration: audio.duration,
-        );
-
-        // Если мы ничего не нашли, либо у альбома нет изображений, то просто ничего не делаем.
-        if (deezerTrack == null || deezerTrack.album.cover == null) {
-          return false;
-        }
-
-        // // Всё ок, запоминаем новую обложку трека.
-        // thumbs = ExtendedThumbnails.fromDeezerTrack(deezerTrack);
-        // audio.deezerThumbs = thumbs;
-        // shouldUpdateDB = true;
-      }
-
-      // Загружаем обложки, либо с API ВКонтакте, либо Deezer.
-      if (thumbs != null) {
-        tasks.add(
-          CachedAlbumImagesManager.instance.downloadFile(
-            thumbs.photoSmall,
-            key: "${audio.mediaKey}small",
-          ),
-        );
-        tasks.add(
-          CachedAlbumImagesManager.instance.downloadFile(
-            thumbs.photoMax,
-            key: "${audio.mediaKey}max",
-          ),
-        );
-      }
-    }
-
-    // Если это возможно, то так же загружаем текст песни, если его ещё нет.
-    if (audio.lyrics == null || audio.lyrics?.timestamps == null) {
-      if (audio.hasLyrics ?? false) {
-        // tasks.add(
-        //   user.audioGetLyrics(audio.mediaKey).then((response) {
-        //     raiseOnAPIError(response);
-
-        //     audio.lyrics = response.response!.lyrics;
-        //     shouldUpdateDB = true;
-        //   }),
-        // );
-      }
-    }
-
-    // Ждём загрузки всех задач сразу.
-    await Future.wait(tasks);
-
-    // Если это необходимо, то обновляем запись в БД.
-    if (saveInDB && shouldUpdateDB) {
-      await appStorage.savePlaylist(playlist.asDBPlaylist);
-    }
-
-    return shouldUpdateDB;
   }
 
   @override
@@ -1173,10 +1080,13 @@ class VKMusicPlayer {
       for (int index = 0; index < _audiosQueue!.length; index++) {
         final ExtendedAudio oldAudio = _audiosQueue![index];
 
-        _audiosQueue![index] = audios.firstWhere(
+        final ExtendedAudio? newAudio = audios.firstWhereOrNull(
           (ExtendedAudio item) =>
               item.ownerID == oldAudio.ownerID && item.id == oldAudio.id,
         );
+        if (newAudio != null) {
+          _audiosQueue![index] = newAudio;
+        }
       }
     } else {
       _audiosQueue = [...audios];
