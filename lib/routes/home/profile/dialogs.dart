@@ -14,7 +14,6 @@ import "../../../services/image_to_color_scheme.dart";
 import "../../../utils.dart";
 import "../../../widgets/audio_track.dart";
 import "../../../widgets/dialogs.dart";
-import "../../../widgets/page_route_builders.dart";
 import "../../login.dart";
 import "../music.dart";
 
@@ -99,10 +98,8 @@ class ConnectRecommendationsDialog extends ConsumerWidget {
 
             Navigator.push(
               context,
-              Material3PageRoute(
-                builder: (context) => const LoginRoute(
-                  useAlternateAuth: true,
-                ),
+              MaterialPageRoute(
+                builder: (_) => const LoginRoute(useAlternateAuth: true),
               ),
             );
           },

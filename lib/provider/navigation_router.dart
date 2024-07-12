@@ -19,21 +19,16 @@ import "user.dart";
 part "navigation_router.g.dart";
 
 /// Helper-метод, помогающий создать страницу с анимацией перехода по умолчанию.
-CustomTransitionPage buildPageWithDefaultTransition<T>({
+CustomTransitionPage buildPageWithDefaultTransition({
   required BuildContext context,
   required GoRouterState state,
   required Widget child,
   SharedAxisTransitionType transitionType = SharedAxisTransitionType.horizontal,
 }) {
-  return CustomTransitionPage<T>(
+  return CustomTransitionPage(
     key: state.pageKey,
     child: child,
-    transitionsBuilder: (
-      BuildContext context,
-      Animation<double> animation,
-      Animation<double> secondaryAnimation,
-      Widget child,
-    ) {
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
       return SharedAxisTransition(
         animation: animation,
         secondaryAnimation: secondaryAnimation,
@@ -69,7 +64,7 @@ GoRouter router(RouterRef ref) {
       routes: [
         GoRoute(
           path: "playlist/:owner_id/:id",
-          pageBuilder: (BuildContext context, GoRouterState state) {
+          builder: (BuildContext context, GoRouterState state) {
             final ExtendedPlaylist? playlist =
                 ref.read(playlistsProvider.notifier).getPlaylist(
                       int.parse(state.pathParameters["owner_id"]!),
@@ -80,13 +75,9 @@ GoRouter router(RouterRef ref) {
               "Playlist not found",
             );
 
-            return buildPageWithDefaultTransition(
-              context: context,
-              state: state,
-              child: PlaylistInfoRoute(
-                ownerID: playlist!.ownerID,
-                id: playlist.id,
-              ),
+            return PlaylistInfoRoute(
+              ownerID: playlist!.ownerID,
+              id: playlist.id,
             );
           },
         ),
@@ -122,23 +113,11 @@ GoRouter router(RouterRef ref) {
     routes: [
       GoRoute(
         path: "/welcome",
-        pageBuilder: (BuildContext context, GoRouterState state) {
-          return buildPageWithDefaultTransition(
-            context: context,
-            state: state,
-            child: const WelcomeRoute(),
-          );
-        },
+        builder: (_, __) => const WelcomeRoute(),
       ),
       GoRoute(
         path: "/login",
-        pageBuilder: (BuildContext context, GoRouterState state) {
-          return buildPageWithDefaultTransition(
-            context: context,
-            state: state,
-            child: const LoginRoute(),
-          );
-        },
+        builder: (_, __) => const LoginRoute(),
       ),
       ShellRoute(
         builder: (_, state, child) => ShellRouteWrapper(
@@ -151,24 +130,21 @@ GoRouter router(RouterRef ref) {
             if (item.body != null)
               GoRoute(
                 path: item.path,
-                pageBuilder: (BuildContext context, GoRouterState state) =>
-                    buildPageWithDefaultTransition(
-                  context: context,
-                  state: state,
-                  transitionType: SharedAxisTransitionType.vertical,
-                  child: item.body!(context),
-                ),
+                pageBuilder: (BuildContext context, GoRouterState state) {
+                  return buildPageWithDefaultTransition(
+                    context: context,
+                    state: state,
+                    transitionType: SharedAxisTransitionType.vertical,
+                    child: item.body!(context),
+                  );
+                },
                 routes: item.routes,
               ),
         ],
       ),
       GoRoute(
         path: "/fullscreenPlayer",
-        pageBuilder: (BuildContext context, GoRouterState state) {
-          return const MaterialPage(
-            child: FullscreenPlayerRoute(),
-          );
-        },
+        builder: (_, __) => const FullscreenPlayerRoute(),
       ),
     ],
   );

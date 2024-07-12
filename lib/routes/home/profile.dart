@@ -23,7 +23,6 @@ import "../../services/logger.dart";
 import "../../services/updater.dart";
 import "../../utils.dart";
 import "../../widgets/dialogs.dart";
-import "../../widgets/page_route_builders.dart";
 import "profile/debug/colorscheme.dart";
 import "profile/debug/playlists_viewer.dart";
 import "profile/dialogs.dart";
@@ -825,10 +824,8 @@ class HomeProfilePage extends HookConsumerWidget {
                           "ColorScheme test menu",
                         ),
                         onTap: () => Navigator.of(context).push(
-                          Material3PageRoute(
-                            builder: (BuildContext context) {
-                              return const ColorSchemeDebugMenu();
-                            },
+                          MaterialPageRoute(
+                            builder: (_) => const ColorSchemeDebugMenu(),
                           ),
                         ),
                       ),
@@ -842,10 +839,8 @@ class HomeProfilePage extends HookConsumerWidget {
                           "Playlists viewer",
                         ),
                         onTap: () => Navigator.of(context).push(
-                          Material3PageRoute(
-                            builder: (BuildContext context) {
-                              return const PlaylistsViewerDebugMenu();
-                            },
+                          MaterialPageRoute(
+                            builder: (_) => const PlaylistsViewerDebugMenu(),
                           ),
                         ),
                       ),
