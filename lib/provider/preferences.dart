@@ -132,11 +132,7 @@ class UserPreferences {
     this.debugPlayerLogging = false,
   });
 
-  factory UserPreferences.fromJson(Map<String, dynamic> json) =>
-      _$UserPreferencesFromJson(json);
-
-  Map<String, dynamic> toJson() => _$UserPreferencesToJson(this);
-
+  /// Делает копию этого класа с новыми передаваемыми значениями.
   UserPreferences copyWith({
     bool? myMusicChipEnabled,
     bool? playlistsChipEnabled,
@@ -192,6 +188,11 @@ class UserPreferences {
             fullscreenBigThumbnail ?? this.fullscreenBigThumbnail,
         debugPlayerLogging: debugPlayerLogging ?? this.debugPlayerLogging,
       );
+
+  factory UserPreferences.fromJson(Map<String, dynamic> json) =>
+      _$UserPreferencesFromJson(json);
+
+  Map<String, dynamic> toJson() => _$UserPreferencesToJson(this);
 }
 
 /// [Provider] для хранения настроек пользователя.

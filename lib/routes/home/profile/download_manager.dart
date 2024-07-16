@@ -1,0 +1,340 @@
+import "package:flutter/material.dart";
+import "package:flutter_animate/flutter_animate.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
+import "package:gap/gap.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
+
+import "../../../consts.dart";
+import "../../../main.dart";
+import "../../../provider/download_manager.dart";
+import "../../../provider/l18n.dart";
+import "../../../provider/player_events.dart";
+import "../../../services/download_manager.dart";
+import "../../../utils.dart";
+
+/// Виджет, отображаемый отдельный загружающийся элемент, например, плейлист.
+class DownloadItemWidget extends HookConsumerWidget {
+  /// [DownloadTask], отражающий загрузку чего-либо.
+  final DownloadTask task;
+
+  /// Указывает, что данная задача выполняется в данный момент.
+  final bool isCurrent;
+
+  const DownloadItemWidget({
+    super.key,
+    required this.task,
+    this.isCurrent = false,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l18n = ref.watch(l18nProvider);
+
+    final progress = useValueListenable(task.progress);
+    final valueAnimController = useAnimationController(
+      initialValue: progress,
+    );
+    useValueChanged(progress, (_, __) {
+      return valueAnimController.animateTo(
+        progress,
+        curve: Curves.decelerate,
+        duration: const Duration(
+          milliseconds: 500,
+        ),
+      );
+    });
+    final animatedProgress = useValueListenable(valueAnimController);
+
+    final scheme = Theme.of(context).colorScheme;
+    final bool isCompleted = progress == 1.0;
+    final allTasks = task.tasks;
+
+    return AnimatedContainer(
+      curve: Curves.ease,
+      duration: const Duration(
+        milliseconds: 500,
+      ),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(
+          globalBorderRadius,
+        ),
+        gradient: isCurrent
+            ? LinearGradient(
+                colors: [
+                  scheme.primary.withOpacity(
+                    0.1,
+                  ),
+                  Colors.transparent,
+                ],
+              )
+            : null,
+      ),
+      child: Row(
+        children: [
+          // Изображение для данной задачи.
+          // TODO: Другая иконка.
+          const SizedBox(
+            width: 50,
+            height: 50,
+            child: Icon(
+              Icons.download,
+            ),
+          ),
+          const Gap(12),
+
+          // Название.
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Название.
+                Text(
+                  task.longTitle,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+
+                // Количество выполняемых задач, если их больше 1.
+                if ((isCurrent || isCompleted) && allTasks.length > 1)
+                  Text(
+                    l18n.downloadManagerTotalTaskItems(allTasks.length),
+                    style: TextStyle(
+                      color: scheme.onSurfaceVariant.withOpacity(0.8),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const Gap(12),
+
+          // Анимация загрузки, либо иконка завершённой загрузки.
+          SizedBox(
+            width: 50,
+            height: 50,
+            child: Center(
+              child: AnimatedSwitcher(
+                duration: const Duration(
+                  milliseconds: 250,
+                ),
+                child: isCompleted
+                    ? Icon(
+                        key: const ValueKey(
+                          true,
+                        ),
+                        Icons.check,
+                        color: scheme.primary,
+                      )
+                    : Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // Анимация загрузки.
+                          SizedBox(
+                            width: 40,
+                            height: 40,
+                            child: CircularProgressIndicator(
+                              key: const ValueKey(
+                                false,
+                              ),
+                              value: animatedProgress,
+                            )
+                                .animate(
+                                  onComplete: (controller) => controller.loop(),
+                                )
+                                .rotate(
+                                  duration: const Duration(
+                                    seconds: 2,
+                                  ),
+                                  begin: 0,
+                                  end: 1,
+                                ),
+                          ),
+
+                          // Прогресс загрузки.
+                          AnimatedOpacity(
+                            curve: Curves.ease,
+                            duration: const Duration(
+                              milliseconds: 500,
+                            ),
+                            opacity: animatedProgress > 0.0 ? 1.0 : 0.0,
+                            child: Text(
+                              "${(animatedProgress * 100).round()}%",
+                              style: TextStyle(
+                                color: scheme.primary,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Виджет, отображающий отдельную "категорию" в разделе "загрузки".
+///
+/// Примером одной из таких категорий является "загружаются сейчас".
+class DownloadCategory extends ConsumerWidget {
+  /// Название категории.
+  final String title;
+
+  /// Список из задач в этой категории.
+  final List<DownloadTask> tasks;
+
+  /// Указывает выполняемую в данный момент задачу.
+  final DownloadTask? currentTask;
+
+  /// Указывает, что если список задач [tasks] пуст, то покажет надпись "ещё ничего не было загружено".
+  final bool showNoTasksIfEmpty;
+
+  const DownloadCategory({
+    super.key,
+    required this.title,
+    required this.tasks,
+    required this.currentTask,
+    this.showNoTasksIfEmpty = false,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l18n = ref.watch(l18nProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            // Название категории.
+            Text(
+              title,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const Gap(8),
+
+            // Надпись с количеством загружаемых элементов.
+            if (tasks.isNotEmpty)
+              Text(
+                tasks.length.toString(),
+                style: TextStyle(
+                  color:
+                      Theme.of(context).colorScheme.secondary.withOpacity(0.75),
+                ),
+              ),
+          ],
+        ),
+        Gap((showNoTasksIfEmpty && tasks.isEmpty) ? 8 : 14),
+
+        // Содержимое загрузки.
+        for (DownloadTask task in tasks) ...[
+          DownloadItemWidget(
+            task: task,
+            isCurrent: task == currentTask,
+          ),
+          const Gap(8),
+        ],
+
+        // Если ничего нет, то отображаем сообщение об этом.
+        if (showNoTasksIfEmpty && tasks.isEmpty)
+          Text(
+            l18n.downloadManagerNoTasks,
+            style: TextStyle(
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurfaceVariant
+                  .withOpacity(0.8),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// [Route], отображающий менеджер для загрузок.
+class DownloadManagerRoute extends HookConsumerWidget {
+  const DownloadManagerRoute({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l18n = ref.watch(l18nProvider);
+    final downloadManager = ref.watch(downloadManagerProvider);
+    ref.watch(playerLoadedStateProvider);
+
+    final bool mobileLayout = isMobileLayout(context);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: StreamBuilder<bool>(
+          stream: connectivityManager.connectionChange,
+          builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
+            final bool isConnected = connectivityManager.hasConnection;
+
+            return Text(
+              isConnected
+                  ? l18n.home_downloadManagerPageLabel
+                  : l18n.home_downloadManagerPageLabelOffline,
+            );
+          },
+        ),
+        centerTitle: true,
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView(
+              padding: EdgeInsets.symmetric(
+                horizontal: mobileLayout ? 16 : 24,
+                vertical: mobileLayout ? 20 : 30,
+              ).copyWith(
+                bottom: 0,
+              ),
+              children: [
+                // Раздел "загружаются сейчас".
+                DownloadCategory(
+                  title: l18n.downloadManagerCurrentTasksTitle,
+                  tasks: downloadManager.tasks,
+                  currentTask: downloadManager.currentTask,
+                  showNoTasksIfEmpty: true,
+                ),
+                const Gap(18),
+
+                // Раздел "загружено ранее".
+                if (downloadManager.oldTasks.isNotEmpty) ...[
+                  // Разделитель.
+                  const Divider(),
+                  const Gap(18),
+
+                  // Раздел.
+                  DownloadCategory(
+                    title: l18n.downloadManagerOldTasksTitle,
+                    tasks: downloadManager.oldTasks,
+                    currentTask: downloadManager.currentTask,
+                  ),
+                ],
+
+                // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
+                if (player.loaded && mobileLayout)
+                  const Gap(mobileMiniPlayerHeight),
+              ],
+            ),
+          ),
+
+          // Данный Gap нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
+          // Мы его располагаем после ListView, что бы ScrollBar не был закрыт плеером.
+          if (player.loaded && !mobileLayout)
+            const Gap(desktopMiniPlayerHeight),
+        ],
+      ),
+    );
+  }
+}

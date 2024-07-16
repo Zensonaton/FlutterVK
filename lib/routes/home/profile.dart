@@ -6,6 +6,7 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:gap/gap.dart";
+import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:share_plus/share_plus.dart";
 import "package:url_launcher/url_launcher.dart";
@@ -14,13 +15,14 @@ import "../../consts.dart";
 import "../../enums.dart";
 import "../../main.dart";
 import "../../provider/auth.dart";
+import "../../provider/download_manager.dart";
 import "../../provider/l18n.dart";
 import "../../provider/player_events.dart";
 import "../../provider/preferences.dart";
+import "../../provider/updater.dart";
 import "../../provider/user.dart";
 import "../../services/cache_manager.dart";
 import "../../services/logger.dart";
-import "../../services/updater.dart";
 import "../../utils.dart";
 import "../../widgets/dialogs.dart";
 import "../../widgets/page_route_builders.dart";
@@ -219,10 +221,11 @@ class HomeProfilePage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l18n = ref.watch(l18nProvider);
     final user = ref.watch(userProvider);
     final prefsNotifier = ref.read(preferencesProvider.notifier);
     final preferences = ref.watch(preferencesProvider);
-    final l18n = ref.watch(l18nProvider);
+    final downloadManager = ref.watch(downloadManagerProvider);
     ref.watch(playerLoadedStateProvider);
 
     final logExists = useFuture(
@@ -248,6 +251,17 @@ class HomeProfilePage extends HookConsumerWidget {
                   );
                 },
               ),
+              actions: [
+                // Кнопка для менеджера загрузок.
+                if (downloadManager.downloadStarted)
+                  IconButton(
+                    onPressed: () => context.go("/profile/downloadManager"),
+                    icon: const Icon(
+                      Icons.download,
+                    ),
+                  ),
+                const Gap(16),
+              ],
               centerTitle: true,
             )
           : null,
@@ -744,13 +758,13 @@ class HomeProfilePage extends HookConsumerWidget {
                       onTap: () {
                         if (!networkRequiredDialog(ref, context)) return;
 
-                        Updater.checkForUpdates(
-                          context,
-                          allowPre: preferences.updateBranch ==
-                              UpdateBranch.prereleases,
-                          showLoadingOverlay: true,
-                          showMessageOnNoUpdates: true,
-                        );
+                        ref.read(updaterProvider).checkForUpdates(
+                              context,
+                              allowPre: preferences.updateBranch ==
+                                  UpdateBranch.prereleases,
+                              showLoadingOverlay: true,
+                              showMessageOnNoUpdates: true,
+                            );
                       },
                     ),
                   ],
@@ -848,6 +862,23 @@ class HomeProfilePage extends HookConsumerWidget {
                             },
                           ),
                         ),
+                      ),
+
+                      // Кнопка для запуска фейковой загрузки.
+                      ListTile(
+                        leading: const Icon(
+                          Icons.update,
+                        ),
+                        title: const Text(
+                          "Force-trigger update dialog",
+                        ),
+                        onTap: () => ref.read(updaterProvider).checkForUpdates(
+                              context,
+                              allowPre: true,
+                              showLoadingOverlay: true,
+                              showMessageOnNoUpdates: true,
+                              disableCurrentVersionCheck: true,
+                            ),
                       ),
                     ],
                   ),

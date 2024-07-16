@@ -14,23 +14,26 @@ import "../api/vk/api.dart";
 import "../api/vk/audio/get_lyrics.dart";
 import "../api/vk/audio/get_stream_mix_audios.dart";
 import "../api/vk/audio/send_start_event.dart";
+import "../consts.dart";
 import "../enums.dart";
 import "../main.dart";
 import "../provider/color.dart";
+import "../provider/download_manager.dart";
 import "../provider/l18n.dart";
 import "../provider/player_events.dart";
 import "../provider/playlists.dart";
 import "../provider/preferences.dart";
+import "../provider/updater.dart";
 import "../provider/user.dart";
 import "../routes/fullscreen_player.dart";
 import "../routes/home/music.dart";
 import "../routes/home/music/categories/realtime_playlists.dart";
 import "../services/cache_manager.dart";
 import "../services/logger.dart";
-import "../services/updater.dart";
 import "../utils.dart";
 import "audio_player.dart";
 import "dialogs.dart";
+import "download_manager_icon.dart";
 
 /// Класс для отображения Route'ов в [BottomNavigationBar], вместе с их названиями, а так же иконками.
 class NavigationItem {
@@ -66,6 +69,67 @@ class NavigationItem {
   });
 }
 
+/// Обёртка для [DownloadManagerIconWidget], добавляющая анимацию появления и исчезновения этого виджета.
+class DownloadManagerWrapperWidget extends HookConsumerWidget {
+  const DownloadManagerWrapperWidget({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final downloadManager = ref.watch(downloadManagerProvider);
+    ref.watch(playerLoadedStateProvider);
+
+    final downloadStarted = downloadManager.downloadStarted;
+    final progressValue = useValueListenable(downloadManager.progress);
+    final shown = useState(downloadStarted);
+    final timer = useRef<Timer?>(null);
+    useValueChanged(downloadStarted, (_, __) {
+      timer.value?.cancel();
+
+      if (downloadStarted) {
+        shown.value = true;
+      } else {
+        // Прячем виджет, если прошло 5 секунд после полной загрузки.
+        timer.value = Timer(
+          const Duration(seconds: 5),
+          () => shown.value = false,
+        );
+      }
+
+      return true;
+    });
+
+    const double position = 40 - downloadManagerMinimizedSize / 2;
+
+    return AnimatedPositioned(
+      curve: Curves.ease,
+      duration: const Duration(
+        milliseconds: 500,
+      ),
+      left: position + 4,
+      bottom: (player.loaded ? desktopMiniPlayerHeight : 0) + position,
+      child: AnimatedSlide(
+        offset: Offset(
+          0,
+          shown.value ? 0 : 2,
+        ),
+        curve: Curves.ease,
+        duration: const Duration(
+          milliseconds: 500,
+        ),
+        child: RepaintBoundary(
+          child: DownloadManagerIconWidget(
+            progress: progressValue,
+            title: downloadManager.currentTask?.smallTitle ?? "",
+            onTap: () => context.go("/profile/downloadManager"),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Виджет, который содержит в себе [Scaffold] с [NavigationRail] или [BottomNavigationBar] в зависимости от того, какой используется Layout: Desktop ([isDesktopLayout]) или Mobile ([isMobileLayout]), а так же мини-плеер снизу ([BottomMusicPlayerWrapper]).
 ///
 /// Данный виджет так же подписывается на некоторые события, по типу проверки на наличия новых обновлений.
@@ -92,11 +156,11 @@ class ShellRouteWrapper extends HookConsumerWidget {
         !connectivityManager.hasConnection) return;
 
     // Проверяем на наличие обновлений.
-    Updater.checkForUpdates(
-      context,
-      allowPre: preferences.updateBranch == UpdateBranch.prereleases,
-      useSnackbarOnUpdate: preferences.updatePolicy == UpdatePolicy.popup,
-    );
+    ref.read(updaterProvider).checkForUpdates(
+          context,
+          allowPre: preferences.updateBranch == UpdateBranch.prereleases,
+          useSnackbarOnUpdate: preferences.updatePolicy == UpdatePolicy.popup,
+        );
   }
 
   @override
@@ -159,27 +223,29 @@ class ShellRouteWrapper extends HookConsumerWidget {
           // Содержимое.
           Row(
             children: [
-              // NavigationRail слева.
+              // NavigationRail с иконкой загрузки.
               if (!mobileLayout)
-                NavigationRail(
-                  selectedIndex: currentIndex,
-                  onDestinationSelected: onDestinationSelected,
-                  labelType: NavigationRailLabelType.all,
-                  destinations: [
-                    for (final item in navigationItems)
-                      NavigationRailDestination(
-                        icon: Icon(
-                          item.icon,
+                RepaintBoundary(
+                  child: NavigationRail(
+                    selectedIndex: currentIndex,
+                    onDestinationSelected: onDestinationSelected,
+                    labelType: NavigationRailLabelType.all,
+                    destinations: [
+                      for (final item in navigationItems)
+                        NavigationRailDestination(
+                          icon: Icon(
+                            item.icon,
+                          ),
+                          selectedIcon: Icon(
+                            item.selectedIcon ?? item.icon,
+                          ),
+                          label: Text(
+                            item.label,
+                          ),
+                          disabled: item.body == null,
                         ),
-                        selectedIcon: Icon(
-                          item.selectedIcon ?? item.icon,
-                        ),
-                        label: Text(
-                          item.label,
-                        ),
-                        disabled: item.body == null,
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
 
               // Само содержимое страницы.
@@ -188,6 +254,9 @@ class ShellRouteWrapper extends HookConsumerWidget {
               ),
             ],
           ),
+
+          // Иконка загрузки.
+          if (!mobileLayout) const DownloadManagerWrapperWidget(),
 
           // Мини-плеер снизу.
           const RepaintBoundary(

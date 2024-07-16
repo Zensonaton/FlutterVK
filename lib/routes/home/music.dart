@@ -15,6 +15,7 @@ import "../../api/vk/audio/restore.dart";
 import "../../consts.dart";
 import "../../main.dart";
 import "../../provider/auth.dart";
+import "../../provider/download_manager.dart";
 import "../../provider/l18n.dart";
 import "../../provider/player_events.dart";
 import "../../provider/playlists.dart";
@@ -734,9 +735,10 @@ class HomeMusicPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l18n = ref.watch(l18nProvider);
     final user = ref.watch(userProvider);
     final preferences = ref.watch(preferencesProvider);
-    final l18n = ref.watch(l18nProvider);
+    final downloadManager = ref.watch(downloadManagerProvider);
     ref.watch(playerLoadedStateProvider);
 
     final bool mobileLayout = isMobileLayout(context);
@@ -824,6 +826,16 @@ class HomeMusicPage extends HookConsumerWidget {
               ),
               centerTitle: true,
               actions: [
+                // Кнопка для менеджера загрузок.
+                if (downloadManager.downloadStarted)
+                  IconButton(
+                    onPressed: () => context.go("/profile/downloadManager"),
+                    icon: const Icon(
+                      Icons.download,
+                    ),
+                  ),
+
+                // Кнопка для поиска.
                 IconButton(
                   onPressed: () {
                     if (!networkRequiredDialog(ref, context)) return;
@@ -837,7 +849,7 @@ class HomeMusicPage extends HookConsumerWidget {
                     Icons.search,
                   ),
                 ),
-                const Gap(18),
+                const Gap(16),
               ],
             )
           : null,

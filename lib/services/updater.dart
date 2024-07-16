@@ -1,14 +1,14 @@
 import "dart:io";
 
+import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
-import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "package:flutter_markdown/flutter_markdown.dart";
 import "package:gap/gap.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:http/http.dart";
 import "package:install_plugin/install_plugin.dart";
 import "package:intl/intl.dart";
+import "package:path/path.dart" as path;
 import "package:path_provider/path_provider.dart";
 import "package:permission_handler/permission_handler.dart";
 import "package:url_launcher/url_launcher.dart";
@@ -18,12 +18,14 @@ import "../api/github/get_releases.dart";
 import "../api/github/shared.dart";
 import "../consts.dart";
 import "../main.dart";
+import "../provider/download_manager.dart";
 import "../provider/l18n.dart";
+import "../provider/updater.dart";
 import "../utils.dart";
 import "../widgets/dialogs.dart";
 import "../widgets/loading_overlay.dart";
+import "download_manager.dart";
 import "logger.dart";
-import "package:path/path.dart" as path;
 
 /// Диалог, появляющийся снизу экрана, показывающий информацию о том, что доступно новое обновление.
 ///
@@ -48,7 +50,36 @@ class UpdateAvailableDialog extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l18n = ref.watch(l18nProvider);
+
     final String locale = l18n.localeName;
+
+    void onInstallPressed() async {
+      context.pop();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          duration: const Duration(
+            seconds: 10,
+          ),
+          content: Text(
+            l18n.installPendingDescription,
+          ),
+        ),
+      );
+
+      try {
+        ref.read(updaterProvider).downloadAndInstallUpdate(release);
+      } catch (e, stackTrace) {
+        showLogErrorDialog(
+          "Update download/installation error:",
+          e,
+          stackTrace,
+          logger,
+          context,
+          title: l18n.updateErrorTitle,
+        );
+      }
+    }
 
     return DraggableScrollableSheet(
       expand: false,
@@ -161,42 +192,7 @@ class UpdateAvailableDialog extends ConsumerWidget {
                         label: Text(
                           l18n.installUpdate,
                         ),
-                        onPressed: () async {
-                          context.pop();
-
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              duration: const Duration(
-                                seconds: 10,
-                              ),
-                              content: Text(
-                                l18n.installPendingDescription,
-                              ),
-                            ),
-                          );
-
-                          try {
-                            Updater.downloadAndInstallUpdate(
-                              release.assets.firstWhere(
-                                (asset) =>
-                                    asset.name ==
-                                    Updater.getFilenameByPlatform(),
-                                orElse: () => throw Exception(
-                                  "${Updater.getFilenameByPlatform()} file have not been found in release assets",
-                                ),
-                              ),
-                            );
-                          } catch (e, stackTrace) {
-                            showLogErrorDialog(
-                              "Ошибка при обновлении приложения:",
-                              e,
-                              stackTrace,
-                              logger,
-                              context,
-                              title: l18n.updateErrorTitle,
-                            );
-                          }
-                        },
+                        onPressed: onInstallPressed,
                       ),
                     ],
                   ),
@@ -211,9 +207,16 @@ class UpdateAvailableDialog extends ConsumerWidget {
 }
 
 /// Класс для обработки обновлений приложения.
+///
+/// Если Вам нужен данный класс, то воспользуйтесь [updaterProvider].
 class Updater {
-  /// [AppLogger] для этого класса.
   static final AppLogger logger = getLogger("Updater");
+
+  final UpdaterRef ref;
+
+  Updater({
+    required this.ref,
+  });
 
   /// Возвращает информацию по последнему Github Release репозитория данного приложения.
   ///
@@ -236,11 +239,11 @@ class Updater {
     List<Release> releases, {
     bool allowPre = false,
     String? downloadFilename,
+    bool disableCurrentVersionCheck = false,
   }) {
-    // Проходимся по последним релизам, сверяем версии.
     for (Release release in releases) {
       // Если мы нашли одинаковую запись, то значит, что мы уже находимся на новой версии.
-      if (release.tagName == appVersion) break;
+      if (!disableCurrentVersionCheck && release.tagName == appVersion) break;
 
       // Если нам запрещено смотреть на pre release-версии, то пропускаем таковые.
       if (!allowPre && release.prerelease) continue;
@@ -264,11 +267,13 @@ class Updater {
   static Future<Release?> shouldUpdate({
     bool allowPre = false,
     String? downloadFilename,
+    bool disableCurrentVersionCheck = false,
   }) async =>
       shouldUpdateFrom(
         await getReleases(),
         allowPre: allowPre,
         downloadFilename: downloadFilename,
+        disableCurrentVersionCheck: disableCurrentVersionCheck,
       );
 
   /// Возвращает название файла, которое должно быть загружено с Github в зависимости от текущей платформы.
@@ -287,15 +292,18 @@ class Updater {
   /// Сверяет текущую версию приложения с последней версией из Github Actions, показывая информацию о результате проверки в интерфейсе. Если версия отличается, то вызывает [showModalBottomSheet] с целью показа информации о новом обновлении, а так же различными действиями с новым обновлением.
   ///
   /// [showLoadingOverlay] указывает, будет ли вызываться [LoadingOverlay.show] во время получения информации, [showMessageOnNoUpdates] указывает, будет ли показываться [ScaffoldMessenger] с сообщением о том, что обновлений нету, [useSnackbarOnUpdate] указывает, что вместо [showModalBottomSheet] будет использоваться [SnackBar] для отображения информации о появлении нового обновления.
-  static Future<bool> checkForUpdates(
+  Future<bool> checkForUpdates(
     BuildContext context, {
     Release? updateRelease,
     bool allowPre = false,
     bool showLoadingOverlay = false,
     bool showMessageOnNoUpdates = false,
     bool useSnackbarOnUpdate = false,
+    bool disableCurrentVersionCheck = false,
   }) async {
     logger.d("Checking for app updates (current: $appVersion)");
+
+    final l18n = ref.read(l18nProvider);
 
     if (showLoadingOverlay) LoadingOverlay.of(context).show();
 
@@ -304,6 +312,7 @@ class Updater {
           await shouldUpdate(
             allowPre: allowPre,
             downloadFilename: getFilenameByPlatform(),
+            disableCurrentVersionCheck: disableCurrentVersionCheck,
           );
 
       // Если мы можем обновиться, то показываем ModalBottomSheet либо SnackBar.
@@ -316,11 +325,10 @@ class Updater {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                AppLocalizations.of(context)!
-                    .updateAvailableSnackbarTitle("v${release.tagName}"),
+                l18n.updateAvailableSnackbarTitle("v${release.tagName}"),
               ),
               action: SnackBarAction(
-                label: AppLocalizations.of(context)!.showUpdateDetails,
+                label: l18n.showUpdateDetails,
                 onPressed: () => checkForUpdates(
                   context,
                   updateRelease: release,
@@ -355,7 +363,7 @@ class Updater {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              AppLocalizations.of(context)!.noUpdatesAvailableTitle,
+              l18n.noUpdatesAvailableTitle,
             ),
           ),
         );
@@ -373,7 +381,7 @@ class Updater {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              AppLocalizations.of(context)!.updatesRetrieveError(e.toString()),
+              l18n.updatesRetrieveError(e.toString()),
             ),
           ),
         );
@@ -387,9 +395,18 @@ class Updater {
   }
 
   /// Загружает указанный Release во временную папку, возвращая путь к файлу в случае успеха.
-  static Future<File> downloadUpdate(
-    ReleaseAsset asset,
-  ) async {
+  Future<File> downloadUpdate(Release release) async {
+    final l18n = ref.read(l18nProvider);
+    final downloadManager = ref.read(downloadManagerProvider.notifier);
+
+    // Ищем подходящий Asset из Release'ов.
+    final ReleaseAsset asset = release.assets.firstWhere(
+      (item) => item.name == Updater.getFilenameByPlatform(),
+      orElse: () => throw Exception(
+        "${Updater.getFilenameByPlatform()} file have not been found in release assets",
+      ),
+    );
+
     final File file = File(
       path.join(
         (await getApplicationSupportDirectory()).path,
@@ -398,7 +415,7 @@ class Updater {
     );
 
     // Если такой файл уже есть с таким же размером, то не загружаем его по-новой.
-    if (file.existsSync() && await file.length() == asset.size) {
+    if (!kDebugMode && file.existsSync() && file.lengthSync() == asset.size) {
       logger.d("File already downloaded, skipping download");
 
       return file;
@@ -408,26 +425,15 @@ class Updater {
       "Downloading update, size: ${asset.size} bytes, path: ${file.path}",
     );
 
-    final Response response = await get(
-      Uri.parse(
-        asset.browserDownloadUrl,
+    // Загружаем файл обновления.
+    await downloadManager.newTask(
+      AppUpdaterDownloadTask(
+        smallTitle: "Flutter VK",
+        longTitle: l18n.downloadManagerAppUpdateLongTitle(release.tagName),
+        url: asset.browserDownloadUrl,
+        file: file,
       ),
     );
-
-    logger.d(
-      "Response: ${response.statusCode}, ${response.bodyBytes.length} bytes",
-    );
-
-    assert(
-      response.statusCode == 200,
-      "Received wrong status code: ${response.statusCode}",
-    );
-    assert(
-      response.bodyBytes.length == asset.size,
-      "File size mismatch: ${response.bodyBytes.length} received, expected ${asset.size}",
-    );
-
-    await file.writeAsBytes(response.bodyBytes);
 
     logger.d("Update downloaded");
 
@@ -435,9 +441,7 @@ class Updater {
   }
 
   /// Устанавливает обновление приложения. [update] - установочный файл, с которого должно пойти обновление.
-  static Future<void> installUpdate(
-    File update,
-  ) async {
+  static Future<void> installUpdate(File update) async {
     logger.d("Installing update");
 
     if (Platform.isWindows) {
@@ -475,15 +479,13 @@ class Updater {
   }
 
   /// Загружает и устанавливает указанный Release во временную папку, возвращая путь к файлу в случае успешной установки.
-  static Future<File> downloadAndInstallUpdate(
-    ReleaseAsset asset,
-  ) async {
+  Future<File> downloadAndInstallUpdate(Release release) async {
     // На Android, запрашиваем права для установки .apk-файлов.
     if (Platform.isAndroid) {
       await Permission.requestInstallPackages.request();
     }
 
-    final File file = await downloadUpdate(asset);
+    final File file = await downloadUpdate(release);
     await installUpdate(file);
 
     return file;

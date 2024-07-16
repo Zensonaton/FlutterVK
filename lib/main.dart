@@ -8,6 +8,8 @@ import "package:catcher_2/model/catcher_2_options.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
+import "package:flutter_local_notifications/flutter_local_notifications.dart";
+import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:just_audio_media_kit/just_audio_media_kit.dart";
 import "package:local_notifier/local_notifier.dart";
@@ -30,7 +32,6 @@ import "provider/preferences.dart";
 import "provider/shared_prefs.dart";
 import "services/audio_player.dart";
 import "services/connectivity_manager.dart";
-import "services/download_manager.dart";
 import "services/logger.dart";
 import "services/updater.dart";
 import "utils.dart";
@@ -49,11 +50,17 @@ late final AppStorage appStorage;
 /// Объект аудиоплеера.
 late final VKMusicPlayer player;
 
-/// Менеджер загрузок плейлистов.
-late final DownloadManager downloadManager;
-
 /// Менеджер интернет соедининия.
 late final ConnectivityManager connectivityManager;
+
+/// Плагин для создания уведомлений на OS Android.
+late final FlutterLocalNotificationsPlugin notificationsPlugin;
+
+/// Обработчик события нажатия на уведомление от [notificationsPlugin].
+@pragma("vm:entry-point")
+void notificationTap(NotificationResponse notificationResponse) {
+  navigatorKey.currentContext?.go("/profile/downloadManager");
+}
 
 /// [ColorScheme] яркости [Brightness.light], которая используется в случае, если по какой-то причине приложение не смогло получить цвета акцента, либо цвета музыкального плеера.
 final fallbackLightColorScheme = ColorScheme.fromSeed(
@@ -241,14 +248,26 @@ Future main() async {
       oldCacheDirectory.deleteSync(recursive: true);
     }
 
-    // Инициализируем библиотеку для создания уведомлений.
-    await localNotifier.setup(appName: "Flutter VK");
+    // Инициализируем библиотеку для создания уведомлений на OS Windows.
+    if (Platform.isWindows) {
+      await localNotifier.setup(appName: "Flutter VK");
+    } else if (Platform.isAndroid) {
+      // Инициализируем уведомления на OS Android.
+
+      notificationsPlugin = FlutterLocalNotificationsPlugin();
+      await notificationsPlugin.initialize(
+        onDidReceiveNotificationResponse: notificationTap,
+        onDidReceiveBackgroundNotificationResponse: notificationTap,
+        const InitializationSettings(
+          android: AndroidInitializationSettings(
+            "drawable/ic_music_note",
+          ),
+        ),
+      );
+    }
 
     // Загружаем базу данных Isar.
     appStorage = AppStorage();
-
-    // Создаём менеджер загрузок.
-    downloadManager = DownloadManager();
 
     // Создаём менеджер интернет соединения.
     connectivityManager = ConnectivityManager();

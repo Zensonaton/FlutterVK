@@ -3,11 +3,9 @@ import "dart:math";
 import "dart:ui";
 
 import "package:cached_network_image/cached_network_image.dart";
-import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/rendering.dart";
 import "package:flutter/services.dart";
-import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:gap/gap.dart";
 import "package:go_router/go_router.dart";
@@ -31,7 +29,6 @@ import "../../../utils.dart";
 import "../../../widgets/audio_track.dart";
 import "../../../widgets/dialogs.dart";
 import "../../../widgets/fallback_audio_photo.dart";
-import "../../../widgets/loading_overlay.dart";
 
 /// Возвращает только те [Audio], которые совпадают по названию [query].
 List<ExtendedAudio> filterAudiosByName(
@@ -145,14 +142,14 @@ class CacheDisableWarningDialog extends ConsumerWidget {
           ),
         ),
 
-        // "Остановить".
-        if (downloadManager.isTaskRunningFor(playlist))
-          TextButton(
-            onPressed: () => context.pop(false),
-            child: Text(
-              l18n.music_stopTrackCachingButton,
-            ),
-          ),
+        // TODO: "Остановить".
+        // if (downloadManager.isTaskRunningFor(playlist))
+        //   TextButton(
+        //     onPressed: () => context.pop(false),
+        //     child: Text(
+        //       l18n.music_stopTrackCachingButton,
+        //     ),
+        //   ),
 
         // "Удалить".
         FilledButton(
@@ -329,9 +326,7 @@ class PlaylistInfoRoute extends HookConsumerWidget {
       if (!cacheTracks) {
         final bool dialogResult = await showDialog(
               context: context,
-              builder: (
-                BuildContext context,
-              ) {
+              builder: (BuildContext context) {
                 return EnableCacheDialog(
                   playlist: playlist,
                 );
@@ -343,92 +338,7 @@ class PlaylistInfoRoute extends HookConsumerWidget {
         if (!dialogResult || !context.mounted) return;
       }
 
-      // Если кэширование уже включено, то спрашиваем у пользователя, хочет ли он отменить его и удалить треки.
-      bool removeTracksFromCache = false;
-      if (cacheTracks) {
-        // Если плеер воспроизводит этот же плейлист, то мы не должны позволить пользователю удалить кэш.
-        if (player.currentPlaylist == playlist) {
-          showErrorDialog(
-            context,
-            title: l18n.music_disableTrackCachingUnavailableTitle,
-            description: AppLocalizations.of(context)!
-                .music_disableTrackCachingUnavailableDescription,
-          );
-
-          return;
-        }
-
-        // Спрашимаем у пользователя, хочет ли он отключить кэширование.
-        //  true - да, отключаем с удалением.
-        //  false - да, отключаем без удаления треков.
-        //  null - нет.
-        final bool? dialogResult = await showDialog(
-          context: context,
-          builder: (
-            BuildContext context,
-          ) {
-            return CacheDisableWarningDialog(
-              playlist: playlist,
-            );
-          },
-        );
-
-        if (dialogResult == null) {
-          return;
-        }
-
-        removeTracksFromCache = dialogResult;
-      }
-
-      // Включаем или отключаем кэширование.
-      cacheTracks = !cacheTracks;
-      // playlist.cacheTracks = cacheTracks;
-
-      // user.markUpdated(false);
-      await appStorage.savePlaylist(
-        playlist.asDBPlaylist,
-      );
-
-      // Запускаем задачу по кэшированию плейлиста.
-      if (!cacheTracks && context.mounted) {
-        LoadingOverlay.of(context).show();
-      }
-
-      // Если пользователь просто попросил остановить загрузку, то помечаем, что у плейлиста нет кэша, а так же останавливаем задачу.
-      if (!cacheTracks && !removeTracksFromCache) {
-        await downloadManager
-            .getCacheTask(
-              playlist,
-            )
-            ?.cancelCaching();
-
-        return;
-      }
-
-      try {
-        await downloadManager.cachePlaylist(
-          playlist,
-          // user: user,
-          cache: playlist.cacheTracks ?? false,
-          onTrackCached: (ExtendedAudio audio) {
-            if (!context.mounted) {
-              return;
-            }
-
-            // user.markUpdated(false);
-          },
-        );
-      } catch (e, stackTrace) {
-        logger.e(
-          "Playlist caching error: ",
-          error: e,
-          stackTrace: stackTrace,
-        );
-      } finally {
-        if (!cacheTracks && context.mounted) {
-          LoadingOverlay.of(context).hide();
-        }
-      }
+      // TODO: Код для кэширования плейлистов.
     }
 
     void onPlayTapped() async {
@@ -681,28 +591,18 @@ class PlaylistInfoRoute extends HookConsumerWidget {
                                     // Кнопка для загрузки треков в кэш.
                                     IconButton(
                                       iconSize: 38,
-                                      icon: downloadManager
-                                              .isTaskRunningFor(playlist)
-                                          ? const SizedBox(
-                                              width: 28,
-                                              height: 28,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 3.5,
-                                              ),
-                                            )
-                                          : Icon(
-                                              Icons.arrow_circle_down,
-                                              color: hasTracksLoaded
-                                                  ? ((playlist.cacheTracks ??
-                                                          false)
-                                                      ? Theme.of(context)
-                                                          .colorScheme
-                                                          .primary
-                                                      : Theme.of(context)
-                                                          .colorScheme
-                                                          .onSurface)
-                                                  : null,
-                                            ),
+                                      icon: Icon(
+                                        Icons.arrow_circle_down,
+                                        color: hasTracksLoaded
+                                            ? ((playlist.cacheTracks ?? false)
+                                                ? Theme.of(context)
+                                                    .colorScheme
+                                                    .primary
+                                                : Theme.of(context)
+                                                    .colorScheme
+                                                    .onSurface)
+                                            : null,
+                                      ),
                                       onPressed:
                                           hasTracksLoaded ? onCacheTap : null,
                                     ),

@@ -22,7 +22,6 @@ import "../../../provider/player_events.dart";
 import "../../../provider/user.dart";
 import "../../../services/audio_player.dart";
 import "../../../services/cache_manager.dart";
-import "../../../services/download_manager.dart";
 import "../../../services/logger.dart";
 import "../../../utils.dart";
 import "../../../widgets/adaptive_dialog.dart";
@@ -530,17 +529,11 @@ class BottomAudioOptionsDialog extends ConsumerWidget {
 
                     context.pop();
 
-                    // Загружаем трек.
                     try {
-                      await CacheItem.cacheTrack(
-                        audio,
-                        playlist,
-                        true,
-                        // user,
-                      );
+                      // TODO: Загружаем трек.
                     } catch (error, stackTrace) {
                       showLogErrorDialog(
-                        "Ошибка при принудительном кэшировании отдельного трека: ",
+                        "Manual media caching error: ",
                         error,
                         stackTrace,
                         logger,

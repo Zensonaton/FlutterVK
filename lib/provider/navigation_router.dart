@@ -8,6 +8,7 @@ import "../routes/fullscreen_player.dart";
 import "../routes/home/music.dart";
 import "../routes/home/music/playlist.dart";
 import "../routes/home/profile.dart";
+import "../routes/home/profile/download_manager.dart";
 import "../routes/login.dart";
 import "../routes/welcome.dart";
 import "../widgets/shell_route_wrapper.dart";
@@ -98,6 +99,18 @@ GoRouter router(RouterRef ref) {
       icon: Icons.person_outline,
       selectedIcon: Icons.person,
       label: l18n.home_profilePageLabel,
+      routes: [
+        GoRoute(
+          path: "downloadManager",
+          pageBuilder: (BuildContext context, GoRouterState state) {
+            return buildPageWithDefaultTransition(
+              context: context,
+              state: state,
+              child: const DownloadManagerRoute(),
+            );
+          },
+        ),
+      ],
     ),
   ];
 

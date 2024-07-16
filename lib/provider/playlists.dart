@@ -37,6 +37,7 @@ class PlaylistsState {
   /// Количество всех созданых плейлистов пользователя (те, что находятся в разделе "Ваши плейлисты").
   final int? playlistsCount;
 
+  /// Делает копию этого класа с новыми передаваемыми значениями.
   PlaylistsState copyWith({
     bool? fromAPI,
     List<ExtendedPlaylist>? playlists,
@@ -560,8 +561,6 @@ class Playlists extends _$Playlists {
       }
 
       logger.d("Playlist has changed");
-    } else {
-      logger.d("No changes to the playlist");
     }
 
     return playlistChanged;

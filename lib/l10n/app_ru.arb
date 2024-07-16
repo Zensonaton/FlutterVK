@@ -81,6 +81,10 @@
 	"home_profilePageLabelOffline": "Профиль (оффлайн)",
 
 
+	"home_downloadManagerPageLabel": "Загрузки",
+	"home_downloadManagerPageLabelOffline": "Загрузки (оффлайн)",
+
+
 
 	"music_label": "Музыка",
 	"music_labelOffline": "Музыка (оффлайн)",
@@ -400,6 +404,32 @@
 	"profile_updatesBranchDescription": "Бета-канал имеет более частые, но менее стабильные билды",
 	"profile_updatesBranchReleases": "Основные (по-умолчанию)",
 	"profile_updatesBranchPrereleases": "Бета",
+
+	"downloadManagerAppUpdateLongTitle": "Обновление Flutter VK v{version}",
+	"@downloadManagerAppUpdateLongTitle": {
+		"placeholders": {
+			"version": {
+				"type": "String",
+				"description": "Номер версии, до которой можно обновиться.",
+				"example": "1.2.3"
+			}
+		}
+	},
+
+	"downloadManagerCurrentTasksTitle": "Загружаются сейчас",
+	"downloadManagerOldTasksTitle": "Загружено ранее",
+
+	"downloadManagerTotalTaskItems": "{count} задач всего",
+	"@downloadManagerTotalTaskItems": {
+		"placeholders": {
+			"count": {
+				"type": "int",
+				"description": "Количество задач в менеджере загрузок."
+			}
+		}
+	},
+
+	"downloadManagerNoTasks": "Пусто...",
 
 	"updateAvailableTitle": "Доступно обновление Flutter VK",
 	"showUpdateDetails": "Подробности",
