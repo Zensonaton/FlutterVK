@@ -316,7 +316,7 @@ class VKMusicPlayer {
             );
           }
 
-          stop();
+          // TODO: Останавливать плеер, если что-то пошло не так при воспроизведении.
         },
       ),
 
@@ -838,9 +838,7 @@ class VKMusicPlayer {
   /// ```
   Future<void> play() async {
     // Если ничего не загружено, то мы не должны запускать воспроизведение.
-    if (_queue == null) {
-      return;
-    }
+    if (_queue == null || playing) return;
 
     _setPlayerLoaded(true);
 
@@ -857,10 +855,8 @@ class VKMusicPlayer {
   ///   player.pause();
   /// }
   /// ```
-  Future<void> pause({
-    bool stopAudioSession = false,
-  }) async {
-    if (stopAudioSession) {}
+  Future<void> pause() async {
+    if (!playing) return;
 
     return await _player.pause();
   }
@@ -960,7 +956,7 @@ class VKMusicPlayer {
 
     _setPlayerLoaded(false);
 
-    await _player.pause();
+    await pause();
     await _player.stop();
     await stopMusicSession();
   }
