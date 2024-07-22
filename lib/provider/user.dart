@@ -346,6 +346,7 @@ class ExtendedPlaylist {
         other.ownerID == ownerID &&
         other.isLiveData == isLiveData &&
         other.areTracksLive == areTracksLive &&
+        other.cacheTracks == cacheTracks &&
         listEquals(other.audios, audios);
   }
 
@@ -550,11 +551,6 @@ class ExtendedAudio {
   bool get canPlay =>
       (isCached ?? false) || (connectivityManager.hasConnection && url != null);
 
-  /// [ValueNotifier] для указания прогресса загрузки трека этого трека.
-  ///
-  /// Указывает значение от 0.0 до 1.0.
-  final ValueNotifier<double> downloadProgress = ValueNotifier(0.0);
-
   /// Указывает, что данный трек был сохранён из другого плейлиста, и значит, что вместо [id] (и его подобным) стоит пользоваться [relativeID].
   final bool savedFromPlaylist;
 
@@ -748,7 +744,8 @@ class ExtendedAudio {
     return other.runtimeType == ExtendedAudio &&
         other.id == id &&
         other.ownerID == ownerID &&
-        other.isLiked == isLiked;
+        other.isLiked == isLiked &&
+        other.isCached == isCached;
   }
 
   @override

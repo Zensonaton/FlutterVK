@@ -70,9 +70,6 @@ class ImageSchemeExtractor {
   /// Вычисляет процент того, сколько занимает [frequentColorInt] от [colorCount].
   double get frequentColorPercentage => frequentColorCount / colorCount;
 
-  /// [Duration], которое было затрачено на преобразование [ImageProvider] в объект типа [ui.Image].
-  final Duration? resizeDuration;
-
   /// [Duration], которое было затрачено на получение цветов из изображения.
   final Duration? quantizeDuration;
 
@@ -81,7 +78,6 @@ class ImageSchemeExtractor {
     required this.scoredColorInts,
     required this.frequentColorInt,
     required this.colorCount,
-    this.resizeDuration,
     this.quantizeDuration,
   });
 
@@ -327,6 +323,27 @@ class ImageSchemeExtractor {
     ImageProvider provider, {
     bool resizeImage = false,
   }) async {
+    // Получаем объект типа [ui.Image], из которого уже можно извлекать цвета.
+    final Stopwatch scaleWatch = Stopwatch()..start();
+    final ui.Image scaledImage = await (resizeImage
+        ? _imageProviderToScaled(provider)
+        : _providerToImage(provider));
+    scaleWatch.stop();
+
+    // Получаем байты из объекта изображения.
+    final Uint32List imageBytes =
+        (await scaledImage.toByteData())!.buffer.asUint32List();
+
+    // Получаем [ImageSchemeExtractor].
+    return await fromImageBytes(imageBytes);
+  }
+
+  /// Извлекает основные цвета из [Uint32List] байтов изображения.
+  ///
+  /// Является модифицированной версией метода [ColorScheme.fromImageProvider], которая выполняет некоторые части в отдельном Isolate для улучшенной производительности.
+  static Future<ImageSchemeExtractor> fromImageBytes(
+    Iterable<int> bytes,
+  ) async {
     int getArgbFromAbgr(int abgr) {
       const int exceptRMask = 0xFF00FFFF;
       const int onlyRMask = ~exceptRMask;
@@ -338,18 +355,6 @@ class ImageSchemeExtractor {
       return (abgr & exceptRMask & exceptBMask) | (b << 16) | r;
     }
 
-    // Получаем объект типа [ui.Image], из которого уже можно извлекать цвета.
-    final Stopwatch scaleWatch = Stopwatch()..start();
-    final ui.Image scaledImage = await (resizeImage
-        ? _imageProviderToScaled(provider)
-        : _providerToImage(provider));
-
-    // Получаем байты из объекта изображения.
-    scaleWatch.stop();
-    final Stopwatch quantizerTimer = Stopwatch()..start();
-    final Uint32List imageBytes =
-        (await scaledImage.toByteData())!.buffer.asUint32List();
-
     // Получаем объект, состоящий из:
     // - Map<Color, количество>,
     // - List<Color> scored-цвета,
@@ -357,8 +362,9 @@ class ImageSchemeExtractor {
     // - Общее количество цветов,
     //
     // Все цвета (Color) возвращаются в виде int.
+    final Stopwatch quantizerTimer = Stopwatch()..start();
     final (Map<int, int>, List<int>, int, int) result = await compute(
-      (Uint32List bytes) async {
+      (Iterable<int> bytes) async {
         // Производим Quantizer.
         final QuantizerResult quantizerResult = await QuantizerCelebi()
             .quantize(bytes, 128, returnInputPixelToClusterPixel: true);
@@ -386,7 +392,7 @@ class ImageSchemeExtractor {
 
         return (colorToCount, scoredResults, mostFrequentColor, totalColors);
       },
-      imageBytes,
+      bytes,
     );
 
     quantizerTimer.stop();
@@ -395,7 +401,6 @@ class ImageSchemeExtractor {
       scoredColorInts: result.$2,
       frequentColorInt: result.$3,
       colorCount: result.$4,
-      resizeDuration: scaleWatch.elapsed,
       quantizeDuration: quantizerTimer.elapsed,
     );
   }

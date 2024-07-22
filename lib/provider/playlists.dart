@@ -2,6 +2,7 @@ import "dart:async";
 
 import "package:collection/collection.dart";
 import "package:flutter/foundation.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 
 import "../api/vk/api.dart";
@@ -10,12 +11,74 @@ import "../api/vk/executeScripts/mass_audio_get.dart";
 import "../api/vk/shared.dart";
 import "../db/schemas/playlists.dart";
 import "../main.dart";
+import "../services/download_manager.dart";
 import "../services/logger.dart";
 import "../utils.dart";
 import "auth.dart";
+import "download_manager.dart";
+import "l18n.dart";
 import "user.dart";
 
 part "playlists.g.dart";
+
+/// Создаёт задачу [PlaylistCacheDownloadTask] по кэшированию плейлиста [playlist]. После вызова этого метода, будет создана задача для [DownloadManager], которая будет кэшировать треки плейлиста, и так же очищать данные для удалённых треков [deletedAudios].
+
+Future<void> createPlaylistCacheTask(
+  Ref ref,
+  ExtendedPlaylist playlist, {
+  List<ExtendedAudio> deletedAudios = const [],
+}) async {
+  if (deletedAudios.isNotEmpty) {
+    assert(
+      playlist.cacheTracks ?? false,
+      "You can't delete tracks from cache if cacheTracks is false",
+    );
+  }
+  assert(playlist.audios != null, "Expected playlist audios to be loaded");
+
+  final downloadManager = ref.read(downloadManagerProvider.notifier);
+  final l18n = ref.read(l18nProvider);
+  final playlistName =
+      playlist.title ?? l18n.music_fullscreenFavoritePlaylistName;
+
+  // Создаём задачу по кэшированию треков плейлиста (и удалению старых, при наличии).
+  await downloadManager.newTask(
+    PlaylistCacheDownloadTask(
+      ref: downloadManager.ref,
+      playlist: playlist,
+      longTitle: l18n.music_playlistCachingTitle(playlistName),
+      smallTitle: playlistName,
+      tasks: [
+        // Удалённые треки.
+        ...deletedAudios.map(
+          (audio) => PlaylistCacheDeleteDownloadItem(
+            ref: ref,
+            playlist: playlist,
+            audio: audio,
+            updatePlaylist: false,
+            removeThumbnails: true,
+          ),
+        ),
+
+        // Некэшированные треки.
+        if (playlist.cacheTracks ?? false)
+          ...playlist.audios!
+              .where(
+                (audio) =>
+                    !(audio.isCached ?? false) ||
+                    ((audio.hasLyrics ?? false) && audio.lyrics == null),
+              )
+              .map(
+                (audio) => PlaylistCacheDownloadItem(
+                  ref: ref,
+                  playlist: playlist,
+                  audio: audio,
+                ),
+              ),
+      ],
+    ),
+  );
+}
 
 /// Хранит в себе состояние загруженности плейлистов.
 class PlaylistsState {
@@ -67,6 +130,24 @@ class PlaylistsState {
   });
 }
 
+/// Класс, характеризующий результат работы метода [Playlists.updatePlaylist].
+class PlaylistUpdateResult {
+  /// Плейлист, который был модифицирован.
+  final ExtendedPlaylist playlist;
+
+  /// Указывает, был ли изменён плейлист.
+  final bool changed;
+
+  /// Указывает, какие треки были удалены из плейлиста.
+  final List<ExtendedAudio> deletedAudios;
+
+  PlaylistUpdateResult({
+    required this.playlist,
+    required this.changed,
+    this.deletedAudios = const [],
+  });
+}
+
 /// [Provider], загружающий информацию о плейлистах пользователя из локальной БД.
 @Riverpod(keepAlive: true)
 Future<PlaylistsState?> dbPlaylists(DbPlaylistsRef ref) async {
@@ -103,12 +184,10 @@ class Playlists extends _$Playlists {
 
   @override
   Future<PlaylistsState?> build() async {
-    state = const AsyncLoading();
-
     // FIXME: Неиспользованные ключи локализации: music_basicDataLoadError, music_recommendationsDataLoadError.
 
-    // Загружаем плейлисты из локальной БД, если они не были загружены ранее.
-    if (!(state.unwrapPrevious().valueOrNull?.fromAPI ?? false)) {
+    // Если же плейлисты не были загружены через API, то пытаемся загрузить их из БД.
+    if (state.value == null || !state.value!.fromAPI) {
       final Stopwatch watch = Stopwatch()..start();
       final PlaylistsState? playlistsState =
           await ref.read(dbPlaylistsProvider.future);
@@ -133,11 +212,6 @@ class Playlists extends _$Playlists {
     final List<ExtendedPlaylist> recommendedPlaylists =
         results[1] as List<ExtendedPlaylist>;
 
-    final List<ExtendedPlaylist> playlists = [
-      ...userPlaylists.$1,
-      ...recommendedPlaylists,
-    ];
-
     // Если state не был установлен, то устанавливаем его.
     state = AsyncData(
       PlaylistsState(
@@ -148,11 +222,37 @@ class Playlists extends _$Playlists {
     );
 
     // Обновляем плейлисты. Данный метод обновит UI и сохранит в БД, если плейлисты отличаются от тех, что уже есть.
-    await updatePlaylists(
-      playlists,
+    final List<PlaylistUpdateResult> updatedPlaylists = await updatePlaylists(
+      [...userPlaylists.$1, ...recommendedPlaylists],
       saveInDB: true,
       fromAPI: true,
     );
+
+    // Проходимся по всем модифицированным плейлистам, и запускаем задачи по их кэшированию.
+    for (PlaylistUpdateResult result in updatedPlaylists) {
+      if (!result.changed || result.playlist.areTracksCached) continue;
+
+      final ExtendedPlaylist playlist = result.playlist;
+      createPlaylistCacheTask(
+        ref,
+        playlist,
+        deletedAudios: result.deletedAudios,
+      );
+    }
+
+    // Проходимся по всем существующим плейлистам (в том числе и рекомендованным, ...), и смотрим, у каких включено кэширование.
+    // Загружаем данные таковых плейлистов, что бы дополнительно создались задачи по их кэшированию.
+    for (ExtendedPlaylist playlist in state.value!.playlists) {
+      if (playlist.isFavoritesPlaylist ||
+          playlist.isSearchResultsPlaylist ||
+          playlist.areTracksLive ||
+          !(playlist.cacheTracks ?? false)) {
+        continue;
+      }
+
+      logger.d("Found playlist with caching enabled: $playlist");
+      await loadPlaylist(playlist);
+    }
 
     return state.value;
   }
@@ -390,10 +490,14 @@ class Playlists extends _$Playlists {
     ];
   }
 
-  /// Обновляет состояние данного Provider, объединяя новую и старую версию плейлиста, а после чего сохраняет его в БД, если [saveInDB] правдив.
+  /// Сохраняет передаваемый [playlist] в БД.
   ///
-  /// Возвращает то, отличается ли старая версия плейлиста от новой.
-  Future<bool> updatePlaylist(
+  /// Если Вам нужен метод для обновления плейлиста, то воспользуйтесь методом [updatePlaylist]; он так же может сохранить плейлист в БД.
+  Future<void> saveDBPlaylist(ExtendedPlaylist playlist) async =>
+      appStorage.savePlaylist(playlist.asDBPlaylist);
+
+  /// Обновляет состояние данного Provider, объединяя новую и старую версию плейлиста, а после чего сохраняет его в БД, если [saveInDB] правдив.
+  Future<PlaylistUpdateResult> updatePlaylist(
     ExtendedPlaylist playlist, {
     bool saveInDB = false,
     bool fromAPI = false,
@@ -405,8 +509,8 @@ class Playlists extends _$Playlists {
 
     final List<ExtendedPlaylist> allPlaylists = state.value?.playlists ?? [];
     final ExtendedPlaylist? existingPlaylist = allPlaylists.firstWhereOrNull(
-      (ExtendedPlaylist plist) =>
-          plist.id == playlist.id && plist.ownerID == playlist.ownerID,
+      (ExtendedPlaylist existing) =>
+          existing.ownerID == playlist.ownerID && existing.id == playlist.id,
     );
 
     // Если передаваемого плейлиста ещё нету в списке плейлистов, то просто сохраняем его.
@@ -422,10 +526,13 @@ class Playlists extends _$Playlists {
 
       // Сохраняем в БД.
       if (saveInDB) {
-        await appStorage.savePlaylist(playlist.asDBPlaylist);
+        await saveDBPlaylist(playlist);
       }
 
-      return true;
+      return PlaylistUpdateResult(
+        playlist: playlist,
+        changed: true,
+      );
     }
 
     // Такой же плейлист уже существует в списке плейлистов.
@@ -435,8 +542,8 @@ class Playlists extends _$Playlists {
         existingPlaylist.title != playlist.title ||
         existingPlaylist.description != playlist.description ||
         existingPlaylist.subtitle != playlist.subtitle ||
-        (existingPlaylist.cacheTracks ?? false) !=
-            (playlist.cacheTracks ?? false) ||
+        (playlist.cacheTracks != null &&
+            existingPlaylist.cacheTracks != playlist.cacheTracks) ||
         existingPlaylist.areTracksLive != playlist.areTracksLive ||
         existingPlaylist.backgroundAnimationUrl !=
             playlist.backgroundAnimationUrl ||
@@ -445,12 +552,16 @@ class Playlists extends _$Playlists {
 
     // Проходимся по всем трекам в передаваемом плейлисте.
     final List<ExtendedAudio> newAudios = [];
+    final List<ExtendedAudio> deletedAudios = [];
     if (playlist.audios != null) {
       final List<ExtendedAudio> existingAudios = existingPlaylist.audios ?? [];
 
       for (ExtendedAudio givenAudio in [...playlist.audios!]) {
-        final ExtendedAudio? existingAudio = existingAudios
-            .firstWhereOrNull((oldAudio) => oldAudio == givenAudio);
+        final ExtendedAudio? existingAudio = existingAudios.firstWhereOrNull(
+          (oldAudio) =>
+              oldAudio.ownerID == givenAudio.ownerID &&
+              oldAudio.id == givenAudio.id,
+        );
 
         // Трек не найден, добавляем его.
         if (existingAudio == null) {
@@ -464,15 +575,15 @@ class Playlists extends _$Playlists {
         // Если трек не отличается, то ничего не меняем.
         if (existingAudio.title == givenAudio.title &&
             existingAudio.artist == givenAudio.artist &&
-            (existingAudio.isCached ?? false) ==
-                (givenAudio.isCached ?? false) &&
+            (existingAudio.isCached == givenAudio.isCached &&
+                givenAudio.isCached != null) &&
             (existingAudio.album == givenAudio.album ||
                 givenAudio.album == null) &&
             existingAudio.hasLyrics == givenAudio.hasLyrics &&
             existingAudio.lyrics == givenAudio.lyrics &&
             existingAudio.isLiked == givenAudio.isLiked &&
             existingAudio.frequentColorInt == givenAudio.frequentColorInt) {
-          newAudios.add(givenAudio);
+          newAudios.add(existingAudio);
 
           continue;
         }
@@ -498,20 +609,21 @@ class Playlists extends _$Playlists {
         playlistChanged = true;
       }
 
-      // Проходимся по тому списку треков, которые кэшированы, но больше нет в плейлисте.
-      final List<ExtendedAudio> removedAudios = existingAudios
-          .where(
-            (audio) =>
-                (audio.isCached ?? false) && !playlist.audios!.contains(audio),
-          )
-          .toList();
+      // Ищем удалённые треки.
+      deletedAudios.addAll(
+        existingAudios.where(
+          (audio) => playlist.audios!.every(
+            (newAudio) =>
+                newAudio.ownerID != audio.ownerID || newAudio.id != audio.id,
+          ),
+        ),
+      );
 
-      // Проходимся по списку из "удалённых" из плейлиста треков.
-      for (ExtendedAudio audio in removedAudios) {
-        logger.d("$audio should be deleted");
-
+      if (deletedAudios.isNotEmpty) {
         playlistChanged = true;
       }
+    } else {
+      newAudios.addAll(existingPlaylist.audios ?? []);
     }
 
     // Мы закончили проходиться по списку треков.
@@ -540,10 +652,9 @@ class Playlists extends _$Playlists {
       );
 
       // Обновляем плейлист.
-      allPlaylists.removeWhere(
-        (a) => a.id == playlist.id && a.ownerID == playlist.ownerID,
-      );
-      allPlaylists.add(newPlaylist);
+      allPlaylists[allPlaylists.indexWhere(
+        (old) => old.id == playlist.id && old.ownerID == playlist.ownerID,
+      )] = newPlaylist;
 
       // Обновляем состояние интерфейса.
       state = AsyncData(
@@ -557,33 +668,40 @@ class Playlists extends _$Playlists {
 
       // Сохраняем в БД.
       if (saveInDB && !newPlaylist.isSearchResultsPlaylist) {
-        await appStorage.savePlaylist(newPlaylist.asDBPlaylist);
+        await saveDBPlaylist(newPlaylist);
       }
 
       logger.d("Playlist has changed");
+
+      return PlaylistUpdateResult(
+        playlist: newPlaylist,
+        changed: playlistChanged,
+        deletedAudios: deletedAudios,
+      );
     }
 
-    return playlistChanged;
+    return PlaylistUpdateResult(
+      playlist: playlist,
+      changed: false,
+    );
   }
 
   /// Обновляет состояние данного Provider, объединяя новые и старые версии плейлистров, а после чего сохраняет их в БД, если [saveInDB] правдив.
-  ///
-  /// Возвращает то, был ли изменён хотя бы один из плейлистов после объединения.
-  Future<bool> updatePlaylists(
+  Future<List<PlaylistUpdateResult>> updatePlaylists(
     List<ExtendedPlaylist> newPlaylists, {
     bool saveInDB = false,
     bool fromAPI = false,
   }) async {
-    final List<ExtendedPlaylist> changedPlaylists = [];
+    final List<PlaylistUpdateResult> changedPlaylists = [];
     for (ExtendedPlaylist playlist in newPlaylists) {
-      final bool changed = await updatePlaylist(
+      final PlaylistUpdateResult result = await updatePlaylist(
         playlist,
         fromAPI: fromAPI,
       );
 
       // Если этот плейлист считается изменённым, то запоминаем его что бы потом массово сохранить.
-      if (changed) {
-        changedPlaylists.add(playlist);
+      if (result.changed) {
+        changedPlaylists.add(result);
       }
     }
 
@@ -591,15 +709,15 @@ class Playlists extends _$Playlists {
     if (changedPlaylists.isNotEmpty) {
       await appStorage.savePlaylists(
         changedPlaylists
-            .where((playlist) => !playlist.isSearchResultsPlaylist)
+            .where((item) => !item.playlist.isSearchResultsPlaylist)
             .map(
-              (playlist) => playlist.asDBPlaylist,
+              (item) => item.playlist.asDBPlaylist,
             )
             .toList(),
       );
     }
 
-    return changedPlaylists.isNotEmpty;
+    return changedPlaylists;
   }
 
   /// Устанавливает значение данного Provider по передаваемому списку из [ExtendedPlaylist].
@@ -638,7 +756,12 @@ class Playlists extends _$Playlists {
   void reset() => state = const AsyncLoading();
 
   /// Загружает информацию с API ВКонтакте по [playlist], если она не была загружена ранее, и обновляет state данного объекта.
-  Future<void> loadPlaylist(ExtendedPlaylist playlist) async {
+  ///
+  /// После успешной загрузки, [createCacheTask] диктует, будет ли создана задача по кэшированию треков в данном плейлисте.
+  Future<void> loadPlaylist(
+    ExtendedPlaylist playlist, {
+    bool createCacheTask = true,
+  }) async {
     final user = ref.read(userProvider.notifier);
 
     // Если информация по плейлисту уже загружена, то ничего не делаем.
@@ -659,7 +782,8 @@ class Playlists extends _$Playlists {
     );
     raiseOnAPIError(response);
 
-    await updatePlaylist(
+    // Обновляем плейлист.
+    final update = await updatePlaylist(
       playlist.copyWith(
         photo: response.response!.playlists
             .firstWhereOrNull(
@@ -675,7 +799,18 @@ class Playlists extends _$Playlists {
         isLiveData: true,
         areTracksLive: true,
       ),
+      fromAPI: true,
+      saveInDB: true,
     );
+
+    // Если плейлист изменился, то создаём задачу по кэшированию.
+    if (update.changed && createCacheTask) {
+      createPlaylistCacheTask(
+        ref,
+        update.playlist,
+        deletedAudios: update.deletedAudios,
+      );
+    }
   }
 }
 

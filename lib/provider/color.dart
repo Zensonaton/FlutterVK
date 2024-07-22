@@ -20,7 +20,7 @@ class TrackSchemeInfo extends _$TrackSchemeInfo {
 
     state = await ImageSchemeExtractor.fromImageProvider(provider);
     logger.d(
-      "Took ${watch.elapsedMilliseconds}ms to create ColorScheme from image (resize ${state!.resizeDuration?.inMilliseconds}ms, qzer (Isolated): ${state!.quantizeDuration?.inMilliseconds}ms)",
+      "${watch.elapsedMilliseconds}ms to create ColorScheme (quazer: ${state!.quantizeDuration?.inMilliseconds}ms)",
     );
 
     return state!;

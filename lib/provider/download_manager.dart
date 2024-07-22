@@ -30,9 +30,6 @@ class DownloadManagerState {
   /// Текущая задача, которая загружается в данный момент.
   final DownloadTask? currentTask;
 
-  // /// Очередь из задач по загрузке.
-  // final Queue queue;
-
   /// Делает копию этого класа с новыми передаваемыми значениями.
   DownloadManagerState copyWith({
     List<DownloadTask>? tasks,
@@ -48,7 +45,6 @@ class DownloadManagerState {
       downloadStarted: downloadStarted ?? this.downloadStarted,
       progress: progress ?? this.progress,
       currentTask: currentTask ?? this.currentTask,
-      // queue: queue ?? this.queue,
     );
   }
 
@@ -157,6 +153,9 @@ class DownloadManager extends _$DownloadManager {
       await _createNotification(title: task.longTitle, progress: progress);
     }
 
+    // Если нам не дана задачи, то ничего не делаем.
+    if (task.tasks.isEmpty) return;
+
     state = state.copyWith(
       tasks: [...state.tasks, task],
     );
@@ -175,7 +174,7 @@ class DownloadManager extends _$DownloadManager {
         // Все задачи выполнены.
         state = state.copyWith(
           downloadStarted: false,
-          oldTasks: [...state.oldTasks, ...state.tasks],
+          oldTasks: [...state.tasks, ...state.oldTasks],
           tasks: [],
         );
 
@@ -199,6 +198,7 @@ class DownloadManager extends _$DownloadManager {
         // TODO: Обработчик ошибок.
       }
 
+      logger.d("Completed task $task");
       task.progress.removeListener(progressListener);
 
       return;

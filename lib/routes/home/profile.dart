@@ -880,6 +880,17 @@ class HomeProfilePage extends HookConsumerWidget {
                               disableCurrentVersionCheck: true,
                             ),
                       ),
+
+                      // Кнопка для открытия экрана загрузок.
+                      ListTile(
+                        leading: const Icon(
+                          Icons.download,
+                        ),
+                        title: const Text(
+                          "Open download manager",
+                        ),
+                        onTap: () => context.go("/profile/downloadManager"),
+                      ),
                     ],
                   ),
                   const Gap(16),

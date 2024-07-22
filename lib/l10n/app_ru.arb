@@ -194,12 +194,37 @@
 	},
 
 	"music_disableTrackCachingTitle": "Удаление кэша треков",
-	"music_disableTrackCachingDescription": "Продолжив, Вы отключите кэширование треков в этом плейлисте, а все треки, которые были кэшированы здесь будут удалены с Вашего устройства. После этого действия Вы не сможете слушать музыку из этого плейлиста оффлайн.",
+	"music_disableTrackCachingDescription": "Очистив кэш этого плейлиста, Flutter VK удалит из памяти {count, plural, one{{count} сохранённый трек} few{{count} сохранённых трека} other{{count} сохранённых треков}}.\n\nПосле удаления, приложение будет занимать меньше места на Вашем устройстве, однако Вы не сможете слушать данный плейлист оффлайн.\nУверены, что хотите продолжить?",
+	"@music_disableTrackCachingDescription": {
+		"placeholders": {
+			"count": {
+				"type": "int",
+				"description": "Количество треков в данном плейлисте."
+			}
+		}
+	},
 	"music_stopTrackCachingButton": "Остановить",
 	"music_disableTrackCachingButton": "Удалить",
 
-	"music_disableTrackCachingUnavailableTitle": "Невозможно удалить кэш сейчас",
-	"music_disableTrackCachingUnavailableDescription": "Вы не можете удалить кэш треков из воспроизводимого в данный момент плейлиста.\nОстановите воспроизведение, либо включите другой плейлист, что бы очистить кэш.",
+	"music_playlistCachingTitle": "Кэширование плейлиста «{title}»",
+	"@music_playlistCachingTitle": {
+		"placeholders": {
+			"title": {
+				"type": "String",
+				"description": "Название плейлиста, который кэшируется."
+			}
+		}
+	},
+
+	"music_playlistCacheRemovalTitle": "Удаление треков плейлиста «{title}»",
+	"@music_playlistCacheRemovalTitle": {
+		"placeholders": {
+			"title": {
+				"type": "String",
+				"description": "Название плейлиста, треки которого будут удалены."
+			}
+		}
+	},
 
 	"music_searchText": "Поиск музыки ВКонтакте",
 

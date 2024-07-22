@@ -105,7 +105,7 @@ class ColorSchemeDebugMenu extends ConsumerWidget {
 
           // Время, затраченное на получение цветов.
           Text(
-            "Resize: ${schemeInfo.resizeDuration?.inMilliseconds}ms, Quantize (non-UI blocking): ${schemeInfo.quantizeDuration?.inMilliseconds}ms",
+            "Quantize (non-UI blocking): ${schemeInfo.quantizeDuration?.inMilliseconds}ms",
           ),
           const Gap(20),
 

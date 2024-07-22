@@ -431,6 +431,7 @@ class Updater {
         smallTitle: "Flutter VK",
         longTitle: l18n.downloadManagerAppUpdateLongTitle(release.tagName),
         url: asset.browserDownloadUrl,
+        ref: ref,
         file: file,
       ),
     );

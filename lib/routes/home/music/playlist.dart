@@ -8,7 +8,6 @@ import "package:flutter/rendering.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:gap/gap.dart";
-import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:relative_time/relative_time.dart";
 import "package:scroll_to_index/scroll_to_index.dart";
@@ -19,11 +18,13 @@ import "package:styled_text/widgets/styled_text.dart";
 import "../../../api/vk/shared.dart";
 import "../../../consts.dart";
 import "../../../main.dart";
+import "../../../provider/download_manager.dart";
 import "../../../provider/l18n.dart";
 import "../../../provider/player_events.dart";
 import "../../../provider/playlists.dart";
 import "../../../provider/user.dart";
 import "../../../services/cache_manager.dart";
+import "../../../services/download_manager.dart";
 import "../../../services/logger.dart";
 import "../../../utils.dart";
 import "../../../widgets/audio_track.dart";
@@ -99,13 +100,13 @@ class EnableCacheDialog extends ConsumerWidget {
       ),
       actions: [
         TextButton(
-          onPressed: () => context.pop(false),
+          onPressed: () => Navigator.of(context).pop(false),
           child: Text(
             l18n.general_no,
           ),
         ),
         FilledButton(
-          onPressed: () => context.pop(true),
+          onPressed: () => Navigator.of(context).pop(true),
           child: Text(
             l18n.music_enableTrackCachingButton,
           ),
@@ -116,11 +117,11 @@ class EnableCacheDialog extends ConsumerWidget {
 }
 
 /// Диалог, предупреждающий пользователя о том, что при отключении кэширования треков будет полностью удалёно всё содержимое плейлиста с памяти устройства.
-class CacheDisableWarningDialog extends ConsumerWidget {
-  /// Плейлист, кэш которого пытаются отключить.
+class DeleteCacheDialog extends ConsumerWidget {
+  /// Плейлист, кэш которого пытаются удалить.
   final ExtendedPlaylist playlist;
 
-  const CacheDisableWarningDialog({
+  const DeleteCacheDialog({
     super.key,
     required this.playlist,
   });
@@ -129,14 +130,17 @@ class CacheDisableWarningDialog extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l18n = ref.watch(l18nProvider);
 
+    final int cachedTracksCount =
+        playlist.audios!.where((audio) => audio.isCached ?? false).length;
+
     return MaterialDialog(
       icon: Icons.file_download_off,
       title: l18n.music_disableTrackCachingTitle,
-      text: l18n.music_disableTrackCachingDescription,
+      text: l18n.music_disableTrackCachingDescription(cachedTracksCount),
       actions: [
         // "Нет".
         TextButton(
-          onPressed: () => context.pop(),
+          onPressed: () => Navigator.of(context).pop(),
           child: Text(
             l18n.general_no,
           ),
@@ -153,7 +157,7 @@ class CacheDisableWarningDialog extends ConsumerWidget {
 
         // "Удалить".
         FilledButton(
-          onPressed: () => context.pop(true),
+          onPressed: () => Navigator.of(context).pop(true),
           child: Text(
             l18n.music_disableTrackCachingButton,
           ),
@@ -313,21 +317,19 @@ class PlaylistInfoRoute extends HookConsumerWidget {
     final bool hasTracksLoaded = !playlist.isEmpty && !loading;
 
     void onCacheTap() async {
-      bool cacheTracks = playlist.cacheTracks ?? false;
+      final downloadManager = ref.read(downloadManagerProvider.notifier);
+      final playlistsManager = ref.read(playlistsProvider.notifier);
+      final bool currentlyCached = playlist.cacheTracks ?? false;
+      final playlistName =
+          playlist.title ?? l18n.music_fullscreenFavoritePlaylistName;
 
-      // Пользователь пытается включить кэширование с выключенным интернетом, запрещаем ему такое.
-      if (!cacheTracks &&
-          !networkRequiredDialog(
-            ref,
-            context,
-          )) return;
-
-      // Пользователь пытается включить кэширование, спрашиваем, уверен ли он в своих намерениях.
-      if (!cacheTracks) {
+      // Если плейлист уже кэширован, то значит, что нам нужно его удалить.
+      // Сначала нужно спросить у пользователя то, хочет ли он удалить кэш.
+      if (currentlyCached) {
         final bool dialogResult = await showDialog(
               context: context,
               builder: (BuildContext context) {
-                return EnableCacheDialog(
+                return DeleteCacheDialog(
                   playlist: playlist,
                 );
               },
@@ -336,9 +338,68 @@ class PlaylistInfoRoute extends HookConsumerWidget {
 
         // Если пользователь нажал на "нет", то выходим.
         if (!dialogResult || !context.mounted) return;
+
+        // Пользователь разрешил удаление кэша плейлиста.
+        // Если у нас запущено воспроизведение этого плейлиста, то останавливаем её.
+        if (player.currentPlaylist == playlist) {
+          await player.stop();
+        }
+
+        // Запоминаем, что плейлист больше не кэширован.
+        final newPlaylist = await playlistsManager.updatePlaylist(
+          playlist.copyWith(cacheTracks: false),
+          saveInDB: true,
+        );
+
+        // Создаём задачу по удалению кэша.
+        await downloadManager.newTask(
+          PlaylistCacheDownloadTask(
+            ref: downloadManager.ref,
+            playlist: newPlaylist.playlist,
+            longTitle: l18n.music_playlistCacheRemovalTitle(playlistName),
+            smallTitle: playlistName,
+            tasks: playlist.audios!
+                .map(
+                  (audio) => PlaylistCacheDeleteDownloadItem(
+                    ref: downloadManager.ref,
+                    playlist: newPlaylist.playlist,
+                    audio: audio,
+                    removeThumbnails: true,
+                  ),
+                )
+                .toList(),
+          ),
+        );
+
+        return;
       }
 
-      // TODO: Код для кэширования плейлистов.
+      // Если мы попали сюда, то значит, что плейлист не кэширован, и пользователь пытается включить кэширование.
+
+      // Проверяем наличие интернета.
+      if (!networkRequiredDialog(ref, context)) return;
+
+      // Спрашиваем, уверен ли он в своих намерениях.
+      final bool dialogResult = await showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return EnableCacheDialog(
+                playlist: playlist,
+              );
+            },
+          ) ??
+          false;
+
+      // Если пользователь нажал на "нет", то выходим.
+      if (!dialogResult || !context.mounted) return;
+
+      // Запоминаем, что плейлист теперь кэширован.
+      final newPlaylist = await playlistsManager.updatePlaylist(
+        playlist.copyWith(cacheTracks: true),
+        saveInDB: true,
+      );
+
+      createPlaylistCacheTask(downloadManager.ref, newPlaylist.playlist);
     }
 
     void onPlayTapped() async {

@@ -21,9 +21,7 @@ import "../../provider/player_events.dart";
 import "../../provider/playlists.dart";
 import "../../provider/preferences.dart";
 import "../../provider/user.dart";
-import "../../services/audio_player.dart";
 import "../../services/cache_manager.dart";
-import "../../services/logger.dart";
 import "../../utils.dart";
 import "../../widgets/dialogs.dart";
 import "../../widgets/fallback_audio_photo.dart";
@@ -55,13 +53,13 @@ class DuplicateWarningDialog extends ConsumerWidget {
           child: Text(
             l18n.general_no,
           ),
-          onPressed: () => context.pop(false),
+          onPressed: () => Navigator.of(context).pop(false),
         ),
         FilledButton(
           child: Text(
             l18n.general_yes,
           ),
-          onPressed: () => context.pop(true),
+          onPressed: () => Navigator.of(context).pop(true),
         ),
       ],
     );
@@ -107,8 +105,6 @@ Future<void> toggleTrackLike(
   bool isLiked, {
   ExtendedPlaylist? sourcePlaylist,
 }) async {
-  final AppLogger logger = getLogger("toggleTrackLike");
-
   final favsPlaylist = ref.read(favoritesPlaylistProvider);
   final userNotifier = ref.read(userProvider.notifier);
   final playlistsNotifier = ref.read(playlistsProvider.notifier);
@@ -197,19 +193,6 @@ Future<void> toggleTrackLike(
       audio.savedFromPlaylist ? audio.relativeOwnerID! : audio.ownerID,
     );
     raiseOnAPIError(response);
-
-    // Если это возможно, то удаляем трек из кэша.
-    try {
-      CachedStreamedAudio(audio: audio).delete();
-
-      newAudio = audio.copyWith(isCached: false);
-    } catch (error, stackTrace) {
-      logger.w(
-        "Couldn't delete cached track after dislike: ",
-        error: error,
-        stackTrace: stackTrace,
-      );
-    }
 
     // Запоминаем новую версию плейлиста "любимые треки" с удалённым треком.
     playlistsModified.add(
