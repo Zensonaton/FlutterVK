@@ -5,6 +5,7 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:skeletonizer/skeletonizer.dart";
 
 import "../../../../consts.dart";
+import "../../../../extensions.dart";
 import "../../../../main.dart";
 import "../../../../provider/l18n.dart";
 import "../../../../provider/player_events.dart";
@@ -45,6 +46,7 @@ class MyMusicBlock extends HookConsumerWidget {
 
       await player.setPlaylist(
         playlist!,
+        selectedTrack: playlist.audios!.randomItem(),
       );
     }
 
