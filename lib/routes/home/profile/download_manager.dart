@@ -1,3 +1,4 @@
+import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
@@ -9,8 +10,10 @@ import "../../../main.dart";
 import "../../../provider/download_manager.dart";
 import "../../../provider/l18n.dart";
 import "../../../provider/player_events.dart";
+import "../../../services/cache_manager.dart";
 import "../../../services/download_manager.dart";
 import "../../../utils.dart";
+import "../../../widgets/fallback_audio_photo.dart";
 
 /// Виджет, отображаемый отдельный загружающийся элемент, например, плейлист.
 class DownloadItemWidget extends HookConsumerWidget {
@@ -72,13 +75,8 @@ class DownloadItemWidget extends HookConsumerWidget {
       child: Row(
         children: [
           // Изображение для данной задачи.
-          // TODO: Другая иконка.
-          const SizedBox(
-            width: 50,
-            height: 50,
-            child: Icon(
-              Icons.download,
-            ),
+          DownloadItemIconWidget(
+            task: task,
           ),
           const Gap(12),
 
@@ -172,6 +170,72 @@ class DownloadItemWidget extends HookConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Виджет для [DownloadIconWidget], отображающий иконку, отображаемую слева, в зависимости от типа передаваемой задачи [task].
+class DownloadItemIconWidget extends StatelessWidget {
+  /// [DownloadTask], отражающий загрузку чего-либо.
+  final DownloadTask task;
+
+  const DownloadItemIconWidget({
+    super.key,
+    required this.task,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final int memCacheSize =
+        (50 * MediaQuery.devicePixelRatioOf(context)).round();
+
+    if (task is PlaylistCacheDownloadTask) {
+      final playlistTask = task as PlaylistCacheDownloadTask;
+      final playlist = playlistTask.playlist;
+
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(
+          globalBorderRadius,
+        ),
+        child: playlist.photo != null
+            ? CachedNetworkImage(
+                imageUrl: playlist.photo!.photo270!,
+                cacheKey: "${playlist.mediaKey}270",
+                width: 50,
+                height: 50,
+                memCacheHeight: memCacheSize,
+                memCacheWidth: memCacheSize,
+                placeholder: (BuildContext context, String url) {
+                  return const FallbackAudioAvatar();
+                },
+                cacheManager: CachedNetworkImagesManager.instance,
+              )
+            : FallbackAudioPlaylistAvatar(
+                favoritesPlaylist: playlist.isFavoritesPlaylist,
+              ),
+      );
+    } else if (task is AppUpdaterDownloadTask) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(
+          globalBorderRadius,
+        ),
+        child: Image.asset(
+          "assets/icon.png",
+          width: 50,
+          height: 50,
+          cacheHeight: memCacheSize,
+          cacheWidth: memCacheSize,
+        ),
+      );
+    }
+
+    // Перед нами неизвестная задача, отображаем стандартную иконку.
+    return const SizedBox(
+      width: 50,
+      height: 50,
+      child: Icon(
+        Icons.download,
       ),
     );
   }
@@ -318,7 +382,7 @@ class DownloadManagerRoute extends HookConsumerWidget {
                   DownloadCategory(
                     title: l18n.downloadManagerOldTasksTitle,
                     tasks: downloadManager.oldTasks,
-                    currentTask: downloadManager.currentTask,
+                    currentTask: null,
                   ),
                 ],
 

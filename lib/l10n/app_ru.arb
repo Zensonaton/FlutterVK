@@ -444,7 +444,7 @@
 	"downloadManagerCurrentTasksTitle": "Загружаются сейчас",
 	"downloadManagerOldTasksTitle": "Загружено ранее",
 
-	"downloadManagerTotalTaskItems": "{count} задач всего",
+	"downloadManagerTotalTaskItems": "{count, plural, one{{count} задача} few{{count} задачи} other{{count} задач}} всего",
 	"@downloadManagerTotalTaskItems": {
 		"placeholders": {
 			"count": {
