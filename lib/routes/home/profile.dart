@@ -107,7 +107,7 @@ class ProfileSettingCategory extends StatelessWidget {
             // Внешнее название виджета.
             if (centerTitle) ...[
               titleWidget,
-              const Gap(8),
+              const Gap(16),
             ],
 
             // Внутреннее содержимое.
@@ -321,6 +321,7 @@ class HomeProfilePage extends HookConsumerWidget {
                       SelectableText(
                         "@${user.domain}",
                         style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                              fontWeight: FontWeight.w400,
                               color: Theme.of(context)
                                   .colorScheme
                                   .onSurface
