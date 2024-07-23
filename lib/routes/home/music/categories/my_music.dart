@@ -31,6 +31,8 @@ class MyMusicBlock extends HookConsumerWidget {
     ref.watch(playerCurrentIndexProvider);
     ref.watch(playerLoadedStateProvider);
 
+    final bool mobileLayout = isMobileLayout(context);
+
     void onPlayPressed() async {
       // Если данный плейлист уже играет, то просто ставим на паузу/воспроизведение.
       if (player.currentPlaylist == playlist) {
@@ -134,6 +136,7 @@ class MyMusicBlock extends HookConsumerWidget {
               context,
               playlist!.audios!.elementAt(index),
               playlist,
+              showDuration: !mobileLayout,
             ),
             const Gap(trackTileSpacing),
           ],

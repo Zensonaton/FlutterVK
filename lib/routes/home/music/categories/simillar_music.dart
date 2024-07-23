@@ -224,9 +224,9 @@ class SimillarMusicPlaylistWidget extends HookConsumerWidget {
               ),
               child: AudioTrackTile(
                 audio: audio,
-                isSelected: audio == player.currentAudio,
+                isSelected: player.playing && audio == player.currentAudio,
                 isPlaying: player.loaded && player.playing,
-                isLoading: player.buffering,
+                isLoading: player.buffering && audio == player.currentAudio,
                 forceAvailable: true,
                 showDuration: false,
               ),

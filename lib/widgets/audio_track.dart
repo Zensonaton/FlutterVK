@@ -30,6 +30,7 @@ Widget buildListTrackWidget(
   ExtendedAudio audio,
   ExtendedPlaylist playlist, {
   bool showCachedIcon = false,
+  bool showDuration = true,
 }) {
   final l18n = ref.watch(l18nProvider);
   final bool isSelected = audio == player.currentAudio;
@@ -41,6 +42,7 @@ Widget buildListTrackWidget(
     audio: audio,
     glowIfSelected: true,
     showCachedIcon: showCachedIcon,
+    showDuration: showDuration,
     onPlayToggle: () async {
       // Если этот трек уже играет, то просто делаем toggle воспроизведения.
       if (isSelected) {
@@ -384,6 +386,9 @@ class AudioTrackOtherInfo extends ConsumerWidget {
   /// Кэширован ли трек.
   final bool isCached;
 
+  /// Указывает, что в случае, если трек кэширован ([ExtendedAudio.isCached]), то будет показана соответствующая иконка.
+  final bool showCachedIcon;
+
   /// Callback-метод, вызываемый при нажатии на кнопку "лайка" трека.
   ///
   /// Если не указан, то кнопки лайка не будет.
@@ -395,6 +400,7 @@ class AudioTrackOtherInfo extends ConsumerWidget {
     this.isSelected = false,
     this.isFavorite = false,
     this.isCached = false,
+    this.showCachedIcon = true,
     this.onLikeTap,
   });
 
@@ -406,7 +412,7 @@ class AudioTrackOtherInfo extends ConsumerWidget {
     return Row(
       children: [
         // Иконка кэша, при наличии.
-        if (isCached) ...[
+        if (isCached && showCachedIcon) ...[
           Icon(
             Icons.arrow_downward,
             size: 18,
@@ -578,10 +584,11 @@ class AudioTrackTile extends HookConsumerWidget {
                 // Данный блок можно не отображать, если ничего не было передано.
                 if (showDuration || onLikeTap != null)
                   AudioTrackOtherInfo(
-                    duration: audio.durationString,
+                    duration: showDuration ? audio.durationString : null,
                     isFavorite: audio.isLiked,
                     isSelected: isSelected,
                     isCached: audio.isCached ?? false,
+                    showCachedIcon: showCachedIcon,
                     onLikeTap: onLikeTap,
                   ),
               ],
