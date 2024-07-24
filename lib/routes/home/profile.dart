@@ -25,9 +25,6 @@ import "../../services/cache_manager.dart";
 import "../../services/logger.dart";
 import "../../utils.dart";
 import "../../widgets/dialogs.dart";
-import "../../widgets/page_route_builders.dart";
-import "profile/debug/colorscheme.dart";
-import "profile/debug/playlists_viewer.dart";
 import "profile/dialogs.dart";
 
 /// Вызывает окно, дающее пользователю возможность поделиться файлом логов приложения ([logFilePath]), либо же открывающее проводник (`explorer.exe`) с файлом логов (на OS Windows).
@@ -839,13 +836,7 @@ class HomeProfilePage extends HookConsumerWidget {
                         title: const Text(
                           "ColorScheme test menu",
                         ),
-                        onTap: () => Navigator.of(context).push(
-                          Material3PageRoute(
-                            builder: (BuildContext context) {
-                              return const ColorSchemeDebugMenu();
-                            },
-                          ),
-                        ),
+                        onTap: () => context.push("/profile/colorSchemeDebug"),
                       ),
 
                       // Debug-меню для отображения всех плейлистов.
@@ -856,13 +847,8 @@ class HomeProfilePage extends HookConsumerWidget {
                         title: const Text(
                           "Playlists viewer",
                         ),
-                        onTap: () => Navigator.of(context).push(
-                          Material3PageRoute(
-                            builder: (BuildContext context) {
-                              return const PlaylistsViewerDebugMenu();
-                            },
-                          ),
-                        ),
+                        onTap: () =>
+                            context.push("/profile/playlistsViewerDebug"),
                       ),
 
                       // Кнопка для запуска фейковой загрузки.
