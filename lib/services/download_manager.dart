@@ -151,7 +151,7 @@ class PlaylistCacheDownloadItem extends DownloadItem {
     final file = await CachedStreamedAudio.getCachedAudioByKey(audio.mediaKey);
 
     // Если файл уже загружен, то не загружаем его.
-    if (!file.existsSync()) {
+    if (!file.existsSync() && audio.url != null) {
       final response = await dio.get(
         audio.url!,
         onReceiveProgress: (int received, int total) {
@@ -248,8 +248,6 @@ class PlaylistCacheDownloadItem extends DownloadItem {
 
   @override
   Future<void> download() async {
-    assert(audio.url != null, "Audio url is null");
-
     final newAudio = await downloadWithMetadata(
       ref,
       playlist,

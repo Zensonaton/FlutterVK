@@ -61,11 +61,15 @@ Future<void> createPlaylistCacheTask(
         ),
 
         // Некэшированные треки.
+        //
+        // Мы кэшируем те, которые:
+        // - Не кэшированы, но есть ссылка на скачивание (трек доступен).
+        // - Имеют текст песни, но текст не загружен.
         if (playlist.cacheTracks ?? false)
           ...playlist.audios!
               .where(
                 (audio) =>
-                    !(audio.isCached ?? false) ||
+                    (!(audio.isCached ?? false) && audio.url != null) ||
                     ((audio.hasLyrics ?? false) && audio.lyrics == null),
               )
               .map(
