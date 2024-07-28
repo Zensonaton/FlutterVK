@@ -579,16 +579,7 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
                 milliseconds: 500,
               ),
               curve: Curves.ease,
-              child: AnimatedContainer(
-                duration: const Duration(
-                  milliseconds: 500,
-                ),
-                padding: !mobileLayout && allowBigPlayer
-                    ? null
-                    : const EdgeInsets.all(
-                        8,
-                      ),
-                curve: Curves.ease,
+              child: SizedBox(
                 width: mobileLayout
                     ? null
                     : (allowBigPlayer
