@@ -1516,6 +1516,7 @@ class PlaylistRoute extends HookConsumerWidget {
     final l18n = ref.watch(l18nProvider);
     final playlistColorInfo =
         ref.watch(colorInfoFromPlaylistProvider(ownerID, id));
+    ref.watch(playerLoadedStateProvider);
 
     final scrollController = useScrollController();
     final searchController = useTextEditingController();
