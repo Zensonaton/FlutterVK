@@ -191,10 +191,20 @@ class Playlists extends _$Playlists {
       final PlaylistsState? playlistsState =
           await ref.read(dbPlaylistsProvider.future);
 
+      watch.stop();
+      final int elapsedMs = watch.elapsedMilliseconds;
+
       if (playlistsState != null) {
         logger.d(
-          "Took ${watch.elapsedMilliseconds}ms to load playlists from Isar DB",
+          "Took ${elapsedMs}ms to load playlists from Isar DB",
         );
+
+        // Если плейлисты долго грузились, то логируем это.
+        if (elapsedMs > 500) {
+          logger.w(
+            "Took a very long time (${elapsedMs}ms) to load playlists from Isar DB",
+          );
+        }
 
         state = AsyncData(playlistsState);
       }
