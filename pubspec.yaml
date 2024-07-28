@@ -41,6 +41,7 @@ dependencies:
   go_router: ^14.2.0
   hooks_riverpod: ^2.5.1
   http: ^1.1.0
+  humanize_duration: ^0.0.2
   install_plugin: ^2.1.0
   intl: any
   isar: ^3.1.0+1
@@ -65,7 +66,6 @@ dependencies:
   path_provider: ^2.1.2
   permission_handler: ^11.2.1
   queue: ^3.1.0+2
-  relative_time: ^5.0.0
   responsive_builder: ^0.7.0
   retry: ^3.1.2
   riverpod_annotation: ^2.3.5

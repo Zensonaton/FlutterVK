@@ -28,12 +28,6 @@ Future<void> createPlaylistCacheTask(
   ExtendedPlaylist playlist, {
   List<ExtendedAudio> deletedAudios = const [],
 }) async {
-  if (deletedAudios.isNotEmpty) {
-    assert(
-      playlist.cacheTracks ?? false,
-      "You can't delete tracks from cache if cacheTracks is false",
-    );
-  }
   assert(playlist.audios != null, "Expected playlist audios to be loaded");
 
   final downloadManager = ref.read(downloadManagerProvider.notifier);
@@ -45,6 +39,7 @@ Future<void> createPlaylistCacheTask(
   await downloadManager.newTask(
     PlaylistCacheDownloadTask(
       ref: downloadManager.ref,
+      id: playlist.mediaKey,
       playlist: playlist,
       longTitle: l18n.music_playlistCachingTitle(playlistName),
       smallTitle: playlistName,
@@ -552,7 +547,8 @@ class Playlists extends _$Playlists {
         existingPlaylist.backgroundAnimationUrl !=
             playlist.backgroundAnimationUrl ||
         existingPlaylist.isLiveData != playlist.isLiveData ||
-        existingPlaylist.photo != playlist.photo);
+        existingPlaylist.photo != playlist.photo ||
+        existingPlaylist.colorCount != playlist.colorCount);
 
     // Проходимся по всем трекам в передаваемом плейлисте.
     final List<ExtendedAudio> newAudios = [];
@@ -652,7 +648,13 @@ class Playlists extends _$Playlists {
         areTracksLive: playlist.areTracksLive,
         backgroundAnimationUrl: playlist.backgroundAnimationUrl,
         isLiveData: playlist.isLiveData,
-        audios: newAudios,
+        colorInts: playlist.colorInts,
+        scoredColorInts: playlist.scoredColorInts,
+        frequentColorInt: playlist.frequentColorInt,
+        colorCount: playlist.colorCount,
+        audios: existingPlaylist.audios != null || playlist.audios != null
+            ? newAudios
+            : null,
       );
 
       // Обновляем плейлист.
@@ -804,7 +806,7 @@ class Playlists extends _$Playlists {
         areTracksLive: true,
       ),
       fromAPI: true,
-      saveInDB: true,
+      // saveInDB: true,
     );
 
     // Если плейлист изменился, то создаём задачу по кэшированию.

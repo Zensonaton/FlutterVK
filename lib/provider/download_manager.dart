@@ -1,5 +1,6 @@
 import "dart:io";
 
+import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:flutter_local_notifications/flutter_local_notifications.dart";
 import "package:queue/queue.dart";
@@ -54,7 +55,6 @@ class DownloadManagerState {
     this.downloadStarted = false,
     required this.progress,
     this.currentTask,
-    // required this.queue,
   });
 }
 
@@ -132,9 +132,11 @@ class DownloadManager extends _$DownloadManager {
 
   /// Добавляет новую задачу типа [DownloadTask] в список задач, и сразу же начинает её выполнять. К примеру, данная задача может являться задачей по загрузке треков с плейлиста.
   ///
+  /// У [task] есть [DownloadTask.id], используемый для идентификации задачи. При добавлении уже существующей задачи, под-задачи ([DownloadTask.tasks]) будут объединены в одну.
+  ///
   /// Данный метод считается завершённым лишь тогда, когда [task] будет выполнен. Таким образом,
   /// ```dart
-  /// await newTask();
+  /// await newTask(...);
   /// print("completed!");
   /// ```
   /// "compeleted!" будет отображён после полного выполнения [task].
@@ -155,6 +157,20 @@ class DownloadManager extends _$DownloadManager {
 
     // Если нам не дана задачи, то ничего не делаем.
     if (task.tasks.isEmpty) return;
+
+    // Ищем существующую задачу.
+    final existingTask =
+        state.tasks.firstWhereOrNull((item) => item.id == task.id);
+    if (existingTask != null) {
+      logger.d("Found existing task $existingTask");
+
+      // TODO: Реализовать объединение задач с одинаковыми ID.
+      //
+      // Не удалось реализовать, поскольку из-за модификации [tasks] во время выполнения,
+      //  появляется ошибка "Concurrent modification during iteration".
+    }
+
+    logger.d("Running task $task");
 
     state = state.copyWith(
       tasks: [...state.tasks, task],
@@ -204,4 +220,13 @@ class DownloadManager extends _$DownloadManager {
       return;
     });
   }
+}
+
+/// Возвращает [DownloadTask] по его [id].
+@riverpod
+DownloadTask? downloadTaskByID(DownloadTaskByIDRef ref, String id) {
+  return ref
+      .watch(downloadManagerProvider)
+      .tasks
+      .firstWhereOrNull((item) => item.id == id);
 }

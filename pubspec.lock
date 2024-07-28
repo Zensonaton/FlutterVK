@@ -718,6 +718,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.2"
+  humanize_duration:
+    dependency: "direct main"
+    description:
+      name: humanize_duration
+      sha256: a9fb33b18d028aa2ffd1731af25f59cfcb3c1c2af673cf73fffc7f9a42b2f57e
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.2"
   image:
     dependency: transitive
     description:
@@ -1240,14 +1248,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.0+2"
-  relative_time:
-    dependency: "direct main"
-    description:
-      name: relative_time
-      sha256: "4e6c3b27d98ff6af5061b6dbaca178b5aa2607b7a7c2a77e6cae1d32b2759893"
-      url: "https://pub.dev"
-    source: hosted
-    version: "5.0.0"
   responsive_builder:
     dependency: "direct main"
     description:

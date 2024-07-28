@@ -1,16 +1,17 @@
 import "dart:async";
 import "dart:math";
-import "dart:ui";
 
 import "package:cached_network_image/cached_network_image.dart";
+import "package:collection/collection.dart";
+import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/rendering.dart";
 import "package:flutter/services.dart";
+import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:relative_time/relative_time.dart";
-import "package:scroll_to_index/scroll_to_index.dart";
+import "package:humanize_duration/humanize_duration.dart";
 import "package:skeletonizer/skeletonizer.dart";
 import "package:styled_text/tags/styled_text_tag_action.dart";
 import "package:styled_text/widgets/styled_text.dart";
@@ -18,6 +19,7 @@ import "package:styled_text/widgets/styled_text.dart";
 import "../../../api/vk/shared.dart";
 import "../../../consts.dart";
 import "../../../main.dart";
+import "../../../provider/color.dart";
 import "../../../provider/download_manager.dart";
 import "../../../provider/l18n.dart";
 import "../../../provider/player_events.dart";
@@ -30,22 +32,32 @@ import "../../../utils.dart";
 import "../../../widgets/audio_track.dart";
 import "../../../widgets/dialogs.dart";
 import "../../../widgets/fallback_audio_photo.dart";
+import "../../../widgets/loading_button.dart";
+
+/// Проверяет, подходит ли [Audio] под запрос [query].
+///
+/// Учтите, что данный метод не делает нормализацию [query] (т.е., [cleanString])
+bool isAudioMatchesQuery(ExtendedAudio audio, String query) {
+  if (query.isEmpty) return true;
+
+  return audio.normalizedName.contains(query);
+}
 
 /// Возвращает только те [Audio], которые совпадают по названию [query].
+///
+/// Для сверки названия используется метод [isAudioMatchesQuery].
 List<ExtendedAudio> filterAudiosByName(
   List<ExtendedAudio> audios,
   String query,
 ) {
-  // Избавляемся от всех пробелов в запросе, а так же диакритические знаки.
   query = cleanString(query);
 
-  // Если запрос пустой, то просто возвращаем исходный массив.
   if (query.isEmpty) return audios;
 
   // Возвращаем список тех треков, у которых совпадает название или исполнитель.
   return audios
       .where(
-        (ExtendedAudio audio) => audio.normalizedName.contains(query),
+        (ExtendedAudio audio) => isAudioMatchesQuery(audio, query),
       )
       .toList();
 }
@@ -196,9 +208,11 @@ class SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
-    return builder(
-      context,
-      shrinkOffset,
+    return SizedBox.expand(
+      child: builder(
+        context,
+        shrinkOffset,
+      ),
     );
   }
 
@@ -210,54 +224,1310 @@ class SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   }
 }
 
-/// Route, отображающий информацию о плейлисте: его название, треки, и прочую информацию.
-class PlaylistInfoRoute extends HookConsumerWidget {
-  static final AppLogger logger = getLogger("PlaylistInfoRoute");
+/// Виджет, отображающий кнопку для кэширования плейлиста.
+class CachePlaylistButtonWidget extends HookConsumerWidget {
+  /// Плейлист, для которого изображена эта иконка.
+  final ExtendedPlaylist playlist;
 
-  /// ID владельца плейлиста.
+  /// Размер иконки.
+  final double size;
+
+  /// [DownloadTask], загружающий этот плейлист.
+  final DownloadTask? task;
+
+  /// Метод, вызываемый при нажатии на кнопку.
+  final VoidCallback onTap;
+
+  const CachePlaylistButtonWidget({
+    super.key,
+    this.size = 38,
+    required this.playlist,
+    this.task,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (task == null) {
+      return IconButton(
+        iconSize: size,
+        icon: Icon(
+          playlist.cacheTracks ?? false
+              ? Icons.offline_pin
+              : Icons.arrow_circle_down,
+          color: playlist.cacheTracks ?? false
+              ? Theme.of(context).colorScheme.secondary
+              : Theme.of(context).colorScheme.onSurface,
+        ),
+        onPressed: onTap,
+      );
+    }
+
+    final progress = task!.progress.value;
+
+    final scheme = Theme.of(context).colorScheme;
+    final bool isCompleted = progress == 1.0;
+
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Center(
+        child: AnimatedSwitcher(
+          duration: const Duration(
+            milliseconds: 250,
+          ),
+          child: isCompleted
+              ? Icon(
+                  key: const ValueKey(
+                    true,
+                  ),
+                  Icons.check,
+                  color: scheme.primary,
+                )
+              : Stack(
+                  key: const ValueKey(
+                    false,
+                  ),
+                  alignment: Alignment.center,
+                  children: [
+                    // Анимация загрузки.
+                    SizedBox(
+                      width: size,
+                      height: size,
+                      child: CircularProgressIndicator(
+                        value: progress,
+                      )
+                          .animate(
+                            onComplete: (controller) => controller.loop(),
+                          )
+                          .rotate(
+                            duration: const Duration(
+                              seconds: 2,
+                            ),
+                            begin: 0,
+                            end: 1,
+                          ),
+                    ),
+
+                    // Прогресс загрузки.
+                    AnimatedOpacity(
+                      curve: Curves.ease,
+                      duration: const Duration(
+                        milliseconds: 500,
+                      ),
+                      opacity: progress > 0.0 ? 1.0 : 0.0,
+                      child: Text(
+                        "${(progress * 100).round()}%",
+                        style: TextStyle(
+                          color: scheme.primary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Виджет, отображающий информацию о данном плейлисте (его название, ...) для [PlaylistRoute].
+class MobilePlaylistInfoWidget extends ConsumerWidget {
+  /// [ExtendedPlaylist], данные которого будут показаны.
+  final ExtendedPlaylist playlist;
+
+  /// Цветовая схема, извлечённая из цветов плейлиста.
+  final ColorScheme? scheme;
+
+  /// Высота блока с информацией.
+  final double infoBoxHeight;
+
+  const MobilePlaylistInfoWidget({
+    super.key,
+    required this.playlist,
+    this.scheme,
+    required this.infoBoxHeight,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(userProvider);
+    final l18n = ref.watch(l18nProvider);
+
+    final safeScheme = scheme ?? Theme.of(context).colorScheme;
+
+    final String playlistName =
+        playlist.title ?? l18n.music_fullscreenFavoritePlaylistName;
+    final String playlistType = playlist.isRecommendationsPlaylist
+        ? l18n.music_recommendationPlaylistTitle
+        : (playlist.isFavoritesPlaylist ||
+                (playlist.ownerID == user.id && !playlist.isFollowing))
+            ? l18n.music_ownedPlaylistTitle
+            : l18n.music_savedPlaylistTitle;
+
+    return SliverToBoxAdapter(
+      child: SizedBox(
+        height: infoBoxHeight,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 18,
+          ),
+          child: Column(
+            children: [
+              // Название плейлиста.
+              Text(
+                playlistName,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: safeScheme.onSurface,
+                ),
+              ),
+
+              // Описание плейлиста, если таковое есть.
+              if (playlist.description != null) ...[
+                Text(
+                  playlist.description!,
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
+                  style: TextStyle(
+                    color: safeScheme.onSurface.withOpacity(0.9),
+                  ),
+                ),
+                const Gap(4),
+              ],
+
+              // Пояснение того, что это за плейлист.
+              Skeletonizer(
+                enabled: playlist.audios == null,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    l18n.music_bottomPlaylistInfo(
+                      playlist.count,
+                      playlistType,
+                      humanizeDuration(
+                        playlist.duration ?? Duration.zero,
+                        language: getLanguageByLocale(
+                          l18n.localeName,
+                        ),
+                        options: const HumanizeOptions(
+                          units: [
+                            Units.hour,
+                            Units.minute,
+                          ],
+                        ),
+                      ),
+                    ),
+                    style: TextStyle(
+                      color: safeScheme.onSurface.withOpacity(0.8),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Ряд из кнопок управления плейлиста для [PlaylistRoute].
+class MobileControlButtonsWidget extends HookConsumerWidget {
+  /// Размер иконки, используемой у кнопок.
+  static const double buttonSize = 56;
+
+  /// [ExtendedPlaylist], для которого отображаются кнопки.
+  final ExtendedPlaylist playlist;
+
+  /// [ScrollController], используемый для отслеживания прокрутки.
+  final ScrollController scrollController;
+
+  /// Максимальный размер для данного [AppBar], когда он полностью раскрыт.
+  final double maxAppBarHeight;
+
+  /// Минимальный размер для данного [AppBar], когда он полностью свёрнут.
+  final double minAppBarHeight;
+
+  /// Высота блока с информацией.
+  final double infoBoxHeight;
+
+  /// Указывает то, лайкнут ли этот плейлист.
+  final bool isLiked;
+
+  /// Метод, вызываемый при нажатии на кнопку "лайка" плейлиста слева.
+  ///
+  /// Если не указано, то кнопка не будет отображена.
+  ///
+  /// Поле [isLiked] указывает, какая иконка будет отображена.
+  final AsyncCallback? onLikePressed;
+
+  /// Метод, вызываемый при нажатии на кнопку воспроизведения.
+  final VoidCallback? onPlayPausePressed;
+
+  /// Метод, вызываемый при нажатии на кнопку кэширования плейлиста справа.
+  ///
+  /// Если не указано, то кнопка не будет отображена.
+  final VoidCallback? onCachePressed;
+
+  const MobileControlButtonsWidget({
+    super.key,
+    required this.playlist,
+    required this.scrollController,
+    required this.maxAppBarHeight,
+    required this.minAppBarHeight,
+    required this.infoBoxHeight,
+    this.isLiked = false,
+    this.onLikePressed,
+    this.onPlayPausePressed,
+    this.onCachePressed,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final downloadTask = ref.watch(downloadTaskByIDProvider(playlist.mediaKey));
+    ref.watch(playerPlayingStateProvider);
+
+    useListenable(scrollController.position);
+
+    final scheme = Theme.of(context).colorScheme;
+
+    final double finalPosition = minAppBarHeight - buttonSize / 2;
+    double positionFromTop = maxAppBarHeight;
+    double otherButtonOpacity = 1.0;
+
+    // Если по какой-то причине у нас нет клиента, то возвращаем стандартную позицию.
+    if (scrollController.hasClients) {
+      final double offset = scrollController.offset;
+
+      final double buttonCenterPosition = infoBoxHeight - buttonSize / 2;
+
+      // Другие кнопки должны становиться прозрачными после скроллинга большого AppBar'а.
+      otherButtonOpacity =
+          (1.0 + (maxAppBarHeight - minAppBarHeight - offset) / infoBoxHeight)
+              .clamp(0.0, 1.0);
+
+      // Если пользователь прокрутил плейлист, закрыв AppBar, то ставим кнопку на статичную позицию.
+      positionFromTop =
+          offset > (maxAppBarHeight - finalPosition + buttonCenterPosition)
+              ? finalPosition
+              : maxAppBarHeight - offset + buttonCenterPosition;
+    }
+
+    const double realButtonSize = buttonSize - 8 * 2;
+
+    final bool isPlaying = player.currentPlaylist == playlist && player.playing;
+
+    return Positioned(
+      top: positionFromTop,
+      child: SizedBox(
+        width: 300,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // Кнопка для лайка плейлиста, при наличии.
+            SizedBox(
+              width: buttonSize,
+              height: buttonSize,
+              child: (otherButtonOpacity > 0 && onLikePressed != null)
+                  ? Opacity(
+                      opacity: otherButtonOpacity,
+                      child: LoadingIconButton(
+                        icon: Icon(
+                          isLiked ? Icons.favorite : Icons.favorite_outline,
+                          color: isLiked ? scheme.primary : null,
+                        ),
+                        iconSize: realButtonSize,
+                        onPressed: onLikePressed,
+                      ),
+                    )
+                  : null,
+            ),
+
+            // Кнопка для воспроизведения/паузы.
+            IconButton.filled(
+              icon: Icon(
+                isPlaying ? Icons.pause : Icons.play_arrow,
+                color: scheme.onPrimary,
+              ),
+              iconSize: realButtonSize,
+              onPressed: onPlayPausePressed,
+              color: scheme.primary,
+            ),
+
+            // Кнопка для кэширования плейлиста.
+            SizedBox(
+              width: buttonSize,
+              height: buttonSize,
+              child: (otherButtonOpacity > 0 && onCachePressed != null)
+                  ? Opacity(
+                      opacity: otherButtonOpacity,
+                      child: CachePlaylistButtonWidget(
+                        size: realButtonSize,
+                        playlist: playlist,
+                        task: downloadTask,
+                        onTap: onCachePressed!,
+                      ),
+                    )
+                  : null,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Виджет, отображающий список из треков для [PlaylistRoute].
+class PlaylistAudiosListWidget extends HookConsumerWidget {
+  /// [ExtendedPlaylist], треки которого будут отображены.
+  final ExtendedPlaylist playlist;
+
+  /// [TextEditingController] для поля поиска.
+  final TextEditingController searchController;
+
+  /// Значение, используемое как горизонтальный Padding.
+  final double horizontalPadding;
+
+  const PlaylistAudiosListWidget({
+    super.key,
+    required this.playlist,
+    required this.searchController,
+    this.horizontalPadding = 0,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l18n = ref.watch(l18nProvider);
+    ref.watch(playerStateProvider);
+
+    useValueListenable(searchController);
+
+    final List<ExtendedAudio> playlistAudios = playlist.audios ?? [];
+
+    final String searchText = searchController.text;
+    final List<ExtendedAudio> filteredAudios = useMemoized(
+      () => filterAudiosByName(playlistAudios, searchText),
+      [searchText, playlistAudios],
+    );
+
+    final bool hasTracksList = playlist.audios != null;
+    final bool trackListFullyLoaded = hasTracksList && playlist.areTracksLive;
+
+    // У пользователя нет треков в данном плейлисте.
+    if (hasTracksList && playlistAudios.isEmpty) {
+      return SliverToBoxAdapter(
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: horizontalPadding,
+          ),
+          child: Text(
+            l18n.music_playlistEmpty,
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+
+    // У пользователя есть треки, но поиск ничего не выдал.
+    if (trackListFullyLoaded &&
+        playlistAudios.isNotEmpty &&
+        filteredAudios.isEmpty) {
+      return SliverToBoxAdapter(
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: horizontalPadding,
+          ),
+          child: StyledText(
+            text: l18n.music_zeroSearchResults,
+            textAlign: TextAlign.center,
+            tags: {
+              "click": StyledTextActionTag(
+                (_, __) => searchController.clear(),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+            },
+          ),
+        ),
+      );
+    }
+
+    // Содержимое плейлиста.
+    return SliverPadding(
+      padding: EdgeInsets.symmetric(
+        horizontal: horizontalPadding,
+      ),
+      sliver: SliverList.separated(
+        itemCount: hasTracksList ? filteredAudios.length : playlist.count,
+        separatorBuilder: (BuildContext context, int index) {
+          return const Gap(8);
+        },
+        itemBuilder: (BuildContext context, int index) {
+          // Если ничего не загружено, то отображаем Skeleton Loader вместо реального трека.
+          if (!hasTracksList) {
+            return Skeletonizer(
+              child: AudioTrackTile(
+                audio: ExtendedAudio(
+                  id: -1,
+                  ownerID: -1,
+                  title: fakeTrackNames[index % fakeTrackNames.length],
+                  artist: fakeTrackNames[(index + 1) % fakeTrackNames.length],
+                  duration: 60 * 3,
+                  accessKey: "",
+                  url: "",
+                  date: 0,
+                ),
+              ),
+            );
+          }
+
+          return buildListTrackWidget(
+            ref,
+            context,
+            filteredAudios.elementAt(index),
+            playlist,
+            showCachedIcon: true,
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// Виджет, отображающий изображение плейлиста для [AppBarWidget].
+class AppBarPlaylistImageWidget extends StatelessWidget {
+  /// Плейлист, изображение которого будет получено.
+  final ExtendedPlaylist playlist;
+
+  /// Значение, используемое как ширина и высота для данного виджета.
+  final double size;
+
+  const AppBarPlaylistImageWidget({
+    super.key,
+    required this.playlist,
+    required this.size,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final imageUrl = playlist.photo?.photo300;
+    final fallbackWidget = FallbackAudioPlaylistAvatar(
+      favoritesPlaylist: playlist.isFavoritesPlaylist,
+      size: size,
+    );
+
+    final int cacheSize =
+        (size * MediaQuery.devicePixelRatioOf(context)).round();
+
+    final scheme = Theme.of(context).colorScheme;
+
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: scheme.surface,
+            spreadRadius: 1,
+            blurRadius: 50,
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(
+          globalBorderRadius,
+        ),
+        child: imageUrl != null
+            ? CachedNetworkImage(
+                imageUrl: imageUrl,
+                cacheKey: "${playlist.mediaKey}300",
+                fit: BoxFit.cover,
+                width: size,
+                height: size,
+                memCacheHeight: cacheSize,
+                memCacheWidth: cacheSize,
+                placeholder: (BuildContext context, String url) {
+                  return fallbackWidget;
+                },
+                cacheManager: CachedNetworkImagesManager.instance,
+              )
+            : fallbackWidget,
+      ),
+    );
+  }
+}
+
+/// [AppBar] для [AppBarWidget], показывающий настоящее содержимое [AppBar]'а: кнопку назад, поиска и дополнительных действий.
+class AppBarRealAppBarWidget extends HookConsumerWidget {
+  /// [TextEditingController] для поля поиска.
+  final TextEditingController? controller;
+
+  /// [FocusNode] для поля поиска.
+  final FocusNode? focusNode;
+
+  /// Заголовок для данного [AppBar].
+  final String title;
+
+  /// Количество треков в данном плейлисте.
+  final int count;
+
+  /// Указывает, открыто ли поле для поиска.
+  ///
+  /// Если правдиво, то будет показано поле для поиска, а кнопки "поиска" и "дополнительных действий" не будут отображены.
+  final bool isSearchOpen;
+
+  /// Значение от `0.0` до `1.0`, отображающее прозрачность заголовка.
+  final double titleOpacity;
+
+  /// Метод, вызываемый при нажатии на кнопку "поиска" справа.
+  ///
+  /// Если не указано, то кнопка не будет отображена.
+  final VoidCallback? onSearchPressed;
+
+  /// Метод, вызываемый при нажатии на кнопку "дополнительных действий" справа.
+  ///
+  /// Если не указано, то кнопка не будет отображена.
+  final VoidCallback? onMorePressed;
+
+  /// Метод, возвращающий текст для поиска.
+  ///
+  /// Не может вызываться, если [isSearchOpen] не правдив.
+  final ValueChanged<String>? onSearchInput;
+
+  /// Метод, вызываемый при нажатии кнопки Enter на клавиатуре при вводе текста поля поиска.
+  ///
+  /// Не может вызываться, если [isSearchOpen] не правдив.
+  final void Function(String)? onSearchSubmitted;
+
+  const AppBarRealAppBarWidget({
+    super.key,
+    this.controller,
+    this.focusNode,
+    required this.title,
+    this.count = 0,
+    this.isSearchOpen = false,
+    this.titleOpacity = 1.0,
+    this.onSearchPressed,
+    this.onMorePressed,
+    this.onSearchInput,
+    this.onSearchSubmitted,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l18n = ref.watch(l18nProvider);
+
+    useListenable(controller);
+
+    final bool showSearchButton = onSearchPressed != null && !isSearchOpen;
+    final bool showMoreButton = onMorePressed != null && !isSearchOpen;
+
+    void onSearchClear() => controller?.clear();
+
+    return AppBar(
+      title: isSearchOpen
+          ? TextField(
+              controller: controller,
+              focusNode: focusNode,
+              onChanged: onSearchInput,
+              onSubmitted: onSearchSubmitted,
+              style: const TextStyle(
+                color: Colors.white,
+              ),
+              textAlignVertical: TextAlignVertical.center,
+              decoration: InputDecoration(
+                hintText: l18n.music_searchTextInPlaylist(
+                  count,
+                ),
+                filled: true,
+                contentPadding: const EdgeInsets.all(
+                  16,
+                ),
+                suffixIcon: controller != null && controller!.text.isNotEmpty
+                    ? Padding(
+                        padding: const EdgeInsetsDirectional.only(
+                          end: 12,
+                        ),
+                        child: IconButton(
+                          icon: const Icon(
+                            Icons.close,
+                            color: Colors.white,
+                          ),
+                          onPressed: onSearchClear,
+                        ),
+                      )
+                    : null,
+              ),
+            )
+          : AnimatedOpacity(
+              opacity: titleOpacity.clamp(
+                0.0,
+                1.0,
+              ),
+              duration: const Duration(
+                milliseconds: 150,
+              ),
+              child: Text(
+                title,
+              ),
+            ),
+      centerTitle: true,
+      backgroundColor: Colors.transparent,
+      shadowColor: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
+      foregroundColor: Colors.white,
+      actions: [
+        // Кнопка для поиска.
+        if (showSearchButton)
+          IconButton(
+            onPressed: onSearchPressed,
+            icon: const Icon(
+              Icons.search,
+            ),
+          ),
+
+        // Кнопка для открытия дополнительных действий.
+        if (showMoreButton)
+          IconButton(
+            onPressed: onMorePressed,
+            icon: Icon(
+              Icons.adaptive.more,
+            ),
+          ),
+
+        // Небольшое расстояние.
+        if (showSearchButton || showMoreButton) const Gap(12),
+      ],
+    );
+  }
+}
+
+/// [AppBar] для [PlaylistRoute] Mobile Layout'а.
+///
+/// Не стоит путать с [AppBarRealAppBarWidget].
+class AppBarWidget extends HookConsumerWidget {
+  /// Плейлист, для которого отображается данный [AppBar].
+  final ExtendedPlaylist playlist;
+
+  /// Указывает, что будет использоваться Mobile Layout.
+  final bool mobileLayout;
+
+  /// [TextEditingController] для поля поиска.
+  final TextEditingController? searchController;
+
+  /// [FocusNode] для поля поиска.
+  final FocusNode? searchFocusNode;
+
+  /// Максимальный размер для данного [AppBar], когда он полностью раскрыт.
+  final double maxAppBarHeight;
+
+  /// Минимальный размер для данного [AppBar], когда он полностью свёрнут.
+  final double minAppBarHeight;
+
+  /// Указывает, открыто ли поле для поиска.
+  ///
+  /// Если правдиво, то будет показано поле для поиска, а кнопки "поиска" и "дополнительных действий" не будут отображены.
+  final bool isSearchOpen;
+
+  /// Метод, вызываемый при нажатии на кнопку "поиска" справа.
+  ///
+  /// Если не указано, то кнопка не будет отображена.
+  final VoidCallback? onSearchPressed;
+
+  /// Метод, вызываемый при нажатии на кнопку "дополнительных действий" справа.
+  ///
+  /// Если не указано, то кнопка не будет отображена.
+  final VoidCallback? onMorePressed;
+
+  /// Метод, возвращающий текст для поиска.
+  ///
+  /// Не может вызываться, если [isSearchOpen] не правдив.
+  final ValueChanged<String>? onSearchInput;
+
+  /// Метод, вызываемый при нажатии кнопки Enter на клавиатуре при вводе текста поля поиска.
+  ///
+  /// Не может вызываться, если [isSearchOpen] не правдив.
+  final void Function(String)? onSearchSubmitted;
+
+  const AppBarWidget({
+    super.key,
+    required this.playlist,
+    this.mobileLayout = false,
+    this.searchController,
+    this.searchFocusNode,
+    required this.maxAppBarHeight,
+    required this.minAppBarHeight,
+    this.isSearchOpen = false,
+    this.onSearchPressed,
+    this.onMorePressed,
+    this.onSearchInput,
+    this.onSearchSubmitted,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l18n = ref.watch(l18nProvider);
+
+    final scheme = Theme.of(context).colorScheme;
+
+    final String title =
+        playlist.title ?? l18n.music_fullscreenFavoritePlaylistName;
+
+    return SliverPersistentHeader(
+      pinned: true,
+      delegate: SliverAppBarDelegate(
+        maxHeight: maxAppBarHeight,
+        minHeight: minAppBarHeight,
+        builder: (BuildContext context, double offset) {
+          const double albumPadding = 50;
+          final double albumImageSize =
+              (MediaQuery.sizeOf(context).width - albumPadding * 2)
+                  .clamp(50, 300);
+          final double albumImageSizeWithPadding =
+              albumImageSize + albumPadding * 2;
+
+          final double scrollToHeightRatio = offset / maxAppBarHeight;
+
+          // Изображение альбома должно становиться меньше, если пользовать проскроллил
+          //  изображение, а так же его padding сверху и снизу.
+          final double freeSpace = maxAppBarHeight - albumImageSizeWithPadding;
+          final bool shouldScaleDownAlbumImage = offset > freeSpace;
+          final double albumScaleDiff = shouldScaleDownAlbumImage
+              ? (offset - freeSpace) / (maxAppBarHeight - freeSpace)
+              : 0.0;
+          final double albumScale = 1.0 - albumScaleDiff;
+
+          // Если размер альбома уменьшился на 50%, то начинаем анимировать его прозрачность.
+          final double albumOpacity =
+              (1.0 - (albumScaleDiff - 0.5) / 0.7).clamp(0.0, 1.0);
+
+          // Вычисляем позицию для изображения. Оно должно находиться по центру AppBar'а,
+          // Однако, если пользователь проскроллил много, то оно должно "уезжать" наверх.
+          final double albumBasePosition =
+              maxAppBarHeight / 2 - albumImageSize / 2;
+          final double albumAnimatedPosition = albumBasePosition -
+              scrollToHeightRatio * maxAppBarHeight / 2 -
+              (albumImageSize / 2 * (1.0 - albumOpacity));
+
+          // Вычисляем прозрачность названия плейлиста в AppBar'е сверху.
+          final bool showAppBarTitle = scrollToHeightRatio > 0.7;
+          final double titleOpacity = showAppBarTitle
+              ? 1.0 - (maxAppBarHeight - offset) / minAppBarHeight
+              : 0.0;
+
+          return Stack(
+            alignment: Alignment.center,
+            children: [
+              // Изображение альбома для Mobile Layout'а, которое двигается с анимацией.
+              if (mobileLayout && albumOpacity > 0)
+                Positioned(
+                  top: albumAnimatedPosition,
+                  child: Opacity(
+                    opacity: albumOpacity,
+                    child: Transform.scale(
+                      scale: albumScale,
+                      child: AppBarPlaylistImageWidget(
+                        playlist: playlist,
+                        size: albumImageSize,
+                      ),
+                    ),
+                  ),
+                ),
+
+              // AppBar сверху, title и градиент которого меняется в зависимости от того, сколько наскроллено.
+              AnimatedContainer(
+                duration: const Duration(
+                  milliseconds: 150,
+                ),
+                decoration: BoxDecoration(
+                  gradient: showAppBarTitle
+                      ? LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            scheme.primary.withOpacity(0.75),
+                            scheme.primary.withOpacity(0.3),
+                          ],
+                        )
+                      : null,
+                ),
+                child: AppBarRealAppBarWidget(
+                  controller: searchController,
+                  focusNode: searchFocusNode,
+                  title: title,
+                  count: playlist.count,
+                  isSearchOpen: isSearchOpen,
+                  titleOpacity: titleOpacity,
+                  onSearchPressed: mobileLayout ? onSearchPressed : null,
+                  onMorePressed: mobileLayout ? onMorePressed : null,
+                  onSearchInput: onSearchInput,
+                  onSearchSubmitted: onSearchSubmitted,
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// Виджет, отображающий фоновый градиент для [PlaylistRoute].
+class BackgroundGradientWidget extends HookConsumerWidget {
+  /// Цветовая схема, извлечённая из цветов плейлиста.
+  final ColorScheme? scheme;
+
+  /// [ScrollController], используемый для отслеживания прокрутки.
+  final ScrollController scrollController;
+
+  /// Максимальный размер для градиента.
+  final double maxHeight;
+
+  const BackgroundGradientWidget({
+    super.key,
+    this.scheme,
+    required this.scrollController,
+    required this.maxHeight,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    useListenable(scrollController);
+
+    final double offset =
+        scrollController.hasClients ? scrollController.position.pixels : 0.0;
+
+    // Если проскроллено больше, чем размер AppBar'а + блок с информацией, то ничего не отображаем.
+    if (offset > maxHeight) {
+      return const SizedBox.shrink();
+    }
+
+    return Positioned(
+      top: -offset,
+      child: SizedBox(
+        width: MediaQuery.sizeOf(context).width,
+        height: maxHeight,
+        child: AnimatedContainer(
+          duration: const Duration(
+            milliseconds: 1500,
+          ),
+          curve: Curves.easeOut,
+          decoration: BoxDecoration(
+            gradient: scheme != null
+                ? LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      scheme!.primary,
+                      Colors.transparent,
+                    ],
+                    stops: const [0.5, 1.0],
+                  )
+                : null,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// [AppBar] для [PlaylistRoute] Desktop Layout'а.
+class DesktopAppBarWidget extends HookConsumerWidget {
+  /// Плейлист, для которого отображается данный [AppBar].
+  final ExtendedPlaylist playlist;
+
+  /// Значение, используемое как горизонтальный Padding.
+  final double horizontalPadding;
+
+  /// Максимальный размер для данного [AppBar], когда он полностью раскрыт.
+  final double maxAppBarHeight;
+
+  /// Минимальный размер для данного [AppBar], когда он полностью свёрнут.
+  final double minAppBarHeight;
+
+  const DesktopAppBarWidget({
+    super.key,
+    required this.playlist,
+    this.horizontalPadding = 0,
+    required this.maxAppBarHeight,
+    required this.minAppBarHeight,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l18n = ref.watch(l18nProvider);
+    final user = ref.watch(userProvider);
+
+    final String playlistType = playlist.isRecommendationsPlaylist
+        ? l18n.music_recommendationPlaylistTitle
+        : (playlist.isFavoritesPlaylist ||
+                (playlist.ownerID == user.id && !playlist.isFollowing))
+            ? l18n.music_ownedPlaylistTitle
+            : l18n.music_savedPlaylistTitle;
+
+    final scheme = Theme.of(context).colorScheme;
+
+    return SliverLayoutBuilder(
+      builder: (
+        BuildContext context,
+        SliverConstraints constraints,
+      ) {
+        final double offset = constraints.scrollOffset;
+
+        final isExpanded = maxAppBarHeight > offset;
+
+        return SliverAppBar(
+          pinned: true,
+          expandedHeight: maxAppBarHeight,
+          backgroundColor: isExpanded ? Colors.transparent : scheme.surface,
+          shadowColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          foregroundColor: Colors.white,
+          title: AnimatedOpacity(
+            opacity: isExpanded ? 0.0 : 1.0,
+            duration: const Duration(
+              milliseconds: 150,
+            ),
+            child: Text(
+              playlist.title ?? l18n.music_fullscreenFavoritePlaylistName,
+            ),
+          ),
+          centerTitle: true,
+          flexibleSpace: FlexibleSpaceBar(
+            background: Padding(
+              padding: EdgeInsets.only(
+                left: horizontalPadding,
+                right: horizontalPadding,
+                top: 60,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Информация о плейлисте в Desktop Layout'е.
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      // Изображение плейлиста.
+                      AppBarPlaylistImageWidget(
+                        playlist: playlist,
+                        size: 200,
+                      ),
+                      const Gap(24),
+
+                      // Название плейлиста, количество треков в нём.
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Название плейлиста.
+                            SelectableText(
+                              playlist.title ??
+                                  l18n.music_fullscreenFavoritePlaylistName,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .displayLarge!
+                                  .copyWith(
+                                    fontWeight: FontWeight.w500,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                            ),
+                            const Gap(4),
+
+                            // Описание плейлиста, при наличии.
+                            if (playlist.description != null)
+                              SelectableText(
+                                playlist.description!,
+                                style: TextStyle(
+                                  overflow: TextOverflow.ellipsis,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface
+                                      .withOpacity(0.9),
+                                ),
+                              ),
+                            if (playlist.description != null) const Gap(4),
+
+                            // Пояснение того, что это за плейлист.
+                            Skeletonizer(
+                              enabled: playlist.audios == null,
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  l18n.music_bottomPlaylistInfo(
+                                    playlist.count,
+                                    playlistType,
+                                    humanizeDuration(
+                                      playlist.duration ?? Duration.zero,
+                                      language: getLanguageByLocale(
+                                        l18n.localeName,
+                                      ),
+                                      options: const HumanizeOptions(
+                                        units: [
+                                          Units.hour,
+                                          Units.minute,
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  style: TextStyle(
+                                    color: scheme.onSurface.withOpacity(0.8),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Виджет для [PlaylistRoute] Desktop Layout'а, отображающий кнопки управления плейлистом.
+class DesktopPlaylistControlsWidget extends HookConsumerWidget {
+  /// [ExtendedPlaylist], для которого отображаются кнопки.
+  final ExtendedPlaylist playlist;
+
+  /// Цветовая схема, извлечённая из цветов плейлиста.
+  final ColorScheme? scheme;
+
+  /// [TextEditingController] для поля поиска.
+  final TextEditingController? searchController;
+
+  /// [FocusNode] для поля поиска.
+  final FocusNode? searchFocusNode;
+
+  /// Значение, используемое как горизонтальный Padding.
+  final double horizontalPadding;
+
+  /// Указывает, лайкнут ли плейлист.
+  final bool isLiked;
+
+  /// Метод, вызываемый при нажатии на кнопку воспроизведения.
+  ///
+  /// Если не указано, то кнопка не будет отображена.
+  final VoidCallback? onPlayPressed;
+
+  /// Метод, вызываемый при нажатии на кнопку "лайка" плейлиста.
+  ///
+  /// Если не указано, то кнопка не будет отображена.
+  final AsyncCallback? onLikePressed;
+
+  /// Метод, вызываемый при нажатии на кнопку кэширования плейлиста.
+  ///
+  /// Если не указано, то кнопка не будет отображена.
+  final VoidCallback? onCacheTap;
+
+  /// Метод, возвращающий текст для поиска.
+  final ValueChanged<String>? onSearchInput;
+
+  /// Метод, вызываемый при нажатии кнопки Enter на клавиатуре при вводе текста поля поиска.
+  final void Function(String)? onSearchSubmitted;
+
+  const DesktopPlaylistControlsWidget({
+    super.key,
+    required this.playlist,
+    this.scheme,
+    this.searchController,
+    this.searchFocusNode,
+    this.horizontalPadding = 0,
+    this.isLiked = false,
+    this.onPlayPressed,
+    this.onLikePressed,
+    this.onCacheTap,
+    this.onSearchInput,
+    this.onSearchSubmitted,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l18n = ref.watch(l18nProvider);
+    final downloadTask = ref.watch(downloadTaskByIDProvider(playlist.mediaKey));
+    ref.watch(playerStateProvider);
+
+    final bool hasTracksLoaded = playlist.audios != null;
+
+    final safeScheme = scheme ?? Theme.of(context).colorScheme;
+
+    void onSearchClear() => searchController?.clear();
+
+    return SliverPadding(
+      padding: EdgeInsets.symmetric(
+        horizontal: horizontalPadding,
+      ),
+      sliver: SliverPersistentHeader(
+        pinned: true,
+        delegate: SliverAppBarDelegate(
+          minHeight: 54 + 8 * 2,
+          maxHeight: 54 + 8 * 2,
+          builder: (BuildContext context, double offset) {
+            return Container(
+              color: Theme.of(context).colorScheme.surface,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Кнопки управления.
+                  Theme(
+                    data: ThemeData(
+                      colorScheme: safeScheme,
+                    ),
+                    child: Row(
+                      children: [
+                        // Кнопка запуска воспроизведения треков из плейлиста.
+                        if (onPlayPressed != null)
+                          IconButton.filled(
+                            onPressed: onPlayPressed,
+                            iconSize: 38,
+                            icon: Icon(
+                              player.currentPlaylist == playlist &&
+                                      player.playing
+                                  ? Icons.pause
+                                  : Icons.play_arrow,
+                            ),
+                          ),
+                        const Gap(12),
+
+                        // Кнопка для лайка плейлиста.
+                        if (onLikePressed != null)
+                          LoadingIconButton(
+                            onPressed: onLikePressed,
+                            iconSize: 38,
+                            icon: Icon(
+                              isLiked ? Icons.favorite : Icons.favorite_outline,
+                              color: isLiked
+                                  ? safeScheme.primary
+                                  : safeScheme.onSurface,
+                            ),
+                          ),
+                        const Gap(6),
+
+                        // Кнопка для загрузки треков в кэш.
+                        if (onCacheTap != null)
+                          CachePlaylistButtonWidget(
+                            playlist: playlist,
+                            task: downloadTask,
+                            onTap: onCacheTap!,
+                          ),
+                        const Gap(6),
+                      ],
+                    ),
+                  ),
+
+                  // Поиск.
+                  Flexible(
+                    child: SizedBox(
+                      width: 300,
+                      child: CallbackShortcuts(
+                        bindings: {
+                          const SingleActivator(
+                            LogicalKeyboardKey.escape,
+                          ): onSearchClear,
+                        },
+                        child: TextField(
+                          controller: searchController,
+                          focusNode: searchFocusNode,
+                          enabled: hasTracksLoaded,
+                          onSubmitted: onSearchSubmitted,
+                          decoration: InputDecoration(
+                            hintText: l18n.music_searchTextInPlaylist(
+                              playlist.count,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(
+                                globalBorderRadius,
+                              ),
+                            ),
+                            prefixIconColor: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withOpacity(
+                                  hasTracksLoaded ? 1.0 : 0.5,
+                                ),
+                            prefixIcon: const Icon(
+                              Icons.search,
+                            ),
+                            suffixIcon: searchController != null &&
+                                    searchController!.text.isNotEmpty
+                                ? Padding(
+                                    padding: const EdgeInsetsDirectional.only(
+                                      end: 12,
+                                    ),
+                                    child: IconButton(
+                                      icon: const Icon(
+                                        Icons.close,
+                                      ),
+                                      onPressed: onSearchClear,
+                                    ),
+                                  )
+                                : null,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+/// Route, отображающий информацию о [ExtendedPlaylist] по передаваемым параметрам.
+///
+/// Данный Route показывает базовую информацию о плейлисте, его треки, и позволяет управлять ими.
+///
+/// go_route: `/music/playlist/:ownerID/:id`.
+class PlaylistRoute extends HookConsumerWidget {
+  static final AppLogger logger = getLogger("OldPlaylistInfoRoute");
+
+  /// ID владельца плейлиста. [ExtendedPlaylist.ownerID]
   final int ownerID;
 
-  /// ID плейлиста.
+  /// ID плейлиста. [ExtendedPlaylist.id]
   final int id;
 
-  /// Указывает трек типа [ExtendedAudio], который будет иметь фокус после открытия данного плейлиста.
-  ///
-  /// Если не указывать, никакой из треков иметь фокус не будет.
-  final ExtendedAudio? audio;
-
-  /// Если true, то сразу после открытия данного диалога фокус будет на [SearchBar].
-  ///
-  /// Если значение не указано, то оно будет зависеть от [isDesktop].
-  final bool? focusSearchBarOnOpen;
-
-  const PlaylistInfoRoute({
+  const PlaylistRoute({
     super.key,
     required this.ownerID,
     required this.id,
-    this.audio,
-    this.focusSearchBarOnOpen,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final playlist = ref.watch(getPlaylistProvider(ownerID, id))!;
-    final user = ref.watch(userProvider);
     final l18n = ref.watch(l18nProvider);
-    ref.watch(playerCurrentIndexProvider);
-    ref.watch(playerLoadedStateProvider);
-    ref.watch(playerStateProvider);
+    final playlistColorInfo =
+        ref.watch(colorInfoFromPlaylistProvider(ownerID, id));
 
-    final scrollController = useMemoized(() => AutoScrollController());
+    final scrollController = useScrollController();
     final searchController = useTextEditingController();
-    final focusNode = useFocusNode();
-    useValueListenable(searchController);
+    final searchFocusNode = useFocusNode();
+    final isSearchOpen = useState(false);
 
     useEffect(
       () {
         logger.d("Open $playlist");
 
-        final playlistsNotifier = ref.read(playlistsProvider.notifier);
-        Future<void> loadPlaylist() => playlistsNotifier.loadPlaylist(playlist);
+        Future<void> loadPlaylist() =>
+            ref.read(playlistsProvider.notifier).loadPlaylist(playlist);
 
         // Загружаем данные о плейлисте, если есть доступ к интернету.
         StreamSubscription? subscription;
@@ -273,59 +1543,51 @@ class PlaylistInfoRoute extends HookConsumerWidget {
           });
         }
 
-        // Если нам это разрешено, то устанавливаем фокус на поле поиска.
-        if (focusSearchBarOnOpen ?? isDesktop) focusNode.requestFocus();
-
-        // Если у нас указан трек, то скроллим до него.
-        if (audio != null) {
-          final int index = (playlist.audios ?? []).indexOf(audio!);
-
-          if (index != -1) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              scrollController.jumpTo(
-                (50 + 8).toDouble() * index,
-              );
-            });
-          }
-        }
-
         return subscription?.cancel;
       },
       [],
     );
 
-    final List<ExtendedAudio> playlistAudios = playlist.audios ?? [];
-    final List<ExtendedAudio> filteredAudios = useMemoized(
-      () => filterAudiosByName(playlistAudios, searchController.text),
-      [searchController.text, playlistAudios],
-    );
-
     final bool mobileLayout = isMobileLayout(context);
 
-    final double horizontalPadding = mobileLayout ? 16 : 24;
-    final double verticalPadding = mobileLayout ? 0 : 30;
+    final oldScheme = Theme.of(context).colorScheme;
+    final ColorScheme? scheme = playlist.photo != null
+        ? playlistColorInfo.value != null
+            ? ColorScheme.fromSeed(
+                seedColor: Color(
+                  playlistColorInfo.value!.scoredColorInts.first,
+                ),
+                brightness: Theme.of(context).brightness,
+              )
+            : null
+        : oldScheme;
 
-    final bool loading = !playlist.areTracksLive;
-
-    final String playlistType = playlist.isRecommendationsPlaylist
-        ? l18n.music_recommendationPlaylistTitle
-        : (playlist.isFavoritesPlaylist ||
-                (playlist.ownerID == user.id && !playlist.isFollowing))
-            ? l18n.music_ownedPlaylistTitle
-            : l18n.music_savedPlaylistTitle;
-
-    final bool hasTracksLoaded = !playlist.isEmpty && !loading;
+    final double statusBarHeight = MediaQuery.of(context).padding.top;
+    final double maxAppBarHeight = (mobileLayout
+            ? (MediaQuery.sizeOf(context).height / 2)
+                .roundToDouble()
+                .clamp(0, 500)
+            : 272) +
+        statusBarHeight;
+    final double minAppBarHeight = 70 + statusBarHeight;
+    final double infoBoxHeight = mobileLayout
+        ? playlist.description != null
+            ? 150
+            : 100
+        : 0;
+    final double horizontalPadding = mobileLayout ? 12 : 18;
 
     void onCacheTap() async {
       final downloadManager = ref.read(downloadManagerProvider.notifier);
       final playlistsManager = ref.read(playlistsProvider.notifier);
-      final bool currentlyCached = playlist.cacheTracks ?? false;
       final playlistName =
           playlist.title ?? l18n.music_fullscreenFavoritePlaylistName;
 
+      final bool playlistCached = playlist.cacheTracks ?? false;
+
       // Если плейлист уже кэширован, то значит, что нам нужно его удалить.
       // Сначала нужно спросить у пользователя то, хочет ли он удалить кэш.
-      if (currentlyCached) {
+      if (playlistCached) {
         final bool dialogResult = await showDialog(
               context: context,
               builder: (BuildContext context) {
@@ -355,6 +1617,7 @@ class PlaylistInfoRoute extends HookConsumerWidget {
         await downloadManager.newTask(
           PlaylistCacheDownloadTask(
             ref: downloadManager.ref,
+            id: playlist.mediaKey,
             playlist: newPlaylist.playlist,
             longTitle: l18n.music_playlistCacheRemovalTitle(playlistName),
             smallTitle: playlistName,
@@ -412,448 +1675,204 @@ class PlaylistInfoRoute extends HookConsumerWidget {
 
       await player.setShuffle(true);
 
-      await player.setPlaylist(playlist, randomTrack: true);
+      await player.setPlaylist(
+        playlist,
+        randomTrack: true,
+      );
     }
 
-    void onSearchClear() => searchController.clear();
-
     void onSearchSubmitted(String? value) async {
+      final String query = cleanString(value ?? "");
+      if (query.isEmpty) return;
+
+      final ExtendedAudio? foundAudio = playlist.audios!.firstWhereOrNull(
+        (item) => isAudioMatchesQuery(item, query),
+      );
+      if (foundAudio == null) return;
+
       // Если у нас уже запущен этот же трек, то переключаем паузу/воспроизведение.
-      if (player.currentAudio == filteredAudios.first) {
+      if (player.currentAudio == foundAudio) {
         await player.togglePlay();
 
         return;
       }
 
-      await player.setPlaylist(playlist, selectedTrack: filteredAudios.first);
+      await player.setShuffle(true);
+
+      await player.setPlaylist(
+        playlist,
+        selectedTrack: foundAudio,
+      );
     }
 
-    return Column(
-      children: [
-        // Внутреннее содержимое.
-        Expanded(
+    void scrollPastAppBar() => scrollController.animateTo(
+          maxAppBarHeight + infoBoxHeight - 46,
+          duration: const Duration(
+            milliseconds: 300,
+          ),
+          curve: Curves.ease,
+        );
+
+    void onSearchPressed() {
+      // Включаем отображение поиска.
+      isSearchOpen.value = true;
+
+      // Делаем фокус на поле поиска.
+      searchFocusNode.requestFocus();
+
+      // Скроллим, что бы был маленький AppBar.
+      scrollPastAppBar();
+    }
+
+    void onSearchInput() => scrollPastAppBar();
+
+    void onMorePressed() => showWipDialog(context);
+
+    return PopScope(
+      canPop: !isSearchOpen.value,
+      onPopInvoked: (bool didPop) async {
+        if (didPop) return;
+
+        // Если у нас открыт поиск, то сначала закрыаем его.
+        if (isSearchOpen.value) {
+          searchController.clear();
+          isSearchOpen.value = false;
+
+          return;
+        }
+      },
+      child: Scaffold(
+        body: Theme(
+          data: ThemeData(
+            colorScheme: scheme ?? Theme.of(context).colorScheme,
+          ),
           child: Stack(
+            alignment: Alignment.topCenter,
             children: [
-              // Само содержимое плейлиста.
-              CustomScrollView(
-                controller: scrollController,
-                slivers: [
-                  // AppBar, дополнительно содержащий информацию о данном плейлисте.
-                  SliverLayoutBuilder(
-                    builder: (
-                      BuildContext context,
-                      SliverConstraints constraints,
-                    ) {
-                      final isExpanded =
-                          constraints.scrollOffset < 280 && !mobileLayout;
+              // Градиент на фоне, который будет меняться в зависимости от прокрутки.
+              BackgroundGradientWidget(
+                scheme: scheme,
+                scrollController: scrollController,
+                maxHeight: maxAppBarHeight + infoBoxHeight,
+              ),
 
-                      return SliverAppBar(
-                        pinned: true,
-                        expandedHeight: mobileLayout ? null : 260,
-                        elevation: 0,
-                        title: isExpanded
-                            ? null
-                            : Text(
-                                playlist.title ??
-                                    l18n.music_fullscreenFavoritePlaylistName,
-                              ),
-                        centerTitle: true,
-                        flexibleSpace: mobileLayout
-                            ? null
-                            : FlexibleSpaceBar(
-                                background: Padding(
-                                  padding: EdgeInsets.only(
-                                    left: horizontalPadding,
-                                    right: horizontalPadding,
-                                    top: verticalPadding + 30,
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      // Информация о плейлисте в Desktop Layout'е.
-                                      Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.end,
-                                        children: [
-                                          // Изображение плейлиста.
-                                          ClipRRect(
-                                            borderRadius: BorderRadius.circular(
-                                              globalBorderRadius,
-                                            ),
-                                            child: playlist.photo != null
-                                                ? CachedNetworkImage(
-                                                    imageUrl: playlist
-                                                        .photo!.photo270!,
-                                                    cacheKey:
-                                                        "${playlist.mediaKey}270",
-                                                    memCacheHeight: (200 *
-                                                            MediaQuery
-                                                                .devicePixelRatioOf(
-                                                              context,
-                                                            ))
-                                                        .round(),
-                                                    memCacheWidth: (200 *
-                                                            MediaQuery
-                                                                .devicePixelRatioOf(
-                                                              context,
-                                                            ))
-                                                        .round(),
-                                                    placeholder: (
-                                                      BuildContext context,
-                                                      String url,
-                                                    ) {
-                                                      return const FallbackAudioPlaylistAvatar();
-                                                    },
-                                                    cacheManager:
-                                                        CachedNetworkImagesManager
-                                                            .instance,
-                                                  )
-                                                : FallbackAudioPlaylistAvatar(
-                                                    favoritesPlaylist: playlist
-                                                        .isFavoritesPlaylist,
-                                                  ),
-                                          ),
-                                          const Gap(24),
-
-                                          // Название плейлиста, количество треков в нём.
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                // Название плейлиста.
-                                                SelectableText(
-                                                  playlist.title ??
-                                                      l18n.music_fullscreenFavoritePlaylistName,
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .displayLarge!
-                                                      .copyWith(
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
-                                                      ),
-                                                ),
-                                                const Gap(4),
-
-                                                // Описание плейлиста, при наличии.
-                                                if (playlist.description !=
-                                                    null)
-                                                  SelectableText(
-                                                    playlist.description!,
-                                                    style: TextStyle(
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                      color: Theme.of(context)
-                                                          .colorScheme
-                                                          .onSurface
-                                                          .withOpacity(0.9),
-                                                    ),
-                                                  ),
-                                                if (playlist.description !=
-                                                    null)
-                                                  const Gap(4),
-
-                                                // Строка вида "100 треков • Ваш плейлист, 25 часов".
-                                                // TODO: Написать свою функцию для форматирования времени.
-                                                Skeletonizer(
-                                                  enabled: loading,
-                                                  child: Text(
-                                                    l18n.music_bottomPlaylistInfo(
-                                                      playlist.count,
-                                                      playlistType,
-                                                      RelativeTime.locale(
-                                                        Localizations.localeOf(
-                                                          context,
-                                                        ),
-                                                        timeUnits: [
-                                                          TimeUnit.hour,
-                                                          TimeUnit.minute,
-                                                        ],
-                                                        numeric: true,
-                                                      ).format(
-                                                        DateTime.now().add(
-                                                          playlist.duration ??
-                                                              Duration.zero,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    style: TextStyle(
-                                                      color: Theme.of(context)
-                                                          .colorScheme
-                                                          .onSurface
-                                                          .withOpacity(0.8),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                      );
-                    },
-                  ),
-
-                  // Row с действиями с данным плейлистом.
-                  SliverPadding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: horizontalPadding,
-                      vertical: clampDouble(
-                        verticalPadding - 8 * 2,
-                        0,
-                        100,
-                      ),
-                    ),
-                    sliver: SliverPersistentHeader(
-                      pinned: true,
-                      delegate: SliverAppBarDelegate(
-                        minHeight: 54 + 8 * 2,
-                        maxHeight: 54 + 8 * 2,
-                        builder: (BuildContext context, double shrinkOffset) {
-                          return Container(
-                            color: Theme.of(context).colorScheme.surface,
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 8,
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                // Кнопка запуска воспроизведения треков из плейлиста.
-                                Row(
-                                  children: [
-                                    IconButton.filled(
-                                      onPressed: !playlist.isEmpty && !loading
-                                          ? onPlayTapped
-                                          : null,
-                                      iconSize: 38,
-                                      color:
-                                          Theme.of(context).colorScheme.primary,
-                                      icon: Icon(
-                                        player.currentPlaylist == playlist &&
-                                                player.playing
-                                            ? Icons.pause
-                                            : Icons.play_arrow,
-                                        color: hasTracksLoaded
-                                            ? Theme.of(context)
-                                                .colorScheme
-                                                .onPrimary
-                                            : null,
-                                      ),
-                                    ),
-                                    const Gap(6),
-
-                                    // Кнопка для загрузки треков в кэш.
-                                    IconButton(
-                                      iconSize: 38,
-                                      icon: Icon(
-                                        Icons.arrow_circle_down,
-                                        color: hasTracksLoaded
-                                            ? ((playlist.cacheTracks ?? false)
-                                                ? Theme.of(context)
-                                                    .colorScheme
-                                                    .primary
-                                                : Theme.of(context)
-                                                    .colorScheme
-                                                    .onSurface)
-                                            : null,
-                                      ),
-                                      onPressed:
-                                          hasTracksLoaded ? onCacheTap : null,
-                                    ),
-                                    const Gap(6),
-                                  ],
-                                ),
-
-                                // Поиск.
-                                Flexible(
-                                  child: SizedBox(
-                                    width: 300,
-                                    child: CallbackShortcuts(
-                                      bindings: {
-                                        const SingleActivator(
-                                          LogicalKeyboardKey.escape,
-                                        ): onSearchClear,
-                                      },
-                                      child: TextField(
-                                        controller: searchController,
-                                        focusNode: focusNode,
-                                        enabled: hasTracksLoaded,
-                                        onSubmitted: onSearchSubmitted,
-                                        decoration: InputDecoration(
-                                          hintText:
-                                              l18n.music_searchTextInPlaylist(
-                                            playlistAudios.length,
-                                          ),
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              globalBorderRadius,
-                                            ),
-                                          ),
-                                          prefixIconColor: Theme.of(context)
-                                              .colorScheme
-                                              .onSurface
-                                              .withOpacity(
-                                                hasTracksLoaded ? 1.0 : 0.5,
-                                              ),
-                                          prefixIcon: const Icon(
-                                            Icons.search,
-                                          ),
-                                          suffixIcon: searchController
-                                                  .text.isNotEmpty
-                                              ? Padding(
-                                                  padding:
-                                                      const EdgeInsetsDirectional
-                                                          .only(end: 12),
-                                                  child: IconButton(
-                                                    icon: const Icon(
-                                                      Icons.close,
-                                                    ),
-                                                    onPressed: onSearchClear,
-                                                  ),
-                                                )
-                                              : null,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-
-                  // У пользователя нет треков в данном плейлисте.
-                  if (playlistAudios.isEmpty && !loading)
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                        ),
-                        child: Text(
-                          l18n.music_playlistEmpty,
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-
-                  // У пользователя есть треки, но поиск ничего не выдал.
-                  if (playlistAudios.isNotEmpty &&
-                      filteredAudios.isEmpty &&
-                      !loading)
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                        ),
-                        child: StyledText(
-                          text: l18n.music_zeroSearchResults,
-                          textAlign: TextAlign.center,
-                          tags: {
-                            "click": StyledTextActionTag(
-                              (String? text, Map<String?, String?> attrs) =>
-                                  onSearchClear(),
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                            ),
-                          },
-                        ),
-                      ),
-                    ),
-
+              // Содержимое.
+              Column(
+                children: [
                   // Содержимое плейлиста.
-                  SliverPadding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: horizontalPadding,
-                    ),
-                    sliver: SliverList.separated(
-                      itemCount:
-                          loading ? playlist.count : filteredAudios.length,
-                      separatorBuilder: (BuildContext context, int index) {
-                        return const Gap(8);
-                      },
-                      itemBuilder: (BuildContext context, int index) {
-                        // Если ничего не загружено, то отображаем Skeleton Loader вместо реального трека.
-                        if (loading) {
-                          return Skeletonizer(
-                            child: AudioTrackTile(
-                              audio: ExtendedAudio(
-                                id: -1,
-                                ownerID: -1,
-                                title: fakeTrackNames[
-                                    index % fakeTrackNames.length],
-                                artist: fakeTrackNames[
-                                    (index + 1) % fakeTrackNames.length],
-                                duration: 60 * 3,
-                                accessKey: "",
-                                url: "",
-                                date: 0,
+                  Expanded(
+                    child: ScrollConfiguration(
+                      behavior: AlwaysScrollableScrollBehavior(),
+                      child: CustomScrollView(
+                        controller: scrollController,
+                        slivers: [
+                          // AppBar, в котором есть кнопки для управления (назад, ...),
+                          //  а так же анимированное изображение плейлиста.
+                          if (mobileLayout)
+                            AppBarWidget(
+                              playlist: playlist,
+                              mobileLayout: mobileLayout,
+                              searchController: searchController,
+                              searchFocusNode: searchFocusNode,
+                              maxAppBarHeight: maxAppBarHeight,
+                              minAppBarHeight: minAppBarHeight,
+                              isSearchOpen: isSearchOpen.value,
+                              onSearchPressed: onSearchPressed,
+                              onMorePressed: onMorePressed,
+                              onSearchInput: (_) => onSearchInput(),
+                              onSearchSubmitted: onSearchSubmitted,
+                            )
+                          else
+                            Theme(
+                              data: ThemeData(
+                                colorScheme: oldScheme,
+                              ),
+                              child: DesktopAppBarWidget(
+                                playlist: playlist,
+                                maxAppBarHeight: maxAppBarHeight,
+                                minAppBarHeight: minAppBarHeight,
+                                horizontalPadding: horizontalPadding,
                               ),
                             ),
-                          );
-                        }
 
-                        return buildListTrackWidget(
-                          ref,
-                          context,
-                          filteredAudios.elementAt(index),
-                          playlist,
-                          showCachedIcon: true,
-                        );
-                      },
+                          // Информация о данном плейлисте для Mobile Layout'а.
+                          if (mobileLayout) ...[
+                            MobilePlaylistInfoWidget(
+                              playlist: playlist,
+                              scheme: scheme,
+                              infoBoxHeight: infoBoxHeight,
+                            ),
+                            const SliverGap(36),
+                          ] else ...[
+                            Theme(
+                              data: ThemeData(
+                                colorScheme: oldScheme,
+                              ),
+                              child: DesktopPlaylistControlsWidget(
+                                playlist: playlist,
+                                scheme: scheme,
+                                searchController: searchController,
+                                searchFocusNode: searchFocusNode,
+                                horizontalPadding: horizontalPadding,
+                                onPlayPressed: onPlayTapped,
+                                onLikePressed: playlist.isFavoritesPlaylist
+                                    ? null
+                                    : () async => showWipDialog(context),
+                                onCacheTap: onCacheTap,
+                                onSearchSubmitted: onSearchSubmitted,
+                              ),
+                            ),
+                            const SliverGap(8),
+                          ],
+
+                          // Треки в плейлисте.
+                          Theme(
+                            data: ThemeData(
+                              colorScheme: oldScheme,
+                            ),
+                            child: PlaylistAudiosListWidget(
+                              playlist: playlist,
+                              searchController: searchController,
+                              horizontalPadding: horizontalPadding,
+                            ),
+                          ),
+
+                          // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
+                          if (player.loaded && mobileLayout)
+                            const SliverGap(mobileMiniPlayerHeight),
+
+                          // Небольшой Gap, что бы интерфейс был не слишком сжат.
+                          const SliverGap(8),
+                        ],
+                      ),
                     ),
                   ),
 
-                  // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
-                  if (player.loaded && mobileLayout)
-                    const SliverGap(mobileMiniPlayerHeight),
-
-                  // Небольшой Gap, что бы интерфейс был не слишком сжат.
-                  const SliverGap(8),
+                  // Данный Gap нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
+                  // Мы его располагаем после ListView, что бы ScrollBar не был закрыт плеером.
+                  if (player.loaded && !mobileLayout)
+                    const Gap(desktopMiniPlayerHeight),
                 ],
               ),
 
-              // FAB, располагаемый поверх всего интерфейса при Mobile Layout'е, если играет не этот плейлист.
-              if (mobileLayout && player.currentPlaylist != playlist)
-                Align(
-                  alignment: Alignment.bottomRight,
-                  child: AnimatedPadding(
-                    padding: const EdgeInsets.all(8).copyWith(
-                      bottom: player.loaded ? 84 : null,
-                    ),
-                    duration: const Duration(
-                      milliseconds: 500,
-                    ),
-                    curve: Curves.ease,
-                    child: FloatingActionButton.extended(
-                      label: Text(
-                        l18n.music_shuffleAndPlay,
-                      ),
-                      icon: const Icon(
-                        Icons.shuffle,
-                      ),
-                      onPressed: onPlayTapped,
-                    ),
-                  ),
+              // Ряд из кнопок управления плейлистом: кнопка лайка/дизлайка, воспроизведения/паузы, кэширования.
+              if (mobileLayout && !isSearchOpen.value)
+                MobileControlButtonsWidget(
+                  playlist: playlist,
+                  scrollController: scrollController,
+                  maxAppBarHeight: maxAppBarHeight,
+                  minAppBarHeight: minAppBarHeight,
+                  infoBoxHeight: infoBoxHeight,
+                  onLikePressed: playlist.isFavoritesPlaylist
+                      ? null
+                      : () async => showWipDialog(context),
+                  onPlayPausePressed: onPlayTapped,
+                  onCachePressed: onCacheTap,
                 ),
             ],
           ),
         ),
-
-        // Данный Gap нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
-        // Мы его располагаем после ListView, что бы ScrollBar не был закрыт плеером.
-        if (player.loaded && !mobileLayout) const Gap(desktopMiniPlayerHeight),
-      ],
+      ),
     );
   }
 }

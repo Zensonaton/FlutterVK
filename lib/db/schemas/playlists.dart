@@ -475,6 +475,18 @@ class DBPlaylist {
   /// Указывает, что в данном плейлисте разрешено кэширование треков.
   final bool isCachingAllowed;
 
+  /// {@macro ImageSchemeExtractor.colorInts}
+  final List<int>? colorInts;
+
+  /// {@macro ImageSchemeExtractor.scoredColorInts}
+  final List<int>? scoredColorInts;
+
+  /// {@macro ImageSchemeExtractor.frequentColorInt}
+  final int? frequentColorInt;
+
+  /// {@macro ImageSchemeExtractor.colorCount}
+  final int? colorCount;
+
   /// Создаёт объект [DBPlaylist] из передаваемого объекта [ExtendedPlaylist].
   static DBPlaylist fromExtendedPlaylist(ExtendedPlaylist playlist) =>
       DBPlaylist(
@@ -510,6 +522,10 @@ class DBPlaylist {
             )
             .toList(),
         isCachingAllowed: playlist.cacheTracks ?? false,
+        colorInts: playlist.colorInts?.keys.toList(),
+        scoredColorInts: playlist.scoredColorInts,
+        frequentColorInt: playlist.frequentColorInt,
+        colorCount: playlist.colorCount,
       );
 
   /// Возвращает копию данного класса в виде объекта [ExtendedPlaylist].
@@ -560,5 +576,9 @@ class DBPlaylist {
     this.color,
     this.knownTracks,
     required this.isCachingAllowed,
+    this.colorInts,
+    this.scoredColorInts,
+    this.frequentColorInt,
+    this.colorCount,
   });
 }

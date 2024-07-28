@@ -428,6 +428,7 @@ class Updater {
     // Загружаем файл обновления.
     await downloadManager.newTask(
       AppUpdaterDownloadTask(
+        id: "update-${asset.name}",
         smallTitle: "Flutter VK",
         longTitle: l18n.downloadManagerAppUpdateLongTitle(release.tagName),
         url: asset.browserDownloadUrl,

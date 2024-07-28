@@ -86,7 +86,7 @@ GoRouter router(RouterRef ref) {
             return buildPageWithDefaultTransition(
               context: context,
               state: state,
-              child: PlaylistInfoRoute(
+              child: PlaylistRoute(
                 ownerID: playlist!.ownerID,
                 id: playlist.id,
               ),

@@ -42,6 +42,7 @@ class PlaylistCacheDownloadTask extends DownloadTask {
   PlaylistCacheDownloadTask({
     required this.ref,
     required this.playlist,
+    required super.id,
     required super.smallTitle,
     required super.longTitle,
     required super.tasks,
@@ -295,6 +296,7 @@ class AppUpdaterDownloadTask extends DownloadTask {
 
   AppUpdaterDownloadTask({
     required this.ref,
+    required super.id,
     required super.smallTitle,
     required super.longTitle,
     required this.url,
@@ -383,6 +385,9 @@ class DownloadItem {
 class DownloadTask {
   static final AppLogger logger = getLogger("DownloadTask");
 
+  /// ID данной задачи.
+  final String id;
+
   /// Маленькое название у данной задачи, отображаемое при наведении на [DownloadManagerIconWidget].
   ///
   /// Содержимое данное переменной должно быть максимально кратким, что бы оно с большей вероятностью вместилось в [DownloadManagerIconWidget]. Пример: "Любимая музыка" или "Обновление".
@@ -400,10 +405,12 @@ class DownloadTask {
   final ValueNotifier<double> progress = ValueNotifier(0.0);
 
   /// [Queue], используемый для одновременной загрузки задач из [tasks].
-  final Queue queue = Queue(parallel: isDesktop ? 5 : 2);
+  final Queue _queue = Queue(parallel: isDesktop ? 5 : 2);
 
-  /// Начинает задачу по загрузке всех [tasks].
-  Future<void> download() async {
+  /// Указывает, запущена ли загрузка.
+  bool _downloading = false;
+
+  Future<void> _queueItemWrapper(DownloadItem item) async {
     void listener() {
       progress.value = tasks.fold(
             0.0,
@@ -412,30 +419,41 @@ class DownloadTask {
           tasks.length;
     }
 
-    for (DownloadItem item in tasks) {
-      queue.add(() async {
-        item.progress.addListener(listener);
+    return await _queue.add(() async {
+      item.progress.addListener(listener);
 
-        await item.download();
-        item.progress.removeListener(listener);
-      }).onError((error, stackTrace) {
-        if (error is QueueCancelledException) return;
+      await item.download();
+      item.progress.removeListener(listener);
+    }).onError((error, stackTrace) {
+      if (error is QueueCancelledException) return;
 
-        logger.e(
-          "Download error:",
-          error: error,
-          stackTrace: stackTrace,
-        );
-      });
+      logger.e(
+        "Download error:",
+        error: error,
+        stackTrace: stackTrace,
+      );
+    });
+  }
+
+  /// Начинает задачу по загрузке всех [tasks].
+  Future<void> download() async {
+    assert(!_downloading, "Download already started");
+    _downloading = true;
+
+    for (DownloadItem item in [...tasks]) {
+      _queueItemWrapper(item);
     }
-    await queue.onComplete;
+    await _queue.onComplete;
+
+    _downloading = false;
   }
 
   @override
   String toString() =>
-      "DownloadTask \"$smallTitle\" with ${tasks.length} tasks, ${(progress.value * 100).round()}% completed";
+      "DownloadTask \"$smallTitle\" id $id with ${tasks.length} tasks, ${(progress.value * 100).round()}% completed";
 
   DownloadTask({
+    required this.id,
     required this.smallTitle,
     required this.longTitle,
     required this.tasks,

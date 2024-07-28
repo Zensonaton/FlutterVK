@@ -12,12 +12,16 @@ class LoadingIconButton extends HookWidget {
   /// Во время выполнения этого Future, [icon] будет заменён [CircularProgressIndicator].
   final AsyncCallback? onPressed;
 
+  /// Размер для иконки.
+  final double iconSize;
+
   /// Цвет для [CircularProgressIndicator].
   final Color? color;
 
   const LoadingIconButton({
     super.key,
     required this.icon,
+    this.iconSize = 24,
     required this.onPressed,
     this.color,
   });
@@ -42,8 +46,8 @@ class LoadingIconButton extends HookWidget {
           : null,
       icon: isLoading.value
           ? SizedBox(
-              width: 24,
-              height: 24,
+              width: iconSize,
+              height: iconSize,
               child: CircularProgressIndicator.adaptive(
                 strokeWidth: 3,
                 valueColor: AlwaysStoppedAnimation(
@@ -52,6 +56,7 @@ class LoadingIconButton extends HookWidget {
               ),
             )
           : icon,
+      iconSize: iconSize,
     );
   }
 }

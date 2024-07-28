@@ -267,7 +267,7 @@
 		"description": "Используется в строке вида '[плейлист имеет] 95% совпадения с Вами'."
 	},
 
-	"music_bottomPlaylistInfo": "{type} • {count, plural, one{{count} трек} few{{count} трека} other{{count} треков}}, {duration}.",
+	"music_bottomPlaylistInfo": "{type} • {count, plural, one{{count} трек} few{{count} трека} other{{count} треков}} • {duration}.",
 	"@music_bottomPlaylistInfo": {
 		"placeholders": {
 			"count": {
@@ -277,12 +277,11 @@
 			"type": {
 				"type": "String",
 				"description": "Тип плейлиста.",
-				"example": "'Рекомендуемый плейлист', 'Ваш плейлист', 'Сохранённый плейлист'."
+				"example": "Рекомендуемый плейлист"
 			},
 			"duration": {
 				"type": "String",
-				"description": "Длительность всех треков в плейлисте.",
-				"example": "8 часов"
+				"description": "Длительность всех треков в плейлисте."
 			}
 		}
 	},

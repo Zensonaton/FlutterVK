@@ -1,6 +1,5 @@
 import "package:flutter/material.dart";
 import "package:gap/gap.dart";
-import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
 import "../main.dart";
@@ -75,19 +74,16 @@ class MaterialDialog extends ConsumerWidget {
               ),
 
             // Title диалога.
-            if (title != null)
-              Padding(
-                padding: const EdgeInsets.only(
-                  bottom: 24,
-                ),
-                child: Center(
-                  child: Text(
-                    title!,
-                    style: Theme.of(context).textTheme.headlineSmall,
-                    textAlign: TextAlign.center,
-                  ),
+            if (title != null) ...[
+              Center(
+                child: Text(
+                  title!,
+                  style: Theme.of(context).textTheme.headlineSmall,
+                  textAlign: TextAlign.center,
                 ),
               ),
+              const Gap(24),
+            ],
 
             // Текстовое содержимое диалога.
             if (text != null)
@@ -113,27 +109,24 @@ class MaterialDialog extends ConsumerWidget {
               ),
 
             // Действия диалога.
-            if (actions == null || (actions ?? []).isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(
-                  top: 24,
-                ),
-                child: Align(
-                  alignment: Alignment.bottomRight,
-                  child: Wrap(
-                    spacing: 8,
-                    children: actions ??
-                        [
-                          TextButton(
-                            onPressed: () => context.pop(),
-                            child: Text(
-                              l18n.general_close,
-                            ),
+            if (actions == null || (actions ?? []).isNotEmpty) ...[
+              const Gap(24),
+              Align(
+                alignment: Alignment.bottomRight,
+                child: Wrap(
+                  spacing: 8,
+                  children: actions ??
+                      [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: Text(
+                            l18n.general_close,
                           ),
-                        ],
-                  ),
+                        ),
+                      ],
                 ),
               ),
+            ],
           ],
         ),
       ),

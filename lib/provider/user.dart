@@ -76,6 +76,18 @@ class ExtendedPlaylist {
   /// Список из аудио в данном плейлисте.
   List<ExtendedAudio>? audios;
 
+  /// {@macro ImageSchemeExtractor.colorInts}
+  final Map<int, int?>? colorInts;
+
+  /// {@macro ImageSchemeExtractor.scoredColorInts}
+  final List<int>? scoredColorInts;
+
+  /// {@macro ImageSchemeExtractor.frequentColorInt}
+  final int? frequentColorInt;
+
+  /// {@macro ImageSchemeExtractor.colorCount}
+  final int? colorCount;
+
   /// Указывает, что данный плейлист является плейлистом с "любимыми" треками пользователя.
   bool get isFavoritesPlaylist => id == 0;
 
@@ -249,6 +261,12 @@ class ExtendedPlaylist {
             )
             .toList(),
         cacheTracks: playlist.isCachingAllowed,
+        colorInts: playlist.colorInts != null
+            ? Map.fromIterable(playlist.colorInts!, key: (item) => item)
+            : null,
+        scoredColorInts: playlist.scoredColorInts,
+        frequentColorInt: playlist.frequentColorInt,
+        colorCount: playlist.colorCount,
       );
 
   /// Возвращает копию данного класса в виде объекта [DBPlaylist].
@@ -280,6 +298,10 @@ class ExtendedPlaylist {
     bool? isLiveData,
     bool? areTracksLive,
     bool? cacheTracks,
+    Map<int, int?>? colorInts,
+    List<int>? scoredColorInts,
+    int? frequentColorInt,
+    int? colorCount,
   }) =>
       ExtendedPlaylist(
         id: id ?? this.id,
@@ -307,6 +329,10 @@ class ExtendedPlaylist {
         isLiveData: isLiveData ?? this.isLiveData,
         areTracksLive: areTracksLive ?? this.areTracksLive,
         cacheTracks: cacheTracks ?? this.cacheTracks,
+        colorInts: colorInts ?? this.colorInts,
+        scoredColorInts: scoredColorInts ?? this.scoredColorInts,
+        frequentColorInt: frequentColorInt ?? this.frequentColorInt,
+        colorCount: colorCount ?? this.colorCount,
       );
 
   /// Возвращает копию этого плейлиста с добавленным треком [audio] в начало плейлиста. Если этот трек уже есть, то заменяет его новым.
@@ -347,6 +373,7 @@ class ExtendedPlaylist {
         other.isLiveData == isLiveData &&
         other.areTracksLive == areTracksLive &&
         other.cacheTracks == cacheTracks &&
+        other.colorCount == colorCount &&
         listEquals(other.audios, audios);
   }
 
@@ -378,6 +405,10 @@ class ExtendedPlaylist {
     this.isLiveData = false,
     this.areTracksLive = false,
     this.cacheTracks,
+    this.colorInts,
+    this.scoredColorInts,
+    this.frequentColorInt,
+    this.colorCount,
   });
 }
 

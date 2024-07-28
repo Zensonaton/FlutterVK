@@ -44,6 +44,8 @@ class IOCacheManagerExtended extends IOFileSystem {
 /// Класс типа [CacheManager], который используется в [CachedNetworkImage].
 ///
 /// Этот [CacheManager] используется для хранения обычных изображений. Для изображений треков используется [CachedAlbumImagesManager].
+///
+/// Не стоит путать с [CachedAlbumImagesManager], который используется для изображений треков.
 class CachedNetworkImagesManager {
   static const String key = "images";
 
@@ -66,6 +68,8 @@ class CachedNetworkImagesManager {
 /// Класс типа [CacheManager], который используется в [CachedNetworkImage].
 ///
 /// Этот [CacheManager] используется для изображений треков. Для обычных изображений используется [CachedNetworkImagesManager].
+///
+/// Не стоит путать с [CachedNetworkImagesManager], который используется для обычных изображений.
 class CachedAlbumImagesManager {
   static const String key = "album-images";
 

@@ -213,7 +213,7 @@ class DownloadItemIconWidget extends StatelessWidget {
               )
             : FallbackAudioPlaylistAvatar(
                 favoritesPlaylist: playlist.isFavoritesPlaylist,
-                useSmall: true,
+                size: 50,
               ),
       );
     } else if (task is AppUpdaterDownloadTask) {

@@ -38,100 +38,120 @@ const DBPlaylistSchema = CollectionSchema(
       name: r'color',
       type: IsarType.string,
     ),
-    r'count': PropertySchema(
+    r'colorCount': PropertySchema(
       id: 4,
+      name: r'colorCount',
+      type: IsarType.long,
+    ),
+    r'colorInts': PropertySchema(
+      id: 5,
+      name: r'colorInts',
+      type: IsarType.longList,
+    ),
+    r'count': PropertySchema(
+      id: 6,
       name: r'count',
       type: IsarType.long,
     ),
     r'createTime': PropertySchema(
-      id: 5,
+      id: 7,
       name: r'createTime',
       type: IsarType.long,
     ),
     r'description': PropertySchema(
-      id: 6,
+      id: 8,
       name: r'description',
       type: IsarType.string,
     ),
     r'followers': PropertySchema(
-      id: 7,
+      id: 9,
       name: r'followers',
       type: IsarType.long,
     ),
+    r'frequentColorInt': PropertySchema(
+      id: 10,
+      name: r'frequentColorInt',
+      type: IsarType.long,
+    ),
     r'hashCode': PropertySchema(
-      id: 8,
+      id: 11,
       name: r'hashCode',
       type: IsarType.long,
     ),
     r'id': PropertySchema(
-      id: 9,
+      id: 12,
       name: r'id',
       type: IsarType.long,
     ),
     r'isAudioMixPlaylist': PropertySchema(
-      id: 10,
+      id: 13,
       name: r'isAudioMixPlaylist',
       type: IsarType.bool,
     ),
     r'isCachingAllowed': PropertySchema(
-      id: 11,
+      id: 14,
       name: r'isCachingAllowed',
       type: IsarType.bool,
     ),
     r'isFollowing': PropertySchema(
-      id: 12,
+      id: 15,
       name: r'isFollowing',
       type: IsarType.bool,
     ),
     r'isMoodPlaylist': PropertySchema(
-      id: 13,
+      id: 16,
       name: r'isMoodPlaylist',
       type: IsarType.bool,
     ),
     r'knownTracks': PropertySchema(
-      id: 14,
+      id: 17,
       name: r'knownTracks',
       type: IsarType.objectList,
       target: r'DBAudio',
     ),
     r'mixID': PropertySchema(
-      id: 15,
+      id: 18,
       name: r'mixID',
       type: IsarType.string,
     ),
     r'ownerID': PropertySchema(
-      id: 16,
+      id: 19,
       name: r'ownerID',
       type: IsarType.long,
     ),
     r'photo': PropertySchema(
-      id: 17,
+      id: 20,
       name: r'photo',
       type: IsarType.object,
       target: r'DBThumbnails',
     ),
     r'plays': PropertySchema(
-      id: 18,
+      id: 21,
       name: r'plays',
       type: IsarType.long,
     ),
+    r'scoredColorInts': PropertySchema(
+      id: 22,
+      name: r'scoredColorInts',
+      type: IsarType.longList,
+    ),
     r'simillarity': PropertySchema(
-      id: 19,
+      id: 23,
       name: r'simillarity',
       type: IsarType.double,
     ),
     r'subtitle': PropertySchema(
-      id: 20,
+      id: 24,
       name: r'subtitle',
       type: IsarType.string,
     ),
     r'title': PropertySchema(
-      id: 21,
+      id: 25,
       name: r'title',
       type: IsarType.string,
     ),
     r'updateTime': PropertySchema(
-      id: 22,
+      id: 26,
       name: r'updateTime',
       type: IsarType.long,
     )
@@ -195,6 +215,12 @@ int _dBPlaylistEstimateSize(
     }
   }
   {
+    final value = object.colorInts;
+    if (value != null) {
+      bytesCount += 3 + value.length * 8;
+    }
+  }
+  {
     final value = object.description;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
@@ -228,6 +254,12 @@ int _dBPlaylistEstimateSize(
     }
   }
   {
+    final value = object.scoredColorInts;
+    if (value != null) {
+      bytesCount += 3 + value.length * 8;
+    }
+  }
+  {
     final value = object.subtitle;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
@@ -257,35 +289,39 @@ void _dBPlaylistSerialize(
   );
   writer.writeString(offsets[2], object.backgroundAnimationUrl);
   writer.writeString(offsets[3], object.color);
-  writer.writeLong(offsets[4], object.count);
-  writer.writeLong(offsets[5], object.createTime);
-  writer.writeString(offsets[6], object.description);
-  writer.writeLong(offsets[7], object.followers);
-  writer.writeLong(offsets[8], object.hashCode);
-  writer.writeLong(offsets[9], object.id);
-  writer.writeBool(offsets[10], object.isAudioMixPlaylist);
-  writer.writeBool(offsets[11], object.isCachingAllowed);
-  writer.writeBool(offsets[12], object.isFollowing);
-  writer.writeBool(offsets[13], object.isMoodPlaylist);
+  writer.writeLong(offsets[4], object.colorCount);
+  writer.writeLongList(offsets[5], object.colorInts);
+  writer.writeLong(offsets[6], object.count);
+  writer.writeLong(offsets[7], object.createTime);
+  writer.writeString(offsets[8], object.description);
+  writer.writeLong(offsets[9], object.followers);
+  writer.writeLong(offsets[10], object.frequentColorInt);
+  writer.writeLong(offsets[11], object.hashCode);
+  writer.writeLong(offsets[12], object.id);
+  writer.writeBool(offsets[13], object.isAudioMixPlaylist);
+  writer.writeBool(offsets[14], object.isCachingAllowed);
+  writer.writeBool(offsets[15], object.isFollowing);
+  writer.writeBool(offsets[16], object.isMoodPlaylist);
   writer.writeObjectList<DBAudio>(
-    offsets[14],
+    offsets[17],
     allOffsets,
     DBAudioSchema.serialize,
     object.knownTracks,
   );
-  writer.writeString(offsets[15], object.mixID);
-  writer.writeLong(offsets[16], object.ownerID);
+  writer.writeString(offsets[18], object.mixID);
+  writer.writeLong(offsets[19], object.ownerID);
   writer.writeObject<DBThumbnails>(
-    offsets[17],
+    offsets[20],
     allOffsets,
     DBThumbnailsSchema.serialize,
     object.photo,
   );
-  writer.writeLong(offsets[18], object.plays);
-  writer.writeDouble(offsets[19], object.simillarity);
-  writer.writeString(offsets[20], object.subtitle);
-  writer.writeString(offsets[21], object.title);
-  writer.writeLong(offsets[22], object.updateTime);
+  writer.writeLong(offsets[21], object.plays);
+  writer.writeLongList(offsets[22], object.scoredColorInts);
+  writer.writeDouble(offsets[23], object.simillarity);
+  writer.writeString(offsets[24], object.subtitle);
+  writer.writeString(offsets[25], object.title);
+  writer.writeLong(offsets[26], object.updateTime);
 }
 
 DBPlaylist _dBPlaylistDeserialize(
@@ -304,33 +340,37 @@ DBPlaylist _dBPlaylistDeserialize(
     ),
     backgroundAnimationUrl: reader.readStringOrNull(offsets[2]),
     color: reader.readStringOrNull(offsets[3]),
-    count: reader.readLong(offsets[4]),
-    createTime: reader.readLongOrNull(offsets[5]),
-    description: reader.readStringOrNull(offsets[6]),
-    followers: reader.readLongOrNull(offsets[7]) ?? 0,
-    id: reader.readLong(offsets[9]),
-    isAudioMixPlaylist: reader.readBoolOrNull(offsets[10]),
-    isCachingAllowed: reader.readBool(offsets[11]),
-    isFollowing: reader.readBoolOrNull(offsets[12]),
-    isMoodPlaylist: reader.readBoolOrNull(offsets[13]),
+    colorCount: reader.readLongOrNull(offsets[4]),
+    colorInts: reader.readLongList(offsets[5]),
+    count: reader.readLong(offsets[6]),
+    createTime: reader.readLongOrNull(offsets[7]),
+    description: reader.readStringOrNull(offsets[8]),
+    followers: reader.readLongOrNull(offsets[9]) ?? 0,
+    frequentColorInt: reader.readLongOrNull(offsets[10]),
+    id: reader.readLong(offsets[12]),
+    isAudioMixPlaylist: reader.readBoolOrNull(offsets[13]),
+    isCachingAllowed: reader.readBool(offsets[14]),
+    isFollowing: reader.readBoolOrNull(offsets[15]),
+    isMoodPlaylist: reader.readBoolOrNull(offsets[16]),
     knownTracks: reader.readObjectList<DBAudio>(
-      offsets[14],
+      offsets[17],
       DBAudioSchema.deserialize,
       allOffsets,
       DBAudio(),
     ),
-    mixID: reader.readStringOrNull(offsets[15]),
-    ownerID: reader.readLong(offsets[16]),
+    mixID: reader.readStringOrNull(offsets[18]),
+    ownerID: reader.readLong(offsets[19]),
     photo: reader.readObjectOrNull<DBThumbnails>(
-      offsets[17],
+      offsets[20],
       DBThumbnailsSchema.deserialize,
       allOffsets,
     ),
-    plays: reader.readLongOrNull(offsets[18]) ?? 0,
-    simillarity: reader.readDoubleOrNull(offsets[19]),
-    subtitle: reader.readStringOrNull(offsets[20]),
-    title: reader.readStringOrNull(offsets[21]),
-    updateTime: reader.readLongOrNull(offsets[22]),
+    plays: reader.readLongOrNull(offsets[21]) ?? 0,
+    scoredColorInts: reader.readLongList(offsets[22]),
+    simillarity: reader.readDoubleOrNull(offsets[23]),
+    subtitle: reader.readStringOrNull(offsets[24]),
+    title: reader.readStringOrNull(offsets[25]),
+    updateTime: reader.readLongOrNull(offsets[26]),
   );
   return object;
 }
@@ -356,51 +396,59 @@ P _dBPlaylistDeserializeProp<P>(
     case 3:
       return (reader.readStringOrNull(offset)) as P;
     case 4:
-      return (reader.readLong(offset)) as P;
-    case 5:
       return (reader.readLongOrNull(offset)) as P;
+    case 5:
+      return (reader.readLongList(offset)) as P;
     case 6:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 7:
-      return (reader.readLongOrNull(offset) ?? 0) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 8:
-      return (reader.readLong(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 9:
-      return (reader.readLong(offset)) as P;
+      return (reader.readLongOrNull(offset) ?? 0) as P;
     case 10:
-      return (reader.readBoolOrNull(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 11:
-      return (reader.readBool(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 12:
-      return (reader.readBoolOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 13:
       return (reader.readBoolOrNull(offset)) as P;
     case 14:
+      return (reader.readBool(offset)) as P;
+    case 15:
+      return (reader.readBoolOrNull(offset)) as P;
+    case 16:
+      return (reader.readBoolOrNull(offset)) as P;
+    case 17:
       return (reader.readObjectList<DBAudio>(
         offset,
         DBAudioSchema.deserialize,
         allOffsets,
         DBAudio(),
       )) as P;
-    case 15:
+    case 18:
       return (reader.readStringOrNull(offset)) as P;
-    case 16:
+    case 19:
       return (reader.readLong(offset)) as P;
-    case 17:
+    case 20:
       return (reader.readObjectOrNull<DBThumbnails>(
         offset,
         DBThumbnailsSchema.deserialize,
         allOffsets,
       )) as P;
-    case 18:
-      return (reader.readLongOrNull(offset) ?? 0) as P;
-    case 19:
-      return (reader.readDoubleOrNull(offset)) as P;
-    case 20:
-      return (reader.readStringOrNull(offset)) as P;
     case 21:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readLongOrNull(offset) ?? 0) as P;
     case 22:
+      return (reader.readLongList(offset)) as P;
+    case 23:
+      return (reader.readDoubleOrNull(offset)) as P;
+    case 24:
+      return (reader.readStringOrNull(offset)) as P;
+    case 25:
+      return (reader.readStringOrNull(offset)) as P;
+    case 26:
       return (reader.readLongOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1060,6 +1108,242 @@ extension DBPlaylistQueryFilter
     });
   }
 
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      colorCountIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'colorCount',
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      colorCountIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'colorCount',
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition> colorCountEqualTo(
+      int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'colorCount',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      colorCountGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'colorCount',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      colorCountLessThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'colorCount',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition> colorCountBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'colorCount',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      colorIntsIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'colorInts',
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      colorIntsIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'colorInts',
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      colorIntsElementEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'colorInts',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      colorIntsElementGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'colorInts',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      colorIntsElementLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'colorInts',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      colorIntsElementBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'colorInts',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      colorIntsLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'colorInts',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      colorIntsIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'colorInts',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      colorIntsIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'colorInts',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      colorIntsLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'colorInts',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      colorIntsLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'colorInts',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      colorIntsLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'colorInts',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
+    });
+  }
+
   QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition> countEqualTo(
       int value) {
     return QueryBuilder.apply(this, (query) {
@@ -1386,6 +1670,80 @@ extension DBPlaylistQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
         property: r'followers',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      frequentColorIntIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'frequentColorInt',
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      frequentColorIntIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'frequentColorInt',
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      frequentColorIntEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'frequentColorInt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      frequentColorIntGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'frequentColorInt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      frequentColorIntLessThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'frequentColorInt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      frequentColorIntBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'frequentColorInt',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -2026,6 +2384,169 @@ extension DBPlaylistQueryFilter
   }
 
   QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      scoredColorIntsIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'scoredColorInts',
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      scoredColorIntsIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'scoredColorInts',
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      scoredColorIntsElementEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'scoredColorInts',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      scoredColorIntsElementGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'scoredColorInts',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      scoredColorIntsElementLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'scoredColorInts',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      scoredColorIntsElementBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'scoredColorInts',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      scoredColorIntsLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'scoredColorInts',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      scoredColorIntsIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'scoredColorInts',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      scoredColorIntsIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'scoredColorInts',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      scoredColorIntsLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'scoredColorInts',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      scoredColorIntsLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'scoredColorInts',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
+      scoredColorIntsLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'scoredColorInts',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
       simillarityIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -2548,6 +3069,18 @@ extension DBPlaylistQuerySortBy
     });
   }
 
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> sortByColorCount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'colorCount', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> sortByColorCountDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'colorCount', Sort.desc);
+    });
+  }
+
   QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> sortByCount() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'count', Sort.asc);
@@ -2593,6 +3126,19 @@ extension DBPlaylistQuerySortBy
   QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> sortByFollowersDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'followers', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> sortByFrequentColorInt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'frequentColorInt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy>
+      sortByFrequentColorIntDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'frequentColorInt', Sort.desc);
     });
   }
 
@@ -2797,6 +3343,18 @@ extension DBPlaylistQuerySortThenBy
     });
   }
 
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> thenByColorCount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'colorCount', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> thenByColorCountDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'colorCount', Sort.desc);
+    });
+  }
+
   QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> thenByCount() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'count', Sort.asc);
@@ -2842,6 +3400,19 @@ extension DBPlaylistQuerySortThenBy
   QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> thenByFollowersDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'followers', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> thenByFrequentColorInt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'frequentColorInt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy>
+      thenByFrequentColorIntDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'frequentColorInt', Sort.desc);
     });
   }
 
@@ -3042,6 +3613,18 @@ extension DBPlaylistQueryWhereDistinct
     });
   }
 
+  QueryBuilder<DBPlaylist, DBPlaylist, QDistinct> distinctByColorCount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'colorCount');
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QDistinct> distinctByColorInts() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'colorInts');
+    });
+  }
+
   QueryBuilder<DBPlaylist, DBPlaylist, QDistinct> distinctByCount() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'count');
@@ -3064,6 +3647,12 @@ extension DBPlaylistQueryWhereDistinct
   QueryBuilder<DBPlaylist, DBPlaylist, QDistinct> distinctByFollowers() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'followers');
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QDistinct> distinctByFrequentColorInt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'frequentColorInt');
     });
   }
 
@@ -3120,6 +3709,12 @@ extension DBPlaylistQueryWhereDistinct
   QueryBuilder<DBPlaylist, DBPlaylist, QDistinct> distinctByPlays() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'plays');
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QDistinct> distinctByScoredColorInts() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'scoredColorInts');
     });
   }
 
@@ -3183,6 +3778,18 @@ extension DBPlaylistQueryProperty
     });
   }
 
+  QueryBuilder<DBPlaylist, int?, QQueryOperations> colorCountProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'colorCount');
+    });
+  }
+
+  QueryBuilder<DBPlaylist, List<int>?, QQueryOperations> colorIntsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'colorInts');
+    });
+  }
+
   QueryBuilder<DBPlaylist, int, QQueryOperations> countProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'count');
@@ -3204,6 +3811,12 @@ extension DBPlaylistQueryProperty
   QueryBuilder<DBPlaylist, int, QQueryOperations> followersProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'followers');
+    });
+  }
+
+  QueryBuilder<DBPlaylist, int?, QQueryOperations> frequentColorIntProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'frequentColorInt');
     });
   }
 
@@ -3272,6 +3885,13 @@ extension DBPlaylistQueryProperty
   QueryBuilder<DBPlaylist, int, QQueryOperations> playsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'plays');
+    });
+  }
+
+  QueryBuilder<DBPlaylist, List<int>?, QQueryOperations>
+      scoredColorIntsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'scoredColorInts');
     });
   }
 
