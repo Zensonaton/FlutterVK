@@ -31,6 +31,7 @@ Widget buildListTrackWidget(
   ExtendedPlaylist playlist, {
   bool showCachedIcon = false,
   bool showDuration = true,
+  bool allowImageCache = true,
 }) {
   final l18n = ref.watch(l18nProvider);
   final bool isSelected = audio == player.currentAudio;
@@ -43,6 +44,7 @@ Widget buildListTrackWidget(
     glowIfSelected: true,
     showCachedIcon: showCachedIcon,
     showDuration: showDuration,
+    allowImageCache: allowImageCache,
     onPlayToggle: () async {
       // Если этот трек уже играет, то просто делаем toggle воспроизведения.
       if (isSelected) {
@@ -475,6 +477,9 @@ class AudioTrackTile extends HookConsumerWidget {
   /// Если true, то данный виджет будет не будет иметь эффект прозрачности даже если [ExtendedAudio.canPlay] равен false.
   final bool forceAvailable;
 
+  /// Указывает, разрешено ли использование кэшированного изображения трека.
+  final bool allowImageCache;
+
   /// Указывает, что будет показана длительность этого трека.
   final bool showDuration;
 
@@ -502,6 +507,7 @@ class AudioTrackTile extends HookConsumerWidget {
     this.glowIfSelected = false,
     this.showCachedIcon = true,
     this.forceAvailable = false,
+    this.allowImageCache = true,
     this.showDuration = true,
     this.onPlayToggle,
     this.onLikeTap,
@@ -558,7 +564,7 @@ class AudioTrackTile extends HookConsumerWidget {
                 // Изображение трека. (слева)
                 AudioTrackImage(
                   imageUrl: audio.smallestThumbnail,
-                  cacheKey: "${audio.mediaKey}small",
+                  cacheKey: allowImageCache ? "${audio.mediaKey}small" : null,
                   isAvailable: forceAvailable || audio.canPlay,
                   isSelected: isSelected,
                   isPlaying: isPlaying,
