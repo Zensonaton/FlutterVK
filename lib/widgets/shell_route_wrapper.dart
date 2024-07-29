@@ -579,7 +579,7 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
                 milliseconds: 500,
               ),
               curve: Curves.ease,
-              child: SizedBox(
+              child: Container(
                 width: mobileLayout
                     ? null
                     : (allowBigPlayer
@@ -588,6 +588,11 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
                             .clamp(500, double.infinity)
                         // ignore: dead_code
                         : 360),
+                padding: mobileLayout
+                    ? const EdgeInsets.all(
+                        8,
+                      )
+                    : null,
                 child: BottomMusicPlayer(
                   audio: player.smartCurrentAudio,
                   nextAudio: player.smartNextAudio,
