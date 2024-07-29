@@ -1722,7 +1722,7 @@ class PlaylistRoute extends HookConsumerWidget {
     }
 
     void scrollPastAppBar() => scrollController.animateTo(
-          maxAppBarHeight + infoBoxHeight - 46,
+          maxAppBarHeight + infoBoxHeight - statusBarHeight - 46,
           duration: const Duration(
             milliseconds: 300,
           ),
@@ -1824,7 +1824,7 @@ class PlaylistRoute extends HookConsumerWidget {
         // Небольшой Gap, что бы интерфейс был не слишком сжат.
         const SliverGap(8),
       ],
-      [mobileLayout, maxAppBarHeight],
+      [mobileLayout, maxAppBarHeight, isSearchOpen.value],
     );
 
     return PopScope(
