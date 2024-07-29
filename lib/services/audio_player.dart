@@ -913,7 +913,7 @@ class VKMusicPlayer {
     bool play = false,
   }) async {
     assert(
-      volume >= 0.0 && volume <= 1.0,
+      position >= 0.0 && position <= 1.0,
       "seekNormalized position $position is not in range from 0.0 to 1.0",
     );
 
@@ -954,7 +954,6 @@ class VKMusicPlayer {
     _playlist = null;
     _queue = null;
     _audiosQueue = null;
-
     _setPlayerLoaded(false);
 
     await pause();
@@ -1034,20 +1033,6 @@ class VKMusicPlayer {
     return await _player.setLoopMode(loopMode);
   }
 
-  /// Callback-метод, сохраняющий информацию о том, что трек был кэширован.
-  void _onTrackCached(ExtendedAudio audio, ExtendedPlaylist playlist) {
-    // final UserProvider user =
-    //     Provider.of<UserProvider>(buildContext!, listen: false);
-
-    // Если это аудио микс, то его сохранять при кэшировании необязательно.
-    if (playlist.isAudioMixPlaylist) return;
-
-    // audio.isCached = true;
-
-    appStorage.savePlaylist(playlist.asDBPlaylist);
-    // user.markUpdated(false);
-  }
-
   /// Тихо устанавливает плейлист [playlist], не передавая изменения в низкоуровневый плеер. [mergeWithOldQueue] указывает, что очередь из треков (отвечающая за отображение треков в UI) будет заменена таким образом, что бы индексы не смешивались.
   ///
   /// Вместо этого метода стоит воспользоваться методом [setPlaylist].
@@ -1116,7 +1101,6 @@ class VKMusicPlayer {
           return CachedStreamedAudio(
             audio: audio,
             cacheTrack: cacheTrack,
-            onCached: cacheTrack ? () => _onTrackCached(audio, playlist) : null,
           );
         },
       ).toList(),
@@ -1159,7 +1143,6 @@ class VKMusicPlayer {
       nextTrackIndex!,
       CachedStreamedAudio(
         audio: audio,
-        onCached: () => _onTrackCached(audio, player.currentPlaylist!),
       ),
     );
     _audiosQueue!.insert(
@@ -1178,7 +1161,6 @@ class VKMusicPlayer {
     await _queue!.add(
       CachedStreamedAudio(
         audio: audio,
-        onCached: () => _onTrackCached(audio, player.currentPlaylist!),
       ),
     );
     _audiosQueue!.add(
@@ -1347,6 +1329,7 @@ class VKMusicPlayer {
       await _smtc?.disableSmtc();
     }
 
+    await _audioService?.stop();
     await _audioSession?.setActive(false);
     if (discordRPCEnabled) {
       _discordRPC?.clearPresence();
@@ -1381,7 +1364,7 @@ class AudioPlayerService extends BaseAudioHandler
     });
 
     // События изменения позиции плеера.
-    _player.positionStream.listen((Duration position) async {
+    _player.seekStateStream.listen((Duration position) async {
       await _updateEvent();
     });
 
@@ -1398,9 +1381,10 @@ class AudioPlayerService extends BaseAudioHandler
 
   /// Отправляет изменения состояния воспроизведения в `audio_service`, обновляя информацию, отображаемую в уведомлении.
   Future<void> _updateEvent() async {
-    final bool isAudioMix = player.currentPlaylist?.isAudioMixPlaylist ?? false;
+    final bool isAudioMix =
+        _player.currentPlaylist?.isAudioMixPlaylist ?? false;
     final bool isRecommended =
-        player.currentPlaylist?.isRecommendationTypePlaylist ?? false;
+        _player.currentPlaylist?.isRecommendationTypePlaylist ?? false;
 
     playbackState.add(
       PlaybackState(
@@ -1440,7 +1424,7 @@ class AudioPlayerService extends BaseAudioHandler
           MediaAction.seek,
         },
         androidCompactActionIndices: const [0, 1, 2],
-        playing: _player.playing,
+        playing: _player.loaded && _player.playing,
         updatePosition: _player.position,
         bufferedPosition: _player.bufferedPosition,
         shuffleMode: player.shuffleModeEnabled
@@ -1461,6 +1445,8 @@ class AudioPlayerService extends BaseAudioHandler
   /// Отправляет новый трек в уведомление.
   Future<void> _updateTrack() async {
     if (!_player.loaded) return;
+
+    // TODO: Сделать очередь вместо обновления текущего трека.
 
     mediaItem.add(_player.currentAudio?.asMediaItem);
   }
