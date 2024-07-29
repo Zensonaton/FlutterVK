@@ -20,7 +20,9 @@ import "package:smtc_windows/smtc_windows.dart";
 import "../api/vk/shared.dart";
 import "../consts.dart";
 import "../main.dart";
+import "../provider/player.dart";
 import "../provider/playlists.dart";
+import "../provider/preferences.dart";
 import "../provider/user.dart";
 import "../utils.dart";
 import "cache_manager.dart";
@@ -40,7 +42,6 @@ enum MediaNotificationAction {
 
 /// Расширение [StreamAudioSource] для `just_audio`, который воспроизводит аудио по передаваемому [Uri], а после загрузки аудио сохраняет его в кэш.
 class CachedStreamedAudio extends StreamAudioSource {
-  /// [AppLogger] для этого класса.
   static final AppLogger logger = getLogger("CachedStreamedAudio");
 
   /// Map из [StreamSubscription], который защищает от повторной загрузки одного и того же трека.
@@ -244,11 +245,11 @@ class VKMusicPlayer {
   ConcatenatingAudioSource? _queue;
   List<ExtendedAudio>? _audiosQueue;
 
-  final Ref ref;
+  final VkMusicPlayerRef _ref;
 
   VKMusicPlayer({
-    required this.ref,
-  }) {
+    required VkMusicPlayerRef ref,
+  }) : _ref = ref {
     _subscriptions = [
       // События паузы/воспроизведения.
       _player.playingStream.listen(
@@ -668,7 +669,7 @@ class VKMusicPlayer {
 
     // Регистрируем AudioHandler для управления музыки при помощи медиа-уведомления на OS Android.
     _audioService = await AudioService.init(
-      builder: () => AudioPlayerService(player),
+      builder: () => AudioPlayerService(player, _ref),
       config: const AudioServiceConfig(
         androidNotificationChannelName: "Flutter VK",
         androidNotificationChannelId: "com.zensonaton.fluttervk",
@@ -1359,8 +1360,12 @@ class VKMusicPlayer {
 class AudioPlayerService extends BaseAudioHandler
     with QueueHandler, SeekHandler {
   final VKMusicPlayer _player;
+  final Ref _ref;
 
-  AudioPlayerService(this._player) {
+  AudioPlayerService(
+    this._player,
+    this._ref,
+  ) {
     // События состояния плеера.
     _player.playerStateStream.listen((PlayerState state) async {
       if (!player.playing) return;
@@ -1462,13 +1467,9 @@ class AudioPlayerService extends BaseAudioHandler
 
   @override
   Future<void> customAction(String name, [Map<String, dynamic>? extras]) async {
-    // final UserProvider user = Provider.of<UserProvider>(
-    //   buildContext!,
-    //   listen: false,
-    // );
+    final preferences = _ref.read(preferencesProvider.notifier);
 
-    final MediaNotificationAction action =
-        MediaNotificationAction.values.firstWhere(
+    final action = MediaNotificationAction.values.firstWhere(
       (action) => action.name == name,
     );
 
@@ -1476,40 +1477,31 @@ class AudioPlayerService extends BaseAudioHandler
       case (MediaNotificationAction.shuffle):
         await _player.toggleShuffle();
 
-        // user.settings.shuffleEnabled = _player.shuffleModeEnabled;
-        // user.markUpdated();
+        preferences.setShuffleEnabled(_player.shuffleModeEnabled);
 
         break;
 
       case (MediaNotificationAction.favorite):
         if (!connectivityManager.hasConnection) return;
 
+        // TODO: Кнопка лайка трека с плеера.
         // await toggleTrackLike(
-        //   user,
+        //   _ref,
         //   _player.currentAudio!,
         //   !_player.currentAudio!.isLiked,
         // );
-
         // await _updateEvent();
-
-        // user.updatePlaylist(player.currentPlaylist!);
-        // user.markUpdated(false);
 
         break;
 
       case (MediaNotificationAction.dislike):
         if (!connectivityManager.hasConnection) return;
 
+        // TODO: Кнопка дизлайка трека с плеера.
         // await dislikeTrack(
-        //   user,
+        //   _ref,
         //   _player.currentAudio!,
         // );
-        // await player.next();
-
-        // await _updateEvent();
-
-        // user.updatePlaylist(player.currentPlaylist!);
-        // user.markUpdated(false);
 
         break;
     }
