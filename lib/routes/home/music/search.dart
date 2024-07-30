@@ -256,8 +256,7 @@ class SearchDisplayDialog extends HookConsumerWidget {
                         text: l18n.music_zeroSearchResults,
                         tags: {
                           "click": StyledTextActionTag(
-                            (String? text, Map<String?, String?> attrs) =>
-                                onSearchClear(),
+                            (_, __) => onSearchClear(),
                             style: TextStyle(
                               color: Theme.of(context).colorScheme.primary,
                             ),
@@ -279,6 +278,7 @@ class SearchDisplayDialog extends HookConsumerWidget {
                         context,
                         audios.elementAt(index),
                         playlist!,
+                        allowImageCache: false,
                       );
                     },
                   );

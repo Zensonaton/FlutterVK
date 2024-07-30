@@ -322,7 +322,7 @@ class PlayerDynamicSchemeDialog extends ConsumerWidget {
     List<Widget> buildTrackWidgets() {
       final List<Widget> widgets = [];
 
-      for (final (int index, List<dynamic> track) in tracks.indexed) {
+      for (final List<dynamic> track in tracks) {
         final String title = track[0];
         final String artist = track[1];
         final String url = track[2];
@@ -355,20 +355,21 @@ class PlayerDynamicSchemeDialog extends ConsumerWidget {
                     audio: ExtendedAudio(
                       title: title,
                       artist: artist,
+                      id: 0,
+                      ownerID: 0,
+                      duration: 0,
+                      accessKey: "",
+                      date: 0,
                       deezerThumbs: ExtendedThumbnails(
                         photoBig: url,
                         photoMax: url,
                         photoMedium: url,
                         photoSmall: url,
                       ),
-                      id: 0 - index,
-                      ownerID: 0 - index,
-                      duration: 0,
-                      accessKey: "",
-                      date: 0,
                     ),
                     showDuration: false,
                     forceAvailable: true,
+                    allowImageCache: false,
                   ),
                 ),
 
