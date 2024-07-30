@@ -9,6 +9,7 @@ import "../routes/home/music.dart";
 import "../routes/home/music/playlist.dart";
 import "../routes/home/profile.dart";
 import "../routes/home/profile/debug/colorscheme.dart";
+import "../routes/home/profile/debug/markdown_viewer.dart";
 import "../routes/home/profile/debug/playlists_viewer.dart";
 import "../routes/home/profile/download_manager.dart";
 import "../routes/login.dart";
@@ -129,6 +130,16 @@ GoRouter router(RouterRef ref) {
               context: context,
               state: state,
               child: const PlaylistsViewerDebugMenu(),
+            );
+          },
+        ),
+        GoRoute(
+          path: "markdownViewerDebug",
+          pageBuilder: (BuildContext context, GoRouterState state) {
+            return buildPageWithDefaultTransition(
+              context: context,
+              state: state,
+              child: const MarkdownViewerDebugMenu(),
             );
           },
         ),

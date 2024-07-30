@@ -851,6 +851,18 @@ class HomeProfilePage extends HookConsumerWidget {
                             context.push("/profile/playlistsViewerDebug"),
                       ),
 
+                      // Debug-меню для отображения Markdown-разметки.
+                      ListTile(
+                        leading: const Icon(
+                          Icons.article,
+                        ),
+                        title: const Text(
+                          "Markdown viewer",
+                        ),
+                        onTap: () =>
+                            context.push("/profile/markdownViewerDebug"),
+                      ),
+
                       // Кнопка для запуска фейковой загрузки.
                       ListTile(
                         leading: const Icon(

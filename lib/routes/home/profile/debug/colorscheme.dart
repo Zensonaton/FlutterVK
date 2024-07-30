@@ -44,7 +44,7 @@ class ColorPill extends ConsumerWidget {
   }
 }
 
-/// Debug-меню, отображаемое в [HomeProfilePage] если включён debug-режим ([kDebugMode]), отображающая техническую информацию о цветовой схеме, полученной от цветов плеера.
+/// Debug-меню, отображаемое в [HomeProfilePage] если включён debug-режим ([kDebugMode]), отображающее техническую информацию о цветовой схеме, полученной от цветов плеера.
 class ColorSchemeDebugMenu extends ConsumerWidget {
   const ColorSchemeDebugMenu({
     super.key,

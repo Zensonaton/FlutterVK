@@ -12,7 +12,7 @@ import "../../../../provider/user.dart";
 import "../../../../widgets/dialogs.dart";
 import "../../music.dart";
 
-/// Debug-меню, отображаемое в [HomeProfilePage] если включён debug-режим ([kDebugMode]), отображающая техническую информацию о цветовой схеме, полученной от цветов плеера.
+/// Debug-меню, отображаемое в [HomeProfilePage] если включён debug-режим ([kDebugMode]), отображающее техническую информацию о всех плейлистах, которые хранятся в памяти.
 class PlaylistsViewerDebugMenu extends ConsumerWidget {
   const PlaylistsViewerDebugMenu({
     super.key,
