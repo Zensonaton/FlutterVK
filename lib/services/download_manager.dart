@@ -160,8 +160,8 @@ class PlaylistCacheDownloadItem extends DownloadItem {
         },
       );
 
-      file.createSync(recursive: true);
-      file.writeAsBytesSync(response.data);
+      await file.create(recursive: true);
+      await file.writeAsBytes(response.data);
     }
 
     progress.value = 1.0;
@@ -341,7 +341,7 @@ class AppUpdaterDownloadItem extends DownloadItem {
       },
     );
 
-    file.writeAsBytesSync(response.data);
+    await file.writeAsBytes(response.data);
   }
 
   @override

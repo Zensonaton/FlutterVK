@@ -61,11 +61,11 @@ class Release {
   /// Указывает, является ли данный Release pre-release'ом.
   final bool prerelease;
 
-  /// Время создания Release.
+  /// Время создания Release в UTC.
   @JsonKey(name: "created_at", fromJson: datetimeFromString)
   final DateTime? createdAt;
 
-  /// Время публикации Release.
+  /// Время публикации Release в UTC.
   @JsonKey(name: "published_at", fromJson: datetimeFromString)
   final DateTime? publishedAt;
 

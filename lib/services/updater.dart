@@ -2,16 +2,10 @@ import "dart:io";
 
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
-import "package:flutter_markdown/flutter_markdown.dart";
-import "package:gap/gap.dart";
-import "package:go_router/go_router.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:install_plugin/install_plugin.dart";
-import "package:intl/intl.dart";
 import "package:path/path.dart" as path;
 import "package:path_provider/path_provider.dart";
 import "package:permission_handler/permission_handler.dart";
-import "package:url_launcher/url_launcher.dart";
 
 import "../api/github/get_latest.dart";
 import "../api/github/get_releases.dart";
@@ -21,190 +15,10 @@ import "../main.dart";
 import "../provider/download_manager.dart";
 import "../provider/l18n.dart";
 import "../provider/updater.dart";
-import "../utils.dart";
-import "../widgets/dialogs.dart";
 import "../widgets/loading_overlay.dart";
+import "../widgets/update_dialog.dart";
 import "download_manager.dart";
 import "logger.dart";
-
-/// Диалог, появляющийся снизу экрана, показывающий информацию о том, что доступно новое обновление.
-///
-/// Пример использования:
-/// ```dart
-/// showModalBottomSheet(
-///   context: context,
-///   builder: (BuildContext context) => const UpdateAvailableDialog(...),
-/// ),
-/// ```
-class UpdateAvailableDialog extends ConsumerWidget {
-  static final AppLogger logger = getLogger("UpdateAvailableDialog");
-
-  /// Github Release с новым обновлением.
-  final Release release;
-
-  const UpdateAvailableDialog({
-    super.key,
-    required this.release,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l18n = ref.watch(l18nProvider);
-
-    final String locale = l18n.localeName;
-
-    void onInstallPressed() async {
-      context.pop();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          duration: const Duration(
-            seconds: 10,
-          ),
-          content: Text(
-            l18n.installPendingDescription,
-          ),
-        ),
-      );
-
-      try {
-        ref.read(updaterProvider).downloadAndInstallUpdate(release);
-      } catch (e, stackTrace) {
-        showLogErrorDialog(
-          "Update download/installation error:",
-          e,
-          stackTrace,
-          logger,
-          context,
-          title: l18n.updateErrorTitle,
-        );
-      }
-    }
-
-    return DraggableScrollableSheet(
-      expand: false,
-      builder: (BuildContext context, ScrollController controller) {
-        return Container(
-          width: 500,
-          padding: const EdgeInsets.all(24),
-          child: Stack(
-            children: [
-              ListView(
-                controller: controller,
-                children: [
-                  // Текст "Доступно обновление".
-                  Text(
-                    l18n.updateAvailableTitle,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const Gap(4),
-
-                  // Информация о старой и новой версии.
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Текущая версия.
-                      Text(
-                        "v$appVersion",
-                        style: TextStyle(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withOpacity(0.75),
-                        ),
-                      ),
-
-                      // Стрелочка.
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 4,
-                        ),
-                        child: Icon(
-                          Icons.arrow_right,
-                          size: 18,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withOpacity(0.75),
-                        ),
-                      ),
-
-                      // Новая версия, а так же информация о дате релиза.
-                      Text(
-                        "v${release.tagName}, ${DateFormat.yMd(locale).format(release.createdAt!)} ${DateFormat.Hm(locale).format(release.createdAt!)} ${release.prerelease ? "(Pre-release)" : ""}",
-                        style: TextStyle(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withOpacity(0.75),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Gap(6),
-
-                  const Divider(),
-                  const Gap(6),
-
-                  // Описание обновления.
-                  MarkdownBody(
-                    data: release.body,
-                  ),
-                  const Gap(6),
-
-                  const Divider(),
-                  const Gap(6),
-
-                  // Ряд из кнопок.
-                  Wrap(
-                    spacing: 8,
-                    alignment: WrapAlignment.end,
-                    children: [
-                      // Подробности.
-                      FilledButton.tonalIcon(
-                        icon: const Icon(
-                          Icons.library_books,
-                        ),
-                        label: Text(
-                          l18n.showUpdateDetails,
-                        ),
-                        onPressed: () {
-                          launchUrl(
-                            Uri.parse(
-                              release.htmlUrl,
-                            ),
-                          );
-                        },
-                      ),
-
-                      // Установить.
-                      FilledButton.icon(
-                        icon: Icon(
-                          isMobile
-                              ? Icons.install_mobile
-                              : Icons.install_desktop,
-                        ),
-                        label: Text(
-                          l18n.installUpdate,
-                        ),
-                        onPressed: onInstallPressed,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
 
 /// Класс для обработки обновлений приложения.
 ///

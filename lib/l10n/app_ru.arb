@@ -456,6 +456,37 @@
 	"downloadManagerNoTasks": "Пусто...",
 
 	"updateAvailableTitle": "Доступно обновление Flutter VK",
+	"updateAvailableDescription": "v{oldVersion} <arrow></arrow> v{newVersion}, {date}, {time}. {badges}",
+	"@updateAvailableDescription": {
+		"placeholders": {
+			"oldVersion": {
+				"type": "String",
+				"description": "Текущая версия приложения.",
+				"example": "0.0.0"
+			},
+			"newVersion": {
+				"type": "String",
+				"description": "Новая версия приложения, до которой можно обновиться.",
+				"example": "1.0.0"
+			},
+			"date": {
+				"type": "DateTime",
+				"description": "Дата выхода новой версии приложения.",
+				"format": "yMMMd"
+			},
+			"time": {
+				"type": "DateTime",
+				"description": "Время выхода новой версии приложения.",
+				"format": "Hm"
+			},
+			"badges": {
+				"type": "String",
+				"description": "Перечисление бейджей, которые могут быть у новой версии приложения.",
+				"example": "(бета)"
+			}
+		}
+	},
+	"updatePreReleaseTitle": "<debug></debug> бета",
 	"showUpdateDetails": "Подробности",
 	"installUpdate": "Установить",
 
@@ -481,6 +512,7 @@
 	},
 
 	"installPendingDescription": "Flutter VK начал загрузку обновления. Пожалуйста, дождитесь загрузки установщика обновления, и дальше проследуйте инструкциям на экране.",
+	"installPendingActionText": "Показать прогресс",
 
 	"updateErrorTitle": "Ошибка при установке обновления",
 

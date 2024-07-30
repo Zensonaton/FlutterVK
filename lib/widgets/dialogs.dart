@@ -60,18 +60,15 @@ class MaterialDialog extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Иконка.
-            if (icon != null)
-              Padding(
-                padding: const EdgeInsets.only(
-                  bottom: 12,
-                ),
-                child: Center(
-                  child: Icon(
-                    icon,
-                    color: iconColor ?? Theme.of(context).colorScheme.primary,
-                  ),
+            if (icon != null) ...[
+              Center(
+                child: Icon(
+                  icon,
+                  color: iconColor ?? Theme.of(context).colorScheme.primary,
                 ),
               ),
+              const Gap(12),
+            ],
 
             // Title диалога.
             if (title != null) ...[
