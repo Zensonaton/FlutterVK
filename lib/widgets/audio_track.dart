@@ -332,6 +332,7 @@ class AudioTrackTitle extends ConsumerWidget {
     final Color primaryIconColor = primaryTextColor.withOpacity(0.75);
 
     return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Ряд с названием, subtitle, иконкой explicit.
