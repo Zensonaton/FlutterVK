@@ -1293,7 +1293,6 @@ class VKMusicPlayer {
       await _smtc?.disableSmtc();
     }
 
-    await _audioService?.stop();
     await _audioSession?.setActive(false);
     if (discordRPCEnabled) {
       _discordRPC?.clearPresence();
@@ -1315,15 +1314,11 @@ class AudioPlayerService extends BaseAudioHandler
   ) {
     // События состояния плеера.
     _player.playerStateStream.listen((PlayerState state) async {
-      if (!player.playing) return;
-
       await _updateEvent();
     });
 
     // События паузы/воспроизведения/...
     _player.playingStream.listen((bool playing) async {
-      if (!playing) return;
-
       await _updateEvent();
     });
 
