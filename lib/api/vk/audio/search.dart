@@ -1,7 +1,5 @@
 // ignore_for_file: non_constant_identifier_names
 
-import "dart:convert";
-
 import "package:json_annotation/json_annotation.dart";
 
 import "../api.dart";
@@ -48,7 +46,9 @@ class APIAudioSearchResponse {
   Map<String, dynamic> toJson() => _$APIAudioSearchResponseToJson(this);
 }
 
+/// {@template VKAPI.audio.search}
 /// Ищет треки во ВКонтакте по их названию.
+/// {@endtemplate}
 ///
 /// API: `audio.search`.
 Future<APIAudioSearchResponse> audio_search(
@@ -58,7 +58,7 @@ Future<APIAudioSearchResponse> audio_search(
   int count = 50,
   int offset = 0,
 }) async {
-  var response = await vkAPIcall(
+  var response = await callVkAPI(
     "audio.search",
     token,
     {
@@ -69,5 +69,5 @@ Future<APIAudioSearchResponse> audio_search(
     },
   );
 
-  return APIAudioSearchResponse.fromJson(jsonDecode(response.body));
+  return APIAudioSearchResponse.fromJson(response.data);
 }

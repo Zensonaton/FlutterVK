@@ -7,7 +7,7 @@ import "package:riverpod_annotation/riverpod_annotation.dart";
 
 import "../api/vk/api.dart";
 import "../api/vk/catalog/get_audio.dart";
-import "../api/vk/executeScripts/mass_audio_get.dart";
+import "../api/vk/execute/mass_get_audio.dart";
 import "../api/vk/shared.dart";
 import "../db/schemas/playlists.dart";
 import "../main.dart";
@@ -18,6 +18,7 @@ import "auth.dart";
 import "download_manager.dart";
 import "l18n.dart";
 import "user.dart";
+import "vk_api.dart";
 
 part "playlists.g.dart";
 
@@ -271,10 +272,10 @@ class Playlists extends _$Playlists {
     logger.d("Loading basic playlists info via API");
 
     final user = ref.read(userProvider);
+    final api = ref.read(vkAPIProvider);
 
-    final APIMassAudioGetResponse regularPlaylists = await ref
-        .read(userProvider.notifier)
-        .scriptMassAudioGetWithAlbums(user.id);
+    final APIMassAudioGetResponse regularPlaylists =
+        await api.audio.getWithAlbums(user.id);
     raiseOnAPIError(regularPlaylists);
 
     return (
@@ -486,7 +487,7 @@ class Playlists extends _$Playlists {
     }
 
     final APICatalogGetAudioResponse response =
-        await ref.read(userProvider.notifier).catalogGetAudio();
+        await ref.read(vkAPIProvider).catalog.getAudio();
     raiseOnAPIError(response);
 
     // Создаём список из всех рекомендуемых плейлистов, а так же добавляем их в память.
@@ -778,7 +779,7 @@ class Playlists extends _$Playlists {
     ExtendedPlaylist playlist, {
     bool createCacheTask = true,
   }) async {
-    final user = ref.read(userProvider.notifier);
+    final api = ref.read(vkAPIProvider);
 
     // Если информация по плейлисту уже загружена, то ничего не делаем.
     if (playlist.isFavoritesPlaylist ||
@@ -790,8 +791,7 @@ class Playlists extends _$Playlists {
 
     logger.d("Loading data for $playlist");
 
-    final APIMassAudioGetResponse response =
-        await user.scriptMassAudioGetWithAlbums(
+    final APIMassAudioGetResponse response = await api.audio.getWithAlbums(
       playlist.ownerID,
       albumID: playlist.id,
       accessKey: playlist.accessKey,

@@ -54,7 +54,7 @@ Future<bool> tryAuthorize(
 
     // Делаем ещё один запрос, благодаря которому можно проверить, есть ли доступ к каталогам рекомендаций или нет.
     final bool musicCatalogAccess =
-        (await catalog_getAudio(token)).error == null;
+        (await catalog_get_audio(token)).error == null;
     if (!context.mounted) return false;
 
     // Если мы делаем обычную авторизацию, то доступа к каталогу быть не должно, в ином случае он должен быть.

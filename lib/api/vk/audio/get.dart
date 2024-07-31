@@ -1,7 +1,5 @@
 // ignore_for_file: non_constant_identifier_names
 
-import "dart:convert";
-
 import "package:json_annotation/json_annotation.dart";
 
 import "../api.dart";
@@ -46,18 +44,22 @@ class APIAudioGetResponse {
   Map<String, dynamic> toJson() => _$APIAudioGetResponseToJson(this);
 }
 
+/// {@template VKAPI.audio.get}
 /// Возвращает информацию об аудиофайлах пользователя или сообщества.
+/// {@endtemplate}
 ///
 /// API: `audio.get`.
 Future<APIAudioGetResponse> audio_get(
   String token,
   int userID,
 ) async {
-  var response = await vkAPIcall(
+  var response = await callVkAPI(
     "audio.get",
     token,
-    {"owner_id": userID.toString()},
+    {
+      "owner_id": userID.toString(),
+    },
   );
 
-  return APIAudioGetResponse.fromJson(jsonDecode(response.body));
+  return APIAudioGetResponse.fromJson(response.data);
 }

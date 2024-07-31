@@ -1,7 +1,5 @@
 // ignore_for_file: non_constant_identifier_names
 
-import "dart:convert";
-
 import "package:json_annotation/json_annotation.dart";
 
 import "../api.dart";
@@ -19,8 +17,8 @@ class APIAudioGetStreamMixAudiosResponse {
   final APIError? error;
 
   APIAudioGetStreamMixAudiosResponse({
-    required this.response,
-    required this.error,
+    this.response,
+    this.error,
   });
 
   factory APIAudioGetStreamMixAudiosResponse.fromJson(
@@ -31,15 +29,17 @@ class APIAudioGetStreamMixAudiosResponse {
       _$APIAudioGetStreamMixAudiosResponseToJson(this);
 }
 
+/// {@template VKAPI.audio.getStreamMixAudios}
 /// Возвращает список треков для аудио микса (VK Mix).
+/// {@endtemplate}
 ///
 /// API: `audio.getStreamMixAudios`.
 Future<APIAudioGetStreamMixAudiosResponse> audio_get_stream_mix_audios(
-  String token, {
-  String mixID = "common",
-  int count = 10,
-}) async {
-  var response = await vkAPIcall(
+  String token,
+  String mixID,
+  int count,
+) async {
+  var response = await callVkAPI(
     "audio.getStreamMixAudios",
     token,
     {
@@ -48,5 +48,5 @@ Future<APIAudioGetStreamMixAudiosResponse> audio_get_stream_mix_audios(
     },
   );
 
-  return APIAudioGetStreamMixAudiosResponse.fromJson(jsonDecode(response.body));
+  return APIAudioGetStreamMixAudiosResponse.fromJson(response.data);
 }

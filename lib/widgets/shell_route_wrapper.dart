@@ -25,6 +25,7 @@ import "../provider/playlists.dart";
 import "../provider/preferences.dart";
 import "../provider/updater.dart";
 import "../provider/user.dart";
+import "../provider/vk_api.dart";
 import "../routes/fullscreen_player.dart";
 import "../routes/home/music.dart";
 import "../routes/home/music/categories/realtime_playlists.dart";
@@ -329,16 +330,15 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final trackImageInfo = ref.watch(trackSchemeInfoProvider);
-    final l18n = ref.watch(l18nProvider);
-    final user = ref.read(userProvider.notifier);
     final preferences = ref.watch(preferencesProvider);
-    ref.watch(playerCurrentIndexProvider);
-    ref.watch(playerStateProvider);
-    ref.watch(playerVolumeProvider);
-    ref.watch(playerShuffleModeEnabledProvider);
-    ref.watch(playerLoopModeProvider);
-    ref.watch(playerLoadedStateProvider);
+    final l18n = ref.watch(l18nProvider);
     ref.watch(playerPlaylistModificationsProvider);
+    ref.watch(playerShuffleModeEnabledProvider);
+    ref.watch(playerCurrentIndexProvider);
+    ref.watch(playerLoadedStateProvider);
+    ref.watch(playerLoopModeProvider);
+    ref.watch(playerVolumeProvider);
+    ref.watch(playerStateProvider);
 
     useEffect(
       () {
@@ -363,10 +363,10 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
             final ExtendedAudio audio = player.currentAudio!.copyWith();
             final schemeInfoNotifier =
                 ref.read(trackSchemeInfoProvider.notifier);
-            final userNotifier = ref.read(userProvider.notifier);
             final playlistsNotifier = ref.read(playlistsProvider.notifier);
 
             // TODO: Сохранять треки в БД по-другому, что бы избежать кучи записей за раз.
+            // TODO: Использовать уже существующий метод по загрузке данных, что бы избежать повторения кода.
 
             /// Метод, создающий цветовую схему из обложки трека, если таковая имеется.
             void getColorScheme() async {
@@ -411,11 +411,13 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
 
             /// Метод, загружающий текст трека.
             void getLyrics() async {
+              final api = ref.read(vkAPIProvider);
+
               if (!(audio.hasLyrics ?? false) || audio.lyrics != null) return;
 
               // Загружаем текст песни.
               final APIAudioGetLyricsResponse response =
-                  await userNotifier.audioGetLyrics(audio.mediaKey);
+                  await api.audio.getLyrics(audio.mediaKey);
               raiseOnAPIError(response);
 
               // Сохраняем в БД.
@@ -438,6 +440,8 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
 
           // Слушаем события изменения текущего трека, что бы в случае, если запущен рекомендательный плейлист, мы передавали информацию об этом ВКонтакте.
           player.currentIndexStream.listen((int? index) async {
+            final api = ref.read(vkAPIProvider);
+
             if (index == null) return;
 
             // Если нет доступа к интернету, то ничего не делаем.
@@ -452,7 +456,7 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
             // Делаем API-запрос, передавая информацию серверам ВКонтакте.
             try {
               final APIAudioSendStartEventResponse response =
-                  await user.audioSendStartEvent(player.currentAudio!.mediaKey);
+                  await api.audio.sendStartEvent(player.currentAudio!.mediaKey);
               raiseOnAPIError(response);
             } catch (e, stackTrace) {
               logger.w(
@@ -465,6 +469,8 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
 
           // Отдельно слушаем события изменения индекса текущего трека, что бы добавлять треки в реальном времени, если это аудио микс.
           player.currentIndexStream.listen((int? index) async {
+            final api = ref.read(vkAPIProvider);
+
             if (index == null ||
                 !player.loaded ||
                 !(player.currentPlaylist?.isAudioMixPlaylist ?? false)) return;
@@ -484,8 +490,9 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
 
             logger.d("Adding $tracksToAdd tracks to mix queue");
             try {
-              final APIAudioGetStreamMixAudiosResponse response = await user
-                  .audioGetStreamMixAudiosWithAlbums(count: tracksToAdd);
+              final APIAudioGetStreamMixAudiosResponse response = await api
+                  .audio
+                  .getStreamMixAudiosWithAlbums(count: tracksToAdd);
               raiseOnAPIError(response);
 
               final List<ExtendedAudio> newAudios = response.response!

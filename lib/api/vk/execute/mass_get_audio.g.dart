@@ -1,14 +1,14 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'audio_get_data.dart';
+part of 'mass_get_audio.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-APIAudioGetDataRealResponse _$APIAudioGetDataRealResponseFromJson(
+APIMassAudioGetRealResponse _$APIMassAudioGetRealResponseFromJson(
         Map<String, dynamic> json) =>
-    APIAudioGetDataRealResponse(
+    APIMassAudioGetRealResponse(
       audioCount: (json['audioCount'] as num).toInt(),
       audios: (json['audios'] as List<dynamic>)
           .map((e) => Audio.fromJson(e as Map<String, dynamic>))
@@ -19,8 +19,8 @@ APIAudioGetDataRealResponse _$APIAudioGetDataRealResponseFromJson(
           .toList(),
     );
 
-Map<String, dynamic> _$APIAudioGetDataRealResponseToJson(
-        APIAudioGetDataRealResponse instance) =>
+Map<String, dynamic> _$APIMassAudioGetRealResponseToJson(
+        APIMassAudioGetRealResponse instance) =>
     <String, dynamic>{
       'audioCount': instance.audioCount,
       'audios': instance.audios,
@@ -28,20 +28,20 @@ Map<String, dynamic> _$APIAudioGetDataRealResponseToJson(
       'playlists': instance.playlists,
     };
 
-APIAudioGetDataResponse _$APIAudioGetDataResponseFromJson(
+APIMassAudioGetResponse _$APIMassAudioGetResponseFromJson(
         Map<String, dynamic> json) =>
-    APIAudioGetDataResponse(
+    APIMassAudioGetResponse(
       response: json['response'] == null
           ? null
-          : APIAudioGetDataRealResponse.fromJson(
+          : APIMassAudioGetRealResponse.fromJson(
               json['response'] as Map<String, dynamic>),
       error: json['error'] == null
           ? null
           : APIError.fromJson(json['error'] as Map<String, dynamic>),
     );
 
-Map<String, dynamic> _$APIAudioGetDataResponseToJson(
-        APIAudioGetDataResponse instance) =>
+Map<String, dynamic> _$APIMassAudioGetResponseToJson(
+        APIMassAudioGetResponse instance) =>
     <String, dynamic>{
       'response': instance.response,
       'error': instance.error,

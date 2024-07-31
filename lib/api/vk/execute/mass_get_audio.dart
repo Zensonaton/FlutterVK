@@ -1,14 +1,13 @@
 // ignore_for_file: non_constant_identifier_names
 
-import "dart:convert";
-
 import "package:flutter/foundation.dart";
 import "package:json_annotation/json_annotation.dart";
 
-import "../execute.dart";
+import "../../../utils.dart";
+import "../api.dart";
 import "../shared.dart";
 
-part "mass_audio_get.g.dart";
+part "mass_get_audio.g.dart";
 
 @JsonSerializable()
 class APIMassAudioGetRealResponse {
@@ -36,7 +35,7 @@ class APIMassAudioGetRealResponse {
   Map<String, dynamic> toJson() => _$APIMassAudioGetRealResponseToJson(this);
 }
 
-/// Ответ для метода [scripts_massAudioGet].
+/// Ответ для метода [execute_mass_get_audio].
 @JsonSerializable()
 class APIMassAudioGetResponse {
   /// Объект ответа.
@@ -55,10 +54,12 @@ class APIMassAudioGetResponse {
   Map<String, dynamic> toJson() => _$APIMassAudioGetResponseToJson(this);
 }
 
+/// {@template VKAPI.execute.massGetAudio}
 /// Массово извлекает список лайкнутых треков ВКонтакте. Максимум извлекает около 5000 треков.
+/// {@endtemplate}
 ///
 /// Для данного метода требуется токен от Kate Mobile.
-Future<APIMassAudioGetResponse> scripts_massAudioGet(
+Future<APIMassAudioGetResponse> execute_mass_get_audio(
   String token,
   int ownerID, {
   int? albumID,
@@ -66,7 +67,7 @@ Future<APIMassAudioGetResponse> scripts_massAudioGet(
 }) async {
   // TODO: Метод для offset'а.
 
-  final String executeCode = """
+  final String codeToExecute = """
 var ownerID = $ownerID;
 var albumID = ${albumID ?? 0};
 var accessKey = '${accessKey ?? ''}';
@@ -87,13 +88,16 @@ var playlistsResp = API.audio.getPlaylists({'owner_id': ownerID, 'count': 50});
 
 return {'audioCount': audioCount, 'audios': audios, 'playlistsCount': playlistsResp.count, 'playlists': playlistsResp.items};""";
 
-  var response = await VKExecuteAPI.execute(
+  var response = await callVkAPI(
+    "execute",
     token,
-    executeCode,
+    {
+      "code": minimizeJS(codeToExecute),
+    },
   );
 
   return await compute(
-    (message) => APIMassAudioGetResponse.fromJson(jsonDecode(message)),
-    response.body,
+    (message) => APIMassAudioGetResponse.fromJson(message),
+    response.data,
   );
 }

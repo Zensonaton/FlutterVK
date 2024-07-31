@@ -7,7 +7,7 @@ part of 'color.dart';
 // **************************************************************************
 
 String _$colorInfoFromPlaylistHash() =>
-    r'7dcd20af6e8e2806609290a7fe766585e0361da4';
+    r'00515bf49391c4d8252f542b32ab3dc37f96c9b8';
 
 /// Copied from Dart SDK
 class _SystemHash {

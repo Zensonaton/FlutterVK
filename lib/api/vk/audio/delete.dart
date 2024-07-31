@@ -1,7 +1,5 @@
 // ignore_for_file: non_constant_identifier_names
 
-import "dart:convert";
-
 import "package:json_annotation/json_annotation.dart";
 
 import "../../../utils.dart";
@@ -30,22 +28,26 @@ class APIAudioDeleteResponse {
   Map<String, dynamic> toJson() => _$APIAudioDeleteResponseToJson(this);
 }
 
-/// Удаляет ранее лайкнутый трек (методом [audio_add]). В течении 15 минут после удаления трека можно его восстановить, вызвав [audio_restore].
+/// {@template VKAPI.audio.delete}
+/// Удаляет ранее лайкнутый трек (методом `add`).
+///
+/// В течении ~15 минут после удаления трека можно его восстановить, вызвав `restore`.
+/// {@endtemplate}
 ///
 /// API: `audio.delete`.
 Future<APIAudioDeleteResponse> audio_delete(
   String token,
-  int audioID,
+  int id,
   int ownerID,
 ) async {
-  var response = await vkAPIcall(
+  var response = await callVkAPI(
     "audio.delete",
     token,
     {
-      "audio_id": audioID.toString(),
+      "audio_id": id.toString(),
       "owner_id": ownerID.toString(),
     },
   );
 
-  return APIAudioDeleteResponse.fromJson(jsonDecode(response.body));
+  return APIAudioDeleteResponse.fromJson(response.data);
 }

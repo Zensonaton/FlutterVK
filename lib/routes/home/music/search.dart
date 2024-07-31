@@ -16,6 +16,7 @@ import "../../../provider/l18n.dart";
 import "../../../provider/player_events.dart";
 import "../../../provider/playlists.dart";
 import "../../../provider/user.dart";
+import "../../../provider/vk_api.dart";
 import "../../../utils.dart";
 import "../../../widgets/adaptive_dialog.dart";
 import "../../../widgets/audio_track.dart";
@@ -33,10 +34,10 @@ class SearchDisplayDialog extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final playlist = ref.watch(searchResultsPlaylistProvider);
     final l18n = ref.watch(l18nProvider);
     final user = ref.watch(userProvider);
-    final userNotifier = ref.read(userProvider.notifier);
-    final playlist = ref.watch(searchResultsPlaylistProvider);
+    final api = ref.read(vkAPIProvider);
     ref.watch(playerStateProvider);
     ref.watch(playerCurrentIndexProvider);
 
@@ -57,7 +58,7 @@ class SearchDisplayDialog extends HookConsumerWidget {
       final String query = controller.text.trim();
 
       Future<ExtendedPlaylist> search() async {
-        final response = await userNotifier.audioSearchWithAlbums(query);
+        final response = await api.audio.searchWithAlbums(query);
         raiseOnAPIError(response);
 
         // Создаём фейковый плейлист с треками.

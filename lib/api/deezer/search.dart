@@ -1,11 +1,9 @@
 // ignore_for_file: non_constant_identifier_names
 
-import "dart:convert";
-
-import "package:http/http.dart";
 import "package:json_annotation/json_annotation.dart";
 import "package:string_similarity/string_similarity.dart";
 
+import "../../main.dart";
 import "shared.dart";
 
 part "search.g.dart";
@@ -37,15 +35,13 @@ Future<DeezerAPISearchResponse> deezer_search(
   String artist,
   String title,
 ) async {
-  var response = await get(
-    Uri.parse(
-      Uri.encodeFull(
-        "https://api.deezer.com/search?q=$artist $title",
-      ),
+  var response = await dio.get(
+    Uri.encodeFull(
+      "https://api.deezer.com/search?q=$artist $title",
     ),
   );
 
-  return DeezerAPISearchResponse.fromJson(jsonDecode(response.body));
+  return DeezerAPISearchResponse.fromJson(response.data);
 }
 
 /// Используя API Deezer, выполняет поиск по передаваемым [artist] и [title] трека, после чего возвращает список объектов [DeezerTrack], отсортированных по схожести с запросом.

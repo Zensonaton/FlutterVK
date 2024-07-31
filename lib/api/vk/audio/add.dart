@@ -1,7 +1,5 @@
 // ignore_for_file: non_constant_identifier_names
 
-import "dart:convert";
-
 import "package:json_annotation/json_annotation.dart";
 
 import "../api.dart";
@@ -28,22 +26,26 @@ class APIAudioAddResponse {
   Map<String, dynamic> toJson() => _$APIAudioAddResponseToJson(this);
 }
 
-/// Копирует трек с указанным ID к данному пользователю, передавая относительный для данного пользователя сохранённый ID трека. После добавления трека, его можно удалить методом [audio_delete].
+/// {@template VKAPI.audio.add}
+/// Копирует трек с указанным ID ([ExtendedAudio.id], [ExtendedAudio.ownerID]) к данному пользователю, передавая относительный для данного пользователя сохранённый ID трека.
+///
+/// После добавления трека, его можно удалить методом `delete`.
+/// {@endtemplate}
 ///
 /// API: `audio.add`.
 Future<APIAudioAddResponse> audio_add(
   String token,
-  int audioID,
+  int id,
   int ownerID,
 ) async {
-  var response = await vkAPIcall(
+  final response = await callVkAPI(
     "audio.add",
     token,
     {
-      "audio_id": audioID.toString(),
+      "audio_id": id.toString(),
       "owner_id": ownerID.toString(),
     },
   );
 
-  return APIAudioAddResponse.fromJson(jsonDecode(response.body));
+  return APIAudioAddResponse.fromJson(response.data);
 }

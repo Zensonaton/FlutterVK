@@ -42,7 +42,7 @@ enum MediaNotificationAction {
 
 /// Расширение [StreamAudioSource] для `just_audio`, который воспроизводит аудио по передаваемому [Uri], а после загрузки аудио сохраняет его в кэш.
 class CachedStreamedAudio extends StreamAudioSource {
-  static final AppLogger logger = getLogger("CachedStreamedAudio");
+  static final AppLogger logger = getLogger("OldCachedStreamedAudio");
 
   /// Map из [StreamSubscription], который защищает от повторной загрузки одного и того же трека.
   static LinkedHashMap<String, StreamSubscription<List<int>>> downloadQueue =
@@ -54,16 +54,8 @@ class CachedStreamedAudio extends StreamAudioSource {
   /// Трек, данные которого будут загружаться.
   final ExtendedAudio audio;
 
-  /// Указывает, будет ли данный трек кэшироваться.
-  final bool cacheTrack;
-
-  /// Callback-метод, вызываемый после успешного кэширования этого трека (т.е., сохранения его на диск). Рекомендуется использовать этот метод для сохранения информации о кэшированности на диск.
-  final VoidCallback? onCached;
-
   CachedStreamedAudio({
     required this.audio,
-    this.cacheTrack = false,
-    this.onCached,
   });
 
   /// Возвращает путь к корневой папке, хранящий в себе кэшированные треки.
@@ -91,21 +83,6 @@ class CachedStreamedAudio extends StreamAudioSource {
 
   /// Возвращает объект типа [File], либо null, если [cacheKey] не указан.
   Future<File?> getCachedAudio() => getCachedAudioByKey(audio.mediaKey);
-
-  /// Удаляет кэшированный трек из кэша, а так же его обложки, если они вообще были.
-  Future<void> delete() async {
-    final File cacheFile = (await getCachedAudio())!;
-
-    // Удаляем кэшированные обложки.
-    CachedAlbumImagesManager.instance.removeFile("${audio.mediaKey}small");
-    CachedAlbumImagesManager.instance.removeFile("${audio.mediaKey}max");
-
-    try {
-      cacheFile.deleteSync();
-    } catch (e) {
-      // No-op.
-    }
-  }
 
   @override
   Future<StreamAudioResponse> request([
@@ -137,9 +114,6 @@ class CachedStreamedAudio extends StreamAudioSource {
     }
 
     // Кэшированный трек не был найден, загружаем его, и после чего кэшируем.
-
-    // Создаём HTTPClient, а так же HTTP-запрос.
-    // Загрузка содержимого трека находится ниже.
     final HttpClient httpClient = HttpClient();
     final HttpClientRequest request =
         (await httpClient.getUrl(Uri.parse(audio.url!)))..maxRedirects = 20;
@@ -163,6 +137,8 @@ class CachedStreamedAudio extends StreamAudioSource {
 
       downloadQueue.values.first.cancel();
       downloadQueue.remove(downloadQueue.keys.first);
+
+      // TODO: Отменить загрузку трека в плеере, если он загружается.
     }
 
     // Создаём задачу по загрузке данного трека, если таковой ещё не было.
@@ -184,16 +160,7 @@ class CachedStreamedAudio extends StreamAudioSource {
                   );
                 }
 
-                // Сохраняем трек на диск, если нам передан ключ для кэша.
-                if (cacheTrack && cacheFile != null) {
-                  cacheFile.createSync(recursive: true);
-                  cacheFile.writeAsBytesSync(trackBytes);
-                }
-
                 downloadQueue.remove(audio.mediaKey);
-
-                // Трек был успешно полностью кэширован.
-                onCached?.call();
               },
               onError: (Object e, StackTrace stackTrace) {
                 logger.e(
@@ -1094,16 +1061,13 @@ class VKMusicPlayer {
 
     _silentSetPlaylist(playlist);
     _queue = ConcatenatingAudioSource(
-      children: _audiosQueue!.map(
-        (ExtendedAudio audio) {
-          final bool cacheTrack = playlist.cacheTracks ?? false;
-
-          return CachedStreamedAudio(
-            audio: audio,
-            cacheTrack: cacheTrack,
-          );
-        },
-      ).toList(),
+      children: _audiosQueue!
+          .map(
+            (ExtendedAudio audio) => CachedStreamedAudio(
+              audio: audio,
+            ),
+          )
+          .toList(),
     );
 
     // Указываем, что плеер загружен.

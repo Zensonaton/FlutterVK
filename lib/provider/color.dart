@@ -83,7 +83,7 @@ Future<ImageSchemeExtractor?> colorInfoFromPlaylist(
 
   final result = await ImageSchemeExtractor.fromImageProvider(
     CachedNetworkImageProvider(
-      playlist.photo!.photo300!,
+      playlist.photo!.photo300,
       cacheKey: "${playlist.mediaKey}300",
       cacheManager: CachedNetworkImagesManager.instance,
     ),

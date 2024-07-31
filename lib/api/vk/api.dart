@@ -1,8 +1,8 @@
 import "dart:async";
 
-import "package:http/http.dart";
+import "package:dio/dio.dart";
 
-import "../api.dart";
+import "../../main.dart";
 import "consts.dart";
 
 /// Делает запрос к API ВКонтакте.
@@ -10,21 +10,20 @@ import "consts.dart";
 /// [method] - название метода, например, `users.get`.
 /// [token] - access-токен.
 /// [body] - содержимое запроса.
-Future<Response> vkAPIcall(
+@Deprecated("Должно быть реализовано на стороне Dio")
+Future<Response> callVkAPI(
   String method,
   String token,
-  Map<String, dynamic> body, {
-  Map<String, String>? moreHeaders,
-  List<int>? retryHttpCodes,
-}) async {
+  Map<String, dynamic> body,
+) async {
   body["access_token"] = token;
   body["v"] = vkAPIversion;
 
-  return await apiPost(
-    vkAPIBaseURL + method,
-    body,
-    moreHeaders: moreHeaders,
-    retryHttpCodes: retryHttpCodes,
+  // TODO: Использовать HTTP Header `Authorization: bearer token` используя interceptor.
+
+  return await vkDio.post(
+    method,
+    data: body,
   );
 }
 
@@ -45,7 +44,8 @@ class VKAPIError implements Exception {
   });
 }
 
-/// Проверяет передаваемый API-ответ от ВКонтакте на наличие поля `error`. Если таковое поле находится, то данный метод вызвает исключение.
+/// Проверяет передаваемый API-ответ от ВКонтакте на наличие поля `error`. Если таковое поле находится, то данный метод вызовет исключение.
+@Deprecated("Должно быть реализовано на стороне Dio")
 void raiseOnAPIError(
   dynamic response,
 ) {

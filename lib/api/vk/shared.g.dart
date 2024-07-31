@@ -212,15 +212,15 @@ Map<String, dynamic> _$APIUserToJson(APIUser instance) => <String, dynamic>{
     };
 
 Thumbnails _$ThumbnailsFromJson(Map<String, dynamic> json) => Thumbnails(
-      width: (json['width'] as num?)?.toInt(),
-      height: (json['height'] as num?)?.toInt(),
-      photo34: json['photo_34'] as String?,
-      photo68: json['photo_68'] as String?,
-      photo135: json['photo_135'] as String?,
-      photo270: json['photo_270'] as String?,
-      photo300: json['photo_300'] as String?,
-      photo600: json['photo_600'] as String?,
-      photo1200: json['photo_1200'] as String?,
+      width: (json['width'] as num).toInt(),
+      height: (json['height'] as num).toInt(),
+      photo34: json['photo_34'] as String,
+      photo68: json['photo_68'] as String,
+      photo135: json['photo_135'] as String,
+      photo270: json['photo_270'] as String,
+      photo300: json['photo_300'] as String,
+      photo600: json['photo_600'] as String,
+      photo1200: json['photo_1200'] as String,
     );
 
 Map<String, dynamic> _$ThumbnailsToJson(Thumbnails instance) =>

@@ -1,7 +1,5 @@
 // ignore_for_file: non_constant_identifier_names
 
-import "dart:convert";
-
 import "package:json_annotation/json_annotation.dart";
 
 import "../../../utils.dart";
@@ -30,20 +28,22 @@ class APIAudioAddDislikeResponse {
   Map<String, dynamic> toJson() => _$APIAudioAddDislikeResponseToJson(this);
 }
 
-/// Помечает передаваемые треки как дизлайкнутые.
+/// {@template VKAPI.audio.addDislike}
+/// Помечает список аудиозаписей ([ExtendedAudio.mediaKey]) как дизлайкнутые.
+/// {@endtemplate}
 ///
 /// API: `audio.addDislike`.
 Future<APIAudioAddDislikeResponse> audio_add_dislike(
   String token,
-  List<String> ids,
+  List<String> mediaKeys,
 ) async {
-  var response = await vkAPIcall(
+  final response = await callVkAPI(
     "audio.addDislike",
     token,
     {
-      "audio_ids": ids.join(","),
+      "audio_ids": mediaKeys.join(","),
     },
   );
 
-  return APIAudioAddDislikeResponse.fromJson(jsonDecode(response.body));
+  return APIAudioAddDislikeResponse.fromJson(response.data);
 }

@@ -474,53 +474,53 @@ class APIUser {
 @JsonSerializable()
 class Thumbnails {
   /// Ширина изображения альбома.
-  final int? width;
+  final int width;
 
   /// Высота изображения альбома.
-  final int? height;
+  final int height;
 
   /// URL на изображение альбома в размере `34`.
   @JsonKey(name: "photo_34")
-  final String? photo34;
+  final String photo34;
 
   /// URL на изображение альбома в размере `68`.
   @JsonKey(name: "photo_68")
-  final String? photo68;
+  final String photo68;
 
   /// URL на изображение альбома в размере `135`.
   @JsonKey(name: "photo_135")
-  final String? photo135;
+  final String photo135;
 
   /// URL на изображение альбома в размере `270`.
   @JsonKey(name: "photo_270")
-  final String? photo270;
+  final String photo270;
 
   /// URL на изображение альбома в размере `300`.
   @JsonKey(name: "photo_300")
-  final String? photo300;
+  final String photo300;
 
   /// URL на изображение альбома в размере `600`.
   @JsonKey(name: "photo_600")
-  final String? photo600;
+  final String photo600;
 
   /// URL на изображение альбома в размере `1200`.
   @JsonKey(name: "photo_1200")
-  final String? photo1200;
+  final String photo1200;
 
   /// Создаёт из передаваемого объекта [DBThumbnails] объект данного класа.
   static Thumbnails fromDBThumbnails(
     DBThumbnails thumbnails,
   ) =>
       Thumbnails(
-        width: thumbnails.width,
-        height: thumbnails.height,
-        photo34: thumbnails.photo34,
-        photo68: thumbnails.photo68,
-        photo135: thumbnails.photo135,
-        photo270: thumbnails.photo270,
-        photo300: thumbnails.photo300,
-        photo600: thumbnails.photo600,
-        photo1200: thumbnails.photo1200,
+        width: thumbnails.width!,
+        height: thumbnails.height!,
+        photo34: thumbnails.photo34!,
+        photo68: thumbnails.photo68!,
+        photo135: thumbnails.photo135!,
+        photo270: thumbnails.photo270!,
+        photo300: thumbnails.photo300!,
+        photo600: thumbnails.photo600!,
+        photo1200: thumbnails.photo1200!,
       );
 
   /// Возвращает копию данного класса в виде объекта [DBThumbnails].
@@ -547,15 +547,15 @@ class Thumbnails {
   String toString() => "Thumbnails $width*$height";
 
   Thumbnails({
-    this.width,
-    this.height,
-    this.photo34,
-    this.photo68,
-    this.photo135,
-    this.photo270,
-    this.photo300,
-    this.photo600,
-    this.photo1200,
+    required this.width,
+    required this.height,
+    required this.photo34,
+    required this.photo68,
+    required this.photo135,
+    required this.photo270,
+    required this.photo300,
+    required this.photo600,
+    required this.photo1200,
   });
 
   factory Thumbnails.fromJson(Map<String, dynamic> json) =>

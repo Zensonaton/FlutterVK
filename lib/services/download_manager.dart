@@ -10,6 +10,7 @@ import "../api/vk/api.dart";
 import "../api/vk/audio/get_lyrics.dart";
 import "../provider/playlists.dart";
 import "../provider/user.dart";
+import "../provider/vk_api.dart";
 import "../utils.dart";
 import "audio_player.dart";
 import "cache_manager.dart";
@@ -192,12 +193,14 @@ class PlaylistCacheDownloadItem extends DownloadItem {
 
   /// Загружает текст песни с ВКонтакте, и возвращает объект [Lyrics] с текстом песни.
   Future<Lyrics?> _downloadLyrics() async {
+    final api = ref.read(vkAPIProvider);
+
     // Если мы знаем, что у трека нету текста, либо он уже загружен, то ничего не делаем.
     if (!(audio.hasLyrics ?? false) || audio.lyrics != null) return null;
 
     // Загружаем текст песни.
     final APIAudioGetLyricsResponse response =
-        await ref.read(userProvider.notifier).audioGetLyrics(audio.mediaKey);
+        await api.audio.getLyrics(audio.mediaKey);
     raiseOnAPIError(response);
 
     return response.response!.lyrics;

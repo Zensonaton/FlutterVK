@@ -21,6 +21,7 @@ import "../../provider/player_events.dart";
 import "../../provider/playlists.dart";
 import "../../provider/preferences.dart";
 import "../../provider/user.dart";
+import "../../provider/vk_api.dart";
 import "../../services/cache_manager.dart";
 import "../../utils.dart";
 import "../../widgets/dialogs.dart";
@@ -105,10 +106,10 @@ Future<void> toggleTrackLike(
   bool isLiked, {
   ExtendedPlaylist? sourcePlaylist,
 }) async {
-  final favsPlaylist = ref.read(favoritesPlaylistProvider);
-  final userNotifier = ref.read(userProvider.notifier);
   final playlistsNotifier = ref.read(playlistsProvider.notifier);
+  final favsPlaylist = ref.read(favoritesPlaylistProvider);
   final user = ref.read(userProvider);
+  final api = ref.read(vkAPIProvider);
   assert(
     favsPlaylist != null,
     "Favorites playlist is null",
@@ -133,16 +134,16 @@ Future<void> toggleTrackLike(
       newTrackID = newAudio.id;
 
       // Восстанавливаем трек.
-      final APIAudioRestoreResponse response = await userNotifier.audioRestore(
+      final APIAudioRestoreResponse response = await api.audio.restore(
         newTrackID,
-        ownerID: newAudio.ownerID,
+        newAudio.ownerID,
       );
       raiseOnAPIError(response);
 
       // TODO: Обработчик ошибки #15: cannot restore too late
     } else {
       // Сохраняем трек как лайкнутый.
-      final APIAudioAddResponse response = await userNotifier.audioAdd(
+      final APIAudioAddResponse response = await api.audio.add(
         newAudio.id,
         newAudio.ownerID,
       );
@@ -188,7 +189,7 @@ Future<void> toggleTrackLike(
     // Пользователь пытается удалить трек.
 
     // Удаляем трек из лайкнутых.
-    final APIAudioDeleteResponse response = await userNotifier.audioDelete(
+    final APIAudioDeleteResponse response = await api.audio.delete(
       audio.savedFromPlaylist ? audio.relativeID! : audio.id,
       audio.savedFromPlaylist ? audio.relativeOwnerID! : audio.ownerID,
     );
@@ -250,10 +251,10 @@ Future<void> dislikeTrack(
   WidgetRef ref,
   ExtendedAudio audio,
 ) async {
-  final user = ref.read(userProvider.notifier);
+  final api = ref.read(vkAPIProvider);
 
   final APIAudioAddDislikeResponse response =
-      await user.audioAddDislike([audio.mediaKey]);
+      await api.audio.addDislike([audio.mediaKey]);
   raiseOnAPIError(response);
 
   assert(

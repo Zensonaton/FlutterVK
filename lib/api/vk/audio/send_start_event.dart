@@ -1,7 +1,5 @@
 // ignore_for_file: non_constant_identifier_names
 
-import "dart:convert";
-
 import "package:json_annotation/json_annotation.dart";
 
 import "../api.dart";
@@ -27,21 +25,25 @@ class APIAudioSendStartEventResponse {
   Map<String, dynamic> toJson() => _$APIAudioSendStartEventResponseToJson(this);
 }
 
-/// Информирует ВКонтакте о том, что передавемый трек сейчас прослушивается. Благодаря этому методу, рекомендации ВКонтакте перестают рекомендовать этот трек снова и снова.
+/// {@template VKAPI.audio.sendStartEvent}
+/// Информирует ВКонтакте о том, что передавемый ID трека ([ExtendedAudio.mediaKey]) сейчас прослушивается.
+///
+/// Благодаря этому методу, рекомендации ВКонтакте перестают рекомендовать этот трек снова и снова.
+/// {@endtemplate}
 ///
 /// API: `audio.sendStartEvent`.
 Future<APIAudioSendStartEventResponse> audio_send_start_event(
   String token,
-  String id,
+  String mediaKey,
 ) async {
-  var response = await vkAPIcall(
+  var response = await callVkAPI(
     "audio.sendStartEvent",
     token,
     {
       "uuid": "abcdef:abcdef", // Понятия не имею что это за параша.
-      "audio_id": id,
+      "audio_id": mediaKey,
     },
   );
 
-  return APIAudioSendStartEventResponse.fromJson(jsonDecode(response.body));
+  return APIAudioSendStartEventResponse.fromJson(response.data);
 }

@@ -16,6 +16,7 @@ import "../../../../provider/l18n.dart";
 import "../../../../provider/player_events.dart";
 import "../../../../provider/playlists.dart";
 import "../../../../provider/user.dart";
+import "../../../../provider/vk_api.dart";
 import "../../../../services/logger.dart";
 import "../../../../utils.dart";
 import "../playlist.dart";
@@ -33,7 +34,7 @@ Future<void> onMixPlayToggle(
     "onMixPlayToggle can only be called for audio mix playlists",
   );
 
-  final user = ref.read(userProvider.notifier);
+  final api = ref.read(vkAPIProvider);
 
   // Если у нас играет этот же плейлист, то тогда мы попросту должны поставить на паузу/убрать паузу.
   if (player.currentPlaylist == playlist) {
@@ -41,7 +42,7 @@ Future<void> onMixPlayToggle(
   }
 
   final APIAudioGetStreamMixAudiosResponse response =
-      await user.audioGetStreamMixAudiosWithAlbums(count: minMixAudiosCount);
+      await api.audio.getStreamMixAudiosWithAlbums(count: minMixAudiosCount);
   raiseOnAPIError(response);
 
   playlist.audios = response.response!
@@ -471,7 +472,7 @@ class RealtimePlaylistsBlock extends HookConsumerWidget {
                 return MoodPlaylistWidget(
                   title: playlist.title!,
                   description: playlist.description ?? playlist.subtitle,
-                  backgroundUrl: playlist.photo!.photo270!,
+                  backgroundUrl: playlist.photo!.photo270,
                   cacheKey: "${playlist.mediaKey}270",
                   selected: player.currentPlaylist == playlist,
                   currentlyPlaying: player.playing,

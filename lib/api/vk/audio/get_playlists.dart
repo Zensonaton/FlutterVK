@@ -1,7 +1,5 @@
 // ignore_for_file: non_constant_identifier_names
 
-import "dart:convert";
-
 import "package:json_annotation/json_annotation.dart";
 
 import "../api.dart";
@@ -30,7 +28,7 @@ class APIAudioGetPlaylistsRealResponse {
       _$APIAudioGetPlaylistsRealResponseToJson(this);
 }
 
-/// Ответ для метода [audio_getPlaylists].
+/// Ответ для метода [audio_get_playlists].
 @JsonSerializable()
 class APIAudioGetPlaylistsResponse {
   /// Объект ответа.
@@ -49,14 +47,16 @@ class APIAudioGetPlaylistsResponse {
   Map<String, dynamic> toJson() => _$APIAudioGetPlaylistsResponseToJson(this);
 }
 
-/// Возвращает информацию о аудио плейлистах указанного пользователя.
+/// {@template VKAPI.audio.getPlaylists}
+/// Возвращает информацию о плейлистах пользователя.
+/// {@endtemplate}
 ///
 /// API: `audio.getPlaylists`.
-Future<APIAudioGetPlaylistsResponse> audio_getPlaylists(
+Future<APIAudioGetPlaylistsResponse> audio_get_playlists(
   String token,
   int userID,
 ) async {
-  var response = await vkAPIcall(
+  var response = await callVkAPI(
     "audio.getPlaylists",
     token,
     {
@@ -65,5 +65,5 @@ Future<APIAudioGetPlaylistsResponse> audio_getPlaylists(
     },
   );
 
-  return APIAudioGetPlaylistsResponse.fromJson(jsonDecode(response.body));
+  return APIAudioGetPlaylistsResponse.fromJson(response.data);
 }

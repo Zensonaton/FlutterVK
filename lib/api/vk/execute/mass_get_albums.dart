@@ -5,12 +5,13 @@ import "dart:convert";
 import "package:flutter/foundation.dart";
 import "package:json_annotation/json_annotation.dart";
 
-import "../execute.dart";
+import "../../../utils.dart";
+import "../api.dart";
 import "../shared.dart";
 
-part "mass_audio_albums.g.dart";
+part "mass_get_albums.g.dart";
 
-/// Ответ для метода [scripts_massAlbumsGet].
+/// Ответ для метода [execute_mass_get_albums].
 @JsonSerializable()
 class APIMassAudioAlbumsResponse {
   /// Объект ответа.
@@ -29,15 +30,29 @@ class APIMassAudioAlbumsResponse {
   Map<String, dynamic> toJson() => _$APIMassAudioAlbumsResponseToJson(this);
 }
 
+/// {@template VKAPI.execute.massGetAlbums}
 /// Массово извлекает информацию по альбомам (и, соответственно, изображениям) треков.
 ///
+/// Передавая [mediaKeys], данный список будет автоматически разделён на группы по 200 элементов максимум, что бы избежать лимита API ВКонтакте.
+/// {@endtemplate}
+///
 /// Для данного метода требуется токен от VK Admin.
-Future<APIMassAudioAlbumsResponse> scripts_massAlbumsGet(
+Future<APIMassAudioAlbumsResponse> execute_mass_get_albums(
   String token,
-  List<String> audioMediaIDs,
+  List<String> mediaKeys,
 ) async {
-  final String executeCode = """
-var audioMediaIDs = ${jsonEncode(audioMediaIDs)};
+  final List<String> groupedMediaKeys = List.generate(
+    (mediaKeys.length / 200).ceil(),
+    (i) => mediaKeys
+        .sublist(
+          i * 200,
+          (i * 200 + 200).clamp(0, mediaKeys.length),
+        )
+        .join(","),
+  );
+
+  final String codeToExecute = """
+var audioMediaIDs = ${jsonEncode(groupedMediaKeys)};
 
 var audioAlbums = [];
 
@@ -50,13 +65,16 @@ while (mediaIndex < audioMediaIDs.length) {
 
 return audioAlbums;""";
 
-  var response = await VKExecuteAPI.execute(
+  var response = await callVkAPI(
+    "execute",
     token,
-    executeCode,
+    {
+      "code": minimizeJS(codeToExecute),
+    },
   );
 
   return await compute(
-    (message) => APIMassAudioAlbumsResponse.fromJson(jsonDecode(message)),
-    response.body,
+    (message) => APIMassAudioAlbumsResponse.fromJson(message),
+    response.data,
   );
 }

@@ -1,7 +1,5 @@
 // ignore_for_file: non_constant_identifier_names
 
-import "dart:convert";
-
 import "package:json_annotation/json_annotation.dart";
 
 import "../../../db/schemas/playlists.dart";
@@ -145,20 +143,22 @@ class APIAudioGetLyricsResponse {
   Map<String, dynamic> toJson() => _$APIAudioGetLyricsResponseToJson(this);
 }
 
+/// {@template VKAPI.audio.getLyrics}
 /// Возвращает текст песни (lyrics) у трека по его передаваемому ID ([Audio.mediaKey]).
+/// {@endtemplate}
 ///
 /// API: `audio.getLyrics`.
 Future<APIAudioGetLyricsResponse> audio_get_lyrics(
   String token,
-  String audioID,
+  String mediaKey,
 ) async {
-  var response = await vkAPIcall(
+  var response = await callVkAPI(
     "audio.getLyrics",
     token,
     {
-      "audio_id": audioID,
+      "audio_id": mediaKey,
     },
   );
 
-  return APIAudioGetLyricsResponse.fromJson(jsonDecode(response.body));
+  return APIAudioGetLyricsResponse.fromJson(response.data);
 }

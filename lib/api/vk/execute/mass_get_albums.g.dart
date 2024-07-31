@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'mass_audio_albums.dart';
+part of 'mass_get_albums.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator

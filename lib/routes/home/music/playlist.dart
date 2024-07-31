@@ -1824,7 +1824,7 @@ class PlaylistRoute extends HookConsumerWidget {
         // Небольшой Gap, что бы интерфейс был не слишком сжат.
         const SliverGap(8),
       ],
-      [mobileLayout, maxAppBarHeight, isSearchOpen.value],
+      [mobileLayout, maxAppBarHeight, isSearchOpen.value, playlist],
     );
 
     return PopScope(

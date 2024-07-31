@@ -1,10 +1,14 @@
 import "dart:io";
 
+import "package:awesome_dio_interceptor/awesome_dio_interceptor.dart";
 import "package:catcher_2/core/catcher_2.dart";
 import "package:catcher_2/handlers/console_handler.dart";
 import "package:catcher_2/handlers/file_handler.dart";
 import "package:catcher_2/mode/silent_report_mode.dart";
 import "package:catcher_2/model/catcher_2_options.dart";
+import "package:dio/dio.dart";
+import "package:dio_http2_adapter/dio_http2_adapter.dart";
+import "package:dio_smart_retry/dio_smart_retry.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
@@ -22,6 +26,7 @@ import "package:shared_preferences/shared_preferences.dart";
 import "package:system_tray/system_tray.dart";
 import "package:window_manager/window_manager.dart";
 
+import "api/vk/consts.dart";
 import "app.dart";
 import "consts.dart";
 import "db/db.dart";
@@ -40,7 +45,7 @@ import "utils.dart";
 ///
 /// Пример использования:
 /// ```dart
-/// navigatorKey.currentContext?.go("/grades");
+/// navigatorKey.currentContext?.go("/music");
 /// ```
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -56,11 +61,29 @@ late final ConnectivityManager connectivityManager;
 /// Плагин для создания уведомлений на OS Android.
 late final FlutterLocalNotificationsPlugin notificationsPlugin;
 
-/// Обработчик события нажатия на уведомление от [notificationsPlugin].
-@pragma("vm:entry-point")
-void notificationTap(NotificationResponse notificationResponse) {
-  navigatorKey.currentContext?.go("/profile/downloadManager");
-}
+/// Объект [Dio], позволяющий создавать HTTP-запросы.
+///
+/// Данный объект содержит в себе interceptor'ы, позволяющие:
+/// - Повторять запрос в случае ошибки сети.
+/// - Логировать запросы и их ответы.
+///
+/// Пример использования:
+/// ```dart
+/// await dio.get("https://example.com/")
+/// ```
+late final Dio dio;
+
+/// Объект [Dio], позволяющий создавать HTTP-запросы, настроенный конкретно под работу с API ВКонтакте.
+///
+/// Данный объект содержит в себе interceptor'ы, позволяющие:
+/// - Повторять запрос в случае ошибки сети.
+/// - Логировать запросы и их ответы.
+///
+/// Пример использования:
+/// ```dart
+/// await dio.post("users.get")
+/// ```
+late final Dio vkDio;
 
 /// [ColorScheme] яркости [Brightness.light], которая используется в случае, если по какой-то причине приложение не смогло получить цвета акцента, либо цвета музыкального плеера.
 final fallbackLightColorScheme = ColorScheme.fromSeed(
@@ -77,6 +100,54 @@ final fallbackDarkColorScheme = ColorScheme.fromSeed(
 
 /// Версия приложения.
 late String appVersion;
+
+/// Обработчик события нажатия на уведомление от [notificationsPlugin].
+@pragma("vm:entry-point")
+void notificationTap(NotificationResponse notificationResponse) {
+  navigatorKey.currentContext?.go("/profile/downloadManager");
+}
+
+/// Возвращает объект [Dio] с зарегистрированными [Interceptor]'ами.
+void initDioInterceptors(Dio dio, {String loggerName = "Dio"}) {
+  final AppLogger logger = getLogger(loggerName);
+
+  // Игнорируем плохие SSL-сертификаты.
+  dio.httpClientAdapter = Http2Adapter(
+    ConnectionManager(
+      onClientCreate: (_, config) => config.onBadCertificate = (_) => true,
+    ),
+  );
+
+  dio.interceptors.addAll([
+    // Обработчик для повтора HTTP-запросов в случае ошибок сети.
+    RetryInterceptor(
+      dio: dio,
+      retryDelays: const [
+        Duration(
+          seconds: 1,
+        ),
+      ],
+    ),
+
+    // Обработчик для логирования HTTP-запросов и их ответов в debug-режиме.
+    if (kDebugMode)
+      AwesomeDioInterceptor(
+        logRequestTimeout: false,
+        logRequestHeaders: false,
+        logResponseHeaders: false,
+        logger: (String log) {
+          String newLog = log;
+
+          // Если слишком длинное, то обрезаем.
+          if (newLog.length > 300) {
+            newLog = "${newLog.substring(0, 300)}...";
+          }
+
+          logger.d(newLog);
+        },
+      ),
+  ]);
+}
 
 /// Инициализирует запись в системном трее Windows.
 Future<void> initSystemTray(AppLocalizations l18n) async {
@@ -137,18 +208,6 @@ Future<void> initSystemTray(AppLocalizations l18n) async {
       }
     },
   );
-}
-
-/// Используется для исправления ошибки невалидных SSL-сертификатов.
-///
-/// Источник: https://github.com/dart-lang/http/issues/458#issuecomment-932652512.
-class DevHttpOverrides extends HttpOverrides {
-  @override
-  HttpClient createHttpClient(SecurityContext? context) {
-    return super.createHttpClient(context)
-      ..badCertificateCallback =
-          (X509Certificate cert, String host, int port) => true;
-  }
 }
 
 Future main() async {
@@ -266,6 +325,34 @@ Future main() async {
       );
     }
 
+    // Создаём объекты Dio.
+    dio = Dio(
+      BaseOptions(
+        headers: {
+          "User-Agent": vkAPIKateMobileUA,
+        },
+      ),
+    );
+    vkDio = Dio(
+      BaseOptions(
+        baseUrl: vkAPIBaseURL,
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "User-Agent": vkAPIKateMobileUA,
+
+          // TODO: QUIC support
+          // "x-quic": "1",
+          // "x-response-format": "msgpack",
+          // "accept-encoding": "zstd",
+        },
+      ),
+    );
+    initDioInterceptors(dio);
+    initDioInterceptors(
+      vkDio,
+      loggerName: "VKDio",
+    );
+
     // Загружаем базу данных Isar.
     appStorage = AppStorage();
 
@@ -333,9 +420,6 @@ Future main() async {
     appVersion = (await PackageInfo.fromPlatform()).version;
 
     logger.i("Running Flutter VK v$appVersion");
-
-    // Фикс сертификатов.
-    HttpOverrides.global = DevHttpOverrides();
 
     // Запускаем само приложение, а так же делаем глобальный обработчик ошибок.
     Catcher2(

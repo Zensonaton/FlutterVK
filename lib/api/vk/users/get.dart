@@ -1,7 +1,5 @@
 // ignore_for_file: non_constant_identifier_names
 
-import "dart:convert";
-
 import "package:json_annotation/json_annotation.dart";
 
 import "../api.dart";
@@ -29,22 +27,24 @@ class APIUsersGetResponse {
   Map<String, dynamic> toJson() => _$APIUsersGetResponseToJson(this);
 }
 
+/// {@template VKAPI.users.get}
 /// Получает публичную информацию о пользователях с передаваемым ID, либо же о владельце текущей страницы, если ID не передаётся.
+/// {@endtemplate}
 ///
 /// API: `users.get`.
 Future<APIUsersGetResponse> users_get(
   String token, {
-  List<int>? userIDs,
+  List<int>? ids,
   String? fields = vkAPIallUserFields,
 }) async {
-  var response = await vkAPIcall(
+  var response = await callVkAPI(
     "users.get",
     token,
     {
-      "user_ids": userIDs?.toString(),
+      "user_ids": ids?.toString(),
       "fields": fields,
     },
   );
 
-  return APIUsersGetResponse.fromJson(jsonDecode(response.body));
+  return APIUsersGetResponse.fromJson(response.data);
 }

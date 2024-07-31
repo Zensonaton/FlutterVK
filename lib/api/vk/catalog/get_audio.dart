@@ -1,7 +1,5 @@
 // ignore_for_file: non_constant_identifier_names
 
-import "dart:convert";
-
 import "package:json_annotation/json_annotation.dart";
 
 import "../api.dart";
@@ -244,7 +242,7 @@ class APICatalogRealResponse {
   Map<String, dynamic> toJson() => _$APICatalogRealResponseToJson(this);
 }
 
-/// Ответ для метода [catalog_getAudio].
+/// Ответ для метода [catalog_get_audio].
 @JsonSerializable()
 class APICatalogGetAudioResponse {
   /// Объект ответа.
@@ -263,17 +261,21 @@ class APICatalogGetAudioResponse {
   Map<String, dynamic> toJson() => _$APICatalogGetAudioResponseToJson(this);
 }
 
+/// {@template VKAPI.catalog.getAudio}
 /// Возвращает информацию о категории для раздела "аудио".
+/// {@endtemplate}
 ///
 /// API: `catalog.getAudio`.
-Future<APICatalogGetAudioResponse> catalog_getAudio(
+Future<APICatalogGetAudioResponse> catalog_get_audio(
   String token,
 ) async {
-  var response = await vkAPIcall(
+  var response = await callVkAPI(
     "catalog.getAudio",
     token,
-    {"need_blocks": "1"},
+    {
+      "need_blocks": "1",
+    },
   );
 
-  return APICatalogGetAudioResponse.fromJson(jsonDecode(response.body));
+  return APICatalogGetAudioResponse.fromJson(response.data);
 }
