@@ -75,10 +75,11 @@ Future<void> onPlaylistPlayToggle(
   }
 
   // Если информация по плейлисту не загружена, то мы должны её загрузить.
-  await ref.read(playlistsProvider.notifier).loadPlaylist(playlist);
+  final newPlaylist =
+      await ref.read(playlistsProvider.notifier).loadPlaylist(playlist);
 
   // Всё ок, запускаем воспроизведение.
-  await player.setPlaylist(playlist, randomTrack: true);
+  await player.setPlaylist(newPlaylist, randomTrack: true);
 }
 
 /// Диалог, спрашивающий у пользователя разрешения на запуск кэширования плейлиста.

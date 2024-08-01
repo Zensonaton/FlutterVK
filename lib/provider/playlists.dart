@@ -775,7 +775,9 @@ class Playlists extends _$Playlists {
   /// Загружает информацию с API ВКонтакте по [playlist], если она не была загружена ранее, и обновляет state данного объекта.
   ///
   /// После успешной загрузки, [createCacheTask] диктует, будет ли создана задача по кэшированию треков в данном плейлисте.
-  Future<void> loadPlaylist(
+  ///
+  /// Возвращает новую версию [ExtendedPlaylist] с обновлёнными данными.
+  Future<ExtendedPlaylist> loadPlaylist(
     ExtendedPlaylist playlist, {
     bool createCacheTask = true,
   }) async {
@@ -786,7 +788,7 @@ class Playlists extends _$Playlists {
         (playlist.audios != null &&
             playlist.isLiveData &&
             playlist.areTracksLive)) {
-      return;
+      return playlist;
     }
 
     logger.d("Loading data for $playlist");
@@ -799,24 +801,26 @@ class Playlists extends _$Playlists {
     raiseOnAPIError(response);
 
     // Обновляем плейлист.
+    final newPlaylist = playlist.copyWith(
+      photo: response.response!.playlists
+          .firstWhereOrNull(
+            (item) => item.mediaKey == playlist.mediaKey,
+          )
+          ?.photo,
+      audios: response.response!.audios
+          .map(
+            (item) => ExtendedAudio.fromAPIAudio(item),
+          )
+          .toList(),
+      count: response.response!.audioCount,
+      isLiveData: true,
+      areTracksLive: true,
+    );
+
     final update = await updatePlaylist(
-      playlist.copyWith(
-        photo: response.response!.playlists
-            .firstWhereOrNull(
-              (item) => item.mediaKey == playlist.mediaKey,
-            )
-            ?.photo,
-        audios: response.response!.audios
-            .map(
-              (item) => ExtendedAudio.fromAPIAudio(item),
-            )
-            .toList(),
-        count: response.response!.audioCount,
-        isLiveData: true,
-        areTracksLive: true,
-      ),
+      newPlaylist,
       fromAPI: true,
-      // saveInDB: true,
+      saveInDB: true,
     );
 
     // Если плейлист изменился, то создаём задачу по кэшированию.
@@ -827,6 +831,8 @@ class Playlists extends _$Playlists {
         deletedAudios: update.deletedAudios,
       );
     }
+
+    return newPlaylist;
   }
 }
 
