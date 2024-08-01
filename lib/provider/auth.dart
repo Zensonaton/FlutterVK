@@ -65,7 +65,7 @@ class CurrentAuthState extends _$CurrentAuthState {
 
     // Удаляем папку с кэшированными треками, если такие вообще есть.
     final Directory tracksDirectory = Directory(
-      await CachedStreamedAudio.getTrackStorageDirectory(),
+      await CachedStreamAudioSource.getTrackStorageDirectory(),
     );
 
     if (tracksDirectory.existsSync()) {

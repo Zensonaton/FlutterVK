@@ -395,7 +395,7 @@ Future main() async {
     if (isDesktop) {
       final File readmeFile = File(
         path.join(
-          await CachedStreamedAudio.getTrackStorageDirectory(),
+          await CachedStreamAudioSource.getTrackStorageDirectory(),
           tracksCacheReadmeFileName,
         ),
       );

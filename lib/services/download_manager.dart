@@ -76,13 +76,16 @@ class PlaylistCacheDeleteDownloadItem extends DownloadItem {
 
   @override
   Future<void> download() async {
-    final file = await CachedStreamedAudio.getCachedAudioByKey(audio.mediaKey);
+    final file =
+        await CachedStreamAudioSource.getCachedAudioByKey(audio.mediaKey);
 
     // Если файл есть на диске, то удаляем его.
     if (file.existsSync()) {
-      // Удаляем файл, а так же папку, в которой он находился, если она пустая.
+      await file.delete();
+
+      // Удаляем папку, хранящую кэшированный файл, если она пуста.
+      // Здесь используется try-catch, так как .delete() может вызвать ошибку, если папка не пуста.
       try {
-        await file.delete();
         await file.parent.delete();
       } catch (e) {
         // No-op.
@@ -150,7 +153,8 @@ class PlaylistCacheDownloadItem extends DownloadItem {
 
   /// Загружает трек, возвращая true, если он был успешно загружен.
   Future<bool> _downloadAudio() async {
-    final file = await CachedStreamedAudio.getCachedAudioByKey(audio.mediaKey);
+    final file =
+        await CachedStreamAudioSource.getCachedAudioByKey(audio.mediaKey);
 
     // Если файл уже загружен, то не загружаем его.
     if (!file.existsSync() && audio.url != null) {

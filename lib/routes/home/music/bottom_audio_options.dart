@@ -439,7 +439,7 @@ class BottomAudioOptionsDialog extends ConsumerWidget {
                   onTap: () {
                     if (!networkRequiredDialog(ref, context)) return;
 
-                    context.pop();
+                    Navigator.of(context).pop();
 
                     showDialog(
                       context: context,
@@ -527,7 +527,7 @@ class BottomAudioOptionsDialog extends ConsumerWidget {
                   onTap: () async {
                     if (!networkRequiredDialog(ref, context)) return;
 
-                    context.pop();
+                    Navigator.of(context).pop();
 
                     try {
                       // TODO: Загружаем трек.
@@ -562,7 +562,7 @@ class BottomAudioOptionsDialog extends ConsumerWidget {
                   onTap: () {
                     if (!networkRequiredDialog(ref, context)) return;
 
-                    context.pop();
+                    Navigator.of(context).pop();
 
                     showDialog(
                       context: context,
@@ -611,7 +611,7 @@ class BottomAudioOptionsDialog extends ConsumerWidget {
                         ),
                       );
 
-                      context.pop();
+                      Navigator.of(context).pop();
                     },
                   ),
 
@@ -626,10 +626,10 @@ class BottomAudioOptionsDialog extends ConsumerWidget {
                       ),
                       enabled: audio.isCached ?? false,
                       onTap: () async {
-                        context.pop();
+                        Navigator.of(context).pop();
 
                         final File path =
-                            await CachedStreamedAudio.getCachedAudioByKey(
+                            await CachedStreamAudioSource.getCachedAudioByKey(
                           audio.mediaKey,
                         );
                         await Process.run(

@@ -41,7 +41,167 @@ enum MediaNotificationAction {
 }
 
 /// Расширение [StreamAudioSource] для `just_audio`, который воспроизводит аудио по передаваемому [Uri], а после загрузки аудио сохраняет его в кэш.
-class CachedStreamedAudio extends StreamAudioSource {
+class CachedStreamAudioSource extends StreamAudioSource {
+  static final AppLogger logger = getLogger("CachedStreamedAudio");
+
+  /// [HttpClient] для загрузки треков.
+  final HttpClient _client = HttpClient();
+
+  /// [Ref] для определения того, будет ли трек кэшироваться после загрузки плеером.
+  final Ref _ref;
+
+  /// Трек, данные которого будут загружаться.
+  final ExtendedAudio audio;
+
+  /// Плейлист, в котором находится данный трек.
+  final ExtendedPlaylist playlist;
+
+  /// Возвращает путь к корневой папке, хранящий в себе кэшированные треки.
+  ///
+  /// К примеру, на Windows это `%APPDATA%/com.zensonaton/Flutter VK/audios-v2`.
+  static Future<String> getTrackStorageDirectory() async => join(
+        (await getApplicationSupportDirectory()).path,
+        "audios-v2",
+      );
+
+  /// Возвращает объект типа [File] по передаваемому [ExtendedAudio.mediaKey], в котором хранится кэшированный трек.
+  ///
+  /// Учтите, что данный метод не проверяет на существование файла. Для проверки на существование файла воспользуйтесь методом [File.existsSync].
+  static Future<File> getCachedAudioByKey(String mediaKey) async {
+    final hash = sha256
+        .convert(
+          utf8.encode(mediaKey),
+        )
+        .toString();
+
+    return File(
+      join(
+        await getTrackStorageDirectory(), // Корень (папка с треками)
+        hash.substring(0, 2), // Папка
+        hash.substring(0, 32), // Файл
+      ),
+    );
+  }
+
+  /// Возвращает объект типа [File], олицетворяющий файл кэша для данного трека.
+  ///
+  /// Учтите, что данный метод не проверяет на существование файла. Для проверки на существование файла воспользуйтесь методом [File.existsSync].
+  Future<File> getAudioCacheFile() => getCachedAudioByKey(audio.mediaKey);
+
+  CachedStreamAudioSource({
+    required Ref ref,
+    required this.audio,
+    required this.playlist,
+  }) : _ref = ref;
+
+  /// Загружает трек из кэша, и возвращает [StreamAudioResponse]. Если кэшированного трека нет, то возвращает null.
+  ///
+  /// Если по какой-то причине кэш поломан (скажем, [ExtendedAudio.isCached] но файла нет или наоборот), то данный метод может пометить трек как (не-)кэшированный.
+  Future<StreamAudioResponse?> acquireCache({int? start, int? end}) async {
+    final file = await getAudioCacheFile();
+    final fileExists = file.existsSync();
+    final markedAsCached = audio.isCached ?? false;
+    bool? newCachedState;
+
+    // TODO: Случай, если по какой-то причине файл кэша повреждён (например, его размер не соответствует длине трека).
+
+    // Логирование странных случаев:
+    //  1. Трек помечен как кэшированный, но файл кэша не найден.
+    //  2. Трек не помечен как кэшированный, но файл кэша найден.
+    if (markedAsCached && !fileExists) {
+      logger.w(
+        "Expected audio ${audio.mediaKey} to have cache file at ${file.path}; will mark as not cached",
+      );
+
+      // Помечаем трек как не кэшированный.
+      newCachedState = false;
+    } else if (!markedAsCached && fileExists) {
+      logger.w(
+        "Audio ${audio.mediaKey} is not marked as cached, but cache file was found; will mark as cached",
+      );
+
+      // Помечаем трек как кэшированный.
+      newCachedState = true;
+    }
+
+    // Изменяем состояние кэша трека, если он ранее изменился.
+    if (newCachedState != null) {
+      _ref.read(playlistsProvider.notifier).updatePlaylist(
+            _ref
+                .read(getPlaylistProvider(playlist.ownerID, playlist.id))!
+                .copyWithNewAudio(
+                  audio.copyWith(
+                    isCached: newCachedState,
+                  ),
+                ),
+            saveInDB: true,
+          );
+    }
+
+    // Файл кэша не существует.
+    if (!fileExists) return null;
+
+    final int length = file.lengthSync();
+
+    return StreamAudioResponse(
+      sourceLength: start != null ? length : null,
+      contentLength: (end ?? length) - (start ?? 0),
+      offset: start,
+      contentType: "audio/mpeg",
+      stream: file.openRead(start, end).asBroadcastStream(),
+    );
+  }
+
+  /// Загружает трек, и возвращает [StreamAudioResponse].
+  Future<StreamAudioResponse> fetch({int? start, int? end}) async {
+    assert(
+      audio.url != null,
+      "Audio URL is null",
+    );
+    assert(
+      audio.url!.contains(".mp3"),
+      "Expected audio URL to be mp3 file",
+    );
+
+    // Подготавливаем запрос на загрузку трека.
+    // Здесь трек не загружется, а просто извлекается информация по его размеру.
+    final request = await _client.getUrl(Uri.parse(audio.url!))
+      ..headers.add("Range", "bytes=${start ?? 0}-");
+    final response = await request.close();
+    if (response.statusCode >= 300) {
+      throw Exception("HTTP Status Error: ${response.statusCode}");
+    }
+
+    // Извлекаем размер.
+    final int length = response.contentLength + (start ?? 0);
+    logger.d(
+      "Content length for ${audio.mediaKey}: $length, range: $start-$end",
+    );
+
+    return StreamAudioResponse(
+      sourceLength: start != null ? length : null,
+      contentLength: (end ?? length) - (start ?? 0),
+      offset: start,
+      contentType: "audio/mpeg",
+      stream: response.asBroadcastStream(),
+    );
+  }
+
+  @override
+  Future<StreamAudioResponse> request([int? start, int? end]) async {
+    // Пытаемся загрузить трек из кэша.
+    final cacheFile = await acquireCache();
+    if (cacheFile != null) {
+      return cacheFile;
+    }
+
+    // Загружаем трек.
+    return await fetch(start: start, end: end);
+  }
+}
+
+/// Расширение [StreamAudioSource] для `just_audio`, который воспроизводит аудио по передаваемому [Uri], а после загрузки аудио сохраняет его в кэш.
+class OldCachedStreamedAudio extends StreamAudioSource {
   static final AppLogger logger = getLogger("OldCachedStreamedAudio");
 
   /// Map из [StreamSubscription], который защищает от повторной загрузки одного и того же трека.
@@ -54,7 +214,7 @@ class CachedStreamedAudio extends StreamAudioSource {
   /// Трек, данные которого будут загружаться.
   final ExtendedAudio audio;
 
-  CachedStreamedAudio({
+  OldCachedStreamedAudio({
     required this.audio,
   });
 
@@ -1063,8 +1223,10 @@ class VKMusicPlayer {
     _queue = ConcatenatingAudioSource(
       children: _audiosQueue!
           .map(
-            (ExtendedAudio audio) => CachedStreamedAudio(
+            (ExtendedAudio audio) => CachedStreamAudioSource(
+              ref: _ref,
               audio: audio,
+              playlist: playlist,
             ),
           )
           .toList(),
@@ -1105,8 +1267,10 @@ class VKMusicPlayer {
 
     await _queue!.insert(
       nextTrackIndex!,
-      CachedStreamedAudio(
+      CachedStreamAudioSource(
+        ref: _ref,
         audio: audio,
+        playlist: currentPlaylist!,
       ),
     );
     _audiosQueue!.insert(
@@ -1123,8 +1287,10 @@ class VKMusicPlayer {
     );
 
     await _queue!.add(
-      CachedStreamedAudio(
+      CachedStreamAudioSource(
+        ref: _ref,
         audio: audio,
+        playlist: currentPlaylist!,
       ),
     );
     _audiosQueue!.add(
