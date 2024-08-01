@@ -42,8 +42,10 @@ class MyMusicBlock extends HookConsumerWidget {
         return;
       }
 
-      await player.setShuffle(true);
-
+      await player.setShuffle(
+        true,
+        disableAudioMixCheck: true,
+      );
       await player.setPlaylist(
         playlist!,
         selectedTrack: playlist.audios!.randomItem(),

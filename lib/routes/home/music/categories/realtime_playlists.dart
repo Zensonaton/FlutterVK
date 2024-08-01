@@ -1,70 +1,22 @@
-import "dart:async";
-
 import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
 import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:just_audio/just_audio.dart";
 import "package:lottie/lottie.dart";
 import "package:skeletonizer/skeletonizer.dart";
 
-import "../../../../api/vk/api.dart";
-import "../../../../api/vk/audio/get_stream_mix_audios.dart";
 import "../../../../consts.dart";
 import "../../../../main.dart";
 import "../../../../provider/l18n.dart";
 import "../../../../provider/player_events.dart";
 import "../../../../provider/playlists.dart";
 import "../../../../provider/user.dart";
-import "../../../../provider/vk_api.dart";
 import "../../../../services/logger.dart";
 import "../../../../utils.dart";
 import "../playlist.dart";
 
 /// Указывает минимальное треков из аудио микса, которое обязано быть в очереди плеера. Если очередь плейлиста состоит из меньшего количества треков, то очередь будет восполнена этим значением.
 const int minMixAudiosCount = 3;
-
-/// Метод, вызываемый при нажатии нажатии по аудио микс-плейлисту (VK Mix). Данный метод либо ставит плейлист на паузу, либо возобновляет воспроизведение.
-Future<void> onMixPlayToggle(
-  WidgetRef ref,
-  ExtendedPlaylist playlist,
-) async {
-  assert(
-    playlist.isAudioMixPlaylist,
-    "onMixPlayToggle can only be called for audio mix playlists",
-  );
-
-  final api = ref.read(vkAPIProvider);
-
-  // Если у нас играет этот же плейлист, то тогда мы попросту должны поставить на паузу/убрать паузу.
-  if (player.currentPlaylist?.mediaKey == playlist.mediaKey) {
-    return player.togglePlay();
-  }
-
-  final APIAudioGetStreamMixAudiosResponse response =
-      await api.audio.getStreamMixAudiosWithAlbums(count: minMixAudiosCount);
-  raiseOnAPIError(response);
-
-  playlist.audios = response.response!
-      .map(
-        (audio) => ExtendedAudio.fromAPIAudio(audio),
-      )
-      .toList();
-  playlist.count = response.response!.length;
-
-  // Всё ок, запускаем воспроизведение, отключив при этом shuffle, а так же зацикливание плейлиста.
-  if (player.shuffleModeEnabled) {
-    await player.setShuffle(false);
-  }
-  if (player.loopMode != LoopMode.off) {
-    await player.setLoop(LoopMode.off);
-  }
-
-  await player.setPlaylist(
-    playlist,
-    setLoopAll: false,
-  );
-}
 
 /// Fallback-виджет, отображаемый вместо аудио миксов по типу VK Mix.
 class FallbackMixPlaylistWidget extends StatelessWidget {

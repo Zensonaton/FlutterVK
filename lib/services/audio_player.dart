@@ -986,10 +986,15 @@ class VKMusicPlayer {
   }
 
   /// Включает или отключает случайное перемешивание треков в данном плейлисте, в зависимости от аргумента [shuffle].
-  Future<void> setShuffle(bool shuffle) async {
-    if (shuffle) {
+  ///
+  /// [shuffle] не может быть true, если [currentPlaylist] является плейлистом типа VK Mix ([ExtendedPlaylist.isAudioMixPlaylist]).
+  Future<void> setShuffle(
+    bool shuffle, {
+    bool disableAudioMixCheck = false,
+  }) async {
+    if (shuffle && !disableAudioMixCheck) {
       assert(
-        !(player.currentPlaylist?.isAudioMixPlaylist ?? false),
+        !(currentPlaylist?.isAudioMixPlaylist ?? false),
         "Attempted to enable shuffle for audio mix",
       );
     }

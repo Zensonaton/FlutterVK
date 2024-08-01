@@ -12,10 +12,13 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:humanize_duration/humanize_duration.dart";
+import "package:just_audio/just_audio.dart";
 import "package:skeletonizer/skeletonizer.dart";
 import "package:styled_text/tags/styled_text_tag_action.dart";
 import "package:styled_text/widgets/styled_text.dart";
 
+import "../../../api/vk/api.dart";
+import "../../../api/vk/audio/get_stream_mix_audios.dart";
 import "../../../api/vk/shared.dart";
 import "../../../consts.dart";
 import "../../../main.dart";
@@ -25,6 +28,7 @@ import "../../../provider/l18n.dart";
 import "../../../provider/player_events.dart";
 import "../../../provider/playlists.dart";
 import "../../../provider/user.dart";
+import "../../../provider/vk_api.dart";
 import "../../../services/cache_manager.dart";
 import "../../../services/download_manager.dart";
 import "../../../services/logger.dart";
@@ -33,6 +37,7 @@ import "../../../widgets/audio_track.dart";
 import "../../../widgets/dialogs.dart";
 import "../../../widgets/fallback_audio_photo.dart";
 import "../../../widgets/loading_button.dart";
+import "categories/realtime_playlists.dart";
 
 /// Проверяет, подходит ли [Audio] под запрос [query].
 ///
@@ -62,7 +67,9 @@ List<ExtendedAudio> filterAudiosByName(
       .toList();
 }
 
-/// Метод, вызываемый при нажатии по центру плейлиста. Данный метод либо ставит плейлист на паузу, либо загружает его информацию.
+/// Метод, вызываемый при нажатии по центру плейлиста.
+///
+/// Данный метод либо ставит плейлист на паузу, либо загружает его информацию.
 Future<void> onPlaylistPlayToggle(
   WidgetRef ref,
   BuildContext context,
@@ -80,6 +87,50 @@ Future<void> onPlaylistPlayToggle(
 
   // Всё ок, запускаем воспроизведение.
   await player.setPlaylist(newPlaylist, randomTrack: true);
+}
+
+/// Метод, вызываемый при нажатии нажатии по аудио микс-плейлисту (VK Mix).
+///
+/// Данный метод либо ставит плейлист на паузу, либо возобновляет воспроизведение.
+Future<void> onMixPlayToggle(
+  WidgetRef ref,
+  ExtendedPlaylist playlist,
+) async {
+  assert(
+    playlist.isAudioMixPlaylist,
+    "onMixPlayToggle can only be called for audio mix playlists",
+  );
+
+  final api = ref.read(vkAPIProvider);
+
+  // Если у нас играет этот же плейлист, то тогда мы попросту должны поставить на паузу/убрать паузу.
+  if (player.currentPlaylist?.mediaKey == playlist.mediaKey) {
+    return player.togglePlay();
+  }
+
+  final APIAudioGetStreamMixAudiosResponse response =
+      await api.audio.getStreamMixAudiosWithAlbums(count: minMixAudiosCount);
+  raiseOnAPIError(response);
+
+  playlist.audios = response.response!
+      .map(
+        (audio) => ExtendedAudio.fromAPIAudio(audio),
+      )
+      .toList();
+  playlist.count = response.response!.length;
+
+  // Всё ок, запускаем воспроизведение, отключив при этом shuffle, а так же зацикливание плейлиста.
+  if (player.shuffleModeEnabled) {
+    await player.setShuffle(false);
+  }
+  if (player.loopMode != LoopMode.off) {
+    await player.setLoop(LoopMode.off);
+  }
+
+  await player.setPlaylist(
+    playlist,
+    setLoopAll: false,
+  );
 }
 
 /// Диалог, спрашивающий у пользователя разрешения на запуск кэширования плейлиста.
@@ -1692,8 +1743,10 @@ class PlaylistRoute extends HookConsumerWidget {
         return;
       }
 
-      await player.setShuffle(true);
-
+      await player.setShuffle(
+        true,
+        disableAudioMixCheck: true,
+      );
       await player.setPlaylist(
         playlist,
         randomTrack: true,
@@ -1716,8 +1769,10 @@ class PlaylistRoute extends HookConsumerWidget {
         return;
       }
 
-      await player.setShuffle(true);
-
+      await player.setShuffle(
+        true,
+        disableAudioMixCheck: true,
+      );
       await player.setPlaylist(
         playlist,
         selectedTrack: foundAudio,
