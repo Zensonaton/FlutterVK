@@ -35,6 +35,7 @@ import "../utils.dart";
 import "audio_player.dart";
 import "dialogs.dart";
 import "download_manager_icon.dart";
+import "update_dialog.dart";
 
 /// Класс для отображения Route'ов в [BottomNavigationBar], вместе с их названиями, а так же иконками.
 class NavigationItem {
@@ -149,19 +150,38 @@ class ShellRouteWrapper extends HookConsumerWidget {
   });
 
   /// Проверяет на наличие обновлений, и дальше предлагает пользователю обновиться, если есть новое обновление.
-  void checkForUpdates(WidgetRef ref, BuildContext context) {
+  void checkForUpdates(WidgetRef ref, BuildContext context) async {
     final preferences = ref.read(preferencesProvider);
+    final preferencesNotifier = ref.read(preferencesProvider.notifier);
+    UpdateBranch updateBranch = preferences.updateBranch;
+
+    // Отображаем уведомление о бета-обновлении, если мы находимся на бета-версии.
+    if (isPrerelease && !preferences.preReleaseWarningShown) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showDialog(
+          context: context,
+          builder: (context) => const PreReleaseInstalledDialog(),
+        );
+
+        // Обновляем настройки.
+        updateBranch = UpdateBranch.preReleases;
+        preferencesNotifier.setUpdateBranch(updateBranch);
+        preferencesNotifier.setPreReleaseWarningShown(true);
+      });
+    }
 
     // Проверяем, есть ли разрешение на обновления, а так же работу интернета.
     if (preferences.updatePolicy == UpdatePolicy.disabled ||
         !connectivityManager.hasConnection) return;
 
     // Проверяем на наличие обновлений.
-    ref.read(updaterProvider).checkForUpdates(
-          context,
-          allowPre: preferences.updateBranch == UpdateBranch.prereleases,
-          useSnackbarOnUpdate: preferences.updatePolicy == UpdatePolicy.popup,
-        );
+    if (context.mounted) {
+      ref.read(updaterProvider).checkForUpdates(
+            context,
+            allowPre: updateBranch == UpdateBranch.preReleases,
+            useSnackbarOnUpdate: preferences.updatePolicy == UpdatePolicy.popup,
+          );
+    }
   }
 
   @override

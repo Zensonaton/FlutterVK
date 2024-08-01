@@ -574,7 +574,7 @@ class UpdatesChannelDialog extends ConsumerWidget {
           title: Text(
             l18n.profile_updatesBranchPrereleases,
           ),
-          value: UpdateBranch.prereleases,
+          value: UpdateBranch.preReleases,
           groupValue: preferences.updateBranch,
           onChanged: onValueChanged,
         ),

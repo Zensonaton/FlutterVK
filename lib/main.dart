@@ -419,7 +419,9 @@ Future main() async {
     // Узнаём версию приложения.
     appVersion = (await PackageInfo.fromPlatform()).version;
 
-    logger.i("Running Flutter VK v$appVersion");
+    logger.i(
+      "Running Flutter VK v$appVersion ${isPrerelease ? "(pre-release)" : ""}",
+    );
 
     // Запускаем само приложение, а так же делаем глобальный обработчик ошибок.
     Catcher2(

@@ -106,6 +106,10 @@ class UserPreferences {
   @JsonKey(name: "DebugPlayerLogging")
   final bool debugPlayerLogging;
 
+  /// Указывает, что было показано предупреждение о том, что пользователь запустил бета-версию приложения.
+  @JsonKey(name: "PreReleaseWarningShown")
+  final bool preReleaseWarningShown;
+
   UserPreferences({
     this.myMusicChipEnabled = true,
     this.playlistsChipEnabled = true,
@@ -130,6 +134,7 @@ class UserPreferences {
     this.dynamicSchemeType = DynamicSchemeType.tonalSpot,
     this.fullscreenBigThumbnail = false,
     this.debugPlayerLogging = false,
+    this.preReleaseWarningShown = false,
   });
 
   /// Делает копию этого класа с новыми передаваемыми значениями.
@@ -157,6 +162,7 @@ class UserPreferences {
     DynamicSchemeType? dynamicSchemeType,
     bool? fullscreenBigThumbnail,
     bool? debugPlayerLogging,
+    bool? preReleaseWarningShown,
   }) =>
       UserPreferences(
         myMusicChipEnabled: myMusicChipEnabled ?? this.myMusicChipEnabled,
@@ -187,6 +193,8 @@ class UserPreferences {
         fullscreenBigThumbnail:
             fullscreenBigThumbnail ?? this.fullscreenBigThumbnail,
         debugPlayerLogging: debugPlayerLogging ?? this.debugPlayerLogging,
+        preReleaseWarningShown:
+            preReleaseWarningShown ?? this.preReleaseWarningShown,
       );
 
   factory UserPreferences.fromJson(Map<String, dynamic> json) =>
@@ -229,6 +237,7 @@ class Preferences extends _$Preferences {
           DynamicSchemeType.values[prefs.getInt("DynamicSchemeType") ?? 0],
       fullscreenBigThumbnail: prefs.getBool("FullscreenBigThumbnail"),
       debugPlayerLogging: prefs.getBool("DebugPlayerLogging"),
+      preReleaseWarningShown: prefs.getBool("PreReleaseWarningShown"),
     );
   }
 
@@ -330,4 +339,7 @@ class Preferences extends _$Preferences {
 
   void setDebugPlayerLogging(bool enabled) =>
       state = state.copyWith(debugPlayerLogging: enabled);
+
+  void setPreReleaseWarningShown(bool enabled) =>
+      state = state.copyWith(preReleaseWarningShown: enabled);
 }

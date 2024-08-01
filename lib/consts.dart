@@ -100,3 +100,6 @@ const double desktopMiniPlayerHeight = 88;
 
 /// Высота мини-плеера снизу при Mobile Layout'е (без учёта верхнего Padding'а в 8)
 const double mobileMiniPlayerHeight = 74;
+
+/// Указывает, что запущена pre-release (бета) версия приложения.
+bool isPrerelease = const String.fromEnvironment("PRERELEASE").isNotEmpty;

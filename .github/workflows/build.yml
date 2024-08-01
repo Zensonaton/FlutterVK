@@ -66,7 +66,7 @@ jobs:
 
       - name: Build Android release
         run: |
-          flutter build apk --release
+          flutter build apk --release --dart-define PRERELEASE=1
           cp ./build/app/outputs/flutter-apk/app-release.apk "./build/Flutter VK Android.apk"
 
       - name: Upload artifact
@@ -100,7 +100,7 @@ jobs:
         run: flutter pub get
 
       - name: Build Windows release
-        run: flutter build windows --release
+        run: flutter build windows --release --dart-define PRERELEASE=1
 
       - name: Build installer and portable .7z archive
         shell: bash
@@ -159,11 +159,12 @@ jobs:
         run: |
           $telegramToken = $env:TELEGRAM_TOKEN
           $telegramTo = $env:TELEGRAM_TO
+          $isPreRelease = $env:PRERELEASE -eq "true"
 
           # Android
           Invoke-RestMethod -Uri "https://api.telegram.org/bot$telegramToken/sendDocument" -Method Post -Form @{
             chat_id = $telegramTo
-            caption = "<b>🚧 Новый билд для Android</b>.`n`n#Android"
+            caption = $isPreRelease ? "<b>🚧 Новый бета-билд для Android</b>.`n`n#Android #preRelease" : "<b>🚧 Новый билд для Android</b>.`n`n#Android"
             parse_mode = 'HTML'
             document = Get-Item -Path './build/Flutter VK Android.apk'
           }
@@ -171,7 +172,7 @@ jobs:
           # Windows installer
           Invoke-RestMethod -Uri "https://api.telegram.org/bot$telegramToken/sendDocument" -Method Post -Form @{
             chat_id = $telegramTo
-            caption = "<b>🚧 Новый билд для Windows</b>.`n`n#Windows #installer"
+            caption = $isPreRelease ? "<b>🚧 Новый бета-билд для Windows</b>.`n`n#Windows #installer #preRelease" : "<b>🚧 Новый билд для Windows</b>.`n`n#Windows #installer"
             parse_mode = 'HTML'
             document = Get-Item -Path './build/Flutter VK installer.exe'
           }
@@ -179,13 +180,14 @@ jobs:
           # Windows portable
           Invoke-RestMethod -Uri "https://api.telegram.org/bot$telegramToken/sendDocument" -Method Post -Form @{
             chat_id = $telegramTo
-            caption = "<b>🚧 Новый билд для Windows</b>.`n`n#Windows #portable"
+            caption = $isPreRelease ? "<b>🚧 Новый бета-билд для Windows</b>.`n`n#Windows #portable #preRelease" : "<b>🚧 Новый билд для Windows</b>.`n`n#Windows #portable"
             parse_mode = 'HTML'
             document = Get-Item -Path './build/Flutter VK portable.7z'
           }
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_TO: ${{ secrets.TELEGRAM_TO }}
+          PRERELEASE: ${{ inputs.pre-release }}
 
       - name: Create release
         if: ${{ inputs.create-release }}

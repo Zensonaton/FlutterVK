@@ -737,7 +737,7 @@ class HomeProfilePage extends HookConsumerWidget {
                       settingText: {
                         UpdateBranch.releasesOnly:
                             l18n.profile_updatesBranchReleases,
-                        UpdateBranch.prereleases:
+                        UpdateBranch.preReleases:
                             l18n.profile_updatesBranchPrereleases,
                       }[preferences.updateBranch]!,
                     ),
@@ -751,7 +751,9 @@ class HomeProfilePage extends HookConsumerWidget {
                         l18n.profile_appVersionTitle,
                       ),
                       subtitle: Text(
-                        l18n.profile_appVersionDescription("v$appVersion"),
+                        l18n.profile_appVersionDescription(
+                          "v$appVersion${isPrerelease ? " (${l18n.profile_appVersionPreRelease})" : ""}",
+                        ),
                       ),
                       onTap: () {
                         if (!networkRequiredDialog(ref, context)) return;
@@ -759,7 +761,7 @@ class HomeProfilePage extends HookConsumerWidget {
                         ref.read(updaterProvider).checkForUpdates(
                               context,
                               allowPre: preferences.updateBranch ==
-                                  UpdateBranch.prereleases,
+                                  UpdateBranch.preReleases,
                               showLoadingOverlay: true,
                               showMessageOnNoUpdates: true,
                             );

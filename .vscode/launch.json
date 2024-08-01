@@ -7,7 +7,10 @@
 		{
 			"name": "Запустить в debug-режиме",
 			"request": "launch",
-			"type": "dart"
+			"type": "dart",
+			"args":[
+				"--dart-define", "PRERELEASE=1"
+			]
 		},
 		{
 			"name": "Запустить в profile-режиме",
@@ -16,7 +19,8 @@
 			"flutterMode": "profile",
 			"args": [
 				"--cache-sksl",
-				"--purge-persistent-cache"
+				"--purge-persistent-cache",
+				"--dart-define", "PRERELEASE=1"
 			]
 		},
 		{
@@ -25,14 +29,18 @@
 			"type": "dart",
 			"flutterMode": "profile",
 			"args": [
-				"--enable-impeller"
+				"--enable-impeller",
+				"--dart-define", "PRERELEASE=1"
 			]
 		},
 		{
 			"name": "Запустить в release-режиме",
 			"request": "launch",
 			"type": "dart",
-			"flutterMode": "release"
+			"flutterMode": "release",
+			"args":[
+				"--dart-define", "PRERELEASE=1"
+			]
 		},
 		{
 			"name": "Подключиться к устройству",

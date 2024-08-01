@@ -42,6 +42,7 @@ UserPreferences _$UserPreferencesFromJson(Map<String, dynamic> json) =>
           DynamicSchemeType.tonalSpot,
       fullscreenBigThumbnail: json['FullscreenBigThumbnail'] as bool? ?? false,
       debugPlayerLogging: json['DebugPlayerLogging'] as bool? ?? false,
+      preReleaseWarningShown: json['PreReleaseWarningShown'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$UserPreferencesToJson(UserPreferences instance) =>
@@ -70,6 +71,7 @@ Map<String, dynamic> _$UserPreferencesToJson(UserPreferences instance) =>
       'DynamicSchemeType': intFromEnum(instance.dynamicSchemeType),
       'FullscreenBigThumbnail': instance.fullscreenBigThumbnail,
       'DebugPlayerLogging': instance.debugPlayerLogging,
+      'PreReleaseWarningShown': instance.preReleaseWarningShown,
     };
 
 const _$ThemeModeEnumMap = {
@@ -92,7 +94,7 @@ const _$UpdatePolicyEnumMap = {
 
 const _$UpdateBranchEnumMap = {
   UpdateBranch.releasesOnly: 'releasesOnly',
-  UpdateBranch.prereleases: 'prereleases',
+  UpdateBranch.preReleases: 'preReleases',
 };
 
 const _$DynamicSchemeTypeEnumMap = {
@@ -106,7 +108,7 @@ const _$DynamicSchemeTypeEnumMap = {
 // RiverpodGenerator
 // **************************************************************************
 
-String _$preferencesHash() => r'25b3ca00eb01de0d6a1b49ee73a557a94370cb03';
+String _$preferencesHash() => r'baa1a9ba8327512bec78c42d1d4b85d856a35bcc';
 
 /// [Provider] для хранения настроек пользователя.
 ///

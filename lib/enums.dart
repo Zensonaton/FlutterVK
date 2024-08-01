@@ -28,7 +28,7 @@ enum UpdateBranch {
   releasesOnly,
 
   /// Приложение будет загружать все обновления: release и pre-release.
-  prereleases,
+  preReleases,
 }
 
 /// enum, перечисляющий типы палитры цветов обложки.

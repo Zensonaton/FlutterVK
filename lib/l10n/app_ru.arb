@@ -490,6 +490,9 @@
 	"showUpdateDetails": "Подробности",
 	"installUpdate": "Установить",
 
+	"preReleaseInstalledTitle": "Бета-версия",
+	"preReleaseInstalledDescription": "Тс-с-с! Вы ступили на опасную территорию, установив бета-версию Flutter VK. Бета-версии менее стабильны, и обычным пользователям устанавливать их не рекомендуется.\n\nПродолжая, Вы осознаёте риски использования бета-версии приложения, в ином случае Вас может скушать дракоша.\nДанное уведомление будет показано лишь единожды.",
+
 	"updateAvailableSnackbarTitle": "Доступно обновление Flutter VK до версии {version}.",
 	"@updateAvailableSnackbarTitle": {
 		"placeholders": {
@@ -530,5 +533,6 @@
 				"example": "v1.2.3"
 			}
 		}
-	}
+	},
+	"profile_appVersionPreRelease": "бета"
 }
