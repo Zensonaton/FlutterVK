@@ -70,7 +70,7 @@ Future<void> onPlaylistPlayToggle(
   bool playing,
 ) async {
   // Если у нас играет этот же плейлист, то тогда мы попросту должны поставить на паузу/убрать паузу.
-  if (player.currentPlaylist == playlist) {
+  if (player.currentPlaylist?.mediaKey == playlist.mediaKey) {
     return await player.togglePlay();
   }
 
@@ -522,7 +522,8 @@ class MobileControlButtonsWidget extends HookConsumerWidget {
 
     const double realButtonSize = buttonSize - 8 * 2;
 
-    final bool isPlaying = player.currentPlaylist == playlist && player.playing;
+    final bool isPlaying =
+        player.currentPlaylist?.mediaKey == playlist.mediaKey && player.playing;
 
     return Positioned(
       top: positionFromTop,
@@ -1409,7 +1410,8 @@ class DesktopPlaylistControlsWidget extends HookConsumerWidget {
                             onPressed: onPlayPressed,
                             iconSize: 38,
                             icon: Icon(
-                              player.currentPlaylist == playlist &&
+                              player.currentPlaylist?.mediaKey ==
+                                          playlist.mediaKey &&
                                       player.playing
                                   ? Icons.pause
                                   : Icons.play_arrow,
@@ -1619,7 +1621,7 @@ class PlaylistRoute extends HookConsumerWidget {
 
         // Пользователь разрешил удаление кэша плейлиста.
         // Если у нас запущено воспроизведение этого плейлиста, то останавливаем её.
-        if (player.currentPlaylist == playlist) {
+        if (player.currentPlaylist?.mediaKey == playlist.mediaKey) {
           await player.stop();
         }
 
@@ -1683,7 +1685,7 @@ class PlaylistRoute extends HookConsumerWidget {
 
     void onPlayTapped() async {
       // Если у нас уже запущен этот же плейлист, то переключаем паузу/воспроизведение.
-      if (player.currentPlaylist == playlist) {
+      if (player.currentPlaylist?.mediaKey == playlist.mediaKey) {
         await player.togglePlay();
 
         return;

@@ -103,7 +103,8 @@ class MyPlaylistsBlock extends HookConsumerWidget {
                     cacheKey: "${playlist.mediaKey}270",
                     name: playlist.title!,
                     description: playlist.description,
-                    selected: player.currentPlaylist == playlist,
+                    selected:
+                        player.currentPlaylist?.mediaKey == playlist.mediaKey,
                     currentlyPlaying: player.playing && player.loaded,
                     onOpen: () => context.push(
                       "/music/playlist/${playlist.ownerID}/${playlist.id}",

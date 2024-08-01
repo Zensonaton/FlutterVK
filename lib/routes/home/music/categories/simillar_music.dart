@@ -324,7 +324,8 @@ class SimillarMusicBlock extends HookConsumerWidget {
                       playlist.color!,
                     ),
                     tracks: playlist.knownTracks!,
-                    selected: player.currentPlaylist == playlist,
+                    selected:
+                        player.currentPlaylist?.mediaKey == playlist.mediaKey,
                     currentlyPlaying: player.playing && player.loaded,
                     onOpen: () => context.push(
                       "/music/playlist/${playlist.ownerID}/${playlist.id}",

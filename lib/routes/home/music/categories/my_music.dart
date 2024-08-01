@@ -36,7 +36,7 @@ class MyMusicBlock extends HookConsumerWidget {
 
     void onPlayPressed() async {
       // Если данный плейлист уже играет, то просто ставим на паузу/воспроизведение.
-      if (player.currentPlaylist == playlist) {
+      if (player.currentPlaylist?.mediaKey == playlist?.mediaKey) {
         await player.togglePlay();
 
         return;
@@ -50,7 +50,8 @@ class MyMusicBlock extends HookConsumerWidget {
       );
     }
 
-    final bool selected = player.currentPlaylist == playlist;
+    final bool selected =
+        player.currentPlaylist?.mediaKey == playlist?.mediaKey;
     final bool selectedAndPlaying = selected && player.playing;
     final int musicCount = playlist?.count ?? 0;
     final int clampedMusicCount = clampInt(

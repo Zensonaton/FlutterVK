@@ -86,7 +86,8 @@ class RecommendedPlaylistsBlock extends HookConsumerWidget {
                     name: playlist.title!,
                     description: playlist.subtitle,
                     useTextOnImageLayout: true,
-                    selected: player.currentPlaylist == playlist,
+                    selected:
+                        player.currentPlaylist?.mediaKey == playlist.mediaKey,
                     currentlyPlaying: player.playing && player.loaded,
                     onOpen: () => context.push(
                       "/music/playlist/${playlist.ownerID}/${playlist.id}",

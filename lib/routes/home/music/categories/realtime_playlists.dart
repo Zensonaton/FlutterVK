@@ -37,7 +37,7 @@ Future<void> onMixPlayToggle(
   final api = ref.read(vkAPIProvider);
 
   // Если у нас играет этот же плейлист, то тогда мы попросту должны поставить на паузу/убрать паузу.
-  if (player.currentPlaylist == playlist) {
+  if (player.currentPlaylist?.mediaKey == playlist.mediaKey) {
     return player.togglePlay();
   }
 
@@ -433,7 +433,7 @@ class RealtimePlaylistsBlock extends HookConsumerWidget {
               description: playlist.description,
               lottieUrl: playlist.backgroundAnimationUrl!,
               bigLayout: !isMobile,
-              selected: player.currentPlaylist == playlist,
+              selected: player.currentPlaylist?.mediaKey == playlist.mediaKey,
               currentlyPlaying: player.playing,
               onPlayToggle: () => onMixPlayToggle(ref, playlist),
             ),
@@ -474,7 +474,8 @@ class RealtimePlaylistsBlock extends HookConsumerWidget {
                   description: playlist.description ?? playlist.subtitle,
                   backgroundUrl: playlist.photo!.photo270,
                   cacheKey: "${playlist.mediaKey}270",
-                  selected: player.currentPlaylist == playlist,
+                  selected:
+                      player.currentPlaylist?.mediaKey == playlist.mediaKey,
                   currentlyPlaying: player.playing,
                   onPlayToggle: () => onPlaylistPlayToggle(
                     ref,
