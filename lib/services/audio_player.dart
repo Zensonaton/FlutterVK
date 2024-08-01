@@ -1349,6 +1349,11 @@ class AudioPlayerService extends BaseAudioHandler
     _player.shuffleModeEnabledStream.listen((bool enabled) async {
       await _updateEvent();
     });
+
+    // События изменения индекса трека.
+    _player.shuffleModeEnabledStream.listen((bool enabled) async {
+      await _updateEvent();
+    });
   }
 
   /// Отправляет изменения состояния воспроизведения в `audio_service`, обновляя информацию, отображаемую в уведомлении.
