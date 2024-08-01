@@ -17,6 +17,7 @@ import "../provider/user.dart";
 import "../routes/home/music.dart";
 import "../routes/home/music/bottom_audio_options.dart";
 import "../services/cache_manager.dart";
+import "../utils.dart";
 import "dialogs.dart";
 import "fallback_audio_photo.dart";
 import "loading_button.dart";
@@ -541,6 +542,7 @@ class AudioTrackTile extends HookConsumerWidget {
           onHover: (bool value) => isHovered.value = value,
           onTap: onPlayToggle,
           onSecondaryTap: onSecondaryAction,
+          onLongPress: isMobile ? onSecondaryAction : null,
           borderRadius: BorderRadius.circular(
             globalBorderRadius,
           ),
