@@ -493,7 +493,7 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
 
             if (index == null ||
                 !player.loaded ||
-                !(player.currentPlaylist?.isAudioMixPlaylist ?? false)) return;
+                player.currentPlaylist?.type != PlaylistType.audioMix) return;
 
             final int count = player.currentPlaylist!.count;
             final int tracksLeft = count - index;
@@ -581,7 +581,7 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
         true; // TODO: navigationPage.allowBigAudioPlayer
 
     final bool isMixPlaylistPlaying =
-        player.currentPlaylist?.isAudioMixPlaylist ?? false;
+        player.currentPlaylist?.type == PlaylistType.audioMix;
 
     return AnimatedAlign(
       duration: const Duration(

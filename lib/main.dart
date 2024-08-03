@@ -29,7 +29,8 @@ import "package:window_manager/window_manager.dart";
 import "api/vk/consts.dart";
 import "app.dart";
 import "consts.dart";
-import "db/db.dart";
+import "services/db.dart";
+import "provider/db_migrator.dart";
 import "provider/l18n.dart";
 import "provider/observer.dart";
 import "provider/player.dart";
@@ -230,6 +231,7 @@ Future main() async {
     );
     final preferences = container.read(preferencesProvider);
     final l18n = container.read(l18nProvider);
+    final dbMigrator = container.read(dbMigratorProvider);
 
     // Инициализируем WindowManager на Desktop-платформах.
     if (isDesktop) {
@@ -295,17 +297,11 @@ Future main() async {
       );
     }
 
-    // Удаляем папку со старым кэшем треков, если таковой существует.
-    // Сейчас, для кэша треков используется папка audios, однако раньше использовалась папка tracks.
-    final Directory oldCacheDirectory = Directory(
-      path.join(
-        (await getApplicationSupportDirectory()).path,
-        "tracks",
-      ),
-    );
-    if (oldCacheDirectory.existsSync()) {
-      oldCacheDirectory.deleteSync(recursive: true);
-    }
+    // Загружаем базу данных Isar.
+    appStorage = AppStorage();
+
+    // Запускаем миграцию базы данных.
+    await dbMigrator.performMigration();
 
     // Инициализируем библиотеку для создания уведомлений на OS Windows.
     if (Platform.isWindows) {
@@ -352,9 +348,6 @@ Future main() async {
       vkDio,
       loggerName: "VKDio",
     );
-
-    // Загружаем базу данных Isar.
-    appStorage = AppStorage();
 
     // Создаём менеджер интернет соединения.
     connectivityManager = ConnectivityManager();

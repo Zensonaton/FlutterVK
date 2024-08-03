@@ -8,6 +8,7 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:just_audio/just_audio.dart";
 
 import "../../consts.dart";
+import "../../enums.dart";
 import "../../main.dart";
 import "../../provider/color.dart";
 import "../../provider/l18n.dart";
@@ -318,7 +319,7 @@ class FullscreenMediaControls extends ConsumerWidget {
     final bool smallerLayout = MediaQuery.sizeOf(context).width <= 300;
     final bool showLyricsBlock = MediaQuery.sizeOf(context).height > 150;
     final bool canToggleShuffle =
-        !(player.currentPlaylist?.isAudioMixPlaylist ?? false);
+        player.currentPlaylist?.type != PlaylistType.audioMix;
     final bool isRecommendationTypePlaylist =
         player.currentPlaylist?.isRecommendationTypePlaylist ?? false;
 

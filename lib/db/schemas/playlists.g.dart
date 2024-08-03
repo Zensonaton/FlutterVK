@@ -53,107 +53,83 @@ const DBPlaylistSchema = CollectionSchema(
       name: r'count',
       type: IsarType.long,
     ),
-    r'createTime': PropertySchema(
-      id: 7,
-      name: r'createTime',
-      type: IsarType.long,
-    ),
     r'description': PropertySchema(
-      id: 8,
+      id: 7,
       name: r'description',
       type: IsarType.string,
     ),
-    r'followers': PropertySchema(
-      id: 9,
-      name: r'followers',
-      type: IsarType.long,
-    ),
     r'frequentColorInt': PropertySchema(
-      id: 10,
+      id: 8,
       name: r'frequentColorInt',
       type: IsarType.long,
     ),
     r'hashCode': PropertySchema(
-      id: 11,
+      id: 9,
       name: r'hashCode',
       type: IsarType.long,
     ),
     r'id': PropertySchema(
-      id: 12,
+      id: 10,
       name: r'id',
       type: IsarType.long,
     ),
-    r'isAudioMixPlaylist': PropertySchema(
-      id: 13,
-      name: r'isAudioMixPlaylist',
-      type: IsarType.bool,
-    ),
     r'isCachingAllowed': PropertySchema(
-      id: 14,
+      id: 11,
       name: r'isCachingAllowed',
       type: IsarType.bool,
     ),
     r'isFollowing': PropertySchema(
-      id: 15,
+      id: 12,
       name: r'isFollowing',
       type: IsarType.bool,
     ),
-    r'isMoodPlaylist': PropertySchema(
-      id: 16,
-      name: r'isMoodPlaylist',
-      type: IsarType.bool,
-    ),
     r'knownTracks': PropertySchema(
-      id: 17,
+      id: 13,
       name: r'knownTracks',
       type: IsarType.objectList,
       target: r'DBAudio',
     ),
     r'mixID': PropertySchema(
-      id: 18,
+      id: 14,
       name: r'mixID',
       type: IsarType.string,
     ),
     r'ownerID': PropertySchema(
-      id: 19,
+      id: 15,
       name: r'ownerID',
       type: IsarType.long,
     ),
     r'photo': PropertySchema(
-      id: 20,
+      id: 16,
       name: r'photo',
       type: IsarType.object,
       target: r'DBThumbnails',
     ),
-    r'plays': PropertySchema(
-      id: 21,
-      name: r'plays',
-      type: IsarType.long,
-    ),
     r'scoredColorInts': PropertySchema(
-      id: 22,
+      id: 17,
       name: r'scoredColorInts',
       type: IsarType.longList,
     ),
     r'simillarity': PropertySchema(
-      id: 23,
+      id: 18,
       name: r'simillarity',
       type: IsarType.double,
     ),
     r'subtitle': PropertySchema(
-      id: 24,
+      id: 19,
       name: r'subtitle',
       type: IsarType.string,
     ),
     r'title': PropertySchema(
-      id: 25,
+      id: 20,
       name: r'title',
       type: IsarType.string,
     ),
-    r'updateTime': PropertySchema(
-      id: 26,
-      name: r'updateTime',
-      type: IsarType.long,
+    r'type': PropertySchema(
+      id: 21,
+      name: r'type',
+      type: IsarType.byte,
+      enumMap: _DBPlaylisttypeEnumValueMap,
     )
   },
   estimateSize: _dBPlaylistEstimateSize,
@@ -292,36 +268,31 @@ void _dBPlaylistSerialize(
   writer.writeLong(offsets[4], object.colorCount);
   writer.writeLongList(offsets[5], object.colorInts);
   writer.writeLong(offsets[6], object.count);
-  writer.writeLong(offsets[7], object.createTime);
-  writer.writeString(offsets[8], object.description);
-  writer.writeLong(offsets[9], object.followers);
-  writer.writeLong(offsets[10], object.frequentColorInt);
-  writer.writeLong(offsets[11], object.hashCode);
-  writer.writeLong(offsets[12], object.id);
-  writer.writeBool(offsets[13], object.isAudioMixPlaylist);
-  writer.writeBool(offsets[14], object.isCachingAllowed);
-  writer.writeBool(offsets[15], object.isFollowing);
-  writer.writeBool(offsets[16], object.isMoodPlaylist);
+  writer.writeString(offsets[7], object.description);
+  writer.writeLong(offsets[8], object.frequentColorInt);
+  writer.writeLong(offsets[9], object.hashCode);
+  writer.writeLong(offsets[10], object.id);
+  writer.writeBool(offsets[11], object.isCachingAllowed);
+  writer.writeBool(offsets[12], object.isFollowing);
   writer.writeObjectList<DBAudio>(
-    offsets[17],
+    offsets[13],
     allOffsets,
     DBAudioSchema.serialize,
     object.knownTracks,
   );
-  writer.writeString(offsets[18], object.mixID);
-  writer.writeLong(offsets[19], object.ownerID);
+  writer.writeString(offsets[14], object.mixID);
+  writer.writeLong(offsets[15], object.ownerID);
   writer.writeObject<DBThumbnails>(
-    offsets[20],
+    offsets[16],
     allOffsets,
     DBThumbnailsSchema.serialize,
     object.photo,
   );
-  writer.writeLong(offsets[21], object.plays);
-  writer.writeLongList(offsets[22], object.scoredColorInts);
-  writer.writeDouble(offsets[23], object.simillarity);
-  writer.writeString(offsets[24], object.subtitle);
-  writer.writeString(offsets[25], object.title);
-  writer.writeLong(offsets[26], object.updateTime);
+  writer.writeLongList(offsets[17], object.scoredColorInts);
+  writer.writeDouble(offsets[18], object.simillarity);
+  writer.writeString(offsets[19], object.subtitle);
+  writer.writeString(offsets[20], object.title);
+  writer.writeByte(offsets[21], object.type.index);
 }
 
 DBPlaylist _dBPlaylistDeserialize(
@@ -343,34 +314,30 @@ DBPlaylist _dBPlaylistDeserialize(
     colorCount: reader.readLongOrNull(offsets[4]),
     colorInts: reader.readLongList(offsets[5]),
     count: reader.readLong(offsets[6]),
-    createTime: reader.readLongOrNull(offsets[7]),
-    description: reader.readStringOrNull(offsets[8]),
-    followers: reader.readLongOrNull(offsets[9]) ?? 0,
-    frequentColorInt: reader.readLongOrNull(offsets[10]),
-    id: reader.readLong(offsets[12]),
-    isAudioMixPlaylist: reader.readBoolOrNull(offsets[13]),
-    isCachingAllowed: reader.readBool(offsets[14]),
-    isFollowing: reader.readBoolOrNull(offsets[15]),
-    isMoodPlaylist: reader.readBoolOrNull(offsets[16]),
+    description: reader.readStringOrNull(offsets[7]),
+    frequentColorInt: reader.readLongOrNull(offsets[8]),
+    id: reader.readLong(offsets[10]),
+    isCachingAllowed: reader.readBool(offsets[11]),
+    isFollowing: reader.readBoolOrNull(offsets[12]),
     knownTracks: reader.readObjectList<DBAudio>(
-      offsets[17],
+      offsets[13],
       DBAudioSchema.deserialize,
       allOffsets,
       DBAudio(),
     ),
-    mixID: reader.readStringOrNull(offsets[18]),
-    ownerID: reader.readLong(offsets[19]),
+    mixID: reader.readStringOrNull(offsets[14]),
+    ownerID: reader.readLong(offsets[15]),
     photo: reader.readObjectOrNull<DBThumbnails>(
-      offsets[20],
+      offsets[16],
       DBThumbnailsSchema.deserialize,
       allOffsets,
     ),
-    plays: reader.readLongOrNull(offsets[21]) ?? 0,
-    scoredColorInts: reader.readLongList(offsets[22]),
-    simillarity: reader.readDoubleOrNull(offsets[23]),
-    subtitle: reader.readStringOrNull(offsets[24]),
-    title: reader.readStringOrNull(offsets[25]),
-    updateTime: reader.readLongOrNull(offsets[26]),
+    scoredColorInts: reader.readLongList(offsets[17]),
+    simillarity: reader.readDoubleOrNull(offsets[18]),
+    subtitle: reader.readStringOrNull(offsets[19]),
+    title: reader.readStringOrNull(offsets[20]),
+    type: _DBPlaylisttypeValueEnumMap[reader.readByteOrNull(offsets[21])] ??
+        PlaylistType.favorites,
   );
   return object;
 }
@@ -402,58 +369,70 @@ P _dBPlaylistDeserializeProp<P>(
     case 6:
       return (reader.readLong(offset)) as P;
     case 7:
-      return (reader.readLongOrNull(offset)) as P;
-    case 8:
       return (reader.readStringOrNull(offset)) as P;
-    case 9:
-      return (reader.readLongOrNull(offset) ?? 0) as P;
-    case 10:
+    case 8:
       return (reader.readLongOrNull(offset)) as P;
+    case 9:
+      return (reader.readLong(offset)) as P;
+    case 10:
+      return (reader.readLong(offset)) as P;
     case 11:
-      return (reader.readLong(offset)) as P;
-    case 12:
-      return (reader.readLong(offset)) as P;
-    case 13:
-      return (reader.readBoolOrNull(offset)) as P;
-    case 14:
       return (reader.readBool(offset)) as P;
-    case 15:
+    case 12:
       return (reader.readBoolOrNull(offset)) as P;
-    case 16:
-      return (reader.readBoolOrNull(offset)) as P;
-    case 17:
+    case 13:
       return (reader.readObjectList<DBAudio>(
         offset,
         DBAudioSchema.deserialize,
         allOffsets,
         DBAudio(),
       )) as P;
-    case 18:
+    case 14:
       return (reader.readStringOrNull(offset)) as P;
-    case 19:
+    case 15:
       return (reader.readLong(offset)) as P;
-    case 20:
+    case 16:
       return (reader.readObjectOrNull<DBThumbnails>(
         offset,
         DBThumbnailsSchema.deserialize,
         allOffsets,
       )) as P;
-    case 21:
-      return (reader.readLongOrNull(offset) ?? 0) as P;
-    case 22:
+    case 17:
       return (reader.readLongList(offset)) as P;
-    case 23:
+    case 18:
       return (reader.readDoubleOrNull(offset)) as P;
-    case 24:
+    case 19:
       return (reader.readStringOrNull(offset)) as P;
-    case 25:
+    case 20:
       return (reader.readStringOrNull(offset)) as P;
-    case 26:
-      return (reader.readLongOrNull(offset)) as P;
+    case 21:
+      return (_DBPlaylisttypeValueEnumMap[reader.readByteOrNull(offset)] ??
+          PlaylistType.favorites) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
 }
+
+const _DBPlaylisttypeEnumValueMap = {
+  'favorites': 0,
+  'searchResults': 1,
+  'regular': 2,
+  'mood': 3,
+  'audioMix': 4,
+  'recommendations': 5,
+  'simillar': 6,
+  'madeByVK': 7,
+};
+const _DBPlaylisttypeValueEnumMap = {
+  0: PlaylistType.favorites,
+  1: PlaylistType.searchResults,
+  2: PlaylistType.regular,
+  3: PlaylistType.mood,
+  4: PlaylistType.audioMix,
+  5: PlaylistType.recommendations,
+  6: PlaylistType.simillar,
+  7: PlaylistType.madeByVK,
+};
 
 Id _dBPlaylistGetId(DBPlaylist object) {
   return object.isarId;
@@ -1398,79 +1377,6 @@ extension DBPlaylistQueryFilter
   }
 
   QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
-      createTimeIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'createTime',
-      ));
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
-      createTimeIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'createTime',
-      ));
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition> createTimeEqualTo(
-      int? value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'createTime',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
-      createTimeGreaterThan(
-    int? value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'createTime',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
-      createTimeLessThan(
-    int? value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'createTime',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition> createTimeBetween(
-    int? lower,
-    int? upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'createTime',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
       descriptionIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -1620,60 +1526,6 @@ extension DBPlaylistQueryFilter
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'description',
         value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition> followersEqualTo(
-      int value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'followers',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
-      followersGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'followers',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition> followersLessThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'followers',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition> followersBetween(
-    int lower,
-    int upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'followers',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
       ));
     });
   }
@@ -1860,34 +1712,6 @@ extension DBPlaylistQueryFilter
   }
 
   QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
-      isAudioMixPlaylistIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'isAudioMixPlaylist',
-      ));
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
-      isAudioMixPlaylistIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'isAudioMixPlaylist',
-      ));
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
-      isAudioMixPlaylistEqualTo(bool? value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'isAudioMixPlaylist',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
       isCachingAllowedEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -1920,34 +1744,6 @@ extension DBPlaylistQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'isFollowing',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
-      isMoodPlaylistIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'isMoodPlaylist',
-      ));
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
-      isMoodPlaylistIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'isMoodPlaylist',
-      ));
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
-      isMoodPlaylistEqualTo(bool? value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'isMoodPlaylist',
         value: value,
       ));
     });
@@ -2326,59 +2122,6 @@ extension DBPlaylistQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNotNull(
         property: r'photo',
-      ));
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition> playsEqualTo(
-      int value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'plays',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition> playsGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'plays',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition> playsLessThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'plays',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition> playsBetween(
-    int lower,
-    int upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'plays',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
       ));
     });
   }
@@ -2928,71 +2671,51 @@ extension DBPlaylistQueryFilter
     });
   }
 
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
-      updateTimeIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'updateTime',
-      ));
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
-      updateTimeIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'updateTime',
-      ));
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition> updateTimeEqualTo(
-      int? value) {
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition> typeEqualTo(
+      PlaylistType value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'updateTime',
+        property: r'type',
         value: value,
       ));
     });
   }
 
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
-      updateTimeGreaterThan(
-    int? value, {
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition> typeGreaterThan(
+    PlaylistType value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'updateTime',
+        property: r'type',
         value: value,
       ));
     });
   }
 
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition>
-      updateTimeLessThan(
-    int? value, {
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition> typeLessThan(
+    PlaylistType value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'updateTime',
+        property: r'type',
         value: value,
       ));
     });
   }
 
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition> updateTimeBetween(
-    int? lower,
-    int? upper, {
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition> typeBetween(
+    PlaylistType lower,
+    PlaylistType upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'updateTime',
+        property: r'type',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -3093,18 +2816,6 @@ extension DBPlaylistQuerySortBy
     });
   }
 
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> sortByCreateTime() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'createTime', Sort.asc);
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> sortByCreateTimeDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'createTime', Sort.desc);
-    });
-  }
-
   QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> sortByDescription() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'description', Sort.asc);
@@ -3114,18 +2825,6 @@ extension DBPlaylistQuerySortBy
   QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> sortByDescriptionDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'description', Sort.desc);
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> sortByFollowers() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'followers', Sort.asc);
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> sortByFollowersDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'followers', Sort.desc);
     });
   }
 
@@ -3166,20 +2865,6 @@ extension DBPlaylistQuerySortBy
     });
   }
 
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy>
-      sortByIsAudioMixPlaylist() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'isAudioMixPlaylist', Sort.asc);
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy>
-      sortByIsAudioMixPlaylistDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'isAudioMixPlaylist', Sort.desc);
-    });
-  }
-
   QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> sortByIsCachingAllowed() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isCachingAllowed', Sort.asc);
@@ -3205,19 +2890,6 @@ extension DBPlaylistQuerySortBy
     });
   }
 
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> sortByIsMoodPlaylist() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'isMoodPlaylist', Sort.asc);
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy>
-      sortByIsMoodPlaylistDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'isMoodPlaylist', Sort.desc);
-    });
-  }
-
   QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> sortByMixID() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'mixID', Sort.asc);
@@ -3239,18 +2911,6 @@ extension DBPlaylistQuerySortBy
   QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> sortByOwnerIDDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ownerID', Sort.desc);
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> sortByPlays() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'plays', Sort.asc);
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> sortByPlaysDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'plays', Sort.desc);
     });
   }
 
@@ -3290,15 +2950,15 @@ extension DBPlaylistQuerySortBy
     });
   }
 
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> sortByUpdateTime() {
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> sortByType() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'updateTime', Sort.asc);
+      return query.addSortBy(r'type', Sort.asc);
     });
   }
 
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> sortByUpdateTimeDesc() {
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> sortByTypeDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'updateTime', Sort.desc);
+      return query.addSortBy(r'type', Sort.desc);
     });
   }
 }
@@ -3367,18 +3027,6 @@ extension DBPlaylistQuerySortThenBy
     });
   }
 
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> thenByCreateTime() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'createTime', Sort.asc);
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> thenByCreateTimeDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'createTime', Sort.desc);
-    });
-  }
-
   QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> thenByDescription() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'description', Sort.asc);
@@ -3388,18 +3036,6 @@ extension DBPlaylistQuerySortThenBy
   QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> thenByDescriptionDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'description', Sort.desc);
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> thenByFollowers() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'followers', Sort.asc);
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> thenByFollowersDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'followers', Sort.desc);
     });
   }
 
@@ -3440,20 +3076,6 @@ extension DBPlaylistQuerySortThenBy
     });
   }
 
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy>
-      thenByIsAudioMixPlaylist() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'isAudioMixPlaylist', Sort.asc);
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy>
-      thenByIsAudioMixPlaylistDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'isAudioMixPlaylist', Sort.desc);
-    });
-  }
-
   QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> thenByIsCachingAllowed() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isCachingAllowed', Sort.asc);
@@ -3476,19 +3098,6 @@ extension DBPlaylistQuerySortThenBy
   QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> thenByIsFollowingDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isFollowing', Sort.desc);
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> thenByIsMoodPlaylist() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'isMoodPlaylist', Sort.asc);
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy>
-      thenByIsMoodPlaylistDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'isMoodPlaylist', Sort.desc);
     });
   }
 
@@ -3528,18 +3137,6 @@ extension DBPlaylistQuerySortThenBy
     });
   }
 
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> thenByPlays() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'plays', Sort.asc);
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> thenByPlaysDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'plays', Sort.desc);
-    });
-  }
-
   QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> thenBySimillarity() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'simillarity', Sort.asc);
@@ -3576,15 +3173,15 @@ extension DBPlaylistQuerySortThenBy
     });
   }
 
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> thenByUpdateTime() {
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> thenByType() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'updateTime', Sort.asc);
+      return query.addSortBy(r'type', Sort.asc);
     });
   }
 
-  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> thenByUpdateTimeDesc() {
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterSortBy> thenByTypeDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'updateTime', Sort.desc);
+      return query.addSortBy(r'type', Sort.desc);
     });
   }
 }
@@ -3631,22 +3228,10 @@ extension DBPlaylistQueryWhereDistinct
     });
   }
 
-  QueryBuilder<DBPlaylist, DBPlaylist, QDistinct> distinctByCreateTime() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'createTime');
-    });
-  }
-
   QueryBuilder<DBPlaylist, DBPlaylist, QDistinct> distinctByDescription(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'description', caseSensitive: caseSensitive);
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QDistinct> distinctByFollowers() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'followers');
     });
   }
 
@@ -3668,13 +3253,6 @@ extension DBPlaylistQueryWhereDistinct
     });
   }
 
-  QueryBuilder<DBPlaylist, DBPlaylist, QDistinct>
-      distinctByIsAudioMixPlaylist() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'isAudioMixPlaylist');
-    });
-  }
-
   QueryBuilder<DBPlaylist, DBPlaylist, QDistinct> distinctByIsCachingAllowed() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'isCachingAllowed');
@@ -3684,12 +3262,6 @@ extension DBPlaylistQueryWhereDistinct
   QueryBuilder<DBPlaylist, DBPlaylist, QDistinct> distinctByIsFollowing() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'isFollowing');
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QDistinct> distinctByIsMoodPlaylist() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'isMoodPlaylist');
     });
   }
 
@@ -3703,12 +3275,6 @@ extension DBPlaylistQueryWhereDistinct
   QueryBuilder<DBPlaylist, DBPlaylist, QDistinct> distinctByOwnerID() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'ownerID');
-    });
-  }
-
-  QueryBuilder<DBPlaylist, DBPlaylist, QDistinct> distinctByPlays() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'plays');
     });
   }
 
@@ -3738,9 +3304,9 @@ extension DBPlaylistQueryWhereDistinct
     });
   }
 
-  QueryBuilder<DBPlaylist, DBPlaylist, QDistinct> distinctByUpdateTime() {
+  QueryBuilder<DBPlaylist, DBPlaylist, QDistinct> distinctByType() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'updateTime');
+      return query.addDistinctBy(r'type');
     });
   }
 }
@@ -3796,21 +3362,9 @@ extension DBPlaylistQueryProperty
     });
   }
 
-  QueryBuilder<DBPlaylist, int?, QQueryOperations> createTimeProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'createTime');
-    });
-  }
-
   QueryBuilder<DBPlaylist, String?, QQueryOperations> descriptionProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'description');
-    });
-  }
-
-  QueryBuilder<DBPlaylist, int, QQueryOperations> followersProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'followers');
     });
   }
 
@@ -3832,13 +3386,6 @@ extension DBPlaylistQueryProperty
     });
   }
 
-  QueryBuilder<DBPlaylist, bool?, QQueryOperations>
-      isAudioMixPlaylistProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'isAudioMixPlaylist');
-    });
-  }
-
   QueryBuilder<DBPlaylist, bool, QQueryOperations> isCachingAllowedProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'isCachingAllowed');
@@ -3848,12 +3395,6 @@ extension DBPlaylistQueryProperty
   QueryBuilder<DBPlaylist, bool?, QQueryOperations> isFollowingProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'isFollowing');
-    });
-  }
-
-  QueryBuilder<DBPlaylist, bool?, QQueryOperations> isMoodPlaylistProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'isMoodPlaylist');
     });
   }
 
@@ -3882,12 +3423,6 @@ extension DBPlaylistQueryProperty
     });
   }
 
-  QueryBuilder<DBPlaylist, int, QQueryOperations> playsProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'plays');
-    });
-  }
-
   QueryBuilder<DBPlaylist, List<int>?, QQueryOperations>
       scoredColorIntsProperty() {
     return QueryBuilder.apply(this, (query) {
@@ -3913,9 +3448,9 @@ extension DBPlaylistQueryProperty
     });
   }
 
-  QueryBuilder<DBPlaylist, int?, QQueryOperations> updateTimeProperty() {
+  QueryBuilder<DBPlaylist, PlaylistType, QQueryOperations> typeProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'updateTime');
+      return query.addPropertyName(r'type');
     });
   }
 }

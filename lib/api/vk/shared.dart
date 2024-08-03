@@ -596,10 +596,10 @@ class Playlist {
   final String? accessKey;
 
   /// Количество подписчиков плейлиста.
-  final int followers;
+  final int? followers;
 
   /// Количество проигрываний плейлиста.
-  final int plays;
+  final int? plays;
 
   /// Timestamp создания плейлиста.
   @JsonKey(name: "create_time")
@@ -663,8 +663,8 @@ class Playlist {
     this.description,
     required this.count,
     this.accessKey,
-    this.followers = 0,
-    this.plays = 0,
+    this.followers,
+    this.plays,
     this.createTime,
     this.updateTime,
     this.isFollowing = false,

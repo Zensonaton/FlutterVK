@@ -22,7 +22,7 @@ final dbPlaylistsProvider = FutureProvider<PlaylistsState?>.internal(
 );
 
 typedef DbPlaylistsRef = FutureProviderRef<PlaylistsState?>;
-String _$favoritesPlaylistHash() => r'd3bdf133b8db348dc7b7ffdf265f0e4460ac5219';
+String _$favoritesPlaylistHash() => r'0742712f7d0a208cf6db561d115ec2f2f1a923a9';
 
 /// [Provider], возвращающий [ExtendedPlaylist], характеризующий фейковый плейлист "Любимая музыка".
 ///
@@ -41,7 +41,7 @@ final favoritesPlaylistProvider =
 
 typedef FavoritesPlaylistRef = AutoDisposeProviderRef<ExtendedPlaylist?>;
 String _$searchResultsPlaylistHash() =>
-    r'29d41e8c5c24abe1d1bc99d6ebdf05dd3ee44e7c';
+    r'cf07341f574ae51d838afb845e80a3b3b2f3cc73';
 
 /// [Provider], возвращающий [ExtendedPlaylist], характеризующий фейковый плейлист "Музыка из результатов поиска".
 ///
@@ -59,7 +59,7 @@ final searchResultsPlaylistProvider =
 );
 
 typedef SearchResultsPlaylistRef = AutoDisposeProviderRef<ExtendedPlaylist?>;
-String _$userPlaylistsHash() => r'46a2af2558df30679b34168dbd0e7d4a1b33b3c8';
+String _$userPlaylistsHash() => r'b6f4c83a690b6bf7ab102bfc0060c9ee7bbbce17';
 
 /// [Provider], возвращающий список плейлистов ([ExtendedPlaylist]) пользователя.
 ///
@@ -77,7 +77,7 @@ final userPlaylistsProvider =
 );
 
 typedef UserPlaylistsRef = AutoDisposeProviderRef<List<ExtendedPlaylist>?>;
-String _$mixPlaylistsHash() => r'243dfd17b783828a993182d31cfd03e830fd8c07';
+String _$mixPlaylistsHash() => r'91420697ecbcd297328f84dc92739aa808feec68';
 
 /// [Provider], возвращающий список рекомендуемых плейлистов ([ExtendedPlaylist]) пользователя типа "VK Mix".
 ///
@@ -94,7 +94,7 @@ final mixPlaylistsProvider =
 );
 
 typedef MixPlaylistsRef = AutoDisposeProviderRef<List<ExtendedPlaylist>?>;
-String _$moodPlaylistsHash() => r'9089c1970e1527df5886ffc20c0b0b1635b4a7fc';
+String _$moodPlaylistsHash() => r'c404328192cab2ae0cda172070986527e479d4f2';
 
 /// [Provider], возвращающий список рекомендуемых плейлистов ([ExtendedPlaylist]) пользователя по настроению.
 ///
@@ -113,7 +113,7 @@ final moodPlaylistsProvider =
 
 typedef MoodPlaylistsRef = AutoDisposeProviderRef<List<ExtendedPlaylist>?>;
 String _$recommendedPlaylistsHash() =>
-    r'dd4f961436011760e5925ea04524f8e3004088ce';
+    r'b79a926d90981f56f07ba599c1318284f3792cb6';
 
 /// [Provider], возвращающий список рекомендуемых плейлистов ([ExtendedPlaylist]) пользователя типа "Плейлист дня 1" и подобные.
 ///
@@ -132,7 +132,7 @@ final recommendedPlaylistsProvider =
 
 typedef RecommendedPlaylistsRef
     = AutoDisposeProviderRef<List<ExtendedPlaylist>?>;
-String _$simillarPlaylistsHash() => r'9c27eefdda338520dd22c6072166d0de4586d046';
+String _$simillarPlaylistsHash() => r'7a0a6787c7114a967efb38d015c343dc612a306d';
 
 /// [Provider], возвращающий список рекомендуемых плейлистов ([ExtendedPlaylist]) пользователя, которые имеют схожести с другими плейлистами пользователя ВКонтакте.
 ///
@@ -150,7 +150,7 @@ final simillarPlaylistsProvider =
 );
 
 typedef SimillarPlaylistsRef = AutoDisposeProviderRef<List<ExtendedPlaylist>?>;
-String _$madeByVKPlaylistsHash() => r'080ce8e04d04029d4314bb57c3f964ea57f08451';
+String _$madeByVKPlaylistsHash() => r'a42b8ac6521afba75ea1ed8d44c0c40e2cbc1141';
 
 /// [Provider], возвращающий список рекомендуемых плейлистов ([ExtendedPlaylist]) от ВКонтакте.
 ///
@@ -346,7 +346,7 @@ class _GetPlaylistProviderElement
   int get id => (origin as GetPlaylistProvider).id;
 }
 
-String _$playlistsHash() => r'f7f36f71212ce53d1d8f4d5955c2d5d23e17e3da';
+String _$playlistsHash() => r'f5b01196a040e320762177dc3a17a78180a48f54';
 
 /// [Provider], хранящий в себе информацию о плейлистах пользователя.
 ///

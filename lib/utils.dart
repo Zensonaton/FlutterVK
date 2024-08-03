@@ -5,6 +5,11 @@ import "package:diacritic/diacritic.dart";
 import "package:dynamic_color/dynamic_color.dart";
 import "package:flutter/material.dart";
 import "package:responsive_builder/responsive_builder.dart";
+import "package:flutter_gen/gen_l10n/app_localizations.dart"
+    show AppLocalizations;
+
+import "enums.dart";
+import "provider/user.dart";
 
 /// Класс для отображения Route'ов в [BottomNavigationBar], вместе с их названиями, а так же иконками.
 class NavigationPage {
@@ -316,4 +321,23 @@ int fastHash(String input) {
   var darkScheme = insertAdditionalColors(darkBase, darkAdditionalColours);
 
   return (lightScheme.harmonized(), darkScheme.harmonized());
+}
+
+/// Возвращает строку, описывающую тип плейлиста в зависимости от его [ExtendedPlaylist.type].
+String getPlaylistTypeString(AppLocalizations l18n, ExtendedPlaylist playlist) {
+  switch (playlist.type) {
+    case PlaylistType.favorites:
+      return l18n.music_ownedPlaylistTitle;
+
+    case PlaylistType.searchResults:
+    case PlaylistType.mood:
+    case PlaylistType.audioMix:
+    case PlaylistType.recommendations:
+    case PlaylistType.simillar:
+    case PlaylistType.madeByVK:
+      return l18n.music_recommendationPlaylistTitle;
+
+    case PlaylistType.regular:
+      return l18n.music_savedPlaylistTitle;
+  }
 }

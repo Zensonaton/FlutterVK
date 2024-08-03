@@ -12,6 +12,7 @@ import "package:styled_text/widgets/styled_text.dart";
 
 import "../../../api/vk/api.dart";
 import "../../../consts.dart";
+import "../../../enums.dart";
 import "../../../provider/l18n.dart";
 import "../../../provider/player_events.dart";
 import "../../../provider/playlists.dart";
@@ -68,6 +69,7 @@ class SearchDisplayDialog extends HookConsumerWidget {
         final ExtendedPlaylist playlist = ExtendedPlaylist(
           id: -1,
           ownerID: user.id,
+          type: PlaylistType.searchResults,
           audios: audios,
           count: audios.length,
           title: l18n.music_searchPlaylistTitle,

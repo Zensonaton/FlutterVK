@@ -10,6 +10,7 @@ import "../api/vk/catalog/get_audio.dart";
 import "../api/vk/execute/mass_get_audio.dart";
 import "../api/vk/shared.dart";
 import "../db/schemas/playlists.dart";
+import "../enums.dart";
 import "../main.dart";
 import "../services/download_manager.dart";
 import "../services/logger.dart";
@@ -253,9 +254,8 @@ class Playlists extends _$Playlists {
     // Проходимся по всем существующим плейлистам (в том числе и рекомендованным, ...), и смотрим, у каких включено кэширование.
     // Загружаем данные таковых плейлистов, что бы дополнительно создались задачи по их кэшированию.
     for (ExtendedPlaylist playlist in state.value!.playlists) {
-      if (playlist.isFavoritesPlaylist ||
-          playlist.isSearchResultsPlaylist ||
-          playlist.areTracksLive ||
+      if ([PlaylistType.favorites, PlaylistType.searchResults]
+              .contains(playlist.type) ||
           !(playlist.cacheTracks ?? false)) {
         continue;
       }
@@ -284,6 +284,7 @@ class Playlists extends _$Playlists {
         ExtendedPlaylist(
           id: 0,
           ownerID: user.id,
+          type: PlaylistType.favorites,
           count: regularPlaylists.response!.audioCount,
           audios: regularPlaylists.response!.audios
               .map(
@@ -302,6 +303,7 @@ class Playlists extends _$Playlists {
         ...regularPlaylists.response!.playlists.map(
           (playlist) => ExtendedPlaylist.fromAudioPlaylist(
             playlist,
+            PlaylistType.regular,
           ),
         ),
       ],
@@ -349,7 +351,7 @@ class Playlists extends _$Playlists {
           .map(
             (Playlist playlist) => ExtendedPlaylist.fromAudioPlaylist(
               playlist,
-              isMoodPlaylist: true,
+              PlaylistType.mood,
             ),
           )
           .toList();
@@ -367,12 +369,12 @@ class Playlists extends _$Playlists {
           ExtendedPlaylist(
             id: -fastHash(mix.id),
             ownerID: user.id,
+            type: PlaylistType.audioMix,
             title: mix.title,
             description: mix.description,
             backgroundAnimationUrl: mix.backgroundAnimationUrl,
             mixID: mix.id,
             count: 0,
-            isAudioMixPlaylist: true,
           ),
         );
       }
@@ -410,7 +412,10 @@ class Playlists extends _$Playlists {
                 recommendedPlaylistIDs.contains(playlist.mediaKey),
           )
           .map(
-            (Playlist playlist) => ExtendedPlaylist.fromAudioPlaylist(playlist),
+            (Playlist playlist) => ExtendedPlaylist.fromAudioPlaylist(
+              playlist,
+              PlaylistType.recommendations,
+            ),
           )
           .toList();
     }
@@ -425,14 +430,13 @@ class Playlists extends _$Playlists {
       for (SimillarPlaylist playlist
           in response.response!.recommendedPlaylists) {
         final fullPlaylist = response.response!.playlists.firstWhere(
-          (Playlist fullPlaylist) {
-            return fullPlaylist.mediaKey == playlist.mediaKey;
-          },
+          (Playlist fullPlaylist) => fullPlaylist.mediaKey == playlist.mediaKey,
         );
 
         playlists.add(
           ExtendedPlaylist.fromAudioPlaylist(
             fullPlaylist,
+            PlaylistType.simillar,
             simillarity: playlist.percentage,
             color: playlist.color,
             isLiveData: false,
@@ -481,7 +485,10 @@ class Playlists extends _$Playlists {
                 recommendedPlaylistIDs.contains(playlist.mediaKey),
           )
           .map(
-            (Playlist playlist) => ExtendedPlaylist.fromAudioPlaylist(playlist),
+            (Playlist playlist) => ExtendedPlaylist.fromAudioPlaylist(
+              playlist,
+              PlaylistType.madeByVK,
+            ),
           )
           .toList();
     }
@@ -653,9 +660,6 @@ class Playlists extends _$Playlists {
         subtitle: playlist.subtitle,
         cacheTracks: playlist.cacheTracks,
         photo: playlist.photo,
-        createTime: playlist.createTime,
-        updateTime: playlist.updateTime,
-        followers: playlist.followers,
         areTracksLive: playlist.areTracksLive,
         backgroundAnimationUrl: playlist.backgroundAnimationUrl,
         isLiveData: playlist.isLiveData,
@@ -683,8 +687,8 @@ class Playlists extends _$Playlists {
       // Отправляем событие об изменении плейлиста.
       PlaylistsState.playlistModificationsController.add(newPlaylist);
 
-      // Сохраняем в БД.
-      if (saveInDB && !newPlaylist.isSearchResultsPlaylist) {
+      // Сохраняем в БД, если это не плейлист "музыка из результатов поиска".
+      if (saveInDB && playlist.type != PlaylistType.searchResults) {
         await saveDBPlaylist(newPlaylist);
       }
 
@@ -726,7 +730,7 @@ class Playlists extends _$Playlists {
     if (changedPlaylists.isNotEmpty) {
       await appStorage.savePlaylists(
         changedPlaylists
-            .where((item) => !item.playlist.isSearchResultsPlaylist)
+            .where((item) => item.playlist.type != PlaylistType.searchResults)
             .map(
               (item) => item.playlist.asDBPlaylist,
             )
@@ -760,7 +764,7 @@ class Playlists extends _$Playlists {
   /// Возвращает плейлист с лайкнутыми треками.
   ExtendedPlaylist? getFavoritesPlaylist() =>
       state.value?.playlists.firstWhereOrNull(
-        (playlist) => playlist.isFavoritesPlaylist,
+        (playlist) => playlist.type == PlaylistType.favorites,
       );
 
   /// Возвращает плейлист по передаваемому [ownerID] и [id].
@@ -784,7 +788,7 @@ class Playlists extends _$Playlists {
     final api = ref.read(vkAPIProvider);
 
     // Если информация по плейлисту уже загружена, то ничего не делаем.
-    if (playlist.isFavoritesPlaylist ||
+    if (playlist.type == PlaylistType.favorites ||
         (playlist.audios != null &&
             playlist.isLiveData &&
             playlist.areTracksLive)) {
@@ -844,7 +848,7 @@ ExtendedPlaylist? favoritesPlaylist(FavoritesPlaylistRef ref) {
   if (state == null) return null;
 
   return state.playlists.firstWhereOrNull(
-    (ExtendedPlaylist playlist) => playlist.isFavoritesPlaylist,
+    (ExtendedPlaylist playlist) => playlist.type == PlaylistType.favorites,
   );
 }
 
@@ -856,7 +860,7 @@ ExtendedPlaylist? searchResultsPlaylist(SearchResultsPlaylistRef ref) {
   if (state == null) return null;
 
   return state.playlists.firstWhereOrNull(
-    (ExtendedPlaylist playlist) => playlist.isSearchResultsPlaylist,
+    (ExtendedPlaylist playlist) => playlist.type == PlaylistType.searchResults,
   );
 }
 
@@ -869,7 +873,7 @@ List<ExtendedPlaylist>? userPlaylists(UserPlaylistsRef ref) {
 
   final List<ExtendedPlaylist> playlists = state.playlists
       .where(
-        (ExtendedPlaylist playlist) => playlist.isRegularPlaylist,
+        (ExtendedPlaylist playlist) => playlist.type == PlaylistType.regular,
       )
       .toList();
   if (playlists.isEmpty && !state.fromAPI) return null;
@@ -886,7 +890,7 @@ List<ExtendedPlaylist>? mixPlaylists(MixPlaylistsRef ref) {
 
   final List<ExtendedPlaylist> playlists = state.playlists
       .where(
-        (ExtendedPlaylist playlist) => playlist.isAudioMixPlaylist,
+        (ExtendedPlaylist playlist) => playlist.type == PlaylistType.audioMix,
       )
       .toList();
   if (playlists.isEmpty && !state.fromAPI) return null;
@@ -903,7 +907,7 @@ List<ExtendedPlaylist>? moodPlaylists(MoodPlaylistsRef ref) {
 
   final List<ExtendedPlaylist> playlists = state.playlists
       .where(
-        (ExtendedPlaylist playlist) => playlist.isMoodPlaylist,
+        (ExtendedPlaylist playlist) => playlist.type == PlaylistType.mood,
       )
       .toList();
   if (playlists.isEmpty && !state.fromAPI) return null;
@@ -920,7 +924,8 @@ List<ExtendedPlaylist>? recommendedPlaylists(RecommendedPlaylistsRef ref) {
 
   final List<ExtendedPlaylist> playlists = state.playlists
       .where(
-        (ExtendedPlaylist playlist) => playlist.isRecommendationsPlaylist,
+        (ExtendedPlaylist playlist) =>
+            playlist.type == PlaylistType.recommendations,
       )
       .sorted((a, b) => b.id.compareTo(a.id))
       .toList();
@@ -938,7 +943,7 @@ List<ExtendedPlaylist>? simillarPlaylists(SimillarPlaylistsRef ref) {
 
   final List<ExtendedPlaylist> playlists = state.playlists
       .where(
-        (ExtendedPlaylist playlist) => playlist.isSimillarPlaylist,
+        (ExtendedPlaylist playlist) => playlist.type == PlaylistType.simillar,
       )
       .sorted((a, b) => b.simillarity!.compareTo(a.simillarity!))
       .toList();
@@ -956,7 +961,7 @@ List<ExtendedPlaylist>? madeByVKPlaylists(MadeByVKPlaylistsRef ref) {
 
   final List<ExtendedPlaylist> playlists = state.playlists
       .where(
-        (ExtendedPlaylist playlist) => playlist.isMadeByVKPlaylist,
+        (ExtendedPlaylist playlist) => playlist.type == PlaylistType.madeByVK,
       )
       .toList();
   if (playlists.isEmpty && !state.fromAPI) return null;

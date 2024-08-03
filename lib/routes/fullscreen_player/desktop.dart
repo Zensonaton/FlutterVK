@@ -6,6 +6,7 @@ import "package:just_audio/just_audio.dart";
 import "package:skeletonizer/skeletonizer.dart";
 
 import "../../consts.dart";
+import "../../enums.dart";
 import "../../main.dart";
 import "../../provider/color.dart";
 import "../../provider/l18n.dart";
@@ -339,7 +340,7 @@ class FullscreenMediaControls extends ConsumerWidget {
 
     /// Указывает, что кнопка для переключения shuffle работает.
     final bool canToggleShuffle =
-        !(player.currentPlaylist?.isAudioMixPlaylist ?? false);
+        player.currentPlaylist?.type != PlaylistType.audioMix;
 
     return Column(
       mainAxisSize: MainAxisSize.min,

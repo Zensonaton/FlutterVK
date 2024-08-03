@@ -21,6 +21,7 @@ import "../../../api/vk/api.dart";
 import "../../../api/vk/audio/get_stream_mix_audios.dart";
 import "../../../api/vk/shared.dart";
 import "../../../consts.dart";
+import "../../../enums.dart";
 import "../../../main.dart";
 import "../../../provider/color.dart";
 import "../../../provider/download_manager.dart";
@@ -97,7 +98,7 @@ Future<void> onMixPlayToggle(
   ExtendedPlaylist playlist,
 ) async {
   assert(
-    playlist.isAudioMixPlaylist,
+    playlist.type == PlaylistType.audioMix,
     "onMixPlayToggle can only be called for audio mix playlists",
   );
 
@@ -404,19 +405,13 @@ class MobilePlaylistInfoWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(userProvider);
     final l18n = ref.watch(l18nProvider);
 
     final safeScheme = scheme ?? Theme.of(context).colorScheme;
 
     final String playlistName =
         playlist.title ?? l18n.music_fullscreenFavoritePlaylistName;
-    final String playlistType = playlist.isRecommendationsPlaylist
-        ? l18n.music_recommendationPlaylistTitle
-        : (playlist.isFavoritesPlaylist ||
-                (playlist.ownerID == user.id && !playlist.isFollowing))
-            ? l18n.music_ownedPlaylistTitle
-            : l18n.music_savedPlaylistTitle;
+    final String playlistType = getPlaylistTypeString(l18n, playlist);
 
     return SliverToBoxAdapter(
       child: SizedBox(
@@ -786,7 +781,7 @@ class AppBarPlaylistImageWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final imageUrl = playlist.photo?.photo300;
     final fallbackWidget = FallbackAudioPlaylistAvatar(
-      favoritesPlaylist: playlist.isFavoritesPlaylist,
+      favoritesPlaylist: playlist.type == PlaylistType.favorites,
       size: size,
     );
 
@@ -1232,14 +1227,8 @@ class DesktopAppBarWidget extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l18n = ref.watch(l18nProvider);
-    final user = ref.watch(userProvider);
 
-    final String playlistType = playlist.isRecommendationsPlaylist
-        ? l18n.music_recommendationPlaylistTitle
-        : (playlist.isFavoritesPlaylist ||
-                (playlist.ownerID == user.id && !playlist.isFollowing))
-            ? l18n.music_ownedPlaylistTitle
-            : l18n.music_savedPlaylistTitle;
+    final String playlistType = getPlaylistTypeString(l18n, playlist);
 
     final scheme = Theme.of(context).colorScheme;
 
@@ -1853,7 +1842,7 @@ class PlaylistRoute extends HookConsumerWidget {
               searchFocusNode: searchFocusNode,
               horizontalPadding: horizontalPadding,
               onPlayPressed: onPlayTapped,
-              onLikePressed: playlist.isFavoritesPlaylist
+              onLikePressed: playlist.type == PlaylistType.favorites
                   ? null
                   : () async => showWipDialog(context),
               onCacheTap: onCacheTap,
@@ -1942,7 +1931,7 @@ class PlaylistRoute extends HookConsumerWidget {
                   maxAppBarHeight: maxAppBarHeight,
                   minAppBarHeight: minAppBarHeight,
                   infoBoxHeight: infoBoxHeight,
-                  onLikePressed: playlist.isFavoritesPlaylist
+                  onLikePressed: playlist.type == PlaylistType.favorites
                       ? null
                       : () async => showWipDialog(context),
                   onPlayPausePressed: onPlayTapped,

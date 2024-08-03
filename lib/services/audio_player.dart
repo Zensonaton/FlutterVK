@@ -18,6 +18,7 @@ import "package:smtc_windows/smtc_windows.dart";
 
 import "../api/vk/shared.dart";
 import "../consts.dart";
+import "../enums.dart";
 import "../main.dart";
 import "../provider/player.dart";
 import "../provider/playlists.dart";
@@ -62,6 +63,22 @@ class CachedStreamAudioSource extends StreamAudioSource {
         (await getApplicationSupportDirectory()).path,
         "audios-v2",
       );
+
+  /// Возвращает пути к старым папкам, которые ранее использовались для хранения кэшированных треков. Учтите, что данный метод не проверяет на существование папок.
+  ///
+  /// Если Вам нужна новая папка для хранения кэшированных треков, то воспользуйтесь методом [getTrackStorageDirectory].
+  static Future<List<Directory>> getOldTrackStorageDirectories() async {
+    final rootDir = (await getApplicationSupportDirectory()).path;
+
+    return [
+      "tracks",
+      "audios",
+    ]
+        .map(
+          (item) => Directory(join(rootDir, item)),
+        )
+        .toList();
+  }
 
   /// Возвращает объект типа [File] по передаваемому [ExtendedAudio.mediaKey], в котором хранится кэшированный трек.
   ///
@@ -994,7 +1011,7 @@ class VKMusicPlayer {
   }) async {
     if (shuffle && !disableAudioMixCheck) {
       assert(
-        !(currentPlaylist?.isAudioMixPlaylist ?? false),
+        currentPlaylist?.type != PlaylistType.audioMix,
         "Attempted to enable shuffle for audio mix",
       );
     }
@@ -1364,7 +1381,7 @@ class AudioPlayerService extends BaseAudioHandler
   /// Отправляет изменения состояния воспроизведения в `audio_service`, обновляя информацию, отображаемую в уведомлении.
   Future<void> _updateEvent() async {
     final bool isAudioMix =
-        _player.currentPlaylist?.isAudioMixPlaylist ?? false;
+        _player.currentPlaylist?.type != PlaylistType.audioMix;
     final bool isRecommended =
         _player.currentPlaylist?.isRecommendationTypePlaylist ?? false;
 
@@ -1495,7 +1512,7 @@ class AudioPlayerService extends BaseAudioHandler
     await super.setShuffleMode(shuffleMode);
 
     // Не позволяем включить Shuffle при включённом аудио миксе.
-    if (player.currentPlaylist?.isAudioMixPlaylist ?? false) return;
+    if (player.currentPlaylist?.type == PlaylistType.audioMix) return;
 
     await _player.setShuffle(
       shuffleMode == AudioServiceShuffleMode.all,

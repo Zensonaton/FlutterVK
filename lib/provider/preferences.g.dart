@@ -8,6 +8,8 @@ part of 'preferences.dart';
 
 UserPreferences _$UserPreferencesFromJson(Map<String, dynamic> json) =>
     UserPreferences(
+      dbVersion:
+          (json['DBVersion'] as num?)?.toInt() ?? IsarDBMigrator.maxDBVersion,
       myMusicChipEnabled: json['MyMusicChipEnabled'] as bool? ?? true,
       playlistsChipEnabled: json['PlaylistsChipEnabled'] as bool? ?? true,
       realtimePlaylistsChipEnabled:
@@ -47,6 +49,7 @@ UserPreferences _$UserPreferencesFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$UserPreferencesToJson(UserPreferences instance) =>
     <String, dynamic>{
+      'DBVersion': instance.dbVersion,
       'MyMusicChipEnabled': instance.myMusicChipEnabled,
       'PlaylistsChipEnabled': instance.playlistsChipEnabled,
       'RealtimePlaylistsChipEnabled': instance.realtimePlaylistsChipEnabled,
@@ -108,7 +111,7 @@ const _$DynamicSchemeTypeEnumMap = {
 // RiverpodGenerator
 // **************************************************************************
 
-String _$preferencesHash() => r'baa1a9ba8327512bec78c42d1d4b85d856a35bcc';
+String _$preferencesHash() => r'9a166539fefdfd599860ff752019e4a9ad9933dc';
 
 /// [Provider] для хранения настроек пользователя.
 ///

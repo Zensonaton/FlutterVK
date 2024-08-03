@@ -285,9 +285,9 @@
 			}
 		}
 	},
-	"music_recommendationPlaylistTitle": "Рекомендуемый плейлист",
 	"music_ownedPlaylistTitle": "Ваш плейлист",
 	"music_savedPlaylistTitle": "Сохранённый плейлист",
+	"music_recommendationPlaylistTitle": "Рекомендуемый плейлист",
 
 	"music_fullscreenPlaylistNameTitle": "Воспроизведение музыки",
 	"@music_fullscreenPlaylistNameTitle": {
@@ -322,10 +322,6 @@
 			}
 		}
 	},
-
-	"recommendationsStatsWarningTitle": "Вопрос конфиденциальности",
-	"recommendationsStatsWarningDescription": "Слушая рекомендации, Flutter VK будет передавать серверам ВКонтакте информацию о том, какую музыку Вы прослушали, что бы рекомендации не повторяли одни и те же треки снова и снова.\nЕсли Вы согласны с этим, нажав «разрешить», Вы позволите Flutter VK отправлять информацию о прослушанной музыке ВКонтакте. В ином случае, Вы не сможете начать прослушивать рекомендуемые плейлисты.",
-	"recommendationsStatsWarningAllow": "Разрешить",
 
 
 	"home_profilePageLogout": "Выйти",

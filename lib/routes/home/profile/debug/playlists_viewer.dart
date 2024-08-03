@@ -97,7 +97,7 @@ class PlaylistsViewerDebugMenu extends ConsumerWidget {
 
               final List<ExtendedPlaylist> playlists =
                   (await appStorage.getPlaylists())
-                      .map((item) => item!.asExtendedPlaylist)
+                      .map((item) => item.asExtendedPlaylist)
                       .toList();
 
               ref.read(playlistsProvider.notifier).setPlaylists(

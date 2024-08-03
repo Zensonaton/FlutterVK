@@ -4,6 +4,7 @@ import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:shared_preferences/shared_preferences.dart";
 
 import "../enums.dart";
+import "../services/db.dart";
 import "../utils.dart";
 import "shared_prefs.dart";
 
@@ -14,6 +15,15 @@ part "preferences.g.dart";
 /// Не стоит путать с [Preferences] или [preferencesProvider].
 @JsonSerializable()
 class UserPreferences {
+  /// Список из JSON-ключей, которые обязаны находиться в SharedPreferences, даже если их значение равно стандартному.
+  static final List<String> ignoreDefaultKeys = [
+    "DBVersion",
+  ];
+
+  /// Указывает версию базы данных Isar. Используется для миграции.
+  @JsonKey(name: "DBVersion")
+  final int dbVersion;
+
   /// Указывает, что поле "Моя музыка" включено на экране с музыкой.
   @JsonKey(name: "MyMusicChipEnabled")
   final bool myMusicChipEnabled;
@@ -111,6 +121,7 @@ class UserPreferences {
   final bool preReleaseWarningShown;
 
   UserPreferences({
+    this.dbVersion = IsarDBMigrator.maxDBVersion,
     this.myMusicChipEnabled = true,
     this.playlistsChipEnabled = true,
     this.realtimePlaylistsChipEnabled = true,
@@ -139,6 +150,7 @@ class UserPreferences {
 
   /// Делает копию этого класа с новыми передаваемыми значениями.
   UserPreferences copyWith({
+    int? dbVersion,
     bool? myMusicChipEnabled,
     bool? playlistsChipEnabled,
     bool? realtimePlaylistsChipEnabled,
@@ -165,6 +177,7 @@ class UserPreferences {
     bool? preReleaseWarningShown,
   }) =>
       UserPreferences(
+        dbVersion: dbVersion ?? this.dbVersion,
         myMusicChipEnabled: myMusicChipEnabled ?? this.myMusicChipEnabled,
         playlistsChipEnabled: playlistsChipEnabled ?? this.playlistsChipEnabled,
         realtimePlaylistsChipEnabled:
@@ -211,6 +224,7 @@ class Preferences extends _$Preferences {
     final SharedPreferences prefs = ref.read(sharedPrefsProvider);
 
     return UserPreferences().copyWith(
+      dbVersion: prefs.getInt("DBVersion"),
       myMusicChipEnabled: prefs.getBool("MyMusicChipEnabled"),
       playlistsChipEnabled: prefs.getBool("PlaylistsChipEnabled"),
       realtimePlaylistsChipEnabled:
@@ -250,7 +264,8 @@ class Preferences extends _$Preferences {
 
     for (String key in json.keys) {
       final dynamic newValue = json[key];
-      if (oldJson[key] == newValue) continue;
+      if (oldJson[key] == newValue &&
+          !UserPreferences.ignoreDefaultKeys.contains(key)) continue;
 
       if (newValue is bool) {
         prefs.setBool(key, newValue);
@@ -271,6 +286,8 @@ class Preferences extends _$Preferences {
 
     super.state = newState;
   }
+
+  void setDBVersion(int version) => state = state.copyWith(dbVersion: version);
 
   void setMyMusicChipEnabled(bool enabled) =>
       state = state.copyWith(myMusicChipEnabled: enabled);

@@ -6,6 +6,7 @@ import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
 import "../../../consts.dart";
+import "../../../enums.dart";
 import "../../../main.dart";
 import "../../../provider/download_manager.dart";
 import "../../../provider/l18n.dart";
@@ -212,7 +213,7 @@ class DownloadItemIconWidget extends StatelessWidget {
                 cacheManager: CachedNetworkImagesManager.instance,
               )
             : FallbackAudioPlaylistAvatar(
-                favoritesPlaylist: playlist.isFavoritesPlaylist,
+                favoritesPlaylist: playlist.type == PlaylistType.favorites,
                 size: 50,
               ),
       );

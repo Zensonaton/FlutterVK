@@ -2,6 +2,7 @@ import "package:isar/isar.dart";
 
 import "../../api/vk/audio/get_lyrics.dart";
 import "../../api/vk/shared.dart";
+import "../../enums.dart";
 import "../../provider/user.dart";
 import "../../utils.dart";
 
@@ -360,6 +361,54 @@ class DBAudio {
   @Ignore()
   ExtendedAudio get asExtendedAudio => ExtendedAudio.fromDBAudio(this);
 
+  /// Делает копию этого класа с новыми передаваемыми значениями.
+  DBAudio copyWith({
+    int? id,
+    int? ownerID,
+    String? artist,
+    String? title,
+    int? duration,
+    String? subtitle,
+    String? accessKey,
+    bool? isExplicit,
+    bool? isRestricted,
+    int? date,
+    DBAlbum? album,
+    DBExtendedThumbnail? vkThumbs,
+    DBExtendedThumbnail? deezerThumbs,
+    bool? hasLyrics,
+    DBLyrics? lyrics,
+    int? genreID,
+    bool? isCached,
+    List<int>? colorInts,
+    List<int>? scoredColorInts,
+    int? frequentColorInt,
+    int? colorCount,
+  }) =>
+      DBAudio(
+        id: id ?? this.id,
+        ownerID: ownerID ?? this.ownerID,
+        artist: artist ?? this.artist,
+        title: title ?? this.title,
+        duration: duration ?? this.duration,
+        subtitle: subtitle ?? this.subtitle,
+        accessKey: accessKey ?? this.accessKey,
+        isExplicit: isExplicit ?? this.isExplicit,
+        isRestricted: isRestricted ?? this.isRestricted,
+        date: date ?? this.date,
+        album: album ?? this.album,
+        vkThumbs: vkThumbs ?? this.vkThumbs,
+        deezerThumbs: deezerThumbs ?? this.deezerThumbs,
+        hasLyrics: hasLyrics ?? this.hasLyrics,
+        lyrics: lyrics ?? this.lyrics,
+        genreID: genreID ?? this.genreID,
+        isCached: isCached ?? this.isCached,
+        colorInts: colorInts ?? this.colorInts,
+        scoredColorInts: scoredColorInts ?? this.scoredColorInts,
+        frequentColorInt: frequentColorInt ?? this.frequentColorInt,
+        colorCount: colorCount ?? this.colorCount,
+      );
+
   /// Возвращает строку, которая используется как идентификатор пользователя и медиа.
   @Ignore()
   String get mediaKey => "${ownerID}_$id";
@@ -415,6 +464,10 @@ class DBPlaylist {
   /// ID владельца плейлиста.
   final int ownerID;
 
+  /// Тип плейлиста.
+  @enumerated
+  final PlaylistType type;
+
   /// Название плейлиста.
   final String? title;
 
@@ -430,18 +483,6 @@ class DBPlaylist {
   /// Ключ доступа.
   final String? accessKey;
 
-  /// Количество подписчиков плейлиста.
-  final int followers;
-
-  /// Количество проигрываний плейлиста.
-  final int plays;
-
-  /// Timestamp создания плейлиста.
-  final int? createTime;
-
-  /// Timestamp последнего обновления плейлиста.
-  final int? updateTime;
-
   /// Указывает, подписан ли данный пользователь на данный плейлист или нет.
   final bool? isFollowing;
 
@@ -450,12 +491,6 @@ class DBPlaylist {
 
   /// Список треков в данном плейлисте.
   final List<DBAudio>? audios;
-
-  /// Указывает, что данный плейлист является плейлистом из раздела "Какой сейчас вайб?" ВКонтакте.
-  final bool? isMoodPlaylist;
-
-  /// Указывает, что данный плейлист является фейковым плейлистом, олицетворяющий аудио микс ВКонтакте.
-  final bool? isAudioMixPlaylist;
 
   /// ID данного аудио микса. Данное поле не-null только для аудио микс-плейлистов.
   final String? mixID;
@@ -492,26 +527,19 @@ class DBPlaylist {
       DBPlaylist(
         id: playlist.id,
         ownerID: playlist.ownerID,
+        type: playlist.type,
         title: playlist.title,
         description: playlist.description,
         subtitle: playlist.subtitle,
         count: playlist.count,
         accessKey: playlist.accessKey,
-        followers: playlist.followers,
-        plays: playlist.plays,
-        createTime: playlist.createTime,
-        updateTime: playlist.updateTime,
         isFollowing: playlist.isFollowing,
         photo: playlist.photo?.asDBThumbnails,
-        audios: !playlist.isAudioMixPlaylist
-            ? playlist.audios
-                ?.map(
-                  (ExtendedAudio audio) => audio.asDBAudio,
-                )
-                .toList()
-            : null,
-        isMoodPlaylist: playlist.isMoodPlaylist,
-        isAudioMixPlaylist: playlist.isAudioMixPlaylist,
+        audios: playlist.audios
+            ?.map(
+              (ExtendedAudio audio) => audio.asDBAudio,
+            )
+            .toList(),
         mixID: playlist.mixID,
         backgroundAnimationUrl: playlist.backgroundAnimationUrl,
         simillarity: playlist.simillarity,
@@ -532,6 +560,55 @@ class DBPlaylist {
   @Ignore()
   ExtendedPlaylist get asExtendedPlaylist =>
       ExtendedPlaylist.fromDBPlaylist(this);
+
+  /// Делает копию этого класа с новыми передаваемыми значениями.
+  DBPlaylist copyWith({
+    int? id,
+    int? ownerID,
+    PlaylistType? type,
+    String? title,
+    String? description,
+    String? subtitle,
+    int? count,
+    String? accessKey,
+    bool? isFollowing,
+    DBThumbnails? photo,
+    List<DBAudio>? audios,
+    String? mixID,
+    String? backgroundAnimationUrl,
+    double? simillarity,
+    String? color,
+    List<DBAudio>? knownTracks,
+    bool? isCachingAllowed,
+    List<int>? colorInts,
+    List<int>? scoredColorInts,
+    int? frequentColorInt,
+    int? colorCount,
+  }) =>
+      DBPlaylist(
+        id: id ?? this.id,
+        ownerID: ownerID ?? this.ownerID,
+        type: type ?? this.type,
+        title: title ?? this.title,
+        description: description ?? this.description,
+        subtitle: subtitle ?? this.subtitle,
+        count: count ?? this.count,
+        accessKey: accessKey ?? this.accessKey,
+        isFollowing: isFollowing ?? this.isFollowing,
+        photo: photo ?? this.photo,
+        audios: audios ?? this.audios,
+        mixID: mixID ?? this.mixID,
+        backgroundAnimationUrl:
+            backgroundAnimationUrl ?? this.backgroundAnimationUrl,
+        simillarity: simillarity ?? this.simillarity,
+        color: color ?? this.color,
+        knownTracks: knownTracks ?? this.knownTracks,
+        isCachingAllowed: isCachingAllowed ?? this.isCachingAllowed,
+        colorInts: colorInts ?? this.colorInts,
+        scoredColorInts: scoredColorInts ?? this.scoredColorInts,
+        frequentColorInt: frequentColorInt ?? this.frequentColorInt,
+        colorCount: colorCount ?? this.colorCount,
+      );
 
   /// Возвращает строку, которая используется как идентификатор пользователя и медиа.
   @Ignore()
@@ -556,20 +633,15 @@ class DBPlaylist {
   DBPlaylist({
     required this.id,
     required this.ownerID,
+    required this.type,
     this.title,
     this.description,
     this.subtitle,
     required this.count,
     this.accessKey,
-    this.followers = 0,
-    this.plays = 0,
-    this.createTime,
-    this.updateTime,
     this.isFollowing,
     this.photo,
     this.audios,
-    this.isMoodPlaylist,
-    this.isAudioMixPlaylist,
     this.mixID,
     this.backgroundAnimationUrl,
     this.simillarity,

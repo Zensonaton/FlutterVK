@@ -5,9 +5,9 @@ import "package:shared_preferences/shared_preferences.dart";
 
 import "../api/deezer/shared.dart";
 import "../api/vk/audio/get_lyrics.dart";
-import "../api/vk/consts.dart";
 import "../api/vk/shared.dart";
 import "../db/schemas/playlists.dart";
+import "../enums.dart";
 import "../main.dart";
 import "../utils.dart";
 import "auth.dart";
@@ -22,6 +22,9 @@ class ExtendedPlaylist {
 
   /// ID владельца плейлиста.
   int ownerID;
+
+  /// Тип плейлиста.
+  PlaylistType type;
 
   /// Название плейлиста.
   String? title;
@@ -39,18 +42,6 @@ class ExtendedPlaylist {
 
   /// Ключ доступа.
   String? accessKey;
-
-  /// Количество подписчиков плейлиста.
-  int followers;
-
-  /// Количество проигрываний плейлиста.
-  int plays;
-
-  /// Timestamp создания плейлиста.
-  int? createTime;
-
-  /// Timestamp последнего обновления плейлиста.
-  int? updateTime;
 
   /// Указывает, подписан ли данный пользователь на данный плейлист или нет.
   bool isFollowing;
@@ -72,47 +63,6 @@ class ExtendedPlaylist {
 
   /// {@macro ImageSchemeExtractor.colorCount}
   final int? colorCount;
-
-  /// Указывает, что данный плейлист является плейлистом с "любимыми" треками пользователя.
-  bool get isFavoritesPlaylist => id == 0;
-
-  /// Указывает, что данный плейлист является фейковым плейлистом с результатами поиска.
-  bool get isSearchResultsPlaylist => id == -1;
-
-  /// Указывает, что данный плейлист является обычным плейлистом пользователя, который он либо создал либо сохранил.
-  bool get isRegularPlaylist =>
-      id > 0 &&
-      ownerID != vkMusicGroupID &&
-      !isSimillarPlaylist &&
-      !isMoodPlaylist &&
-      !isAudioMixPlaylist;
-
-  /// Указывает, что данный плейлист является плейлистом из раздела "Какой сейчас вайб?" ВКонтакте.
-  final bool isMoodPlaylist;
-
-  /// Указывает, что данный плейлист является фейковым плейлистом, олицетворяющий аудио микс ВКонтакте.
-  final bool isAudioMixPlaylist;
-
-  /// Указывает, что данный плейлист является плейлистом из рекомендаций.
-  bool get isRecommendationsPlaylist =>
-      id < 0 && !isMoodPlaylist && !isSearchResultsPlaylist;
-
-  /// Указывает, что данный плейлист является плейлистом из раздела "Совпадения по вкусам".
-  bool get isSimillarPlaylist => simillarity != null;
-
-  /// Указывает, что данный плейлист является плейлистом от ВКонтакте (плейлист из раздела "Собрано редакцией")
-  bool get isMadeByVKPlaylist => ownerID == vkMusicGroupID;
-
-  /// Указывает, пуст ли данный плейлист. Данный метод всегда возвращает true, если треки не были загружены.
-  bool get isEmpty => audios == null ? true : count == 0;
-
-  /// Указывает, что этот плейлист является плейлистом любого рекомендательного типа.
-  bool get isRecommendationTypePlaylist =>
-      isRecommendationsPlaylist ||
-      isSimillarPlaylist ||
-      isMoodPlaylist ||
-      isAudioMixPlaylist ||
-      isMadeByVKPlaylist;
 
   /// Указывает процент "схожести" данного плейлиста. Данное поле не-null только для плейлистов из раздела "совпадения по вкусам".
   final double? simillarity;
@@ -152,6 +102,10 @@ class ExtendedPlaylist {
   /// Указывает, что в данном плейлисте разрешено кэширование треков.
   final bool? cacheTracks;
 
+  /// Указывает, что данный плейлист является плейлистом рекомендательного типа. Обычно, при прослушивании музыки у таких плейлистов, в интерфейсе показывается кнопка дизлайка.
+  bool get isRecommendationTypePlaylist =>
+      ![PlaylistType.favorites, PlaylistType.regular].contains(type);
+
   /// Возвращает длительность всего плейлиста. Если список треков ещё не был получен, то возвращает null.
   Duration? get duration {
     if (audios == null) return null;
@@ -172,10 +126,10 @@ class ExtendedPlaylist {
 
   /// Создаёт из передаваемого объекта [Playlist] объект данного класа.
   static ExtendedPlaylist fromAudioPlaylist(
-    Playlist playlist, {
+    Playlist playlist,
+    PlaylistType type, {
     List<ExtendedAudio>? audios,
     int? totalAudios,
-    bool isMoodPlaylist = false,
     double? simillarity,
     String? color,
     List<ExtendedAudio>? knownTracks,
@@ -185,14 +139,11 @@ class ExtendedPlaylist {
       ExtendedPlaylist(
         id: playlist.id,
         ownerID: playlist.ownerID,
+        type: type,
         title: playlist.title,
         description: playlist.description,
         count: playlist.count,
         accessKey: playlist.accessKey,
-        followers: playlist.followers,
-        plays: playlist.plays,
-        createTime: playlist.createTime,
-        updateTime: playlist.updateTime,
         isFollowing: playlist.isFollowing,
         subtitle: playlist.subtitle,
         photo: playlist.photo,
@@ -200,7 +151,6 @@ class ExtendedPlaylist {
         simillarity: simillarity,
         color: color,
         knownTracks: knownTracks,
-        isMoodPlaylist: isMoodPlaylist,
         isLiveData: isLiveData,
         areTracksLive: areTracksLive,
       );
@@ -212,14 +162,11 @@ class ExtendedPlaylist {
       ExtendedPlaylist(
         id: playlist.id,
         ownerID: playlist.ownerID,
+        type: playlist.type,
         title: playlist.title,
         description: playlist.description,
         count: playlist.count,
         accessKey: playlist.accessKey,
-        followers: playlist.followers,
-        plays: playlist.plays,
-        createTime: playlist.createTime,
-        updateTime: playlist.updateTime,
         isFollowing: playlist.isFollowing ?? false,
         subtitle: playlist.subtitle,
         photo: playlist.photo?.asThumbnails,
@@ -231,8 +178,6 @@ class ExtendedPlaylist {
               ),
             )
             .toList(),
-        isMoodPlaylist: playlist.isMoodPlaylist ?? false,
-        isAudioMixPlaylist: playlist.isAudioMixPlaylist ?? false,
         mixID: playlist.mixID,
         backgroundAnimationUrl: playlist.backgroundAnimationUrl,
         simillarity: playlist.simillarity,
@@ -261,20 +206,15 @@ class ExtendedPlaylist {
   ExtendedPlaylist copyWith({
     int? id,
     int? ownerID,
+    PlaylistType? type,
     String? title,
     String? description,
     int? count,
     String? accessKey,
-    int? followers,
-    int? plays,
-    int? createTime,
-    int? updateTime,
     bool? isFollowing,
     String? subtitle,
     Thumbnails? photo,
     List<ExtendedAudio>? audios,
-    bool? isMoodPlaylist,
-    bool? isAudioMixPlaylist,
     String? mixID,
     String? backgroundAnimationUrl,
     double? simillarity,
@@ -291,20 +231,15 @@ class ExtendedPlaylist {
       ExtendedPlaylist(
         id: id ?? this.id,
         ownerID: ownerID ?? this.ownerID,
+        type: type ?? this.type,
         title: title ?? this.title,
         description: description ?? this.description,
         count: count ?? this.count,
         accessKey: accessKey ?? this.accessKey,
-        followers: followers ?? this.followers,
-        plays: plays ?? this.plays,
-        createTime: createTime ?? this.createTime,
-        updateTime: updateTime ?? this.updateTime,
         isFollowing: isFollowing ?? this.isFollowing,
         subtitle: subtitle ?? this.subtitle,
         photo: photo ?? this.photo,
         audios: audios ?? this.audios,
-        isMoodPlaylist: isMoodPlaylist ?? this.isMoodPlaylist,
-        isAudioMixPlaylist: isAudioMixPlaylist ?? this.isAudioMixPlaylist,
         mixID: mixID ?? this.mixID,
         backgroundAnimationUrl:
             backgroundAnimationUrl ?? this.backgroundAnimationUrl,
@@ -368,20 +303,15 @@ class ExtendedPlaylist {
   ExtendedPlaylist({
     required this.id,
     required this.ownerID,
+    required this.type,
     this.title,
     this.description,
     required this.count,
     this.accessKey,
-    this.followers = 0,
-    this.plays = 0,
-    this.createTime,
-    this.updateTime,
     this.isFollowing = false,
     this.subtitle,
     this.photo,
     this.audios,
-    this.isMoodPlaylist = false,
-    this.isAudioMixPlaylist = false,
     this.simillarity,
     this.color,
     this.knownTracks,
