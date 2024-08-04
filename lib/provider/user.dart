@@ -290,6 +290,7 @@ class ExtendedPlaylist {
     return other.runtimeType == ExtendedPlaylist &&
         other.id == id &&
         other.ownerID == ownerID &&
+        other.title == title &&
         other.isLiveData == isLiveData &&
         other.areTracksLive == areTracksLive &&
         other.cacheTracks == cacheTracks &&
