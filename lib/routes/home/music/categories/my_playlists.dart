@@ -99,8 +99,8 @@ class MyPlaylistsBlock extends HookConsumerWidget {
                     right: 8,
                   ),
                   child: AudioPlaylistWidget(
-                    backgroundUrl: playlist.photo?.photo270,
-                    cacheKey: "${playlist.mediaKey}270",
+                    backgroundUrl: playlist.photo?.photo600,
+                    cacheKey: "${playlist.mediaKey}600",
                     name: playlist.title!,
                     description: playlist.description,
                     selected:

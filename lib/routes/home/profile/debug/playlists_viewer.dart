@@ -117,10 +117,10 @@ class PlaylistsViewerDebugMenu extends ConsumerWidget {
               for (ExtendedPlaylist playlist in playlistsInfo.playlists)
                 AudioPlaylistWidget(
                   name: playlist.title ?? "<no name>",
-                  backgroundUrl: playlist.photo?.photo270,
-                  cacheKey: "${playlist.mediaKey}270",
+                  backgroundUrl: playlist.photo?.photo600,
+                  cacheKey: "${playlist.mediaKey}600",
                   description:
-                      "isLiveData: ${playlist.isLiveData}\nareTracksLive: ${playlist.areTracksLive}",
+                      "live: ${playlist.isLiveData}, tracksLive: ${playlist.areTracksLive}, cache: ${playlist.cacheTracks ?? false}",
                   useTextOnImageLayout: true,
                   onOpen: () => context.push(
                     "/music/playlist/${playlist.ownerID}/${playlist.id}",

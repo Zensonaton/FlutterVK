@@ -424,8 +424,8 @@ class RealtimePlaylistsBlock extends HookConsumerWidget {
                 return MoodPlaylistWidget(
                   title: playlist.title!,
                   description: playlist.description ?? playlist.subtitle,
-                  backgroundUrl: playlist.photo!.photo270,
-                  cacheKey: "${playlist.mediaKey}270",
+                  backgroundUrl: playlist.photo!.photo600,
+                  cacheKey: "${playlist.mediaKey}600",
                   selected:
                       player.currentPlaylist?.mediaKey == playlist.mediaKey,
                   currentlyPlaying: player.playing,

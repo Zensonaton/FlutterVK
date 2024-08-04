@@ -201,8 +201,8 @@ class DownloadItemIconWidget extends StatelessWidget {
         ),
         child: playlist.photo != null
             ? CachedNetworkImage(
-                imageUrl: playlist.photo!.photo270,
-                cacheKey: "${playlist.mediaKey}270",
+                imageUrl: playlist.photo!.photo600,
+                cacheKey: "${playlist.mediaKey}600",
                 width: 50,
                 height: 50,
                 memCacheHeight: memCacheSize,

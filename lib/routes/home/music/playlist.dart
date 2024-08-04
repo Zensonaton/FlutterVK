@@ -779,7 +779,7 @@ class AppBarPlaylistImageWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final imageUrl = playlist.photo?.photo300;
+    final imageUrl = playlist.photo?.photo1200;
     final fallbackWidget = FallbackAudioPlaylistAvatar(
       favoritesPlaylist: playlist.type == PlaylistType.favorites,
       size: size,
@@ -809,7 +809,7 @@ class AppBarPlaylistImageWidget extends StatelessWidget {
         child: imageUrl != null
             ? CachedNetworkImage(
                 imageUrl: imageUrl,
-                cacheKey: "${playlist.mediaKey}300",
+                cacheKey: "${playlist.mediaKey}1200",
                 fit: BoxFit.cover,
                 width: size,
                 height: size,
