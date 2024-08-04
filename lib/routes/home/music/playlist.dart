@@ -1810,16 +1810,11 @@ class PlaylistRoute extends HookConsumerWidget {
             onSearchSubmitted: onSearchSubmitted,
           )
         else
-          Theme(
-            data: ThemeData(
-              colorScheme: oldScheme,
-            ),
-            child: DesktopAppBarWidget(
-              playlist: playlist,
-              maxAppBarHeight: maxAppBarHeight,
-              minAppBarHeight: minAppBarHeight,
-              horizontalPadding: horizontalPadding,
-            ),
+          DesktopAppBarWidget(
+            playlist: playlist,
+            maxAppBarHeight: maxAppBarHeight,
+            minAppBarHeight: minAppBarHeight,
+            horizontalPadding: horizontalPadding,
           ),
 
         // Информация о данном плейлисте для Mobile Layout'а.
@@ -1871,7 +1866,14 @@ class PlaylistRoute extends HookConsumerWidget {
         // Небольшой Gap, что бы интерфейс был не слишком сжат.
         const SliverGap(8),
       ],
-      [mobileLayout, maxAppBarHeight, isSearchOpen.value, playlist],
+      [
+        mobileLayout,
+        maxAppBarHeight,
+        isSearchOpen.value,
+        oldScheme,
+        scheme,
+        playlist,
+      ],
     );
 
     return PopScope(
