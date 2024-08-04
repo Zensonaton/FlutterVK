@@ -1,5 +1,6 @@
 import "dart:io";
 
+import "package:collection/collection.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:install_plugin/install_plugin.dart";
@@ -15,6 +16,7 @@ import "../main.dart";
 import "../provider/download_manager.dart";
 import "../provider/l18n.dart";
 import "../provider/updater.dart";
+import "../widgets/dialogs.dart";
 import "../widgets/loading_overlay.dart";
 import "../widgets/update_dialog.dart";
 import "download_manager.dart";
@@ -46,9 +48,24 @@ class Updater {
         repoName,
       );
 
+  /// Возвращает информацию по Github Release текущей версии приложения. Может вернуть null, если по какой-то причине Release не был найден.
+  ///
+  /// Если Вы не получили список из объектов [Release], то воспользуйтесь методом [getReleases], либо воспользуйтесь методом [getCurrent].
+  static Release? getCurrentFrom(List<Release> releases) =>
+      releases.firstWhereOrNull(
+        (release) => release.tagName == appVersion,
+      );
+
+  /// Возвращает информацию по Github Release текущей версии приложения. Может вернуть null, если по какой-то причине Release не был найден.
+  ///
+  /// Если у Вас уже есть объект [Release] то рекомендуется воспользоваться методом [getCurrentFrom], что бы избежать повторного API-запроса.
+  static Future<Release?> getCurrent() async => getCurrentFrom(
+        await getReleases(),
+      );
+
   /// Проверяет, нужно ли обновиться с текущей версии приложения до той версии, которая передаётся в [releases]. Если обновиться можно, то вместо null возвращает объект [Release], олицетворяющий последнюю версию, до которой можно произвести обновление.
   ///
-  /// Если Вы не получили объект [Release], то воспользуйтесь методом [getReleases], либо воспользуйтесь методом [shouldUpdate].
+  /// Если Вы не получили список из объектов [Release], то воспользуйтесь методом [getReleases], либо воспользуйтесь методом [shouldUpdate].
   static Release? shouldUpdateFrom(
     List<Release> releases, {
     bool allowPre = false,
@@ -205,6 +222,52 @@ class Updater {
     } finally {
       // ignore: use_build_context_synchronously
       if (showLoadingOverlay) LoadingOverlay.of(context).hide();
+    }
+  }
+
+  /// Показывает диалог, в котором написана информация об изменениях в этой версии приложения Flutter VK.
+  Future<void> showChangelog(
+    BuildContext context, {
+    bool showLoadingOverlay = false,
+  }) async {
+    logger.d("Getting changelog for version $appVersion");
+
+    if (showLoadingOverlay) LoadingOverlay.of(context).show();
+
+    try {
+      final Release? release = await getCurrent();
+
+      // Release был найден.
+      if (release != null && context.mounted) {
+        logger.d("Changelog found");
+
+        showModalBottomSheet(
+          context: context,
+          useRootNavigator: true,
+          isScrollControlled: true,
+          useSafeArea: true,
+          builder: (BuildContext context) {
+            return ChangelogDialog(
+              release: release,
+            );
+          },
+        );
+
+        return;
+      }
+    } catch (e, stackTrace) {
+      showLogErrorDialog(
+        "Couldn't get changelog",
+        e,
+        stackTrace,
+        logger,
+        // ignore: use_build_context_synchronously
+        context,
+      );
+    } finally {
+      if (showLoadingOverlay && context.mounted) {
+        LoadingOverlay.of(context).hide();
+      }
     }
   }
 

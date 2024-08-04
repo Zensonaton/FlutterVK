@@ -520,6 +520,20 @@
 	"profile_githubTitle": "Исходный код проекта",
 	"profile_githubDescription": "Нажав сюда, мы отправим Вас в прекрасный Github-репозиторий приложения Flutter VK",
 
+	"profile_showChangelogTitle": "Список изменений",
+	"profile_showChangelogDescription": "Показывает список изменений в этой версии приложения",
+
+	"profile_changelogDialogTitle": "Список изменений в {version}",
+	"@profile_changelogDialogTitle": {
+		"placeholders": {
+			"version": {
+				"type": "String",
+				"description": "Номер версии приложения, для которой отображается список изменений.",
+				"example": "1.2.3"
+			}
+		}
+	},
+
 	"profile_appVersionTitle": "О приложении",
 	"profile_appVersionDescription": "Установленная версия приложения: {version}.\nНажмите сюда, что бы проверить на наличие новых обновлений",
 	"@profile_appVersionDescription": {

@@ -742,6 +742,27 @@ class HomeProfilePage extends HookConsumerWidget {
                       }[preferences.updateBranch]!,
                     ),
 
+                    // Список изменений этой версии.
+                    ListTile(
+                      leading: const Icon(
+                        Icons.article,
+                      ),
+                      title: Text(
+                        l18n.profile_showChangelogTitle,
+                      ),
+                      subtitle: Text(
+                        l18n.profile_showChangelogDescription,
+                      ),
+                      onTap: () {
+                        if (!networkRequiredDialog(ref, context)) return;
+
+                        ref.read(updaterProvider).showChangelog(
+                              context,
+                              showLoadingOverlay: true,
+                            );
+                      },
+                    ),
+
                     // Версия приложения (и проверка текущей версии).
                     ListTile(
                       leading: const Icon(

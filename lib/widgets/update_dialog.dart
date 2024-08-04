@@ -210,6 +210,94 @@ class UpdateAvailableDialog extends ConsumerWidget {
   }
 }
 
+/// Диалог, появляющийся снизу экрана, показывающий список изменений текущей версии приложения.
+///
+/// Пример использования:
+/// ```dart
+/// showModalBottomSheet(
+///   context: context,
+///   builder: (BuildContext context) => const ChangelogDialog(...),
+/// ),
+/// ```
+class ChangelogDialog extends ConsumerWidget {
+  static final AppLogger logger = getLogger("ChangelogDialog");
+
+  /// Github Release с новым обновлением.
+  final Release release;
+
+  const ChangelogDialog({
+    super.key,
+    required this.release,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l18n = ref.watch(l18nProvider);
+
+    final scheme = Theme.of(context).colorScheme;
+
+    return DraggableScrollableSheet(
+      expand: false,
+      builder: (BuildContext context, ScrollController controller) {
+        return Container(
+          width: 500,
+          padding: const EdgeInsets.symmetric(
+            horizontal: 8,
+            vertical: 8,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              // Внутреннее содержимое.
+              Expanded(
+                child: ListView(
+                  controller: controller,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 16,
+                  ),
+                  children: [
+                    // Иконка обновления.
+                    Icon(
+                      Icons.article,
+                      size: 28,
+                      color: scheme.primary,
+                    ),
+                    const Gap(2),
+
+                    // Текст "Список изменений в этой версии".
+                    Text(
+                      l18n.profile_changelogDialogTitle(
+                        "v${release.tagName}",
+                      ),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: scheme.primary,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const Gap(2),
+
+                    const Divider(),
+                    const Gap(6),
+
+                    // Описание обновления.
+                    MarkdownBody(
+                      data: release.body,
+                      shrinkWrap: false,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
 /// Диалог, отображающий информацию о том, что пользователь впервые установил бета-версию приложения.
 ///
 /// Пример использования:
