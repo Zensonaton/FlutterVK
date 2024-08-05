@@ -1381,7 +1381,7 @@ class AudioPlayerService extends BaseAudioHandler
   /// Отправляет изменения состояния воспроизведения в `audio_service`, обновляя информацию, отображаемую в уведомлении.
   Future<void> _updateEvent() async {
     final bool isAudioMix =
-        _player.currentPlaylist?.type != PlaylistType.audioMix;
+        _player.currentPlaylist?.type == PlaylistType.audioMix;
     final bool isRecommended =
         _player.currentPlaylist?.isRecommendationTypePlaylist ?? false;
 
