@@ -1373,7 +1373,7 @@ class AudioPlayerService extends BaseAudioHandler
     });
 
     // События изменения индекса трека.
-    _player.shuffleModeEnabledStream.listen((bool enabled) async {
+    _player.currentIndexStream.listen((int? index) async {
       await _updateEvent();
     });
   }
