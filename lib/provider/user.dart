@@ -494,6 +494,11 @@ class ExtendedAudio {
   /// Указывает, кэширован ли данный трек.
   final bool? isCached;
 
+  /// Указывает размер кэша трека в байтах.
+  ///
+  /// null если трек не кэширован ([isCached]).
+  final int? cachedSize;
+
   /// Указывает, возможно ли воспроизвести данный трек. Данное поле проверяет наличие интернета и существование Url на mp3 файл, либо же то, что трек кэширован.
   bool get canPlay =>
       (isCached ?? false) || (connectivityManager.hasConnection && url != null);
@@ -605,6 +610,7 @@ class ExtendedAudio {
         lyrics: audio.lyrics?.asLyrics,
         isLiked: isLiked,
         isCached: audio.isCached ?? false,
+        cachedSize: audio.cachedSize,
         colorInts: audio.colorInts != null
             ? Map.fromIterable(audio.colorInts!, key: (item) => item)
             : null,
@@ -634,6 +640,7 @@ class ExtendedAudio {
     Lyrics? lyrics,
     bool? isLiked,
     bool? isCached,
+    int? cachedSize,
     bool? savedFromPlaylist,
     int? relativeID,
     int? relativeOwnerID,
@@ -664,6 +671,7 @@ class ExtendedAudio {
         lyrics: lyrics ?? this.lyrics,
         isLiked: isLiked ?? this.isLiked,
         isCached: isCached ?? this.isCached,
+        cachedSize: cachedSize ?? this.cachedSize,
         savedFromPlaylist: savedFromPlaylist ?? this.savedFromPlaylist,
         relativeID: relativeID ?? this.relativeID,
         relativeOwnerID: relativeOwnerID ?? this.relativeOwnerID,
@@ -718,6 +726,7 @@ class ExtendedAudio {
     this.lyrics,
     this.isLiked = false,
     this.isCached,
+    this.cachedSize,
     this.savedFromPlaylist = false,
     this.relativeID,
     this.relativeOwnerID,

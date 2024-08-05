@@ -320,6 +320,11 @@ class DBAudio {
   /// Указывает, кэширован ли данный трек.
   final bool? isCached;
 
+  /// Указывает размер кэша трека в байтах.
+  ///
+  /// null если трек не кэширован ([isCached]).
+  final int? cachedSize;
+
   /// {@macro ImageSchemeExtractor.colorInts}
   final List<int>? colorInts;
 
@@ -351,6 +356,7 @@ class DBAudio {
         vkThumbs: audio.vkThumbs?.asDBExtendedThumbnail,
         deezerThumbs: audio.deezerThumbs?.asDBExtendedThumbnail,
         isCached: audio.isCached,
+        cachedSize: audio.cachedSize,
         colorInts: audio.colorInts?.keys.toList(),
         scoredColorInts: audio.scoredColorInts,
         frequentColorInt: audio.frequentColorInt,
@@ -380,6 +386,7 @@ class DBAudio {
     DBLyrics? lyrics,
     int? genreID,
     bool? isCached,
+    int? cachedSize,
     List<int>? colorInts,
     List<int>? scoredColorInts,
     int? frequentColorInt,
@@ -403,6 +410,7 @@ class DBAudio {
         lyrics: lyrics ?? this.lyrics,
         genreID: genreID ?? this.genreID,
         isCached: isCached ?? this.isCached,
+        cachedSize: cachedSize ?? this.cachedSize,
         colorInts: colorInts ?? this.colorInts,
         scoredColorInts: scoredColorInts ?? this.scoredColorInts,
         frequentColorInt: frequentColorInt ?? this.frequentColorInt,
@@ -446,6 +454,7 @@ class DBAudio {
     this.lyrics,
     this.genreID,
     this.isCached,
+    this.cachedSize,
     this.colorInts,
     this.scoredColorInts,
     this.frequentColorInt,

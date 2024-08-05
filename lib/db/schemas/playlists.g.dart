@@ -7454,100 +7454,105 @@ const DBAudioSchema = Schema(
       name: r'artist',
       type: IsarType.string,
     ),
-    r'colorCount': PropertySchema(
+    r'cachedSize': PropertySchema(
       id: 3,
+      name: r'cachedSize',
+      type: IsarType.long,
+    ),
+    r'colorCount': PropertySchema(
+      id: 4,
       name: r'colorCount',
       type: IsarType.long,
     ),
     r'colorInts': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'colorInts',
       type: IsarType.longList,
     ),
     r'date': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'date',
       type: IsarType.long,
     ),
     r'deezerThumbs': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'deezerThumbs',
       type: IsarType.object,
       target: r'DBExtendedThumbnail',
     ),
     r'duration': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'duration',
       type: IsarType.long,
     ),
     r'frequentColorInt': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'frequentColorInt',
       type: IsarType.long,
     ),
     r'genreID': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'genreID',
       type: IsarType.long,
     ),
     r'hasLyrics': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'hasLyrics',
       type: IsarType.bool,
     ),
     r'hashCode': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'hashCode',
       type: IsarType.long,
     ),
     r'id': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'id',
       type: IsarType.long,
     ),
     r'isCached': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'isCached',
       type: IsarType.bool,
     ),
     r'isExplicit': PropertySchema(
-      id: 14,
+      id: 15,
       name: r'isExplicit',
       type: IsarType.bool,
     ),
     r'isRestricted': PropertySchema(
-      id: 15,
+      id: 16,
       name: r'isRestricted',
       type: IsarType.bool,
     ),
     r'lyrics': PropertySchema(
-      id: 16,
+      id: 17,
       name: r'lyrics',
       type: IsarType.object,
       target: r'DBLyrics',
     ),
     r'ownerID': PropertySchema(
-      id: 17,
+      id: 18,
       name: r'ownerID',
       type: IsarType.long,
     ),
     r'scoredColorInts': PropertySchema(
-      id: 18,
+      id: 19,
       name: r'scoredColorInts',
       type: IsarType.longList,
     ),
     r'subtitle': PropertySchema(
-      id: 19,
+      id: 20,
       name: r'subtitle',
       type: IsarType.string,
     ),
     r'title': PropertySchema(
-      id: 20,
+      id: 21,
       name: r'title',
       type: IsarType.string,
     ),
     r'vkThumbs': PropertySchema(
-      id: 21,
+      id: 22,
       name: r'vkThumbs',
       type: IsarType.object,
       target: r'DBExtendedThumbnail',
@@ -7648,36 +7653,37 @@ void _dBAudioSerialize(
     object.album,
   );
   writer.writeString(offsets[2], object.artist);
-  writer.writeLong(offsets[3], object.colorCount);
-  writer.writeLongList(offsets[4], object.colorInts);
-  writer.writeLong(offsets[5], object.date);
+  writer.writeLong(offsets[3], object.cachedSize);
+  writer.writeLong(offsets[4], object.colorCount);
+  writer.writeLongList(offsets[5], object.colorInts);
+  writer.writeLong(offsets[6], object.date);
   writer.writeObject<DBExtendedThumbnail>(
-    offsets[6],
+    offsets[7],
     allOffsets,
     DBExtendedThumbnailSchema.serialize,
     object.deezerThumbs,
   );
-  writer.writeLong(offsets[7], object.duration);
-  writer.writeLong(offsets[8], object.frequentColorInt);
-  writer.writeLong(offsets[9], object.genreID);
-  writer.writeBool(offsets[10], object.hasLyrics);
-  writer.writeLong(offsets[11], object.hashCode);
-  writer.writeLong(offsets[12], object.id);
-  writer.writeBool(offsets[13], object.isCached);
-  writer.writeBool(offsets[14], object.isExplicit);
-  writer.writeBool(offsets[15], object.isRestricted);
+  writer.writeLong(offsets[8], object.duration);
+  writer.writeLong(offsets[9], object.frequentColorInt);
+  writer.writeLong(offsets[10], object.genreID);
+  writer.writeBool(offsets[11], object.hasLyrics);
+  writer.writeLong(offsets[12], object.hashCode);
+  writer.writeLong(offsets[13], object.id);
+  writer.writeBool(offsets[14], object.isCached);
+  writer.writeBool(offsets[15], object.isExplicit);
+  writer.writeBool(offsets[16], object.isRestricted);
   writer.writeObject<DBLyrics>(
-    offsets[16],
+    offsets[17],
     allOffsets,
     DBLyricsSchema.serialize,
     object.lyrics,
   );
-  writer.writeLong(offsets[17], object.ownerID);
-  writer.writeLongList(offsets[18], object.scoredColorInts);
-  writer.writeString(offsets[19], object.subtitle);
-  writer.writeString(offsets[20], object.title);
+  writer.writeLong(offsets[18], object.ownerID);
+  writer.writeLongList(offsets[19], object.scoredColorInts);
+  writer.writeString(offsets[20], object.subtitle);
+  writer.writeString(offsets[21], object.title);
   writer.writeObject<DBExtendedThumbnail>(
-    offsets[21],
+    offsets[22],
     allOffsets,
     DBExtendedThumbnailSchema.serialize,
     object.vkThumbs,
@@ -7698,33 +7704,34 @@ DBAudio _dBAudioDeserialize(
       allOffsets,
     ),
     artist: reader.readStringOrNull(offsets[2]),
-    colorCount: reader.readLongOrNull(offsets[3]),
-    colorInts: reader.readLongList(offsets[4]),
-    date: reader.readLongOrNull(offsets[5]),
+    cachedSize: reader.readLongOrNull(offsets[3]),
+    colorCount: reader.readLongOrNull(offsets[4]),
+    colorInts: reader.readLongList(offsets[5]),
+    date: reader.readLongOrNull(offsets[6]),
     deezerThumbs: reader.readObjectOrNull<DBExtendedThumbnail>(
-      offsets[6],
+      offsets[7],
       DBExtendedThumbnailSchema.deserialize,
       allOffsets,
     ),
-    duration: reader.readLongOrNull(offsets[7]),
-    frequentColorInt: reader.readLongOrNull(offsets[8]),
-    genreID: reader.readLongOrNull(offsets[9]),
-    hasLyrics: reader.readBoolOrNull(offsets[10]),
-    id: reader.readLongOrNull(offsets[12]),
-    isCached: reader.readBoolOrNull(offsets[13]),
-    isExplicit: reader.readBoolOrNull(offsets[14]),
-    isRestricted: reader.readBoolOrNull(offsets[15]),
+    duration: reader.readLongOrNull(offsets[8]),
+    frequentColorInt: reader.readLongOrNull(offsets[9]),
+    genreID: reader.readLongOrNull(offsets[10]),
+    hasLyrics: reader.readBoolOrNull(offsets[11]),
+    id: reader.readLongOrNull(offsets[13]),
+    isCached: reader.readBoolOrNull(offsets[14]),
+    isExplicit: reader.readBoolOrNull(offsets[15]),
+    isRestricted: reader.readBoolOrNull(offsets[16]),
     lyrics: reader.readObjectOrNull<DBLyrics>(
-      offsets[16],
+      offsets[17],
       DBLyricsSchema.deserialize,
       allOffsets,
     ),
-    ownerID: reader.readLongOrNull(offsets[17]),
-    scoredColorInts: reader.readLongList(offsets[18]),
-    subtitle: reader.readStringOrNull(offsets[19]),
-    title: reader.readStringOrNull(offsets[20]),
+    ownerID: reader.readLongOrNull(offsets[18]),
+    scoredColorInts: reader.readLongList(offsets[19]),
+    subtitle: reader.readStringOrNull(offsets[20]),
+    title: reader.readStringOrNull(offsets[21]),
     vkThumbs: reader.readObjectOrNull<DBExtendedThumbnail>(
-      offsets[21],
+      offsets[22],
       DBExtendedThumbnailSchema.deserialize,
       allOffsets,
     ),
@@ -7752,48 +7759,50 @@ P _dBAudioDeserializeProp<P>(
     case 3:
       return (reader.readLongOrNull(offset)) as P;
     case 4:
-      return (reader.readLongList(offset)) as P;
-    case 5:
       return (reader.readLongOrNull(offset)) as P;
+    case 5:
+      return (reader.readLongList(offset)) as P;
     case 6:
+      return (reader.readLongOrNull(offset)) as P;
+    case 7:
       return (reader.readObjectOrNull<DBExtendedThumbnail>(
         offset,
         DBExtendedThumbnailSchema.deserialize,
         allOffsets,
       )) as P;
-    case 7:
-      return (reader.readLongOrNull(offset)) as P;
     case 8:
       return (reader.readLongOrNull(offset)) as P;
     case 9:
       return (reader.readLongOrNull(offset)) as P;
     case 10:
-      return (reader.readBoolOrNull(offset)) as P;
-    case 11:
-      return (reader.readLong(offset)) as P;
-    case 12:
       return (reader.readLongOrNull(offset)) as P;
-    case 13:
+    case 11:
       return (reader.readBoolOrNull(offset)) as P;
+    case 12:
+      return (reader.readLong(offset)) as P;
+    case 13:
+      return (reader.readLongOrNull(offset)) as P;
     case 14:
       return (reader.readBoolOrNull(offset)) as P;
     case 15:
       return (reader.readBoolOrNull(offset)) as P;
     case 16:
+      return (reader.readBoolOrNull(offset)) as P;
+    case 17:
       return (reader.readObjectOrNull<DBLyrics>(
         offset,
         DBLyricsSchema.deserialize,
         allOffsets,
       )) as P;
-    case 17:
-      return (reader.readLongOrNull(offset)) as P;
     case 18:
-      return (reader.readLongList(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 19:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readLongList(offset)) as P;
     case 20:
       return (reader.readStringOrNull(offset)) as P;
     case 21:
+      return (reader.readStringOrNull(offset)) as P;
+    case 22:
       return (reader.readObjectOrNull<DBExtendedThumbnail>(
         offset,
         DBExtendedThumbnailSchema.deserialize,
@@ -8110,6 +8119,75 @@ extension DBAudioQueryFilter
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'artist',
         value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DBAudio, DBAudio, QAfterFilterCondition> cachedSizeIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'cachedSize',
+      ));
+    });
+  }
+
+  QueryBuilder<DBAudio, DBAudio, QAfterFilterCondition> cachedSizeIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'cachedSize',
+      ));
+    });
+  }
+
+  QueryBuilder<DBAudio, DBAudio, QAfterFilterCondition> cachedSizeEqualTo(
+      int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'cachedSize',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DBAudio, DBAudio, QAfterFilterCondition> cachedSizeGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'cachedSize',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DBAudio, DBAudio, QAfterFilterCondition> cachedSizeLessThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'cachedSize',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DBAudio, DBAudio, QAfterFilterCondition> cachedSizeBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'cachedSize',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
       ));
     });
   }

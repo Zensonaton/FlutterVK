@@ -608,6 +608,7 @@ class Playlists extends _$Playlists {
             artist: givenAudio.artist,
             url: givenAudio.url,
             isCached: givenAudio.isCached,
+            cachedSize: givenAudio.cachedSize,
             album: givenAudio.album,
             hasLyrics: givenAudio.hasLyrics,
             lyrics: givenAudio.lyrics,

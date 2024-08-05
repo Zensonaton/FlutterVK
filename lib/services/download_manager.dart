@@ -128,6 +128,7 @@ class PlaylistCacheDeleteDownloadItem extends DownloadItem {
 
 /// [DownloadItem] для кэширования отдельного трека для [PlaylistCacheDownloadTask].
 class PlaylistCacheDownloadItem extends DownloadItem {
+  // TODO: Использовать глобальный Dio.
   final Dio dio = Dio(
     BaseOptions(
       responseType: ResponseType.bytes,
@@ -150,8 +151,8 @@ class PlaylistCacheDownloadItem extends DownloadItem {
     this.updatePlaylist = true,
   });
 
-  /// Загружает трек, возвращая true, если он был успешно загружен.
-  Future<bool> _downloadAudio() async {
+  /// Загружает трек, возвращая его размер в байтах, если он был успешно загружен.
+  Future<int?> _downloadAudio() async {
     final file =
         await CachedStreamAudioSource.getCachedAudioByKey(audio.mediaKey);
 
@@ -166,10 +167,12 @@ class PlaylistCacheDownloadItem extends DownloadItem {
 
       await file.create(recursive: true);
       await file.writeAsBytes(response.data);
+
+      return response.data.length;
     }
 
     progress.value = 1.0;
-    return false;
+    return null;
   }
 
   /// Загружает обложки трека
@@ -244,10 +247,12 @@ class PlaylistCacheDownloadItem extends DownloadItem {
     if (!isAnyDownloaded) return null;
 
     // Извлекаем результаты.
+    final audioSize = result[0] as int?;
     final lyricsDownloaded = result[2] as Lyrics?;
 
     return audio.copyWith(
       isCached: true,
+      cachedSize: audioSize,
       lyrics: lyricsDownloaded,
     );
   }
