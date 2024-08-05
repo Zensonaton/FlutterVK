@@ -1,3 +1,4 @@
+import "package:dio/dio.dart";
 import "package:json_annotation/json_annotation.dart";
 
 import "../../db/schemas/playlists.dart";
@@ -882,19 +883,17 @@ class Audio {
   Map<String, dynamic> toJson() => _$AudioToJson(this);
 }
 
-/// Класс, расширяющий [Exception], олицетворяющий ошибку API ВКонтакте.
-class VKAPIException implements Exception {
+/// Класс, расширяющий [DioException], олицетворяющий ошибку API ВКонтакте.
+class VKAPIException extends DioException {
   /// Код ошибки.
   int? errorCode;
-
-  /// Текст ошибки.
-  String? message;
 
   @override
   String toString() => "VK API error $errorCode: $message";
 
   VKAPIException({
     this.errorCode,
-    this.message,
+    super.message,
+    required super.requestOptions,
   });
 }

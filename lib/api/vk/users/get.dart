@@ -23,5 +23,9 @@ Future<List<APIUser>> users_get({
     },
   );
 
-  return response.data as List<APIUser>;
+  return response.data
+      .map<APIUser>(
+        (item) => APIUser.fromJson(item),
+      )
+      .toList();
 }

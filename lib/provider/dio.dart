@@ -60,6 +60,9 @@ void initDioInterceptors(
     RetryInterceptor(
       dio: dio,
       logPrint: (String log) => logger.d(log),
+      retryEvaluator: (DioException error, int attempt) {
+        return error is! VKAPIException;
+      },
       retryDelays: const [
         Duration(
           seconds: 1,
@@ -100,7 +103,11 @@ class VKAPIInterceptor extends Interceptor {
     final body = options.data as Map<String, dynamic>;
     final headers = options.headers;
 
+    // Удаляем null-поля.
+    body.removeWhere((key, value) => value == null);
+
     // Если у нас нет установленного access_token'а, то ставим его.
+    // TODO: Если access_token находится в body, то переносим его в HTTP Header.
     if (!body.containsKey("access_token")) {
       final useSecondary = options.extra["useSecondary"] as bool? ?? false;
 
@@ -129,6 +136,7 @@ class VKAPIInterceptor extends Interceptor {
       throw VKAPIException(
         errorCode: data["error"]["error_code"],
         message: data["error"]["error_msg"],
+        requestOptions: response.requestOptions,
       );
     }
 
@@ -141,6 +149,7 @@ class VKAPIInterceptor extends Interceptor {
       throw VKAPIException(
         errorCode: error["error_code"],
         message: error["error_msg"],
+        requestOptions: response.requestOptions,
       );
     }
 
