@@ -7,11 +7,6 @@ import "package:gap/gap.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
-import "../../api/vk/api.dart";
-import "../../api/vk/audio/add.dart";
-import "../../api/vk/audio/add_dislike.dart";
-import "../../api/vk/audio/delete.dart";
-import "../../api/vk/audio/restore.dart";
 import "../../consts.dart";
 import "../../main.dart";
 import "../../provider/auth.dart";
@@ -134,22 +129,18 @@ Future<void> toggleTrackLike(
       newTrackID = newAudio.id;
 
       // Восстанавливаем трек.
-      final APIAudioRestoreResponse response = await api.audio.restore(
+      await api.audio.restore(
         newTrackID,
         newAudio.ownerID,
       );
-      raiseOnAPIError(response);
 
       // TODO: Обработчик ошибки #15: cannot restore too late
     } else {
       // Сохраняем трек как лайкнутый.
-      final APIAudioAddResponse response = await api.audio.add(
+      newTrackID = await api.audio.add(
         newAudio.id,
         newAudio.ownerID,
       );
-      raiseOnAPIError(response);
-
-      newTrackID = response.response!;
 
       newAudio = newAudio.copyWith(
         savedFromPlaylist: true,
@@ -189,11 +180,10 @@ Future<void> toggleTrackLike(
     // Пользователь пытается удалить трек.
 
     // Удаляем трек из лайкнутых.
-    final APIAudioDeleteResponse response = await api.audio.delete(
+    await api.audio.delete(
       audio.savedFromPlaylist ? audio.relativeID! : audio.id,
       audio.savedFromPlaylist ? audio.relativeOwnerID! : audio.ownerID,
     );
-    raiseOnAPIError(response);
 
     // Запоминаем новую версию плейлиста "любимые треки" с удалённым треком.
     playlistsModified.add(
@@ -253,13 +243,11 @@ Future<void> dislikeTrack(
 ) async {
   final api = ref.read(vkAPIProvider);
 
-  final APIAudioAddDislikeResponse response =
-      await api.audio.addDislike([audio.mediaKey]);
-  raiseOnAPIError(response);
+  final bool response = await api.audio.addDislike([audio.mediaKey]);
 
   assert(
-    response.response,
-    "Track is not disliked: ${response.response}",
+    response,
+    "Track is not disliked: $response",
   );
 }
 

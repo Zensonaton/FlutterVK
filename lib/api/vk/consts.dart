@@ -2,7 +2,7 @@
 const String vkAPIBaseURL = "https://api.vk.com/method/";
 
 /// Версия API.
-const String vkAPIversion = "5.199";
+const String vkAPIVersion = "5.199";
 
 /// Перечисление всех полей для API-методов по типу `users.get`.
 const String vkAPIallUserFields =

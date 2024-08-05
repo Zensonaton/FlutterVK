@@ -1,52 +1,25 @@
 // ignore_for_file: non_constant_identifier_names
 
-import "package:json_annotation/json_annotation.dart";
-
-import "../api.dart";
+import "../../../main.dart";
 import "../shared.dart";
-
-part "get_stream_mix_audios.g.dart";
-
-/// Ответ для метода [audio_get_stream_mix_audios].
-@JsonSerializable()
-class APIAudioGetStreamMixAudiosResponse {
-  /// Список из треков.
-  final List<Audio>? response;
-
-  /// Объект ошибки.
-  final APIError? error;
-
-  APIAudioGetStreamMixAudiosResponse({
-    this.response,
-    this.error,
-  });
-
-  factory APIAudioGetStreamMixAudiosResponse.fromJson(
-    Map<String, dynamic> json,
-  ) =>
-      _$APIAudioGetStreamMixAudiosResponseFromJson(json);
-  Map<String, dynamic> toJson() =>
-      _$APIAudioGetStreamMixAudiosResponseToJson(this);
-}
 
 /// {@template VKAPI.audio.getStreamMixAudios}
 /// Возвращает список треков для аудио микса (VK Mix).
 /// {@endtemplate}
 ///
 /// API: `audio.getStreamMixAudios`.
-Future<APIAudioGetStreamMixAudiosResponse> audio_get_stream_mix_audios(
-  String token,
-  String mixID,
-  int count,
-) async {
-  var response = await callVkAPI(
+Future<List<Audio>> audio_get_stream_mix_audios(String mixID, int count) async {
+  var response = await vkDio.post(
     "audio.getStreamMixAudios",
-    token,
-    {
+    data: {
       "mix_id": mixID,
-      "count": count.toString(),
+      "count": count,
     },
   );
 
-  return APIAudioGetStreamMixAudiosResponse.fromJson(response.data);
+  return response.data
+      .map<Audio>(
+        (item) => Audio.fromJson(item),
+      )
+      .toList();
 }

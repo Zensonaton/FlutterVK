@@ -5,7 +5,6 @@ import "package:flutter/foundation.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 
-import "../api/vk/api.dart";
 import "../api/vk/catalog/get_audio.dart";
 import "../api/vk/execute/mass_get_audio.dart";
 import "../api/vk/shared.dart";
@@ -276,7 +275,6 @@ class Playlists extends _$Playlists {
 
     final APIMassAudioGetResponse regularPlaylists =
         await api.audio.getWithAlbums(user.id);
-    raiseOnAPIError(regularPlaylists);
 
     return (
       [
@@ -285,8 +283,8 @@ class Playlists extends _$Playlists {
           id: 0,
           ownerID: user.id,
           type: PlaylistType.favorites,
-          count: regularPlaylists.response!.audioCount,
-          audios: regularPlaylists.response!.audios
+          count: regularPlaylists.audioCount,
+          audios: regularPlaylists.audios
               .map(
                 (Audio audio) => ExtendedAudio.fromAPIAudio(
                   audio,
@@ -300,14 +298,14 @@ class Playlists extends _$Playlists {
 
         // Все остальные плейлисты пользователя.
         // Мы помечаем что плейлисты являются кэшированными.
-        ...regularPlaylists.response!.playlists.map(
+        ...regularPlaylists.playlists.map(
           (playlist) => ExtendedPlaylist.fromAudioPlaylist(
             playlist,
             PlaylistType.regular,
           ),
         ),
       ],
-      regularPlaylists.response!.playlistsCount,
+      regularPlaylists.playlistsCount,
     );
   }
 
@@ -328,7 +326,7 @@ class Playlists extends _$Playlists {
     List<ExtendedPlaylist>? parseMoodPlaylists(
       APICatalogGetAudioResponse response,
     ) {
-      final Section mainSection = response.response!.catalog.sections[0];
+      final Section mainSection = response.catalog.sections[0];
 
       // Ищем блок с рекомендуемыми плейлистами.
       SectionBlock? moodPlaylistsBlock = mainSection.blocks!.firstWhereOrNull(
@@ -344,7 +342,7 @@ class Playlists extends _$Playlists {
 
       // Достаём те плейлисты, которые рекомендуются нами ВКонтакте.
       // Превращаем объекты типа AudioPlaylist в ExtendedPlaylist.
-      return response.response!.playlists
+      return response.playlists
           .where(
             (Playlist playlist) => moodPlaylistIDs.contains(playlist.mediaKey),
           )
@@ -364,7 +362,7 @@ class Playlists extends _$Playlists {
       final List<ExtendedPlaylist> playlists = [];
 
       // Проходимся по списку аудио миксов, создавая из них плейлисты.
-      for (AudioMix mix in response.response!.audioStreamMixes) {
+      for (AudioMix mix in response.audioStreamMixes) {
         playlists.add(
           ExtendedPlaylist(
             id: -fastHash(mix.id),
@@ -386,7 +384,7 @@ class Playlists extends _$Playlists {
     List<ExtendedPlaylist>? parseRecommendedPlaylists(
       APICatalogGetAudioResponse response,
     ) {
-      final Section mainSection = response.response!.catalog.sections[0];
+      final Section mainSection = response.catalog.sections[0];
 
       // Ищем блок с рекомендуемыми плейлистами.
       SectionBlock? recommendedPlaylistsBlock =
@@ -406,7 +404,7 @@ class Playlists extends _$Playlists {
 
       // Достаём те плейлисты, которые рекомендуются нами ВКонтакте.
       // Превращаем объекты типа AudioPlaylist в ExtendedPlaylist.
-      return response.response!.playlists
+      return response.playlists
           .where(
             (Playlist playlist) =>
                 recommendedPlaylistIDs.contains(playlist.mediaKey),
@@ -427,9 +425,8 @@ class Playlists extends _$Playlists {
       final List<ExtendedPlaylist> playlists = [];
 
       // Проходимся по списку рекомендуемых плейлистов.
-      for (SimillarPlaylist playlist
-          in response.response!.recommendedPlaylists) {
-        final fullPlaylist = response.response!.playlists.firstWhere(
+      for (SimillarPlaylist playlist in response.recommendedPlaylists) {
+        final fullPlaylist = response.playlists.firstWhere(
           (Playlist fullPlaylist) => fullPlaylist.mediaKey == playlist.mediaKey,
         );
 
@@ -440,7 +437,7 @@ class Playlists extends _$Playlists {
             simillarity: playlist.percentage,
             color: playlist.color,
             isLiveData: false,
-            knownTracks: response.response!.audios
+            knownTracks: response.audios
                 .where(
                   (Audio audio) => playlist.audios.contains(audio.mediaKey),
                 )
@@ -459,7 +456,7 @@ class Playlists extends _$Playlists {
     List<ExtendedPlaylist>? parseMadeByVKPlaylists(
       APICatalogGetAudioResponse response,
     ) {
-      final Section mainSection = response.response!.catalog.sections[0];
+      final Section mainSection = response.catalog.sections[0];
 
       // Ищем блок с плейлистами "Собрано редакцией". Данный блок имеет [SectionBlock.dataType] == "music_playlists", но он расположен в конце.
       SectionBlock? madeByVKPlaylistsBlock =
@@ -479,7 +476,7 @@ class Playlists extends _$Playlists {
 
       // Достаём те плейлисты, которые рекомендуются нами ВКонтакте.
       // Превращаем объекты типа AudioPlaylist в ExtendedPlaylist.
-      return response.response!.playlists
+      return response.playlists
           .where(
             (Playlist playlist) =>
                 recommendedPlaylistIDs.contains(playlist.mediaKey),
@@ -495,7 +492,6 @@ class Playlists extends _$Playlists {
 
     final APICatalogGetAudioResponse response =
         await ref.read(vkAPIProvider).catalog.getAudio();
-    raiseOnAPIError(response);
 
     // Создаём список из всех рекомендуемых плейлистов, а так же добавляем их в память.
     return [
@@ -802,21 +798,20 @@ class Playlists extends _$Playlists {
       albumID: playlist.id,
       accessKey: playlist.accessKey,
     );
-    raiseOnAPIError(response);
 
     // Обновляем плейлист.
     final newPlaylist = playlist.copyWith(
-      photo: response.response!.playlists
+      photo: response.playlists
           .firstWhereOrNull(
             (item) => item.mediaKey == playlist.mediaKey,
           )
           ?.photo,
-      audios: response.response!.audios
+      audios: response.audios
           .map(
             (item) => ExtendedAudio.fromAPIAudio(item),
           )
           .toList(),
-      count: response.response!.audioCount,
+      count: response.audioCount,
       isLiveData: true,
       areTracksLive: true,
     );

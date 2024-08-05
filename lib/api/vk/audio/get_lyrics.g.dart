@@ -36,37 +36,18 @@ Map<String, dynamic> _$LyricsToJson(Lyrics instance) => <String, dynamic>{
       'text': instance.text,
     };
 
-APIAudioGetLyricsRealResponse _$APIAudioGetLyricsRealResponseFromJson(
+APIAudioGetLyricsResponse _$APIAudioGetLyricsResponseFromJson(
         Map<String, dynamic> json) =>
-    APIAudioGetLyricsRealResponse(
+    APIAudioGetLyricsResponse(
       credits: json['credits'] as String,
       lyrics: Lyrics.fromJson(json['lyrics'] as Map<String, dynamic>),
       md5: json['md5'] as String,
     );
 
-Map<String, dynamic> _$APIAudioGetLyricsRealResponseToJson(
-        APIAudioGetLyricsRealResponse instance) =>
+Map<String, dynamic> _$APIAudioGetLyricsResponseToJson(
+        APIAudioGetLyricsResponse instance) =>
     <String, dynamic>{
       'credits': instance.credits,
       'lyrics': instance.lyrics,
       'md5': instance.md5,
-    };
-
-APIAudioGetLyricsResponse _$APIAudioGetLyricsResponseFromJson(
-        Map<String, dynamic> json) =>
-    APIAudioGetLyricsResponse(
-      json['response'] == null
-          ? null
-          : APIAudioGetLyricsRealResponse.fromJson(
-              json['response'] as Map<String, dynamic>),
-      json['error'] == null
-          ? null
-          : APIError.fromJson(json['error'] as Map<String, dynamic>),
-    );
-
-Map<String, dynamic> _$APIAudioGetLyricsResponseToJson(
-        APIAudioGetLyricsResponse instance) =>
-    <String, dynamic>{
-      'response': instance.response,
-      'error': instance.error,
     };

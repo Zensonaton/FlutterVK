@@ -10,10 +10,8 @@ import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:just_audio/just_audio.dart";
 
-import "../api/vk/api.dart";
 import "../api/vk/audio/get_lyrics.dart";
-import "../api/vk/audio/get_stream_mix_audios.dart";
-import "../api/vk/audio/send_start_event.dart";
+import "../api/vk/shared.dart";
 import "../consts.dart";
 import "../enums.dart";
 import "../main.dart";
@@ -438,13 +436,12 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
               // Загружаем текст песни.
               final APIAudioGetLyricsResponse response =
                   await api.audio.getLyrics(audio.mediaKey);
-              raiseOnAPIError(response);
 
               // Сохраняем в БД.
               playlistsNotifier.updatePlaylist(
                 playlist.copyWithNewAudio(
                   audio.copyWith(
-                    lyrics: response.response?.lyrics,
+                    lyrics: response.lyrics,
                   ),
                 ),
                 saveInDB: true,
@@ -475,9 +472,7 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
 
             // Делаем API-запрос, передавая информацию серверам ВКонтакте.
             try {
-              final APIAudioSendStartEventResponse response =
-                  await api.audio.sendStartEvent(player.currentAudio!.mediaKey);
-              raiseOnAPIError(response);
+              await api.audio.sendStartEvent(player.currentAudio!.mediaKey);
             } catch (e, stackTrace) {
               logger.w(
                 "Couldn't notify VK about track listening state: ",
@@ -510,12 +505,10 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
 
             logger.d("Adding $tracksToAdd tracks to mix queue");
             try {
-              final APIAudioGetStreamMixAudiosResponse response = await api
-                  .audio
+              final List<Audio> response = await api.audio
                   .getStreamMixAudiosWithAlbums(count: tracksToAdd);
-              raiseOnAPIError(response);
 
-              final List<ExtendedAudio> newAudios = response.response!
+              final List<ExtendedAudio> newAudios = response
                   .map(
                     (audio) => ExtendedAudio.fromAPIAudio(audio),
                   )
@@ -523,7 +516,7 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
 
               // Добавляем треки в объект плейлиста.
               player.currentPlaylist!.audios!.addAll(newAudios);
-              player.currentPlaylist!.count += response.response!.length;
+              player.currentPlaylist!.count += response.length;
 
               // Добавляем треки в очередь воспроизведения плеера.
               for (ExtendedAudio audio in newAudios) {

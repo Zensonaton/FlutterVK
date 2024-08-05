@@ -17,8 +17,6 @@ import "package:skeletonizer/skeletonizer.dart";
 import "package:styled_text/tags/styled_text_tag_action.dart";
 import "package:styled_text/widgets/styled_text.dart";
 
-import "../../../api/vk/api.dart";
-import "../../../api/vk/audio/get_stream_mix_audios.dart";
 import "../../../api/vk/shared.dart";
 import "../../../consts.dart";
 import "../../../enums.dart";
@@ -109,16 +107,15 @@ Future<void> onMixPlayToggle(
     return player.togglePlay();
   }
 
-  final APIAudioGetStreamMixAudiosResponse response =
+  final List<Audio> response =
       await api.audio.getStreamMixAudiosWithAlbums(count: minMixAudiosCount);
-  raiseOnAPIError(response);
 
-  playlist.audios = response.response!
+  playlist.audios = response
       .map(
         (audio) => ExtendedAudio.fromAPIAudio(audio),
       )
       .toList();
-  playlist.count = response.response!.length;
+  playlist.count = response.length;
 
   // Всё ок, запускаем воспроизведение, отключив при этом shuffle, а так же зацикливание плейлиста.
   if (player.shuffleModeEnabled) {

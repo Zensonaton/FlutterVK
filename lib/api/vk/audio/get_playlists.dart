@@ -2,44 +2,23 @@
 
 import "package:json_annotation/json_annotation.dart";
 
-import "../api.dart";
+import "../../../main.dart";
 import "../shared.dart";
 
 part "get_playlists.g.dart";
 
+/// Ответ для метода [audio_get_playlists].
 @JsonSerializable()
-class APIAudioGetPlaylistsRealResponse {
+class APIAudioGetPlaylistsResponse {
   /// Количество плейлистов.
   final int count;
 
   /// Информация о плейлистах.
   final List<Playlist> items;
 
-  APIAudioGetPlaylistsRealResponse({
+  APIAudioGetPlaylistsResponse({
     required this.count,
     required this.items,
-  });
-
-  factory APIAudioGetPlaylistsRealResponse.fromJson(
-    Map<String, dynamic> json,
-  ) =>
-      _$APIAudioGetPlaylistsRealResponseFromJson(json);
-  Map<String, dynamic> toJson() =>
-      _$APIAudioGetPlaylistsRealResponseToJson(this);
-}
-
-/// Ответ для метода [audio_get_playlists].
-@JsonSerializable()
-class APIAudioGetPlaylistsResponse {
-  /// Объект ответа.
-  final APIAudioGetPlaylistsRealResponse? response;
-
-  /// Объект ошибки.
-  final APIError? error;
-
-  APIAudioGetPlaylistsResponse({
-    this.response,
-    this.error,
   });
 
   factory APIAudioGetPlaylistsResponse.fromJson(Map<String, dynamic> json) =>
@@ -52,16 +31,12 @@ class APIAudioGetPlaylistsResponse {
 /// {@endtemplate}
 ///
 /// API: `audio.getPlaylists`.
-Future<APIAudioGetPlaylistsResponse> audio_get_playlists(
-  String token,
-  int userID,
-) async {
-  var response = await callVkAPI(
+Future<APIAudioGetPlaylistsResponse> audio_get_playlists(int userID) async {
+  var response = await vkDio.post(
     "audio.getPlaylists",
-    token,
-    {
-      "owner_id": userID.toString(),
-      "count": 100.toString(),
+    data: {
+      "owner_id": userID,
+      "count": 100,
     },
   );
 

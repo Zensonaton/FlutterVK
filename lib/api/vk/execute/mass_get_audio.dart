@@ -1,16 +1,17 @@
 // ignore_for_file: non_constant_identifier_names
 
-import "package:flutter/foundation.dart";
 import "package:json_annotation/json_annotation.dart";
 
+import "../../../main.dart";
 import "../../../utils.dart";
-import "../api.dart";
+
 import "../shared.dart";
 
 part "mass_get_audio.g.dart";
 
+/// Ответ для метода [execute_mass_get_audio].
 @JsonSerializable()
-class APIMassAudioGetRealResponse {
+class APIMassAudioGetResponse {
   /// Количество треков.
   final int audioCount;
 
@@ -23,30 +24,11 @@ class APIMassAudioGetRealResponse {
   /// Плейлисты.
   final List<Playlist> playlists;
 
-  APIMassAudioGetRealResponse({
+  APIMassAudioGetResponse({
     required this.audioCount,
     required this.audios,
     required this.playlistsCount,
     required this.playlists,
-  });
-
-  factory APIMassAudioGetRealResponse.fromJson(Map<String, dynamic> json) =>
-      _$APIMassAudioGetRealResponseFromJson(json);
-  Map<String, dynamic> toJson() => _$APIMassAudioGetRealResponseToJson(this);
-}
-
-/// Ответ для метода [execute_mass_get_audio].
-@JsonSerializable()
-class APIMassAudioGetResponse {
-  /// Объект ответа.
-  final APIMassAudioGetRealResponse? response;
-
-  /// Объект ошибки.
-  final APIError? error;
-
-  APIMassAudioGetResponse({
-    this.response,
-    this.error,
   });
 
   factory APIMassAudioGetResponse.fromJson(Map<String, dynamic> json) =>
@@ -60,7 +42,6 @@ class APIMassAudioGetResponse {
 ///
 /// Для данного метода требуется токен от Kate Mobile.
 Future<APIMassAudioGetResponse> execute_mass_get_audio(
-  String token,
   int ownerID, {
   int? albumID,
   String? accessKey,
@@ -88,16 +69,12 @@ var playlistsResp = API.audio.getPlaylists({'owner_id': ownerID, 'count': 50});
 
 return {'audioCount': audioCount, 'audios': audios, 'playlistsCount': playlistsResp.count, 'playlists': playlistsResp.items};""";
 
-  var response = await callVkAPI(
+  var response = await vkDio.post(
     "execute",
-    token,
-    {
+    data: {
       "code": minimizeJS(codeToExecute),
     },
   );
 
-  return await compute(
-    (message) => APIMassAudioGetResponse.fromJson(message),
-    response.data,
-  );
+  return APIMassAudioGetResponse.fromJson(response.data);
 }

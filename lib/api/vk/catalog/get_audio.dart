@@ -1,8 +1,9 @@
 // ignore_for_file: non_constant_identifier_names
 
+import "package:dio/dio.dart";
 import "package:json_annotation/json_annotation.dart";
 
-import "../api.dart";
+import "../../../main.dart";
 import "../shared.dart";
 
 part "get_audio.g.dart";
@@ -210,8 +211,9 @@ class Catalog {
   Map<String, dynamic> toJson() => _$CatalogToJson(this);
 }
 
+/// Ответ для метода [catalog_get_audio].
 @JsonSerializable()
-class APICatalogRealResponse {
+class APICatalogGetAudioResponse {
   /// Информация о треках.
   final List<Audio> audios;
 
@@ -229,31 +231,12 @@ class APICatalogRealResponse {
   @JsonKey(name: "audio_stream_mixes", defaultValue: [])
   final List<AudioMix> audioStreamMixes;
 
-  APICatalogRealResponse({
+  APICatalogGetAudioResponse({
     required this.audios,
     required this.playlists,
     required this.catalog,
     required this.recommendedPlaylists,
     required this.audioStreamMixes,
-  });
-
-  factory APICatalogRealResponse.fromJson(Map<String, dynamic> json) =>
-      _$APICatalogRealResponseFromJson(json);
-  Map<String, dynamic> toJson() => _$APICatalogRealResponseToJson(this);
-}
-
-/// Ответ для метода [catalog_get_audio].
-@JsonSerializable()
-class APICatalogGetAudioResponse {
-  /// Объект ответа.
-  final APICatalogRealResponse? response;
-
-  /// Объект ошибки.
-  final APIError? error;
-
-  APICatalogGetAudioResponse({
-    this.response,
-    this.error,
   });
 
   factory APICatalogGetAudioResponse.fromJson(Map<String, dynamic> json) =>
@@ -266,15 +249,20 @@ class APICatalogGetAudioResponse {
 /// {@endtemplate}
 ///
 /// API: `catalog.getAudio`.
-Future<APICatalogGetAudioResponse> catalog_get_audio(
-  String token,
-) async {
-  var response = await callVkAPI(
+Future<APICatalogGetAudioResponse> catalog_get_audio({
+  String? token,
+}) async {
+  var response = await vkDio.post(
     "catalog.getAudio",
-    token,
-    {
+    data: {
       "need_blocks": "1",
+      if (token != null) "access_token": token,
     },
+    options: Options(
+      extra: {
+        "useSecondary": true,
+      },
+    ),
   );
 
   return APICatalogGetAudioResponse.fromJson(response.data);

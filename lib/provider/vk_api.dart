@@ -1,7 +1,6 @@
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 
-import "../api/vk/api.dart";
 import "../api/vk/audio/add.dart";
 import "../api/vk/audio/add_dislike.dart";
 import "../api/vk/audio/delete.dart";
@@ -16,6 +15,7 @@ import "../api/vk/audio/send_start_event.dart";
 import "../api/vk/catalog/get_audio.dart";
 import "../api/vk/execute/mass_get_albums.dart";
 import "../api/vk/execute/mass_get_audio.dart";
+import "../api/vk/shared.dart";
 import "../api/vk/users/get.dart";
 import "auth.dart";
 
@@ -75,8 +75,7 @@ class VKAPIUsers extends VKAPICategory {
   });
 
   /// {@macro VKAPI.users.get}
-  Future<APIUsersGetResponse> get(List<int> ids) =>
-      users_get(this.token, ids: ids);
+  Future<List<APIUser>> get(List<int> ids) => users_get(ids: ids);
 }
 
 /// Класс, предоставляющий доступ к методам API ВКонтакте, связанным с аудиозаписями (`audio`).
@@ -86,75 +85,65 @@ class VKAPIAudio extends VKAPICategory {
   });
 
   /// {@macro VKAPI.audio.addDislike}
-  Future<APIAudioAddDislikeResponse> addDislike(List<String> mediaKeys) =>
-      audio_add_dislike(this.token, mediaKeys);
+  Future<bool> addDislike(List<String> mediaKeys) =>
+      audio_add_dislike(mediaKeys);
 
   /// {@macro VKAPI.audio.add}
-  Future<APIAudioAddResponse> add(int id, int ownerID) =>
-      audio_add(this.token, id, ownerID);
+  Future<int> add(int id, int ownerID) => audio_add(id, ownerID);
 
   /// {@macro VKAPI.audio.delete}
-  Future<APIAudioDeleteResponse> delete(int id, int ownerID) =>
-      audio_delete(this.token, id, ownerID);
+  Future<bool> delete(int id, int ownerID) => audio_delete(id, ownerID);
 
   /// {@macro VKAPI.audio.edit}
-  Future<APIAudioEditResponse> edit(
+  Future<int> edit(
     int id,
     int ownerID,
     String title,
     String artist,
     int genreID,
   ) =>
-      audio_edit(this.token, id, ownerID, title, artist, genreID);
+      audio_edit(id, ownerID, title, artist, genreID);
 
   /// {@macro VKAPI.audio.getLyrics}
   Future<APIAudioGetLyricsResponse> getLyrics(String mediaKey) =>
-      audio_get_lyrics(this.token, mediaKey);
+      audio_get_lyrics(mediaKey);
 
   /// {@macro VKAPI.audio.getPlaylists}
   Future<APIAudioGetPlaylistsResponse> getPlaylists(int ownerID) =>
-      audio_get_playlists(this.token, ownerID);
+      audio_get_playlists(ownerID);
 
   /// {@macro VKAPI.audio.getStreamMixAudios}
-  Future<APIAudioGetStreamMixAudiosResponse> getStreamMixAudios({
+  Future<List<Audio>> getStreamMixAudios({
     String mixID = "common",
     int count = 10,
   }) =>
-      audio_get_stream_mix_audios(this.token, mixID, count);
+      audio_get_stream_mix_audios(mixID, count);
 
   /// {@macro VKAPI.audio.getStreamMixAudios}
   ///
   /// В отличии от [getStreamMixAudios], данный метод добавляет трекам информацию о их альбомах.
-  Future<APIAudioGetStreamMixAudiosResponse> getStreamMixAudiosWithAlbums({
+  Future<List<Audio>> getStreamMixAudiosWithAlbums({
     String mixID = "common",
     int count = 10,
   }) async {
+    final api = _ref.read(vkAPIExecuteProvider);
+
     // Получаем список треков.
-    final APIAudioGetStreamMixAudiosResponse response =
-        await getStreamMixAudios(
+    final List<Audio> response = await getStreamMixAudios(
       mixID: mixID,
       count: count,
     );
-    raiseOnAPIError(response);
 
     // Если вторичного токена нет, то возвращаем ответ без дополнительной информации.
     if (this.secondaryToken == null) return response;
 
-    // Получаем информацию о альбомах.
-    final APIMassAudioAlbumsResponse audiosWithAlbums =
-        await execute_mass_get_albums(
-      this.secondaryToken!,
-      response.response!.map((audio) => audio.mediaKey).toList(),
-    );
-    raiseOnAPIError(audiosWithAlbums);
-
-    return APIAudioGetStreamMixAudiosResponse(
-      response: audiosWithAlbums.response!,
+    return await api.massGetAlbums(
+      response.map((audio) => audio.mediaKey).toList(),
     );
   }
 
   /// {@macro VKAPI.audio.get}
-  Future<APIAudioGetResponse> get(int userID) => audio_get(this.token, userID);
+  Future<APIAudioGetResponse> get(int userID) => audio_get(userID);
 
   /// {@macro VKAPI.audio.get}
   ///
@@ -164,42 +153,33 @@ class VKAPIAudio extends VKAPICategory {
     int? albumID,
     String? accessKey,
   }) async {
+    final api = _ref.read(vkAPIExecuteProvider);
+
     // Получаем список треков.
-    final APIMassAudioGetResponse response = await execute_mass_get_audio(
-      this.token,
+    final APIMassAudioGetResponse response = await api.massGetAudio(
       ownerID,
       albumID: albumID,
       accessKey: accessKey,
     );
-    raiseOnAPIError(response);
 
     // Если вторичного токена нет, то возвращаем ответ без дополнительной информации.
     if (this.secondaryToken == null) return response;
 
     // Получаем информацию о альбомах.
-    final APIMassAudioAlbumsResponse audiosWithAlbums =
-        await execute_mass_get_albums(
-      this.secondaryToken!,
-      response.response!.audios.map((audio) => audio.mediaKey).toList(),
+    final audiosWithAlbums = await api.massGetAlbums(
+      response.audios.map((audio) => audio.mediaKey).toList(),
     );
-    raiseOnAPIError(audiosWithAlbums);
 
     return APIMassAudioGetResponse(
-      response: APIMassAudioGetRealResponse(
-        audioCount: response.response!.audioCount,
-        audios: audiosWithAlbums.response!,
-        playlistsCount: response.response!.playlistsCount,
-        playlists: response.response!.playlists,
-      ),
+      audioCount: response.audioCount,
+      audios: audiosWithAlbums,
+      playlistsCount: response.playlistsCount,
+      playlists: response.playlists,
     );
   }
 
   /// {@macro VKAPI.audio.restore}
-  Future<APIAudioRestoreResponse> restore(
-    int id,
-    int ownerID,
-  ) =>
-      audio_restore(this.token, id, ownerID);
+  Future<Audio> restore(int id, int ownerID) => audio_restore(id, ownerID);
 
   /// {@macro VKAPI.audio.search}
   Future<APIAudioSearchResponse> search(
@@ -209,7 +189,6 @@ class VKAPIAudio extends VKAPICategory {
     int offset = 0,
   }) =>
       audio_search(
-        this.token,
         query,
         autoComplete: autoComplete,
         count: count,
@@ -225,38 +204,33 @@ class VKAPIAudio extends VKAPICategory {
     int count = 50,
     int offset = 0,
   }) async {
+    final api = _ref.read(vkAPIExecuteProvider);
+
     // Получаем список треков.
-    final APIAudioSearchResponse response = await audio_search(
-      this.token,
+    final APIAudioSearchResponse response = await search(
       query,
       autoComplete: autoComplete,
       count: count,
       offset: offset,
     );
-    raiseOnAPIError(response);
 
     // Если вторичного токена нет, то возвращаем ответ без дополнительной информации.
     if (this.secondaryToken == null) return response;
 
     // Получаем информацию о альбомах.
-    final APIMassAudioAlbumsResponse audiosWithAlbums =
-        await execute_mass_get_albums(
-      this.secondaryToken!,
-      response.response!.items.map((audio) => audio.mediaKey).toList(),
+    final List<Audio> audiosWithAlbums = await api.massGetAlbums(
+      response.items.map((audio) => audio.mediaKey).toList(),
     );
-    raiseOnAPIError(audiosWithAlbums);
 
     return APIAudioSearchResponse(
-      response: APIAudioSearchRealResponse(
-        count: response.response!.count,
-        items: audiosWithAlbums.response!,
-      ),
+      count: response.count,
+      items: audiosWithAlbums,
     );
   }
 
   /// {@macro VKAPI.audio.sendStartEvent}
-  Future<APIAudioSendStartEventResponse> sendStartEvent(String mediaKey) =>
-      audio_send_start_event(this.token, mediaKey);
+  Future<dynamic> sendStartEvent(String mediaKey) =>
+      audio_send_start_event(mediaKey);
 }
 
 /// Класс, предоставляющий доступ к методам API ВКонтакте, связанным с каталогом аудиозаписей (`catalog`).
@@ -266,8 +240,7 @@ class VKAPICatalog extends VKAPICategory {
   });
 
   /// {@macro VKAPI.catalog.getAudio}
-  Future<APICatalogGetAudioResponse> getAudio() =>
-      catalog_get_audio(this.secondaryToken!);
+  Future<APICatalogGetAudioResponse> getAudio() => catalog_get_audio();
 }
 
 /// Класс, предоставляющий доступ к helper-методам для API ВКонтакте, предоставляющие удобный доступ к `execute`-скриптам.
@@ -277,8 +250,8 @@ class VKAPIExecute extends VKAPICategory {
   });
 
   /// {@macro VKAPI.execute.massGetAlbums}
-  Future<APIMassAudioAlbumsResponse> massGetAlbums(List<String> mediaKeys) =>
-      execute_mass_get_albums(this.secondaryToken!, mediaKeys);
+  Future<List<Audio>> massGetAlbums(List<String> mediaKeys) =>
+      execute_mass_get_albums(mediaKeys);
 
   /// {@macro VKAPI.execute.massGetAudio}
   Future<APIMassAudioGetResponse> massGetAudio(
@@ -287,7 +260,6 @@ class VKAPIExecute extends VKAPICategory {
     String? accessKey,
   }) =>
       execute_mass_get_audio(
-        this.secondaryToken!,
         ownerID,
         albumID: albumID,
         accessKey: accessKey,

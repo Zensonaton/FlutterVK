@@ -119,9 +119,9 @@ Map<String, dynamic> _$CatalogToJson(Catalog instance) => <String, dynamic>{
       'pinned_section': instance.pinnedSection,
     };
 
-APICatalogRealResponse _$APICatalogRealResponseFromJson(
+APICatalogGetAudioResponse _$APICatalogGetAudioResponseFromJson(
         Map<String, dynamic> json) =>
-    APICatalogRealResponse(
+    APICatalogGetAudioResponse(
       audios: (json['audios'] as List<dynamic>)
           .map((e) => Audio.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -138,31 +138,12 @@ APICatalogRealResponse _$APICatalogRealResponseFromJson(
           [],
     );
 
-Map<String, dynamic> _$APICatalogRealResponseToJson(
-        APICatalogRealResponse instance) =>
+Map<String, dynamic> _$APICatalogGetAudioResponseToJson(
+        APICatalogGetAudioResponse instance) =>
     <String, dynamic>{
       'audios': instance.audios,
       'playlists': instance.playlists,
       'catalog': instance.catalog,
       'recommended_playlists': instance.recommendedPlaylists,
       'audio_stream_mixes': instance.audioStreamMixes,
-    };
-
-APICatalogGetAudioResponse _$APICatalogGetAudioResponseFromJson(
-        Map<String, dynamic> json) =>
-    APICatalogGetAudioResponse(
-      response: json['response'] == null
-          ? null
-          : APICatalogRealResponse.fromJson(
-              json['response'] as Map<String, dynamic>),
-      error: json['error'] == null
-          ? null
-          : APIError.fromJson(json['error'] as Map<String, dynamic>),
-    );
-
-Map<String, dynamic> _$APICatalogGetAudioResponseToJson(
-        APICatalogGetAudioResponse instance) =>
-    <String, dynamic>{
-      'response': instance.response,
-      'error': instance.error,
     };

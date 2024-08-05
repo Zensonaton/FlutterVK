@@ -10,7 +10,6 @@ import "package:skeletonizer/skeletonizer.dart";
 import "package:styled_text/tags/styled_text_tag_action.dart";
 import "package:styled_text/widgets/styled_text.dart";
 
-import "../../../api/vk/api.dart";
 import "../../../consts.dart";
 import "../../../enums.dart";
 import "../../../provider/l18n.dart";
@@ -60,10 +59,9 @@ class SearchDisplayDialog extends HookConsumerWidget {
 
       Future<ExtendedPlaylist> search() async {
         final response = await api.audio.searchWithAlbums(query);
-        raiseOnAPIError(response);
 
         // Создаём фейковый плейлист с треками.
-        final List<ExtendedAudio> audios = response.response!.items
+        final List<ExtendedAudio> audios = response.items
             .map((item) => ExtendedAudio.fromAPIAudio(item))
             .toList();
         final ExtendedPlaylist playlist = ExtendedPlaylist(

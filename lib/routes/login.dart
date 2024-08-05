@@ -4,8 +4,8 @@ import "package:flutter/material.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
-import "../api/vk/api.dart";
 import "../api/vk/catalog/get_audio.dart";
+import "../api/vk/shared.dart";
 import "../api/vk/users/get.dart";
 import "../provider/auth.dart";
 import "../provider/l18n.dart";
@@ -34,14 +34,12 @@ Future<bool> tryAuthorize(
   FocusScope.of(context).unfocus();
 
   try {
-    final APIUsersGetResponse response = await users_get(token);
-    raiseOnAPIError(response);
+    final List<APIUser> response = await users_get(token: token);
 
     if (!context.mounted) return false;
 
     // Проверка, одинаковый ли ID юзера при основной и не основной авторизации.
-    if (useAlternateAuth &&
-        ref.read(userProvider).id != response.response!.first.id) {
+    if (useAlternateAuth && ref.read(userProvider).id != response.first.id) {
       showErrorDialog(
         context,
         description: l18n.login_alternativeWrongUserID(
@@ -53,8 +51,13 @@ Future<bool> tryAuthorize(
     }
 
     // Делаем ещё один запрос, благодаря которому можно проверить, есть ли доступ к каталогам рекомендаций или нет.
-    final bool musicCatalogAccess =
-        (await catalog_get_audio(token)).error == null;
+    bool musicCatalogAccess;
+    try {
+      await catalog_get_audio(token: token);
+      musicCatalogAccess = true;
+    } catch (e) {
+      musicCatalogAccess = false;
+    }
     if (!context.mounted) return false;
 
     // Если мы делаем обычную авторизацию, то доступа к каталогу быть не должно, в ином случае он должен быть.
@@ -81,7 +84,7 @@ Future<bool> tryAuthorize(
     // При основной авторизации мы сохраняем основной токен.
     ref
         .read(currentAuthStateProvider.notifier)
-        .login(token, response.response!.first);
+        .login(token, response.first);
   } catch (e, stackTrace) {
     showLogErrorDialog(
       "Ошибка при авторизации: ",

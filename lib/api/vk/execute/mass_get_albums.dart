@@ -2,33 +2,11 @@
 
 import "dart:convert";
 
-import "package:flutter/foundation.dart";
-import "package:json_annotation/json_annotation.dart";
+import "package:dio/dio.dart";
 
+import "../../../main.dart";
 import "../../../utils.dart";
-import "../api.dart";
 import "../shared.dart";
-
-part "mass_get_albums.g.dart";
-
-/// Ответ для метода [execute_mass_get_albums].
-@JsonSerializable()
-class APIMassAudioAlbumsResponse {
-  /// Объект ответа.
-  final List<Audio>? response;
-
-  /// Объект ошибки.
-  final APIError? error;
-
-  APIMassAudioAlbumsResponse({
-    this.response,
-    this.error,
-  });
-
-  factory APIMassAudioAlbumsResponse.fromJson(Map<String, dynamic> json) =>
-      _$APIMassAudioAlbumsResponseFromJson(json);
-  Map<String, dynamic> toJson() => _$APIMassAudioAlbumsResponseToJson(this);
-}
 
 /// {@template VKAPI.execute.massGetAlbums}
 /// Массово извлекает информацию по альбомам (и, соответственно, изображениям) треков.
@@ -37,10 +15,7 @@ class APIMassAudioAlbumsResponse {
 /// {@endtemplate}
 ///
 /// Для данного метода требуется токен от VK Admin.
-Future<APIMassAudioAlbumsResponse> execute_mass_get_albums(
-  String token,
-  List<String> mediaKeys,
-) async {
+Future<List<Audio>> execute_mass_get_albums(List<String> mediaKeys) async {
   final List<String> groupedMediaKeys = List.generate(
     (mediaKeys.length / 200).ceil(),
     (i) => mediaKeys
@@ -65,16 +40,21 @@ while (mediaIndex < audioMediaIDs.length) {
 
 return audioAlbums;""";
 
-  var response = await callVkAPI(
+  var response = await vkDio.post(
     "execute",
-    token,
-    {
+    data: {
       "code": minimizeJS(codeToExecute),
     },
+    options: Options(
+      extra: {
+        "useSecondary": true,
+      },
+    ),
   );
 
-  return await compute(
-    (message) => APIMassAudioAlbumsResponse.fromJson(message),
-    response.data,
-  );
+  return response.data
+      .map<Audio>(
+        (item) => Audio.fromJson(item),
+      )
+      .toList();
 }

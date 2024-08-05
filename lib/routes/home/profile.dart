@@ -21,6 +21,7 @@ import "../../provider/player_events.dart";
 import "../../provider/preferences.dart";
 import "../../provider/updater.dart";
 import "../../provider/user.dart";
+import "../../provider/vk_api.dart";
 import "../../services/cache_manager.dart";
 import "../../services/logger.dart";
 import "../../utils.dart";
@@ -212,6 +213,8 @@ class SettingWithDialog extends StatelessWidget {
 
 /// Страница для [HomeRoute] для просмотра собственного профиля.
 class HomeProfilePage extends HookConsumerWidget {
+  static final AppLogger logger = getLogger("HomeProfilePage");
+
   const HomeProfilePage({
     super.key,
   });
@@ -912,6 +915,47 @@ class HomeProfilePage extends HookConsumerWidget {
                           "Open download manager",
                         ),
                         onTap: () => context.go("/profile/downloadManager"),
+                      ),
+
+                      // Кнопка для создания тестового API-запроса.
+                      ListTile(
+                        leading: const Icon(
+                          Icons.speed,
+                        ),
+                        title: const Text(
+                          "API call test",
+                        ),
+                        onTap: () async {
+                          if (!networkRequiredDialog(ref, context)) return;
+
+                          final totalStopwatch = Stopwatch()..start();
+
+                          final List<int> times = [];
+                          for (int i = 0; i < 10; i++) {
+                            final stopwatch = Stopwatch()..start();
+                            await ref
+                                .read(vkAPIProvider)
+                                .execute
+                                .massGetAudio(user.id);
+                            stopwatch.stop();
+
+                            times.add(stopwatch.elapsedMilliseconds);
+                          }
+
+                          totalStopwatch.stop();
+                          final String printString =
+                              "Time took: ${totalStopwatch.elapsedMilliseconds}ms, avg: ${times.reduce((a, b) => a + b) ~/ times.length}ms, times: ${times.join(", ")}";
+                          logger.d(printString);
+
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                printString,
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),

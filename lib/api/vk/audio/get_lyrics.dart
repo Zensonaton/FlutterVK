@@ -3,7 +3,8 @@
 import "package:json_annotation/json_annotation.dart";
 
 import "../../../db/schemas/playlists.dart";
-import "../api.dart";
+
+import "../../../main.dart";
 import "../shared.dart";
 
 part "get_lyrics.g.dart";
@@ -103,8 +104,9 @@ class Lyrics {
   Map<String, dynamic> toJson() => _$LyricsToJson(this);
 }
 
+/// Ответ на запрос [audio_get_lyrics].
 @JsonSerializable()
-class APIAudioGetLyricsRealResponse {
+class APIAudioGetLyricsResponse {
   final String credits;
 
   /// Перечисление текста песни.
@@ -113,30 +115,11 @@ class APIAudioGetLyricsRealResponse {
   /// MD5-строка.
   final String md5;
 
-  APIAudioGetLyricsRealResponse({
+  APIAudioGetLyricsResponse({
     required this.credits,
     required this.lyrics,
     required this.md5,
   });
-
-  factory APIAudioGetLyricsRealResponse.fromJson(Map<String, dynamic> json) =>
-      _$APIAudioGetLyricsRealResponseFromJson(json);
-  Map<String, dynamic> toJson() => _$APIAudioGetLyricsRealResponseToJson(this);
-}
-
-/// Ответ для метода [audio_get_lyrics].
-@JsonSerializable()
-class APIAudioGetLyricsResponse {
-  /// Объект ответа.
-  final APIAudioGetLyricsRealResponse? response;
-
-  /// Объект ошибки.
-  final APIError? error;
-
-  APIAudioGetLyricsResponse(
-    this.response,
-    this.error,
-  );
 
   factory APIAudioGetLyricsResponse.fromJson(Map<String, dynamic> json) =>
       _$APIAudioGetLyricsResponseFromJson(json);
@@ -148,14 +131,10 @@ class APIAudioGetLyricsResponse {
 /// {@endtemplate}
 ///
 /// API: `audio.getLyrics`.
-Future<APIAudioGetLyricsResponse> audio_get_lyrics(
-  String token,
-  String mediaKey,
-) async {
-  var response = await callVkAPI(
+Future<APIAudioGetLyricsResponse> audio_get_lyrics(String mediaKey) async {
+  var response = await vkDio.post(
     "audio.getLyrics",
-    token,
-    {
+    data: {
       "audio_id": mediaKey,
     },
   );

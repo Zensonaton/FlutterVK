@@ -6,7 +6,6 @@ import "package:flutter/foundation.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:queue/queue.dart";
 
-import "../api/vk/api.dart";
 import "../api/vk/audio/get_lyrics.dart";
 import "../provider/playlists.dart";
 import "../provider/user.dart";
@@ -205,9 +204,8 @@ class PlaylistCacheDownloadItem extends DownloadItem {
     // Загружаем текст песни.
     final APIAudioGetLyricsResponse response =
         await api.audio.getLyrics(audio.mediaKey);
-    raiseOnAPIError(response);
 
-    return response.response!.lyrics;
+    return response.lyrics;
   }
 
   /// Загружает сам трек, его обложки, текст песни и прочую информацию для передаваемого [audio].

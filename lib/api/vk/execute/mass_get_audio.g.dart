@@ -6,9 +6,9 @@ part of 'mass_get_audio.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-APIMassAudioGetRealResponse _$APIMassAudioGetRealResponseFromJson(
+APIMassAudioGetResponse _$APIMassAudioGetResponseFromJson(
         Map<String, dynamic> json) =>
-    APIMassAudioGetRealResponse(
+    APIMassAudioGetResponse(
       audioCount: (json['audioCount'] as num).toInt(),
       audios: (json['audios'] as List<dynamic>)
           .map((e) => Audio.fromJson(e as Map<String, dynamic>))
@@ -19,30 +19,11 @@ APIMassAudioGetRealResponse _$APIMassAudioGetRealResponseFromJson(
           .toList(),
     );
 
-Map<String, dynamic> _$APIMassAudioGetRealResponseToJson(
-        APIMassAudioGetRealResponse instance) =>
+Map<String, dynamic> _$APIMassAudioGetResponseToJson(
+        APIMassAudioGetResponse instance) =>
     <String, dynamic>{
       'audioCount': instance.audioCount,
       'audios': instance.audios,
       'playlistsCount': instance.playlistsCount,
       'playlists': instance.playlists,
-    };
-
-APIMassAudioGetResponse _$APIMassAudioGetResponseFromJson(
-        Map<String, dynamic> json) =>
-    APIMassAudioGetResponse(
-      response: json['response'] == null
-          ? null
-          : APIMassAudioGetRealResponse.fromJson(
-              json['response'] as Map<String, dynamic>),
-      error: json['error'] == null
-          ? null
-          : APIError.fromJson(json['error'] as Map<String, dynamic>),
-    );
-
-Map<String, dynamic> _$APIMassAudioGetResponseToJson(
-        APIMassAudioGetResponse instance) =>
-    <String, dynamic>{
-      'response': instance.response,
-      'error': instance.error,
     };

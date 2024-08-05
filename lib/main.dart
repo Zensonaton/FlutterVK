@@ -1,14 +1,11 @@
 import "dart:io";
 
-import "package:awesome_dio_interceptor/awesome_dio_interceptor.dart";
 import "package:catcher_2/core/catcher_2.dart";
 import "package:catcher_2/handlers/console_handler.dart";
 import "package:catcher_2/handlers/file_handler.dart";
 import "package:catcher_2/mode/silent_report_mode.dart";
 import "package:catcher_2/model/catcher_2_options.dart";
 import "package:dio/dio.dart";
-import "package:dio_http2_adapter/dio_http2_adapter.dart";
-import "package:dio_smart_retry/dio_smart_retry.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
@@ -26,11 +23,10 @@ import "package:shared_preferences/shared_preferences.dart";
 import "package:system_tray/system_tray.dart";
 import "package:window_manager/window_manager.dart";
 
-import "api/vk/consts.dart";
 import "app.dart";
 import "consts.dart";
-import "services/db.dart";
 import "provider/db_migrator.dart";
+import "provider/dio.dart";
 import "provider/l18n.dart";
 import "provider/observer.dart";
 import "provider/player.dart";
@@ -38,6 +34,7 @@ import "provider/preferences.dart";
 import "provider/shared_prefs.dart";
 import "services/audio_player.dart";
 import "services/connectivity_manager.dart";
+import "services/db.dart";
 import "services/logger.dart";
 import "services/updater.dart";
 import "utils.dart";
@@ -79,6 +76,7 @@ late final Dio dio;
 /// Данный объект содержит в себе interceptor'ы, позволяющие:
 /// - Повторять запрос в случае ошибки сети.
 /// - Логировать запросы и их ответы.
+/// - Добавлять `access_token` и версию API в запросы.
 ///
 /// Пример использования:
 /// ```dart
@@ -106,48 +104,6 @@ late String appVersion;
 @pragma("vm:entry-point")
 void notificationTap(NotificationResponse notificationResponse) {
   navigatorKey.currentContext?.go("/profile/downloadManager");
-}
-
-/// Возвращает объект [Dio] с зарегистрированными [Interceptor]'ами.
-void initDioInterceptors(Dio dio, {String loggerName = "Dio"}) {
-  final AppLogger logger = getLogger(loggerName);
-
-  // Игнорируем плохие SSL-сертификаты.
-  dio.httpClientAdapter = Http2Adapter(
-    ConnectionManager(
-      onClientCreate: (_, config) => config.onBadCertificate = (_) => true,
-    ),
-  );
-
-  dio.interceptors.addAll([
-    // Обработчик для повтора HTTP-запросов в случае ошибок сети.
-    RetryInterceptor(
-      dio: dio,
-      retryDelays: const [
-        Duration(
-          seconds: 1,
-        ),
-      ],
-    ),
-
-    // Обработчик для логирования HTTP-запросов и их ответов в debug-режиме.
-    if (kDebugMode)
-      AwesomeDioInterceptor(
-        logRequestTimeout: false,
-        logRequestHeaders: false,
-        logResponseHeaders: false,
-        logger: (String log) {
-          String newLog = log;
-
-          // Если слишком длинное, то обрезаем.
-          if (newLog.length > 300) {
-            newLog = "${newLog.substring(0, 300)}...";
-          }
-
-          logger.d(newLog);
-        },
-      ),
-  ]);
 }
 
 /// Инициализирует запись в системном трее Windows.
@@ -322,32 +278,8 @@ Future main() async {
     }
 
     // Создаём объекты Dio.
-    dio = Dio(
-      BaseOptions(
-        headers: {
-          "User-Agent": vkAPIKateMobileUA,
-        },
-      ),
-    );
-    vkDio = Dio(
-      BaseOptions(
-        baseUrl: vkAPIBaseURL,
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          "User-Agent": vkAPIKateMobileUA,
-
-          // TODO: QUIC support
-          // "x-quic": "1",
-          // "x-response-format": "msgpack",
-          // "accept-encoding": "zstd",
-        },
-      ),
-    );
-    initDioInterceptors(dio);
-    initDioInterceptors(
-      vkDio,
-      loggerName: "VKDio",
-    );
+    dio = container.read(dioProvider);
+    vkDio = container.read(vkDioProvider);
 
     // Создаём менеджер интернет соединения.
     connectivityManager = ConnectivityManager();

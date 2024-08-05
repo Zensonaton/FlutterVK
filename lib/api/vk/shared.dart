@@ -881,3 +881,20 @@ class Audio {
   factory Audio.fromJson(Map<String, dynamic> json) => _$AudioFromJson(json);
   Map<String, dynamic> toJson() => _$AudioToJson(this);
 }
+
+/// Класс, расширяющий [Exception], олицетворяющий ошибку API ВКонтакте.
+class VKAPIException implements Exception {
+  /// Код ошибки.
+  int? errorCode;
+
+  /// Текст ошибки.
+  String? message;
+
+  @override
+  String toString() => "VK API error $errorCode: $message";
+
+  VKAPIException({
+    this.errorCode,
+    this.message,
+  });
+}
