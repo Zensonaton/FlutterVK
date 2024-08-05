@@ -338,6 +338,28 @@
 	},
 
 
+	"profile_visualTitle": "Визуал, косметические настройки",
+
+	"profile_themeTitle": "Тема",
+	"profile_themeSystem": "Системная",
+	"profile_themeLight": "Светлая",
+	"profile_themeDark": "Тёмная",
+
+	"profile_oledThemeTitle": "OLED-тема",
+	"profile_oledThemeDescription": "Ещё больше тьмы! Помогает сохранять заряд аккумулятора на устройствах с OLED-дисплеями",
+
+	"profile_useThumbnailAsBackgroundTitle": "Изображение трека как фон полноэкранного плеера",
+
+	"profile_usePlayerColorsAppWideTitle": "Цвета трека по всему приложению",
+
+	"profile_playerDynamicColorSchemeTypeTitle": "Тип палитры цветов обложки",
+	"profile_playerDynamicColorSchemeTypeDescription": "Задаёт тип палитры, которая используется для цветов обложки играющего трека",
+	"profile_playerDynamicColorSchemeTonalSpot": "По-умолчанию",
+	"profile_playerDynamicColorSchemeNeutral": "Нейтральный",
+	"profile_playerDynamicColorSchemeContent": "Яркий",
+	"profile_playerDynamicColorSchemeMonochrome": "Монохромный",
+
+
 	"profile_musicPlayerTitle": "Музыкальный плеер",
 
 	"profile_discordRPCTitle": "Discord Rich Presence",
@@ -362,28 +384,6 @@
 
 	"profile_playerDebugLoggingTitle": "Debug-логирование плеера",
 	"profile_playerDebugLoggingDescription": "Включает вывод технических данных музыкального плеера в лог. Включение может привести к понижению производительности",
-
-
-	"profile_visualTitle": "Визуал, косметические настройки",
-
-	"profile_themeTitle": "Тема",
-	"profile_themeSystem": "Системная",
-	"profile_themeLight": "Светлая",
-	"profile_themeDark": "Тёмная",
-
-	"profile_oledThemeTitle": "OLED-тема",
-	"profile_oledThemeDescription": "Ещё больше тьмы! Помогает сохранять заряд аккумулятора на устройствах с OLED-дисплеями",
-
-	"profile_useThumbnailAsBackgroundTitle": "Изображение трека как фон полноэкранного плеера",
-
-	"profile_usePlayerColorsAppWideTitle": "Цвета трека по всему приложению",
-
-	"profile_playerDynamicColorSchemeTypeTitle": "Тип палитры цветов обложки",
-	"profile_playerDynamicColorSchemeTypeDescription": "Задаёт тип палитры, которая используется для цветов обложки играющего трека",
-	"profile_playerDynamicColorSchemeTonalSpot": "По-умолчанию",
-	"profile_playerDynamicColorSchemeNeutral": "Нейтральный",
-	"profile_playerDynamicColorSchemeContent": "Яркий",
-	"profile_playerDynamicColorSchemeMonochrome": "Монохромный",
 
 
 	"profile_experimentalTitle": "Экспериментальные функции",

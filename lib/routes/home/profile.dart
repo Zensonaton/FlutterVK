@@ -378,6 +378,104 @@ class HomeProfilePage extends HookConsumerWidget {
                   ),
                 const Gap(18),
 
+                // Визуал.
+                ProfileSettingCategory(
+                  icon: Icons.color_lens,
+                  title: l18n.profile_visualTitle,
+                  centerTitle: mobileLayout,
+                  children: [
+                    // Тема приложения.
+                    SettingWithDialog(
+                      icon: Icons.dark_mode,
+                      title: l18n.profile_themeTitle,
+                      dialog: const ThemeActionDialog(),
+                      settingText: {
+                        ThemeMode.system: l18n.profile_themeSystem,
+                        ThemeMode.light: l18n.profile_themeLight,
+                        ThemeMode.dark: l18n.profile_themeDark,
+                      }[preferences.theme]!,
+                    ),
+
+                    // OLED тема.
+                    SwitchListTile(
+                      secondary: const Icon(
+                        Icons.mode_night,
+                      ),
+                      title: Text(
+                        l18n.profile_oledThemeTitle,
+                      ),
+                      subtitle: Text(
+                        l18n.profile_oledThemeDescription,
+                      ),
+                      value: preferences.oledTheme,
+                      onChanged: Theme.of(context).brightness == Brightness.dark
+                          ? (bool? enabled) async {
+                              if (enabled == null) return;
+
+                              prefsNotifier.setOLEDThemeEnabled(enabled);
+                            }
+                          : null,
+                    ),
+
+                    // Использование изображения трека для фона в полноэкранном плеере.
+                    SwitchListTile(
+                      secondary: const Icon(
+                        Icons.photo_filter,
+                      ),
+                      title: Text(
+                        l18n.profile_useThumbnailAsBackgroundTitle,
+                      ),
+                      value: preferences.playerThumbAsBackground,
+                      onChanged: recommendationsConnected
+                          ? (bool? enabled) async {
+                              if (enabled == null) return;
+
+                              prefsNotifier.setPlayerThumbAsBackground(enabled);
+                            }
+                          : null,
+                    ),
+
+                    // Использование цветов плеера по всему приложению.
+                    SwitchListTile(
+                      secondary: const Icon(
+                        Icons.color_lens,
+                      ),
+                      title: Text(
+                        l18n.profile_usePlayerColorsAppWideTitle,
+                      ),
+                      value: preferences.playerColorsAppWide,
+                      onChanged: recommendationsConnected
+                          ? (bool? enabled) async {
+                              if (enabled == null) return;
+
+                              prefsNotifier.setPlayerColorsAppWide(enabled);
+                            }
+                          : null,
+                    ),
+
+                    // Тип палитры цветов обложки.
+                    SettingWithDialog(
+                      icon: Icons.auto_fix_high,
+                      title: l18n.profile_playerDynamicColorSchemeTypeTitle,
+                      subtitle:
+                          l18n.profile_playerDynamicColorSchemeTypeDescription,
+                      dialog: const PlayerDynamicSchemeDialog(),
+                      enabled: recommendationsConnected,
+                      settingText: {
+                        DynamicSchemeType.tonalSpot:
+                            l18n.profile_playerDynamicColorSchemeTonalSpot,
+                        DynamicSchemeType.neutral:
+                            l18n.profile_playerDynamicColorSchemeNeutral,
+                        DynamicSchemeType.content:
+                            l18n.profile_playerDynamicColorSchemeContent,
+                        DynamicSchemeType.monochrome:
+                            l18n.profile_playerDynamicColorSchemeMonochrome,
+                      }[preferences.dynamicSchemeType]!,
+                    ),
+                  ],
+                ),
+                const Gap(16),
+
                 // Музыкальный плеер.
                 ProfileSettingCategory(
                   icon: Icons.music_note,
@@ -514,104 +612,6 @@ class HomeProfilePage extends HookConsumerWidget {
                           }
                         },
                       ),
-                  ],
-                ),
-                const Gap(16),
-
-                // Визуал.
-                ProfileSettingCategory(
-                  icon: Icons.color_lens,
-                  title: l18n.profile_visualTitle,
-                  centerTitle: mobileLayout,
-                  children: [
-                    // Тема приложения.
-                    SettingWithDialog(
-                      icon: Icons.dark_mode,
-                      title: l18n.profile_themeTitle,
-                      dialog: const ThemeActionDialog(),
-                      settingText: {
-                        ThemeMode.system: l18n.profile_themeSystem,
-                        ThemeMode.light: l18n.profile_themeLight,
-                        ThemeMode.dark: l18n.profile_themeDark,
-                      }[preferences.theme]!,
-                    ),
-
-                    // OLED тема.
-                    SwitchListTile(
-                      secondary: const Icon(
-                        Icons.mode_night,
-                      ),
-                      title: Text(
-                        l18n.profile_oledThemeTitle,
-                      ),
-                      subtitle: Text(
-                        l18n.profile_oledThemeDescription,
-                      ),
-                      value: preferences.oledTheme,
-                      onChanged: Theme.of(context).brightness == Brightness.dark
-                          ? (bool? enabled) async {
-                              if (enabled == null) return;
-
-                              prefsNotifier.setOLEDThemeEnabled(enabled);
-                            }
-                          : null,
-                    ),
-
-                    // Использование изображения трека для фона в полноэкранном плеере.
-                    SwitchListTile(
-                      secondary: const Icon(
-                        Icons.photo_filter,
-                      ),
-                      title: Text(
-                        l18n.profile_useThumbnailAsBackgroundTitle,
-                      ),
-                      value: preferences.playerThumbAsBackground,
-                      onChanged: recommendationsConnected
-                          ? (bool? enabled) async {
-                              if (enabled == null) return;
-
-                              prefsNotifier.setPlayerThumbAsBackground(enabled);
-                            }
-                          : null,
-                    ),
-
-                    // Использование цветов плеера по всему приложению.
-                    SwitchListTile(
-                      secondary: const Icon(
-                        Icons.color_lens,
-                      ),
-                      title: Text(
-                        l18n.profile_usePlayerColorsAppWideTitle,
-                      ),
-                      value: preferences.playerColorsAppWide,
-                      onChanged: recommendationsConnected
-                          ? (bool? enabled) async {
-                              if (enabled == null) return;
-
-                              prefsNotifier.setPlayerColorsAppWide(enabled);
-                            }
-                          : null,
-                    ),
-
-                    // Тип палитры цветов обложки.
-                    SettingWithDialog(
-                      icon: Icons.auto_fix_high,
-                      title: l18n.profile_playerDynamicColorSchemeTypeTitle,
-                      subtitle:
-                          l18n.profile_playerDynamicColorSchemeTypeDescription,
-                      dialog: const PlayerDynamicSchemeDialog(),
-                      enabled: recommendationsConnected,
-                      settingText: {
-                        DynamicSchemeType.tonalSpot:
-                            l18n.profile_playerDynamicColorSchemeTonalSpot,
-                        DynamicSchemeType.neutral:
-                            l18n.profile_playerDynamicColorSchemeNeutral,
-                        DynamicSchemeType.content:
-                            l18n.profile_playerDynamicColorSchemeContent,
-                        DynamicSchemeType.monochrome:
-                            l18n.profile_playerDynamicColorSchemeMonochrome,
-                      }[preferences.dynamicSchemeType]!,
-                    ),
                   ],
                 ),
                 const Gap(16),
