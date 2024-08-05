@@ -173,6 +173,7 @@ class ImageLyricsBlock extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final preferences = ref.watch(preferencesProvider);
     ref.watch(playerCurrentIndexProvider);
+    ref.watch(playerPositionProvider);
     ref.watch(playerStateProvider);
 
     final dragProgress = useState(0.0);

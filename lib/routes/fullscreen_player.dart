@@ -770,7 +770,6 @@ class _FullscreenPlayerRouteState extends ConsumerState<FullscreenPlayerRoute> {
                         child: Stack(
                           children: [
                             // Размытое фоновое изображение.
-
                             if (player.currentAudio?.maxThumbnail != null &&
                                 preferences.playerThumbAsBackground)
                               SizedBox(
