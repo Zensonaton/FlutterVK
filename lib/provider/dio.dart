@@ -100,29 +100,26 @@ class VKAPIInterceptor extends Interceptor {
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    final body = options.data as Map<String, dynamic>;
     final headers = options.headers;
+    final body = options.data as Map<String, dynamic>;
+    final extras = options.extra;
 
     // Удаляем null-поля.
     body.removeWhere((key, value) => value == null);
 
-    // Если у нас нет установленного access_token'а, то ставим его.
-    // TODO: Если access_token находится в body, то переносим его в HTTP Header.
-    if (!body.containsKey("access_token")) {
-      final useSecondary = options.extra["useSecondary"] as bool? ?? false;
-
-      final token =
-          _ref.read(useSecondary ? secondaryTokenProvider : tokenProvider);
-      assert(
-        token != null,
-        "Access token is null (secondary: $useSecondary)",
-      );
-
-      headers["Authorization"] = "Bearer $token";
-    }
-
     // Устанавливаем ключ с версией API ВКонтакте.
     options.queryParameters["v"] = vkAPIVersion;
+
+    // Устанавливаем access_token в HTTP Header, если он не установлен.
+    final bool useSecondary = extras["useSecondary"] ?? false;
+    final token = body.remove("access_token") ??
+        _ref.read(useSecondary ? secondaryTokenProvider : tokenProvider);
+    assert(
+      token != null,
+      "Access token is null (secondary: $useSecondary)",
+    );
+
+    headers["Authorization"] = "Bearer $token";
 
     super.onRequest(options, handler);
   }
@@ -130,22 +127,10 @@ class VKAPIInterceptor extends Interceptor {
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
     final data = response.data as Map<String, dynamic>;
+    final error = data["error"] ?? data["execute_errors"]?.first;
 
     // Проверяем на наличие ошибок.
-    if (data["error"] != null) {
-      throw VKAPIException(
-        errorCode: data["error"]["error_code"],
-        message: data["error"]["error_msg"],
-        requestOptions: response.requestOptions,
-      );
-    }
-
-    // Проверка на наличие ошибок при использовании API execute.
-    if (data["execute_errors"] != null) {
-      // При использовании API execute может быть возвращено несколько ошибок в поле execute_errors.
-      // Здесь мы учитываем лишь первую.
-      final error = data["execute_errors"].first;
-
+    if (error != null) {
       throw VKAPIException(
         errorCode: error["error_code"],
         message: error["error_msg"],
