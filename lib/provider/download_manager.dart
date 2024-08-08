@@ -79,14 +79,6 @@ class DownloadManager extends _$DownloadManager {
     );
   }
 
-  /// Возвращает [AndroidFlutterLocalNotificationsPlugin] если вызван на OS Android.
-  AndroidFlutterLocalNotificationsPlugin? _getNotifsPlugin() {
-    if (!Platform.isAndroid) return null;
-
-    return notificationsPlugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
-  }
-
   /// Создаёт уведомление на Android.
   Future<void> _createNotification({
     required String title,
@@ -109,7 +101,7 @@ class DownloadManager extends _$DownloadManager {
     logger.d("Updating notification with progress $progress");
 
     _lastNotificationUpdate = curEpoch;
-    await _getNotifsPlugin()?.startForegroundService(
+    await androidNotificationsPlugin?.startForegroundService(
       1,
       title,
       "${(progress * 100).round()}%",
@@ -196,7 +188,7 @@ class DownloadManager extends _$DownloadManager {
 
         // Если мы на OS Android, то убираем FGS-уведомление.
         if (Platform.isAndroid) {
-          _getNotifsPlugin()?.stopForegroundService();
+          androidNotificationsPlugin?.stopForegroundService();
         }
       });
     }

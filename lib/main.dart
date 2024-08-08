@@ -59,6 +59,9 @@ late final ConnectivityManager connectivityManager;
 /// Плагин для создания уведомлений на OS Android.
 late final FlutterLocalNotificationsPlugin notificationsPlugin;
 
+/// Плагин для API-вызовов, связанных с OS Android.
+late final AndroidFlutterLocalNotificationsPlugin? androidNotificationsPlugin;
+
 /// Объект [Dio], позволяющий создавать HTTP-запросы.
 ///
 /// Данный объект содержит в себе interceptor'ы, позволяющие:
@@ -275,6 +278,12 @@ Future main() async {
           ),
         ),
       );
+      androidNotificationsPlugin =
+          notificationsPlugin.resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+
+      // Запрашиваем разрешения на отправку уведомлений.
+      androidNotificationsPlugin?.requestNotificationsPermission();
     }
 
     // Создаём объекты Dio.
