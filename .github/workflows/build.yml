@@ -66,7 +66,11 @@ jobs:
 
       - name: Build Android release
         run: |
-          flutter build apk --release --dart-define PRERELEASE=1
+          if [ "${{ inputs.pre-release }}" = "true" ]; then
+            flutter build apk --release --dart-define PRERELEASE=1
+          else
+            flutter build apk --release
+          fi
           cp ./build/app/outputs/flutter-apk/app-release.apk "./build/Flutter VK Android.apk"
 
       - name: Upload artifact
@@ -100,7 +104,12 @@ jobs:
         run: flutter pub get
 
       - name: Build Windows release
-        run: flutter build windows --release --dart-define PRERELEASE=1
+        run: |
+          if [ "${{ inputs.pre-release }}" = "true" ]; then
+            flutter build windows --release --dart-define PRERELEASE=1
+          else
+            flutter build windows --release
+          fi
 
       - name: Build installer and portable .7z archive
         shell: bash
