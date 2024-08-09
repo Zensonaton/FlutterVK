@@ -105,11 +105,11 @@ jobs:
 
       - name: Build Windows release
         run: |
-          if [ "${{ inputs.pre-release }}" = "true" ]; then
+          if (${{ inputs.pre-release }} -eq 'true') {
             flutter build windows --release --dart-define PRERELEASE=1
-          else
+          } else {
             flutter build windows --release
-          fi
+          }
 
       - name: Build installer and portable .7z archive
         shell: bash
