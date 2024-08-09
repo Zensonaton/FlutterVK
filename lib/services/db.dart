@@ -167,6 +167,19 @@ class IsarDBMigrator {
 
     int currentDBVersion = preferences.dbVersion;
 
+    // Если версия БД больше максимальной, то это значит, что пользователь запустил
+    // старую версию Flutter VK при новой версии БД. В таком случае, нам нужно
+    // полностью сбросить БД, что бы предотвратить возможные ошибки.
+    if (currentDBVersion > maxDBVersion) {
+      logger.w(
+        "DB version ($currentDBVersion) is greater than supported version ($maxDBVersion), resetting DB",
+      );
+
+      await appStorage.resetDB();
+      currentDBVersion = maxDBVersion;
+      preferencesNotifier.setDBVersion(currentDBVersion);
+    }
+
     // Поскольку Flutter VK не делал учёт версии БД в предыдущих версиях,
     // то нам нужно определить то, с какой версии нам нужно начать миграцию.
     //
