@@ -296,6 +296,7 @@ Future main() async {
 
     // Инициализируем плеер.
     JustAudioMediaKit.title = "Flutter VK";
+    JustAudioMediaKit.prefetchPlaylist = true;
     if (preferences.debugPlayerLogging) {
       logger.i("Media kit debug logger is enabled");
 

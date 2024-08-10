@@ -54,7 +54,7 @@ dependencies:
   just_audio_media_kit:
     git:
       url: https://github.com/Zensonaton/just_audio_media_kit.git
-      ref: main
+      ref: "529af19"
   local_notifier: ^0.1.5
   logger: ^2.0.2+1
   lottie: ^3.1.0
@@ -88,7 +88,6 @@ dependency_overrides:
     git:
       url: https://github.com/AshishSingh2001/octo_image.git
       ref: fix/issue-34
-
 
 dev_dependencies:
   build_runner: ^2.4.11
