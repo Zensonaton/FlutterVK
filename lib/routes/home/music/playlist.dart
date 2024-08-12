@@ -282,8 +282,8 @@ class CachePlaylistButtonWidget extends HookConsumerWidget {
   /// Размер иконки.
   final double size;
 
-  /// [DownloadTask], загружающий этот плейлист.
-  final DownloadTask? task;
+  /// Ключ, используемый у [DownloadTask], по которому может быть извлечена информация о загрузке.
+  final String? taskKey;
 
   /// Метод, вызываемый при нажатии на кнопку.
   final VoidCallback onTap;
@@ -292,12 +292,16 @@ class CachePlaylistButtonWidget extends HookConsumerWidget {
     super.key,
     this.size = 38,
     required this.playlist,
-    this.task,
+    this.taskKey,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final task =
+        taskKey != null ? ref.watch(downloadTaskByIDProvider(taskKey!)) : null;
+
+    // Если задача не была найдена, то ничего не делаем.
     if (task == null) {
       return IconButton(
         iconSize: size,
@@ -313,69 +317,61 @@ class CachePlaylistButtonWidget extends HookConsumerWidget {
       );
     }
 
-    final progress = task!.progress.value;
+    final progress = useValueListenable(task.progress);
 
     final scheme = Theme.of(context).colorScheme;
-    final bool isCompleted = progress == 1.0;
 
+    // FIXME: Данный виджет стоит переписать, поскольку тут происходит какие-то странные, не имеющие смысла вещи.
     return SizedBox(
-      width: size,
-      height: size,
+      width: size * 1.5,
+      height: size * 1.5,
       child: Center(
         child: AnimatedSwitcher(
           duration: const Duration(
             milliseconds: 250,
           ),
-          child: isCompleted
-              ? Icon(
-                  key: const ValueKey(
-                    true,
-                  ),
-                  Icons.check,
-                  color: scheme.primary,
+          child: Stack(
+            key: const ValueKey(
+              false,
+            ),
+            alignment: Alignment.center,
+            children: [
+              // Анимация загрузки.
+              SizedBox(
+                width: size,
+                height: size,
+                child: CircularProgressIndicator(
+                  value: progress,
                 )
-              : Stack(
-                  key: const ValueKey(
-                    false,
-                  ),
-                  alignment: Alignment.center,
-                  children: [
-                    // Анимация загрузки.
-                    SizedBox(
-                      width: size,
-                      height: size,
-                      child: CircularProgressIndicator(
-                        value: progress,
-                      )
-                          .animate(
-                            onComplete: (controller) => controller.loop(),
-                          )
-                          .rotate(
-                            duration: const Duration(
-                              seconds: 2,
-                            ),
-                            begin: 0,
-                            end: 1,
-                          ),
-                    ),
-
-                    // Прогресс загрузки.
-                    AnimatedOpacity(
-                      curve: Curves.ease,
+                    .animate(
+                      onComplete: (controller) => controller.loop(),
+                    )
+                    .rotate(
                       duration: const Duration(
-                        milliseconds: 500,
+                        seconds: 2,
                       ),
-                      opacity: progress > 0.0 ? 1.0 : 0.0,
-                      child: Text(
-                        "${(progress * 100).round()}%",
-                        style: TextStyle(
-                          color: scheme.primary,
-                          fontSize: 12,
-                        ),
-                      ),
+                      begin: 0,
+                      end: 1,
                     ),
-                  ],
+              ),
+
+              // Прогресс загрузки.
+              AnimatedOpacity(
+                curve: Curves.ease,
+                duration: const Duration(
+                  milliseconds: 500,
                 ),
+                opacity: progress > 0.0 ? 1.0 : 0.0,
+                child: Text(
+                  "${(progress * 100).round()}%",
+                  style: TextStyle(
+                    color: scheme.primary,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -535,7 +531,6 @@ class MobileControlButtonsWidget extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final downloadTask = ref.watch(downloadTaskByIDProvider(playlist.mediaKey));
     ref.watch(playerPlayingStateProvider);
 
     useListenable(scrollController.position);
@@ -617,7 +612,7 @@ class MobileControlButtonsWidget extends HookConsumerWidget {
                         child: CachePlaylistButtonWidget(
                           size: realButtonSize,
                           playlist: playlist,
-                          task: downloadTask,
+                          taskKey: playlist.mediaKey,
                           onTap: onCachePressed!,
                         ),
                       )
@@ -1411,7 +1406,6 @@ class DesktopPlaylistControlsWidget extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l18n = ref.watch(l18nProvider);
-    final downloadTask = ref.watch(downloadTaskByIDProvider(playlist.mediaKey));
     ref.watch(playerStateProvider);
 
     final bool hasTracksLoaded = playlist.audios != null;
@@ -1475,7 +1469,7 @@ class DesktopPlaylistControlsWidget extends HookConsumerWidget {
                         if (onCacheTap != null)
                           CachePlaylistButtonWidget(
                             playlist: playlist,
-                            task: downloadTask,
+                            taskKey: playlist.mediaKey,
                             onTap: onCacheTap!,
                           ),
                         const Gap(6),
