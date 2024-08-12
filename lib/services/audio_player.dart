@@ -24,6 +24,7 @@ import "../provider/player.dart";
 import "../provider/playlists.dart";
 import "../provider/preferences.dart";
 import "../provider/user.dart";
+import "../routes/home/music.dart";
 import "../utils.dart";
 import "cache_manager.dart";
 import "logger.dart";
@@ -236,18 +237,18 @@ class VKMusicPlayer {
   ConcatenatingAudioSource? _queue;
   List<ExtendedAudio>? _audiosQueue;
 
-  final VkMusicPlayerRef _ref;
+  final VkMusicPlayerRef ref;
 
   VKMusicPlayer({
-    required VkMusicPlayerRef ref,
-  }) : _ref = ref {
+    required this.ref,
+  }) {
     _subscriptions = [
       // События паузы/воспроизведения.
       _player.playingStream.listen(
         (bool playing) async {
           if (!playing) return;
 
-          // Если установлена пауза ввиду функции "пауза при минимальной громкости", то убираем флаг.
+          // Убираем флаг, установленный функцией "пауза при миниамльной громкости".
           _pausedDueMute = false;
 
           // Если мы запустили воспроизведение, но плеер ещё не был загружен, то помечаем это.
@@ -287,6 +288,8 @@ class VKMusicPlayer {
           await pause();
         } else if (!playing && _pausedDueMute && volume > 0.0) {
           await play();
+
+          _pausedDueMute = false;
         }
       }),
 
@@ -313,8 +316,7 @@ class VKMusicPlayer {
       ),
 
       // Обработчик событий изменения плейлистов.
-      PlaylistsState.playlistModificationsStream
-          .listen((ExtendedPlaylist playlist) {
+      PlaylistsState.playlistModificationsStream.listen((playlist) {
         final bool isCurrent = playlist.ownerID == currentPlaylist?.ownerID &&
             playlist.id == currentPlaylist?.id;
 
@@ -660,7 +662,7 @@ class VKMusicPlayer {
 
     // Регистрируем AudioHandler для управления музыки при помощи медиа-уведомления на OS Android.
     _audioService = await AudioService.init(
-      builder: () => AudioPlayerService(player, _ref),
+      builder: () => AudioPlayerService(player, ref),
       config: const AudioServiceConfig(
         androidNotificationChannelName: "Flutter VK",
         androidNotificationChannelId: "com.zensonaton.fluttervk",
@@ -800,9 +802,7 @@ class VKMusicPlayer {
   }
 
   /// Указывает, загружен ли плеер.
-  void _setPlayerLoaded(
-    bool loaded,
-  ) {
+  void _setPlayerLoaded(bool loaded) {
     if (loaded == _loaded) return;
 
     _loaded = loaded;
@@ -917,9 +917,7 @@ class VKMusicPlayer {
   }
 
   /// Переключает на трек с указанным индексом.
-  Future<void> jump(
-    int index,
-  ) async {
+  Future<void> jump(int index) async {
     _fakeCurrentTrackIndex = index;
 
     return await _player.seek(
@@ -1093,7 +1091,7 @@ class VKMusicPlayer {
       children: _audiosQueue!
           .map(
             (ExtendedAudio audio) => CachedStreamAudioSource(
-              ref: _ref,
+              ref: ref,
               audio: audio,
               playlist: playlist,
             ),
@@ -1137,7 +1135,7 @@ class VKMusicPlayer {
     await _queue!.insert(
       nextTrackIndex!,
       CachedStreamAudioSource(
-        ref: _ref,
+        ref: ref,
         audio: audio,
         playlist: currentPlaylist!,
       ),
@@ -1157,7 +1155,7 @@ class VKMusicPlayer {
 
     await _queue!.add(
       CachedStreamAudioSource(
-        ref: _ref,
+        ref: ref,
         audio: audio,
         playlist: currentPlaylist!,
       ),
@@ -1229,8 +1227,6 @@ class VKMusicPlayer {
     if (Platform.isWindows) {
       await _smtc?.enableSmtc();
     }
-
-    if (_loaded) return;
   }
 
   /// Метод, обновляющий данные о музыкальной сессии, отправляя новые данные по текущему треку после вызова метода [startMusicSession].
@@ -1340,6 +1336,8 @@ class VKMusicPlayer {
 /// Расширение для класса [BaseAudioHandler], методы которого вызываются при взаимодействии с медиа-уведомлением.
 class AudioPlayerService extends BaseAudioHandler
     with QueueHandler, SeekHandler {
+  static final AppLogger logger = getLogger("AudioPlayerService");
+
   final VKMusicPlayer _player;
   final Ref _ref;
 
@@ -1349,11 +1347,6 @@ class AudioPlayerService extends BaseAudioHandler
   ) {
     // События состояния плеера.
     _player.playerStateStream.listen((PlayerState state) async {
-      await _updateEvent();
-    });
-
-    // События паузы/воспроизведения/...
-    _player.playingStream.listen((bool playing) async {
       await _updateEvent();
     });
 
@@ -1380,10 +1373,11 @@ class AudioPlayerService extends BaseAudioHandler
 
   /// Отправляет изменения состояния воспроизведения в `audio_service`, обновляя информацию, отображаемую в уведомлении.
   Future<void> _updateEvent() async {
-    final bool isAudioMix =
-        _player.currentPlaylist?.type == PlaylistType.audioMix;
-    final bool isRecommended =
-        _player.currentPlaylist?.isRecommendationTypePlaylist ?? false;
+    final ExtendedPlaylist? playlist = _player.currentPlaylist;
+    final ExtendedAudio? audio = _player.smartCurrentAudio;
+    final bool isLiked = audio?.isLiked ?? false;
+    final bool isAudioMix = playlist?.type == PlaylistType.audioMix;
+    final bool isRecommended = playlist?.isRecommendationTypePlaylist ?? false;
 
     playbackState.add(
       PlaybackState(
@@ -1412,7 +1406,7 @@ class AudioPlayerService extends BaseAudioHandler
 
           // Кнопка для сохранения трека как лайкнутый.
           MediaControl.custom(
-            androidIcon: _player.currentAudio?.isLiked ?? false
+            androidIcon: isLiked
                 ? "drawable/ic_favorite"
                 : "drawable/ic_favorite_outline",
             label: "Favorite",
@@ -1423,10 +1417,10 @@ class AudioPlayerService extends BaseAudioHandler
           MediaAction.seek,
         },
         androidCompactActionIndices: const [0, 1, 2],
-        playing: _player.loaded && _player.playing,
+        playing: _player.playing,
         updatePosition: _player.position,
         bufferedPosition: _player.bufferedPosition,
-        shuffleMode: player.shuffleModeEnabled
+        shuffleMode: _player.shuffleModeEnabled
             ? AudioServiceShuffleMode.all
             : AudioServiceShuffleMode.none,
         repeatMode: _player.loopMode == LoopMode.one
@@ -1443,8 +1437,6 @@ class AudioPlayerService extends BaseAudioHandler
 
   /// Отправляет новый трек в уведомление.
   Future<void> _updateTrack() async {
-    if (!_player.loaded) return;
-
     // TODO: Сделать очередь вместо обновления текущего трека.
 
     mediaItem.add(_player.currentAudio?.asMediaItem);
@@ -1469,24 +1461,23 @@ class AudioPlayerService extends BaseAudioHandler
       case (MediaNotificationAction.favorite):
         if (!connectivityManager.hasConnection) return;
 
-        // TODO: Кнопка лайка трека с плеера.
-        // await toggleTrackLike(
-        //   _ref,
-        //   _player.currentAudio!,
-        //   !_player.currentAudio!.isLiked,
-        // );
-        // await _updateEvent();
+        await toggleTrackLike(
+          _ref,
+          _player.currentAudio!,
+          !_player.currentAudio!.isLiked,
+        );
+        await _updateEvent();
 
         break;
 
       case (MediaNotificationAction.dislike):
         if (!connectivityManager.hasConnection) return;
 
-        // TODO: Кнопка дизлайка трека с плеера.
-        // await dislikeTrack(
-        //   _ref,
-        //   _player.currentAudio!,
-        // );
+        await dislikeTrack(
+          _ref,
+          _player.currentAudio!,
+        );
+        await _updateEvent();
 
         break;
     }
@@ -1512,7 +1503,7 @@ class AudioPlayerService extends BaseAudioHandler
     await super.setShuffleMode(shuffleMode);
 
     // Не позволяем включить Shuffle при включённом аудио миксе.
-    if (player.currentPlaylist?.type == PlaylistType.audioMix) return;
+    if (_player.currentPlaylist?.type == PlaylistType.audioMix) return;
 
     await _player.setShuffle(
       shuffleMode == AudioServiceShuffleMode.all,

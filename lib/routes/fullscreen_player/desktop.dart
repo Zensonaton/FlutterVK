@@ -293,7 +293,7 @@ class FullscreenMediaControls extends ConsumerWidget {
       if (!await checkForDuplicates(ref, context, player.currentAudio!)) return;
     }
     await toggleTrackLike(
-      ref,
+      player.ref,
       player.currentAudio!,
       !player.currentAudio!.isLiked,
       sourcePlaylist: player.currentPlaylist,
@@ -310,7 +310,7 @@ class FullscreenMediaControls extends ConsumerWidget {
     if (!networkRequiredDialog(ref, context)) return;
 
     // Делаем трек дизлайкнутым.
-    await dislikeTrack(ref, player.currentAudio!);
+    await dislikeTrack(player.ref, player.currentAudio!);
 
     // Запускаем следующий трек в плейлисте.
     await player.next();

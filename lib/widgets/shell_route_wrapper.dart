@@ -642,7 +642,7 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
                       )) return;
                     }
                     await toggleTrackLike(
-                      ref,
+                      player.ref,
                       player.currentAudio!,
                       !player.currentAudio!.isLiked,
                       sourcePlaylist: player.currentPlaylist,
@@ -655,7 +655,7 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
                               if (!networkRequiredDialog(ref, context)) return;
 
                               await dislikeTrack(
-                                ref,
+                                player.ref,
                                 player.currentAudio!,
                               );
 

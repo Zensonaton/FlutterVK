@@ -75,7 +75,7 @@ Widget buildListTrackWidget(
         if (!await checkForDuplicates(ref, context, audio)) return;
       }
       await toggleTrackLike(
-        ref,
+        player.ref,
         audio,
         !audio.isLiked,
         sourcePlaylist: playlist,

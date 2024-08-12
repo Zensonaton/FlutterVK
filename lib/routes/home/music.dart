@@ -96,7 +96,7 @@ Future<bool> checkForDuplicates(
 ///
 /// Если [isLiked] = true, то трек будет восстановлен (если он был удалён ранее), либо же лайкнут. В ином же случае, трек будет удалён из лайкнутых.
 Future<void> toggleTrackLike(
-  WidgetRef ref,
+  Ref ref,
   ExtendedAudio audio,
   bool isLiked, {
   ExtendedPlaylist? sourcePlaylist,
@@ -237,10 +237,7 @@ Future<void> toggleTrackLike(
 }
 
 /// Помечает передаваемый трек [audio] как дизлайкнутый.
-Future<void> dislikeTrack(
-  WidgetRef ref,
-  ExtendedAudio audio,
-) async {
+Future<void> dislikeTrack(Ref ref, ExtendedAudio audio) async {
   final api = ref.read(vkAPIProvider);
 
   final bool response = await api.audio.addDislike([audio.mediaKey]);
