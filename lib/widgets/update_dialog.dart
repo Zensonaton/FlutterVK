@@ -87,122 +87,126 @@ class UpdateAvailableDialog extends ConsumerWidget {
     return DraggableScrollableSheet(
       expand: false,
       builder: (BuildContext context, ScrollController controller) {
-        return Container(
-          width: 500,
-          padding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 18,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              // Внутреннее содержимое.
-              Expanded(
-                child: ListView(
-                  controller: controller,
+        return SafeArea(
+          child: Container(
+            width: 500,
+            padding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 18,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                // Внутреннее содержимое.
+                Expanded(
+                  child: ListView(
+                    controller: controller,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                    ),
+                    children: [
+                      // Иконка обновления.
+                      Icon(
+                        Icons.update,
+                        size: 28,
+                        color: scheme.primary,
+                      ),
+                      const Gap(2),
+
+                      // Текст "Доступно обновление Flutter VK".
+                      Text(
+                        l18n.updateAvailableTitle,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: scheme.primary,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const Gap(2),
+
+                      // Информация о старой и новой версии.
+                      StyledText(
+                        text: l18n.updateAvailableDescription(
+                          appVersion,
+                          release.tagName,
+                          release.createdAt!.toLocal(),
+                          release.createdAt!.toLocal(),
+                          release.prerelease
+                              ? "(${l18n.updatePreReleaseTitle})"
+                              : "",
+                        ),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: scheme.onSurface.withOpacity(0.75),
+                        ),
+                        tags: {
+                          "arrow": StyledTextIconTag(
+                            Icons.arrow_right,
+                            color: scheme.onSurface.withOpacity(0.75),
+                            size: 18,
+                          ),
+                          "debug": StyledTextIconTag(
+                            Icons.bug_report,
+                            color: scheme.onSurface.withOpacity(0.75),
+                            size: 18,
+                          ),
+                        },
+                      ),
+                      const Gap(6),
+
+                      const Divider(),
+                      const Gap(6),
+
+                      // Описание обновления.
+                      MarkdownBody(
+                        data: release.body,
+                        shrinkWrap: false,
+                      ),
+                      const Gap(4),
+                    ],
+                  ),
+                ),
+                const Divider(),
+                const Gap(6),
+
+                // Кнопки "Подробнее" и "Установить".
+                Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
                   ),
-                  children: [
-                    // Иконка обновления.
-                    Icon(
-                      Icons.update,
-                      size: 28,
-                      color: scheme.primary,
-                    ),
-                    const Gap(2),
-
-                    // Текст "Доступно обновление Flutter VK".
-                    Text(
-                      l18n.updateAvailableTitle,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: scheme.primary,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const Gap(2),
-
-                    // Информация о старой и новой версии.
-                    StyledText(
-                      text: l18n.updateAvailableDescription(
-                        appVersion,
-                        release.tagName,
-                        release.createdAt!.toLocal(),
-                        release.createdAt!.toLocal(),
-                        release.prerelease
-                            ? "(${l18n.updatePreReleaseTitle})"
-                            : "",
-                      ),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: scheme.onSurface.withOpacity(0.75),
-                      ),
-                      tags: {
-                        "arrow": StyledTextIconTag(
-                          Icons.arrow_right,
-                          color: scheme.onSurface.withOpacity(0.75),
-                          size: 18,
+                  child: Wrap(
+                    spacing: 8,
+                    alignment: WrapAlignment.end,
+                    children: [
+                      // Подробности.
+                      FilledButton.tonalIcon(
+                        icon: const Icon(
+                          Icons.library_books,
                         ),
-                        "debug": StyledTextIconTag(
-                          Icons.bug_report,
-                          color: scheme.onSurface.withOpacity(0.75),
-                          size: 18,
+                        label: Text(
+                          l18n.showUpdateDetails,
                         ),
-                      },
-                    ),
-                    const Gap(6),
+                        onPressed: onMorePressed,
+                      ),
 
-                    const Divider(),
-                    const Gap(6),
-
-                    // Описание обновления.
-                    MarkdownBody(
-                      data: release.body,
-                      shrinkWrap: false,
-                    ),
-                    const Gap(4),
-                  ],
+                      // Установить.
+                      FilledButton.icon(
+                        icon: Icon(
+                          isMobile
+                              ? Icons.install_mobile
+                              : Icons.install_desktop,
+                        ),
+                        label: Text(
+                          l18n.installUpdate,
+                        ),
+                        onPressed: () => onInstallPressed(context),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const Divider(),
-              const Gap(6),
-
-              // Кнопки "Подробнее" и "Установить".
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                ),
-                child: Wrap(
-                  spacing: 8,
-                  alignment: WrapAlignment.end,
-                  children: [
-                    // Подробности.
-                    FilledButton.tonalIcon(
-                      icon: const Icon(
-                        Icons.library_books,
-                      ),
-                      label: Text(
-                        l18n.showUpdateDetails,
-                      ),
-                      onPressed: onMorePressed,
-                    ),
-
-                    // Установить.
-                    FilledButton.icon(
-                      icon: Icon(
-                        isMobile ? Icons.install_mobile : Icons.install_desktop,
-                      ),
-                      label: Text(
-                        l18n.installUpdate,
-                      ),
-                      onPressed: () => onInstallPressed(context),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
