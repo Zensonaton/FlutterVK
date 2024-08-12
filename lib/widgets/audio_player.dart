@@ -16,6 +16,59 @@ import "loading_button.dart";
 import "responsive_slider.dart";
 import "scrollable_slider.dart";
 
+/// Виджет, являющийся частью [BottomMusicPlayer] и [AudioTrackTile], который либо использует [Text], либо [RichText] в зависимости от того, указан [subtitle] или нет.
+class TrackTitleWithSubtitle extends StatelessWidget {
+  /// Название трека.
+  final String title;
+
+  /// Подпись трека. Может отсутствовать.
+  final String? subtitle;
+
+  /// Цвет текста.
+  final Color color;
+
+  const TrackTitleWithSubtitle({
+    super.key,
+    required this.title,
+    this.subtitle,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final TextStyle titleStyle = TextStyle(
+      fontWeight: FontWeight.w500,
+      color: color,
+    );
+
+    // Если есть subtitle, то делаем RichText.
+    if (subtitle != null) {
+      return RichText(
+        text: TextSpan(
+          text: title,
+          style: titleStyle,
+          children: [
+            TextSpan(
+              text: " ($subtitle)",
+              style: TextStyle(
+                fontWeight: FontWeight.w300,
+                color: color.withOpacity(0.75),
+              ),
+            ),
+          ],
+        ),
+        overflow: TextOverflow.ellipsis,
+      );
+    }
+
+    return Text(
+      title,
+      overflow: TextOverflow.ellipsis,
+      style: titleStyle,
+    );
+  }
+}
+
 /// Виджет, расположенный поверх нижней части [BottomMusicPlayer], показывая прогресс прослушивания текущего трека.
 class BottomMusicProgressBar extends StatelessWidget {
   const BottomMusicProgressBar({
@@ -155,16 +208,12 @@ class TrackTitleAndArtist extends StatelessWidget {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Название трека.
+            // Название трека, а так же subtitle, при наличии.
             Flexible(
-              child: Text(
-                title,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: scheme.onPrimaryContainer,
-                ),
+              child: TrackTitleWithSubtitle(
+                title: title,
+                subtitle: subtitle,
+                color: scheme.onPrimaryContainer,
               ),
             ),
 
@@ -178,24 +227,6 @@ class TrackTitleAndArtist extends StatelessWidget {
                   Icons.explicit,
                   color: scheme.onPrimaryContainer.withOpacity(0.5),
                   size: 14,
-                ),
-              ),
-
-            // Подпись трека.
-            if (subtitle != null)
-              Flexible(
-                child: Padding(
-                  padding: const EdgeInsets.only(
-                    left: 6,
-                  ),
-                  child: Text(
-                    subtitle!,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: scheme.onPrimaryContainer.withOpacity(0.5),
-                    ),
-                  ),
                 ),
               ),
           ],

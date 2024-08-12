@@ -6,7 +6,6 @@ import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:styled_text/widgets/styled_text.dart";
 
 import "../consts.dart";
 import "../main.dart";
@@ -18,6 +17,7 @@ import "../routes/home/music.dart";
 import "../routes/home/music/bottom_audio_options.dart";
 import "../services/cache_manager.dart";
 import "../utils.dart";
+import "audio_player.dart";
 import "dialogs.dart";
 import "fallback_audio_photo.dart";
 import "loading_button.dart";
@@ -236,59 +236,6 @@ class AudioTrackImage extends HookWidget {
                   color: Theme.of(context).colorScheme.primary,
                 ),
       ],
-    );
-  }
-}
-
-/// Виджет, являющийся частью [AudioTrackTitle], который либо использует [Text], либо [StyledText] в зависимости от того, указан [subtitle] или нет.
-class TrackTitleWithSubtitle extends StatelessWidget {
-  /// Название трека.
-  final String title;
-
-  /// Подпись трека. Может отсутствовать.
-  final String? subtitle;
-
-  /// Цвет текста.
-  final Color color;
-
-  const TrackTitleWithSubtitle({
-    super.key,
-    required this.title,
-    this.subtitle,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final TextStyle titleStyle = TextStyle(
-      fontWeight: FontWeight.w500,
-      color: color,
-    );
-
-    // Если есть subtitle, то делаем RichText.
-    if (subtitle != null) {
-      return RichText(
-        text: TextSpan(
-          text: title,
-          style: titleStyle,
-          children: [
-            TextSpan(
-              text: " ($subtitle)",
-              style: TextStyle(
-                fontWeight: FontWeight.w300,
-                color: color.withOpacity(0.75),
-              ),
-            ),
-          ],
-        ),
-        overflow: TextOverflow.ellipsis,
-      );
-    }
-
-    return Text(
-      title,
-      overflow: TextOverflow.ellipsis,
-      style: titleStyle,
     );
   }
 }
