@@ -10,7 +10,6 @@ import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:just_audio/just_audio.dart";
 
-import "../api/vk/audio/get_lyrics.dart";
 import "../api/vk/shared.dart";
 import "../consts.dart";
 import "../enums.dart";
@@ -28,6 +27,8 @@ import "../routes/fullscreen_player.dart";
 import "../routes/home/music.dart";
 import "../routes/home/music/categories/realtime_playlists.dart";
 import "../services/cache_manager.dart";
+import "../services/download_manager.dart";
+import "../services/image_to_color_scheme.dart";
 import "../services/logger.dart";
 import "../utils.dart";
 import "audio_player.dart";
@@ -347,7 +348,9 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final trackImageInfoNotifier = ref.watch(trackSchemeInfoProvider.notifier);
     final trackImageInfo = ref.watch(trackSchemeInfoProvider);
+    final playlistsNotifier = ref.watch(playlistsProvider.notifier);
     final preferences = ref.watch(preferencesProvider);
     final l18n = ref.watch(l18nProvider);
     ref.watch(playerPlaylistModificationsProvider);
@@ -357,6 +360,35 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
     ref.watch(playerLoopModeProvider);
     ref.watch(playerVolumeProvider);
     ref.watch(playerStateProvider);
+
+    /// Метод, создающий цветовую схему из обложки трека, если таковая имеется, и [ImageSchemeExtractor] в случае успеха.
+    Future<ImageSchemeExtractor?> getColorScheme(
+      ExtendedPlaylist playlist,
+      ExtendedAudio audio,
+    ) async {
+      if (audio.thumbnail == null) return null;
+
+      // Если цвета обложки уже были получены, и они хранятся в БД, то просто загружаем их.
+      if (audio.colorCount != null) {
+        logger.d("Image colors are loaded from DB");
+
+        return trackImageInfoNotifier.fromColors(
+          colorInts: audio.colorInts!,
+          scoredColorInts: audio.scoredColorInts!,
+          frequentColorInt: audio.frequentColorInt!,
+          colorCount: audio.colorCount!,
+        );
+      }
+
+      // Заставляем плеер извлекать цветовую схему из обложки трека.
+      return await trackImageInfoNotifier.fromImageProvider(
+        CachedNetworkImageProvider(
+          audio.smallestThumbnail!,
+          cacheKey: "${audio.mediaKey}small",
+          cacheManager: CachedAlbumImagesManager.instance,
+        ),
+      );
+    }
 
     useEffect(
       () {
@@ -376,83 +408,36 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
           player.currentIndexStream.listen((int? index) async {
             if (index == null || !player.loaded) return;
 
-            final ExtendedPlaylist playlist =
-                player.currentPlaylist!.copyWith();
-            final ExtendedAudio audio = player.currentAudio!.copyWith();
-            final schemeInfoNotifier =
-                ref.read(trackSchemeInfoProvider.notifier);
-            final playlistsNotifier = ref.read(playlistsProvider.notifier);
+            final playlist = player.currentPlaylist!.copyWith();
+            final audio = player.currentAudio!.copyWith();
 
-            // TODO: Сохранять треки в БД по-другому, что бы избежать кучи записей за раз.
-            // TODO: Использовать уже существующий метод по загрузке данных, что бы избежать повторения кода.
+            // Пытаемся получить цвета обложки трека.
+            // Здесь мы можем получить null, если обложки у трека нет.
+            ImageSchemeExtractor? extractedColors =
+                await getColorScheme(playlist, audio);
 
-            /// Метод, создающий цветовую схему из обложки трека, если таковая имеется.
-            void getColorScheme() async {
-              if (audio.thumbnail == null) return;
+            // Загружаем метаданные трека (его обложки, текст песни, ...)
+            final newAudio =
+                await PlaylistCacheDownloadItem.downloadWithMetadata(
+              playlistsNotifier.ref,
+              playlist,
+              audio,
+              downloadAudio: false,
+            );
+            if (newAudio == null) return;
 
-              // Если цвета обложки уже были получены, и они хранятся в БД, то просто загружаем их.
-              if (audio.colorCount != null) {
-                logger.d("Image colors are loaded from DB");
+            // Повторно пытаемся получить цвета обложек трека, если они не были загружены ранее.
+            extractedColors ??= await getColorScheme(playlist, newAudio);
 
-                schemeInfoNotifier.fromColors(
-                  colorInts: audio.colorInts!,
-                  scoredColorInts: audio.scoredColorInts!,
-                  frequentColorInt: audio.frequentColorInt!,
-                  colorCount: audio.colorCount!,
-                );
+            // Сохраняем новую версию трека. Для начала, нам нужно извлечь актуальную версию плейлиста.
+            final newPlaylist =
+                playlistsNotifier.getPlaylist(playlist.ownerID, playlist.id);
+            assert(newPlaylist != null, "Playlist is null");
 
-                return;
-              }
-
-              // Заставляем плеер извлекать цветовую схему из обложки трека.
-              final schemeInfo = await schemeInfoNotifier.fromImageProvider(
-                CachedNetworkImageProvider(
-                  audio.smallestThumbnail!,
-                  cacheKey: "${audio.mediaKey}small",
-                  cacheManager: CachedAlbumImagesManager.instance,
-                ),
-              );
-
-              // Сохраняем цвета в БД.
-              playlistsNotifier.updatePlaylist(
-                playlist.copyWithNewAudio(
-                  audio.copyWith(
-                    colorInts: schemeInfo.colorInts,
-                    colorCount: schemeInfo.colorCount,
-                    scoredColorInts: schemeInfo.scoredColorInts,
-                    frequentColorInt: schemeInfo.frequentColorInt,
-                  ),
-                ),
-                saveInDB: true,
-              );
-            }
-
-            /// Метод, загружающий текст трека.
-            void getLyrics() async {
-              final api = ref.read(vkAPIProvider);
-
-              if (!(audio.hasLyrics ?? false) || audio.lyrics != null) return;
-
-              // Загружаем текст песни.
-              final APIAudioGetLyricsResponse response =
-                  await api.audio.getLyrics(audio.mediaKey);
-
-              // Сохраняем в БД.
-              playlistsNotifier.updatePlaylist(
-                playlist.copyWithNewAudio(
-                  audio.copyWith(
-                    lyrics: response.lyrics,
-                  ),
-                ),
-                saveInDB: true,
-              );
-            }
-
-            // Запускаем задачу по получению цветовой схемы.
-            getColorScheme();
-
-            // Загружаем текст песни.
-            getLyrics();
+            playlistsNotifier.updatePlaylist(
+              newPlaylist!.copyWithNewAudio(newAudio),
+              saveInDB: true,
+            );
           }),
 
           // Слушаем события изменения текущего трека, что бы в случае, если запущен рекомендательный плейлист, мы передавали информацию об этом ВКонтакте.

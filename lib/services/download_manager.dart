@@ -251,7 +251,7 @@ class PlaylistCacheDownloadItem extends DownloadItem {
     final lyricsDownloaded = result[2] as Lyrics?;
 
     return audio.copyWith(
-      isCached: true,
+      isCached: downloadAudio ? true : null,
       cachedSize: audioSize,
       lyrics: lyricsDownloaded,
     );
