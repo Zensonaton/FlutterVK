@@ -497,7 +497,7 @@ class DownloadTask {
   final ValueNotifier<double> progress = ValueNotifier(0.0);
 
   /// [Queue], используемый для одновременной загрузки задач из [tasks].
-  final Queue _queue = Queue(parallel: isDesktop ? 5 : 2);
+  final Queue _queue = Queue(parallel: isDesktop ? 5 : 3);
 
   /// Указывает, запущена ли загрузка.
   bool _downloading = false;
