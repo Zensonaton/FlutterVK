@@ -41,6 +41,7 @@ Map<String, dynamic> _$DeezerAlbumToJson(DeezerAlbum instance) =>
 DeezerTrack _$DeezerTrackFromJson(Map<String, dynamic> json) => DeezerTrack(
       id: (json['id'] as num).toInt(),
       title: json['title'] as String,
+      subtitle: emptyStringAsNull(json['title_version'] as String?),
       duration: (json['duration'] as num).toInt(),
       artist: DeezerArtist.fromJson(json['artist'] as Map<String, dynamic>),
       album: DeezerAlbum.fromJson(json['album'] as Map<String, dynamic>),
@@ -50,6 +51,7 @@ Map<String, dynamic> _$DeezerTrackToJson(DeezerTrack instance) =>
     <String, dynamic>{
       'id': instance.id,
       'title': instance.title,
+      'title_version': instance.subtitle,
       'duration': instance.duration,
       'artist': instance.artist,
       'album': instance.album,

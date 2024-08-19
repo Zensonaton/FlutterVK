@@ -30,6 +30,12 @@ String gzipDecoder(
   RequestOptions options,
   ResponseBody responseBody,
 ) {
+  final String? contentEncoding =
+      responseBody.headers[Headers.contentEncodingHeader]?.firstOrNull;
+  if (contentEncoding == null || !contentEncoding.contains("gzip")) {
+    return utf8.decode(responseBytes);
+  }
+
   return utf8.decode(gzip.decode(responseBytes));
 }
 

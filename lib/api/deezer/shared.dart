@@ -1,5 +1,7 @@
 import "package:json_annotation/json_annotation.dart";
 
+import "../../utils.dart";
+
 part "shared.g.dart";
 
 /// Класс, олицетворяющий исполнителя трека в Deezer.
@@ -79,6 +81,10 @@ class DeezerTrack {
   /// Название трека.
   final String title;
 
+  /// Subtitle трека.
+  @JsonKey(name: "title_version", fromJson: emptyStringAsNull)
+  final String? subtitle;
+
   /// Длительность трека в секундах.
   final int duration;
 
@@ -94,6 +100,7 @@ class DeezerTrack {
   DeezerTrack({
     required this.id,
     required this.title,
+    required this.subtitle,
     required this.duration,
     required this.artist,
     required this.album,

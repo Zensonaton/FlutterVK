@@ -6,8 +6,10 @@ import "package:flutter/foundation.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:queue/queue.dart";
 
+import "../api/deezer/search.dart";
 import "../api/vk/audio/get_lyrics.dart";
 import "../provider/playlists.dart";
+import "../provider/preferences.dart";
 import "../provider/user.dart";
 import "../provider/vk_api.dart";
 import "../utils.dart";
@@ -128,6 +130,8 @@ class PlaylistCacheDeleteDownloadItem extends DownloadItem {
 
 /// [DownloadItem] для кэширования отдельного трека для [PlaylistCacheDownloadTask].
 class PlaylistCacheDownloadItem extends DownloadItem {
+  static final AppLogger logger = getLogger("PlaylistCacheDownloadItem");
+
   // TODO: Использовать глобальный Dio.
   final Dio dio = Dio(
     BaseOptions(
@@ -175,11 +179,12 @@ class PlaylistCacheDownloadItem extends DownloadItem {
     return null;
   }
 
-  /// Загружает обложки трека
-  Future<void> _downloadThumbnails() async {
-    // Если у самого трека нет обложек, то ничего не загружаем.
-    if (audio.thumbnail == null) return;
-
+  /// Внутренний метод, который загружает обложки с передаваемого объекта [ExtendedThumbnails], и помещает их в [CachedAlbumImagesManager]. Если оказывается, что обложка уже кэширована, то ничего не делается.
+  ///
+  /// Вероятнее всего, вместо этого метода вам нужен [_downloadThumbnails] либо [_downloadDeezerThumbnails].
+  Future<void> _downloadAndCacheThumbnails(
+    ExtendedThumbnails thumbnails,
+  ) async {
     final manager = CachedAlbumImagesManager.instance;
     final smallKey = "${audio.mediaKey}small";
     final maxKey = "${audio.mediaKey}max";
@@ -190,25 +195,58 @@ class PlaylistCacheDownloadItem extends DownloadItem {
     // Если обложки уже загружены, то ничего не делаем.
     if (thumbSmall != null && thumbMax != null) return;
 
-    // Загружаем обложки трека, если таковые ещё не были загружены.
     await Future.wait([
-      manager.downloadFile(audio.thumbnail!.photoSmall, key: smallKey),
-      manager.downloadFile(audio.thumbnail!.photoMax, key: maxKey),
+      manager.downloadFile(thumbnails.photoSmall, key: smallKey),
+      manager.downloadFile(thumbnails.photoMax, key: maxKey),
     ]);
+  }
+
+  /// Загружает обложки трека, передаваемые серверами ВКонтакте, если они есть. Возвращает true, если обложка была успешно загружена, либо null, если обложек вообще нет.
+  Future<bool?> _downloadThumbnails() async {
+    if (audio.thumbnail == null) return null;
+
+    await _downloadAndCacheThumbnails(audio.thumbnail!);
+
+    return true;
   }
 
   /// Загружает текст песни с ВКонтакте, и возвращает объект [Lyrics] с текстом песни.
   Future<Lyrics?> _downloadLyrics() async {
-    final api = ref.read(vkAPIProvider);
-
-    // Если мы знаем, что у трека нету текста, либо он уже загружен, то ничего не делаем.
     if (!(audio.hasLyrics ?? false) || audio.lyrics != null) return null;
 
-    // Загружаем текст песни.
     final APIAudioGetLyricsResponse response =
-        await api.audio.getLyrics(audio.mediaKey);
+        await ref.read(vkAPIProvider).audio.getLyrics(audio.mediaKey);
 
     return response.lyrics;
+  }
+
+  /// Пытается найти обложки для трека с сервиса Deezer, и загружает их, если они есть, возвращая объект [ExtendedThumbnails].
+  Future<ExtendedThumbnails?> _downloadDeezerThumbnails() async {
+    final AppLogger logger = getLogger("_downloadDeezerThumbnails");
+
+    if (audio.deezerThumbs != null) return null;
+
+    final results = await deezer_search_sorted(
+      audio.artist,
+      audio.title,
+      subtitle: audio.subtitle,
+      duration: audio.duration,
+      album: audio.album?.title,
+    );
+    final match = results.firstOrNull;
+    if (match == null) return null;
+
+    // В очень редких случаях Deezer возвращает альбом, но не возвращает обложки.
+    if (match.album.coverSmall == null) {
+      logger.w("Deezer returned album without cover: ${match.toJson()}");
+
+      return null;
+    }
+
+    final thumbnails = ExtendedThumbnails.fromDeezerTrack(match);
+    await _downloadAndCacheThumbnails(thumbnails);
+
+    return thumbnails;
   }
 
   /// Загружает сам трек, его обложки, текст песни и прочую информацию для передаваемого [audio].
@@ -222,6 +260,7 @@ class PlaylistCacheDownloadItem extends DownloadItem {
     bool downloadAudio = true,
     bool downloadThumbnails = true,
     bool downloadLyrics = true,
+    bool deezerThumbnails = true,
   }) async {
     final item = downloadItem ??
         PlaylistCacheDownloadItem(
@@ -239,7 +278,22 @@ class PlaylistCacheDownloadItem extends DownloadItem {
         if (downloadAudio) item._downloadAudio() else null,
         if (downloadThumbnails) item._downloadThumbnails() else null,
         if (downloadLyrics) item._downloadLyrics() else null,
-      ].map((element) => element ?? Future.value()),
+        if (deezerThumbnails) item._downloadDeezerThumbnails() else null,
+      ].map((element) async {
+        final future = element ?? Future.value();
+
+        try {
+          return await future;
+        } catch (e, stackTrace) {
+          logger.e(
+            "Error while downloading metadata for $audio:",
+            error: e,
+            stackTrace: stackTrace,
+          );
+
+          return null;
+        }
+      }),
     );
 
     // Если ничего не изменилось, просто выходим без сохранений.
@@ -249,21 +303,27 @@ class PlaylistCacheDownloadItem extends DownloadItem {
     // Извлекаем результаты.
     final audioSize = result[0] as int?;
     final lyricsDownloaded = result[2] as Lyrics?;
+    final deezerThumbs = result[3] as ExtendedThumbnails?;
 
     return audio.copyWith(
       isCached: downloadAudio ? true : null,
       cachedSize: audioSize,
       lyrics: lyricsDownloaded,
+      deezerThumbs: deezerThumbs,
     );
   }
 
   @override
   Future<void> download() async {
+    final preferences = ref.read(preferencesProvider);
+    final playlists = ref.read(playlistsProvider.notifier);
+
     final newAudio = await downloadWithMetadata(
       ref,
       playlist,
       audio,
       downloadItem: this,
+      deezerThumbnails: preferences.deezerThumbnails,
     );
 
     // Если ничего не поменялось, то ничего не делаем.
@@ -271,19 +331,17 @@ class PlaylistCacheDownloadItem extends DownloadItem {
 
     // Сохраняем новую версию трека. Для начала, нам нужно извлечь актуальную версию плейлиста.
     if (updatePlaylist) {
-      final newPlaylist = ref
-          .read(playlistsProvider.notifier)
-          .getPlaylist(playlist.ownerID, playlist.id);
+      final newPlaylist = playlists.getPlaylist(playlist.ownerID, playlist.id);
       assert(newPlaylist != null, "Playlist is null");
 
       // Определяем, нужно ли нам сохранять изменения в БД.
       // Мы сохраняем изменения каждые 5 треков.
       final saveInDB = newPlaylist!.audios!.indexOf(audio) % 5 == 0;
 
-      ref.read(playlistsProvider.notifier).updatePlaylist(
-            newPlaylist.copyWithNewAudio(newAudio),
-            saveInDB: saveInDB,
-          );
+      playlists.updatePlaylist(
+        newPlaylist.copyWithNewAudio(newAudio),
+        saveInDB: saveInDB,
+      );
     }
   }
 
@@ -433,15 +491,17 @@ class DownloadTask {
       item.progress.addListener(listener);
 
       await item.download();
-      item.progress.removeListener(listener);
     }).onError((error, stackTrace) {
       if (error is QueueCancelledException) return;
 
       logger.e(
-        "Download error:",
+        "Download error for $item:",
         error: error,
         stackTrace: stackTrace,
       );
+    }).whenComplete(() {
+      item.progress.value = 1.0;
+      item.progress.removeListener(listener);
     });
   }
 

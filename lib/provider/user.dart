@@ -394,6 +394,16 @@ class ExtendedThumbnails {
   @override
   String toString() => "ExtendedThumbnails";
 
+  @override
+  bool operator ==(covariant ExtendedThumbnails other) {
+    if (identical(this, other)) return true;
+
+    return other.runtimeType == ExtendedAudio && other.photoSmall == photoSmall;
+  }
+
+  @override
+  int get hashCode => photoSmall.hashCode;
+
   ExtendedThumbnails({
     required this.photoSmall,
     required this.photoMedium,

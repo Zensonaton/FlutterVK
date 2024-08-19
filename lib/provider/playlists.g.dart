@@ -346,7 +346,7 @@ class _GetPlaylistProviderElement
   int get id => (origin as GetPlaylistProvider).id;
 }
 
-String _$playlistsHash() => r'a284db6361b112d4ff89e25d88488b1ddb93b059';
+String _$playlistsHash() => r'7ba94152730509fc748623a8249bedb48d12f624';
 
 /// [Provider], хранящий в себе информацию о плейлистах пользователя.
 ///

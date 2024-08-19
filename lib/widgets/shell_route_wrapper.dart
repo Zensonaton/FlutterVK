@@ -423,6 +423,7 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
               playlist,
               audio,
               downloadAudio: false,
+              deezerThumbnails: preferences.deezerThumbnails,
             );
             if (newAudio == null) return;
 
@@ -435,7 +436,14 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
             assert(newPlaylist != null, "Playlist is null");
 
             playlistsNotifier.updatePlaylist(
-              newPlaylist!.copyWithNewAudio(newAudio),
+              newPlaylist!.copyWithNewAudio(
+                newAudio.copyWith(
+                  colorInts: extractedColors?.colorInts,
+                  scoredColorInts: extractedColors?.scoredColorInts,
+                  frequentColorInt: extractedColors?.frequentColorInt,
+                  colorCount: extractedColors?.colorCount,
+                ),
+              ),
               saveInDB: true,
             );
           }),
