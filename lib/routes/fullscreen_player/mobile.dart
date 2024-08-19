@@ -488,16 +488,21 @@ class FullscreenMediaControls extends ConsumerWidget {
               // Кнопка для включения/отключения показа текста песни.
               if (showLyricsBlock)
                 IconButton(
-                  onPressed: player.currentAudio!.hasLyrics ?? false
+                  onPressed: ((player.currentAudio!.hasLyrics ?? false) ||
+                          player.currentAudio!.lyrics != null)
                       ? onLyricsTap
                       : null,
                   icon: Icon(
                     preferences.trackLyricsEnabled &&
-                            (player.currentAudio!.hasLyrics ?? false)
+                            ((player.currentAudio!.hasLyrics ?? false) ||
+                                player.currentAudio!.lyrics != null)
                         ? Icons.lyrics
                         : Icons.lyrics_outlined,
                     color: Theme.of(context).colorScheme.primary.withOpacity(
-                          player.currentAudio!.hasLyrics ?? false ? 1.0 : 0.5,
+                          ((player.currentAudio!.hasLyrics ?? false) ||
+                                  player.currentAudio!.lyrics != null)
+                              ? 1.0
+                              : 0.5,
                         ),
                   ),
                 ),
