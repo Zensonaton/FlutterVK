@@ -254,7 +254,10 @@ class PlaylistCacheDownloadItem extends DownloadItem {
   Future<Lyrics?> _downloadLRCLIBLyrics() async {
     if (audio.lrcLibLyrics != null) return null;
 
-    // TODO: search, если альбом неизвестен.
+    // Если у нас нет альбома, то поиск по текстам будет невозможен.
+    // TODO: Использовать API `search`, если альбом неизвестен.
+    if (audio.album == null) return null;
+
     final response = await lrcLib_get(
       audio.title,
       audio.artist,
