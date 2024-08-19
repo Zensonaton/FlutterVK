@@ -59,9 +59,10 @@ void initDioInterceptors(
       },
       retryDelays: [
         Duration(
-          seconds: isLRCLIB ? 3 : 1,
+          seconds: isLRCLIB ? 2 : 1,
         ),
       ],
+      retries: isLRCLIB ? 1 : 3,
     ),
 
     // Обработчик для логирования HTTP-запросов и их ответов в debug-режиме.
