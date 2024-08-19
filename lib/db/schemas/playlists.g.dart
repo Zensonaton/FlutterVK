@@ -7471,9 +7471,9 @@ const DBAudioSchema = Schema(
       name: r'isRestricted',
       type: IsarType.bool,
     ),
-    r'lyrics': PropertySchema(
+    r'lrcLibLyrics': PropertySchema(
       id: 17,
-      name: r'lyrics',
+      name: r'lrcLibLyrics',
       type: IsarType.object,
       target: r'DBLyrics',
     ),
@@ -7497,8 +7497,14 @@ const DBAudioSchema = Schema(
       name: r'title',
       type: IsarType.string,
     ),
-    r'vkThumbs': PropertySchema(
+    r'vkLyrics': PropertySchema(
       id: 22,
+      name: r'vkLyrics',
+      type: IsarType.object,
+      target: r'DBLyrics',
+    ),
+    r'vkThumbs': PropertySchema(
+      id: 23,
       name: r'vkThumbs',
       type: IsarType.object,
       target: r'DBExtendedThumbnail',
@@ -7550,7 +7556,7 @@ int _dBAudioEstimateSize(
     }
   }
   {
-    final value = object.lyrics;
+    final value = object.lrcLibLyrics;
     if (value != null) {
       bytesCount += 3 +
           DBLyricsSchema.estimateSize(value, allOffsets[DBLyrics]!, allOffsets);
@@ -7572,6 +7578,13 @@ int _dBAudioEstimateSize(
     final value = object.title;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.vkLyrics;
+    if (value != null) {
+      bytesCount += 3 +
+          DBLyricsSchema.estimateSize(value, allOffsets[DBLyrics]!, allOffsets);
     }
   }
   {
@@ -7622,14 +7635,20 @@ void _dBAudioSerialize(
     offsets[17],
     allOffsets,
     DBLyricsSchema.serialize,
-    object.lyrics,
+    object.lrcLibLyrics,
   );
   writer.writeLong(offsets[18], object.ownerID);
   writer.writeLongList(offsets[19], object.scoredColorInts);
   writer.writeString(offsets[20], object.subtitle);
   writer.writeString(offsets[21], object.title);
-  writer.writeObject<DBExtendedThumbnail>(
+  writer.writeObject<DBLyrics>(
     offsets[22],
+    allOffsets,
+    DBLyricsSchema.serialize,
+    object.vkLyrics,
+  );
+  writer.writeObject<DBExtendedThumbnail>(
+    offsets[23],
     allOffsets,
     DBExtendedThumbnailSchema.serialize,
     object.vkThumbs,
@@ -7667,7 +7686,7 @@ DBAudio _dBAudioDeserialize(
     isCached: reader.readBoolOrNull(offsets[14]),
     isExplicit: reader.readBoolOrNull(offsets[15]),
     isRestricted: reader.readBoolOrNull(offsets[16]),
-    lyrics: reader.readObjectOrNull<DBLyrics>(
+    lrcLibLyrics: reader.readObjectOrNull<DBLyrics>(
       offsets[17],
       DBLyricsSchema.deserialize,
       allOffsets,
@@ -7676,8 +7695,13 @@ DBAudio _dBAudioDeserialize(
     scoredColorInts: reader.readLongList(offsets[19]),
     subtitle: reader.readStringOrNull(offsets[20]),
     title: reader.readStringOrNull(offsets[21]),
-    vkThumbs: reader.readObjectOrNull<DBExtendedThumbnail>(
+    vkLyrics: reader.readObjectOrNull<DBLyrics>(
       offsets[22],
+      DBLyricsSchema.deserialize,
+      allOffsets,
+    ),
+    vkThumbs: reader.readObjectOrNull<DBExtendedThumbnail>(
+      offsets[23],
       DBExtendedThumbnailSchema.deserialize,
       allOffsets,
     ),
@@ -7749,6 +7773,12 @@ P _dBAudioDeserializeProp<P>(
     case 21:
       return (reader.readStringOrNull(offset)) as P;
     case 22:
+      return (reader.readObjectOrNull<DBLyrics>(
+        offset,
+        DBLyricsSchema.deserialize,
+        allOffsets,
+      )) as P;
+    case 23:
       return (reader.readObjectOrNull<DBExtendedThumbnail>(
         offset,
         DBExtendedThumbnailSchema.deserialize,
@@ -8886,18 +8916,19 @@ extension DBAudioQueryFilter
     });
   }
 
-  QueryBuilder<DBAudio, DBAudio, QAfterFilterCondition> lyricsIsNull() {
+  QueryBuilder<DBAudio, DBAudio, QAfterFilterCondition> lrcLibLyricsIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'lyrics',
+        property: r'lrcLibLyrics',
       ));
     });
   }
 
-  QueryBuilder<DBAudio, DBAudio, QAfterFilterCondition> lyricsIsNotNull() {
+  QueryBuilder<DBAudio, DBAudio, QAfterFilterCondition>
+      lrcLibLyricsIsNotNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'lyrics',
+        property: r'lrcLibLyrics',
       ));
     });
   }
@@ -9426,6 +9457,22 @@ extension DBAudioQueryFilter
     });
   }
 
+  QueryBuilder<DBAudio, DBAudio, QAfterFilterCondition> vkLyricsIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'vkLyrics',
+      ));
+    });
+  }
+
+  QueryBuilder<DBAudio, DBAudio, QAfterFilterCondition> vkLyricsIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'vkLyrics',
+      ));
+    });
+  }
+
   QueryBuilder<DBAudio, DBAudio, QAfterFilterCondition> vkThumbsIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -9459,10 +9506,17 @@ extension DBAudioQueryObject
     });
   }
 
-  QueryBuilder<DBAudio, DBAudio, QAfterFilterCondition> lyrics(
+  QueryBuilder<DBAudio, DBAudio, QAfterFilterCondition> lrcLibLyrics(
       FilterQuery<DBLyrics> q) {
     return QueryBuilder.apply(this, (query) {
-      return query.object(q, r'lyrics');
+      return query.object(q, r'lrcLibLyrics');
+    });
+  }
+
+  QueryBuilder<DBAudio, DBAudio, QAfterFilterCondition> vkLyrics(
+      FilterQuery<DBLyrics> q) {
+    return QueryBuilder.apply(this, (query) {
+      return query.object(q, r'vkLyrics');
     });
   }
 

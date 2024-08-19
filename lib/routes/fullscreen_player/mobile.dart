@@ -179,9 +179,8 @@ class ImageLyricsBlock extends HookConsumerWidget {
     final dragProgress = useState(0.0);
 
     const scrollWidth = _playerImageSize + 50;
-    final bool lyricsLoadedAndShown = preferences.trackLyricsEnabled &&
-        (player.currentAudio!.hasLyrics ?? false) &&
-        player.currentAudio!.lyrics != null;
+    final bool lyricsLoadedAndShown =
+        preferences.trackLyricsEnabled && player.currentAudio!.lyrics != null;
 
     return AnimatedSwitcher(
       duration: const Duration(

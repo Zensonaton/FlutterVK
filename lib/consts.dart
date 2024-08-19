@@ -1,10 +1,7 @@
-/// URL для основной OAuth-авторизацией (Kate Mobile).
-const String vkMainOAuthURL =
-    "https://oauth.vk.com/authorize?client_id=2685278&scope=69634&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token&revoke=1";
+import "main.dart";
 
-/// URL для вторичной OAuth-авторизации для списка рекомендаций (VK Admin).
-const String vkMusicRecommendationsOAuthURL =
-    "https://oauth.vk.com/authorize?client_id=6121396&scope=65546&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token&revoke=1";
+/// Указывает, что запущена pre-release (бета) версия приложения.
+bool isPrerelease = const String.fromEnvironment("PRERELEASE").isNotEmpty;
 
 /// Имя владельца репозитория. Используется для проверки обновлений.
 ///
@@ -19,22 +16,41 @@ const String repoName = "FlutterVK";
 /// Ссылка на Github-репозиторий данного приложения.
 String get repoURL => "https://github.com/$repoOwner/$repoName";
 
-/// Значение скругления многих элементов интерфейса.
-const double globalBorderRadius = 8;
+/// Обычный User-Agent браузера Firefox.
+const String browserUA =
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0";
 
-/// Расстояние между треками.
-const double trackTileSpacing = 8;
+/// Базовый URL для API-запросов к LRCLIB.
+const String lrcLibBaseURL = "https://lrclib.net/api/";
+
+/// User-Agent, используемый для API-запросов к сервису LRCLIB.
+String lrcLibUA = "FlutterVK v$appVersion ($repoURL)";
 
 /// ID приложения Discord, используемый для работы Rich Presence.
 ///
 /// Олицетворяет приложение "Flutter VK".
 const int discordAppID = 1195224178996027412;
 
-/// Название README-файла в папке с кэшом треков.
-const String tracksCacheReadmeFileName = "Abc_123_README.txt";
+/// Значение скругления многих элементов интерфейса.
+const double globalBorderRadius = 8;
+
+/// Расстояние между треками.
+const double trackTileSpacing = 8;
+
+/// Значение от 0.0 до 1.0, указывающее то, начиная с какого процента "прослушанности" трека появляется надпись "Сыграет следующим: Артист - Трек" в интерфейсе проигрывателя.
+const double nextPlayingTextProgress = 0.85;
+
+/// Высота мини-плеера снизу при Desktop Layout'е.
+const double desktopMiniPlayerHeight = 88;
+
+/// Высота мини-плеера снизу при Mobile Layout'е (без учёта верхнего Padding'а в 8)
+const double mobileMiniPlayerHeight = 74;
 
 /// Магическая константа, характеризующая размер в мегабайтах у одной минуты `mp3`-трека.
 const double trackSizePerMin = 2.2;
+
+/// Название README-файла в папке с кэшом треков.
+const String tracksCacheReadmeFileName = "Abc_123_README.txt";
 
 /// Случайные названия треков, используемые в Skeleton Loader'ах.
 const List<String> fakeTrackNames = [
@@ -91,15 +107,3 @@ const List<String> fakeTrackLyrics = [
   "VK API sucks",
   "Test lyric",
 ];
-
-/// Значение от 0.0 до 1.0, указывающее то, начиная с какого процента "прослушанности" трека появляется надпись "Сыграет следующим: Артист - Трек" в интерфейсе проигрывателя.
-const double nextPlayingTextProgress = 0.85;
-
-/// Высота мини-плеера снизу при Desktop Layout'е.
-const double desktopMiniPlayerHeight = 88;
-
-/// Высота мини-плеера снизу при Mobile Layout'е (без учёта верхнего Padding'а в 8)
-const double mobileMiniPlayerHeight = 74;
-
-/// Указывает, что запущена pre-release (бета) версия приложения.
-bool isPrerelease = const String.fromEnvironment("PRERELEASE").isNotEmpty;

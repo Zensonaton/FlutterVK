@@ -7,6 +7,7 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:queue/queue.dart";
 
 import "../api/deezer/search.dart";
+import "../api/lrclib/get.dart";
 import "../api/vk/audio/get_lyrics.dart";
 import "../provider/playlists.dart";
 import "../provider/preferences.dart";
@@ -212,7 +213,7 @@ class PlaylistCacheDownloadItem extends DownloadItem {
 
   /// Загружает текст песни с ВКонтакте, и возвращает объект [Lyrics] с текстом песни.
   Future<Lyrics?> _downloadLyrics() async {
-    if (!(audio.hasLyrics ?? false) || audio.lyrics != null) return null;
+    if (!(audio.hasLyrics ?? false) || audio.vkLyrics != null) return null;
 
     final APIAudioGetLyricsResponse response =
         await ref.read(vkAPIProvider).audio.getLyrics(audio.mediaKey);
@@ -249,6 +250,21 @@ class PlaylistCacheDownloadItem extends DownloadItem {
     return thumbnails;
   }
 
+  /// Ищет тексты песен с сервиса LRCLIB, и загружает их, если они есть, возвращая объект [Lyrics].
+  Future<Lyrics?> _downloadLRCLIBLyrics() async {
+    if (audio.lrcLibLyrics != null) return null;
+
+    // TODO: search, если альбом неизвестен.
+    final response = await lrcLib_get(
+      audio.title,
+      audio.artist,
+      audio.album!.title,
+      audio.duration,
+    );
+
+    return response.asLyrics;
+  }
+
   /// Загружает сам трек, его обложки, текст песни и прочую информацию для передаваемого [audio].
   ///
   /// Возвращает изменённую версию [audio] типа [ExtendedAudio], если хотя бы один из элементов был загружен, иначе null.
@@ -260,7 +276,8 @@ class PlaylistCacheDownloadItem extends DownloadItem {
     bool downloadAudio = true,
     bool downloadThumbnails = true,
     bool downloadLyrics = true,
-    bool deezerThumbnails = true,
+    bool deezerThumbnails = false,
+    bool lrcLibLyricsEnabled = false,
   }) async {
     final item = downloadItem ??
         PlaylistCacheDownloadItem(
@@ -279,6 +296,7 @@ class PlaylistCacheDownloadItem extends DownloadItem {
         if (downloadThumbnails) item._downloadThumbnails() else null,
         if (downloadLyrics) item._downloadLyrics() else null,
         if (deezerThumbnails) item._downloadDeezerThumbnails() else null,
+        if (lrcLibLyricsEnabled) item._downloadLRCLIBLyrics() else null,
       ].map((element) async {
         final future = element ?? Future.value();
 
@@ -304,11 +322,13 @@ class PlaylistCacheDownloadItem extends DownloadItem {
     final audioSize = result[0] as int?;
     final lyricsDownloaded = result[2] as Lyrics?;
     final deezerThumbs = result[3] as ExtendedThumbnails?;
+    final lrcLibLyrics = result[4] as Lyrics?;
 
     return audio.copyWith(
       isCached: downloadAudio ? true : null,
       cachedSize: audioSize,
-      lyrics: lyricsDownloaded,
+      vkLyrics: lyricsDownloaded,
+      lrcLibLyrics: lrcLibLyrics,
       deezerThumbs: deezerThumbs,
     );
   }
@@ -324,6 +344,7 @@ class PlaylistCacheDownloadItem extends DownloadItem {
       audio,
       downloadItem: this,
       deezerThumbnails: preferences.deezerThumbnails,
+      lrcLibLyricsEnabled: preferences.lrcLibEnabled,
     );
 
     // Если ничего не поменялось, то ничего не делаем.

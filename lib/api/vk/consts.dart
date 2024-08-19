@@ -1,3 +1,11 @@
+/// URL для основной OAuth-авторизацией (Kate Mobile).
+const String vkMainOAuthURL =
+    "https://oauth.vk.com/authorize?client_id=2685278&scope=69634&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token&revoke=1";
+
+/// URL для вторичной OAuth-авторизации для списка рекомендаций (VK Admin).
+const String vkMusicRecommendationsOAuthURL =
+    "https://oauth.vk.com/authorize?client_id=6121396&scope=65546&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token&revoke=1";
+
 /// Начало любого URL, связанных с API ВКонтакте.
 const String vkAPIBaseURL = "https://api.vk.com/method/";
 

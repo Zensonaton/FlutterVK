@@ -424,6 +424,7 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
               audio,
               downloadAudio: false,
               deezerThumbnails: preferences.deezerThumbnails,
+              lrcLibLyricsEnabled: preferences.lrcLibEnabled,
             );
             if (newAudio == null) return;
 

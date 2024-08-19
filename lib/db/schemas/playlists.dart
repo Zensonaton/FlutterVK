@@ -306,8 +306,11 @@ class DBAudio {
   /// Указывает наличие текста песни.
   final bool? hasLyrics;
 
-  /// Информация о тексте песни.
-  final DBLyrics? lyrics;
+  /// Информация о тексте песни со ВКонтакте.
+  final DBLyrics? vkLyrics;
+
+  /// Информация о тексте песни с LRCLIB.
+  final DBLyrics? lrcLibLyrics;
 
   /// ID жанра аудиозаписи. Список жанров описан [здесь](https://dev.vk.com/ru/reference/objects/audio-genres).
   final int? genreID;
@@ -345,7 +348,8 @@ class DBAudio {
         isRestricted: audio.isRestricted,
         date: audio.date,
         hasLyrics: audio.hasLyrics,
-        lyrics: audio.lyrics?.asDBLyrics,
+        vkLyrics: audio.vkLyrics?.asDBLyrics,
+        lrcLibLyrics: audio.lrcLibLyrics?.asDBLyrics,
         genreID: audio.genreID,
         album: audio.album?.asDBAlbum,
         vkThumbs: audio.vkThumbs?.asDBExtendedThumbnail,
@@ -378,7 +382,8 @@ class DBAudio {
     DBExtendedThumbnail? vkThumbs,
     DBExtendedThumbnail? deezerThumbs,
     bool? hasLyrics,
-    DBLyrics? lyrics,
+    DBLyrics? vkLyrics,
+    DBLyrics? lrcLibLyrics,
     int? genreID,
     bool? isCached,
     int? cachedSize,
@@ -402,7 +407,8 @@ class DBAudio {
         vkThumbs: vkThumbs ?? this.vkThumbs,
         deezerThumbs: deezerThumbs ?? this.deezerThumbs,
         hasLyrics: hasLyrics ?? this.hasLyrics,
-        lyrics: lyrics ?? this.lyrics,
+        vkLyrics: vkLyrics ?? this.vkLyrics,
+        lrcLibLyrics: lrcLibLyrics ?? this.lrcLibLyrics,
         genreID: genreID ?? this.genreID,
         isCached: isCached ?? this.isCached,
         cachedSize: cachedSize ?? this.cachedSize,
@@ -446,7 +452,8 @@ class DBAudio {
     this.vkThumbs,
     this.deezerThumbs,
     this.hasLyrics,
-    this.lyrics,
+    this.vkLyrics,
+    this.lrcLibLyrics,
     this.genreID,
     this.isCached,
     this.cachedSize,

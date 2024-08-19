@@ -4,7 +4,7 @@ import "package:flutter_inappwebview/flutter_inappwebview.dart";
 import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
-import "../../consts.dart";
+import "../../api/vk/consts.dart";
 import "../../provider/l18n.dart";
 import "../../utils.dart";
 import "../../widgets/dialogs.dart";

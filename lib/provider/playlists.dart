@@ -66,7 +66,7 @@ Future<void> createPlaylistCacheTask(
               .where(
                 (audio) =>
                     (!(audio.isCached ?? false) && audio.url != null) ||
-                    ((audio.hasLyrics ?? false) && audio.lyrics == null),
+                    ((audio.hasLyrics ?? false) && audio.vkLyrics == null),
               )
               .map(
                 (audio) => PlaylistCacheDownloadItem(
@@ -594,7 +594,8 @@ class Playlists extends _$Playlists {
             (existingAudio.album == givenAudio.album ||
                 givenAudio.album == null) &&
             existingAudio.hasLyrics == givenAudio.hasLyrics &&
-            existingAudio.lyrics == givenAudio.lyrics &&
+            existingAudio.vkLyrics == givenAudio.vkLyrics &&
+            existingAudio.lrcLibLyrics == givenAudio.lrcLibLyrics &&
             existingAudio.isLiked == givenAudio.isLiked &&
             existingAudio.thumbnail == givenAudio.thumbnail &&
             existingAudio.frequentColorInt == givenAudio.frequentColorInt) {
@@ -612,7 +613,8 @@ class Playlists extends _$Playlists {
             cachedSize: givenAudio.cachedSize,
             album: givenAudio.album,
             hasLyrics: givenAudio.hasLyrics,
-            lyrics: givenAudio.lyrics,
+            vkLyrics: givenAudio.vkLyrics,
+            lrcLibLyrics: givenAudio.lrcLibLyrics,
             vkThumbs: givenAudio.vkThumbs,
             deezerThumbs: givenAudio.deezerThumbs,
             isLiked: givenAudio.isLiked,

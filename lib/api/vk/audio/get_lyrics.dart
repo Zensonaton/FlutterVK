@@ -5,6 +5,7 @@ import "package:json_annotation/json_annotation.dart";
 import "../../../db/schemas/playlists.dart";
 
 import "../../../main.dart";
+import "../../lrclib/shared.dart";
 import "../shared.dart";
 
 part "get_lyrics.g.dart";
@@ -72,6 +73,54 @@ class Lyrics {
 
   /// Список всех линий в тексте песни. Может отсутствовать в пользу [timestamps].
   final List<String>? text;
+
+  /// Создаёт из передаваемого объекта [LRCLIBTrack] объект данного класа.
+  static Lyrics? fromLRCLIBTrack(
+    LRCLIBTrack track,
+  ) {
+    if (track.plainLyrics == null) return null;
+
+    // Если нам дан только текст песни, то возвращаем его.
+    if (track.syncedLyrics == null) {
+      return Lyrics(
+        text: track.plainLyrics!.split("\n"),
+      );
+    }
+
+    final List<String> lyrics = track.syncedLyrics!.split("\n");
+    final Map<int, String?> lyricsMap = {};
+
+    // Создаём Map с временными метками и текстом.
+    for (var line in lyrics) {
+      final match = RegExp(r"\[(\d{2}):(\d{2}\.\d{2})\] (.*)").firstMatch(line);
+      if (match == null) continue;
+
+      final minutes = int.parse(match.group(1)!);
+      final seconds = double.parse(match.group(2)!);
+      final content = match.group(3);
+
+      final milliseconds = (minutes * 60 * 1000) + (seconds * 1000).toInt();
+      lyricsMap[milliseconds] = content!.isNotEmpty ? content : null;
+    }
+
+    // Создаём список с объектами LyricTimestamp.
+    final List<LyricTimestamp> timestamps = [];
+
+    for (final (index, item) in lyricsMap.entries.indexed) {
+      timestamps.add(
+        LyricTimestamp(
+          line: item.value,
+          interlude: item.value == null,
+          begin: item.key,
+          end: lyricsMap.entries.elementAtOrNull(index + 1)?.key,
+        ),
+      );
+    }
+
+    return Lyrics(
+      timestamps: timestamps,
+    );
+  }
 
   /// Создаёт из передаваемого объекта [DBLyrics] объект данного класа.
   static Lyrics fromDBLyrics(

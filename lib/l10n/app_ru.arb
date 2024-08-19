@@ -391,6 +391,9 @@
 	"profile_deezerThumbnailsTitle": "Обложки Deezer",
 	"profile_deezerThumbnailsDescription": "Загружает обложки для треков из Deezer, если у трека её нет.\nИногда может выдавать неправильные обложки",
 
+	"profile_LRCLibLyricsTitle": "Тексты песен через LRCLIB",
+	"profile_LRCLibLyricsDescription": "Загружает тексты песен из LRCLIB, если у трека его нет, либо он не синхронизирован.\nИногда может выдавать неправильные/некачественные тексты",
+
 	"profile_exportMusicListTitle": "Экспорт списка треков",
 	"profile_exportMusicListDescription": "Список из {count, plural, one{{count} лайкнутого трека} other{{count} лайкнутых треков}}:",
 	"profile_exportMusicListShareTitle": "Поделиться",

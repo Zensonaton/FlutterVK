@@ -643,6 +643,25 @@ class HomeProfilePage extends HookConsumerWidget {
                           : null,
                     ),
 
+                    // Тексты песен через LRCLIB.
+                    SwitchListTile(
+                      secondary: const Icon(
+                        Icons.lyrics_outlined,
+                      ),
+                      title: Text(
+                        l18n.profile_LRCLibLyricsTitle,
+                      ),
+                      subtitle: Text(
+                        l18n.profile_LRCLibLyricsDescription,
+                      ),
+                      value: preferences.lrcLibEnabled,
+                      onChanged: (bool? enabled) async {
+                        if (enabled == null) return;
+
+                        prefsNotifier.setLRCLIBEnabled(enabled);
+                      },
+                    ),
+
                     // Экспорт списка треков.
                     ListTile(
                       leading: const Icon(

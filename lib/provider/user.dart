@@ -433,7 +433,7 @@ class ExtendedAudio {
   final String? subtitle;
 
   /// Ключ доступа.
-  final String accessKey;
+  final String? accessKey;
 
   /// Указывает, если это Explicit-аудиозапись.
   final bool isExplicit;
@@ -447,7 +447,7 @@ class ExtendedAudio {
   final String? url;
 
   /// Timestamp добавления аудиозаписи.
-  final int date;
+  final int? date;
 
   /// Информация об альбоме данной аудиозаписи.
   final Album? album;
@@ -467,14 +467,24 @@ class ExtendedAudio {
   /// Возвращает URL самой большой обложки ([ExtendedThumbnails.photoMax]) из переменной [vkThumbs] либо [deezerThumbs].
   String? get maxThumbnail => thumbnail?.photoMax;
 
-  /// Указывает наличие текста песни.
+  /// Указывает наличие текста песни ВКонтакте. Если false, то делать API-запрос на получение текста песни не имеет смысла.
   final bool? hasLyrics;
 
   /// ID жанра аудиозаписи. Список жанров описан [здесь](https://dev.vk.com/ru/reference/objects/audio-genres).
   final int? genreID;
 
-  /// Информация о тексте песни.
-  final Lyrics? lyrics;
+  /// Информация о тексте песни, взятого с ВКонтакте.
+  final Lyrics? vkLyrics;
+
+  /// Информация о тексте песни, взятого с LRCLIB.
+  final Lyrics? lrcLibLyrics;
+
+  /// Возвращает текст песни с ВКонтакте, либо LRCLIB.
+  Lyrics? get lyrics {
+    if (vkLyrics?.timestamps != null) return vkLyrics;
+
+    return lrcLibLyrics ?? vkLyrics;
+  }
 
   /// Указывает, что данный трек лайкнут (если находится в плейлисте "любимые треки").
   ///
@@ -592,7 +602,7 @@ class ExtendedAudio {
         vkThumbs: audio.album?.thumbnails?.asExtendedThumbnail,
         hasLyrics: audio.hasLyrics,
         genreID: audio.genreID,
-        lyrics: lyrics,
+        vkLyrics: lyrics,
         isLiked: isLiked ?? false,
       );
 
@@ -617,7 +627,8 @@ class ExtendedAudio {
         deezerThumbs: audio.deezerThumbs?.asExtendedThumbnails,
         hasLyrics: audio.hasLyrics!,
         genreID: audio.genreID ?? 18,
-        lyrics: audio.lyrics?.asLyrics,
+        vkLyrics: audio.vkLyrics?.asLyrics,
+        lrcLibLyrics: audio.lrcLibLyrics?.asLyrics,
         isLiked: isLiked,
         isCached: audio.isCached ?? false,
         cachedSize: audio.cachedSize,
@@ -647,7 +658,8 @@ class ExtendedAudio {
     ExtendedThumbnails? deezerThumbs,
     bool? hasLyrics,
     int? genreID,
-    Lyrics? lyrics,
+    Lyrics? vkLyrics,
+    Lyrics? lrcLibLyrics,
     bool? isLiked,
     bool? isCached,
     int? cachedSize,
@@ -678,7 +690,8 @@ class ExtendedAudio {
         deezerThumbs: deezerThumbs ?? this.deezerThumbs,
         hasLyrics: hasLyrics ?? this.hasLyrics,
         genreID: genreID ?? this.genreID,
-        lyrics: lyrics ?? this.lyrics,
+        vkLyrics: vkLyrics ?? this.vkLyrics,
+        lrcLibLyrics: lrcLibLyrics ?? this.lrcLibLyrics,
         isLiked: isLiked ?? this.isLiked,
         isCached: isCached ?? this.isCached,
         cachedSize: cachedSize ?? this.cachedSize,
@@ -723,17 +736,18 @@ class ExtendedAudio {
     required this.title,
     required this.duration,
     this.subtitle,
-    required this.accessKey,
+    this.accessKey,
     this.isExplicit = false,
     this.isRestricted = false,
     this.url,
-    required this.date,
+    this.date,
     this.album,
     this.vkThumbs,
     this.deezerThumbs,
     this.hasLyrics = false,
     this.genreID,
-    this.lyrics,
+    this.vkLyrics,
+    this.lrcLibLyrics,
     this.isLiked = false,
     this.isCached,
     this.cachedSize,

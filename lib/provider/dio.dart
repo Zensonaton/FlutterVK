@@ -3,7 +3,7 @@ import "dart:io";
 
 import "package:awesome_dio_interceptor/awesome_dio_interceptor.dart";
 import "package:dio/dio.dart";
-import "package:dio_http2_adapter/dio_http2_adapter.dart";
+import "package:dio/io.dart";
 import "package:dio_smart_retry/dio_smart_retry.dart";
 import "package:flutter/foundation.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
@@ -11,6 +11,7 @@ import "package:riverpod_annotation/riverpod_annotation.dart";
 
 import "../api/vk/consts.dart";
 import "../api/vk/shared.dart";
+import "../consts.dart";
 import "../services/logger.dart";
 import "auth.dart";
 
@@ -24,36 +25,23 @@ List<int> gzipEncoder(
   return gzip.encode(utf8.encode(request));
 }
 
-/// Response Decoder для [Dio], реализовывающий поддержку GZip.
-String gzipDecoder(
-  List<int> responseBytes,
-  RequestOptions options,
-  ResponseBody responseBody,
-) {
-  final String? contentEncoding =
-      responseBody.headers[Headers.contentEncodingHeader]?.firstOrNull;
-  if (contentEncoding == null || !contentEncoding.contains("gzip")) {
-    return utf8.decode(responseBytes);
-  }
-
-  return utf8.decode(gzip.decode(responseBytes));
-}
-
 /// Возвращает объект [Dio] с зарегистрированными [Interceptor]'ами.
 void initDioInterceptors(
   Ref ref,
   Dio dio, {
   String loggerName = "Dio",
   bool isVK = false,
+  bool isLRCLIB = false,
 }) {
   final AppLogger logger = getLogger(loggerName);
 
   // Игнорируем плохие SSL-сертификаты.
-  dio.httpClientAdapter = Http2Adapter(
-    ConnectionManager(
-      onClientCreate: (_, config) => config.onBadCertificate = (_) => true,
-    ),
-  );
+  (dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
+    final client = HttpClient()
+      ..badCertificateCallback = (cert, host, port) => true;
+
+    return client;
+  };
 
   dio.interceptors.addAll([
     // Обработчик для добавления версии API и access_token для VK API.
@@ -69,9 +57,9 @@ void initDioInterceptors(
       retryEvaluator: (DioException error, int attempt) {
         return error is! VKAPIException;
       },
-      retryDelays: const [
+      retryDelays: [
         Duration(
-          seconds: 1,
+          seconds: isLRCLIB ? 3 : 1,
         ),
       ],
     ),
@@ -168,9 +156,8 @@ Dio dio(DioRef ref) {
   final Dio dio = Dio(
     BaseOptions(
       requestEncoder: gzipEncoder,
-      responseDecoder: gzipDecoder,
       headers: {
-        "User-Agent": vkAPIKateMobileUA,
+        "User-Agent": browserUA,
         "Accept-Encoding": "gzip",
         "Content-Encoding": "gzip",
       },
@@ -202,7 +189,6 @@ Dio vkDio(VkDioRef ref) {
     BaseOptions(
       baseUrl: vkAPIBaseURL,
       requestEncoder: gzipEncoder,
-      responseDecoder: gzipDecoder,
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
         "User-Agent": vkAPIKateMobileUA,
@@ -220,6 +206,39 @@ Dio vkDio(VkDioRef ref) {
     ref,
     dio,
     isVK: true,
+  );
+
+  return dio;
+}
+
+/// [Provider], возвращающий объект [Dio] с зарегистрированными [Interceptor]'ами, настроенный для создания API-запросов к сервису LRCLIB.
+///
+/// Данный объект содержит в себе interceptor'ы, позволяющие:
+/// - Повторять запрос в случае ошибки сети.
+/// - Логировать запросы и их ответы.
+///
+/// Пример использования:
+/// ```dart
+/// await dio.get("search?q=Never Gonna Give You Up")
+/// ```
+@riverpod
+Dio lrcLibDio(LrcLibDioRef ref) {
+  final Dio dio = Dio(
+    BaseOptions(
+      baseUrl: lrcLibBaseURL,
+      requestEncoder: gzipEncoder,
+      headers: {
+        "User-Agent": lrcLibUA,
+        "Accept-Encoding": "gzip",
+        "Content-Encoding": "gzip",
+      },
+    ),
+  );
+
+  initDioInterceptors(
+    ref,
+    dio,
+    isLRCLIB: true,
   );
 
   return dio;

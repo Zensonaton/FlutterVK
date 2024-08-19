@@ -120,6 +120,10 @@ class UserPreferences {
   @JsonKey(name: "PreReleaseWarningShown")
   final bool preReleaseWarningShown;
 
+  /// Указывает, что приложение будет загружать тексты песен с LRCLIB.
+  @JsonKey(name: "LRCLIBEnabled")
+  final bool lrcLibEnabled;
+
   UserPreferences({
     this.dbVersion = IsarDBMigrator.maxDBVersion,
     this.myMusicChipEnabled = true,
@@ -146,6 +150,7 @@ class UserPreferences {
     this.fullscreenBigThumbnail = false,
     this.debugPlayerLogging = false,
     this.preReleaseWarningShown = false,
+    this.lrcLibEnabled = false,
   });
 
   /// Делает копию этого класа с новыми передаваемыми значениями.
@@ -175,6 +180,7 @@ class UserPreferences {
     bool? fullscreenBigThumbnail,
     bool? debugPlayerLogging,
     bool? preReleaseWarningShown,
+    bool? lrcLibEnabled,
   }) =>
       UserPreferences(
         dbVersion: dbVersion ?? this.dbVersion,
@@ -208,6 +214,7 @@ class UserPreferences {
         debugPlayerLogging: debugPlayerLogging ?? this.debugPlayerLogging,
         preReleaseWarningShown:
             preReleaseWarningShown ?? this.preReleaseWarningShown,
+        lrcLibEnabled: lrcLibEnabled ?? this.lrcLibEnabled,
       );
 
   factory UserPreferences.fromJson(Map<String, dynamic> json) =>
@@ -252,6 +259,7 @@ class Preferences extends _$Preferences {
       fullscreenBigThumbnail: prefs.getBool("FullscreenBigThumbnail"),
       debugPlayerLogging: prefs.getBool("DebugPlayerLogging"),
       preReleaseWarningShown: prefs.getBool("PreReleaseWarningShown"),
+      lrcLibEnabled: prefs.getBool("LRCLIBEnabled"),
     );
   }
 
@@ -359,4 +367,7 @@ class Preferences extends _$Preferences {
 
   void setPreReleaseWarningShown(bool enabled) =>
       state = state.copyWith(preReleaseWarningShown: enabled);
+
+  void setLRCLIBEnabled(bool enabled) =>
+      state = state.copyWith(lrcLibEnabled: enabled);
 }

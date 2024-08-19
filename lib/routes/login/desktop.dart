@@ -5,7 +5,7 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:styled_text/styled_text.dart";
 import "package:url_launcher/url_launcher.dart";
 
-import "../../consts.dart";
+import "../../api/vk/consts.dart";
 import "../../provider/l18n.dart";
 import "../../utils.dart";
 import "../login.dart";

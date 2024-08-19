@@ -83,9 +83,21 @@ late final Dio dio;
 ///
 /// Пример использования:
 /// ```dart
-/// await dio.post("users.get")
+/// await vkDio.post("users.get")
 /// ```
 late final Dio vkDio;
+
+/// Объект [Dio], позволяющий создавать HTTP-запросы, настроенный конкретно под работу с API ВКонтакте.
+///
+/// Данный объект содержит в себе interceptor'ы, позволяющие:
+/// - Повторять запрос в случае ошибки сети.
+/// - Логировать запросы и их ответы.
+///
+/// Пример использования:
+/// ```dart
+/// await lrcLibDio.get("search?q=Never Gonna Give You Up")
+/// ```
+late final Dio lrcLibDio;
 
 /// [ColorScheme] яркости [Brightness.light], которая используется в случае, если по какой-то причине приложение не смогло получить цвета акцента, либо цвета музыкального плеера.
 final fallbackLightColorScheme = ColorScheme.fromSeed(
@@ -237,6 +249,9 @@ Future main() async {
       );
     }
 
+    // Узнаём версию приложения.
+    appVersion = (await PackageInfo.fromPlatform()).version;
+
     // Удаляем файл обновления, если таковой существует.
     final File updaterInstaller = File(
       path.join(
@@ -289,6 +304,7 @@ Future main() async {
     // Создаём объекты Dio.
     dio = container.read(dioProvider);
     vkDio = container.read(vkDioProvider);
+    lrcLibDio = container.read(lrcLibDioProvider);
 
     // Создаём менеджер интернет соединения.
     connectivityManager = ConnectivityManager();
@@ -350,9 +366,6 @@ Future main() async {
         watch: 100,
       ),
     );
-
-    // Узнаём версию приложения.
-    appVersion = (await PackageInfo.fromPlatform()).version;
 
     logger.i(
       "Running Flutter VK v$appVersion ${isPrerelease ? "(pre-release)" : ""}",

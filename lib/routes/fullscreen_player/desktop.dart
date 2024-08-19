@@ -216,6 +216,8 @@ class LyricsBlockWidget extends ConsumerWidget {
     final preferences = ref.watch(preferencesProvider);
     ref.watch(playerPositionProvider);
 
+    final audio = player.smartCurrentAudio!;
+
     return AnimatedOpacity(
       duration: const Duration(
         milliseconds: 500,
@@ -231,13 +233,13 @@ class LyricsBlockWidget extends ConsumerWidget {
             duration: const Duration(
               milliseconds: 500,
             ),
-            child: (player.currentAudio!.hasLyrics ?? false)
-                ? player.currentAudio!.lyrics != null
+            child: ((audio.hasLyrics ?? false) || audio.lyrics != null)
+                ? audio.lyrics != null
                     ? TrackLyricsBlock(
                         key: ValueKey(
-                          player.currentAudio!.mediaKey,
+                          audio.mediaKey,
                         ),
-                        lyrics: player.currentAudio!.lyrics!,
+                        lyrics: audio.lyrics!,
                       )
                     : ScrollConfiguration(
                         behavior: ScrollConfiguration.of(context).copyWith(
@@ -248,7 +250,6 @@ class LyricsBlockWidget extends ConsumerWidget {
                             key: const ValueKey(
                               "skeleton",
                             ),
-                            itemCount: 50,
                             physics: const NeverScrollableScrollPhysics(),
                             itemBuilder: (BuildContext context, int index) {
                               return Skeletonizer(
