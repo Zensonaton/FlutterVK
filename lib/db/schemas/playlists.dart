@@ -221,16 +221,12 @@ class DBAlbum {
   /// Ключ доступа.
   final String? accessKey;
 
-  /// Изображения альбома.
-  final DBThumbnails? thumb;
-
   /// Создаёт из передаваемого объекта [Album] объект данного класа.
   static DBAlbum fromAudioAlbum(Album album) => DBAlbum(
         id: album.id,
         title: album.title,
         ownerID: album.ownerID,
         accessKey: album.accessKey,
-        thumb: album.thumbnails?.asDBThumbnails,
       );
 
   /// Возвращает копию данного класса в виде объекта [Album].
@@ -260,7 +256,6 @@ class DBAlbum {
     this.title,
     this.ownerID,
     this.accessKey,
-    this.thumb,
   });
 }
 

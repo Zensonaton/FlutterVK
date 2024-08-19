@@ -730,7 +730,6 @@ class Album {
         title: album.title!,
         ownerID: album.ownerID!,
         accessKey: album.accessKey!,
-        thumbnails: album.thumb?.asThumbnails,
       );
 
   /// Возвращает копию данного класса в виде объекта [DBAlbum].

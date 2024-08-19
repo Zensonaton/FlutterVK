@@ -6672,14 +6672,8 @@ const DBAlbumSchema = Schema(
       name: r'ownerID',
       type: IsarType.long,
     ),
-    r'thumb': PropertySchema(
-      id: 5,
-      name: r'thumb',
-      type: IsarType.object,
-      target: r'DBThumbnails',
-    ),
     r'title': PropertySchema(
-      id: 6,
+      id: 5,
       name: r'title',
       type: IsarType.string,
     )
@@ -6704,14 +6698,6 @@ int _dBAlbumEstimateSize(
   }
   bytesCount += 3 + object.mediaKey.length * 3;
   {
-    final value = object.thumb;
-    if (value != null) {
-      bytesCount += 3 +
-          DBThumbnailsSchema.estimateSize(
-              value, allOffsets[DBThumbnails]!, allOffsets);
-    }
-  }
-  {
     final value = object.title;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
@@ -6731,13 +6717,7 @@ void _dBAlbumSerialize(
   writer.writeLong(offsets[2], object.id);
   writer.writeString(offsets[3], object.mediaKey);
   writer.writeLong(offsets[4], object.ownerID);
-  writer.writeObject<DBThumbnails>(
-    offsets[5],
-    allOffsets,
-    DBThumbnailsSchema.serialize,
-    object.thumb,
-  );
-  writer.writeString(offsets[6], object.title);
+  writer.writeString(offsets[5], object.title);
 }
 
 DBAlbum _dBAlbumDeserialize(
@@ -6750,12 +6730,7 @@ DBAlbum _dBAlbumDeserialize(
     accessKey: reader.readStringOrNull(offsets[0]),
     id: reader.readLongOrNull(offsets[2]),
     ownerID: reader.readLongOrNull(offsets[4]),
-    thumb: reader.readObjectOrNull<DBThumbnails>(
-      offsets[5],
-      DBThumbnailsSchema.deserialize,
-      allOffsets,
-    ),
-    title: reader.readStringOrNull(offsets[6]),
+    title: reader.readStringOrNull(offsets[5]),
   );
   return object;
 }
@@ -6778,12 +6753,6 @@ P _dBAlbumDeserializeProp<P>(
     case 4:
       return (reader.readLongOrNull(offset)) as P;
     case 5:
-      return (reader.readObjectOrNull<DBThumbnails>(
-        offset,
-        DBThumbnailsSchema.deserialize,
-        allOffsets,
-      )) as P;
-    case 6:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -7258,22 +7227,6 @@ extension DBAlbumQueryFilter
     });
   }
 
-  QueryBuilder<DBAlbum, DBAlbum, QAfterFilterCondition> thumbIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'thumb',
-      ));
-    });
-  }
-
-  QueryBuilder<DBAlbum, DBAlbum, QAfterFilterCondition> thumbIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'thumb',
-      ));
-    });
-  }
-
   QueryBuilder<DBAlbum, DBAlbum, QAfterFilterCondition> titleIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -7422,14 +7375,7 @@ extension DBAlbumQueryFilter
 }
 
 extension DBAlbumQueryObject
-    on QueryBuilder<DBAlbum, DBAlbum, QFilterCondition> {
-  QueryBuilder<DBAlbum, DBAlbum, QAfterFilterCondition> thumb(
-      FilterQuery<DBThumbnails> q) {
-    return QueryBuilder.apply(this, (query) {
-      return query.object(q, r'thumb');
-    });
-  }
-}
+    on QueryBuilder<DBAlbum, DBAlbum, QFilterCondition> {}
 
 // coverage:ignore-file
 // ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
