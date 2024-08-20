@@ -469,7 +469,7 @@ class _TrackLyricsBlockState extends State<TrackLyricsBlock> {
       if (lyric.begin == null) return null;
 
       // Если у нас плеер находится в 'правильной' позиции, то тогда мы нашли активную строчку.
-      if (posMs >= lyric.begin! && posMs <= lyric.end!) {
+      if (posMs >= lyric.begin! && (lyric.end == null || posMs <= lyric.end!)) {
         return i;
       }
     }
