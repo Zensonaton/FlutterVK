@@ -1408,8 +1408,9 @@ class DesktopPlaylistControlsWidget extends HookConsumerWidget {
     final l18n = ref.watch(l18nProvider);
     ref.watch(playerStateProvider);
 
-    final bool hasTracksLoaded = playlist.audios != null;
+    useListenable(searchController);
 
+    final bool hasTracksLoaded = playlist.audios != null;
     final safeScheme = scheme ?? Theme.of(context).colorScheme;
 
     void onSearchClear() => searchController?.clear();
