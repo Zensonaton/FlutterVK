@@ -8,6 +8,7 @@ import "package:queue/queue.dart";
 
 import "../api/deezer/search.dart";
 import "../api/lrclib/get.dart";
+import "../api/lrclib/search.dart";
 import "../api/vk/audio/get_lyrics.dart";
 import "../provider/playlists.dart";
 import "../provider/preferences.dart";
@@ -254,10 +255,21 @@ class PlaylistCacheDownloadItem extends DownloadItem {
   Future<Lyrics?> _downloadLRCLIBLyrics() async {
     if (audio.lrcLibLyrics != null) return null;
 
-    // Если у нас нет альбома, то поиск по текстам будет невозможен.
-    // TODO: Использовать API `search`, если альбом неизвестен.
-    if (audio.album == null) return null;
+    // Метод `get` у LRCLIB работает только в том случае, если дан title, artist, duration и album трека.
+    // В случае с ВКонтакте, не всегда у нас есть альбом, поэтому поиск по текстам через `get` невозможен.
+    //
+    // Что бы избежать этой беды, мы используем метод `search`, который работает без альбома, но менее точен.
+    if (audio.album == null) {
+      final response = await lrcLib_search(
+        audio.title,
+        artist: audio.artist,
+        album: audio.album?.title,
+      );
 
+      return response.firstOrNull?.asLyrics;
+    }
+
+    // Альбом дан, поэтому используем метод `get`, который более точен.
     final response = await lrcLib_get(
       audio.title,
       audio.artist,
