@@ -1594,6 +1594,11 @@ class PlaylistRoute extends HookConsumerWidget {
           });
         }
 
+        // Делаем фокус на поле поиска на Desktop-платформах.
+        if (isDesktop) {
+          searchFocusNode.requestFocus();
+        }
+
         return subscription?.cancel;
       },
       [],
