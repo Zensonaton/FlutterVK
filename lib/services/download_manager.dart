@@ -255,29 +255,35 @@ class PlaylistCacheDownloadItem extends DownloadItem {
   Future<Lyrics?> _downloadLRCLIBLyrics() async {
     if (audio.lrcLibLyrics != null) return null;
 
-    // Метод `get` у LRCLIB работает только в том случае, если дан title, artist, duration и album трека.
-    // В случае с ВКонтакте, не всегда у нас есть альбом, поэтому поиск по текстам через `get` невозможен.
-    //
-    // Что бы избежать этой беды, мы используем метод `search`, который работает без альбома, но менее точен.
-    if (audio.album == null) {
-      final response = await lrcLib_search(
+    try {
+      // Метод `get` у LRCLIB работает только в том случае, если дан title, artist, duration и album трека.
+      // В случае с ВКонтакте, не всегда у нас есть альбом, поэтому поиск по текстам через `get` невозможен.
+      //
+      // Что бы избежать этой беды, мы используем метод `search`, который работает без альбома, но менее точен.
+      if (audio.album == null) {
+        final response = await lrcLib_search(
+          audio.title,
+          artist: audio.artist,
+          album: audio.album?.title,
+        );
+
+        return response.firstOrNull?.asLyrics;
+      }
+
+      // Альбом дан, поэтому используем метод `get`, который более точен.
+      final response = await lrcLib_get(
         audio.title,
-        artist: audio.artist,
-        album: audio.album?.title,
+        audio.artist,
+        audio.album!.title,
+        audio.duration,
       );
 
-      return response.firstOrNull?.asLyrics;
+      return response.asLyrics;
+    } catch (e) {
+      // No-op.
     }
 
-    // Альбом дан, поэтому используем метод `get`, который более точен.
-    final response = await lrcLib_get(
-      audio.title,
-      audio.artist,
-      audio.album!.title,
-      audio.duration,
-    );
-
-    return response.asLyrics;
+    return null;
   }
 
   /// Загружает сам трек, его обложки, текст песни и прочую информацию для передаваемого [audio].
