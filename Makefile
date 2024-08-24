@@ -5,4 +5,4 @@ innoinstall:
 	.\build\inno-installer.exe /verysilent /allusers /dir=build\iscc
 
 inno:
-	powershell .\build\iscc\iscc.exe windows-setup-creator.iss
+	powershell .\build\iscc\iscc.exe .\scripts\windows-setup-creator.iss

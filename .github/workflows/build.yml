@@ -67,18 +67,23 @@ jobs:
 
       - name: Build Android release
         run: |
-          if [ "${{ inputs.pre-release }}" = "true" ]; then
-            flutter build apk --release --dart-define PRERELEASE=1
-          else
-            flutter build apk --release
-          fi
-          cp ./build/app/outputs/flutter-apk/app-release.apk "./build/Flutter VK Android.apk"
+          mkdir app-build
 
-      - name: Upload artifact
+          if [ "${{ inputs.pre-release }}" = "true" ]; then
+            flutter build apk --release --dart-define PRERELEASE=1; flutter build apk --release --split-per-abi --dart-define PRERELEASE=1
+          else
+            flutter build apk --release; flutter build apk --release --split-per-abi
+          fi
+
+          cp ./build/app/outputs/flutter-apk/app-release.apk "./app-build/Flutter VK Android.apk"
+          cp ./build/app/outputs/flutter-apk/app-arm64-v8a-release.apk "./app-build/Flutter VK Android (arm64-v8a).apk"
+          cp ./build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk "./app-build/Flutter VK Android (armeabi-v7a).apk"
+          cp ./build/app/outputs/flutter-apk/app-x86_64-release.apk "./app-build/Flutter VK Android (x86_64).apk"
+
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Flutter VK Android.apk
-          path: ./build/Flutter VK Android.apk
+          path: ./app-build/
           retention-days: 3
 
       - name: Debug with SSH on fail
@@ -166,43 +171,7 @@ jobs:
           path: build/
           merge-multiple: true
 
-      - name: Publish in Telegram
-        if: ${{ inputs.telegram }}
-        shell: pwsh
-        run: |
-          $telegramToken = $env:TELEGRAM_TOKEN
-          $telegramTo = $env:TELEGRAM_TO
-          $isPreRelease = $env:PRERELEASE -eq "true"
-
-          # Android
-          Invoke-RestMethod -Uri "https://api.telegram.org/bot$telegramToken/sendDocument" -Method Post -Form @{
-            chat_id = $telegramTo
-            caption = $isPreRelease ? "<b>🚧 Новый бета-билд для Android</b>.`n`n#Android #preRelease" : "<b>🚧 Новый билд для Android</b>.`n`n#Android"
-            parse_mode = 'HTML'
-            document = Get-Item -Path './build/Flutter VK Android.apk'
-          }
-
-          # Windows installer
-          Invoke-RestMethod -Uri "https://api.telegram.org/bot$telegramToken/sendDocument" -Method Post -Form @{
-            chat_id = $telegramTo
-            caption = $isPreRelease ? "<b>🚧 Новый бета-билд для Windows</b>.`n`n#Windows #installer #preRelease" : "<b>🚧 Новый билд для Windows</b>.`n`n#Windows #installer"
-            parse_mode = 'HTML'
-            document = Get-Item -Path './build/Flutter VK installer.exe'
-          }
-
-          # Windows portable
-          Invoke-RestMethod -Uri "https://api.telegram.org/bot$telegramToken/sendDocument" -Method Post -Form @{
-            chat_id = $telegramTo
-            caption = $isPreRelease ? "<b>🚧 Новый бета-билд для Windows</b>.`n`n#Windows #portable #preRelease" : "<b>🚧 Новый билд для Windows</b>.`n`n#Windows #portable"
-            parse_mode = 'HTML'
-            document = Get-Item -Path './build/Flutter VK portable.7z'
-          }
-        env:
-          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-          TELEGRAM_TO: ${{ secrets.TELEGRAM_TO }}
-          PRERELEASE: ${{ inputs.pre-release }}
-
-      - name: Create release
+      - name: Create a GitHub release
         if: ${{ inputs.create-release }}
         id: tag_version
         uses: mathieudutour/github-tag-action@v6.1
@@ -211,8 +180,7 @@ jobs:
           tag_prefix: ""
           custom_tag: ${{ steps.read-version.outputs.version-number }}
 
-      - name: Create a GitHub release
-        if: ${{ inputs.create-release }}
+      - if: ${{ inputs.create-release }}
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ steps.tag_version.outputs.new_tag }}
@@ -220,6 +188,23 @@ jobs:
           prerelease: ${{ inputs.pre-release }}
           bodyFile: CHANGELOG.md
           artifacts: "build/*.*"
+
+      - name: Publish in Telegram
+        if: ${{ inputs.telegram }}
+        shell: pwsh
+        run: |
+          $telegramToken = $env:TELEGRAM_TOKEN
+          $telegramTo = $env:TELEGRAM_TO
+          $preRelease = $env:PRERELEASE
+          $version = ${{ steps.read-version.outputs.version-number }}
+
+          pip install -r .\scripts\uploader\requirements.txt
+          python .\scripts\uploader\main.py $telegramToken $telegramTo $version $preRelease "./build/Flutter VK Android.apk" "./build/Flutter VK installer.exe" "./build/Flutter VK portable.7z"
+
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_TO: ${{ secrets.TELEGRAM_TO }}
+          PRERELEASE: ${{ inputs.pre-release }}
 
       - name: Debug with SSH on fail
         if: ${{ failure() && inputs.debug }}
