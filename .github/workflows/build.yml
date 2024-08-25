@@ -220,8 +220,8 @@ jobs:
           $preRelease = $env:PRERELEASE
           $version = ${{ steps.read-version.outputs.version-number }}
 
-          pip install -r .\scripts\uploader\requirements.txt
-          python .\scripts\uploader\main.py $telegramToken $telegramTo $version $preRelease "./build/Flutter VK Android.apk" "./build/Flutter VK installer.exe" "./build/Flutter VK portable.7z"
+          pip install -r scripts/uploader/requirements.txt
+          python scripts/uploader/main.py $telegramToken $telegramTo $version $preRelease "build/Flutter VK Android.apk" "build/Flutter VK installer.exe" "build/Flutter VK portable.7z"
 
       - name: Debug with SSH on fail
         if: ${{ failure() && inputs.debug }}
