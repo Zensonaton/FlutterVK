@@ -83,7 +83,11 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          path: ./app-build/
+          path: |
+            app-build/Flutter VK Android.apk
+            app-build/Flutter VK Android (arm64-v8a).apk
+            app-build/Flutter VK Android (armeabi-v7a).apk
+            app-build/Flutter VK Android (x86_64).apk
           retention-days: 3
 
       - name: Debug with SSH on fail
@@ -192,6 +196,10 @@ jobs:
       - name: Publish in Telegram
         if: ${{ inputs.telegram }}
         shell: pwsh
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_TO: ${{ secrets.TELEGRAM_TO }}
+          PRERELEASE: ${{ inputs.pre-release }}
         run: |
           $telegramToken = $env:TELEGRAM_TOKEN
           $telegramTo = $env:TELEGRAM_TO
@@ -200,11 +208,6 @@ jobs:
 
           pip install -r .\scripts\uploader\requirements.txt
           python .\scripts\uploader\main.py $telegramToken $telegramTo $version $preRelease "./build/Flutter VK Android.apk" "./build/Flutter VK installer.exe" "./build/Flutter VK portable.7z"
-
-        env:
-          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-          TELEGRAM_TO: ${{ secrets.TELEGRAM_TO }}
-          PRERELEASE: ${{ inputs.pre-release }}
 
       - name: Debug with SSH on fail
         if: ${{ failure() && inputs.debug }}
