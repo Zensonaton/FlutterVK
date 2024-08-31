@@ -12,11 +12,11 @@ import sys
 import requests
 
 
-token = sys.argv[1]
+token = sys.argv[1].strip()
 chat_id = int(sys.argv[2])
-version = sys.argv[3]
+version = sys.argv[3].strip()
 is_beta = sys.argv[4].lower().strip() in ("true", "1", "yes")
-files = sys.argv[5:]
+files = [i.strip() for i in sys.argv[5:]]
 
 github_url = "https://github.com/Zensonaton/FlutterVK/releases/tag/v" + version
 info_text = (
@@ -38,6 +38,8 @@ text = (
 )
 
 def main():
+	print(f"Args: [{sys.argv}]")
+
 	media = []
 	files_data = {}
 	for i, file_path in enumerate(files):
