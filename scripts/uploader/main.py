@@ -39,7 +39,7 @@ text = (
 )
 
 def main():
-	print(f"Args: [{sys.argv}]")
+	print(f"Args: {sys.argv}")
 
 	media = []
 	files_data = {}

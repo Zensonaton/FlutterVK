@@ -218,7 +218,7 @@ jobs:
           $telegramToken = $env:TELEGRAM_TOKEN
           $telegramTo = $env:TELEGRAM_TO
           $preRelease = $env:PRERELEASE
-          $version = ${{ steps.tag_version.outputs.new_tag }}
+          $version = "${{ steps.tag_version.outputs.new_tag }}"
 
           pip install -r scripts/uploader/requirements.txt
           python scripts/uploader/main.py $telegramToken $telegramTo $version $preRelease "build/Flutter VK Android.apk" "build/Flutter VK installer.exe" "build/Flutter VK portable.7z"
