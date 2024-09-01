@@ -119,6 +119,7 @@ class CachedStreamAudioSource extends StreamAudioSource {
     final fileExists = file.existsSync();
     final markedAsCached = audio.isCached ?? false;
     bool? newCachedState;
+    int? newFileSize;
 
     // TODO: Случай, если по какой-то причине файл кэша повреждён (например, его размер не соответствует длине трека).
 
@@ -139,6 +140,7 @@ class CachedStreamAudioSource extends StreamAudioSource {
 
       // Помечаем трек как кэшированный.
       newCachedState = true;
+      newFileSize = file.lengthSync();
     }
 
     // Изменяем состояние кэша трека, если он ранее изменился.
@@ -149,6 +151,7 @@ class CachedStreamAudioSource extends StreamAudioSource {
                 .copyWithNewAudio(
                   audio.copyWith(
                     isCached: newCachedState,
+                    cachedSize: newFileSize,
                   ),
                 ),
             saveInDB: true,
