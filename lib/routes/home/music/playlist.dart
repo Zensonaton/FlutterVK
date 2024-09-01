@@ -12,7 +12,6 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:humanize_duration/humanize_duration.dart";
-import "package:just_audio/just_audio.dart";
 import "package:skeletonizer/skeletonizer.dart";
 import "package:styled_text/tags/styled_text_tag_action.dart";
 import "package:styled_text/widgets/styled_text.dart";
@@ -117,14 +116,7 @@ Future<void> onMixPlayToggle(
       .toList();
   playlist.count = response.length;
 
-  // Всё ок, запускаем воспроизведение, отключив при этом shuffle, а так же зацикливание плейлиста.
-  if (player.shuffleModeEnabled) {
-    await player.setShuffle(false);
-  }
-  if (player.loopMode != LoopMode.off) {
-    await player.setLoop(LoopMode.off);
-  }
-
+  // Всё ок, запускаем воспроизведение.
   await player.setPlaylist(
     playlist,
     setLoopAll: false,

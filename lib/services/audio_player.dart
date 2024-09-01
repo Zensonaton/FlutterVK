@@ -400,6 +400,8 @@ class VKMusicPlayer {
   /// [Timer], создаваемый после вызова [setVolume], сохраняющий громкость плеера на диск после вызова.
   Timer? _volumeSaveTimer;
 
+  bool _shouldRestoreShuffle = false;
+
   /// Указывает, что аудио плеер загружен (т.е., был запущен хоть раз), и его стоит показать в интерфейсе.
   ///
   /// Данное поле всегда true после запуска воспроизведения любого трека, и false после вызова [stop].
@@ -1109,6 +1111,8 @@ class VKMusicPlayer {
       );
     }
 
+    final bool isAudioMix = playlist.mixID != null;
+
     _silentSetPlaylist(playlist);
     _queue = ConcatenatingAudioSource(
       children: _audiosQueue!
@@ -1130,6 +1134,26 @@ class VKMusicPlayer {
     // Возвращаем повтор треков в плейлисте, если это нужно.
     if (setLoopAll && player.loopMode == LoopMode.off) {
       await player.setLoop(LoopMode.all);
+    } else if (isAudioMix && player.loopMode != LoopMode.off) {
+      await player.setLoop(LoopMode.off);
+    }
+
+    // Выключаем shuffle, если это плейлист VK Mix.
+    if (isAudioMix && shuffleModeEnabled) {
+      await setShuffle(
+        false,
+        disableAudioMixCheck: true,
+      );
+
+      _shouldRestoreShuffle = true;
+
+      logger.d("Disabled shuffle for VK Mix; will restore later");
+    } else if (_shouldRestoreShuffle && !isAudioMix) {
+      await setShuffle(true);
+
+      _shouldRestoreShuffle = false;
+
+      logger.d("Restored shuffle after VK Mix");
     }
 
     // Отправляем плееру очередь из треков.
