@@ -134,7 +134,7 @@ class MyMusicBlock extends HookConsumerWidget {
           ),
 
         // Настоящие данные.
-        if (playlist?.audios != null)
+        if (playlist?.audios != null && clampedMusicCount > 0)
           for (int index = 0; index < clampedMusicCount; index++) ...[
             buildListTrackWidget(
               ref,
