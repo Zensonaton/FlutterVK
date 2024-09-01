@@ -291,6 +291,14 @@ class VKMusicPlayer {
 
           _pausedDueMute = false;
         }
+
+        // Запускаем таймер для сохранения громкости.
+        _volumeSaveTimer?.cancel();
+
+        _volumeSaveTimer = Timer(
+          const Duration(seconds: 2),
+          () => ref.read(preferencesProvider.notifier).setVolume(volume),
+        );
       }),
 
       // Обработчик событий плеера.
@@ -388,6 +396,9 @@ class VKMusicPlayer {
   bool _pauseOnMuteEnabled = false;
 
   bool _pausedDueMute = false;
+
+  /// [Timer], создаваемый после вызова [setVolume], сохраняющий громкость плеера на диск после вызова.
+  Timer? _volumeSaveTimer;
 
   /// Указывает, что аудио плеер загружен (т.е., был запущен хоть раз), и его стоит показать в интерфейсе.
   ///

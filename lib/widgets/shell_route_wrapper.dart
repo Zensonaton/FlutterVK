@@ -352,6 +352,7 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
     final trackImageInfo = ref.watch(trackSchemeInfoProvider);
     final playlistsNotifier = ref.watch(playlistsProvider.notifier);
     final preferences = ref.watch(preferencesProvider);
+    final preferencesNotifier = ref.watch(preferencesProvider.notifier);
     final l18n = ref.watch(l18nProvider);
     ref.watch(playerPlaylistModificationsProvider);
     ref.watch(playerShuffleModeEnabledProvider);
@@ -628,7 +629,7 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
                     if (!networkRequiredDialog(ref, context)) return;
 
                     if (!player.currentAudio!.isLiked &&
-                        ref.read(preferencesProvider).checkBeforeFavorite) {
+                        preferences.checkBeforeFavorite) {
                       if (!await checkForDuplicates(
                         ref,
                         context,
@@ -671,16 +672,14 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
                       ? () async {
                           await player.toggleShuffle();
 
-                          ref
-                              .read(preferencesProvider.notifier)
+                          preferencesNotifier
                               .setShuffleEnabled(player.shuffleModeEnabled);
                         }
                       : null,
                   onRepeatToggle: () async {
                     await player.toggleLoopMode();
 
-                    ref
-                        .read(preferencesProvider.notifier)
+                    preferencesNotifier
                         .setLoopModeEnabled(player.loopMode == LoopMode.one);
                   },
                   onNextTrack: () => player.next(),

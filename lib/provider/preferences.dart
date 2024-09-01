@@ -128,6 +128,12 @@ class UserPreferences {
   @JsonKey(name: "LoopModeEnabled")
   final bool loopModeEnabled;
 
+  /// Указывает, какая громкость у плеера.
+  ///
+  /// Принимается значение от `0.0` (0%) либо `1.0` (100%).
+  @JsonKey(name: "Volume")
+  final double volume;
+
   UserPreferences({
     this.dbVersion = IsarDBMigrator.maxDBVersion,
     this.myMusicChipEnabled = true,
@@ -156,6 +162,7 @@ class UserPreferences {
     this.preReleaseWarningShown = false,
     this.lrcLibEnabled = false,
     this.loopModeEnabled = false,
+    this.volume = 1.0,
   });
 
   /// Делает копию этого класа с новыми передаваемыми значениями.
@@ -187,6 +194,7 @@ class UserPreferences {
     bool? preReleaseWarningShown,
     bool? lrcLibEnabled,
     bool? loopModeEnabled,
+    double? volume,
   }) =>
       UserPreferences(
         dbVersion: dbVersion ?? this.dbVersion,
@@ -222,6 +230,7 @@ class UserPreferences {
             preReleaseWarningShown ?? this.preReleaseWarningShown,
         lrcLibEnabled: lrcLibEnabled ?? this.lrcLibEnabled,
         loopModeEnabled: loopModeEnabled ?? this.loopModeEnabled,
+        volume: volume ?? this.volume,
       );
 
   factory UserPreferences.fromJson(Map<String, dynamic> json) =>
@@ -268,6 +277,7 @@ class Preferences extends _$Preferences {
       preReleaseWarningShown: prefs.getBool("PreReleaseWarningShown"),
       lrcLibEnabled: prefs.getBool("LRCLIBEnabled"),
       loopModeEnabled: prefs.getBool("LoopModeEnabled"),
+      volume: prefs.getDouble("Volume"),
     );
   }
 
@@ -381,4 +391,6 @@ class Preferences extends _$Preferences {
 
   void setLoopModeEnabled(bool enabled) =>
       state = state.copyWith(loopModeEnabled: enabled);
+
+  void setVolume(double volume) => state = state.copyWith(volume: volume);
 }

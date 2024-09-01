@@ -47,6 +47,7 @@ UserPreferences _$UserPreferencesFromJson(Map<String, dynamic> json) =>
       preReleaseWarningShown: json['PreReleaseWarningShown'] as bool? ?? false,
       lrcLibEnabled: json['LRCLIBEnabled'] as bool? ?? false,
       loopModeEnabled: json['LoopModeEnabled'] as bool? ?? false,
+      volume: (json['Volume'] as num?)?.toDouble() ?? 1.0,
     );
 
 Map<String, dynamic> _$UserPreferencesToJson(UserPreferences instance) =>
@@ -79,6 +80,7 @@ Map<String, dynamic> _$UserPreferencesToJson(UserPreferences instance) =>
       'PreReleaseWarningShown': instance.preReleaseWarningShown,
       'LRCLIBEnabled': instance.lrcLibEnabled,
       'LoopModeEnabled': instance.loopModeEnabled,
+      'Volume': instance.volume,
     };
 
 const _$ThemeModeEnumMap = {
@@ -115,7 +117,7 @@ const _$DynamicSchemeTypeEnumMap = {
 // RiverpodGenerator
 // **************************************************************************
 
-String _$preferencesHash() => r'dde6226a809a75ac072801689b75ff0a19964405';
+String _$preferencesHash() => r'73ee641021828bf68f8c181630339be7eb3d10bc';
 
 /// [Provider] для хранения настроек пользователя.
 ///

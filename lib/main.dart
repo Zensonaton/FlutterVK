@@ -332,6 +332,11 @@ Future main() async {
       await player.setLoopModeEnabled(true);
     }
 
+    // Восстанавливаем громкость у плеера.
+    if (preferences.volume < 1.0 && isDesktop) {
+      await player.setVolume(preferences.volume);
+    }
+
     // Переключаем состояние Discord Rich Presence.
     if (preferences.discordRPCEnabled && isDesktop) {
       await player.setDiscordRPCEnabled(true);
