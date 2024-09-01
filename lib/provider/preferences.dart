@@ -124,6 +124,10 @@ class UserPreferences {
   @JsonKey(name: "LRCLIBEnabled")
   final bool lrcLibEnabled;
 
+  /// Указывает, включён ли loop-mode для плеера.
+  @JsonKey(name: "LoopModeEnabled")
+  final bool loopModeEnabled;
+
   UserPreferences({
     this.dbVersion = IsarDBMigrator.maxDBVersion,
     this.myMusicChipEnabled = true,
@@ -151,6 +155,7 @@ class UserPreferences {
     this.debugPlayerLogging = false,
     this.preReleaseWarningShown = false,
     this.lrcLibEnabled = false,
+    this.loopModeEnabled = false,
   });
 
   /// Делает копию этого класа с новыми передаваемыми значениями.
@@ -181,6 +186,7 @@ class UserPreferences {
     bool? debugPlayerLogging,
     bool? preReleaseWarningShown,
     bool? lrcLibEnabled,
+    bool? loopModeEnabled,
   }) =>
       UserPreferences(
         dbVersion: dbVersion ?? this.dbVersion,
@@ -215,6 +221,7 @@ class UserPreferences {
         preReleaseWarningShown:
             preReleaseWarningShown ?? this.preReleaseWarningShown,
         lrcLibEnabled: lrcLibEnabled ?? this.lrcLibEnabled,
+        loopModeEnabled: loopModeEnabled ?? this.loopModeEnabled,
       );
 
   factory UserPreferences.fromJson(Map<String, dynamic> json) =>
@@ -260,6 +267,7 @@ class Preferences extends _$Preferences {
       debugPlayerLogging: prefs.getBool("DebugPlayerLogging"),
       preReleaseWarningShown: prefs.getBool("PreReleaseWarningShown"),
       lrcLibEnabled: prefs.getBool("LRCLIBEnabled"),
+      loopModeEnabled: prefs.getBool("LoopModeEnabled"),
     );
   }
 
@@ -370,4 +378,7 @@ class Preferences extends _$Preferences {
 
   void setLRCLIBEnabled(bool enabled) =>
       state = state.copyWith(lrcLibEnabled: enabled);
+
+  void setLoopModeEnabled(bool enabled) =>
+      state = state.copyWith(loopModeEnabled: enabled);
 }

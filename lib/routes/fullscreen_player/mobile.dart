@@ -373,8 +373,13 @@ class FullscreenMediaControls extends ConsumerWidget {
 
     void onNextTap() => player.next();
 
-    void onLoopTap() => player
-        .setLoop(player.loopMode == LoopMode.one ? LoopMode.all : LoopMode.one);
+    void onLoopTap() async {
+      bool enabled = player.loopMode == LoopMode.one;
+
+      await player.setLoopModeEnabled(!enabled);
+
+      prefsNotifier.setLoopModeEnabled(!enabled);
+    }
 
     return Column(
       children: [

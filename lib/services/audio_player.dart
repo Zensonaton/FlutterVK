@@ -1027,6 +1027,18 @@ class VKMusicPlayer {
     return await _player.setLoopMode(loopMode);
   }
 
+  /// Указывает, будет ли включён повтор текущего трека.
+  ///
+  /// Тоже самое что и [setLoop], но этот метод принимает булево значение, вместо [LoopMode].
+  Future<void> setLoopModeEnabled(bool loop) async {
+    return await setLoop(loop ? LoopMode.one : LoopMode.all);
+  }
+
+  /// Переключает состояние повтора текущего трека.
+  Future<void> toggleLoopMode() async {
+    return await setLoopModeEnabled(loopMode == LoopMode.all);
+  }
+
   /// Тихо устанавливает плейлист [playlist], не передавая изменения в низкоуровневый плеер. [mergeWithOldQueue] указывает, что очередь из треков (отвечающая за отображение треков в UI) будет заменена таким образом, что бы индексы не смешивались.
   ///
   /// Вместо этого метода стоит воспользоваться методом [setPlaylist].
@@ -1444,17 +1456,17 @@ class AudioPlayerService extends BaseAudioHandler
 
   @override
   Future<void> customAction(String name, [Map<String, dynamic>? extras]) async {
-    final preferences = _ref.read(preferencesProvider.notifier);
-
     final action = MediaNotificationAction.values.firstWhere(
       (action) => action.name == name,
     );
 
     switch (action) {
       case (MediaNotificationAction.shuffle):
-        await _player.toggleShuffle();
-
-        preferences.setShuffleEnabled(_player.shuffleModeEnabled);
+        await setShuffleMode(
+          _player.shuffleModeEnabled
+              ? AudioServiceShuffleMode.group
+              : AudioServiceShuffleMode.all,
+        );
 
         break;
 
@@ -1508,15 +1520,21 @@ class AudioPlayerService extends BaseAudioHandler
     await _player.setShuffle(
       shuffleMode == AudioServiceShuffleMode.all,
     );
+
+    _ref
+        .read(preferencesProvider.notifier)
+        .setShuffleEnabled(_player.shuffleModeEnabled);
   }
 
   @override
   Future<void> setRepeatMode(AudioServiceRepeatMode repeatMode) async {
     await super.setRepeatMode(repeatMode);
 
-    await _player.setLoop(
-      repeatMode == AudioServiceRepeatMode.one ? LoopMode.one : LoopMode.all,
-    );
+    final bool enabled = repeatMode == AudioServiceRepeatMode.one;
+
+    await _player.setLoopModeEnabled(enabled);
+
+    _ref.read(preferencesProvider.notifier).setLoopModeEnabled(enabled);
   }
 
   @override

@@ -725,9 +725,7 @@ class FullscreenMediaControls extends ConsumerWidget {
                               (snapshot.data ?? LoopMode.all) == LoopMode.one;
 
                           return IconButton(
-                            onPressed: () => player.setLoop(
-                              enabled ? LoopMode.all : LoopMode.one,
-                            ),
+                            onPressed: () => player.setLoopModeEnabled(enabled),
                             icon: Icon(
                               enabled ? Icons.repeat_on_outlined : Icons.repeat,
                               color: Theme.of(context).colorScheme.primary,

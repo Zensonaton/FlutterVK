@@ -676,11 +676,13 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
                               .setShuffleEnabled(player.shuffleModeEnabled);
                         }
                       : null,
-                  onRepeatToggle: () => player.setLoop(
-                    player.loopMode == LoopMode.all
-                        ? LoopMode.one
-                        : LoopMode.all,
-                  ),
+                  onRepeatToggle: () async {
+                    await player.toggleLoopMode();
+
+                    ref
+                        .read(preferencesProvider.notifier)
+                        .setLoopModeEnabled(player.loopMode == LoopMode.one);
+                  },
                   onNextTrack: () => player.next(),
                   onPreviousTrack: () =>
                       player.previous(allowSeekToBeginning: true),

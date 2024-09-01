@@ -327,6 +327,11 @@ Future main() async {
       await player.setShuffle(true);
     }
 
+    // Восстанавливаем состояние loop mode у плеера.
+    if (preferences.loopModeEnabled) {
+      await player.setLoopModeEnabled(true);
+    }
+
     // Переключаем состояние Discord Rich Presence.
     if (preferences.discordRPCEnabled && isDesktop) {
       await player.setDiscordRPCEnabled(true);
