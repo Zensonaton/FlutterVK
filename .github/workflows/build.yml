@@ -189,6 +189,31 @@ jobs:
           path: build/
           merge-multiple: true
 
+      - name: Publish in Telegram
+        if: ${{ inputs.telegram }}
+        shell: pwsh
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
+          TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
+          TELEGRAM_TO: ${{ secrets.TELEGRAM_TO }}
+          PRERELEASE: ${{ inputs.pre-release }}
+        run: |
+          $telegramToken = $env:TELEGRAM_TOKEN
+          $telegramTo = $env:TELEGRAM_TO
+          $preRelease = $env:PRERELEASE
+          $version = "${{ steps.read-version.outputs.version-number }}"
+
+          echo "Starting Telegram bot API"
+          docker compose up -d
+
+          echo "Installing Python requirements"
+          pip install -r scripts/uploader/requirements.txt
+
+          echo "Uploading files to Telegram"
+          python scripts/uploader/main.py $telegramToken $telegramTo $version $preRelease http://localhost:8081 "build/Flutter VK Android.apk" "build/Flutter VK installer.exe" "build/Flutter VK portable.7z"
+          # TODO: Учитывать случай, если какой-то из билдов не был создан (android/windows), поскольку тут мы считаем, что все эти файлы есть.
+
       - name: Create a GitHub release
         if: ${{ inputs.create-release }}
         id: tag_version
@@ -206,22 +231,6 @@ jobs:
           prerelease: ${{ inputs.pre-release }}
           bodyFile: CHANGELOG.md
           artifacts: "build/*.*"
-
-      - name: Publish in Telegram
-        if: ${{ inputs.telegram }}
-        shell: pwsh
-        env:
-          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-          TELEGRAM_TO: ${{ secrets.TELEGRAM_TO }}
-          PRERELEASE: ${{ inputs.pre-release }}
-        run: |
-          $telegramToken = $env:TELEGRAM_TOKEN
-          $telegramTo = $env:TELEGRAM_TO
-          $preRelease = $env:PRERELEASE
-          $version = "${{ steps.tag_version.outputs.new_tag }}"
-
-          pip install -r scripts/uploader/requirements.txt
-          python scripts/uploader/main.py $telegramToken $telegramTo $version $preRelease "build/Flutter VK Android.apk" "build/Flutter VK installer.exe" "build/Flutter VK portable.7z"
 
       - name: Debug with SSH on fail
         if: ${{ failure() && inputs.debug }}

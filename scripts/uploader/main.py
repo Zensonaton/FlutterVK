@@ -3,8 +3,11 @@
 # Загружает файлы на сервера Telegram и отправляет сообщение в чат с файлами и текстом.
 # Берегись! Много говнокода. Я быренько набросал этот файл, ибо мне было лень разбираться с argparse :D
 #
-# Пример использования:
-# - python main.py 1234567890:tokenabcdefg 1234567890 1.2.3 true /path/to/file1.apk /path/to/file2.apk
+# Пример использования без Local Bot API:
+# - python main.py 1234567890:tokenabcdefg 1234567890 1.2.3 true false /path/to/file1.apk /path/to/file2.apk
+#
+# Пример использования с Local Bot API:
+# - python main.py 1234567890:tokenabcdefg 1234567890 1.2.3 true http://localhost:8081 /path/to/file1.apk /path/to/file2.apk
 
 import json
 import os
@@ -17,7 +20,9 @@ token = sys.argv[1].strip()
 chat_id = int(sys.argv[2])
 version = sys.argv[3].strip()
 is_beta = sys.argv[4].lower().strip() in ("true", "1", "yes")
-files = [i.strip() for i in sys.argv[5:]]
+local_bot_api_url = sys.argv[5].lower().strip()
+is_local_bot_api = local_bot_api_url not in ("false", "0", "no")
+files = [i.strip() for i in sys.argv[6:]]
 
 github_url = "https://github.com/Zensonaton/FlutterVK/releases/tag/v" + version
 info_text = (
@@ -39,7 +44,11 @@ text = (
 )
 
 def main():
+	api_base_url = local_bot_api_url if is_local_bot_api else "https://api.telegram.org"
+
 	print(f"Args: {sys.argv}")
+	print(f"Will use local bot API: {is_local_bot_api}")
+	print(f"Telegram API URL: {api_base_url}")
 
 	media = []
 	files_data = {}
@@ -56,9 +65,8 @@ def main():
 
 		files_data[f"file{i}"] = (os.path.basename(file_path), open(file_path, "rb"))
 
-
 	response = requests.post(
-		f"https://api.telegram.org/bot{token}/sendMediaGroup",
+		f"{api_base_url}/bot{token}/sendMediaGroup",
 		data={
 			"chat_id": chat_id,
 			"media": json.dumps(media),
