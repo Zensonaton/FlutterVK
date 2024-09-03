@@ -1,3 +1,4 @@
+import "package:collection/collection.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 
@@ -137,9 +138,21 @@ class VKAPIAudio extends VKAPICategory {
     // Если вторичного токена нет, то возвращаем ответ без дополнительной информации.
     if (this.secondaryToken == null) return response;
 
-    return await api.massGetAlbums(
+    final albums = await api.massGetAlbums(
       response.map((audio) => audio.mediaKey).toList(),
     );
+
+    return response.map((audio) {
+      audio.album = albums
+          .firstWhereOrNull(
+            (albumAudio) =>
+                albumAudio.ownerID == audio.ownerID &&
+                albumAudio.id == audio.id,
+          )
+          ?.album;
+
+      return audio;
+    }).toList();
   }
 
   /// {@macro VKAPI.audio.get}
@@ -165,14 +178,23 @@ class VKAPIAudio extends VKAPICategory {
     // Если вторичного токена нет, то возвращаем ответ без дополнительной информации.
     if (this.secondaryToken == null) return response;
 
-    // Получаем информацию о альбомах.
-    final audiosWithAlbums = await api.massGetAlbums(
+    final albums = await api.massGetAlbums(
       response.audios.map((audio) => audio.mediaKey).toList(),
     );
 
     return APIMassAudioGetResponse(
       audioCount: response.audioCount,
-      audios: audiosWithAlbums,
+      audios: response.audios.map((audio) {
+        audio.album = albums
+            .firstWhereOrNull(
+              (albumAudio) =>
+                  albumAudio.ownerID == audio.ownerID &&
+                  albumAudio.id == audio.id,
+            )
+            ?.album;
+
+        return audio;
+      }).toList(),
       playlistsCount: response.playlistsCount,
       playlists: response.playlists,
     );
@@ -217,14 +239,23 @@ class VKAPIAudio extends VKAPICategory {
     // Если вторичного токена нет, то возвращаем ответ без дополнительной информации.
     if (this.secondaryToken == null) return response;
 
-    // Получаем информацию о альбомах.
-    final List<Audio> audiosWithAlbums = await api.massGetAlbums(
+    final List<Audio> albums = await api.massGetAlbums(
       response.items.map((audio) => audio.mediaKey).toList(),
     );
 
     return APIAudioSearchResponse(
       count: response.count,
-      items: audiosWithAlbums,
+      items: response.items.map((audio) {
+        audio.album = albums
+            .firstWhereOrNull(
+              (albumAudio) =>
+                  albumAudio.ownerID == audio.ownerID &&
+                  albumAudio.id == audio.id,
+            )
+            ?.album;
+
+        return audio;
+      }).toList(),
     );
   }
 
