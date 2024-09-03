@@ -204,8 +204,8 @@ jobs:
           $preRelease = $env:PRERELEASE
           $version = "${{ steps.read-version.outputs.version-number }}"
 
-          echo "Starting Telegram bot API"
-          docker compose up -d
+          echo "Starting Telegram Local Bot API"
+          docker compose -f .\scripts\uploader\docker-compose.yml up -d
 
           echo "Installing Python requirements"
           pip install -r scripts/uploader/requirements.txt
