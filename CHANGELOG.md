@@ -1,6 +1,6 @@
 <!-- markdownlint-disable MD033 -->
 
-# Flutter VK vTODO
+# Flutter VK v0.4.12
 
 ## Исправления
 
