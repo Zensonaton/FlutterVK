@@ -205,7 +205,7 @@ jobs:
           $version = "${{ steps.read-version.outputs.version-number }}"
 
           echo "Starting Telegram Local Bot API"
-          docker compose -f .\scripts\uploader\docker-compose.yml up -d
+          docker compose -f scripts/uploader/docker-compose.yml up -d
 
           echo "Installing Python requirements"
           pip install -r scripts/uploader/requirements.txt
