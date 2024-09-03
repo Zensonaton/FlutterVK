@@ -314,26 +314,30 @@ class VKMusicPlayer {
 
       // Обработчик громкости.
       _player.volumeStream.listen((double volume) async {
-        if (!_pauseOnMuteEnabled) return;
+        // Если включена опция "пауза при минимальной громкости".
+        if (_pauseOnMuteEnabled) {
+          if (playing && volume == 0.0) {
+            logger.d("Player is muted, pausing");
+            _pausedDueMute = true;
 
-        // Случай постановления на паузу ввиду нуливой громкости.
-        if (playing && volume == 0.0) {
-          logger.d("Player is muted, pausing");
-          _pausedDueMute = true;
+            await pause();
+          } else if (!playing && _pausedDueMute && volume > 0.0) {
+            await play();
 
-          await pause();
-        } else if (!playing && _pausedDueMute && volume > 0.0) {
-          await play();
-
-          _pausedDueMute = false;
+            _pausedDueMute = false;
+          }
         }
 
-        // Запускаем таймер для сохранения громкости.
+        // Запускаем таймер для сохранения громкости на диск.
         _volumeSaveTimer?.cancel();
 
         _volumeSaveTimer = Timer(
           const Duration(seconds: 2),
-          () => ref.read(preferencesProvider.notifier).setVolume(volume),
+          () {
+            logger.d("Will save player volume ($volume) to disk");
+
+            ref.read(preferencesProvider.notifier).setVolume(volume);
+          },
         );
       }),
 

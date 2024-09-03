@@ -285,14 +285,31 @@ class Preferences extends _$Preferences {
   set state(UserPreferences newState) {
     final SharedPreferences prefs = ref.read(sharedPrefsProvider);
 
+    final Map<String, dynamic> defaultJson = UserPreferences().toJson();
     final Map<String, dynamic> oldJson = state.toJson();
-    final Map<String, dynamic> json = newState.toJson();
+    final Map<String, dynamic> newJson = newState.toJson();
+    bool hasChanges = false;
 
-    for (String key in json.keys) {
-      final dynamic newValue = json[key];
-      if (oldJson[key] == newValue &&
-          !UserPreferences.ignoreDefaultKeys.contains(key)) continue;
+    // Проходимся по новому списку из ключей и значений.
+    for (MapEntry<String, dynamic> entry in newJson.entries) {
+      final String key = entry.key;
 
+      dynamic newValue = entry.value;
+      dynamic oldValue = oldJson[key];
+      dynamic defValue = defaultJson[key];
+
+      // Если значение равно стандартному, то удаляем ключ из SharedPreferences.
+      // Единственное, когда так делать не стоит - это когда ключ есть в списке ignoreDefaultKeys.
+      if (newValue == defValue &&
+          !UserPreferences.ignoreDefaultKeys.contains(key)) {
+        newValue = null;
+      }
+
+      // Если ничего не изменилось, то пропускаем ключ.
+      if (newValue == oldValue) continue;
+
+      // Мы получили новое значение, теперь его нужно записать в SharedPreferences.
+      hasChanges = true;
       if (newValue is bool) {
         prefs.setBool(key, newValue);
       } else if (newValue is int) {
@@ -310,7 +327,8 @@ class Preferences extends _$Preferences {
       }
     }
 
-    super.state = newState;
+    // Если были изменения, то обновляем состояние.
+    if (hasChanges) super.state = newState;
   }
 
   void setDBVersion(int version) => state = state.copyWith(dbVersion: version);
