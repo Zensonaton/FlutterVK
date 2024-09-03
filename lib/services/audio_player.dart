@@ -45,6 +45,9 @@ enum MediaNotificationAction {
 class CachedStreamAudioSource extends StreamAudioSource {
   static final AppLogger logger = getLogger("CachedStreamedAudio");
 
+  /// Размер `.mp3`-файла в байтах, который считается повреждённым.
+  static const int corruptedFileSizeBytes = 100 * 1024;
+
   /// [HttpClient] для загрузки треков.
   final HttpClient _client = HttpClient();
 
@@ -121,26 +124,56 @@ class CachedStreamAudioSource extends StreamAudioSource {
     bool? newCachedState;
     int? newFileSize;
 
-    // TODO: Случай, если по какой-то причине файл кэша повреждён (например, его размер не соответствует длине трека).
-
-    // Логирование странных случаев:
+    // Логирование и обработка странных случаев:
     //  1. Трек помечен как кэшированный, но файл кэша не найден.
     //  2. Трек не помечен как кэшированный, но файл кэша найден.
+    //
+    // Ниже есть ещё один случай, если файл, вероятнее всего, повреждён.
     if (markedAsCached && !fileExists) {
       logger.w(
         "Expected audio ${audio.mediaKey} to have cache file at ${file.path}; will mark as not cached",
       );
 
-      // Помечаем трек как не кэшированный.
       newCachedState = false;
     } else if (!markedAsCached && fileExists) {
       logger.w(
         "Audio ${audio.mediaKey} is not marked as cached, but cache file was found; will mark as cached",
       );
 
-      // Помечаем трек как кэшированный.
       newCachedState = true;
-      newFileSize = file.lengthSync();
+      newFileSize ??= file.lengthSync();
+    }
+
+    // Случай, если по какой-то причине файл кэша повреждён (например, его размер не соответствует длине трека).
+    //
+    // Данный случай был реализован, поскольку Flutter VK кэшировал .m3u8 как .mp3, и это было ошибкой.
+    // Здесь мы будем считать, что если файл имеет размер менее 100 КБ, то он повреждён.
+    if (markedAsCached || newCachedState != false) {
+      newFileSize ??= file.lengthSync();
+
+      final bool smallSize = newFileSize <= corruptedFileSizeBytes;
+      final bool sizeMismatch =
+          audio.cachedSize != null && newFileSize != audio.cachedSize;
+
+      if (smallSize || sizeMismatch) {
+        if (sizeMismatch) {
+          logger.e(
+            "Found audio ${audio.mediaKey} with size mismatch ($newFileSize real vs ${audio.cachedSize} as reported by DB); file ${file.path} will be deleted",
+          );
+        } else {
+          logger.w(
+            "Found audio ${audio.mediaKey} with suspiciously small size ($newFileSize bytes); file ${file.path} will be deleted",
+          );
+        }
+
+        newCachedState = false;
+        newFileSize = null;
+        try {
+          await file.delete();
+        } catch (e) {
+          // No-op.
+        }
+      }
     }
 
     // Изменяем состояние кэша трека, если он ранее изменился.
@@ -159,9 +192,9 @@ class CachedStreamAudioSource extends StreamAudioSource {
     }
 
     // Файл кэша не существует.
-    if (!fileExists) return null;
+    if (!fileExists || newCachedState == false) return null;
 
-    final int length = file.lengthSync();
+    final int length = newFileSize ?? file.lengthSync();
 
     return StreamAudioResponse(
       sourceLength: start != null ? length : null,
