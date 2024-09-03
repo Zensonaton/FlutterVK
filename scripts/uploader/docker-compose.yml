@@ -26,4 +26,3 @@ services:
 
 volumes:
   telegram-bot-api-data:
-    external: true
