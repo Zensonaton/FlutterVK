@@ -90,7 +90,6 @@ class RecommendedPlaylistsBlock extends HookConsumerWidget {
                     cacheKey: "${playlist.mediaKey}600",
                     name: playlist.title!,
                     description: playlist.subtitle,
-                    useTextOnImageLayout: false,
                     selected:
                         player.currentPlaylist?.mediaKey == playlist.mediaKey,
                     currentlyPlaying: player.playing && player.loaded,
