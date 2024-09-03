@@ -6,6 +6,7 @@ import "package:collection/collection.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/rendering.dart";
+import "package:flutter/scheduler.dart";
 import "package:flutter/services.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
@@ -1755,6 +1756,7 @@ class PlaylistRoute extends HookConsumerWidget {
       );
     }
 
+    /// Скроллит экран таким образом, что бы он он показывал место, где начинают отображаться сами треки.
     void scrollPastAppBar() => scrollController.animateTo(
           maxAppBarHeight + infoBoxHeight - statusBarHeight - 46,
           duration: const Duration(
@@ -1764,17 +1766,17 @@ class PlaylistRoute extends HookConsumerWidget {
         );
 
     void onSearchPressed() {
-      // Включаем отображение поиска.
       isSearchOpen.value = true;
-
-      // Делаем фокус на поле поиска.
       searchFocusNode.requestFocus();
 
-      // Скроллим, что бы был маленький AppBar.
       scrollPastAppBar();
     }
 
-    void onSearchInput() => scrollPastAppBar();
+    void onSearchInput() {
+      // TODO: Вызвать событие скроллинга, что бы показать результаты поиска.
+
+      scrollPastAppBar();
+    }
 
     void onMorePressed() => showWipDialog(context);
 
