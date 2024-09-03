@@ -47,7 +47,7 @@ class RecommendedPlaylistsBlock extends HookConsumerWidget {
         ScrollConfiguration(
           behavior: AlwaysScrollableScrollBehavior(),
           child: SizedBox(
-            height: 200,
+            height: 280,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               clipBehavior: Clip.none,
@@ -76,6 +76,11 @@ class RecommendedPlaylistsBlock extends HookConsumerWidget {
                 // Настоящие данные.
                 final ExtendedPlaylist playlist = playlists[index];
 
+                // Очень, блять, смешно, ВКонтакте.
+                //
+                // Спасибо вам за то что вам, сука, приспичило вставлять названия плейлистов
+                // в само их изображение, из-за чего название в моём интерфейсе дублировалось дважды. Пфф...
+
                 return Padding(
                   padding: const EdgeInsets.only(
                     right: 8,
@@ -85,7 +90,7 @@ class RecommendedPlaylistsBlock extends HookConsumerWidget {
                     cacheKey: "${playlist.mediaKey}600",
                     name: playlist.title!,
                     description: playlist.subtitle,
-                    useTextOnImageLayout: true,
+                    useTextOnImageLayout: false,
                     selected:
                         player.currentPlaylist?.mediaKey == playlist.mediaKey,
                     currentlyPlaying: player.playing && player.loaded,
