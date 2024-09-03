@@ -350,8 +350,8 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final trackImageInfoNotifier = ref.watch(trackSchemeInfoProvider.notifier);
     final trackImageInfo = ref.watch(trackSchemeInfoProvider);
-    final playlistsNotifier = ref.watch(playlistsProvider.notifier);
     final preferences = ref.watch(preferencesProvider);
+    final playlistsNotifier = ref.watch(playlistsProvider.notifier);
     final preferencesNotifier = ref.watch(preferencesProvider.notifier);
     final l18n = ref.watch(l18nProvider);
     ref.watch(playerPlaylistModificationsProvider);
@@ -408,6 +408,8 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
           // Слушаем события изменения текущего трека в плеере, что бы загружать обложку, текст песни, а так же создание цветовой схемы.
           player.currentIndexStream.listen((int? index) async {
             if (index == null || !player.loaded) return;
+
+            final preferences = ref.read(preferencesProvider);
 
             final playlist = player.currentPlaylist!.copyWith();
             final audio = player.currentAudio!.copyWith();
