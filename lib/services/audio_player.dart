@@ -148,7 +148,7 @@ class CachedStreamAudioSource extends StreamAudioSource {
     //
     // Данный случай был реализован, поскольку Flutter VK кэшировал .m3u8 как .mp3, и это было ошибкой.
     // Здесь мы будем считать, что если файл имеет размер менее 100 КБ, то он повреждён.
-    if (markedAsCached || newCachedState != false) {
+    if ((markedAsCached && newCachedState != false) || newCachedState == true) {
       newFileSize ??= file.lengthSync();
 
       final bool smallSize = newFileSize <= corruptedFileSizeBytes;
@@ -227,9 +227,9 @@ class CachedStreamAudioSource extends StreamAudioSource {
 
     // Извлекаем размер.
     final int length = response.contentLength + (start ?? 0);
-    logger.d(
-      "Content length for ${audio.mediaKey}: $length, range: $start-$end",
-    );
+    // logger.d(
+    //   "Content length for ${audio.mediaKey}: $length, range: $start-$end",
+    // );
 
     return StreamAudioResponse(
       sourceLength: start != null ? length : null,
@@ -367,7 +367,7 @@ class VKMusicPlayer {
         // Если играет не этот плейлист, то ничего не делаем.
         if (!isCurrent) return;
 
-        logger.d("Player detected playlist modification");
+        // logger.d("Player detected playlist modification");
 
         // Устанавливаем новый плейлист.
         _silentSetPlaylist(playlist, mergeWithOldQueue: true);
@@ -676,7 +676,7 @@ class VKMusicPlayer {
   ExtendedAudio? get smartPreviousAudio {
     if (smartPreviousTrackIndex == null) return null;
 
-    return _audiosQueue?[smartPreviousTrackIndex!];
+    return _audiosQueue?.elementAtOrNull(smartPreviousTrackIndex!);
   }
 
   /// Возвращает объект [ExtendedAudio] для трека, который играет в данный момент. Если очередь пуста, то возвращает null.
@@ -685,7 +685,7 @@ class VKMusicPlayer {
   ExtendedAudio? get smartCurrentAudio {
     if (smartTrackIndex == null) return null;
 
-    return _audiosQueue?[smartTrackIndex!];
+    return _audiosQueue?.elementAtOrNull(smartTrackIndex!);
   }
 
   /// Возвращает объект [ExtendedAudio] для трека, который находится предыдущим в очереди. Если очередь пуста, либо это последний трек в очереди, то возвращает null.
@@ -694,7 +694,7 @@ class VKMusicPlayer {
   ExtendedAudio? get smartNextAudio {
     if (smartNextTrackIndex == null) return null;
 
-    return _audiosQueue?[smartNextTrackIndex!];
+    return _audiosQueue?.elementAtOrNull(smartNextTrackIndex!);
   }
 
   /// Возвращает текущий плейлист.
@@ -1392,7 +1392,7 @@ class VKMusicPlayer {
     _pauseStopTimer?.cancel();
 
     if (_allowStopOnPause && _loaded && !playing) {
-      logger.d("Starting stopOnPause timer for $stopOnPauseTimerDuration");
+      // logger.d("Starting stopOnPause timer for $stopOnPauseTimerDuration");
 
       // Запускаем таймер.
       _pauseStopTimer = Timer(

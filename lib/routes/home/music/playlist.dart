@@ -1567,8 +1567,6 @@ class PlaylistRoute extends HookConsumerWidget {
 
     useEffect(
       () {
-        logger.d("Open $playlist");
-
         Future<void> loadPlaylist() =>
             ref.read(playlistsProvider.notifier).loadPlaylist(playlist);
 

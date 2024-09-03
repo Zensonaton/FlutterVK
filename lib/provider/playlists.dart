@@ -151,9 +151,9 @@ class PlaylistUpdateResult {
 /// [Provider], загружающий информацию о плейлистах пользователя из локальной БД.
 @Riverpod(keepAlive: true)
 Future<PlaylistsState?> dbPlaylists(DbPlaylistsRef ref) async {
-  final AppLogger logger = getLogger("DBPlaylistsProvider");
+  // final AppLogger logger = getLogger("DBPlaylistsProvider");
 
-  logger.d("Loading cached playlists from Isar DB");
+  // logger.d("Loading cached playlists from Isar DB");
 
   final List<ExtendedPlaylist> playlists = (await appStorage.getPlaylists())
       .where((DBPlaylist? playlist) => playlist != null)
@@ -201,7 +201,7 @@ class Playlists extends _$Playlists {
         );
 
         // Если плейлисты долго грузились, то логируем это.
-        if (elapsedMs > 500) {
+        if (elapsedMs >= 500 && !kDebugMode) {
           logger.w(
             "Took a very long time (${elapsedMs}ms) to load playlists from Isar DB",
           );
@@ -268,7 +268,7 @@ class Playlists extends _$Playlists {
 
   /// Загружает пользовательские плейлисты, а так же содержимое фейкового плейлиста "любимые треки".
   Future<(List<ExtendedPlaylist>, int)> _loadUserPlaylists() async {
-    logger.d("Loading basic playlists info via API");
+    // logger.d("Loading basic playlists info via API");
 
     final user = ref.read(userProvider);
     final api = ref.read(vkAPIProvider);
@@ -317,7 +317,7 @@ class Playlists extends _$Playlists {
     // Если у пользователя нет второго токена, то ничего не делаем.
     if (secondaryToken == null) return [];
 
-    logger.d("Loading recommended playlists via API");
+    // logger.d("Loading recommended playlists via API");
 
     /// Парсит список из плейлистов, возвращая список плейлистов из раздела "Какой сейчас вайб?".
     ///
@@ -693,7 +693,7 @@ class Playlists extends _$Playlists {
         await saveDBPlaylist(newPlaylist);
       }
 
-      logger.d("Playlist has changed");
+      // logger.d("Playlist has changed");
 
       return PlaylistUpdateResult(
         playlist: newPlaylist,
@@ -796,7 +796,7 @@ class Playlists extends _$Playlists {
       return playlist;
     }
 
-    logger.d("Loading data for $playlist");
+    // logger.d("Loading data for $playlist");
 
     final APIMassAudioGetResponse response = await api.audio.getWithAlbums(
       playlist.ownerID,

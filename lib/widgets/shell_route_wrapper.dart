@@ -371,7 +371,7 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
 
       // Если цвета обложки уже были получены, и они хранятся в БД, то просто загружаем их.
       if (audio.colorCount != null) {
-        logger.d("Image colors are loaded from DB");
+        // logger.d("Image colors are loaded from DB");
 
         return trackImageInfoNotifier.fromColors(
           colorInts: audio.colorInts!,
@@ -396,7 +396,7 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
         final List<StreamSubscription> subscriptions = [
           // Слушаем события нажатия на медиа-уведомление.
           AudioService.notificationClicked.listen((tapped) {
-            logger.d("Handling player notification clicked event");
+            // logger.d("Handling player notification clicked event");
 
             // AudioService иногда создаёт это событие при запуске плеера. Такой случай мы игнорируем.
             // Если плеер не загружен, то ничего не делаем.
@@ -491,9 +491,9 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
                 ? (minMixAudiosCount - tracksLeft)
                 : 0;
 
-            logger.d(
-              "Mix index: $index/$count, should add $tracksToAdd tracks",
-            );
+            // logger.d(
+            //   "Mix index: $index/$count, should add $tracksToAdd tracks",
+            // );
 
             // Если у нас достаточно треков в очереди, то ничего не делаем.
             if (tracksToAdd <= 0) return;

@@ -66,7 +66,8 @@ void initDioInterceptors(
     ),
 
     // Обработчик для логирования HTTP-запросов и их ответов в debug-режиме.
-    if (kDebugMode)
+    if (kDebugMode && false)
+      // ignore: dead_code
       AwesomeDioInterceptor(
         logRequestTimeout: false,
         logRequestHeaders: false,
