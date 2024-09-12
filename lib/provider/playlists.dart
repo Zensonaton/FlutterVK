@@ -211,59 +211,76 @@ class Playlists extends _$Playlists {
       }
     }
 
-    // Пытаемся получить список плейлистов при помощи API.
-    final results = await Future.wait([
-      _loadUserPlaylists(),
-      _loadRecommendedPlaylists(),
-    ]);
-
-    final (List<ExtendedPlaylist>, int) userPlaylists =
-        results[0] as (List<ExtendedPlaylist>, int);
-    final List<ExtendedPlaylist> recommendedPlaylists =
-        results[1] as List<ExtendedPlaylist>;
-
-    // Если state не был установлен, то устанавливаем его.
-    state = AsyncData(
-      PlaylistsState(
-        playlists: state.value?.playlists ?? [],
-        fromAPI: true,
-        playlistsCount: userPlaylists.$2,
-      ),
-    );
-
-    // Обновляем плейлисты. Данный метод обновит UI и сохранит в БД, если плейлисты отличаются от тех, что уже есть.
-    final List<PlaylistUpdateResult> updatedPlaylists = await updatePlaylists(
-      [...userPlaylists.$1, ...recommendedPlaylists],
-      saveInDB: true,
-      fromAPI: true,
-    );
-
-    // Проходимся по всем модифицированным плейлистам, и запускаем задачи по их кэшированию.
-    for (PlaylistUpdateResult result in updatedPlaylists) {
-      if (!result.changed || result.playlist.areTracksCached) continue;
-
-      final ExtendedPlaylist playlist = result.playlist;
-      createPlaylistCacheTask(
-        ref,
-        playlist,
-        deletedAudios: result.deletedAudios,
-      );
-    }
-
-    // Проходимся по всем существующим плейлистам (в том числе и рекомендованным, ...), и смотрим, у каких включено кэширование.
-    // Загружаем данные таковых плейлистов, что бы дополнительно создались задачи по их кэшированию.
-    for (ExtendedPlaylist playlist in state.value!.playlists) {
-      if ([PlaylistType.favorites, PlaylistType.searchResults]
-              .contains(playlist.type) ||
-          !(playlist.cacheTracks ?? false)) {
-        continue;
-      }
-
-      logger.d("Found playlist with caching enabled: $playlist");
-      await loadPlaylist(playlist);
+    // Пытаемся получить список плейлистов при помощи API, если у нас есть доступ к интернету.
+    if (connectivityManager.hasConnection) {
+      await _loadAPIPlaylists();
     }
 
     return state.value;
+  }
+
+  /// Пытается загрузить все плейлисты пользователя, а так же рекомендуемые плейлисты.
+  ///
+  /// Вызывает [_loadUserPlaylists] и [_loadRecommendedPlaylists].
+  Future<void> _loadAPIPlaylists() async {
+    try {
+      final results = await Future.wait([
+        _loadUserPlaylists(),
+        _loadRecommendedPlaylists(),
+      ]);
+
+      final (List<ExtendedPlaylist>, int) userPlaylists =
+          results[0] as (List<ExtendedPlaylist>, int);
+      final List<ExtendedPlaylist> recommendedPlaylists =
+          results[1] as List<ExtendedPlaylist>;
+
+      // Если state не был установлен, то устанавливаем его.
+      state = AsyncData(
+        PlaylistsState(
+          playlists: state.value?.playlists ?? [],
+          fromAPI: true,
+          playlistsCount: userPlaylists.$2,
+        ),
+      );
+
+      // Обновляем плейлисты. Данный метод обновит UI и сохранит в БД, если плейлисты отличаются от тех, что уже есть.
+      final List<PlaylistUpdateResult> updatedPlaylists = await updatePlaylists(
+        [...userPlaylists.$1, ...recommendedPlaylists],
+        saveInDB: true,
+        fromAPI: true,
+      );
+
+      // Проходимся по всем модифицированным плейлистам, и запускаем задачи по их кэшированию.
+      for (PlaylistUpdateResult result in updatedPlaylists) {
+        if (!result.changed || result.playlist.areTracksCached) continue;
+
+        final ExtendedPlaylist playlist = result.playlist;
+        createPlaylistCacheTask(
+          ref,
+          playlist,
+          deletedAudios: result.deletedAudios,
+        );
+      }
+
+      // Проходимся по всем существующим плейлистам (в том числе и рекомендованным, ...), и смотрим, у каких включено кэширование.
+      // Загружаем данные таковых плейлистов, что бы дополнительно создались задачи по их кэшированию.
+      for (ExtendedPlaylist playlist in state.value!.playlists) {
+        if ([PlaylistType.favorites, PlaylistType.searchResults]
+                .contains(playlist.type) ||
+            !(playlist.cacheTracks ?? false)) {
+          continue;
+        }
+
+        logger.d("Found playlist with caching enabled: $playlist");
+        await loadPlaylist(playlist);
+      }
+    } catch (e, stackTrace) {
+      logger.e(
+        "Failed to load playlists via API",
+        error: e,
+        stackTrace: stackTrace,
+      );
+    }
   }
 
   /// Загружает пользовательские плейлисты, а так же содержимое фейкового плейлиста "любимые треки".
