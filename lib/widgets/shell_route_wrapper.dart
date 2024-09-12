@@ -697,6 +697,7 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
                   isBuffering: player.buffering,
                   isShuffleEnabled: player.shuffleModeEnabled,
                   isRepeatEnabled: isRepeatEnabled,
+                  spoilerNextTrackEnabled: preferences.spoilerNextTrack,
                   isLiked: isLiked,
                   useBigLayout: !mobileLayout,
                   onLikeTap: onLikeTap,

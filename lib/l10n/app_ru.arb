@@ -359,6 +359,9 @@
 	"profile_playerDynamicColorSchemeContent": "Яркий",
 	"profile_playerDynamicColorSchemeMonochrome": "Монохромный",
 
+	"profile_spoilerNextAudioTitle": "Спойлер следующего трека",
+	"profile_spoilerNextAudioDescription": "Показывает название следующего трека за небольшое количество времени до его начала",
+
 	"profile_useThumbnailAsBackgroundTitle": "Изображение трека как фон полноэкранного плеера",
 
 

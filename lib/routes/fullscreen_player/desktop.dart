@@ -107,6 +107,7 @@ class NextTrackInfoWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l18n = ref.watch(l18nProvider);
+    final preferences = ref.watch(preferencesProvider);
     ref.watch(playerPositionProvider);
     ref.watch(playerCurrentIndexProvider);
 
@@ -115,12 +116,11 @@ class NextTrackInfoWidget extends ConsumerWidget {
       "Next audio is not known",
     );
 
-    // TODO: Настройка, что бы отключить это.
     /// Определяет по оставшейся длине трека то, стоит ли показывать надпись со следующим треком.
-    final bool displayNextTrack =
-        (player.smartCurrentAudio != null && player.smartNextAudio != null)
-            ? (player.progress >= nextPlayingTextProgress)
-            : false;
+    final bool displayNextTrack = preferences.spoilerNextTrack &&
+            (player.smartCurrentAudio != null && player.smartNextAudio != null)
+        ? (player.progress >= nextPlayingTextProgress)
+        : false;
 
     return AnimatedOpacity(
       opacity: displayNextTrack ? 1.0 : 0.0,

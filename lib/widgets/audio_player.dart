@@ -288,6 +288,9 @@ class BottomMusicPlayer extends HookConsumerWidget {
   /// Указывает, что у плеера включён режим повтора текущего трека.
   final bool isRepeatEnabled;
 
+  /// Указывает, что включена настройка по отображению следующего трека [nextAudio] перед окончанием текущего трека.
+  final bool spoilerNextTrackEnabled;
+
   /// Указывает громкость у проигрывателя.
   ///
   /// В данном поле указано число от 0.0 до 1.0.
@@ -355,6 +358,7 @@ class BottomMusicPlayer extends HookConsumerWidget {
     this.isBuffering = false,
     this.isShuffleEnabled = false,
     this.isRepeatEnabled = false,
+    this.spoilerNextTrackEnabled = true,
     this.volume = 1.0,
     this.progress = 0.0,
     this.position = Duration.zero,
@@ -411,9 +415,10 @@ class BottomMusicPlayer extends HookConsumerWidget {
     const scrollWidth = 150.0;
 
     /// Определяет по оставшейся длине трека то, стоит ли показывать надпись со следующим треком.
-    final bool displayNextTrack = (audio != null && nextAudio != null)
-        ? (progress >= nextPlayingTextProgress)
-        : false;
+    final bool displayNextTrack =
+        spoilerNextTrackEnabled && (audio != null && nextAudio != null)
+            ? (progress >= nextPlayingTextProgress)
+            : false;
 
     /// Кнопка для паузы и/ли воспроизведения музыки.
     final Widget playPauseButton = GestureDetector(

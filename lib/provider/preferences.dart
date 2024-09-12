@@ -138,6 +138,10 @@ class UserPreferences {
   @JsonKey(name: "RewindOnPreviousBehavior", toJson: intFromEnum)
   final RewindBehavior rewindOnPreviousBehavior;
 
+  /// Указывает, включена ли настройка "спойлер следующего трека".
+  @JsonKey(name: "SpoilerNextTrack")
+  final bool spoilerNextTrack;
+
   UserPreferences({
     this.dbVersion = IsarDBMigrator.maxDBVersion,
     this.myMusicChipEnabled = true,
@@ -168,6 +172,7 @@ class UserPreferences {
     this.loopModeEnabled = false,
     this.volume = 1.0,
     this.rewindOnPreviousBehavior = RewindBehavior.always,
+    this.spoilerNextTrack = true,
   });
 
   /// Делает копию этого класа с новыми передаваемыми значениями.
@@ -201,6 +206,7 @@ class UserPreferences {
     bool? loopModeEnabled,
     double? volume,
     RewindBehavior? rewindOnPreviousBehavior,
+    bool? spoilerNextTrack,
   }) =>
       UserPreferences(
         dbVersion: dbVersion ?? this.dbVersion,
@@ -239,6 +245,7 @@ class UserPreferences {
         volume: volume ?? this.volume,
         rewindOnPreviousBehavior:
             rewindOnPreviousBehavior ?? this.rewindOnPreviousBehavior,
+        spoilerNextTrack: spoilerNextTrack ?? this.spoilerNextTrack,
       );
 
   factory UserPreferences.fromJson(Map<String, dynamic> json) =>
@@ -288,6 +295,7 @@ class Preferences extends _$Preferences {
       volume: prefs.getDouble("Volume"),
       rewindOnPreviousBehavior:
           RewindBehavior.values[prefs.getInt("RewindOnPreviousBehavior") ?? 0],
+      spoilerNextTrack: prefs.getBool("SpoilerNextTrack"),
     );
   }
 
@@ -424,4 +432,7 @@ class Preferences extends _$Preferences {
 
   void setRewindOnPreviousBehavior(RewindBehavior behavior) =>
       state = state.copyWith(rewindOnPreviousBehavior: behavior);
+
+  void setSpoilerNextTrackEnabled(bool enabled) =>
+      state = state.copyWith(spoilerNextTrack: enabled);
 }
