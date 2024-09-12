@@ -294,7 +294,7 @@ class BottomMusicPlayer extends HookConsumerWidget {
   final double volume;
 
   /// Метод, вызываемый при переключении состояния паузы.
-  final VoidCallback? onPlayStateToggle;
+  final VoidCallback? onPlayToggle;
 
   /// Метод, вызываемый при изменения состояния "лайка" трека.
   final AsyncCallback? onLikeTap;
@@ -302,11 +302,15 @@ class BottomMusicPlayer extends HookConsumerWidget {
   /// Метод, вызываемый при нажатии кнопки "дизлайка" у трека.
   final AsyncCallback? onDislike;
 
-  /// Метод, вызываемый при попытке запустить следующий трек (свайп влево).
-  final VoidCallback? onNextTrack;
+  /// Метод, вызываемый при попытке запустить следующий трек.
+  ///
+  /// Возвращает true, если трек был переключён при помощи свайпа влево (при [useBigLayout] = false).
+  final Function(bool)? onNextTrack;
 
-  /// Метод, вызываемый при попытке запустить предыдущий трек (свайп вправо).
-  final VoidCallback? onPreviousTrack;
+  /// Метод, вызываемый при попытке запустить предыдущий трек.
+  ///
+  /// Возвращает true, если трек был переключён при помощи свайпа вправо (при [useBigLayout] = false).
+  final Function(bool)? onPreviousTrack;
 
   /// Метод, вызываемый при переключении режима случайного выбора треков.
   ///
@@ -330,7 +334,7 @@ class BottomMusicPlayer extends HookConsumerWidget {
   /// Метод, вызываемый при изменении позиции трека.
   ///
   /// Выводом данного Callback'а является число от 0.0 до 1.0.
-  final Function(double)? onProgressChange;
+  final Function(double)? onSeek;
 
   /// Метод, вызываемый при изменении громкости.
   ///
@@ -355,7 +359,7 @@ class BottomMusicPlayer extends HookConsumerWidget {
     this.progress = 0.0,
     this.position = Duration.zero,
     this.duration = Duration.zero,
-    this.onPlayStateToggle,
+    this.onPlayToggle,
     this.onLikeTap,
     this.onDislike,
     this.onNextTrack,
@@ -365,7 +369,7 @@ class BottomMusicPlayer extends HookConsumerWidget {
     this.onMiniplayer,
     this.onFullscreen,
     this.onDismiss,
-    this.onProgressChange,
+    this.onSeek,
     this.onVolumeChange,
     this.useBigLayout = false,
   });
@@ -416,7 +420,7 @@ class BottomMusicPlayer extends HookConsumerWidget {
       onLongPress: onDismiss,
       child: useBigLayout
           ? IconButton(
-              onPressed: onPlayStateToggle,
+              onPressed: onPlayToggle,
               iconSize: 48,
               padding: EdgeInsets.zero,
               icon: Icon(
@@ -425,7 +429,7 @@ class BottomMusicPlayer extends HookConsumerWidget {
               ),
             )
           : IconButton(
-              onPressed: onPlayStateToggle,
+              onPressed: onPlayToggle,
               icon: Icon(
                 isPlaying ? Icons.pause : Icons.play_arrow,
                 color: scheme.onPrimaryContainer,
@@ -514,11 +518,11 @@ class BottomMusicPlayer extends HookConsumerWidget {
                               if (dragProgress.value > 0.5) {
                                 // Запуск следующего трека.
 
-                                onNextTrack?.call();
+                                onNextTrack?.call(true);
                               } else if (dragProgress.value < -0.5) {
                                 // Запуск предыдущего трека.
 
-                                onPreviousTrack?.call();
+                                onPreviousTrack?.call(true);
                               }
 
                               dragProgress.value = 0.0;
@@ -577,7 +581,9 @@ class BottomMusicPlayer extends HookConsumerWidget {
                               ),
                             ),
                           ),
-                          Gap(useBigLayout ? 14 : 8),
+                          Gap(
+                            useBigLayout ? 14 : 8,
+                          ),
 
                           // Название и исполнитель трека.
                           Flexible(
@@ -739,7 +745,7 @@ class BottomMusicPlayer extends HookConsumerWidget {
                             ),
                             child: ResponsiveSlider(
                               value: progress,
-                              onChangeEnd: onProgressChange,
+                              onChangeEnd: onSeek,
                             ),
                           ),
 
@@ -781,7 +787,7 @@ class BottomMusicPlayer extends HookConsumerWidget {
 
                                 // Предыдущий трек.
                                 IconButton(
-                                  onPressed: onPreviousTrack,
+                                  onPressed: () => onPreviousTrack?.call(false),
                                   icon: Icon(
                                     Icons.skip_previous,
                                     color: scheme.onPrimaryContainer,
@@ -793,7 +799,7 @@ class BottomMusicPlayer extends HookConsumerWidget {
 
                                 // Кнопка для запуска следующего трека.
                                 IconButton(
-                                  onPressed: onNextTrack,
+                                  onPressed: () => onNextTrack?.call(false),
                                   icon: Icon(
                                     Icons.skip_next,
                                     color: scheme.onPrimaryContainer,

@@ -569,9 +569,85 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
         Alignment.bottomLeft; // TODO: navigationPage.audioPlayerAlign,
     const bool allowBigPlayer =
         true; // TODO: navigationPage.allowBigAudioPlayer
+    final double? width = mobileLayout
+        ? null
+        : (allowBigPlayer
+            ? MediaQuery.sizeOf(context).width.clamp(500, double.infinity)
+            // ignore: dead_code
+            : 360);
 
-    final bool isMixPlaylistPlaying =
-        player.currentPlaylist?.type == PlaylistType.audioMix;
+    final bool isLoaded = player.loaded;
+    final bool isRepeatEnabled = player.loopMode == LoopMode.one;
+    final bool isLiked = player.smartCurrentAudio?.isLiked ?? false;
+    final bool isRecommendation =
+        player.currentPlaylist?.isRecommendationTypePlaylist ?? false;
+    final isMixPlaylist = player.currentPlaylist?.type == PlaylistType.audioMix;
+
+    Future<void> onLikeTap() async {
+      if (!networkRequiredDialog(ref, context)) return;
+
+      if (!player.currentAudio!.isLiked && preferences.checkBeforeFavorite) {
+        if (!await checkForDuplicates(
+          ref,
+          context,
+          player.currentAudio!,
+        )) return;
+      }
+      await toggleTrackLike(
+        player.ref,
+        player.currentAudio!,
+        !player.currentAudio!.isLiked,
+        sourcePlaylist: player.currentPlaylist,
+      );
+    }
+
+    Future<void> onDislike() async {
+      if (!networkRequiredDialog(ref, context)) return;
+
+      await dislikeTrack(
+        player.ref,
+        player.currentAudio!,
+      );
+
+      await player.next();
+    }
+
+    void onPlayToggle() => player.togglePlay();
+
+    void onSeek(double progress) => player.seekNormalized(progress);
+
+    void onVolumeChange(double volume) => player.setVolume(volume);
+
+    void onDismiss() => player.stop();
+
+    void onFullscreen(bool viaSwipeUp) async {
+      final bool fullscreenOnDesktop =
+          !mobileLayout && !HardwareKeyboard.instance.isShiftPressed;
+
+      await openFullscreenPlayer(
+        context,
+        fullscreenOnDesktop: fullscreenOnDesktop,
+      );
+    }
+
+    void onMiniplayer() => openMiniPlayer(context);
+
+    void onShuffleToggle() async {
+      await player.toggleShuffle();
+
+      preferencesNotifier.setShuffleEnabled(player.shuffleModeEnabled);
+    }
+
+    void onRepeatToggle() async {
+      await player.toggleLoopMode();
+
+      preferencesNotifier.setLoopModeEnabled(player.loopMode == LoopMode.one);
+    }
+
+    void onNextTrack(bool viaSwipe) => player.next();
+
+    void onPreviousTrack(bool viaSwipe) =>
+        player.previous(allowSeekToBeginning: !viaSwipe);
 
     return AnimatedAlign(
       duration: const Duration(
@@ -582,7 +658,7 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
         stream: player.positionStream,
         builder: (BuildContext context, AsyncSnapshot<Duration> snapshot) {
           return AnimatedOpacity(
-            opacity: player.loaded ? 1.0 : 0.0,
+            opacity: isLoaded ? 1.0 : 0.0,
             curve: Curves.ease,
             duration: const Duration(
               milliseconds: 500,
@@ -597,19 +673,10 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
               ),
               curve: Curves.ease,
               child: Container(
-                width: mobileLayout
-                    ? null
-                    : (allowBigPlayer
-                        ? MediaQuery.sizeOf(context)
-                            .width
-                            .clamp(500, double.infinity)
-                        // ignore: dead_code
-                        : 360),
-                padding: mobileLayout
-                    ? const EdgeInsets.all(
-                        8,
-                      )
-                    : null,
+                width: width,
+                padding: EdgeInsets.all(
+                  mobileLayout ? 8 : 0,
+                ),
                 child: BottomMusicPlayer(
                   audio: player.smartCurrentAudio,
                   nextAudio: player.smartNextAudio,
@@ -622,71 +689,21 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
                   isPlaying: player.playing,
                   isBuffering: player.buffering,
                   isShuffleEnabled: player.shuffleModeEnabled,
-                  isRepeatEnabled: player.loopMode == LoopMode.one,
-                  isLiked: player.currentAudio != null
-                      ? player.currentAudio!.isLiked
-                      : false,
+                  isRepeatEnabled: isRepeatEnabled,
+                  isLiked: isLiked,
                   useBigLayout: !mobileLayout,
-                  onLikeTap: () async {
-                    if (!networkRequiredDialog(ref, context)) return;
-
-                    if (!player.currentAudio!.isLiked &&
-                        preferences.checkBeforeFavorite) {
-                      if (!await checkForDuplicates(
-                        ref,
-                        context,
-                        player.currentAudio!,
-                      )) return;
-                    }
-                    await toggleTrackLike(
-                      player.ref,
-                      player.currentAudio!,
-                      !player.currentAudio!.isLiked,
-                      sourcePlaylist: player.currentPlaylist,
-                    );
-                  },
-                  onDislike:
-                      (player.currentPlaylist?.isRecommendationTypePlaylist ??
-                              false)
-                          ? () async {
-                              if (!networkRequiredDialog(ref, context)) return;
-
-                              await dislikeTrack(
-                                player.ref,
-                                player.currentAudio!,
-                              );
-
-                              await player.next();
-                            }
-                          : null,
-                  onPlayStateToggle: () => player.togglePlay(),
-                  onProgressChange: (double progress) =>
-                      player.seekNormalized(progress),
-                  onVolumeChange: (double volume) => player.setVolume(volume),
-                  onDismiss: () => player.stop(),
-                  onFullscreen: (bool viaSwipeUp) => openFullscreenPlayer(
-                    context,
-                    fullscreenOnDesktop: !mobileLayout &&
-                        !HardwareKeyboard.instance.isShiftPressed,
-                  ),
-                  onMiniplayer: () => openMiniPlayer(context),
-                  onShuffleToggle: !isMixPlaylistPlaying
-                      ? () async {
-                          await player.toggleShuffle();
-
-                          preferencesNotifier
-                              .setShuffleEnabled(player.shuffleModeEnabled);
-                        }
-                      : null,
-                  onRepeatToggle: () async {
-                    await player.toggleLoopMode();
-
-                    preferencesNotifier
-                        .setLoopModeEnabled(player.loopMode == LoopMode.one);
-                  },
-                  onNextTrack: () => player.next(),
-                  onPreviousTrack: () =>
-                      player.previous(allowSeekToBeginning: true),
+                  onLikeTap: onLikeTap,
+                  onDislike: isRecommendation ? onDislike : null,
+                  onPlayToggle: onPlayToggle,
+                  onSeek: onSeek,
+                  onVolumeChange: onVolumeChange,
+                  onDismiss: onDismiss,
+                  onFullscreen: onFullscreen,
+                  onMiniplayer: onMiniplayer,
+                  onShuffleToggle: isMixPlaylist ? null : onShuffleToggle,
+                  onRepeatToggle: onRepeatToggle,
+                  onNextTrack: onNextTrack,
+                  onPreviousTrack: onPreviousTrack,
                 ),
               ),
             ),
