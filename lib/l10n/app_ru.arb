@@ -376,6 +376,13 @@
 	"profile_stopOnLongPauseTitle": "Остановка при неактивности",
 	"profile_stopOnLongPauseDescription": "Плеер перестанет играть при долгой паузе, экономя ресурсы устройства",
 
+	"profile_rewindOnPreviousTitle": "Перемотка при запуске предыдущего трека",
+	"profile_rewindOnPreviousDescription": "В каких случаях попытка запуска предыдущего трека будет перематывать в начало вместо запуска предыдущего.\nПовторная попытка перемотки в течении небольшого времени запустит предыдущий трек вне зависимости от значения настройки",
+	"profile_rewindOnPreviousAlways": "Всегда",
+	"profile_rewindOnPreviousOnlyViaUI": "Только через интерфейс",
+	"profile_rewindOnPreviousOnlyViaNotification": "Только через уведомление/наушники",
+	"profile_rewindOnPreviousDisabled": "Никогда",
+
 	"profile_checkBeforeFavoriteTitle": "Защита от создания дубликатов",
 	"profile_checkBeforeFavoriteDescription": "Вы увидите предупреждение о том, что трек уже лайкнут, что бы не сохранить его дважды",
 	"checkBeforeFavoriteWarningTitle": "Обнаружен дубликат трека",

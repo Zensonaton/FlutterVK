@@ -221,6 +221,74 @@ class CloseActionDialog extends ConsumerWidget {
   }
 }
 
+/// Диалог, помогающий пользователю поменять настройку "Перемотка при запуска предыдущего трека".
+///
+/// Пример использования:
+/// ```dart
+/// showDialog(
+/// 	context: context,
+/// 	builder: (context) => const RewindOnPreviousDialog()
+/// );
+/// ```
+class RewindOnPreviousDialog extends ConsumerWidget {
+  const RewindOnPreviousDialog({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final prefsNotifier = ref.read(preferencesProvider.notifier);
+    final preferences = ref.watch(preferencesProvider);
+    final l18n = ref.watch(l18nProvider);
+
+    void onValueChanged(RewindBehavior? behavior) {
+      HapticFeedback.lightImpact();
+      if (behavior == null) return;
+
+      prefsNotifier.setRewindOnPreviousBehavior(behavior);
+    }
+
+    return MaterialDialog(
+      icon: Icons.replay,
+      title: l18n.profile_rewindOnPreviousTitle,
+      contents: [
+        RadioListTile.adaptive(
+          title: Text(
+            l18n.profile_rewindOnPreviousAlways,
+          ),
+          value: RewindBehavior.always,
+          groupValue: preferences.rewindOnPreviousBehavior,
+          onChanged: onValueChanged,
+        ),
+        RadioListTile.adaptive(
+          title: Text(
+            l18n.profile_rewindOnPreviousOnlyViaUI,
+          ),
+          value: RewindBehavior.onlyViaUI,
+          groupValue: preferences.rewindOnPreviousBehavior,
+          onChanged: onValueChanged,
+        ),
+        RadioListTile.adaptive(
+          title: Text(
+            l18n.profile_rewindOnPreviousOnlyViaNotification,
+          ),
+          value: RewindBehavior.onlyViaNotification,
+          groupValue: preferences.rewindOnPreviousBehavior,
+          onChanged: onValueChanged,
+        ),
+        RadioListTile.adaptive(
+          title: Text(
+            l18n.profile_rewindOnPreviousDisabled,
+          ),
+          value: RewindBehavior.disabled,
+          groupValue: preferences.rewindOnPreviousBehavior,
+          onChanged: onValueChanged,
+        ),
+      ],
+    );
+  }
+}
+
 /// Диалог, помогающий пользователю поменять настройку "Тема".
 ///
 /// Пример использования:

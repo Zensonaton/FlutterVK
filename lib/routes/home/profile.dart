@@ -649,6 +649,24 @@ class HomeProfilePage extends HookConsumerWidget {
                       },
                     ),
 
+                    // Перемотка при нажатии на предыдущий трек.
+                    SettingWithDialog(
+                      icon: Icons.replay_outlined,
+                      title: l18n.profile_rewindOnPreviousTitle,
+                      subtitle: l18n.profile_rewindOnPreviousDescription,
+                      dialog: const RewindOnPreviousDialog(),
+                      settingText: {
+                        RewindBehavior.always:
+                            l18n.profile_rewindOnPreviousAlways,
+                        RewindBehavior.onlyViaUI:
+                            l18n.profile_rewindOnPreviousOnlyViaUI,
+                        RewindBehavior.onlyViaNotification:
+                            l18n.profile_rewindOnPreviousOnlyViaNotification,
+                        RewindBehavior.disabled:
+                            l18n.profile_rewindOnPreviousDisabled,
+                      }[preferences.rewindOnPreviousBehavior]!,
+                    ),
+
                     // Предупреждение создание дубликата при сохранении.
                     SwitchListTile(
                       secondary: const Icon(

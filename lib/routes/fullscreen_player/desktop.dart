@@ -607,37 +607,34 @@ class FullscreenMediaControls extends ConsumerWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       // Если места мало, то кнопка для лайка/дизлайка.
-                      if (compactLayout)
-                        Padding(
-                          padding: EdgeInsets.only(
-                            right: smallerButtonSpacing ? 0 : 8,
-                          ),
-                          child: IconButton(
-                            onPressed: () => _toggleLike(ref, context, true),
-                            icon: Icon(
-                              isFavorite
-                                  ? Icons.favorite
-                                  : Icons.favorite_border,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
+                      if (compactLayout) ...[
+                        IconButton(
+                          onPressed: () => _toggleLike(ref, context, true),
+                          icon: Icon(
+                            isFavorite ? Icons.favorite : Icons.favorite_border,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                         ),
+                        Gap(
+                          smallerButtonSpacing ? 0 : 8,
+                        ),
+                      ],
 
                       // Кнопка для дизлайка трека, если включён рекомендуемый плейлист.
                       if (compactLayout &&
-                          player.currentPlaylist!.isRecommendationTypePlaylist)
-                        Padding(
-                          padding: EdgeInsets.only(
-                            right: smallerButtonSpacing ? 0 : 8,
-                          ),
-                          child: IconButton(
-                            onPressed: () => _toggleDislike(ref, context),
-                            icon: Icon(
-                              Icons.thumb_down_outlined,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
+                          player.currentPlaylist!
+                              .isRecommendationTypePlaylist) ...[
+                        IconButton(
+                          onPressed: () => _toggleDislike(ref, context),
+                          icon: Icon(
+                            Icons.thumb_down_outlined,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                         ),
+                        Gap(
+                          smallerButtonSpacing ? 0 : 8,
+                        ),
+                      ],
 
                       // Переключение shuffle.
                       StreamBuilder<bool>(
@@ -667,19 +664,21 @@ class FullscreenMediaControls extends ConsumerWidget {
                           );
                         },
                       ),
-                      Gap(smallerButtonSpacing ? 0 : 8),
+                      Gap(
+                        smallerButtonSpacing ? 0 : 8,
+                      ),
 
                       // Предыдущий трек.
                       IconButton(
-                        onPressed: () => player.previous(
-                          allowSeekToBeginning: true,
-                        ),
+                        onPressed: () => player.smartPrevious(),
                         icon: Icon(
                           Icons.skip_previous,
                           color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
-                      Gap(smallerButtonSpacing ? 0 : 8),
+                      Gap(
+                        smallerButtonSpacing ? 0 : 8,
+                      ),
 
                       // Пауза/воспроизведение.
                       StreamBuilder<PlayerState>(
@@ -702,7 +701,9 @@ class FullscreenMediaControls extends ConsumerWidget {
                           );
                         },
                       ),
-                      Gap(smallerButtonSpacing ? 0 : 8),
+                      Gap(
+                        smallerButtonSpacing ? 0 : 8,
+                      ),
 
                       // Следующий трек.
                       IconButton(
@@ -712,7 +713,9 @@ class FullscreenMediaControls extends ConsumerWidget {
                           color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
-                      Gap(smallerButtonSpacing ? 0 : 8),
+                      Gap(
+                        smallerButtonSpacing ? 0 : 8,
+                      ),
 
                       // Повтор трека.
                       StreamBuilder<LoopMode>(
@@ -798,7 +801,9 @@ class FullscreenMediaControls extends ConsumerWidget {
                                   ),
                         ),
                       ),
-                      Gap(smallerButtonSpacing ? 0 : 8),
+                      Gap(
+                        smallerButtonSpacing ? 0 : 8,
+                      ),
 
                       // Выход из полноэкранного режима.
                       IconButton(

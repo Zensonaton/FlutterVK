@@ -758,7 +758,7 @@ class VKMusicPlayer {
 
               break;
             case PressedButton.previous:
-              await previous(allowSeekToBeginning: true);
+              await smartPrevious(viaNotification: true);
 
               break;
             case PressedButton.stop:
@@ -1035,9 +1035,9 @@ class VKMusicPlayer {
     if (!playing) await play();
   }
 
-  /// Запускает воспроизведение предыдущего трека в очереди. Если это первый трек в плейлисте, то ставит плеер на паузу.
+  /// Запускает воспроизведение трека, который был воспроизведён перед текущим треком, либо паузу, если это первый трек в очереди, либо же перематывает в начало текущего трека, если прошло не более 5 секунд воспроизведения и [allowSeekToBeginning] правдив.
   ///
-  /// Если [allowSeekToBeginning] указан как true, то плеер, в случае, если прошло не более 5 секунд воспроизведения, запустит воспроизведение с самого начала трека, вместо перехода на предыдущий.
+  /// Вместо этого метод стоит воспользоваться методом [smartPrevious], который учитывает значение настройки [UserPreferences.rewindOnPreviousBehavior].
   Future<void> previous({
     bool allowSeekToBeginning = false,
   }) async {
@@ -1054,6 +1054,26 @@ class VKMusicPlayer {
     }
 
     if (!playing) await play();
+  }
+
+  /// Запускает воспроизведение трека, который был воспроизведён перед текущим треком, либо паузу, если это первый трек в очереди, либо же перематывает в начало текущего трека в зависимости от источника вызова этого метода (UI либо медиа-уведомление) и значения пользовательской настройки [UserPreferences.rewindOnPreviousBehavior].
+  ///
+  /// Если вам нужно проигнорировать текущее значение настройки [UserPreferences.rewindOnPreviousBehavior], то воспользуйтесь методом [previous].
+  Future<void> smartPrevious({
+    bool viaNotification = false,
+  }) async {
+    final setting = ref.read(preferencesProvider).rewindOnPreviousBehavior;
+    final allowSeekToBeginning = setting == RewindBehavior.always ||
+        (viaNotification && setting == RewindBehavior.onlyViaNotification) ||
+        (!viaNotification && setting == RewindBehavior.onlyViaUI);
+
+    logger.d(
+      "Called smartPrevious($viaNotification), current setting: ${setting.name}, should allow seek to beginning: $allowSeekToBeginning",
+    );
+
+    return await previous(
+      allowSeekToBeginning: allowSeekToBeginning,
+    );
   }
 
   /// Включает или отключает случайное перемешивание треков в данном плейлисте, в зависимости от аргумента [shuffle].
@@ -1624,8 +1644,8 @@ class AudioPlayerService extends BaseAudioHandler
 
   @override
   Future<void> skipToPrevious() async {
-    await _player.previous(
-      allowSeekToBeginning: true,
+    await _player.smartPrevious(
+      viaNotification: true,
     );
 
     await super.skipToPrevious();

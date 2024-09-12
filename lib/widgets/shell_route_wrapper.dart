@@ -646,8 +646,15 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
 
     void onNextTrack(bool viaSwipe) => player.next();
 
-    void onPreviousTrack(bool viaSwipe) =>
+    void onPreviousTrack(bool viaSwipe) {
+      if (viaSwipe) {
         player.previous(allowSeekToBeginning: !viaSwipe);
+
+        return;
+      }
+
+      player.smartPrevious();
+    }
 
     return AnimatedAlign(
       duration: const Duration(

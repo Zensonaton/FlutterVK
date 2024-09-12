@@ -367,7 +367,7 @@ class FullscreenMediaControls extends ConsumerWidget {
 
     onSliderUsed(double newProgress) => player.seekNormalized(newProgress);
 
-    void onPreviousTap() => player.previous(allowSeekToBeginning: true);
+    void onPreviousTap() => player.smartPrevious();
 
     void onPauseTap() => player.togglePlay();
 

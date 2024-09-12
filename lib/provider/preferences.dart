@@ -134,6 +134,10 @@ class UserPreferences {
   @JsonKey(name: "Volume")
   final double volume;
 
+  /// Указывает, в каких случаях трек будет перематываться в начало при попытке запустить предыдущий.
+  @JsonKey(name: "RewindOnPreviousBehavior", toJson: intFromEnum)
+  final RewindBehavior rewindOnPreviousBehavior;
+
   UserPreferences({
     this.dbVersion = IsarDBMigrator.maxDBVersion,
     this.myMusicChipEnabled = true,
@@ -163,6 +167,7 @@ class UserPreferences {
     this.lrcLibEnabled = false,
     this.loopModeEnabled = false,
     this.volume = 1.0,
+    this.rewindOnPreviousBehavior = RewindBehavior.always,
   });
 
   /// Делает копию этого класа с новыми передаваемыми значениями.
@@ -195,6 +200,7 @@ class UserPreferences {
     bool? lrcLibEnabled,
     bool? loopModeEnabled,
     double? volume,
+    RewindBehavior? rewindOnPreviousBehavior,
   }) =>
       UserPreferences(
         dbVersion: dbVersion ?? this.dbVersion,
@@ -231,6 +237,8 @@ class UserPreferences {
         lrcLibEnabled: lrcLibEnabled ?? this.lrcLibEnabled,
         loopModeEnabled: loopModeEnabled ?? this.loopModeEnabled,
         volume: volume ?? this.volume,
+        rewindOnPreviousBehavior:
+            rewindOnPreviousBehavior ?? this.rewindOnPreviousBehavior,
       );
 
   factory UserPreferences.fromJson(Map<String, dynamic> json) =>
@@ -278,6 +286,8 @@ class Preferences extends _$Preferences {
       lrcLibEnabled: prefs.getBool("LRCLIBEnabled"),
       loopModeEnabled: prefs.getBool("LoopModeEnabled"),
       volume: prefs.getDouble("Volume"),
+      rewindOnPreviousBehavior:
+          RewindBehavior.values[prefs.getInt("RewindOnPreviousBehavior") ?? 0],
     );
   }
 
@@ -411,4 +421,7 @@ class Preferences extends _$Preferences {
       state = state.copyWith(loopModeEnabled: enabled);
 
   void setVolume(double volume) => state = state.copyWith(volume: volume);
+
+  void setRewindOnPreviousBehavior(RewindBehavior behavior) =>
+      state = state.copyWith(rewindOnPreviousBehavior: behavior);
 }
