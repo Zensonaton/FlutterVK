@@ -128,7 +128,6 @@
 	"music_similarMusicChip": "Совпадения по вкусам",
 	"music_byVKChip": "Собрано редакцией",
 	"music_connectRecommendationsChipTitle": "Подключить рекомендации ВКонтакте",
-	"music_connectRecommendationsChipDescription": "Дополнительно включает отображение изображений треков",
 
 	"music_connectRecommendationsTitle": "Подключение рекомендаций",
 	"music_connectRecommendationsDescription": "Подключив рекомендации, Вы получите доступ к разделам музыки «Плейлисты для Вас», «VK Mix» и другие, а так же Вы начнёте видеть обложки треков.\n\nДля подключения рекомендаций, Вам будет необходимо повторно авторизоваться.",
@@ -338,6 +337,9 @@
 	},
 
 
+	"profile_recommendationsNotConnectedTitle": "Рекомендации ВКонтакте не подключены",
+	"profile_recommendationsNotConnectedDescription": "Из-за этого у треков нет обложек, а так же Вы теряете доступ к \"умным\" плейлистам с новыми треками.\n\nНажмите на это поле, что бы подключить рекомендации и исправить это.",
+
 	"profile_visualTitle": "Визуал, косметические настройки",
 
 	"profile_themeTitle": "Тема",
@@ -348,8 +350,6 @@
 	"profile_oledThemeTitle": "OLED-тема",
 	"profile_oledThemeDescription": "Ещё больше тьмы! Помогает сохранять заряд аккумулятора на устройствах с OLED-дисплеями",
 
-	"profile_useThumbnailAsBackgroundTitle": "Изображение трека как фон полноэкранного плеера",
-
 	"profile_usePlayerColorsAppWideTitle": "Цвета трека по всему приложению",
 
 	"profile_playerDynamicColorSchemeTypeTitle": "Тип палитры цветов обложки",
@@ -359,11 +359,10 @@
 	"profile_playerDynamicColorSchemeContent": "Яркий",
 	"profile_playerDynamicColorSchemeMonochrome": "Монохромный",
 
+	"profile_useThumbnailAsBackgroundTitle": "Изображение трека как фон полноэкранного плеера",
+
 
 	"profile_musicPlayerTitle": "Музыкальный плеер",
-
-	"profile_discordRPCTitle": "Discord Rich Presence",
-	"profile_discordRPCDescription": "Транслирует играющий трек в Discord",
 
 	"profile_closeActionTitle": "Действие при закрытии",
 	"profile_closeActionDescription": "Определяет, закроется ли приложение при закрытии окна",
@@ -375,12 +374,15 @@
 	"profile_pauseOnMuteDescription": "Поставив громкость на минимум, воспроизведение приостановится",
 
 	"profile_stopOnLongPauseTitle": "Остановка при неактивности",
-	"profile_stopOnLongPauseDescription": "Плеер перестанет играть при долгой паузе",
+	"profile_stopOnLongPauseDescription": "Плеер перестанет играть при долгой паузе, экономя ресурсы устройства",
 
-	"profile_checkBeforeFavoriteTitle": "Предупреждение при дубликате лайка",
+	"profile_checkBeforeFavoriteTitle": "Защита от создания дубликатов",
 	"profile_checkBeforeFavoriteDescription": "Вы увидите предупреждение о том, что трек уже лайкнут, что бы не сохранить его дважды",
 	"checkBeforeFavoriteWarningTitle": "Обнаружен дубликат трека",
 	"checkBeforeFavoriteWarningDescription": "Похоже, что этот трек уже лайкнут Вами. Сохранив этот трек, у Вас будет ещё одна копия этого трека.\nВы уверены, что хотите сделать дубликат данного трека?",
+
+	"profile_discordRPCTitle": "Discord Rich Presence",
+	"profile_discordRPCDescription": "Транслирует играющий трек в Discord",
 
 	"profile_playerDebugLoggingTitle": "Debug-логирование плеера",
 	"profile_playerDebugLoggingDescription": "Включает вывод технических данных музыкального плеера в лог. Включение может привести к понижению производительности",

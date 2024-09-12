@@ -26,6 +26,7 @@ import "../../services/cache_manager.dart";
 import "../../services/logger.dart";
 import "../../utils.dart";
 import "../../widgets/dialogs.dart";
+import "../../widgets/fallback_user_avatar.dart";
 import "profile/dialogs.dart";
 
 /// Вызывает окно, дающее пользователю возможность поделиться файлом логов приложения ([logFilePath]), либо же открывающее проводник (`explorer.exe`) с файлом логов (на OS Windows).
@@ -57,6 +58,9 @@ class ProfileSettingCategory extends StatelessWidget {
   /// Указывает, что [title] и [icon] будут располагаться по центру и вне виджета [Card]. Используется при Mobile Layout'е.
   final bool centerTitle;
 
+  /// [Padding] для [children] внутри виджета [Card].
+  final EdgeInsetsGeometry padding;
+
   /// Содержимое этой категории.
   final List<Widget> children;
 
@@ -65,6 +69,10 @@ class ProfileSettingCategory extends StatelessWidget {
     required this.icon,
     required this.title,
     this.centerTitle = false,
+    this.padding = const EdgeInsets.symmetric(
+      horizontal: 18,
+      vertical: 14,
+    ),
     required this.children,
   });
 
@@ -73,6 +81,17 @@ class ProfileSettingCategory extends StatelessWidget {
     final Widget titleWidget = Row(
       mainAxisSize: centerTitle ? MainAxisSize.min : MainAxisSize.max,
       children: [
+        // Разделитель.
+        if (centerTitle)
+          const Expanded(
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: 16,
+              ),
+              child: Divider(),
+            ),
+          ),
+
         // Иконка.
         if (!centerTitle) const Gap(16),
         Icon(
@@ -82,58 +101,73 @@ class ProfileSettingCategory extends StatelessWidget {
         const Gap(12),
 
         // Название категории.
-        Text(
-          title,
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.primary,
-            fontWeight: FontWeight.w500,
+        SelectionContainer.disabled(
+          child: Text(
+            title,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
+
+        // Разделитель.
+        if (centerTitle)
+          const Expanded(
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: 16,
+              ),
+              child: Divider(),
+            ),
+          ),
       ],
     );
 
-    return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: centerTitle ? 0 : 16,
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(
-          globalBorderRadius,
-        ),
-        child: Column(
-          children: [
-            // Внешнее название виджета.
-            if (centerTitle) ...[
-              titleWidget,
-              const Gap(16),
-            ],
+    return Column(
+      children: [
+        // Иконка и название вне Card.
+        if (centerTitle) ...[
+          titleWidget,
+          const Gap(20),
+        ],
 
-            // Внутреннее содержимое.
-            Card(
-              margin: EdgeInsets.zero,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(
-                  globalBorderRadius,
-                ),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Иконка и название.
-                  if (!centerTitle) ...[
-                    const Gap(14),
-                    titleWidget,
-                    const Gap(8),
-                  ],
-
-                  // Содержимое.
-                  ...children,
-                ],
+        // Внутреннее содержимое.
+        ClipRRect(
+          borderRadius: BorderRadius.circular(
+            globalBorderRadius,
+          ),
+          child: Card(
+            margin: EdgeInsets.zero,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(
+                globalBorderRadius,
               ),
             ),
-          ],
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Иконка и название, располагаемые внутри Card.
+                if (!centerTitle) ...[
+                  const Gap(14),
+                  titleWidget,
+                ],
+
+                // Содержимое.
+                Padding(
+                  padding: padding,
+                  child: Column(
+                    children: children,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
-      ),
+      ],
     );
   }
 }
@@ -211,6 +245,164 @@ class SettingWithDialog extends StatelessWidget {
   }
 }
 
+/// Виджет для [HomeProfilePage], отображающий предупреждение о том, что рекомендации не подключены.
+class ProfileRecommendationsWarning extends ConsumerWidget {
+  const ProfileRecommendationsWarning({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l18n = ref.watch(l18nProvider);
+
+    return Card(
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(
+          globalBorderRadius,
+        ),
+      ),
+      child: InkWell(
+        onTap: () => showDialog(
+          context: context,
+          builder: (context) {
+            return const ConnectRecommendationsDialog();
+          },
+        ),
+        borderRadius: BorderRadius.circular(
+          globalBorderRadius,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(
+            16,
+          ),
+          child: Row(
+            children: [
+              // Иконка.
+              Icon(
+                Icons.auto_fix_high,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const Gap(12),
+
+              // Содержимое.
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // "Рекомендации не подключены".
+                    Text(
+                      l18n.profile_recommendationsNotConnectedTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const Gap(4),
+
+                    // "Рекомендации не подключены".
+                    Text(
+                      l18n.profile_recommendationsNotConnectedDescription,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Виджет для [HomeProfilePage], отображающий аватар пользователя, а так же кнопку для выхода из аккаунта.
+class ProfileAvatar extends ConsumerWidget {
+  const ProfileAvatar({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l18n = ref.watch(l18nProvider);
+    final user = ref.watch(userProvider);
+
+    void onLogoutPressed() => showDialog(
+          context: context,
+          builder: (context) => const ProfileLogoutExitDialog(),
+        );
+
+    return Column(
+      children: [
+        // Аватар пользователя, при наличии.
+        if (user.photoMaxUrl != null)
+          CachedNetworkImage(
+            imageUrl: user.photoMaxUrl!,
+            cacheKey: "${user.id}400",
+            memCacheWidth: 80 * MediaQuery.of(context).devicePixelRatio.toInt(),
+            memCacheHeight:
+                80 * MediaQuery.of(context).devicePixelRatio.toInt(),
+            fadeInDuration: Duration.zero,
+            fadeOutDuration: Duration.zero,
+            placeholderFadeInDuration: Duration.zero,
+            cacheManager: CachedNetworkImagesManager.instance,
+            placeholder: (BuildContext context, String url) {
+              return const UserAvatarPlaceholder();
+            },
+            imageBuilder: (_, imageProvider) {
+              return Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  image: DecorationImage(
+                    image: imageProvider,
+                    fit: BoxFit.scaleDown,
+                  ),
+                ),
+              );
+            },
+          )
+        else
+          const UserAvatarPlaceholder(),
+        const Gap(12),
+
+        // Имя пользователя.
+        Text(
+          user.fullName,
+          style: Theme.of(context).textTheme.titleMedium,
+          textAlign: TextAlign.center,
+        ),
+
+        // @domain пользователя.
+        if (user.domain != null) ...[
+          SelectableText(
+            "@${user.domain}",
+            style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                  fontWeight: FontWeight.w400,
+                  color:
+                      Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                ),
+            textAlign: TextAlign.center,
+          ),
+          const Gap(8),
+        ],
+        const Gap(8),
+
+        // Выход из аккаунта.
+        FilledButton.tonalIcon(
+          onPressed: onLogoutPressed,
+          icon: const Icon(
+            Icons.logout,
+          ),
+          label: Text(
+            l18n.home_profilePageLogout,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 /// Страница для [HomeRoute] для просмотра собственного профиля.
 class HomeProfilePage extends HookConsumerWidget {
   static final AppLogger logger = getLogger("HomeProfilePage");
@@ -235,6 +427,9 @@ class HomeProfilePage extends HookConsumerWidget {
     final bool mobileLayout = isMobileLayout(context);
     final bool recommendationsConnected =
         ref.watch(secondaryTokenProvider) != null;
+    final EdgeInsets settingsPadding = EdgeInsets.only(
+      top: mobileLayout ? 0 : 8,
+    );
 
     return Scaffold(
       appBar: mobileLayout
@@ -270,119 +465,28 @@ class HomeProfilePage extends HookConsumerWidget {
         children: [
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.only(
-                top: 8,
+              padding: EdgeInsets.all(
+                mobileLayout ? 16 : 24,
+              ).copyWith(
+                bottom: 0,
               ),
               children: [
                 // Информация о текущем пользователе.
-                Column(
-                  children: [
-                    // Аватар пользователя, при наличии.
-                    if (user.photoMaxUrl != null) ...[
-                      CachedNetworkImage(
-                        imageUrl: user.photoMaxUrl!,
-                        cacheKey: "${user.id}400",
-                        placeholder: (BuildContext context, String url) {
-                          return const SizedBox(
-                            height: 80,
-                            width: 80,
-                          );
-                        },
-                        fadeInDuration: Duration.zero,
-                        fadeOutDuration: Duration.zero,
-                        placeholderFadeInDuration: Duration.zero,
-                        imageBuilder: (_, ImageProvider imageProvider) {
-                          return Container(
-                            width: 80,
-                            height: 80,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              image: DecorationImage(
-                                image: imageProvider,
-                                fit: BoxFit.scaleDown,
-                              ),
-                            ),
-                          );
-                        },
-                        cacheManager: CachedNetworkImagesManager.instance,
-                      ),
-                      const Gap(12),
-                    ],
-
-                    // Имя пользователя.
-                    Text(
-                      user.fullName,
-                      style: Theme.of(context).textTheme.titleMedium,
-                      textAlign: TextAlign.center,
-                    ),
-
-                    // @domain пользователя.
-                    if (user.domain != null) ...[
-                      SelectableText(
-                        "@${user.domain}",
-                        style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                              fontWeight: FontWeight.w400,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withOpacity(0.5),
-                            ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const Gap(8),
-                    ],
-                    const Gap(8),
-
-                    // Выход из аккаунта.
-                    FilledButton.tonalIcon(
-                      onPressed: () => showDialog(
-                        context: context,
-                        builder: (context) => const ProfileLogoutExitDialog(),
-                      ),
-                      icon: const Icon(
-                        Icons.logout,
-                      ),
-                      label: Text(
-                        l18n.home_profilePageLogout,
-                      ),
-                    ),
-                    const Gap(8),
-                  ],
-                ),
-
-                // Подключение рекомендаций.
-                if (!recommendationsConnected)
-                  ListTile(
-                    title: Text(
-                      l18n.music_connectRecommendationsChipTitle,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                    subtitle: Text(
-                      l18n.music_connectRecommendationsChipDescription,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                    leading: Icon(
-                      Icons.auto_fix_high,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    onTap: () => showDialog(
-                      context: context,
-                      builder: (context) {
-                        return const ConnectRecommendationsDialog();
-                      },
-                    ),
-                  ),
+                const ProfileAvatar(),
                 const Gap(18),
+
+                // Блок, предупреждающий пользователя о том, что рекомендации не подключены.
+                if (!recommendationsConnected) ...[
+                  const ProfileRecommendationsWarning(),
+                  const Gap(18),
+                ],
 
                 // Визуал.
                 ProfileSettingCategory(
                   icon: Icons.color_lens,
                   title: l18n.profile_visualTitle,
                   centerTitle: mobileLayout,
+                  padding: settingsPadding,
                   children: [
                     // Тема приложения.
                     SettingWithDialog(
@@ -410,27 +514,10 @@ class HomeProfilePage extends HookConsumerWidget {
                       value: preferences.oledTheme,
                       onChanged: Theme.of(context).brightness == Brightness.dark
                           ? (bool? enabled) async {
+                              HapticFeedback.lightImpact();
                               if (enabled == null) return;
 
                               prefsNotifier.setOLEDThemeEnabled(enabled);
-                            }
-                          : null,
-                    ),
-
-                    // Использование изображения трека для фона в полноэкранном плеере.
-                    SwitchListTile(
-                      secondary: const Icon(
-                        Icons.photo_filter,
-                      ),
-                      title: Text(
-                        l18n.profile_useThumbnailAsBackgroundTitle,
-                      ),
-                      value: preferences.playerThumbAsBackground,
-                      onChanged: recommendationsConnected
-                          ? (bool? enabled) async {
-                              if (enabled == null) return;
-
-                              prefsNotifier.setPlayerThumbAsBackground(enabled);
                             }
                           : null,
                     ),
@@ -446,6 +533,7 @@ class HomeProfilePage extends HookConsumerWidget {
                       value: preferences.playerColorsAppWide,
                       onChanged: recommendationsConnected
                           ? (bool? enabled) async {
+                              HapticFeedback.lightImpact();
                               if (enabled == null) return;
 
                               prefsNotifier.setPlayerColorsAppWide(enabled);
@@ -472,6 +560,25 @@ class HomeProfilePage extends HookConsumerWidget {
                             l18n.profile_playerDynamicColorSchemeMonochrome,
                       }[preferences.dynamicSchemeType]!,
                     ),
+
+                    // Использование изображения трека для фона в полноэкранном плеере.
+                    SwitchListTile(
+                      secondary: const Icon(
+                        Icons.photo_filter,
+                      ),
+                      title: Text(
+                        l18n.profile_useThumbnailAsBackgroundTitle,
+                      ),
+                      value: preferences.playerThumbAsBackground,
+                      onChanged: recommendationsConnected
+                          ? (bool? enabled) async {
+                              HapticFeedback.lightImpact();
+                              if (enabled == null) return;
+
+                              prefsNotifier.setPlayerThumbAsBackground(enabled);
+                            }
+                          : null,
+                    ),
                   ],
                 ),
                 const Gap(16),
@@ -481,28 +588,8 @@ class HomeProfilePage extends HookConsumerWidget {
                   icon: Icons.music_note,
                   title: l18n.profile_musicPlayerTitle,
                   centerTitle: mobileLayout,
+                  padding: settingsPadding,
                   children: [
-                    // Discord Rich Presence.
-                    if (isDesktop)
-                      SwitchListTile(
-                        secondary: const Icon(
-                          Icons.discord,
-                        ),
-                        title: Text(
-                          l18n.profile_discordRPCTitle,
-                        ),
-                        subtitle: Text(
-                          l18n.profile_discordRPCDescription,
-                        ),
-                        value: player.discordRPCEnabled,
-                        onChanged: (bool? enabled) async {
-                          if (enabled == null) return;
-
-                          prefsNotifier.setDiscordRPCEnabled(enabled);
-                          await player.setDiscordRPCEnabled(enabled);
-                        },
-                      ),
-
                     // Поведение при закрытии.
                     if (isDesktop)
                       SettingWithDialog(
@@ -533,6 +620,7 @@ class HomeProfilePage extends HookConsumerWidget {
                         ),
                         value: preferences.pauseOnMuteEnabled,
                         onChanged: (bool? enabled) async {
+                          HapticFeedback.lightImpact();
                           if (enabled == null) return;
 
                           prefsNotifier.setPauseOnMuteEnabled(enabled);
@@ -553,6 +641,7 @@ class HomeProfilePage extends HookConsumerWidget {
                       ),
                       value: preferences.stopOnPauseEnabled,
                       onChanged: (bool? enabled) async {
+                        HapticFeedback.lightImpact();
                         if (enabled == null) return;
 
                         prefsNotifier.setStopOnPauseEnabled(enabled);
@@ -563,7 +652,7 @@ class HomeProfilePage extends HookConsumerWidget {
                     // Предупреждение создание дубликата при сохранении.
                     SwitchListTile(
                       secondary: const Icon(
-                        Icons.copy,
+                        Icons.copy_all,
                       ),
                       title: Text(
                         l18n.profile_checkBeforeFavoriteTitle,
@@ -573,11 +662,34 @@ class HomeProfilePage extends HookConsumerWidget {
                       ),
                       value: preferences.checkBeforeFavorite,
                       onChanged: (bool? enabled) async {
+                        HapticFeedback.lightImpact();
                         if (enabled == null) return;
 
                         prefsNotifier.setCheckBeforeFavorite(enabled);
                       },
                     ),
+
+                    // Discord Rich Presence.
+                    if (isDesktop)
+                      SwitchListTile(
+                        secondary: const Icon(
+                          Icons.discord,
+                        ),
+                        title: Text(
+                          l18n.profile_discordRPCTitle,
+                        ),
+                        subtitle: Text(
+                          l18n.profile_discordRPCDescription,
+                        ),
+                        value: player.discordRPCEnabled,
+                        onChanged: (bool? enabled) async {
+                          HapticFeedback.lightImpact();
+                          if (enabled == null) return;
+
+                          prefsNotifier.setDiscordRPCEnabled(enabled);
+                          await player.setDiscordRPCEnabled(enabled);
+                        },
+                      ),
 
                     // Debug-логирование плеера.
                     if (isDesktop)
@@ -593,6 +705,7 @@ class HomeProfilePage extends HookConsumerWidget {
                         ),
                         value: preferences.debugPlayerLogging,
                         onChanged: (bool? enabled) async {
+                          HapticFeedback.lightImpact();
                           if (enabled == null) return;
 
                           prefsNotifier.setDebugPlayerLogging(enabled);
@@ -621,6 +734,7 @@ class HomeProfilePage extends HookConsumerWidget {
                   icon: Icons.science,
                   title: l18n.profile_experimentalTitle,
                   centerTitle: mobileLayout,
+                  padding: settingsPadding,
                   children: [
                     // Загрузка отсутсвующих обложек из Deezer.
                     SwitchListTile(
@@ -636,6 +750,7 @@ class HomeProfilePage extends HookConsumerWidget {
                       value: preferences.deezerThumbnails,
                       onChanged: recommendationsConnected
                           ? (bool? enabled) async {
+                              HapticFeedback.lightImpact();
                               if (enabled == null) return;
 
                               prefsNotifier.setDeezerThumbnails(enabled);
@@ -656,6 +771,7 @@ class HomeProfilePage extends HookConsumerWidget {
                       ),
                       value: preferences.lrcLibEnabled,
                       onChanged: (bool? enabled) async {
+                        HapticFeedback.lightImpact();
                         if (enabled == null) return;
 
                         prefsNotifier.setLRCLIBEnabled(enabled);
@@ -681,11 +797,12 @@ class HomeProfilePage extends HookConsumerWidget {
                 ),
                 const Gap(16),
 
-                // О приложении.
+                // О Flutter VK.
                 ProfileSettingCategory(
                   icon: Icons.info,
                   title: l18n.profile_aboutTitle,
                   centerTitle: mobileLayout,
+                  padding: settingsPadding,
                   children: [
                     // Поделиться логами.
                     ListTile(
@@ -775,10 +892,10 @@ class HomeProfilePage extends HookConsumerWidget {
                       subtitle: Text(
                         l18n.profile_showChangelogDescription,
                       ),
-                      onTap: () {
+                      onTap: () async {
                         if (!networkRequiredDialog(ref, context)) return;
 
-                        ref.read(updaterProvider).showChangelog(
+                        await ref.read(updaterProvider).showChangelog(
                               context,
                               showLoadingOverlay: true,
                             );
@@ -795,13 +912,13 @@ class HomeProfilePage extends HookConsumerWidget {
                       ),
                       subtitle: Text(
                         l18n.profile_appVersionDescription(
-                          "v$appVersion${isPrerelease ? " (${l18n.profile_appVersionPreRelease})" : ""}",
+                          "v$appVersion${kDebugMode ? " (Debug)" : isPrerelease ? " (${l18n.profile_appVersionPreRelease})" : ""}",
                         ),
                       ),
-                      onTap: () {
+                      onTap: () async {
                         if (!networkRequiredDialog(ref, context)) return;
 
-                        ref.read(updaterProvider).checkForUpdates(
+                        await ref.read(updaterProvider).checkForUpdates(
                               context,
                               allowPre: preferences.updateBranch ==
                                   UpdateBranch.preReleases,
@@ -820,6 +937,7 @@ class HomeProfilePage extends HookConsumerWidget {
                     icon: Icons.logo_dev,
                     title: "Debugging options",
                     centerTitle: mobileLayout,
+                    padding: settingsPadding,
                     children: [
                       // Кнопка для копирования ID пользователя.
                       ListTile(

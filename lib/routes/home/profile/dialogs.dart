@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:gap/gap.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
@@ -181,6 +182,7 @@ class CloseActionDialog extends ConsumerWidget {
     final l18n = ref.watch(l18nProvider);
 
     void onValueChanged(CloseBehavior? behavior) {
+      HapticFeedback.lightImpact();
       if (behavior == null) return;
 
       prefsNotifier.setCloseBehavior(behavior);
@@ -240,6 +242,7 @@ class ThemeActionDialog extends ConsumerWidget {
     final l18n = ref.watch(l18nProvider);
 
     void onValueChanged(ThemeMode? mode) {
+      HapticFeedback.lightImpact();
       if (mode == null) return;
 
       prefsNotifier.setTheme(mode);
@@ -394,6 +397,7 @@ class PlayerDynamicSchemeDialog extends ConsumerWidget {
     }
 
     void onValueChanged(DynamicSchemeType? dynamicScheme) {
+      HapticFeedback.lightImpact();
       if (dynamicScheme == null) return;
 
       prefsNotifier.setDynamicSchemeType(dynamicScheme);
@@ -466,6 +470,7 @@ class UpdatesDialogTypeActionDialog extends ConsumerWidget {
     final l18n = ref.watch(l18nProvider);
 
     void onValueChanged(UpdatePolicy? policy) async {
+      HapticFeedback.lightImpact();
       if (policy == null) return;
 
       // Делаем небольшое предупреждение, если пользователь пытается отключить обновления.
@@ -553,6 +558,7 @@ class UpdatesChannelDialog extends ConsumerWidget {
     final l18n = ref.watch(l18nProvider);
 
     void onValueChanged(UpdateBranch? branch) {
+      HapticFeedback.lightImpact();
       if (branch == null) return;
 
       prefsNotifier.setUpdateBranch(branch);
