@@ -1,7 +1,7 @@
 import "dart:async";
 import "dart:io";
 
-import "package:debounce_throttle/debounce_throttle.dart";
+import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
@@ -17,11 +17,15 @@ import "../../../api/deezer/search.dart";
 import "../../../api/deezer/shared.dart";
 import "../../../consts.dart";
 import "../../../main.dart";
+import "../../../provider/color.dart";
 import "../../../provider/l18n.dart";
 import "../../../provider/player_events.dart";
+import "../../../provider/playlists.dart";
 import "../../../provider/user.dart";
 import "../../../services/audio_player.dart";
 import "../../../services/cache_manager.dart";
+import "../../../services/download_manager.dart";
+import "../../../services/image_to_color_scheme.dart";
 import "../../../services/logger.dart";
 import "../../../utils.dart";
 import "../../../widgets/adaptive_dialog.dart";
@@ -29,104 +33,184 @@ import "../../../widgets/audio_track.dart";
 import "../../../widgets/dialogs.dart";
 import "track_info.dart";
 
-/// Диалог, помогающий пользователю заменить обложку у трека.
-class TrackThumbnailDialog extends StatefulHookConsumerWidget {
+/// Диалог, помогающий пользователю отредактировать обложку у передаваемого трека.
+class TrackThumbnailEditDialog extends HookConsumerWidget {
+  static final AppLogger logger = getLogger("TrackThumbnailEditDialog");
+
   /// Трек, над обложкой которого производится манипуляция.
   final ExtendedAudio audio;
 
   /// Плейлист, в котором находится трек.
   final ExtendedPlaylist playlist;
 
-  /// Если true, то сразу после открытия данного диалога фокус будет на [SearchBar].
-  final bool focusSearchBarOnOpen;
-
-  const TrackThumbnailDialog({
+  const TrackThumbnailEditDialog({
     super.key,
     required this.audio,
     required this.playlist,
-    this.focusSearchBarOnOpen = true,
   });
 
   @override
-  ConsumerState<TrackThumbnailDialog> createState() =>
-      _TrackThumbnailDialogState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l18n = ref.watch(l18nProvider);
+    final playlists = ref.read(playlistsProvider.notifier);
 
-class _TrackThumbnailDialogState extends ConsumerState<TrackThumbnailDialog> {
-  // TODO: Переписать с использованием hook'ов.
+    final selectedTrack = useState<DeezerTrack?>(null);
+    final controller = useTextEditingController(
+      text:
+          "${audio.artist}${audio.subtitle != null ? " (${audio.subtitle})" : ""} - ${audio.title}",
+    );
+    final focusNode = useFocusNode();
+    final ValueNotifier<Future<List<DeezerTrack>>?> searchFuture =
+        useState(null);
+    final debouncedInput = useDebounced(
+      controller.text,
+      const Duration(milliseconds: 500),
+    );
+    useValueListenable(controller);
 
-  /// Контроллер, используемый для управления введённым в поле поиска текстом.
-  final controller = useTextEditingController();
+    void onSearch() {
+      if (!context.mounted && !networkRequiredDialog(ref, context)) return;
 
-  /// FocusNode для фокуса поля поиска сразу после открытия данного диалога.
-  final focusNode = useFocusNode();
+      final String query = controller.text.trim();
 
-  /// Debouncer для поиска.
-  final debouncer = Debouncer<String>(
-    const Duration(
-      seconds: 1,
-    ),
-    initialValue: "",
-  );
+      Future<List<DeezerTrack>> search() async {
+        final DeezerAPISearchResponse response =
+            await deezer_search_query(query);
 
-  /// Текущий Future по поиску обложек треков через Deezer. Может отсутствовать, если ничего не было введено в поиск.
-  Future<List<DeezerTrack>>? searchFuture;
-
-  /// Выбранный пользователем [DeezerTrack], обложка которого будет использована.
-  DeezerTrack? selectedTrack;
-
-  /// Метод, который вызывается при печати в поле поиска.
-  ///
-  /// Данный метод вызывается с учётом debouncing'а.
-  void onDebounce(String query) {
-    // Если мы вышли из текущего Route, то ничего не делаем.
-    if (!mounted) return;
-
-    // Проверяем наличие интернета.
-    if (!networkRequiredDialog(ref, context)) return;
-
-    // Если ничего не введено, то делаем пустой Future.
-    if (query.isEmpty) {
-      if (searchFuture != null) {
-        setState(
-          () => searchFuture = null,
-        );
+        return response.data;
       }
 
-      return;
+      // Если ничего не введено, то делаем пустой Future.
+      if (query.isEmpty) {
+        if (searchFuture.value != null) {
+          searchFuture.value = null;
+        }
+
+        return;
+      }
+
+      // Делаем запрос по получению результатов поиска.
+      searchFuture.value = search();
     }
 
-    searchFuture = deezer_search_sorted(query, "");
-    setState(() {});
-  }
+    void onSearchClear() => controller.clear();
 
-  @override
-  void initState() {
-    super.initState();
+    void onSearchResultSelect(DeezerTrack track) => selectedTrack.value = track;
 
-    // Обработчик печати.
-    controller.addListener(
-      () => debouncer.value = controller.text,
+    void postThumbnailSave(ExtendedAudio newAudio) async {
+      final trackSchemeInfo = ref.read(trackSchemeInfoProvider.notifier);
+
+      // Удаляем старые обложки.
+      final String mediaKey = audio.mediaKey;
+      await CachedAlbumImagesManager.instance.removeFile("${mediaKey}small");
+      await CachedAlbumImagesManager.instance.removeFile("${mediaKey}max");
+
+      // Очищаем кэш изображений в памяти.
+      PaintingBinding.instance.imageCache.clear();
+      PaintingBinding.instance.imageCache.clearLiveImages();
+
+      // Загружаем новую обложку.
+      final downloadedAudio =
+          await PlaylistCacheDownloadItem.downloadWithMetadata(
+        playlists.ref,
+        playlist,
+        newAudio,
+        downloadAudio: false,
+        downloadLyrics: false,
+      );
+      if (downloadedAudio == null) return;
+
+      // Получаем новые цвета, если у нас есть хоть какая-то обложка.
+      ImageSchemeExtractor? newColors;
+      if (newAudio.smallestThumbnail != null) {
+        newColors = await ImageSchemeExtractor.fromImageProvider(
+          CachedNetworkImageProvider(
+            audio.smallestThumbnail!,
+            cacheKey: "${audio.mediaKey}small",
+            cacheManager: CachedAlbumImagesManager.instance,
+          ),
+        );
+
+        // Если играет этот же трек, то обновляем цвета по всему приложению.
+        if (player.currentAudio?.id == audio.id) {
+          logger.d("Updating colors for current track");
+
+          trackSchemeInfo.fromExtractor(newColors);
+        }
+      }
+
+      // Сохраняем новую версию трека. Для начала, нам нужно извлечь актуальную версию плейлиста.
+      final newPlaylist = playlists.getPlaylist(playlist.ownerID, playlist.id);
+      assert(newPlaylist != null, "Playlist is null");
+
+      playlists.updatePlaylist(
+        newPlaylist!.copyWithNewAudio(
+          newAudio.copyWith(
+            colorInts: newColors?.colorInts,
+            scoredColorInts: newColors?.scoredColorInts,
+            frequentColorInt: newColors?.frequentColor.value,
+            colorCount: newColors?.colorCount,
+          ),
+        ),
+        saveInDB: true,
+      );
+    }
+
+    void onThumbnailSave() {
+      assert(
+        selectedTrack.value != null,
+        "No track selected",
+      );
+
+      if (context.mounted) Navigator.of(context).pop();
+
+      // Сохраняем новую обложку, передавая трек с новыми обложками.
+      postThumbnailSave(
+        audio.copyWith(
+          forceDeezerThumbs: true,
+          deezerThumbs: ExtendedThumbnails.fromDeezerTrack(
+            selectedTrack.value!,
+          ),
+        ),
+      );
+    }
+
+    void onThumbnailReset() async {
+      assert(
+        audio.forceDeezerThumbs,
+        "Deezer thumbnails aren't forced for that track",
+      );
+
+      if (context.mounted) Navigator.of(context).pop();
+
+      // Сохраняем новую обложку, передавая трек без Deezer-обложки.
+      postThumbnailSave(
+        audio.copyWith(
+          forceDeezerThumbs: false,
+        ),
+      );
+    }
+
+    useEffect(
+      () {
+        // Если у пользователя ПК, то тогда устанавливаем фокус на поле поиска.
+        if (isDesktop) focusNode.requestFocus();
+
+        return null;
+      },
+      [],
+    );
+    useEffect(
+      () {
+        if (debouncedInput == null) return;
+        onSearch();
+
+        return null;
+      },
+      [debouncedInput],
     );
 
-    // Обработчик событий поиска, испускаемых Debouncer'ом, если пользователь остановил печать.
-    debouncer.values.listen(onDebounce);
-
-    // Если у пользователя ПК, то тогда устанавливаем фокус на поле поиска.
-    if (isDesktop && widget.focusSearchBarOnOpen) focusNode.requestFocus();
-
-    // Сразу же вставляем название трека в поле поиска.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      controller.text = "${widget.audio.artist} - ${widget.audio.title}";
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l18n = ref.watch(l18nProvider);
-    ref.watch(playerStateProvider);
-
-    final bool mobileLayout = isMobileLayout(context);
+    final mobileLayout = isMobileLayout(context);
 
     return AdaptiveDialog(
       child: Container(
@@ -136,177 +220,178 @@ class _TrackThumbnailDialogState extends ConsumerState<TrackThumbnailDialog> {
         width: 650,
         child: Column(
           children: [
-            Padding(
-              padding: mobileLayout
-                  ? EdgeInsets.zero
-                  : const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Кнопка "Назад".
-                  if (mobileLayout)
-                    Padding(
-                      padding: const EdgeInsets.only(
-                        right: 12,
-                      ),
-                      child: IconButton(
-                        icon: Icon(
-                          Icons.adaptive.arrow_back,
-                        ),
-                        onPressed: () => context.pop(),
-                      ),
-                    ),
+            // Поиск.
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Кнопка "Назад".
+                if (mobileLayout) ...[
+                  const BackButton(),
+                  const Gap(12),
+                ],
 
-                  // Поиск.
-                  Expanded(
-                    child: CallbackShortcuts(
-                      bindings: {
-                        const SingleActivator(
-                          LogicalKeyboardKey.escape,
-                        ): () => controller.clear(),
-                      },
-                      child: TextField(
-                        focusNode: focusNode,
-                        controller: controller,
-                        onChanged: (String query) => setState(() {}),
-                        decoration: InputDecoration(
-                          hintText: l18n.music_setThumbnailSearchText,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(
-                              globalBorderRadius,
-                            ),
+                // Поиск.
+                Expanded(
+                  child: CallbackShortcuts(
+                    bindings: {
+                      const SingleActivator(
+                        LogicalKeyboardKey.escape,
+                      ): () => controller.clear(),
+                    },
+                    child: TextField(
+                      focusNode: focusNode,
+                      controller: controller,
+                      decoration: InputDecoration(
+                        hintText: l18n.music_setThumbnailSearchText,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(
+                            globalBorderRadius,
                           ),
-                          prefixIcon: const Icon(
-                            Icons.search,
-                          ),
-                          suffixIcon: controller.text.isNotEmpty
-                              ? Padding(
-                                  padding: const EdgeInsetsDirectional.only(
-                                    end: 12,
-                                  ),
-                                  child: IconButton(
-                                    icon: const Icon(
-                                      Icons.close,
-                                    ),
-                                    onPressed: () => setState(
-                                      () => controller.clear(),
-                                    ),
-                                  ),
-                                )
-                              : null,
                         ),
+                        prefixIcon: const Icon(
+                          Icons.search,
+                        ),
+                        suffixIcon: controller.text.isNotEmpty
+                            ? Padding(
+                                padding: const EdgeInsetsDirectional.only(
+                                  end: 12,
+                                ),
+                                child: IconButton(
+                                  icon: const Icon(
+                                    Icons.close,
+                                  ),
+                                  onPressed: onSearchClear,
+                                ),
+                              )
+                            : null,
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
             const Gap(16),
 
-            // Результаты поиска.
+            // Содержимое поиска.
             Expanded(
               child: FutureBuilder(
-                future: searchFuture,
+                future: searchFuture.value,
                 builder: (
                   BuildContext context,
                   AsyncSnapshot<List<DeezerTrack>> snapshot,
                 ) {
-                  final List<DeezerTrack> tracks = snapshot.data ?? [];
+                  // Содержимое поиска.
+                  return ListView.separated(
+                    itemCount: () {
+                      // Запрос на поиск.
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return 50;
+                      }
 
-                  // Пользователь ещё ничего не ввёл.
-                  if (snapshot.connectionState == ConnectionState.none) {
-                    return Text(
-                      l18n.music_typeToSearchText,
-                    );
-                  }
+                      // Ошибка при загрузке, либо ничего не было найдено.
+                      if (searchFuture.value == null ||
+                          snapshot.hasError ||
+                          snapshot.data == null ||
+                          snapshot.data!.isEmpty) {
+                        return 1;
+                      }
 
-                  // Информация по данному плейлисту ещё не была загружена.
-                  if (snapshot.connectionState == ConnectionState.waiting ||
-                      snapshot.hasError ||
-                      !snapshot.hasData) {
-                    return ListView.builder(
-                      itemCount: 50,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemBuilder: (BuildContext context, int index) {
+                      return snapshot.data!.length;
+                    }(),
+                    separatorBuilder: (BuildContext context, int index) {
+                      return const Gap(trackTileSpacing);
+                    },
+                    itemBuilder: (BuildContext context, int index) {
+                      final deezerTrack = snapshot.data?.elementAtOrNull(index);
+                      final isSelected =
+                          selectedTrack.value?.id == deezerTrack?.id;
+
+                      // Пользователь ещё ничего не ввёл.
+                      if (searchFuture.value == null) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                          ),
+                          child: Text(
+                            l18n.music_setThumbnailNoQuery,
+                            textAlign: TextAlign.center,
+                          ),
+                        );
+                      }
+
+                      // Информация по данному плейлисту ещё не была загружена.
+                      if (snapshot.connectionState == ConnectionState.waiting) {
                         return Skeletonizer(
-                          child: Padding(
-                            padding: const EdgeInsets.only(
-                              bottom: 8,
-                            ),
-                            child: AudioTrackTile(
-                              audio: ExtendedAudio(
-                                id: -1,
-                                ownerID: -1,
-                                title: fakeTrackNames[
-                                    index % fakeTrackNames.length],
-                                artist: fakeTrackNames[
-                                    (index + 1) % fakeTrackNames.length],
-                                duration: 60 * 3,
-                                accessKey: "",
-                                url: "",
-                                date: 0,
-                              ),
+                          child: AudioTrackTile(
+                            audio: ExtendedAudio(
+                              id: -1,
+                              ownerID: -1,
+                              title:
+                                  fakeTrackNames[index % fakeTrackNames.length],
+                              artist: fakeTrackNames[
+                                  (index + 1) % fakeTrackNames.length],
+                              duration: 60 * 3,
                             ),
                           ),
                         );
-                      },
-                    );
-                  }
+                      }
 
-                  // Ничего не найдено.
-                  if (snapshot.hasData && tracks.isEmpty) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                      ),
-                      child: StyledText(
-                        text: l18n.music_zeroSearchResults,
-                        tags: {
-                          "click": StyledTextActionTag(
-                            (String? text, Map<String?, String?> attrs) =>
-                                setState(
-                              () => controller.clear(),
-                            ),
+                      // Ошибка при загрузке.
+                      if (snapshot.hasError) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                          ),
+                          child: Text(
+                            snapshot.error.toString(),
+                            textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: Theme.of(context).colorScheme.primary,
+                              color: Theme.of(context).colorScheme.error,
                             ),
                           ),
-                        },
-                      ),
-                    );
-                  }
+                        );
+                      }
 
-                  // Отображаем данные.
-                  return ListView.builder(
-                    itemCount: tracks.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      final DeezerTrack track = tracks.elementAt(index);
+                      // Ничего не было найдено.
+                      if (snapshot.hasData && snapshot.data!.isEmpty) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                          ),
+                          child: StyledText(
+                            text: l18n.music_zeroSearchResults,
+                            textAlign: TextAlign.center,
+                            tags: {
+                              "click": StyledTextActionTag(
+                                (_, __) => onSearchClear(),
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                              ),
+                            },
+                          ),
+                        );
+                      }
 
-                      return Padding(
-                        padding: const EdgeInsets.only(
-                          bottom: 8,
-                        ),
-                        child: AudioTrackTile(
-                          audio: ExtendedAudio(
-                            id: track.id,
-                            ownerID: -track.id,
-                            title: track.title,
-                            artist: track.artist.name,
-                            duration: track.duration,
-                            accessKey: "",
-                            url: "",
-                            date: 0,
-                            deezerThumbs:
-                                ExtendedThumbnails.fromDeezerTrack(track),
-                          ),
-                          isSelected: selectedTrack == track,
-                          onPlayToggle: () => setState(
-                            () => selectedTrack = track,
+                      // Результаты поиска.
+                      return AudioTrackTile(
+                        audio: ExtendedAudio(
+                          id: index,
+                          ownerID: 0,
+                          artist: deezerTrack!.artist.name,
+                          title: deezerTrack.title,
+                          duration: deezerTrack.duration,
+                          deezerThumbs: ExtendedThumbnails.fromDeezerTrack(
+                            deezerTrack,
                           ),
                         ),
+                        allowImageCache: false,
+                        forceAvailable: true,
+                        showDuration: false,
+                        glowIfSelected: true,
+                        isSelected: isSelected,
+                        isPlaying: true,
+                        onPlayToggle: () => onSearchResultSelect(deezerTrack),
                       );
                     },
                   );
@@ -315,56 +400,37 @@ class _TrackThumbnailDialogState extends ConsumerState<TrackThumbnailDialog> {
             ),
             const Gap(16),
 
-            // Кнопка для сохранения.
+            // Кнопки для применения либо отмены изменений.
             Align(
               alignment: Alignment.bottomRight,
-              child: FilledButton.icon(
-                onPressed: selectedTrack != null
-                    ? () async {
-                        // // Заменяем обложки.
-                        // widget.audio.deezerThumbs = null;
-                        // widget.audio.vkThumbs =
-                        //     ExtendedThumbnails.fromDeezerTrack(selectedTrack!);
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  // Сбросить.
+                  if (audio.forceDeezerThumbs)
+                    FilledButton.tonalIcon(
+                      onPressed: onThumbnailReset,
+                      icon: const Icon(
+                        Icons.delete,
+                      ),
+                      label: Text(
+                        l18n.general_reset,
+                      ),
+                    ),
 
-                        // Удаляем кэшированные обложки.
-                        CachedAlbumImagesManager.instance
-                            .removeFile("${widget.audio.mediaKey}small");
-                        CachedAlbumImagesManager.instance
-                            .removeFile("${widget.audio.mediaKey}max");
-
-                        // TODO: Сохраняем изменения.
-                        await appStorage
-                            .savePlaylist(widget.playlist.asDBPlaylist);
-
-                        // Загружаем новые обложки.
-                        // CachedStreamedAudio.downloadTrackData(
-                        //   widget.audio,
-                        //   widget.playlist,
-                        //   user,
-                        //   allowDeezer: user.settings.deezerThumbnails,
-                        //   saveInDB: true,
-                        // );
-
-                        // Отображаем сообщение об успешном изменении, и выходим из диалога.
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                l18n.music_setThumbnailSaveSuccessful,
-                              ),
-                            ),
-                          );
-
-                          context.pop();
-                        }
-                      }
-                    : null,
-                icon: const Icon(
-                  Icons.image_search,
-                ),
-                label: Text(
-                  l18n.music_setThumbnailSave,
-                ),
+                  // Сохранить.
+                  FilledButton.icon(
+                    onPressed:
+                        selectedTrack.value != null ? onThumbnailSave : null,
+                    icon: const Icon(
+                      Icons.image_search,
+                    ),
+                    label: Text(
+                      l18n.general_save,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -567,7 +633,7 @@ class BottomAudioOptionsDialog extends ConsumerWidget {
                     showDialog(
                       context: context,
                       builder: (BuildContext context) {
-                        return TrackThumbnailDialog(
+                        return TrackThumbnailEditDialog(
                           audio: audio,
                           playlist: playlist,
                         );

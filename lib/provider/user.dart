@@ -458,8 +458,15 @@ class ExtendedAudio {
   /// Информация об обложке данного трека, полученного с Deezer.
   final ExtendedThumbnails? deezerThumbs;
 
+  /// Указывает, что вместо [vkThumbs] будет использоваться [deezerThumbs].
+  final bool forceDeezerThumbs;
+
   /// Возвращает объект типа [ExtendedThumbnails], берущий значение с переменной [vkThumbs] или [deezerThumbs].
-  ExtendedThumbnails? get thumbnail => vkThumbs ?? deezerThumbs;
+  ExtendedThumbnails? get thumbnail {
+    if (forceDeezerThumbs) return deezerThumbs ?? vkThumbs;
+
+    return vkThumbs ?? deezerThumbs;
+  }
 
   /// Возвращает URL самой маленькой обложки ([ExtendedThumbnails.photoSmall]) из переменной [vkThumbs] либо [deezerThumbs].
   String? get smallestThumbnail => thumbnail?.photoSmall;
@@ -625,6 +632,7 @@ class ExtendedAudio {
         album: audio.album?.asAudioAlbum,
         vkThumbs: audio.vkThumbs?.asExtendedThumbnails,
         deezerThumbs: audio.deezerThumbs?.asExtendedThumbnails,
+        forceDeezerThumbs: audio.forceDeezerThumbs ?? false,
         hasLyrics: audio.hasLyrics!,
         genreID: audio.genreID ?? 18,
         vkLyrics: audio.vkLyrics?.asLyrics,
@@ -656,6 +664,7 @@ class ExtendedAudio {
     Album? album,
     ExtendedThumbnails? vkThumbs,
     ExtendedThumbnails? deezerThumbs,
+    bool? forceDeezerThumbs,
     bool? hasLyrics,
     int? genreID,
     Lyrics? vkLyrics,
@@ -688,6 +697,7 @@ class ExtendedAudio {
         album: album ?? this.album,
         vkThumbs: vkThumbs ?? this.vkThumbs,
         deezerThumbs: deezerThumbs ?? this.deezerThumbs,
+        forceDeezerThumbs: forceDeezerThumbs ?? this.forceDeezerThumbs,
         hasLyrics: hasLyrics ?? this.hasLyrics,
         genreID: genreID ?? this.genreID,
         vkLyrics: vkLyrics ?? this.vkLyrics,
@@ -723,7 +733,8 @@ class ExtendedAudio {
         other.id == id &&
         other.ownerID == ownerID &&
         other.isLiked == isLiked &&
-        other.isCached == isCached;
+        other.isCached == isCached &&
+        other.smallestThumbnail == smallestThumbnail;
   }
 
   @override
@@ -744,6 +755,7 @@ class ExtendedAudio {
     this.album,
     this.vkThumbs,
     this.deezerThumbs,
+    this.forceDeezerThumbs = false,
     this.hasLyrics = false,
     this.genreID,
     this.vkLyrics,

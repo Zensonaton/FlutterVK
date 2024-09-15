@@ -22,7 +22,6 @@ dependencies:
   collection: ^1.17.2
   connectivity_plus: ^6.0.3
   crypto: ^3.0.3
-  debounce_throttle: ^2.0.0
   diacritic: ^0.1.5
   dio: ^5.5.0+1
   dio_http2_adapter: ^2.5.3

@@ -4,6 +4,7 @@
 	"general_yes": "Да",
 	"general_no": "Нет",
 	"general_save": "Сохранить",
+	"general_reset": "Сбросить",
 	"general_close": "Закрыть",
 	"general_addedToQueue": "Трек добавлен в очередь.",
 	"general_restartApp": "Пожалуйста, перезагрузите приложение.",
@@ -251,8 +252,6 @@
 	"@music_setThumbnailNoResults": {
 		"description": "<click>...</click> очищает результаты поиска."
 	},
-	"music_setThumbnailSave": "Сохранить обложку",
-	"music_setThumbnailSaveSuccessful": "Обложка успешно изменена. Это изменение будет видно на этом устройстве после перезахода в приложение.",
 
 	"music_trackTitle": "Название",
 	"music_trackArtist": "Исполнитель",

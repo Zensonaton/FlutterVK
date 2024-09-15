@@ -614,7 +614,9 @@ class Playlists extends _$Playlists {
             existingAudio.vkLyrics == givenAudio.vkLyrics &&
             existingAudio.lrcLibLyrics == givenAudio.lrcLibLyrics &&
             existingAudio.isLiked == givenAudio.isLiked &&
-            existingAudio.thumbnail == givenAudio.thumbnail &&
+            existingAudio.vkThumbs == givenAudio.vkThumbs &&
+            existingAudio.deezerThumbs == givenAudio.deezerThumbs &&
+            existingAudio.forceDeezerThumbs == givenAudio.forceDeezerThumbs &&
             existingAudio.frequentColorInt == givenAudio.frequentColorInt) {
           newAudios.add(existingAudio);
 
@@ -634,6 +636,7 @@ class Playlists extends _$Playlists {
             lrcLibLyrics: givenAudio.lrcLibLyrics,
             vkThumbs: givenAudio.vkThumbs,
             deezerThumbs: givenAudio.deezerThumbs,
+            forceDeezerThumbs: givenAudio.forceDeezerThumbs,
             isLiked: givenAudio.isLiked,
             colorCount: givenAudio.colorCount,
             colorInts: givenAudio.colorInts,

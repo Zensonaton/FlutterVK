@@ -6,7 +6,7 @@ part of 'playlists.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$dbPlaylistsHash() => r'3e3f25c8bd181fb9a3c542b49b5091cbabb09628';
+String _$dbPlaylistsHash() => r'63dae5c097c923479c7c821764e469968f0e931d';
 
 /// [Provider], загружающий информацию о плейлистах пользователя из локальной БД.
 ///
@@ -346,7 +346,7 @@ class _GetPlaylistProviderElement
   int get id => (origin as GetPlaylistProvider).id;
 }
 
-String _$playlistsHash() => r'3611f25fb7b986219d48df4c2de0822fef47feca';
+String _$playlistsHash() => r'65fa98836b58903dbe61e9f0815bf3e66bbe8e10';
 
 /// [Provider], хранящий в себе информацию о плейлистах пользователя.
 ///

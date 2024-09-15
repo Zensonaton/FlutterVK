@@ -303,6 +303,9 @@ class DBAudio {
   /// Информация об обложке данного трека, полученного с Deezer.
   DBExtendedThumbnail? deezerThumbs;
 
+  /// Указывает, что вместо [vkThumbs] будет использоваться [deezerThumbs].
+  final bool? forceDeezerThumbs;
+
   /// Указывает наличие текста песни.
   final bool? hasLyrics;
 
@@ -354,6 +357,7 @@ class DBAudio {
         album: audio.album?.asDBAlbum,
         vkThumbs: audio.vkThumbs?.asDBExtendedThumbnail,
         deezerThumbs: audio.deezerThumbs?.asDBExtendedThumbnail,
+        forceDeezerThumbs: audio.forceDeezerThumbs,
         isCached: audio.isCached,
         cachedSize: audio.cachedSize,
         colorInts: audio.colorInts?.keys.toList(),
@@ -451,6 +455,7 @@ class DBAudio {
     this.album,
     this.vkThumbs,
     this.deezerThumbs,
+    this.forceDeezerThumbs,
     this.hasLyrics,
     this.vkLyrics,
     this.lrcLibLyrics,

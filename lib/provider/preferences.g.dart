@@ -48,6 +48,10 @@ UserPreferences _$UserPreferencesFromJson(Map<String, dynamic> json) =>
       lrcLibEnabled: json['LRCLIBEnabled'] as bool? ?? false,
       loopModeEnabled: json['LoopModeEnabled'] as bool? ?? false,
       volume: (json['Volume'] as num?)?.toDouble() ?? 1.0,
+      rewindOnPreviousBehavior: $enumDecodeNullable(
+              _$RewindBehaviorEnumMap, json['RewindOnPreviousBehavior']) ??
+          RewindBehavior.always,
+      spoilerNextTrack: json['SpoilerNextTrack'] as bool? ?? true,
     );
 
 Map<String, dynamic> _$UserPreferencesToJson(UserPreferences instance) =>
@@ -81,6 +85,9 @@ Map<String, dynamic> _$UserPreferencesToJson(UserPreferences instance) =>
       'LRCLIBEnabled': instance.lrcLibEnabled,
       'LoopModeEnabled': instance.loopModeEnabled,
       'Volume': instance.volume,
+      'RewindOnPreviousBehavior':
+          intFromEnum(instance.rewindOnPreviousBehavior),
+      'SpoilerNextTrack': instance.spoilerNextTrack,
     };
 
 const _$ThemeModeEnumMap = {
@@ -113,11 +120,18 @@ const _$DynamicSchemeTypeEnumMap = {
   DynamicSchemeType.monochrome: 'monochrome',
 };
 
+const _$RewindBehaviorEnumMap = {
+  RewindBehavior.always: 'always',
+  RewindBehavior.onlyViaUI: 'onlyViaUI',
+  RewindBehavior.onlyViaNotification: 'onlyViaNotification',
+  RewindBehavior.disabled: 'disabled',
+};
+
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$preferencesHash() => r'73ee641021828bf68f8c181630339be7eb3d10bc';
+String _$preferencesHash() => r'66ee63d847234a19157d5a67d6a17d699a980808';
 
 /// [Provider] для хранения настроек пользователя.
 ///

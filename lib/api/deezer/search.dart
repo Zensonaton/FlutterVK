@@ -30,6 +30,19 @@ class DeezerAPISearchResponse {
   Map<String, dynamic> toJson() => _$DeezerAPISearchResponseToJson(this);
 }
 
+/// Используя API Deezer, делает поиск по передаваемому [query].
+Future<DeezerAPISearchResponse> deezer_search_query(String query) async {
+  var response = await dio.get(
+    "https://api.deezer.com/search/track",
+    queryParameters: {
+      "q": query,
+      "order": "RANKING",
+    },
+  );
+
+  return DeezerAPISearchResponse.fromJson(response.data);
+}
+
 /// Используя API Deezer, делает поиск по передаваемому [artist] и [title] трека.
 Future<DeezerAPISearchResponse> deezer_search(
   String artist,

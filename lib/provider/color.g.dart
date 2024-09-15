@@ -202,7 +202,7 @@ class _ColorInfoFromPlaylistProviderElement
   int get id => (origin as ColorInfoFromPlaylistProvider).id;
 }
 
-String _$trackSchemeInfoHash() => r'99c3fd94a69b0c9af063cdd1871db24db208cb15';
+String _$trackSchemeInfoHash() => r'4957310b52395c738383bd2398f95eefe81a9f8e';
 
 /// [Provider], который извлекает цветовые схемы из передаваемого изображения трека.
 ///

@@ -298,7 +298,9 @@ class IsarDBMigrator {
             type: getPlaylistType(item),
             audios: item.audios
                 ?.map(
-                  (audio) => audio.copyWith(isCached: false),
+                  (audio) => audio.copyWith(
+                    isCached: false,
+                  ),
                 )
                 .toList(),
           ),

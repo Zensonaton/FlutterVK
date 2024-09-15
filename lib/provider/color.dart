@@ -30,6 +30,9 @@ class TrackSchemeInfo extends _$TrackSchemeInfo {
     return state!;
   }
 
+  /// Обновляет [state] данного объекта по передаваемому [ImageSchemeExtractor].
+  void fromExtractor(ImageSchemeExtractor extractor) => state = extractor;
+
   /// Обновляет [state] данного объекта по передаваемым цветам, ранее извлечённых при помощи метода [fromImageProvider].
   Future<ImageSchemeExtractor> fromColors({
     required Map<int, int?> colorInts,
@@ -37,11 +40,13 @@ class TrackSchemeInfo extends _$TrackSchemeInfo {
     required int frequentColorInt,
     required int colorCount,
   }) async {
-    state = ImageSchemeExtractor(
-      colorInts: colorInts,
-      scoredColorInts: scoredColorInts,
-      frequentColorInt: frequentColorInt,
-      colorCount: colorCount,
+    fromExtractor(
+      ImageSchemeExtractor(
+        colorInts: colorInts,
+        scoredColorInts: scoredColorInts,
+        frequentColorInt: frequentColorInt,
+        colorCount: colorCount,
+      ),
     );
 
     return state!;
