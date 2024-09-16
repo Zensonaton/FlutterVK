@@ -825,7 +825,7 @@ class Playlists extends _$Playlists {
     );
 
     // Обновляем плейлист.
-    final newPlaylist = playlist.copyWith(
+    final newPlaylist = playlist.basicCopyWith(
       photo: response.playlists
           .firstWhereOrNull(
             (item) => item.mediaKey == playlist.mediaKey,

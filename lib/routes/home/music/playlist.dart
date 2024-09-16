@@ -1655,7 +1655,9 @@ class PlaylistRoute extends HookConsumerWidget {
 
         // Запоминаем, что плейлист больше не кэширован.
         final newPlaylist = await playlistsManager.updatePlaylist(
-          playlist.copyWith(cacheTracks: false),
+          playlist.basicCopyWith(
+            cacheTracks: false,
+          ),
           saveInDB: true,
         );
 
@@ -1704,7 +1706,9 @@ class PlaylistRoute extends HookConsumerWidget {
 
       // Запоминаем, что плейлист теперь кэширован.
       final newPlaylist = await playlistsManager.updatePlaylist(
-        playlist.copyWith(cacheTracks: true),
+        playlist.basicCopyWith(
+          cacheTracks: true,
+        ),
         saveInDB: true,
       );
 

@@ -362,16 +362,13 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
     ref.watch(playerVolumeProvider);
     ref.watch(playerStateProvider);
 
-    /// Метод, создающий цветовую схему из обложки трека, если таковая имеется, и [ImageSchemeExtractor] в случае успеха.
-    Future<ImageSchemeExtractor?> getColorScheme(
-      ExtendedPlaylist playlist,
-      ExtendedAudio audio,
-    ) async {
+    /// Метод, создающий цветовую схему из обложки трека [audio], если таковая имеется, и возвращающий [ImageSchemeExtractor] в случае успеха.
+    Future<ImageSchemeExtractor?> getColorScheme(ExtendedAudio audio) async {
       if (audio.thumbnail == null) return null;
 
       // Если цвета обложки уже были получены, и они хранятся в БД, то просто загружаем их.
       if (audio.colorCount != null) {
-        // logger.d("Image colors are loaded from DB");
+        logger.d("Image colors are loaded from DB");
 
         return trackImageInfoNotifier.fromColors(
           colorInts: audio.colorInts!,
@@ -382,6 +379,8 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
       }
 
       // Заставляем плеер извлекать цветовую схему из обложки трека.
+      logger.d("Extracting image colors from network");
+
       return await trackImageInfoNotifier.fromImageProvider(
         CachedNetworkImageProvider(
           audio.smallestThumbnail!,
@@ -416,8 +415,7 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
 
             // Пытаемся получить цвета обложки трека.
             // Здесь мы можем получить null, если обложки у трека нет.
-            ImageSchemeExtractor? extractedColors =
-                await getColorScheme(playlist, audio);
+            ImageSchemeExtractor? extractedColors = await getColorScheme(audio);
 
             // Загружаем метаданные трека (его обложки, текст песни, ...)
             final newAudio =
@@ -432,20 +430,22 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
             if (newAudio == null) return;
 
             // Повторно пытаемся получить цвета обложек трека, если они не были загружены ранее.
-            extractedColors ??= await getColorScheme(playlist, newAudio);
+            extractedColors ??= await getColorScheme(newAudio);
 
-            // Сохраняем новую версию трека. Для начала, нам нужно извлечь актуальную версию плейлиста.
-            final newPlaylist =
-                playlistsNotifier.getPlaylist(playlist.ownerID, playlist.id);
-            assert(newPlaylist != null, "Playlist is null");
-
+            // Сохраняем новую версию трека.
             playlistsNotifier.updatePlaylist(
-              newPlaylist!.copyWithNewAudio(
-                newAudio.copyWith(
+              playlist.copyWithNewAudio(
+                newAudio.basicCopyWith(
                   colorInts: extractedColors?.colorInts,
                   scoredColorInts: extractedColors?.scoredColorInts,
                   frequentColorInt: extractedColors?.frequentColorInt,
                   colorCount: extractedColors?.colorCount,
+
+                  // Повторяем следующие поля, поскольку они могли быть загружены в downloadWithMetadata,
+                  // а .basicCopyWith проигнорирует их (превратит их в null), поэтому их нужно продублировать.
+                  vkLyrics: newAudio.vkLyrics,
+                  lrcLibLyrics: newAudio.lrcLibLyrics,
+                  deezerThumbs: newAudio.deezerThumbs,
                 ),
               ),
               saveInDB: true,
@@ -593,12 +593,34 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
           player.currentAudio!,
         )) return;
       }
-      await toggleTrackLike(
-        player.ref,
-        player.currentAudio!,
-        !player.currentAudio!.isLiked,
-        sourcePlaylist: player.currentPlaylist,
-      );
+
+      try {
+        await toggleTrackLike(
+          player.ref,
+          player.currentAudio!,
+          !player.currentAudio!.isLiked,
+          sourcePlaylist: player.currentPlaylist,
+        );
+      } on VKAPIException catch (error, stackTrace) {
+        if (!context.mounted) return;
+
+        if (error.errorCode == 15) {
+          showErrorDialog(
+            context,
+            description: l18n.music_likeRestoreTooLate,
+          );
+
+          return;
+        }
+
+        showLogErrorDialog(
+          "Error while restoring audio:",
+          error,
+          stackTrace,
+          logger,
+          context,
+        );
+      }
     }
 
     Future<void> onDislike() async {

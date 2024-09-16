@@ -5,6 +5,7 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:just_audio/just_audio.dart";
 import "package:skeletonizer/skeletonizer.dart";
 
+import "../../api/vk/shared.dart";
 import "../../consts.dart";
 import "../../enums.dart";
 import "../../main.dart";
@@ -277,6 +278,8 @@ class LyricsBlockWidget extends ConsumerWidget {
 
 /// Блок для полноэкранного плеера Desktop Layout'а, отображаемый снизу, который показывает информацию по текущему треку, а так же кнопки для управления плеером.
 class FullscreenMediaControls extends ConsumerWidget {
+  static final AppLogger logger = getLogger("FullscreenMediaControls");
+
   const FullscreenMediaControls({
     super.key,
   });
@@ -287,18 +290,42 @@ class FullscreenMediaControls extends ConsumerWidget {
     BuildContext context,
     bool checkDuplicate,
   ) async {
+    final l18n = ref.read(l18nProvider);
+
     assert(player.currentAudio != null, "Current audio is null");
     if (!networkRequiredDialog(ref, context)) return;
 
     if (!player.currentAudio!.isLiked && checkDuplicate) {
       if (!await checkForDuplicates(ref, context, player.currentAudio!)) return;
     }
-    await toggleTrackLike(
-      player.ref,
-      player.currentAudio!,
-      !player.currentAudio!.isLiked,
-      sourcePlaylist: player.currentPlaylist,
-    );
+
+    try {
+      await toggleTrackLike(
+        player.ref,
+        player.currentAudio!,
+        !player.currentAudio!.isLiked,
+        sourcePlaylist: player.currentPlaylist,
+      );
+    } on VKAPIException catch (error, stackTrace) {
+      if (!context.mounted) return;
+
+      if (error.errorCode == 15) {
+        showErrorDialog(
+          context,
+          description: l18n.music_likeRestoreTooLate,
+        );
+
+        return;
+      }
+
+      showLogErrorDialog(
+        "Error while restoring audio:",
+        error,
+        stackTrace,
+        logger,
+        context,
+      );
+    }
   }
 
   /// Добавляет дизлайк для трека, который играет в данный момент.

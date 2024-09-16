@@ -7,6 +7,7 @@ import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:just_audio/just_audio.dart";
 
+import "../../api/vk/shared.dart";
 import "../../consts.dart";
 import "../../enums.dart";
 import "../../main.dart";
@@ -16,6 +17,7 @@ import "../../provider/player_events.dart";
 import "../../provider/preferences.dart";
 import "../../provider/user.dart";
 import "../../services/cache_manager.dart";
+import "../../services/logger.dart";
 import "../../utils.dart";
 import "../../widgets/dialogs.dart";
 import "../../widgets/fallback_audio_photo.dart";
@@ -303,12 +305,16 @@ class ImageLyricsBlock extends HookConsumerWidget {
 
 /// Кнопки, а так же информация по текущему треку полноэкранного плеера Mobile Layout'а, отображаемого снизу плеера.
 class FullscreenMediaControls extends ConsumerWidget {
+  static final AppLogger logger = getLogger("FullscreenMediaControls");
+
   const FullscreenMediaControls({
     super.key,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l18n = ref.watch(l18nProvider);
+
     final prefsNotifier = ref.read(preferencesProvider.notifier);
     final preferences = ref.watch(preferencesProvider);
     ref.watch(playerStateProvider);
@@ -331,12 +337,34 @@ class FullscreenMediaControls extends ConsumerWidget {
           return;
         }
       }
-      await toggleTrackLike(
-        player.ref,
-        player.currentAudio!,
-        !isFavorite,
-        sourcePlaylist: player.currentPlaylist,
-      );
+
+      try {
+        await toggleTrackLike(
+          player.ref,
+          player.currentAudio!,
+          !isFavorite,
+          sourcePlaylist: player.currentPlaylist,
+        );
+      } on VKAPIException catch (error, stackTrace) {
+        if (!context.mounted) return;
+
+        if (error.errorCode == 15) {
+          showErrorDialog(
+            context,
+            description: l18n.music_likeRestoreTooLate,
+          );
+
+          return;
+        }
+
+        showLogErrorDialog(
+          "Error while restoring audio:",
+          error,
+          stackTrace,
+          logger,
+          context,
+        );
+      }
     }
 
     Future<void> onDislikeTap() async {

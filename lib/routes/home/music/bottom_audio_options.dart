@@ -139,13 +139,10 @@ class TrackThumbnailEditDialog extends HookConsumerWidget {
         }
       }
 
-      // Сохраняем новую версию трека. Для начала, нам нужно извлечь актуальную версию плейлиста.
-      final newPlaylist = playlists.getPlaylist(playlist.ownerID, playlist.id);
-      assert(newPlaylist != null, "Playlist is null");
-
+      // Сохраняем новую версию трека.
       playlists.updatePlaylist(
-        newPlaylist!.copyWithNewAudio(
-          newAudio.copyWith(
+        playlist.copyWithNewAudio(
+          newAudio.basicCopyWith(
             colorInts: newColors?.colorInts,
             scoredColorInts: newColors?.scoredColorInts,
             frequentColorInt: newColors?.frequentColor.value,
@@ -166,7 +163,7 @@ class TrackThumbnailEditDialog extends HookConsumerWidget {
 
       // Сохраняем новую обложку, передавая трек с новыми обложками.
       postThumbnailSave(
-        audio.copyWith(
+        audio.basicCopyWith(
           forceDeezerThumbs: true,
           deezerThumbs: ExtendedThumbnails.fromDeezerTrack(
             selectedTrack.value!,
@@ -185,7 +182,7 @@ class TrackThumbnailEditDialog extends HookConsumerWidget {
 
       // Сохраняем новую обложку, передавая трек без Deezer-обложки.
       postThumbnailSave(
-        audio.copyWith(
+        audio.basicCopyWith(
           forceDeezerThumbs: false,
         ),
       );

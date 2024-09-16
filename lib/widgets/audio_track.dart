@@ -7,6 +7,7 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
+import "../api/vk/shared.dart";
 import "../consts.dart";
 import "../main.dart";
 import "../provider/color.dart";
@@ -16,6 +17,7 @@ import "../provider/user.dart";
 import "../routes/home/music.dart";
 import "../routes/home/music/bottom_audio_options.dart";
 import "../services/cache_manager.dart";
+import "../services/logger.dart";
 import "../utils.dart";
 import "audio_player.dart";
 import "dialogs.dart";
@@ -34,6 +36,7 @@ Widget buildListTrackWidget(
   bool showDuration = true,
   bool allowImageCache = true,
 }) {
+  final logger = getLogger("buildListTrackWidget");
   final l18n = ref.watch(l18nProvider);
   final bool isSelected = audio == player.currentAudio;
 
@@ -74,12 +77,34 @@ Widget buildListTrackWidget(
       if (!audio.isLiked && ref.read(preferencesProvider).checkBeforeFavorite) {
         if (!await checkForDuplicates(ref, context, audio)) return;
       }
-      await toggleTrackLike(
-        player.ref,
-        audio,
-        !audio.isLiked,
-        sourcePlaylist: playlist,
-      );
+
+      try {
+        await toggleTrackLike(
+          player.ref,
+          audio,
+          !audio.isLiked,
+          sourcePlaylist: playlist,
+        );
+      } on VKAPIException catch (error, stackTrace) {
+        if (!context.mounted) return;
+
+        if (error.errorCode == 15) {
+          showErrorDialog(
+            context,
+            description: l18n.music_likeRestoreTooLate,
+          );
+
+          return;
+        }
+
+        showLogErrorDialog(
+          "Error while restoring audio:",
+          error,
+          stackTrace,
+          logger,
+          context,
+        );
+      }
     },
     onSecondaryAction: () => showModalBottomSheet(
       context: context,

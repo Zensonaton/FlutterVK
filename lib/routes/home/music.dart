@@ -18,6 +18,7 @@ import "../../provider/preferences.dart";
 import "../../provider/user.dart";
 import "../../provider/vk_api.dart";
 import "../../services/cache_manager.dart";
+import "../../services/logger.dart";
 import "../../utils.dart";
 import "../../widgets/dialogs.dart";
 import "../../widgets/fallback_audio_photo.dart";
@@ -101,6 +102,7 @@ Future<void> toggleTrackLike(
   bool isLiked, {
   ExtendedPlaylist? sourcePlaylist,
 }) async {
+  final logger = getLogger("toggleTrackLike");
   final playlistsNotifier = ref.read(playlistsProvider.notifier);
   final favsPlaylist = ref.read(favoritesPlaylistProvider);
   final user = ref.read(userProvider);
@@ -126,26 +128,37 @@ Future<void> toggleTrackLike(
     // в ином случае просто добавляем его методом audio.add.
     int newTrackID;
     if (shouldRestore) {
-      newTrackID = newAudio.id;
+      final int ownerID = newAudio.relativeOwnerID ?? newAudio.ownerID;
+      newTrackID = newAudio.relativeID ?? newAudio.id;
+
+      logger.d("Restore ${ownerID}_$newTrackID");
 
       // Восстанавливаем трек.
       await api.audio.restore(
         newTrackID,
-        newAudio.ownerID,
-      );
-
-      // TODO: Обработчик ошибки #15: cannot restore too late
-    } else {
-      // Сохраняем трек как лайкнутый.
-      newTrackID = await api.audio.add(
-        newAudio.id,
-        newAudio.ownerID,
+        ownerID,
       );
 
       newAudio = newAudio.copyWith(
-        savedFromPlaylist: true,
+        isLiked: true,
+      );
+    } else {
+      final int ownerID = newAudio.relativeOwnerID ?? newAudio.ownerID;
+      newTrackID = newAudio.id;
+
+      // Сохраняем трек как лайкнутый.
+      newTrackID = await api.audio.add(
+        newTrackID,
+        ownerID,
+      );
+
+      logger.d("Add ${ownerID}_${newAudio.id}, got ${user.id}_$newTrackID");
+
+      newAudio = newAudio.copyWith(
+        isLiked: true,
         relativeID: newTrackID,
         relativeOwnerID: user.id,
+        savedFromPlaylist: sourcePlaylist != null,
         savedPlaylistID: sourcePlaylist?.id,
         savedPlaylistOwnerID: sourcePlaylist?.ownerID,
       );
@@ -155,11 +168,12 @@ Future<void> toggleTrackLike(
     // Запоминаем новую версию плейлиста с лайкнутыми треками.
     playlistsModified.add(
       favsPlaylist
-          .copyWithNewAudio(
-            newAudio.copyWith(isLiked: true),
-          )
-          .copyWith(
+          .basicCopyWith(
+            audios: favsPlaylist.audios!,
             count: favsPlaylist.count + 1,
+          )
+          .copyWithNewAudio(
+            newAudio,
           ),
     );
 
@@ -168,7 +182,7 @@ Future<void> toggleTrackLike(
     if (sourcePlaylist != null) {
       await playlistsNotifier.updatePlaylist(
         sourcePlaylist.copyWithNewAudio(
-          audio.copyWith(
+          audio.basicCopyWith(
             isLiked: true,
             relativeID: newTrackID,
             relativeOwnerID: user.id,
@@ -179,31 +193,38 @@ Future<void> toggleTrackLike(
   } else {
     // Пользователь пытается удалить трек.
 
+    final int ownerID = newAudio.relativeOwnerID ?? newAudio.ownerID;
+    final int newTrackID = newAudio.relativeID ?? newAudio.id;
+    logger.d("Delete ${ownerID}_$newTrackID");
+
     // Удаляем трек из лайкнутых.
     await api.audio.delete(
-      audio.savedFromPlaylist ? audio.relativeID! : audio.id,
-      audio.savedFromPlaylist ? audio.relativeOwnerID! : audio.ownerID,
+      newTrackID,
+      ownerID,
     );
 
     // Запоминаем новую версию плейлиста "любимые треки" с удалённым треком.
     playlistsModified.add(
       favsPlaylist!
+          .basicCopyWith(
+            audios: favsPlaylist.audios!,
+            count: favsPlaylist.count - 1,
+          )
           .copyWithNewAudio(
-            newAudio.copyWith(
+            newAudio.basicCopyWith(
               isLiked: false,
               savedFromPlaylist: false,
             ),
-          )
-          .copyWith(
-            count: favsPlaylist.count - 1,
           ),
     );
 
     // Если мы не трогали плейлист "любимые" треки, то модифицируем его.
-    if (sourcePlaylist != null) {
+    if (sourcePlaylist != null &&
+        !(sourcePlaylist.id == favsPlaylist.id &&
+            sourcePlaylist.ownerID == favsPlaylist.ownerID)) {
       playlistsModified.add(
         sourcePlaylist.copyWithNewAudio(
-          newAudio.copyWith(
+          newAudio.basicCopyWith(
             isLiked: false,
             savedFromPlaylist: false,
           ),
@@ -224,7 +245,7 @@ Future<void> toggleTrackLike(
 
       playlistsModified.add(
         savedPlaylist!.copyWithNewAudio(
-          newAudio.copyWith(
+          newAudio.basicCopyWith(
             isLiked: false,
             savedFromPlaylist: false,
           ),
@@ -233,7 +254,10 @@ Future<void> toggleTrackLike(
     }
   }
 
-  await playlistsNotifier.updatePlaylists(playlistsModified, saveInDB: true);
+  await playlistsNotifier.updatePlaylists(
+    playlistsModified,
+    saveInDB: true,
+  );
 }
 
 /// Помечает передаваемый трек [audio] как дизлайкнутый.

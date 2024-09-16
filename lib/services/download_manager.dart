@@ -113,17 +113,13 @@ class PlaylistCacheDeleteDownloadItem extends DownloadItem {
 
     progress.value = 1.0;
 
-    // Сохраняем новую версию плейлиста. Для начала, нам нужно извлечь актуальную версию плейлиста.
+    // Сохраняем изменения плейлиста.
     if (updatePlaylist) {
-      final newPlaylist = ref
-          .read(playlistsProvider.notifier)
-          .getPlaylist(playlist.ownerID, playlist.id);
-      assert(newPlaylist != null, "Playlist is null");
-
-      // Сохраняем изменения плейлиста.
       ref.read(playlistsProvider.notifier).updatePlaylist(
-            newPlaylist!.copyWithNewAudio(
-              audio.copyWith(isCached: false),
+            playlist.copyWithNewAudio(
+              audio.basicCopyWith(
+                isCached: false,
+              ),
             ),
           );
     }
@@ -345,7 +341,7 @@ class PlaylistCacheDownloadItem extends DownloadItem {
     final deezerThumbs = result[3] as ExtendedThumbnails?;
     final lrcLibLyrics = result[4] as Lyrics?;
 
-    return audio.copyWith(
+    return audio.basicCopyWith(
       isCached: downloadAudio ? true : null,
       cachedSize: audioSize,
       vkLyrics: lyricsDownloaded,
@@ -371,17 +367,16 @@ class PlaylistCacheDownloadItem extends DownloadItem {
     // Если ничего не поменялось, то ничего не делаем.
     if (newAudio == null) return;
 
-    // Сохраняем новую версию трека. Для начала, нам нужно извлечь актуальную версию плейлиста.
+    // Сохраняем новую версию трека.
     if (updatePlaylist) {
-      final newPlaylist = playlists.getPlaylist(playlist.ownerID, playlist.id);
-      assert(newPlaylist != null, "Playlist is null");
-
       // Определяем, нужно ли нам сохранять изменения в БД.
       // Мы сохраняем изменения каждые 5 треков.
-      final saveInDB = newPlaylist!.audios!.indexOf(audio) % 5 == 0;
+      final saveInDB = playlist.audios!.indexOf(audio) % 5 == 0;
 
       playlists.updatePlaylist(
-        newPlaylist.copyWithNewAudio(newAudio),
+        playlist.copyWithNewAudio(
+          newAudio,
+        ),
         saveInDB: saveInDB,
       );
     }

@@ -203,6 +203,59 @@ class ExtendedPlaylist {
   DBPlaylist get asDBPlaylist => DBPlaylist.fromExtendedPlaylist(this);
 
   /// Делает копию этого класа с новыми передаваемыми значениями.
+  ///
+  /// В отличии от [copyWith], данный метод не копирует поля из старого объекта [ExtendedPlaylist], если они не были переданы в аргументах.
+  ExtendedPlaylist basicCopyWith({
+    int? count,
+    String? title,
+    String? description,
+    String? accessKey,
+    bool? isFollowing,
+    String? subtitle,
+    Thumbnails? photo,
+    List<ExtendedAudio>? audios,
+    String? mixID,
+    String? backgroundAnimationUrl,
+    double? simillarity,
+    String? color,
+    List<ExtendedAudio>? knownTracks,
+    bool? isLiveData,
+    bool? areTracksLive,
+    bool? cacheTracks,
+    Map<int, int?>? colorInts,
+    List<int>? scoredColorInts,
+    int? frequentColorInt,
+    int? colorCount,
+  }) =>
+      ExtendedPlaylist(
+        id: id,
+        ownerID: ownerID,
+        type: type,
+        title: title,
+        description: description,
+        count: count ?? this.count,
+        accessKey: accessKey,
+        isFollowing: isFollowing ?? this.isFollowing,
+        subtitle: subtitle,
+        photo: photo,
+        audios: audios,
+        mixID: mixID,
+        backgroundAnimationUrl: backgroundAnimationUrl,
+        simillarity: simillarity,
+        color: color,
+        knownTracks: knownTracks,
+        isLiveData: isLiveData ?? this.isLiveData,
+        areTracksLive: areTracksLive ?? this.areTracksLive,
+        cacheTracks: cacheTracks,
+        colorInts: colorInts,
+        scoredColorInts: scoredColorInts,
+        frequentColorInt: frequentColorInt,
+        colorCount: colorCount,
+      );
+
+  /// Делает копию этого класа с новыми передаваемыми значениями.
+  ///
+  /// В отличии от [basicCopyWith], данный метод копирует все поля из старого объекта [ExtendedPlaylist], если они не были переданы в аргументах.
   ExtendedPlaylist copyWith({
     int? id,
     int? ownerID,
@@ -273,7 +326,9 @@ class ExtendedPlaylist {
       newAudios.insert(index, audio);
     }
 
-    return copyWith(audios: newAudios);
+    return basicCopyWith(
+      audios: newAudios,
+    );
   }
 
   /// Возвращает строку, которая используется как идентификатор пользователя и медиа.
@@ -648,7 +703,77 @@ class ExtendedAudio {
         colorCount: audio.colorCount,
       );
 
+  /// Делает копию этого класа с новыми передаваемыми значениями.
+  ///
+  /// В отличии от [copyWith], данный метод не копирует поля из старого объекта [ExtendedAudio], если они не были переданы в аргументах.
+  ExtendedAudio basicCopyWith({
+    String? artist,
+    String? title,
+    int? duration,
+    String? subtitle,
+    String? accessKey,
+    bool? isExplicit,
+    bool? isRestricted,
+    String? url,
+    int? date,
+    Album? album,
+    ExtendedThumbnails? vkThumbs,
+    ExtendedThumbnails? deezerThumbs,
+    bool? forceDeezerThumbs,
+    bool? hasLyrics,
+    int? genreID,
+    Lyrics? vkLyrics,
+    Lyrics? lrcLibLyrics,
+    bool? isLiked,
+    bool? isCached,
+    int? cachedSize,
+    bool? savedFromPlaylist,
+    int? relativeID,
+    int? relativeOwnerID,
+    int? savedPlaylistID,
+    int? savedPlaylistOwnerID,
+    Map<int, int?>? colorInts,
+    List<int>? scoredColorInts,
+    int? frequentColorInt,
+    int? colorCount,
+  }) =>
+      ExtendedAudio(
+        id: id,
+        ownerID: ownerID,
+        artist: artist ?? this.artist,
+        title: title ?? this.title,
+        duration: duration ?? this.duration,
+        subtitle: subtitle,
+        accessKey: accessKey,
+        isExplicit: isExplicit ?? this.isExplicit,
+        isRestricted: isRestricted ?? this.isRestricted,
+        url: url,
+        date: date,
+        album: album,
+        vkThumbs: vkThumbs,
+        deezerThumbs: deezerThumbs,
+        forceDeezerThumbs: forceDeezerThumbs ?? this.forceDeezerThumbs,
+        hasLyrics: hasLyrics,
+        genreID: genreID,
+        vkLyrics: vkLyrics,
+        lrcLibLyrics: lrcLibLyrics,
+        isLiked: isLiked ?? this.isLiked,
+        isCached: isCached,
+        cachedSize: cachedSize,
+        savedFromPlaylist: savedFromPlaylist ?? this.savedFromPlaylist,
+        relativeID: relativeID,
+        relativeOwnerID: relativeOwnerID,
+        savedPlaylistID: savedPlaylistID,
+        savedPlaylistOwnerID: savedPlaylistOwnerID,
+        colorInts: colorInts,
+        scoredColorInts: scoredColorInts,
+        frequentColorInt: frequentColorInt,
+        colorCount: colorCount,
+      );
+
   /// Возвращает копию данного объекта с новыми передаваемыми значениями.
+  ///
+  /// В отличии от [basicCopyWith], данный метод копирует все поля из старого объекта [ExtendedAudio], если они не были переданы в аргументах.
   ExtendedAudio copyWith({
     int? id,
     int? ownerID,

@@ -99,10 +99,8 @@ Future<ImageSchemeExtractor?> colorInfoFromPlaylist(
   );
 
   // Сохраняем в БД.
-  playlist = playlistsNotifier.getPlaylist(playlist.ownerID, playlist.id)!;
-
   await playlistsNotifier.updatePlaylist(
-    playlist.copyWith(
+    playlist.basicCopyWith(
       colorInts: result.colorInts,
       scoredColorInts: result.scoredColorInts,
       frequentColorInt: result.frequentColor.value,

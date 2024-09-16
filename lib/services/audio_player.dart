@@ -118,6 +118,7 @@ class CachedStreamAudioSource extends StreamAudioSource {
   ///
   /// Если по какой-то причине кэш поломан (скажем, [ExtendedAudio.isCached] но файла нет или наоборот), то данный метод может пометить трек как (не-)кэшированный.
   Future<StreamAudioResponse?> acquireCache({int? start, int? end}) async {
+    final playlists = _ref.read(playlistsProvider.notifier);
     final file = await getAudioCacheFile();
     final fileExists = file.existsSync();
     final markedAsCached = audio.isCached ?? false;
@@ -131,13 +132,16 @@ class CachedStreamAudioSource extends StreamAudioSource {
     // Ниже есть ещё один случай, если файл, вероятнее всего, повреждён.
     if (markedAsCached && !fileExists) {
       logger.w(
-        "Expected audio ${audio.mediaKey} to have cache file at ${file.path}; will mark as not cached",
+        "Expected audio ${audio.mediaKey} to have cache file; will mark as not cached",
       );
 
       newCachedState = false;
     } else if (!markedAsCached && fileExists) {
       logger.w(
         "Audio ${audio.mediaKey} is not marked as cached, but cache file was found; will mark as cached",
+      );
+      logger.d(
+        "Cache file: ${file.path}",
       );
 
       newCachedState = true;
@@ -178,17 +182,15 @@ class CachedStreamAudioSource extends StreamAudioSource {
 
     // Изменяем состояние кэша трека, если он ранее изменился.
     if (newCachedState != null) {
-      _ref.read(playlistsProvider.notifier).updatePlaylist(
-            _ref
-                .read(getPlaylistProvider(playlist.ownerID, playlist.id))!
-                .copyWithNewAudio(
-                  audio.copyWith(
-                    isCached: newCachedState,
-                    cachedSize: newFileSize,
-                  ),
-                ),
-            saveInDB: true,
-          );
+      playlists.updatePlaylist(
+        playlist.copyWithNewAudio(
+          audio.basicCopyWith(
+            isCached: newCachedState,
+            cachedSize: newFileSize,
+          ),
+        ),
+        saveInDB: true,
+      );
     }
 
     // Файл кэша не существует.
