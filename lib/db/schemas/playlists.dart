@@ -552,7 +552,16 @@ class DBPlaylist {
         isFollowing: playlist.isFollowing,
         photo: playlist.photo?.asDBThumbnails,
         audios: playlist.audios
-            ?.map(
+            ?.where((ExtendedAudio audio) {
+              // Все плейлисты кроме "любимой музыки" должны содержать все треки.
+              if (playlist.type != PlaylistType.favorites) return true;
+
+              // Для "любимой музыки" должны быть сохранены в БД лишь те треки,
+              // которые были лайкнуты, нелайкнутым трек может быть, если
+              // пользователь убрал лайк, но трек ещё не был удалён из плейлиста.
+              return audio.isLiked;
+            })
+            .map(
               (ExtendedAudio audio) => audio.asDBAudio,
             )
             .toList(),
