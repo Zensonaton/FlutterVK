@@ -330,17 +330,18 @@ class VKMusicPlayer {
           }
         }
 
-        // Запускаем таймер для сохранения громкости на диск.
+        // Запускаем таймер для сохранения громкости на диск, если плеер загружен.
         _volumeSaveTimer?.cancel();
+        if (loaded) {
+          _volumeSaveTimer = Timer(
+            const Duration(seconds: 2),
+            () {
+              logger.d("Will save player volume ($volume) to disk");
 
-        _volumeSaveTimer = Timer(
-          const Duration(seconds: 2),
-          () {
-            logger.d("Will save player volume ($volume) to disk");
-
-            ref.read(preferencesProvider.notifier).setVolume(volume);
-          },
-        );
+              ref.read(preferencesProvider.notifier).setVolume(volume);
+            },
+          );
+        }
       }),
 
       // Обработчик событий плеера.
