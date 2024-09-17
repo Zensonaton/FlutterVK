@@ -69,21 +69,19 @@ class Updater {
   static Release? shouldUpdateFrom(
     List<Release> releases, {
     bool allowPre = false,
-    String? downloadFilename,
+    required List<String> downloadFilenames,
     bool disableCurrentVersionCheck = false,
   }) {
     for (Release release in releases) {
       // Если мы нашли одинаковую запись, то значит, что мы уже находимся на новой версии.
       if (!disableCurrentVersionCheck && release.tagName == appVersion) break;
 
-      // Если нам запрещено смотреть на pre release-версии, то пропускаем таковые.
+      // Если нам запрещено смотреть на pre-release версии, то пропускаем таковые.
       if (!allowPre && release.prerelease) continue;
 
       // Если нам дано название файла, то проверяем, есть ли он в списке.
-      if (downloadFilename != null &&
-          !release.assets.any(
-            (asset) => asset.name == downloadFilename,
-          )) continue;
+      if (!release.assets
+          .any((asset) => downloadFilenames.contains(asset.name))) continue;
 
       // Мы нашли подходящую версию!
       return release;
@@ -97,27 +95,37 @@ class Updater {
   /// Если у Вас уже есть объект [Release] то рекомендуется воспользоваться методом [shouldUpdateFrom], что бы избежать повторного API-запроса.
   static Future<Release?> shouldUpdate({
     bool allowPre = false,
-    String? downloadFilename,
+    required List<String> downloadFilenames,
     bool disableCurrentVersionCheck = false,
   }) async =>
       shouldUpdateFrom(
         await getReleases(),
         allowPre: allowPre,
-        downloadFilename: downloadFilename,
+        downloadFilenames: downloadFilenames,
         disableCurrentVersionCheck: disableCurrentVersionCheck,
       );
 
-  /// Возвращает название файла, которое должно быть загружено с Github в зависимости от текущей платформы.
-  static String? getFilenameByPlatform() {
+  /// Возвращает список из названий файлов, которое должно быть загружено с Github в зависимости от текущей платформы, на которой запущено приложение.
+  ///
+  /// К примеру, на OS Windows возвращает список из единственного `.exe` файла, который не зависит от архитектуры процессора, а на Android возвращает список из двух `.apk`-файлов: один для конкретной архитектуры текущего устройства, а второй - универсальный.
+  static Future<List<String>> getFilenameByPlatform() async {
     switch (Platform.operatingSystem) {
       case "android":
-        return "Flutter.VK.Android.apk";
+        final List<String> filenames = ["Flutter.VK.Android.apk"];
+
+        // Создаём список из .apk-файлов, которые зависят от архитектуры устройства.
+        final List<String> abiFilenames = androidDeviceInfo?.supportedAbis
+                .map((abi) => "Flutter.VK.Android.$abi.apk")
+                .toList() ??
+            [];
+
+        return [...abiFilenames, ...filenames];
 
       case "windows":
-        return "Flutter.VK.installer.exe";
+        return ["Flutter.VK.installer.exe"];
     }
 
-    return null;
+    return [];
   }
 
   /// Сверяет текущую версию приложения с последней версией из Github Actions, показывая информацию о результате проверки в интерфейсе. Если версия отличается, то вызывает [showModalBottomSheet] с целью показа информации о новом обновлении, а так же различными действиями с новым обновлением.
@@ -142,7 +150,7 @@ class Updater {
       final Release? release = updateRelease ??
           await shouldUpdate(
             allowPre: allowPre,
-            downloadFilename: getFilenameByPlatform(),
+            downloadFilenames: await getFilenameByPlatform(),
             disableCurrentVersionCheck: disableCurrentVersionCheck,
           );
 
@@ -276,13 +284,26 @@ class Updater {
     final l18n = ref.read(l18nProvider);
     final downloadManager = ref.read(downloadManagerProvider.notifier);
 
+    // Получаем список из названий файлов, которые должны быть загружены.
+    final List<String> downloadFilenames = await getFilenameByPlatform();
+    logger.d("Suitable for update filenames: $downloadFilenames");
+
     // Ищем подходящий Asset из Release'ов.
-    final ReleaseAsset asset = release.assets.firstWhere(
-      (item) => item.name == Updater.getFilenameByPlatform(),
-      orElse: () => throw Exception(
-        "${Updater.getFilenameByPlatform()} file have not been found in release assets",
-      ),
-    );
+    ReleaseAsset? asset;
+    for (String filename in downloadFilenames) {
+      asset = release.assets.firstWhereOrNull(
+        (asset) => asset.name == filename,
+      );
+
+      if (asset != null) break;
+    }
+
+    if (asset == null) {
+      throw Exception(
+        "No suitable assets found in release",
+      );
+    }
+    logger.d("Found suitable asset: ${asset.name}, size: ${asset.size} bytes");
 
     final File file = File(
       path.join(

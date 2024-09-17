@@ -5,6 +5,7 @@ import "package:catcher_2/handlers/console_handler.dart";
 import "package:catcher_2/handlers/file_handler.dart";
 import "package:catcher_2/mode/silent_report_mode.dart";
 import "package:catcher_2/model/catcher_2_options.dart";
+import "package:device_info_plus/device_info_plus.dart";
 import "package:dio/dio.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
@@ -113,7 +114,13 @@ final fallbackDarkColorScheme = ColorScheme.fromSeed(
 );
 
 /// Версия приложения.
-late String appVersion;
+late final String appVersion;
+
+/// Объект для получения информации об устройстве.
+final DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
+
+/// Объект, хранящий информацию о текущем Android-устройстве. Может быть null, если устройство не является Android-устройством.
+late final AndroidDeviceInfo? androidDeviceInfo;
 
 /// Обработчик события нажатия на уведомление от [notificationsPlugin].
 @pragma("vm:entry-point")
@@ -252,23 +259,32 @@ Future main() async {
     // Узнаём версию приложения.
     appVersion = (await PackageInfo.fromPlatform()).version;
 
+    // Узнаём информацию об устройстве.
+    androidDeviceInfo =
+        Platform.isAndroid ? await deviceInfoPlugin.androidInfo : null;
+    logger.d("Supported ABIs: ${androidDeviceInfo?.supportedAbis}");
+
     // Удаляем файл обновления, если таковой существует.
-    final File updaterInstaller = File(
-      path.join(
-        (await getApplicationSupportDirectory()).path,
-        Updater.getFilenameByPlatform(),
-      ),
-    );
-    try {
-      if (updaterInstaller.existsSync()) {
-        updaterInstaller.deleteSync();
-      }
-    } catch (e, stackTrace) {
-      logger.w(
-        "Error while deleting updater on path ${updaterInstaller.path}: ",
-        error: e,
-        stackTrace: stackTrace,
+    final supportDirectory = (await getApplicationSupportDirectory()).path;
+    for (String filename in await Updater.getFilenameByPlatform()) {
+      final File updaterInstaller = File(
+        path.join(
+          supportDirectory,
+          filename,
+        ),
       );
+
+      try {
+        if (!updaterInstaller.existsSync()) continue;
+
+        await updaterInstaller.delete();
+      } catch (e, stackTrace) {
+        logger.w(
+          "Error while deleting updater on path ${updaterInstaller.path}: ",
+          error: e,
+          stackTrace: stackTrace,
+        );
+      }
     }
 
     // Загружаем базу данных Isar.
