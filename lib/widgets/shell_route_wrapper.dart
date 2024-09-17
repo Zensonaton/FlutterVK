@@ -238,42 +238,47 @@ class ShellRouteWrapper extends HookConsumerWidget {
     }
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
-          // Содержимое.
-          Row(
-            children: [
-              // NavigationRail с иконкой загрузки.
-              if (!mobileLayout)
-                RepaintBoundary(
-                  child: NavigationRail(
-                    selectedIndex: currentIndex,
-                    onDestinationSelected: onDestinationSelected,
-                    labelType: NavigationRailLabelType.all,
-                    destinations: [
-                      for (final item in navigationItems)
-                        NavigationRailDestination(
-                          icon: Icon(
-                            item.icon,
+          // NavigationRail и содержимое экрана на Desktop Layout.
+          if (!mobileLayout)
+            Row(
+              children: [
+                // NavigationRail с иконкой загрузки.
+                if (!mobileLayout)
+                  RepaintBoundary(
+                    child: NavigationRail(
+                      selectedIndex: currentIndex,
+                      onDestinationSelected: onDestinationSelected,
+                      labelType: NavigationRailLabelType.all,
+                      destinations: [
+                        for (final item in navigationItems)
+                          NavigationRailDestination(
+                            icon: Icon(
+                              item.icon,
+                            ),
+                            selectedIcon: Icon(
+                              item.selectedIcon ?? item.icon,
+                            ),
+                            label: Text(
+                              item.label,
+                            ),
+                            disabled: item.body == null,
                           ),
-                          selectedIcon: Icon(
-                            item.selectedIcon ?? item.icon,
-                          ),
-                          label: Text(
-                            item.label,
-                          ),
-                          disabled: item.body == null,
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
 
-              // Само содержимое страницы.
-              Expanded(
-                child: child,
-              ),
-            ],
-          ),
+                // Само содержимое страницы.
+                Expanded(
+                  child: child,
+                ),
+              ],
+            ),
+
+          // Содержимое экрана на Mobile Layout.
+          if (mobileLayout) child,
 
           // Иконка загрузки.
           if (!mobileLayout) const DownloadManagerWrapperWidget(),

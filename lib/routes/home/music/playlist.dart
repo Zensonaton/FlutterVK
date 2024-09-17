@@ -1883,6 +1883,7 @@ class PlaylistRoute extends HookConsumerWidget {
         }
       },
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         body: Theme(
           data: ThemeData(
             colorScheme: scheme ?? Theme.of(context).colorScheme,
