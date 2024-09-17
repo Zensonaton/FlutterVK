@@ -381,6 +381,9 @@ class VKMusicPlayer {
 
         // Создаём событие об изменении текущего трека.
         _playlistModificationsController.add(playlist);
+
+        // Обновляем информацию о треке.
+        updateMusicSessionTrack();
       }),
     ];
 
