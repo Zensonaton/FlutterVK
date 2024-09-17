@@ -1609,18 +1609,19 @@ class PlaylistRoute extends HookConsumerWidget {
         : oldScheme;
 
     final double statusBarHeight = MediaQuery.of(context).padding.top;
-    final double maxAppBarHeight = (mobileLayout
-            ? (MediaQuery.sizeOf(context).height / 2)
-                .roundToDouble()
-                .clamp(0, 500)
-            : 272) +
-        statusBarHeight;
-    final double minAppBarHeight = 70 + statusBarHeight;
     final double infoBoxHeight = mobileLayout
         ? playlist.description != null
             ? 150
             : 100
         : 0;
+    final double maxAppBarHeight = (mobileLayout
+            ? (MediaQuery.sizeOf(context).height / 2)
+                    .roundToDouble()
+                    .clamp(0, 500) -
+                infoBoxHeight
+            : 272) +
+        statusBarHeight;
+    final double minAppBarHeight = 70 + statusBarHeight;
     final double horizontalPadding = mobileLayout ? 12 : 18;
 
     void onCacheTap() async {
