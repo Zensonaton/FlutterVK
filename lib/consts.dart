@@ -1,5 +1,3 @@
-import "main.dart";
-
 /// Указывает, что запущена pre-release (бета) версия приложения.
 bool isPrerelease = const String.fromEnvironment("PRERELEASE").isNotEmpty;
 
@@ -19,12 +17,6 @@ String get repoURL => "https://github.com/$repoOwner/$repoName";
 /// Обычный User-Agent браузера Firefox.
 const String browserUA =
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0";
-
-/// Базовый URL для API-запросов к LRCLIB.
-const String lrcLibBaseURL = "https://lrclib.net/api/";
-
-/// User-Agent, используемый для API-запросов к сервису LRCLIB.
-String lrcLibUA = "FlutterVK v$appVersion ($repoURL)";
 
 /// ID приложения Discord, используемый для работы Rich Presence.
 ///
@@ -47,7 +39,7 @@ const double desktopMiniPlayerHeight = 88;
 const double mobileMiniPlayerHeight = 74;
 
 /// Магическая константа, характеризующая размер в мегабайтах у одной минуты `mp3`-трека.
-const double trackSizePerMin = 2.2;
+const double trackSizePerMin = 1.5;
 
 /// Название README-файла в папке с кэшом треков.
 const String tracksCacheReadmeFileName = "Abc_123_README.txt";

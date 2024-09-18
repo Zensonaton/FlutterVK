@@ -11,14 +11,6 @@ import "package:material_color_utilities/scheme/scheme_rainbow.dart";
 import "../enums.dart";
 import "logger.dart";
 
-/// Процент того, сколько должен занимать единственный цвет ([ImageSchemeExtractor.shouldCastShadow]), что бы не позволить ему отбрасывать тень ("свечение").
-@Deprecated("Функционал определения наличия тени больше не используется")
-const double shadowFrequentColorThreshold = 0.5;
-
-/// Процент яркости ([Color.computeLuminance]), который проверяется с целью определения того, должна ли отбрасываться тень от обложки или нет.
-@Deprecated("Функционал определения наличия тени больше не используется")
-const double shadowColorLiminanceThreshold = 0.25;
-
 /// Класс, извлекающий цвета из обложек треков.
 ///
 /// Главный метод здесь - [fromImageProvider].

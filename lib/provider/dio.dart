@@ -9,6 +9,7 @@ import "package:flutter/foundation.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 
+import "../api/lrclib/consts.dart";
 import "../api/vk/consts.dart";
 import "../api/vk/shared.dart";
 import "../consts.dart";
