@@ -22,6 +22,7 @@ dependencies:
   collection: ^1.17.2
   connectivity_plus: ^6.0.3
   crypto: ^3.0.3
+  device_info_plus: ^10.1.2
   diacritic: ^0.1.5
   dio: ^5.5.0+1
   dio_http2_adapter: ^2.5.3

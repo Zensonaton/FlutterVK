@@ -23,13 +23,15 @@ import "vk_api.dart";
 part "playlists.g.dart";
 
 /// Создаёт задачу [PlaylistCacheDownloadTask] по кэшированию плейлиста [playlist]. После вызова этого метода, будет создана задача для [DownloadManager], которая будет кэшировать треки плейлиста, и так же очищать данные для удалённых треков [deletedAudios].
-
 Future<void> createPlaylistCacheTask(
   Ref ref,
   ExtendedPlaylist playlist, {
   List<ExtendedAudio> deletedAudios = const [],
 }) async {
-  assert(playlist.audios != null, "Expected playlist audios to be loaded");
+  assert(
+    playlist.audios != null,
+    "Expected playlist audios to be loaded",
+  );
 
   final downloadManager = ref.read(downloadManagerProvider.notifier);
   final l18n = ref.read(l18nProvider);

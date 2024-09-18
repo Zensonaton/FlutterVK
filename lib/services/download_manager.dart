@@ -115,8 +115,16 @@ class PlaylistCacheDeleteDownloadItem extends DownloadItem {
 
     // Сохраняем изменения плейлиста.
     if (updatePlaylist) {
+      // Получаем новый объект плейлиста.
+      //
+      // FIXME: Этот костыль свзяан с тем, что copyWithNewAudio копирует даже старые треки.
+      // Из-за этого при кэшировании иногда происходит перезапись старых треков, и это плохо.
+      final newPlaylist =
+          ref.read(getPlaylistProvider(playlist.ownerID, playlist.id));
+      if (newPlaylist == null) return;
+
       ref.read(playlistsProvider.notifier).updatePlaylist(
-            playlist.copyWithNewAudio(
+            newPlaylist.copyWithNewAudio(
               audio.basicCopyWith(
                 isCached: false,
               ),
@@ -345,8 +353,8 @@ class PlaylistCacheDownloadItem extends DownloadItem {
       isCached: downloadAudio ? true : null,
       cachedSize: audioSize,
       vkLyrics: lyricsDownloaded,
-      lrcLibLyrics: lrcLibLyrics,
       deezerThumbs: deezerThumbs,
+      lrcLibLyrics: lrcLibLyrics,
     );
   }
 
@@ -369,12 +377,21 @@ class PlaylistCacheDownloadItem extends DownloadItem {
 
     // Сохраняем новую версию трека.
     if (updatePlaylist) {
-      // Определяем, нужно ли нам сохранять изменения в БД.
-      // Мы сохраняем изменения каждые 5 треков.
-      final saveInDB = playlist.audios!.indexOf(audio) % 5 == 0;
+      // Сохраняем изменения в БД каждые 5 треков, что бы не перегружать её.
+      final int index =
+          playlist.audios!.indexWhere((item) => item.id == audio.id);
+      final bool saveInDB = index % 5 == 0;
 
-      playlists.updatePlaylist(
-        playlist.copyWithNewAudio(
+      // Получаем новый объект плейлиста.
+      //
+      // FIXME: Этот костыль свзяан с тем, что copyWithNewAudio копирует даже старые треки.
+      // Из-за этого при кэшировании иногда происходит перезапись старых треков, и это плохо.
+      final newPlaylist =
+          ref.read(getPlaylistProvider(playlist.ownerID, playlist.id));
+      if (newPlaylist == null) return;
+
+      await playlists.updatePlaylist(
+        newPlaylist.copyWithNewAudio(
           newAudio,
         ),
         saveInDB: saveInDB,

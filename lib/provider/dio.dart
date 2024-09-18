@@ -36,6 +36,8 @@ void initDioInterceptors(
 }) {
   final AppLogger logger = getLogger(loggerName);
 
+  // TODO: Обработчик для LRCLIB. Он возвращает 404, если трек не найден.
+
   // Игнорируем плохие SSL-сертификаты.
   (dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
     final client = HttpClient()
@@ -208,6 +210,7 @@ Dio vkDio(VkDioRef ref) {
   initDioInterceptors(
     ref,
     dio,
+    loggerName: "VK",
     isVK: true,
   );
 
@@ -241,6 +244,7 @@ Dio lrcLibDio(LrcLibDioRef ref) {
   initDioInterceptors(
     ref,
     dio,
+    loggerName: "LRCLIB",
     isLRCLIB: true,
   );
 

@@ -1713,7 +1713,10 @@ class PlaylistRoute extends HookConsumerWidget {
         saveInDB: true,
       );
 
-      createPlaylistCacheTask(downloadManager.ref, newPlaylist.playlist);
+      createPlaylistCacheTask(
+        downloadManager.ref,
+        newPlaylist.playlist,
+      );
     }
 
     void onPlayTapped() async {
