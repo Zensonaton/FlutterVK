@@ -18,39 +18,44 @@ part "user.g.dart";
 /// Класс, копирующий поля из класса [Playlist] от API ВКонтакте, добавляющий информацию о треках в данном плейлисте.
 class ExtendedPlaylist {
   /// ID плейлиста.
-  int id;
+  final int id;
 
   /// ID владельца плейлиста.
-  int ownerID;
+  final int ownerID;
 
   /// Тип плейлиста.
-  PlaylistType type;
+  final PlaylistType type;
 
   /// Название плейлиста.
-  String? title;
+  final String? title;
 
   /// Описание плейлиста. Пустые описания плейлистов (т.е., [String.isEmpty]) будут восприниматься как null.
-  String? description;
+  final String? description;
 
   /// Подпись плейлиста, обычно присутствует в плейлистах-рекомендациях. Пустые подписи (т.е., [String.isEmpty]) будут восприниматься как null.
-  String? subtitle;
+  final String? subtitle;
 
   /// Количество аудиозаписей в данном плейлисте.
   ///
   /// Это значение возвращает общее количество треков в плейлисте, вне зависимости от количества треков в [audios].
-  int count;
+  final int count;
 
   /// Ключ доступа.
-  String? accessKey;
+  final String? accessKey;
 
   /// Указывает, подписан ли данный пользователь на данный плейлист или нет.
-  bool isFollowing;
+  final bool isFollowing;
 
   /// Фотография плейлиста.
-  Thumbnails? photo;
+  final Thumbnails? photo;
 
   /// Список из аудио в данном плейлисте.
-  List<ExtendedAudio>? audios;
+  final List<ExtendedAudio>? audios;
+
+  /// Список из аудио в данном плейлисте, которые будут обновлять существующий список из треков [audios].
+  ///
+  /// Используется только для метода [updatePlaylist].
+  final List<ExtendedAudio>? audiosToUpdate;
 
   /// {@macro ImageSchemeExtractor.colorInts}
   final Map<int, int?>? colorInts;
@@ -122,6 +127,35 @@ class ExtendedPlaylist {
             );
       },
     );
+  }
+
+  /// Указывает, что данный [ExtendedPlaylist] полностью равен значениям плейлиста другого передаваемого плейлиста [other].
+  ///
+  /// По сравнению с [==], данный метод сравнивает больше полей, что активно используется для [updatePlaylist], однако, данный метод не проверяет равенство треков в плейлисте.
+  bool isEquals(ExtendedPlaylist other) {
+    // Базовые поля.
+    if (count != other.count ||
+        title != other.title ||
+        description != other.description ||
+        subtitle != other.subtitle ||
+        backgroundAnimationUrl != other.backgroundAnimationUrl ||
+        photo != other.photo ||
+        colorCount != other.colorCount) {
+      return false;
+    }
+
+    // Кэширование.
+    if (other.cacheTracks != null && cacheTracks != other.cacheTracks) {
+      return false;
+    }
+
+    // Состояние загруженности данных.
+    if (areTracksLive != other.areTracksLive ||
+        isLiveData != other.isLiveData) {
+      return false;
+    }
+
+    return true;
   }
 
   /// Создаёт из передаваемого объекта [Playlist] объект данного класа.
@@ -214,6 +248,7 @@ class ExtendedPlaylist {
     String? subtitle,
     Thumbnails? photo,
     List<ExtendedAudio>? audios,
+    List<ExtendedAudio>? audiosToUpdate,
     String? mixID,
     String? backgroundAnimationUrl,
     double? simillarity,
@@ -239,6 +274,7 @@ class ExtendedPlaylist {
         subtitle: subtitle,
         photo: photo,
         audios: audios,
+        audiosToUpdate: audiosToUpdate,
         mixID: mixID,
         backgroundAnimationUrl: backgroundAnimationUrl,
         simillarity: simillarity,
@@ -268,6 +304,7 @@ class ExtendedPlaylist {
     String? subtitle,
     Thumbnails? photo,
     List<ExtendedAudio>? audios,
+    List<ExtendedAudio>? audiosToUpdate,
     String? mixID,
     String? backgroundAnimationUrl,
     double? simillarity,
@@ -293,6 +330,7 @@ class ExtendedPlaylist {
         subtitle: subtitle ?? this.subtitle,
         photo: photo ?? this.photo,
         audios: audios ?? this.audios,
+        audiosToUpdate: audiosToUpdate ?? this.audiosToUpdate,
         mixID: mixID ?? this.mixID,
         backgroundAnimationUrl:
             backgroundAnimationUrl ?? this.backgroundAnimationUrl,
@@ -307,29 +345,6 @@ class ExtendedPlaylist {
         frequentColorInt: frequentColorInt ?? this.frequentColorInt,
         colorCount: colorCount ?? this.colorCount,
       );
-
-  /// Возвращает копию этого плейлиста с добавленным треком [audio] в начало плейлиста. Если этот трек уже есть, то заменяет его новым.
-  ExtendedPlaylist copyWithNewAudio(ExtendedAudio audio) {
-    List<ExtendedAudio> newAudios = [...audios!];
-
-    // Пытаемся найти индекс трека.
-    final int index = newAudios.indexWhere(
-      (item) => item.ownerID == audio.ownerID && item.id == audio.id,
-    );
-
-    // Если такого трека нет, то просто добавляем его в начале.
-    if (index == -1) {
-      newAudios.insert(0, audio);
-    } else {
-      // Удаляем старый трек и вставляем новый.
-      newAudios.removeAt(index);
-      newAudios.insert(index, audio);
-    }
-
-    return basicCopyWith(
-      audios: newAudios,
-    );
-  }
 
   /// Возвращает строку, которая используется как идентификатор пользователя и медиа.
   String get mediaKey => "${ownerID}_$id";
@@ -368,6 +383,7 @@ class ExtendedPlaylist {
     this.subtitle,
     this.photo,
     this.audios,
+    this.audiosToUpdate,
     this.simillarity,
     this.color,
     this.knownTracks,
@@ -616,6 +632,46 @@ class ExtendedAudio {
   /// {@macro ImageSchemeExtractor.colorCount}
   final int? colorCount;
 
+  /// Указывает, что данный [ExtendedAudio] полностью равен значениям другого передаваемого трека [other].
+  ///
+  /// По сравнению с [==], данный метод сравнивает больше полей, что активно используется для [updatePlaylist].
+  bool isEquals(ExtendedAudio other) {
+    // Базовые поля.
+    if (title != other.title ||
+        artist != other.artist ||
+        isLiked != other.isLiked ||
+        frequentColorInt != other.frequentColorInt) {
+      return false;
+    }
+
+    // Альбомы.
+    if (album != other.album && other.album != null) {
+      return false;
+    }
+
+    // Кэширование.
+    if (isCached != other.isCached && other.isCached != null) {
+      return false;
+    }
+
+    // Тексты.
+    if (hasLyrics != other.hasLyrics ||
+        vkLyrics != other.vkLyrics ||
+        lrcLibLyrics != other.lrcLibLyrics) {
+      return false;
+    }
+
+    // Обложки.
+    if (vkThumbs != other.vkThumbs ||
+        vkThumbs != other.vkThumbs ||
+        deezerThumbs != other.deezerThumbs ||
+        forceDeezerThumbs != other.forceDeezerThumbs) {
+      return false;
+    }
+
+    return true;
+  }
+
   /// Возвращает данный объект как [MediaItem] для аудио плеера.
   MediaItem get asMediaItem {
     final String mediaTitle = subtitle != null ? "$title ($subtitle)" : title;
@@ -859,7 +915,8 @@ class ExtendedAudio {
         other.ownerID == ownerID &&
         other.isLiked == isLiked &&
         other.isCached == isCached &&
-        other.smallestThumbnail == smallestThumbnail;
+        other.smallestThumbnail == smallestThumbnail &&
+        other.forceDeezerThumbs == forceDeezerThumbs;
   }
 
   @override

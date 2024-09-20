@@ -183,11 +183,13 @@ class CachedStreamAudioSource extends StreamAudioSource {
     // Изменяем состояние кэша трека, если он ранее изменился.
     if (newCachedState != null) {
       playlists.updatePlaylist(
-        playlist.copyWithNewAudio(
-          audio.basicCopyWith(
-            isCached: newCachedState,
-            cachedSize: newFileSize,
-          ),
+        playlist.basicCopyWith(
+          audiosToUpdate: [
+            audio.basicCopyWith(
+              isCached: newCachedState,
+              cachedSize: newFileSize,
+            ),
+          ],
         ),
         saveInDB: true,
       );

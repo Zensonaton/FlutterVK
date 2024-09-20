@@ -100,6 +100,7 @@ Future<void> onMixPlayToggle(
   );
 
   final api = ref.read(vkAPIProvider);
+  final playlists = ref.read(playlistsProvider.notifier);
 
   // Если у нас играет этот же плейлист, то тогда мы попросту должны поставить на паузу/убрать паузу.
   if (player.currentPlaylist?.mediaKey == playlist.mediaKey) {
@@ -109,12 +110,16 @@ Future<void> onMixPlayToggle(
   final List<Audio> response =
       await api.audio.getStreamMixAudiosWithAlbums(count: minMixAudiosCount);
 
-  playlist.audios = response
-      .map(
-        (audio) => ExtendedAudio.fromAPIAudio(audio),
-      )
-      .toList();
-  playlist.count = response.length;
+  playlists.updatePlaylist(
+    playlist.basicCopyWith(
+      audios: response
+          .map(
+            (audio) => ExtendedAudio.fromAPIAudio(audio),
+          )
+          .toList(),
+      count: response.length,
+    ),
+  );
 
   // Всё ок, запускаем воспроизведение.
   await player.setPlaylist(

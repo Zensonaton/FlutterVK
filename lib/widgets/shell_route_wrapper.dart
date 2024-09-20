@@ -439,19 +439,21 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
 
             // Сохраняем новую версию трека.
             playlistsNotifier.updatePlaylist(
-              playlist.copyWithNewAudio(
-                newAudio.basicCopyWith(
-                  colorInts: extractedColors?.colorInts,
-                  scoredColorInts: extractedColors?.scoredColorInts,
-                  frequentColorInt: extractedColors?.frequentColorInt,
-                  colorCount: extractedColors?.colorCount,
+              playlist.basicCopyWith(
+                audiosToUpdate: [
+                  newAudio.basicCopyWith(
+                    colorInts: extractedColors?.colorInts,
+                    scoredColorInts: extractedColors?.scoredColorInts,
+                    frequentColorInt: extractedColors?.frequentColorInt,
+                    colorCount: extractedColors?.colorCount,
 
-                  // Повторяем следующие поля, поскольку они могли быть загружены в downloadWithMetadata,
-                  // а .basicCopyWith проигнорирует их (превратит их в null), поэтому их нужно продублировать.
-                  vkLyrics: newAudio.vkLyrics,
-                  lrcLibLyrics: newAudio.lrcLibLyrics,
-                  deezerThumbs: newAudio.deezerThumbs,
-                ),
+                    // Повторяем следующие поля, поскольку они могли быть загружены в downloadWithMetadata,
+                    // а .basicCopyWith проигнорирует их (превратит их в null), поэтому их нужно продублировать.
+                    vkLyrics: newAudio.vkLyrics,
+                    lrcLibLyrics: newAudio.lrcLibLyrics,
+                    deezerThumbs: newAudio.deezerThumbs,
+                  ),
+                ],
               ),
               saveInDB: true,
             );
@@ -517,8 +519,13 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
                   .toList();
 
               // Добавляем треки в объект плейлиста.
-              player.currentPlaylist!.audios!.addAll(newAudios);
-              player.currentPlaylist!.count += response.length;
+              await playlistsNotifier.updatePlaylist(
+                player.currentPlaylist!.basicCopyWith(
+                  audiosToUpdate: newAudios,
+                  count: count + tracksToAdd,
+                ),
+                saveInDB: true,
+              );
 
               // Добавляем треки в очередь воспроизведения плеера.
               for (ExtendedAudio audio in newAudios) {

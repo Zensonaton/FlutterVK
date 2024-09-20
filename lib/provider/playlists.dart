@@ -530,7 +530,7 @@ class Playlists extends _$Playlists {
 
   /// Обновляет состояние данного Provider, объединяя новую и старую версию плейлиста, а после чего сохраняет его в БД, если [saveInDB] правдив.
   Future<PlaylistUpdateResult> updatePlaylist(
-    ExtendedPlaylist playlist, {
+    ExtendedPlaylist newPlaylist, {
     bool saveInDB = false,
     bool fromAPI = false,
   }) async {
@@ -540,14 +540,15 @@ class Playlists extends _$Playlists {
     );
 
     final List<ExtendedPlaylist> allPlaylists = state.value?.playlists ?? [];
-    final ExtendedPlaylist? existingPlaylist = allPlaylists.firstWhereOrNull(
+    final ExtendedPlaylist? oldPlaylist = allPlaylists.firstWhereOrNull(
       (ExtendedPlaylist existing) =>
-          existing.ownerID == playlist.ownerID && existing.id == playlist.id,
+          existing.ownerID == newPlaylist.ownerID &&
+          existing.id == newPlaylist.id,
     );
 
-    // Если передаваемого плейлиста ещё нету в списке плейлистов, то просто сохраняем его.
-    if (existingPlaylist == null) {
-      allPlaylists.add(playlist);
+    // Если мы вызвали плейлист, которого нету в списке плейлистов, то просто добавляем его, без лишних проверок.
+    if (oldPlaylist == null) {
+      allPlaylists.add(newPlaylist);
 
       // Обновляем состояние.
       state = AsyncData(
@@ -558,104 +559,111 @@ class Playlists extends _$Playlists {
 
       // Сохраняем в БД.
       if (saveInDB) {
-        await saveDBPlaylist(playlist);
+        await saveDBPlaylist(newPlaylist);
       }
 
       return PlaylistUpdateResult(
-        playlist: playlist,
+        playlist: newPlaylist,
         changed: true,
       );
     }
 
-    // Такой же плейлист уже существует в списке плейлистов.
-    // Объединяем старые и новые данные у плейлиста.
-    // Но для начала проверим, отличаются ли поля у этого плейлиста (кроме списка треков).
-    bool playlistChanged = (existingPlaylist.count != playlist.count ||
-        existingPlaylist.title != playlist.title ||
-        existingPlaylist.description != playlist.description ||
-        existingPlaylist.subtitle != playlist.subtitle ||
-        (playlist.cacheTracks != null &&
-            existingPlaylist.cacheTracks != playlist.cacheTracks) ||
-        existingPlaylist.areTracksLive != playlist.areTracksLive ||
-        existingPlaylist.backgroundAnimationUrl !=
-            playlist.backgroundAnimationUrl ||
-        existingPlaylist.isLiveData != playlist.isLiveData ||
-        existingPlaylist.photo != playlist.photo ||
-        existingPlaylist.colorCount != playlist.colorCount);
+    // Мы получили уже существующий плейлист, поэтому проводим объединение таковых.
 
-    // Проходимся по всем трекам в передаваемом плейлисте.
-    final List<ExtendedAudio> newAudios = [];
-    final List<ExtendedAudio> deletedAudios = [];
-    if (playlist.audios != null) {
-      final List<ExtendedAudio> existingAudios = existingPlaylist.audios ?? [];
+    // Для начала, нам нужно понять, поменялся ли плейлист по базовым параметрам.
+    bool playlistChanged = !oldPlaylist.isEquals(newPlaylist);
 
-      for (ExtendedAudio givenAudio in [...playlist.audios!]) {
-        final ExtendedAudio? existingAudio = existingAudios.firstWhereOrNull(
-          (oldAudio) =>
-              oldAudio.ownerID == givenAudio.ownerID &&
-              oldAudio.id == givenAudio.id,
-        );
+    // Проходимся по новому списку треков. Для справки:
+    // - audios хранит актуальный список треков.
+    // - audiosToUpdate хранит обновления треков (например, изменился текст песни).
+    //
+    // Если в audios нет того или иного трека, то это значит, что трек был удалён.
+    // В audiosToUpdate могут быть только те треки, которые были обновлены, но не удалены.
+    List<ExtendedAudio> newAudios = [];
+    List<ExtendedAudio> deletedAudios = [];
 
-        // Трек не найден, добавляем его.
-        if (existingAudio == null) {
-          newAudios.add(givenAudio);
+    /// Метод, обновляющий либо добавляющий трек в список треков.
+    void updateOrAddAudio(int? oldIndex, ExtendedAudio newAudio) {
+      final ExtendedAudio? oldAudio =
+          oldIndex != null ? newAudios.elementAtOrNull(oldIndex) : null;
 
-          playlistChanged = true;
+      // Проверяем схожесть либо отсутствие трека.
+      if (oldAudio == null || oldAudio.isEquals(newAudio)) {
+        newAudios.add(oldAudio ?? newAudio);
 
-          continue;
-        }
+        if (oldIndex == null) playlistChanged = true;
 
-        // Если трек не отличается, то ничего не меняем.
-        if (existingAudio.title == givenAudio.title &&
-            existingAudio.artist == givenAudio.artist &&
-            (existingAudio.isCached == givenAudio.isCached &&
-                givenAudio.isCached != null) &&
-            (existingAudio.album == givenAudio.album ||
-                givenAudio.album == null) &&
-            existingAudio.hasLyrics == givenAudio.hasLyrics &&
-            existingAudio.vkLyrics == givenAudio.vkLyrics &&
-            existingAudio.lrcLibLyrics == givenAudio.lrcLibLyrics &&
-            existingAudio.isLiked == givenAudio.isLiked &&
-            existingAudio.vkThumbs == givenAudio.vkThumbs &&
-            existingAudio.deezerThumbs == givenAudio.deezerThumbs &&
-            existingAudio.forceDeezerThumbs == givenAudio.forceDeezerThumbs &&
-            existingAudio.frequentColorInt == givenAudio.frequentColorInt) {
-          newAudios.add(existingAudio);
-
-          continue;
-        }
-
-        newAudios.add(
-          existingAudio.copyWith(
-            title: givenAudio.title,
-            artist: givenAudio.artist,
-            url: givenAudio.url,
-            isCached: givenAudio.isCached,
-            cachedSize: givenAudio.cachedSize,
-            album: givenAudio.album,
-            hasLyrics: givenAudio.hasLyrics,
-            vkLyrics: givenAudio.vkLyrics,
-            lrcLibLyrics: givenAudio.lrcLibLyrics,
-            vkThumbs: givenAudio.vkThumbs,
-            deezerThumbs: givenAudio.deezerThumbs,
-            forceDeezerThumbs: givenAudio.forceDeezerThumbs,
-            isLiked: givenAudio.isLiked,
-            colorCount: givenAudio.colorCount,
-            colorInts: givenAudio.colorInts,
-            scoredColorInts: givenAudio.scoredColorInts,
-            frequentColorInt: givenAudio.frequentColorInt,
-          ),
-        );
-
-        playlistChanged = true;
+        return;
       }
 
-      // Ищем удалённые треки.
+      newAudios[oldIndex!] = oldAudio.copyWith(
+        title: newAudio.title,
+        artist: newAudio.artist,
+        url: newAudio.url,
+        isCached: newAudio.isCached,
+        cachedSize: newAudio.cachedSize,
+        album: newAudio.album,
+        hasLyrics: newAudio.hasLyrics,
+        vkLyrics: newAudio.vkLyrics,
+        lrcLibLyrics: newAudio.lrcLibLyrics,
+        vkThumbs: newAudio.vkThumbs,
+        deezerThumbs: newAudio.deezerThumbs,
+        forceDeezerThumbs: newAudio.forceDeezerThumbs,
+        isLiked: newAudio.isLiked,
+        colorCount: newAudio.colorCount,
+        colorInts: newAudio.colorInts,
+        scoredColorInts: newAudio.scoredColorInts,
+        frequentColorInt: newAudio.frequentColorInt,
+      );
+
+      playlistChanged = true;
+    }
+
+    // Для начала, проходимся по списку из новых audios.
+    //
+    // В нём находится "актуальный" список из треков.
+    // Если такой список передаётся во второй раз, то информация должна обновиться.
+    if (newPlaylist.audios != null) {
+      for (var newAudio in newPlaylist.audios!) {
+        final index = oldPlaylist.audios?.indexWhere(
+          (old) => old.ownerID == newAudio.ownerID && old.id == newAudio.id,
+        );
+
+        updateOrAddAudio(
+          index != -1 ? index : null,
+          newAudio,
+        );
+      }
+    } else {
+      // Здесь мы делаем копию списка треков, если новый список не был передан.
+      //
+      // Копия делается по той причине, что мы не можем изменять список треков
+      // напрямую, так как это приведёт к ошибке в Riverpod.
+      newAudios = [...(oldPlaylist.audios ?? [])];
+    }
+
+    // Проходимся по списку из "обновлённых" треков. Здесь используется другая логика:
+    // - трек есть -> обновляем его.
+    // - трека нет -> добавляем его.
+    if (newPlaylist.audiosToUpdate != null) {
+      for (var newAudio in newPlaylist.audiosToUpdate!) {
+        final index = oldPlaylist.audios?.indexWhere(
+          (old) => old.ownerID == newAudio.ownerID && old.id == newAudio.id,
+        );
+
+        updateOrAddAudio(
+          index != -1 ? index : null,
+          newAudio,
+        );
+      }
+    }
+
+    // Ищем удалённые треки. Если мы находим хотя бы один, то считаем, что плейлист изменился.
+    if (oldPlaylist.audios != null && newPlaylist.audios != null) {
       deletedAudios.addAll(
-        existingAudios.where(
-          (audio) => playlist.audios!.every(
-            (newAudio) =>
-                newAudio.ownerID != audio.ownerID || newAudio.id != audio.id,
+        oldPlaylist.audios!.where(
+          (audio) => newAudios.every(
+            (item) => item.ownerID != audio.ownerID || item.id != audio.id,
           ),
         ),
       );
@@ -663,8 +671,6 @@ class Playlists extends _$Playlists {
       if (deletedAudios.isNotEmpty) {
         playlistChanged = true;
       }
-    } else {
-      newAudios.addAll(existingPlaylist.audios ?? []);
     }
 
     // Мы закончили проходиться по списку треков.
@@ -676,29 +682,29 @@ class Playlists extends _$Playlists {
       // Если не делать копию плейлиста, то Riverpod сравнивает старую (но с новыми полями) и новую версию плейлистов,
       // и из-за этого происходит сравнение между совершенно одинаковыми полями, из-за чего Riverpod
       // отказывается обновлять свои provider'ы, и интерфейс не rebuild'ится, несмотря на то что изменения, очевидно, есть.
-      final ExtendedPlaylist newPlaylist = existingPlaylist.copyWith(
-        count: playlist.count,
-        title: playlist.title,
-        description: playlist.description,
-        subtitle: playlist.subtitle,
-        cacheTracks: playlist.cacheTracks,
-        photo: playlist.photo,
-        areTracksLive: playlist.areTracksLive,
-        backgroundAnimationUrl: playlist.backgroundAnimationUrl,
-        isLiveData: playlist.isLiveData,
-        colorInts: playlist.colorInts,
-        scoredColorInts: playlist.scoredColorInts,
-        frequentColorInt: playlist.frequentColorInt,
-        colorCount: playlist.colorCount,
-        audios: existingPlaylist.audios != null || playlist.audios != null
-            ? newAudios
-            : null,
+      final ExtendedPlaylist playlistToSave = oldPlaylist.copyWith(
+        count: newPlaylist.count,
+        title: newPlaylist.title,
+        description: newPlaylist.description,
+        subtitle: newPlaylist.subtitle,
+        cacheTracks: newPlaylist.cacheTracks,
+        photo: newPlaylist.photo,
+        areTracksLive: newPlaylist.areTracksLive,
+        backgroundAnimationUrl: newPlaylist.backgroundAnimationUrl,
+        isLiveData: newPlaylist.isLiveData,
+        colorInts: newPlaylist.colorInts,
+        scoredColorInts: newPlaylist.scoredColorInts,
+        frequentColorInt: newPlaylist.frequentColorInt,
+        colorCount: newPlaylist.colorCount,
+        audios: newAudios,
       );
 
       // Обновляем плейлист.
       allPlaylists[allPlaylists.indexWhere(
-        (old) => old.id == playlist.id && old.ownerID == playlist.ownerID,
-      )] = newPlaylist;
+        (old) =>
+            old.id == playlistToSave.id &&
+            old.ownerID == playlistToSave.ownerID,
+      )] = playlistToSave;
 
       // Обновляем состояние интерфейса.
       state = AsyncData(
@@ -708,24 +714,22 @@ class Playlists extends _$Playlists {
       );
 
       // Отправляем событие об изменении плейлиста.
-      PlaylistsState.playlistModificationsController.add(newPlaylist);
+      PlaylistsState.playlistModificationsController.add(playlistToSave);
 
       // Сохраняем в БД, если это не плейлист "музыка из результатов поиска".
-      if (saveInDB && playlist.type != PlaylistType.searchResults) {
-        await saveDBPlaylist(newPlaylist);
+      if (saveInDB && newPlaylist.type != PlaylistType.searchResults) {
+        await saveDBPlaylist(playlistToSave);
       }
 
-      // logger.d("Playlist has changed");
-
       return PlaylistUpdateResult(
-        playlist: newPlaylist,
+        playlist: playlistToSave,
         changed: playlistChanged,
         deletedAudios: deletedAudios,
       );
     }
 
     return PlaylistUpdateResult(
-      playlist: playlist,
+      playlist: oldPlaylist,
       changed: false,
     );
   }

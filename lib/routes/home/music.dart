@@ -167,26 +167,24 @@ Future<void> toggleTrackLike(
     // Прекрасно, трек был добавлен либо восстановлён.
     // Запоминаем новую версию плейлиста с лайкнутыми треками.
     playlistsModified.add(
-      favsPlaylist
-          .basicCopyWith(
-            audios: favsPlaylist.audios!,
-            count: favsPlaylist.count + 1,
-          )
-          .copyWithNewAudio(
-            newAudio,
-          ),
+      favsPlaylist.basicCopyWith(
+        audiosToUpdate: [newAudio],
+        count: favsPlaylist.count + 1,
+      ),
     );
 
     // Меняем второй плейлист, откуда этот трек был взят.
     // Здесь мы не трогаем playlistsModified, поскольку сохранять в БД такое изменение не нужно.
     if (sourcePlaylist != null) {
       await playlistsNotifier.updatePlaylist(
-        sourcePlaylist.copyWithNewAudio(
-          audio.basicCopyWith(
-            isLiked: true,
-            relativeID: newTrackID,
-            relativeOwnerID: user.id,
-          ),
+        sourcePlaylist.basicCopyWith(
+          audiosToUpdate: [
+            audio.basicCopyWith(
+              isLiked: true,
+              relativeID: newTrackID,
+              relativeOwnerID: user.id,
+            ),
+          ],
         ),
       );
     }
@@ -205,17 +203,16 @@ Future<void> toggleTrackLike(
 
     // Запоминаем новую версию плейлиста "любимые треки" с удалённым треком.
     playlistsModified.add(
-      favsPlaylist!
-          .basicCopyWith(
-            audios: favsPlaylist.audios!,
-            count: favsPlaylist.count - 1,
-          )
-          .copyWithNewAudio(
-            newAudio.basicCopyWith(
-              isLiked: false,
-              savedFromPlaylist: false,
-            ),
+      favsPlaylist!.basicCopyWith(
+        audiosToUpdate: [
+          newAudio.basicCopyWith(
+            isLiked: false,
+            savedFromPlaylist: false,
           ),
+        ],
+        audios: favsPlaylist.audios!,
+        count: favsPlaylist.count - 1,
+      ),
     );
 
     // Если мы не трогали плейлист "любимые" треки, то модифицируем его.
@@ -223,11 +220,13 @@ Future<void> toggleTrackLike(
         !(sourcePlaylist.id == favsPlaylist.id &&
             sourcePlaylist.ownerID == favsPlaylist.ownerID)) {
       playlistsModified.add(
-        sourcePlaylist.copyWithNewAudio(
-          newAudio.basicCopyWith(
-            isLiked: false,
-            savedFromPlaylist: false,
-          ),
+        sourcePlaylist.basicCopyWith(
+          audiosToUpdate: [
+            newAudio.basicCopyWith(
+              isLiked: false,
+              savedFromPlaylist: false,
+            ),
+          ],
         ),
       );
     }
@@ -244,11 +243,13 @@ Future<void> toggleTrackLike(
       );
 
       playlistsModified.add(
-        savedPlaylist!.copyWithNewAudio(
-          newAudio.basicCopyWith(
-            isLiked: false,
-            savedFromPlaylist: false,
-          ),
+        savedPlaylist!.basicCopyWith(
+          audiosToUpdate: [
+            newAudio.basicCopyWith(
+              isLiked: false,
+              savedFromPlaylist: false,
+            ),
+          ],
         ),
       );
     }

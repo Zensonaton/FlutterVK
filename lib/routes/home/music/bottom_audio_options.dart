@@ -100,33 +100,31 @@ class TrackThumbnailEditDialog extends HookConsumerWidget {
     void postThumbnailSave(ExtendedAudio newAudio) async {
       final trackSchemeInfo = ref.read(trackSchemeInfoProvider.notifier);
 
+      // Очищаем кэш изображений в памяти.
+      PaintingBinding.instance.imageCache.clear();
+      PaintingBinding.instance.imageCache.clearLiveImages();
+
       // Удаляем старые обложки.
       final String mediaKey = audio.mediaKey;
       await CachedAlbumImagesManager.instance.removeFile("${mediaKey}small");
       await CachedAlbumImagesManager.instance.removeFile("${mediaKey}max");
 
-      // Очищаем кэш изображений в памяти.
-      PaintingBinding.instance.imageCache.clear();
-      PaintingBinding.instance.imageCache.clearLiveImages();
-
-      // Загружаем новую обложку.
-      final downloadedAudio =
-          await PlaylistCacheDownloadItem.downloadWithMetadata(
-        playlists.ref,
-        playlist,
-        newAudio,
-        downloadAudio: false,
-        downloadLyrics: false,
-      );
-      if (downloadedAudio == null) return;
-
       // Получаем новые цвета, если у нас есть хоть какая-то обложка.
       ImageSchemeExtractor? newColors;
       if (newAudio.smallestThumbnail != null) {
+        // Загружаем новую обложку.
+        await PlaylistCacheDownloadItem.downloadWithMetadata(
+          playlists.ref,
+          playlist,
+          newAudio,
+          downloadAudio: false,
+          downloadLyrics: false,
+        );
+
         newColors = await ImageSchemeExtractor.fromImageProvider(
           CachedNetworkImageProvider(
-            audio.smallestThumbnail!,
-            cacheKey: "${audio.mediaKey}small",
+            newAudio.smallestThumbnail!,
+            cacheKey: "${newAudio.mediaKey}small",
             cacheManager: CachedAlbumImagesManager.instance,
           ),
         );
@@ -140,14 +138,18 @@ class TrackThumbnailEditDialog extends HookConsumerWidget {
       }
 
       // Сохраняем новую версию трека.
-      playlists.updatePlaylist(
-        playlist.copyWithNewAudio(
-          newAudio.basicCopyWith(
-            colorInts: newColors?.colorInts,
-            scoredColorInts: newColors?.scoredColorInts,
-            frequentColorInt: newColors?.frequentColor.value,
-            colorCount: newColors?.colorCount,
-          ),
+      await playlists.updatePlaylist(
+        playlist.basicCopyWith(
+          audiosToUpdate: [
+            newAudio.basicCopyWith(
+              deezerThumbs: newAudio.deezerThumbs,
+              forceDeezerThumbs: newAudio.forceDeezerThumbs,
+              colorInts: newColors?.colorInts,
+              scoredColorInts: newColors?.scoredColorInts,
+              frequentColorInt: newColors?.frequentColor.value,
+              colorCount: newColors?.colorCount,
+            ),
+          ],
         ),
         saveInDB: true,
       );

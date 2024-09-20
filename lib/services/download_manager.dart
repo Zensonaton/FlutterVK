@@ -124,10 +124,12 @@ class PlaylistCacheDeleteDownloadItem extends DownloadItem {
       if (newPlaylist == null) return;
 
       ref.read(playlistsProvider.notifier).updatePlaylist(
-            newPlaylist.copyWithNewAudio(
-              audio.basicCopyWith(
-                isCached: false,
-              ),
+            newPlaylist.basicCopyWith(
+              audiosToUpdate: [
+                audio.basicCopyWith(
+                  isCached: false,
+                ),
+              ],
             ),
           );
     }
@@ -382,17 +384,9 @@ class PlaylistCacheDownloadItem extends DownloadItem {
           playlist.audios!.indexWhere((item) => item.id == audio.id);
       final bool saveInDB = index % 5 == 0;
 
-      // Получаем новый объект плейлиста.
-      //
-      // FIXME: Этот костыль свзяан с тем, что copyWithNewAudio копирует даже старые треки.
-      // Из-за этого при кэшировании иногда происходит перезапись старых треков, и это плохо.
-      final newPlaylist =
-          ref.read(getPlaylistProvider(playlist.ownerID, playlist.id));
-      if (newPlaylist == null) return;
-
       await playlists.updatePlaylist(
-        newPlaylist.copyWithNewAudio(
-          newAudio,
+        playlist.basicCopyWith(
+          audiosToUpdate: [newAudio],
         ),
         saveInDB: saveInDB,
       );
