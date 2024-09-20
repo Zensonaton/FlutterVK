@@ -110,7 +110,7 @@ Future<void> onMixPlayToggle(
   final List<Audio> response =
       await api.audio.getStreamMixAudiosWithAlbums(count: minMixAudiosCount);
 
-  playlists.updatePlaylist(
+  final update = await playlists.updatePlaylist(
     playlist.basicCopyWith(
       audios: response
           .map(
@@ -123,7 +123,7 @@ Future<void> onMixPlayToggle(
 
   // Всё ок, запускаем воспроизведение.
   await player.setPlaylist(
-    playlist,
+    update.playlist,
     setLoopAll: false,
   );
 }
@@ -154,7 +154,7 @@ class EnableCacheDialog extends ConsumerWidget {
       icon: Icons.file_download,
       title: l18n.music_enableTrackCachingTitle,
       text: l18n.music_enableTrackCachingDescription(
-        playlist.count,
+        playlist.count ?? 0,
         aproxSizeString,
       ),
       actions: [
@@ -446,7 +446,7 @@ class MobilePlaylistInfoWidget extends ConsumerWidget {
                   fit: BoxFit.scaleDown,
                   child: Text(
                     l18n.music_bottomPlaylistInfo(
-                      playlist.count,
+                      playlist.count ?? 0,
                       playlistType,
                       humanizeDuration(
                         playlist.duration ?? Duration.zero,
@@ -1113,7 +1113,7 @@ class AppBarWidget extends HookConsumerWidget {
                   controller: searchController,
                   focusNode: searchFocusNode,
                   title: title,
-                  count: playlist.count,
+                  count: playlist.count ?? 0,
                   isSearchOpen: isSearchOpen,
                   titleOpacity: titleOpacity,
                   onSearchPressed: mobileLayout ? onSearchPressed : null,
@@ -1308,7 +1308,7 @@ class DesktopAppBarWidget extends HookConsumerWidget {
                                 fit: BoxFit.scaleDown,
                                 child: Text(
                                   l18n.music_bottomPlaylistInfo(
-                                    playlist.count,
+                                    playlist.count ?? 0,
                                     playlistType,
                                     humanizeDuration(
                                       playlist.duration ?? Duration.zero,
@@ -1492,7 +1492,7 @@ class DesktopPlaylistControlsWidget extends HookConsumerWidget {
                           onSubmitted: onSearchSubmitted,
                           decoration: InputDecoration(
                             hintText: l18n.music_searchTextInPlaylist(
-                              playlist.count,
+                              playlist.count ?? 0,
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(
@@ -1749,7 +1749,7 @@ class PlaylistRoute extends HookConsumerWidget {
       final ExtendedAudio? foundAudio = playlist.audios!.firstWhereOrNull(
         (item) => isAudioMatchesQuery(item, query),
       );
-      if (foundAudio == null) return;
+      if (foundAudio == null || !foundAudio.canPlay) return;
 
       // Если у нас уже запущен этот же трек, то переключаем паузу/воспроизведение.
       if (player.currentAudio == foundAudio) {

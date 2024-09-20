@@ -38,7 +38,7 @@ class ExtendedPlaylist {
   /// Количество аудиозаписей в данном плейлисте.
   ///
   /// Это значение возвращает общее количество треков в плейлисте, вне зависимости от количества треков в [audios].
-  final int count;
+  final int? count;
 
   /// Ключ доступа.
   final String? accessKey;
@@ -268,7 +268,7 @@ class ExtendedPlaylist {
         type: type,
         title: title,
         description: description,
-        count: count ?? this.count,
+        count: count,
         accessKey: accessKey,
         isFollowing: isFollowing ?? this.isFollowing,
         subtitle: subtitle,
@@ -377,7 +377,7 @@ class ExtendedPlaylist {
     required this.type,
     this.title,
     this.description,
-    required this.count,
+    this.count,
     this.accessKey,
     this.isFollowing = false,
     this.subtitle,
@@ -736,15 +736,15 @@ class ExtendedAudio {
         title: audio.title!,
         duration: audio.duration!,
         subtitle: audio.subtitle,
-        accessKey: audio.accessKey!,
+        accessKey: audio.accessKey,
         isExplicit: audio.isExplicit!,
         isRestricted: audio.isRestricted!,
-        date: audio.date!,
+        date: audio.date,
         album: audio.album?.asAudioAlbum,
         vkThumbs: audio.vkThumbs?.asExtendedThumbnails,
         deezerThumbs: audio.deezerThumbs?.asExtendedThumbnails,
         forceDeezerThumbs: audio.forceDeezerThumbs ?? false,
-        hasLyrics: audio.hasLyrics!,
+        hasLyrics: audio.hasLyrics,
         genreID: audio.genreID ?? 18,
         vkLyrics: audio.vkLyrics?.asLyrics,
         lrcLibLyrics: audio.lrcLibLyrics?.asLyrics,

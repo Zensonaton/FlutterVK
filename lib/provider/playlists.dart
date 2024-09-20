@@ -816,6 +816,7 @@ class Playlists extends _$Playlists {
 
     // Если информация по плейлисту уже загружена, то ничего не делаем.
     if (playlist.type == PlaylistType.favorites ||
+        playlist.type == PlaylistType.audioMix ||
         (playlist.audios != null &&
             playlist.isLiveData &&
             playlist.areTracksLive)) {

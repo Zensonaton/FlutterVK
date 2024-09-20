@@ -31,7 +31,7 @@ final dioProvider = AutoDisposeProvider<Dio>.internal(
 );
 
 typedef DioRef = AutoDisposeProviderRef<Dio>;
-String _$vkDioHash() => r'90961afbafc61fe18d7a433ee31dffa5eac9f210';
+String _$vkDioHash() => r'3ef9b06017e7b53c19f1d5683271b3cc267b6ca8';
 
 /// [Provider], возвращающий объект [Dio] с зарегистрированными [Interceptor]'ами, настроенный конкретно под работу с API ВКонтакте.
 ///
@@ -57,7 +57,7 @@ final vkDioProvider = AutoDisposeProvider<Dio>.internal(
 );
 
 typedef VkDioRef = AutoDisposeProviderRef<Dio>;
-String _$lrcLibDioHash() => r'c6d88dff6ecb7ca6f7c2e1161f634f8d26309e6d';
+String _$lrcLibDioHash() => r'e9787d7a39bdbdfe62b936cdb08d43b4570cc807';
 
 /// [Provider], возвращающий объект [Dio] с зарегистрированными [Interceptor]'ами, настроенный для создания API-запросов к сервису LRCLIB.
 ///

@@ -685,7 +685,7 @@ class ExportTracksListDialog extends ConsumerWidget {
       icon: Icons.my_library_music,
       title: l18n.profile_exportMusicListTitle,
       text: l18n.profile_exportMusicListDescription(
-        playlist.count,
+        playlist.count!,
       ),
       contents: [
         SelectableText(

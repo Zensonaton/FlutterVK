@@ -438,7 +438,7 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
             extractedColors ??= await getColorScheme(newAudio);
 
             // Сохраняем новую версию трека.
-            playlistsNotifier.updatePlaylist(
+            await playlistsNotifier.updatePlaylist(
               playlist.basicCopyWith(
                 audiosToUpdate: [
                   newAudio.basicCopyWith(
@@ -488,29 +488,37 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
 
           // Отдельно слушаем события изменения индекса текущего трека, что бы добавлять треки в реальном времени, если это аудио микс.
           player.currentIndexStream.listen((int? index) async {
+            final AppLogger logger = getLogger("VK Mix");
             final api = ref.read(vkAPIProvider);
 
             if (index == null ||
                 !player.loaded ||
                 player.currentPlaylist?.type != PlaylistType.audioMix) return;
 
-            final int count = player.currentPlaylist!.count;
-            final int tracksLeft = count - index;
-            final int tracksToAdd = tracksLeft <= minMixAudiosCount
-                ? (minMixAudiosCount - tracksLeft)
-                : 0;
+            final int playlistItemCount = player.currentPlaylist!.count ?? 0;
+            final int remainingTracks = playlistItemCount - index;
+            final int remainingTracksToAdd = clampInt(
+              minMixAudiosCount - remainingTracks,
+              0,
+              minMixAudiosCount,
+            );
 
-            // logger.d(
-            //   "Mix index: $index/$count, should add $tracksToAdd tracks",
-            // );
+            logger.d(
+              "Mix index: $index/$playlistItemCount, should add $remainingTracksToAdd tracks",
+            );
 
             // Если у нас достаточно треков в очереди, то ничего не делаем.
-            if (tracksToAdd <= 0) return;
+            if (remainingTracksToAdd <= 0) return;
 
-            logger.d("Adding $tracksToAdd tracks to mix queue");
             try {
-              final List<Audio> response = await api.audio
-                  .getStreamMixAudiosWithAlbums(count: tracksToAdd);
+              final List<Audio> response =
+                  await api.audio.getStreamMixAudiosWithAlbums(
+                count: remainingTracksToAdd,
+              );
+              assert(
+                response.length == remainingTracksToAdd,
+                "Invalid response length, expected $remainingTracksToAdd, got ${response.length} instead",
+              );
 
               final List<ExtendedAudio> newAudios = response
                   .map(
@@ -520,9 +528,9 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
 
               // Добавляем треки в объект плейлиста.
               await playlistsNotifier.updatePlaylist(
-                player.currentPlaylist!.basicCopyWith(
+                player.currentPlaylist!.copyWith(
                   audiosToUpdate: newAudios,
-                  count: count + tracksToAdd,
+                  count: playlistItemCount + remainingTracksToAdd,
                 ),
                 saveInDB: true,
               );
@@ -552,7 +560,7 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
             }
 
             logger.d(
-              "Successfully added $tracksToAdd tracks to mix queue (current: ${player.currentPlaylist!.count})",
+              "Successfully added $remainingTracksToAdd tracks to mix queue (current: ${player.currentPlaylist!.count})",
             );
           }),
         ];

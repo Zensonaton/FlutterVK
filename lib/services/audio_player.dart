@@ -376,10 +376,13 @@ class VKMusicPlayer {
         // Если играет не этот плейлист, то ничего не делаем.
         if (!isCurrent) return;
 
-        // logger.d("Player detected playlist modification");
+        logger.d("Player detected playlist modification");
 
         // Устанавливаем новый плейлист.
-        _silentSetPlaylist(playlist, mergeWithOldQueue: true);
+        _silentSetPlaylist(
+          playlist,
+          mergeWithOldQueue: true,
+        );
 
         // Создаём событие об изменении текущего трека.
         _playlistModificationsController.add(playlist);

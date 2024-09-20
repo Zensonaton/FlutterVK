@@ -313,7 +313,7 @@ DBPlaylist _dBPlaylistDeserialize(
     color: reader.readStringOrNull(offsets[3]),
     colorCount: reader.readLongOrNull(offsets[4]),
     colorInts: reader.readLongList(offsets[5]),
-    count: reader.readLong(offsets[6]),
+    count: reader.readLongOrNull(offsets[6]),
     description: reader.readStringOrNull(offsets[7]),
     frequentColorInt: reader.readLongOrNull(offsets[8]),
     id: reader.readLong(offsets[10]),
@@ -367,7 +367,7 @@ P _dBPlaylistDeserializeProp<P>(
     case 5:
       return (reader.readLongList(offset)) as P;
     case 6:
-      return (reader.readLong(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 7:
       return (reader.readStringOrNull(offset)) as P;
     case 8:
@@ -1323,8 +1323,24 @@ extension DBPlaylistQueryFilter
     });
   }
 
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition> countIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'count',
+      ));
+    });
+  }
+
+  QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition> countIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'count',
+      ));
+    });
+  }
+
   QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition> countEqualTo(
-      int value) {
+      int? value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'count',
@@ -1334,7 +1350,7 @@ extension DBPlaylistQueryFilter
   }
 
   QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition> countGreaterThan(
-    int value, {
+    int? value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -1347,7 +1363,7 @@ extension DBPlaylistQueryFilter
   }
 
   QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition> countLessThan(
-    int value, {
+    int? value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -1360,8 +1376,8 @@ extension DBPlaylistQueryFilter
   }
 
   QueryBuilder<DBPlaylist, DBPlaylist, QAfterFilterCondition> countBetween(
-    int lower,
-    int upper, {
+    int? lower,
+    int? upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
@@ -3356,7 +3372,7 @@ extension DBPlaylistQueryProperty
     });
   }
 
-  QueryBuilder<DBPlaylist, int, QQueryOperations> countProperty() {
+  QueryBuilder<DBPlaylist, int?, QQueryOperations> countProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'count');
     });

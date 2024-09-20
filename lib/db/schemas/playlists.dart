@@ -494,7 +494,7 @@ class DBPlaylist {
   final String? subtitle;
 
   /// Количество аудиозаписей в данном плейлисте. Это значение возвращает общее количество треков в плейлисте, вне зависимости от того, загружен ли был список треков или нет.
-  final int count;
+  final int? count;
 
   /// Ключ доступа.
   final String? accessKey;
@@ -539,20 +539,14 @@ class DBPlaylist {
   final int? colorCount;
 
   /// Создаёт объект [DBPlaylist] из передаваемого объекта [ExtendedPlaylist].
-  static DBPlaylist fromExtendedPlaylist(ExtendedPlaylist playlist) =>
-      DBPlaylist(
-        id: playlist.id,
-        ownerID: playlist.ownerID,
-        type: playlist.type,
-        title: playlist.title,
-        description: playlist.description,
-        subtitle: playlist.subtitle,
-        count: playlist.count,
-        accessKey: playlist.accessKey,
-        isFollowing: playlist.isFollowing,
-        photo: playlist.photo?.asDBThumbnails,
-        audios: playlist.audios
-            ?.where((ExtendedAudio audio) {
+  static DBPlaylist fromExtendedPlaylist(ExtendedPlaylist playlist) {
+    List<DBAudio>? audios;
+
+    // VK Mix плейлисты не должны содержать треки.
+    if (playlist.type != PlaylistType.audioMix) {
+      audios = playlist.audios
+          ?.where(
+            (ExtendedAudio audio) {
               // Все плейлисты кроме "любимой музыки" должны содержать все треки.
               if (playlist.type != PlaylistType.favorites) return true;
 
@@ -560,26 +554,42 @@ class DBPlaylist {
               // которые были лайкнуты, нелайкнутым трек может быть, если
               // пользователь убрал лайк, но трек ещё не был удалён из плейлиста.
               return audio.isLiked;
-            })
-            .map(
-              (ExtendedAudio audio) => audio.asDBAudio,
-            )
-            .toList(),
-        mixID: playlist.mixID,
-        backgroundAnimationUrl: playlist.backgroundAnimationUrl,
-        simillarity: playlist.simillarity,
-        color: playlist.color,
-        knownTracks: playlist.knownTracks
-            ?.map(
-              (ExtendedAudio audio) => audio.asDBAudio,
-            )
-            .toList(),
-        isCachingAllowed: playlist.cacheTracks ?? false,
-        colorInts: playlist.colorInts?.keys.toList(),
-        scoredColorInts: playlist.scoredColorInts,
-        frequentColorInt: playlist.frequentColorInt,
-        colorCount: playlist.colorCount,
-      );
+            },
+          )
+          .map(
+            (ExtendedAudio audio) => audio.asDBAudio,
+          )
+          .toList();
+    }
+
+    return DBPlaylist(
+      id: playlist.id,
+      ownerID: playlist.ownerID,
+      type: playlist.type,
+      title: playlist.title,
+      description: playlist.description,
+      subtitle: playlist.subtitle,
+      count: playlist.count,
+      accessKey: playlist.accessKey,
+      isFollowing: playlist.isFollowing,
+      photo: playlist.photo?.asDBThumbnails,
+      audios: audios,
+      mixID: playlist.mixID,
+      backgroundAnimationUrl: playlist.backgroundAnimationUrl,
+      simillarity: playlist.simillarity,
+      color: playlist.color,
+      knownTracks: playlist.knownTracks
+          ?.map(
+            (ExtendedAudio audio) => audio.asDBAudio,
+          )
+          .toList(),
+      isCachingAllowed: playlist.cacheTracks ?? false,
+      colorInts: playlist.colorInts?.keys.toList(),
+      scoredColorInts: playlist.scoredColorInts,
+      frequentColorInt: playlist.frequentColorInt,
+      colorCount: playlist.colorCount,
+    );
+  }
 
   /// Возвращает копию данного класса в виде объекта [ExtendedPlaylist].
   @Ignore()
@@ -662,7 +672,7 @@ class DBPlaylist {
     this.title,
     this.description,
     this.subtitle,
-    required this.count,
+    this.count,
     this.accessKey,
     this.isFollowing,
     this.photo,

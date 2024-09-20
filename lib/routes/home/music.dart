@@ -169,7 +169,7 @@ Future<void> toggleTrackLike(
     playlistsModified.add(
       favsPlaylist.basicCopyWith(
         audiosToUpdate: [newAudio],
-        count: favsPlaylist.count + 1,
+        count: favsPlaylist.count! + 1,
       ),
     );
 
@@ -211,7 +211,7 @@ Future<void> toggleTrackLike(
           ),
         ],
         audios: favsPlaylist.audios!,
-        count: favsPlaylist.count - 1,
+        count: favsPlaylist.count! - 1,
       ),
     );
 
