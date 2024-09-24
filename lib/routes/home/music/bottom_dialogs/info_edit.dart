@@ -44,7 +44,7 @@ class TrackInfoEditDialog extends HookConsumerWidget {
 
     final titleController = useTextEditingController(text: audio.title);
     final artistController = useTextEditingController(text: audio.artist);
-    final trackGenre = useState(audio.genreID ?? 18);
+    final trackGenre = useState(audio.genreID);
     useValueListenable(titleController);
     useValueListenable(artistController);
 
@@ -66,7 +66,7 @@ class TrackInfoEditDialog extends HookConsumerWidget {
           audio.ownerID,
           titleController.text,
           artistController.text,
-          trackGenre.value,
+          trackGenre.value ?? 18,
         );
 
         if (!context.mounted) return;
