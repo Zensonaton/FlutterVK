@@ -663,7 +663,6 @@ class ExtendedAudio {
 
     // Обложки.
     if (vkThumbs != other.vkThumbs ||
-        vkThumbs != other.vkThumbs ||
         deezerThumbs != other.deezerThumbs ||
         forceDeezerThumbs != other.forceDeezerThumbs) {
       return false;
@@ -913,6 +912,9 @@ class ExtendedAudio {
     return other.runtimeType == ExtendedAudio &&
         other.id == id &&
         other.ownerID == ownerID &&
+        other.title == title &&
+        other.artist == artist &&
+        other.artist == artist &&
         other.isLiked == isLiked &&
         other.isCached == isCached &&
         other.smallestThumbnail == smallestThumbnail &&

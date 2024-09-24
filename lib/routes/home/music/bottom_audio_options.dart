@@ -31,7 +31,7 @@ import "../../../utils.dart";
 import "../../../widgets/adaptive_dialog.dart";
 import "../../../widgets/audio_track.dart";
 import "../../../widgets/dialogs.dart";
-import "track_info.dart";
+import "bottom_dialogs/info_edit.dart";
 
 /// Диалог, помогающий пользователю отредактировать обложку у передаваемого трека.
 class TrackThumbnailEditDialog extends HookConsumerWidget {
@@ -465,7 +465,6 @@ class BottomAudioOptionsDialog extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(userProvider);
     final l18n = ref.watch(l18nProvider);
     ref.watch(playerStateProvider);
 
@@ -483,8 +482,6 @@ class BottomAudioOptionsDialog extends ConsumerWidget {
                 // Трек.
                 AudioTrackTile(
                   audio: audio,
-                  isSelected: audio == player.currentAudio,
-                  isPlaying: player.loaded && player.playing,
                 ),
                 const Gap(8),
 
@@ -500,7 +497,6 @@ class BottomAudioOptionsDialog extends ConsumerWidget {
                   title: Text(
                     l18n.music_detailsEditTitle,
                   ),
-                  enabled: audio.album == null && audio.ownerID == user.id,
                   onTap: () {
                     if (!networkRequiredDialog(ref, context)) return;
 
@@ -510,6 +506,7 @@ class BottomAudioOptionsDialog extends ConsumerWidget {
                       context: context,
                       builder: (BuildContext context) => TrackInfoEditDialog(
                         audio: audio,
+                        playlist: playlist,
                       ),
                     );
                   },

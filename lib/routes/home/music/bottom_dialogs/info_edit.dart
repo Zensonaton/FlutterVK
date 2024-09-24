@@ -1,17 +1,18 @@
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:gap/gap.dart";
-import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
-import "../../../api/vk/consts.dart";
-import "../../../main.dart";
-import "../../../provider/l18n.dart";
-import "../../../provider/user.dart";
-import "../../../services/logger.dart";
-import "../../../widgets/audio_track.dart";
-import "../../../widgets/dialogs.dart";
-import "../../../widgets/loading_overlay.dart";
+import "../../../../api/vk/consts.dart";
+import "../../../../api/vk/shared.dart";
+import "../../../../provider/l18n.dart";
+import "../../../../provider/playlists.dart";
+import "../../../../provider/user.dart";
+import "../../../../provider/vk_api.dart";
+import "../../../../services/logger.dart";
+import "../../../../widgets/audio_track.dart";
+import "../../../../widgets/dialogs.dart";
+import "../../../../widgets/loading_button.dart";
 
 /// Диалог, который позволяет пользователю отредактировать данные о треке.
 ///
@@ -25,35 +26,94 @@ import "../../../widgets/loading_overlay.dart";
 class TrackInfoEditDialog extends HookConsumerWidget {
   static final AppLogger logger = getLogger("TrackInfoEditDialog");
 
+  /// Плейлист, в котором находится этот трек.
+  final ExtendedPlaylist playlist;
+
   /// Трек, данные которого будут изменяться.
   final ExtendedAudio audio;
 
   const TrackInfoEditDialog({
     super.key,
     required this.audio,
+    required this.playlist,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l18n = ref.watch(l18nProvider);
 
-    final trackTitle = useState(audio.title);
-    final trackArtist = useState(audio.artist);
+    final titleController = useTextEditingController(text: audio.title);
+    final artistController = useTextEditingController(text: audio.artist);
     final trackGenre = useState(audio.genreID ?? 18);
+    useValueListenable(titleController);
+    useValueListenable(artistController);
 
-    // Создаём копию трека, засовывая в неё новые значения с новым именем трека и прочим.
-    final ExtendedAudio newAudio = ExtendedAudio(
-      title: trackTitle.value,
-      artist: trackArtist.value,
-      id: audio.id,
-      ownerID: audio.ownerID,
-      duration: audio.duration,
-      accessKey: audio.accessKey,
-      url: audio.url,
-      date: audio.date,
-      album: audio.album,
-      isLiked: audio.isLiked,
+    final ExtendedAudio newAudio = audio.copyWith(
+      title: titleController.text,
+      artist: artistController.text,
     );
+    final bool isChanged = audio.title != titleController.text ||
+        audio.artist != artistController.text ||
+        audio.genreID != trackGenre.value;
+
+    Future<void> onSave() async {
+      final api = ref.read(vkAPIProvider);
+      final playlists = ref.read(playlistsProvider.notifier);
+
+      try {
+        await api.audio.edit(
+          audio.id,
+          audio.ownerID,
+          titleController.text,
+          artistController.text,
+          trackGenre.value,
+        );
+
+        if (!context.mounted) return;
+        Navigator.of(context).pop();
+
+        // Обновляем локальную информацию о треке.
+        await playlists.updatePlaylist(
+          playlist.basicCopyWith(
+            audiosToUpdate: [
+              audio.basicCopyWith(
+                title: titleController.text,
+                artist: artistController.text,
+                genreID: trackGenre.value,
+              ),
+            ],
+          ),
+          saveInDB: true,
+        );
+      } on VKAPIException catch (e) {
+        if (!context.mounted) return;
+
+        if (e.errorCode == 15) {
+          showErrorDialog(
+            context,
+            description: l18n.music_editErrorRestricted,
+          );
+
+          return;
+        }
+
+        showErrorDialog(
+          context,
+          description: l18n.music_editError(
+            e.toString(),
+          ),
+        );
+      } catch (e, stackTrace) {
+        showLogErrorDialog(
+          "Error while modifying track:",
+          e,
+          stackTrace,
+          logger,
+          // ignore: use_build_context_synchronously
+          context,
+        );
+      }
+    }
 
     return Dialog(
       child: Container(
@@ -66,8 +126,6 @@ class TrackInfoEditDialog extends HookConsumerWidget {
             // Открытый трек.
             AudioTrackTile(
               audio: newAudio,
-              isSelected: newAudio == player.currentAudio,
-              isPlaying: player.loaded && player.playing,
             ),
             const Gap(8),
 
@@ -76,6 +134,7 @@ class TrackInfoEditDialog extends HookConsumerWidget {
 
             // Текстовое поле для изменения названия.
             TextField(
+              controller: titleController,
               decoration: InputDecoration(
                 label: Text(
                   l18n.music_trackTitle,
@@ -89,11 +148,12 @@ class TrackInfoEditDialog extends HookConsumerWidget {
                   ),
                 ),
               ),
-              onChanged: (String value) => trackTitle.value = value,
             ),
+            const Gap(8),
 
             // Текстовое поле для изменения исполнителя.
             TextField(
+              controller: artistController,
               decoration: InputDecoration(
                 prefixIcon: const Padding(
                   padding: EdgeInsetsDirectional.only(
@@ -107,7 +167,6 @@ class TrackInfoEditDialog extends HookConsumerWidget {
                   l18n.music_trackArtist,
                 ),
               ),
-              onChanged: (String value) => trackArtist.value = value,
             ),
             const Gap(28),
 
@@ -135,52 +194,14 @@ class TrackInfoEditDialog extends HookConsumerWidget {
             // Кнопка для сохранения.
             Align(
               alignment: Alignment.bottomRight,
-              child: FilledButton.icon(
+              child: LoadingIconButton.icon(
                 icon: const Icon(
                   Icons.edit,
                 ),
                 label: Text(
                   l18n.general_save,
                 ),
-                onPressed: () async {
-                  final LoadingOverlay overlay = LoadingOverlay.of(context);
-
-                  context.pop();
-                  overlay.show();
-
-                  try {
-                    // final APIAudioEditResponse response = await user.audioEdit(
-                    //   audio.ownerID,
-                    //   audio.id,
-                    //   titleController.text,
-                    //   artistController.text,
-                    //   trackGenre,
-                    // );
-                    // raiseOnAPIError(response);
-
-                    // Обновляем данные о треке у пользователя.
-                    // newAudio.title = titleController.text;
-                    // newAudio.artist = artistController.text;
-                    // newAudio.genreID = trackGenre;
-
-                    // user.markUpdated(false);
-                  } catch (e, stackTrace) {
-                    logger.e(
-                      "Error while modifying track info: ",
-                      error: e,
-                      stackTrace: stackTrace,
-                    );
-
-                    if (context.mounted) {
-                      showErrorDialog(
-                        context,
-                        description: e.toString(),
-                      );
-                    }
-                  } finally {
-                    overlay.hide();
-                  }
-                },
+                onPressed: isChanged ? onSave : null,
               ),
             ),
           ],
