@@ -366,7 +366,7 @@ class RealtimePlaylistsBlock extends HookConsumerWidget {
 
         // Проходимся по доступным аудио миксам.
         // Skeleton loader.
-        if (mixPlaylists == null)
+        if (mixPlaylists == null) ...[
           Skeletonizer(
             child: LivePlaylistWidget(
               title: "Mix playlist",
@@ -375,7 +375,8 @@ class RealtimePlaylistsBlock extends HookConsumerWidget {
               bigLayout: !mobileLayout,
             ),
           ),
-        const Gap(8),
+          const Gap(8),
+        ],
 
         // Настоящие данные.
         if (mixPlaylists != null)
@@ -389,57 +390,59 @@ class RealtimePlaylistsBlock extends HookConsumerWidget {
               currentlyPlaying: player.playing,
               onPlayToggle: () => onMixPlayToggle(ref, playlist),
             ),
-            const Gap(8),
           ],
 
         // Содержимое плейлистов из раздела "Какой сейчас вайб?".
-        ScrollConfiguration(
-          behavior: AlwaysScrollableScrollBehavior(),
-          child: SizedBox(
-            height: 50,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              clipBehavior: Clip.none,
-              physics: moodPlaylists == null
-                  ? const NeverScrollableScrollPhysics()
-                  : null,
-              itemCount: moodPlaylists?.length ?? 0,
-              separatorBuilder: (BuildContext context, int index) {
-                return const Gap(8);
-              },
-              itemBuilder: (BuildContext context, int index) {
-                // Skeleton loader.
-                if (moodPlaylists == null) {
-                  return Skeletonizer(
-                    child: MoodPlaylistWidget(
-                      title:
-                          fakePlaylistNames[index % fakePlaylistNames.length],
+        if (moodPlaylists?.isNotEmpty ?? false) ...[
+          const Gap(8),
+          ScrollConfiguration(
+            behavior: AlwaysScrollableScrollBehavior(),
+            child: SizedBox(
+              height: 50,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                clipBehavior: Clip.none,
+                physics: moodPlaylists == null
+                    ? const NeverScrollableScrollPhysics()
+                    : null,
+                itemCount: moodPlaylists?.length ?? 0,
+                separatorBuilder: (BuildContext context, int index) {
+                  return const Gap(8);
+                },
+                itemBuilder: (BuildContext context, int index) {
+                  // Skeleton loader.
+                  if (moodPlaylists == null) {
+                    return Skeletonizer(
+                      child: MoodPlaylistWidget(
+                        title:
+                            fakePlaylistNames[index % fakePlaylistNames.length],
+                      ),
+                    );
+                  }
+
+                  // Настоящие данные.
+                  final ExtendedPlaylist playlist = moodPlaylists[index];
+
+                  return MoodPlaylistWidget(
+                    title: playlist.title!,
+                    description: playlist.description ?? playlist.subtitle,
+                    backgroundUrl: playlist.photo!.photo600,
+                    cacheKey: "${playlist.mediaKey}600",
+                    selected:
+                        player.currentPlaylist?.mediaKey == playlist.mediaKey,
+                    currentlyPlaying: player.playing,
+                    onPlayToggle: () => onPlaylistPlayToggle(
+                      ref,
+                      context,
+                      playlist,
+                      player.playing,
                     ),
                   );
-                }
-
-                // Настоящие данные.
-                final ExtendedPlaylist playlist = moodPlaylists[index];
-
-                return MoodPlaylistWidget(
-                  title: playlist.title!,
-                  description: playlist.description ?? playlist.subtitle,
-                  backgroundUrl: playlist.photo!.photo600,
-                  cacheKey: "${playlist.mediaKey}600",
-                  selected:
-                      player.currentPlaylist?.mediaKey == playlist.mediaKey,
-                  currentlyPlaying: player.playing,
-                  onPlayToggle: () => onPlaylistPlayToggle(
-                    ref,
-                    context,
-                    playlist,
-                    player.playing,
-                  ),
-                );
-              },
+                },
+              ),
             ),
           ),
-        ),
+        ],
       ],
     );
   }
