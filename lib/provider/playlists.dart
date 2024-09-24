@@ -583,13 +583,22 @@ class Playlists extends _$Playlists {
     List<ExtendedAudio> deletedAudios = [];
 
     /// Метод, обновляющий либо добавляющий трек в список треков.
-    void updateOrAddAudio(int? oldIndex, ExtendedAudio newAudio) {
+    void updateOrAddAudio(
+      int? oldIndex,
+      ExtendedAudio newAudio,
+      bool insertInFront,
+    ) {
       final ExtendedAudio? oldAudio =
           oldIndex != null ? newAudios.elementAtOrNull(oldIndex) : null;
 
       // Проверяем схожесть либо отсутствие трека.
       if (oldAudio == null || oldAudio.isEquals(newAudio)) {
-        newAudios.add(oldAudio ?? newAudio);
+        final insertAudio = oldAudio ?? newAudio;
+        if (insertInFront) {
+          newAudios.insert(0, insertAudio);
+        } else {
+          newAudios.add(insertAudio);
+        }
 
         if (oldIndex == null) playlistChanged = true;
 
@@ -632,6 +641,7 @@ class Playlists extends _$Playlists {
         updateOrAddAudio(
           index != -1 ? index : null,
           newAudio,
+          false,
         );
       }
     } else {
@@ -654,6 +664,7 @@ class Playlists extends _$Playlists {
         updateOrAddAudio(
           index != -1 ? index : null,
           newAudio,
+          true,
         );
       }
     }
