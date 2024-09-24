@@ -18,9 +18,11 @@ import "../../../api/deezer/shared.dart";
 import "../../../consts.dart";
 import "../../../main.dart";
 import "../../../provider/color.dart";
+import "../../../provider/download_manager.dart";
 import "../../../provider/l18n.dart";
 import "../../../provider/player_events.dart";
 import "../../../provider/playlists.dart";
+import "../../../provider/preferences.dart";
 import "../../../provider/user.dart";
 import "../../../services/audio_player.dart";
 import "../../../services/cache_manager.dart";
@@ -589,10 +591,27 @@ class BottomAudioOptionsDialog extends ConsumerWidget {
                   onTap: () async {
                     if (!networkRequiredDialog(ref, context)) return;
 
+                    final preferences = ref.read(preferencesProvider);
+                    final playlists = ref.read(playlistsProvider.notifier);
                     Navigator.of(context).pop();
 
                     try {
-                      // TODO: Загружаем трек.
+                      final newAudio =
+                          await PlaylistCacheDownloadItem.downloadWithMetadata(
+                        ref.read(downloadManagerProvider.notifier).ref,
+                        playlist,
+                        audio,
+                        deezerThumbnails: preferences.deezerThumbnails,
+                        lrcLibLyricsEnabled: preferences.lrcLibEnabled,
+                      );
+
+                      if (newAudio == null) return;
+                      await playlists.updatePlaylist(
+                        playlist.basicCopyWith(
+                          audiosToUpdate: [newAudio],
+                        ),
+                        saveInDB: true,
+                      );
                     } catch (error, stackTrace) {
                       showLogErrorDialog(
                         "Manual media caching error: ",
