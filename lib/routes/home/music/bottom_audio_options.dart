@@ -20,7 +20,6 @@ import "../../../main.dart";
 import "../../../provider/color.dart";
 import "../../../provider/download_manager.dart";
 import "../../../provider/l18n.dart";
-import "../../../provider/player_events.dart";
 import "../../../provider/playlists.dart";
 import "../../../provider/preferences.dart";
 import "../../../provider/user.dart";
@@ -468,7 +467,6 @@ class BottomAudioOptionsDialog extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l18n = ref.watch(l18nProvider);
-    ref.watch(playerStateProvider);
 
     return DraggableScrollableSheet(
       expand: false,
@@ -476,45 +474,59 @@ class BottomAudioOptionsDialog extends ConsumerWidget {
         return Container(
           width: 500,
           height: 300,
-          padding: const EdgeInsets.all(24),
-          child: SizedBox.expand(
-            child: ListView(
-              controller: controller,
-              children: [
-                // Трек.
-                AudioTrackTile(
-                  audio: audio,
+          padding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 8,
+          ),
+          child: ListView(
+            controller: controller,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(
+                  left: 4,
+                  right: 4,
+                  top: 16,
                 ),
-                const Gap(8),
+                child: Column(
+                  children: [
+                    // Трек.
+                    AudioTrackTile(
+                      audio: audio,
+                    ),
+                    const Gap(8),
 
-                // Разделитель.
-                const Divider(),
-                const Gap(8),
-
-                // Редактировать данные трека.
-                ListTile(
-                  leading: const Icon(
-                    Icons.edit,
-                  ),
-                  title: Text(
-                    l18n.music_detailsEditTitle,
-                  ),
-                  onTap: () {
-                    if (!networkRequiredDialog(ref, context)) return;
-
-                    Navigator.of(context).pop();
-
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) => TrackInfoEditDialog(
-                        audio: audio,
-                        playlist: playlist,
-                      ),
-                    );
-                  },
+                    // Разделитель.
+                    const Divider(),
+                    const Gap(8),
+                  ],
                 ),
+              ),
 
-                // Удалить из текущего плейлиста.
+              // Редактировать данные трека.
+              ListTile(
+                leading: const Icon(
+                  Icons.edit,
+                ),
+                title: Text(
+                  l18n.music_detailsEditTitle,
+                ),
+                onTap: () {
+                  if (!networkRequiredDialog(ref, context)) return;
+
+                  Navigator.of(context).pop();
+
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) => TrackInfoEditDialog(
+                      audio: audio,
+                      playlist: playlist,
+                    ),
+                  );
+                },
+              ),
+
+              // TODO: Удалить из текущего плейлиста.
+              if (kDebugMode)
                 ListTile(
                   leading: const Icon(
                     Icons.playlist_remove,
@@ -529,7 +541,8 @@ class BottomAudioOptionsDialog extends ConsumerWidget {
                   },
                 ),
 
-                // Добавить в другой плейлист.
+              // TODO: Добавить в другой плейлист.
+              if (kDebugMode)
                 ListTile(
                   leading: const Icon(
                     Icons.playlist_add,
@@ -544,120 +557,120 @@ class BottomAudioOptionsDialog extends ConsumerWidget {
                   },
                 ),
 
-                // Добавить в очередь.
-                if (false)
-                  // ignore: dead_code
-                  ListTile(
-                    leading: const Icon(
-                      Icons.queue_music,
-                    ),
-                    title: Text(
-                      l18n.music_detailsPlayNextTitle,
-                    ),
-                    enabled: audio.canPlay,
-                    onTap: () async {
-                      await player.addNextToQueue(
-                        audio,
-                      );
-
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            l18n.general_addedToQueue,
-                          ),
-                          duration: const Duration(
-                            seconds: 3,
-                          ),
-                        ),
-                      );
-
-                      context.pop();
-                    },
-                  ),
-
-                // Кэшировать этот трек.
+              // TODO: Добавить в очередь.
+              if (kDebugMode)
                 ListTile(
                   leading: const Icon(
-                    Icons.download,
+                    Icons.queue_music,
                   ),
                   title: Text(
-                    l18n.music_detailsCacheTrackTitle,
+                    l18n.music_detailsPlayNextTitle,
                   ),
-                  subtitle: Text(
-                    l18n.music_detailsCacheTrackDescription,
-                  ),
-                  enabled: !audio.isRestricted && !(audio.isCached ?? false),
+                  enabled: audio.canPlay,
                   onTap: () async {
-                    if (!networkRequiredDialog(ref, context)) return;
-
-                    final preferences = ref.read(preferencesProvider);
-                    final playlists = ref.read(playlistsProvider.notifier);
-                    Navigator.of(context).pop();
-
-                    try {
-                      final newAudio =
-                          await PlaylistCacheDownloadItem.downloadWithMetadata(
-                        ref.read(downloadManagerProvider.notifier).ref,
-                        playlist,
-                        audio,
-                        deezerThumbnails: preferences.deezerThumbnails,
-                        lrcLibLyricsEnabled: preferences.lrcLibEnabled,
-                      );
-
-                      if (newAudio == null) return;
-                      await playlists.updatePlaylist(
-                        playlist.basicCopyWith(
-                          audiosToUpdate: [newAudio],
-                        ),
-                        saveInDB: true,
-                      );
-                    } catch (error, stackTrace) {
-                      showLogErrorDialog(
-                        "Manual media caching error: ",
-                        error,
-                        stackTrace,
-                        logger,
-                        // ignore: use_build_context_synchronously
-                        context,
-                      );
-
-                      return;
-                    }
+                    await player.addNextToQueue(
+                      audio,
+                    );
 
                     if (!context.mounted) return;
-                  },
-                ),
-
-                // Заменить обложку.
-                ListTile(
-                  leading: const Icon(
-                    Icons.image_search,
-                  ),
-                  title: Text(
-                    l18n.music_detailsSetThumbnailTitle,
-                  ),
-                  subtitle: Text(
-                    l18n.music_detailsSetThumbnailDescription,
-                  ),
-                  onTap: () {
-                    if (!networkRequiredDialog(ref, context)) return;
-
-                    Navigator.of(context).pop();
-
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return TrackThumbnailEditDialog(
-                          audio: audio,
-                          playlist: playlist,
-                        );
-                      },
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          l18n.general_addedToQueue,
+                        ),
+                        duration: const Duration(
+                          seconds: 3,
+                        ),
+                      ),
                     );
+
+                    context.pop();
                   },
                 ),
 
-                // Перезалить с Youtube.
+              // Кэшировать этот трек.
+              ListTile(
+                leading: const Icon(
+                  Icons.download,
+                ),
+                title: Text(
+                  l18n.music_detailsCacheTrackTitle,
+                ),
+                subtitle: Text(
+                  l18n.music_detailsCacheTrackDescription,
+                ),
+                enabled: !audio.isRestricted && !(audio.isCached ?? false),
+                onTap: () async {
+                  if (!networkRequiredDialog(ref, context)) return;
+
+                  final preferences = ref.read(preferencesProvider);
+                  final playlists = ref.read(playlistsProvider.notifier);
+                  Navigator.of(context).pop();
+
+                  try {
+                    final newAudio =
+                        await PlaylistCacheDownloadItem.downloadWithMetadata(
+                      ref.read(downloadManagerProvider.notifier).ref,
+                      playlist,
+                      audio,
+                      deezerThumbnails: preferences.deezerThumbnails,
+                      lrcLibLyricsEnabled: preferences.lrcLibEnabled,
+                    );
+
+                    if (newAudio == null) return;
+                    await playlists.updatePlaylist(
+                      playlist.basicCopyWith(
+                        audiosToUpdate: [newAudio],
+                      ),
+                      saveInDB: true,
+                    );
+                  } catch (error, stackTrace) {
+                    showLogErrorDialog(
+                      "Manual media caching error: ",
+                      error,
+                      stackTrace,
+                      logger,
+                      // ignore: use_build_context_synchronously
+                      context,
+                    );
+
+                    return;
+                  }
+
+                  if (!context.mounted) return;
+                },
+              ),
+
+              // Заменить обложку.
+              ListTile(
+                leading: const Icon(
+                  Icons.image_search,
+                ),
+                title: Text(
+                  l18n.music_detailsSetThumbnailTitle,
+                ),
+                subtitle: Text(
+                  l18n.music_detailsSetThumbnailDescription,
+                ),
+                onTap: () {
+                  if (!networkRequiredDialog(ref, context)) return;
+
+                  Navigator.of(context).pop();
+
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return TrackThumbnailEditDialog(
+                        audio: audio,
+                        playlist: playlist,
+                      );
+                    },
+                  );
+                },
+              ),
+
+              // TODO: Перезалить с Youtube.
+              if (kDebugMode)
                 ListTile(
                   leading: const Icon(
                     Icons.rotate_left,
@@ -675,53 +688,52 @@ class BottomAudioOptionsDialog extends ConsumerWidget {
                   },
                 ),
 
-                // Debug-опции.
-                if (kDebugMode) ...[
-                  // Скопировать ID трека.
+              // Debug-опции.
+              if (kDebugMode) ...[
+                // Скопировать ID трека.
+                ListTile(
+                  leading: const Icon(
+                    Icons.link,
+                  ),
+                  title: const Text(
+                    "Copy mediaKey",
+                  ),
+                  onTap: () {
+                    Clipboard.setData(
+                      ClipboardData(
+                        text: audio.mediaKey,
+                      ),
+                    );
+
+                    Navigator.of(context).pop();
+                  },
+                ),
+
+                // Открыть папку с треком.
+                if (Platform.isWindows)
                   ListTile(
                     leading: const Icon(
-                      Icons.link,
+                      Icons.folder_open,
                     ),
                     title: const Text(
-                      "Copy mediaKey",
+                      "Open folder with audio",
                     ),
-                    onTap: () {
-                      Clipboard.setData(
-                        ClipboardData(
-                          text: audio.mediaKey,
-                        ),
-                      );
-
+                    enabled: audio.isCached ?? false,
+                    onTap: () async {
                       Navigator.of(context).pop();
+
+                      final File path =
+                          await CachedStreamAudioSource.getCachedAudioByKey(
+                        audio.mediaKey,
+                      );
+                      await Process.run(
+                        "explorer.exe",
+                        ["/select,", path.path],
+                      );
                     },
                   ),
-
-                  // Открыть папку с треком.
-                  if (Platform.isWindows)
-                    ListTile(
-                      leading: const Icon(
-                        Icons.folder_open,
-                      ),
-                      title: const Text(
-                        "Open folder with audio",
-                      ),
-                      enabled: audio.isCached ?? false,
-                      onTap: () async {
-                        Navigator.of(context).pop();
-
-                        final File path =
-                            await CachedStreamAudioSource.getCachedAudioByKey(
-                          audio.mediaKey,
-                        );
-                        await Process.run(
-                          "explorer.exe",
-                          ["/select,", path.path],
-                        );
-                      },
-                    ),
-                ],
               ],
-            ),
+            ],
           ),
         );
       },
