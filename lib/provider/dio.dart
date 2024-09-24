@@ -58,7 +58,7 @@ void initDioInterceptors(
       dio: dio,
       logPrint: (String log) => logger.d(log),
       retryEvaluator: (DioException error, int attempt) {
-        return error is! VKAPIException;
+        return error is! VKAPIException && error.response?.statusCode != 404;
       },
       retryDelays: [
         Duration(
@@ -161,6 +161,7 @@ Dio dio(DioRef ref) {
   final Dio dio = Dio(
     BaseOptions(
       requestEncoder: gzipEncoder,
+      validateStatus: (_) => true,
       headers: {
         "User-Agent": browserUA,
         "Accept-Encoding": "gzip",

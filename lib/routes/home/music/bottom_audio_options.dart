@@ -12,6 +12,7 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:skeletonizer/skeletonizer.dart";
 import "package:styled_text/tags/styled_text_tag_action.dart";
 import "package:styled_text/widgets/styled_text.dart";
+import "package:url_launcher/url_launcher_string.dart";
 
 import "../../../api/deezer/search.dart";
 import "../../../api/deezer/shared.dart";
@@ -449,7 +450,7 @@ class TrackThumbnailEditDialog extends HookConsumerWidget {
 ///   builder: (BuildContext context) => const BottomAudioOptionsDialog(...),
 /// ),
 /// ```
-class BottomAudioOptionsDialog extends ConsumerWidget {
+class BottomAudioOptionsDialog extends HookConsumerWidget {
   static final AppLogger logger = getLogger("BottomAudioOptionsDialog");
 
   /// Трек типа [ExtendedAudio], над которым производится манипуляция.
@@ -467,6 +468,153 @@ class BottomAudioOptionsDialog extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l18n = ref.watch(l18nProvider);
+
+    final geniusUrl = useMemoized(
+      () {
+        final titleAndArtist = "${audio.artist}-${audio.title}"
+            .replaceAll(RegExp(r"[^\w\s-]"), "")
+            .replaceAll(RegExp(r"\s+"), "-")
+            .toLowerCase();
+
+        return Uri.encodeFull(
+          "https://genius.com/$titleAndArtist-lyrics",
+        );
+      },
+    );
+    final hasGeniusInfo = useState<bool?>(null);
+    useEffect(
+      () {
+        if (!connectivityManager.hasConnection) return;
+
+        dio.head(geniusUrl).then(
+          (response) {
+            hasGeniusInfo.value = response.statusCode == 200;
+          },
+        );
+
+        return null;
+      },
+      [],
+    );
+
+    void onDetailsEditTap() {
+      if (!networkRequiredDialog(ref, context)) return;
+
+      Navigator.of(context).pop();
+
+      showDialog(
+        context: context,
+        builder: (BuildContext context) => TrackInfoEditDialog(
+          audio: audio,
+          playlist: playlist,
+        ),
+      );
+    }
+
+    void onRemoveFromPlaylistTap() {
+      if (!networkRequiredDialog(ref, context)) return;
+
+      showWipDialog(context);
+    }
+
+    void onAddToOtherPlaylistTap() {
+      if (!networkRequiredDialog(ref, context)) return;
+
+      showWipDialog(context);
+    }
+
+    void onAddToQueueTap() async {
+      // FIXME: Этот метод не работает, если включён shuffle, и это косяк на стороне just_audio.
+      await player.addNextToQueue(
+        audio,
+      );
+
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            l18n.general_addedToQueue,
+          ),
+          duration: const Duration(
+            seconds: 3,
+          ),
+        ),
+      );
+
+      context.pop();
+    }
+
+    void onGeniusSearchTap() async {
+      assert(
+        hasGeniusInfo.value != null,
+        "Genius info isn't loaded yet",
+      );
+
+      Navigator.of(context).pop();
+
+      await launchUrlString(geniusUrl);
+    }
+
+    void onCacheTrackTap() async {
+      if (!networkRequiredDialog(ref, context)) return;
+
+      final preferences = ref.read(preferencesProvider);
+      final playlists = ref.read(playlistsProvider.notifier);
+      Navigator.of(context).pop();
+
+      try {
+        final newAudio = await PlaylistCacheDownloadItem.downloadWithMetadata(
+          ref.read(downloadManagerProvider.notifier).ref,
+          playlist,
+          audio,
+          deezerThumbnails: preferences.deezerThumbnails,
+          lrcLibLyricsEnabled: preferences.lrcLibEnabled,
+        );
+
+        if (newAudio == null) return;
+        await playlists.updatePlaylist(
+          playlist.basicCopyWith(
+            audiosToUpdate: [newAudio],
+          ),
+          saveInDB: true,
+        );
+      } catch (error, stackTrace) {
+        showLogErrorDialog(
+          "Manual media caching error: ",
+          error,
+          stackTrace,
+          logger,
+          // ignore: use_build_context_synchronously
+          context,
+        );
+
+        return;
+      }
+
+      if (!context.mounted) return;
+    }
+
+    void onDeezerThumbsTap() {
+      if (!networkRequiredDialog(ref, context)) return;
+
+      Navigator.of(context).pop();
+
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return TrackThumbnailEditDialog(
+            audio: audio,
+            playlist: playlist,
+          );
+        },
+      );
+    }
+
+    void onReplaceFromYoutubeTap() {
+      if (!networkRequiredDialog(ref, context)) return;
+
+      showWipDialog(context);
+    }
 
     return DraggableScrollableSheet(
       expand: false,
@@ -510,19 +658,7 @@ class BottomAudioOptionsDialog extends ConsumerWidget {
                 title: Text(
                   l18n.music_detailsEditTitle,
                 ),
-                onTap: () {
-                  if (!networkRequiredDialog(ref, context)) return;
-
-                  Navigator.of(context).pop();
-
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) => TrackInfoEditDialog(
-                      audio: audio,
-                      playlist: playlist,
-                    ),
-                  );
-                },
+                onTap: onDetailsEditTap,
               ),
 
               // TODO: Удалить из текущего плейлиста.
@@ -534,11 +670,7 @@ class BottomAudioOptionsDialog extends ConsumerWidget {
                   title: Text(
                     l18n.music_detailsDeleteTrackTitle,
                   ),
-                  onTap: () {
-                    if (!networkRequiredDialog(ref, context)) return;
-
-                    showWipDialog(context);
-                  },
+                  onTap: onRemoveFromPlaylistTap,
                 ),
 
               // TODO: Добавить в другой плейлист.
@@ -550,11 +682,7 @@ class BottomAudioOptionsDialog extends ConsumerWidget {
                   title: Text(
                     l18n.music_detailsAddToOtherPlaylistTitle,
                   ),
-                  onTap: () {
-                    if (!networkRequiredDialog(ref, context)) return;
-
-                    showWipDialog(context);
-                  },
+                  onTap: onAddToOtherPlaylistTap,
                 ),
 
               // TODO: Добавить в очередь.
@@ -567,26 +695,37 @@ class BottomAudioOptionsDialog extends ConsumerWidget {
                     l18n.music_detailsPlayNextTitle,
                   ),
                   enabled: audio.canPlay,
-                  onTap: () async {
-                    await player.addNextToQueue(
-                      audio,
-                    );
-
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          l18n.general_addedToQueue,
-                        ),
-                        duration: const Duration(
-                          seconds: 3,
-                        ),
-                      ),
-                    );
-
-                    context.pop();
-                  },
+                  onTap: onAddToQueueTap,
                 ),
+
+              // Поиск по Genius.
+              ListTile(
+                leading: const Icon(
+                  Icons.lyrics_outlined,
+                ),
+                title: Text(
+                  l18n.music_detailsGeniusSearchTitle,
+                ),
+                subtitle: () {
+                  // Загрузка.
+                  if (hasGeniusInfo.value == null) {
+                    return Text(
+                      l18n.general_loading,
+                    );
+                  }
+
+                  // Есть информация.
+                  if (hasGeniusInfo.value!) {
+                    return Text(
+                      l18n.music_detailsGeniusSearchDescription,
+                    );
+                  }
+
+                  return null;
+                }(),
+                enabled: hasGeniusInfo.value ?? false,
+                onTap: onGeniusSearchTap,
+              ),
 
               // Кэшировать этот трек.
               ListTile(
@@ -600,45 +739,7 @@ class BottomAudioOptionsDialog extends ConsumerWidget {
                   l18n.music_detailsCacheTrackDescription,
                 ),
                 enabled: !audio.isRestricted && !(audio.isCached ?? false),
-                onTap: () async {
-                  if (!networkRequiredDialog(ref, context)) return;
-
-                  final preferences = ref.read(preferencesProvider);
-                  final playlists = ref.read(playlistsProvider.notifier);
-                  Navigator.of(context).pop();
-
-                  try {
-                    final newAudio =
-                        await PlaylistCacheDownloadItem.downloadWithMetadata(
-                      ref.read(downloadManagerProvider.notifier).ref,
-                      playlist,
-                      audio,
-                      deezerThumbnails: preferences.deezerThumbnails,
-                      lrcLibLyricsEnabled: preferences.lrcLibEnabled,
-                    );
-
-                    if (newAudio == null) return;
-                    await playlists.updatePlaylist(
-                      playlist.basicCopyWith(
-                        audiosToUpdate: [newAudio],
-                      ),
-                      saveInDB: true,
-                    );
-                  } catch (error, stackTrace) {
-                    showLogErrorDialog(
-                      "Manual media caching error: ",
-                      error,
-                      stackTrace,
-                      logger,
-                      // ignore: use_build_context_synchronously
-                      context,
-                    );
-
-                    return;
-                  }
-
-                  if (!context.mounted) return;
-                },
+                onTap: onCacheTrackTap,
               ),
 
               // Заменить обложку.
@@ -652,21 +753,7 @@ class BottomAudioOptionsDialog extends ConsumerWidget {
                 subtitle: Text(
                   l18n.music_detailsSetThumbnailDescription,
                 ),
-                onTap: () {
-                  if (!networkRequiredDialog(ref, context)) return;
-
-                  Navigator.of(context).pop();
-
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return TrackThumbnailEditDialog(
-                        audio: audio,
-                        playlist: playlist,
-                      );
-                    },
-                  );
-                },
+                onTap: onDeezerThumbsTap,
               ),
 
               // TODO: Перезалить с Youtube.
@@ -681,11 +768,7 @@ class BottomAudioOptionsDialog extends ConsumerWidget {
                   subtitle: Text(
                     l18n.music_detailsReuploadFromYoutubeDescription,
                   ),
-                  onTap: () {
-                    if (!networkRequiredDialog(ref, context)) return;
-
-                    showWipDialog(context);
-                  },
+                  onTap: onReplaceFromYoutubeTap,
                 ),
 
               // Debug-опции.
