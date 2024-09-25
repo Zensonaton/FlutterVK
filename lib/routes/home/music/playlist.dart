@@ -142,28 +142,30 @@ class EnableCacheDialog extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l18n = ref.watch(l18nProvider);
 
-    final int aproxSizeMB =
+    final int approxSize =
         ((playlist.duration ?? Duration.zero).inMinutes * trackSizePerMin)
             .round();
-
-    final aproxSizeString = aproxSizeMB >= 500
-        ? l18n.trackSizeGB(aproxSizeMB / 500)
-        : l18n.trackSizeMB(aproxSizeMB);
+    final size = approxSize >= 500
+        ? l18n.trackSizeGB(approxSize / 500)
+        : l18n.trackSizeMB(approxSize);
 
     return MaterialDialog(
       icon: Icons.file_download,
       title: l18n.music_enableTrackCachingTitle,
       text: l18n.music_enableTrackCachingDescription(
         playlist.count ?? 0,
-        aproxSizeString,
+        size,
       ),
       actions: [
+        // "Нет".
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
           child: Text(
             l18n.general_no,
           ),
         ),
+
+        // "Включить".
         FilledButton(
           onPressed: () => Navigator.of(context).pop(true),
           child: Text(
@@ -176,6 +178,11 @@ class EnableCacheDialog extends ConsumerWidget {
 }
 
 /// Диалог, предупреждающий пользователя о том, что при отключении кэширования треков будет полностью удалёно всё содержимое плейлиста с памяти устройства.
+///
+/// Возвращает:
+/// - `true`, если пользователь согласился на удаление.
+/// - `false`, если пользователь остановил загрузку.
+/// - `null`, если пользователь передумал.
 class DeleteCacheDialog extends ConsumerWidget {
   /// Плейлист, кэш которого пытаются удалить.
   final ExtendedPlaylist playlist;
@@ -189,13 +196,28 @@ class DeleteCacheDialog extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l18n = ref.watch(l18nProvider);
 
-    final int cachedTracksCount =
-        playlist.audios!.where((audio) => audio.isCached ?? false).length;
+    final int count = playlist.audios!
+        .where(
+          (audio) => audio.isCached ?? false,
+        )
+        .length;
+    final int sizeBytes = playlist.audios!
+        .where(
+          (audio) => (audio.isCached ?? false) && (audio.cachedSize ?? 0) > 0,
+        )
+        .fold(
+          0,
+          (prev, audio) => prev + audio.cachedSize!,
+        );
+    final int sizeMB = sizeBytes ~/ 1024 ~/ 1024;
+    final size = sizeMB >= 500
+        ? l18n.trackSizeGB(sizeMB / 500)
+        : l18n.trackSizeMB(sizeMB);
 
     return MaterialDialog(
       icon: Icons.file_download_off,
       title: l18n.music_disableTrackCachingTitle,
-      text: l18n.music_disableTrackCachingDescription(cachedTracksCount),
+      text: l18n.music_disableTrackCachingDescription(count, size),
       actions: [
         // "Нет".
         TextButton(

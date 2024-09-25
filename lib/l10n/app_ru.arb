@@ -195,12 +195,17 @@
 	},
 
 	"music_disableTrackCachingTitle": "Удаление кэша треков",
-	"music_disableTrackCachingDescription": "Очистив кэш этого плейлиста, Flutter VK удалит из памяти {count, plural, one{{count} сохранённый трек} few{{count} сохранённых трека} other{{count} сохранённых треков}}.\n\nПосле удаления, приложение будет занимать меньше места на Вашем устройстве, однако Вы не сможете слушать данный плейлист оффлайн.\nУверены, что хотите продолжить?",
+	"music_disableTrackCachingDescription": "Очистив кэш плейлиста, Flutter VK удалит из памяти {count, plural, one{{count} сохранённый трек} few{{count} сохранённых трека} other{{count} сохранённых треков}}, что занимает {size} на Вашем устройстве.\n\nПосле удаления Вы не сможете слушать данный плейлист оффлайн.\nУверены, что хотите продолжить?",
 	"@music_disableTrackCachingDescription": {
 		"placeholders": {
 			"count": {
 				"type": "int",
 				"description": "Количество треков в данном плейлисте."
+			},
+			"size": {
+				"type": "String",
+				"description": "Размер всех треков в плейлисте после их загрузки.",
+				"example": "3,5 ГБ"
 			}
 		}
 	},
