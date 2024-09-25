@@ -107,6 +107,7 @@ enum AuthState {
     redirectPath: "/music",
     allowedPaths: [
       "/music",
+      "/library",
       "/profile",
       "/fullscreenPlayer",
       "/playlist",

@@ -10,9 +10,11 @@ import "../../../../main.dart";
 import "../../../../provider/l18n.dart";
 import "../../../../provider/player_events.dart";
 import "../../../../provider/playlists.dart";
+import "../../../../provider/preferences.dart";
 import "../../../../provider/user.dart";
 import "../../../../services/logger.dart";
 import "../../../../utils.dart";
+import "../../../../widgets/music_category.dart";
 import "../playlist.dart";
 
 /// Указывает минимальное треков из аудио микса, которое обязано быть в очереди плеера. Если очередь плейлиста состоит из меньшего количества треков, то очередь будет восполнена этим значением.
@@ -351,20 +353,30 @@ class RealtimePlaylistsBlock extends HookConsumerWidget {
 
     final bool mobileLayout = isMobileLayout(context);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // "В реальном времени".
-        Text(
-          l18n.music_realtimePlaylistsChip,
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.primary,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const Gap(14),
+    return MusicCategory(
+      title: l18n.music_realtimePlaylistsChip,
+      onDismiss: () {
+        final preferences = ref.read(preferencesProvider.notifier);
 
-        // Проходимся по доступным аудио миксам.
+        preferences.setRealtimePlaylistsChipEnabled(false);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              l18n.music_categoryClosedTitle(l18n.music_realtimePlaylistsChip),
+            ),
+            duration: const Duration(
+              seconds: 5,
+            ),
+            action: SnackBarAction(
+              label: l18n.general_restore,
+              onPressed: () =>
+                  preferences.setRealtimePlaylistsChipEnabled(true),
+            ),
+          ),
+        );
+      },
+      children: [
         // Skeleton loader.
         if (mixPlaylists == null) ...[
           Skeletonizer(

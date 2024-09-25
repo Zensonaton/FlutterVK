@@ -201,7 +201,7 @@ class TrackThumbnailEditDialog extends HookConsumerWidget {
       [debouncedInput],
     );
 
-    final mobileLayout = isMobileLayout(context);
+    final bool mobileLayout = isMobileLayout(context);
 
     return AdaptiveDialog(
       child: Container(

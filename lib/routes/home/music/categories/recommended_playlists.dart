@@ -1,5 +1,4 @@
 import "package:flutter/material.dart";
-import "package:gap/gap.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:skeletonizer/skeletonizer.dart";
@@ -9,9 +8,11 @@ import "../../../../main.dart";
 import "../../../../provider/l18n.dart";
 import "../../../../provider/player_events.dart";
 import "../../../../provider/playlists.dart";
+import "../../../../provider/preferences.dart";
 import "../../../../provider/user.dart";
 import "../../../../services/logger.dart";
 import "../../../../utils.dart";
+import "../../../../widgets/music_category.dart";
 import "../../music.dart";
 import "../playlist.dart";
 
@@ -30,20 +31,31 @@ class RecommendedPlaylistsBlock extends HookConsumerWidget {
     ref.watch(playerStateProvider);
     ref.watch(playerLoadedStateProvider);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // "Плейлисты для Вас".
-        Text(
-          l18n.music_recommendedPlaylistsChip,
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.primary,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const Gap(14),
+    return MusicCategory(
+      title: l18n.music_recommendedPlaylistsChip,
+      onDismiss: () {
+        final preferences = ref.read(preferencesProvider.notifier);
 
-        // Содержимое.
+        preferences.setRecommendedPlaylistsChipEnabled(false);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              l18n.music_categoryClosedTitle(
+                  l18n.music_recommendedPlaylistsChip),
+            ),
+            duration: const Duration(
+              seconds: 5,
+            ),
+            action: SnackBarAction(
+              label: l18n.general_restore,
+              onPressed: () =>
+                  preferences.setRecommendedPlaylistsChipEnabled(true),
+            ),
+          ),
+        );
+      },
+      children: [
         ScrollConfiguration(
           behavior: AlwaysScrollableScrollBehavior(),
           child: SizedBox(

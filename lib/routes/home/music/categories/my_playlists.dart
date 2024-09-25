@@ -1,5 +1,4 @@
 import "package:flutter/material.dart";
-import "package:gap/gap.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:skeletonizer/skeletonizer.dart";
@@ -9,9 +8,11 @@ import "../../../../main.dart";
 import "../../../../provider/l18n.dart";
 import "../../../../provider/player_events.dart";
 import "../../../../provider/playlists.dart";
+import "../../../../provider/preferences.dart";
 import "../../../../provider/user.dart";
 import "../../../../services/logger.dart";
 import "../../../../utils.dart";
+import "../../../../widgets/music_category.dart";
 import "../../music.dart";
 import "../playlist.dart";
 
@@ -33,37 +34,30 @@ class MyPlaylistsBlock extends HookConsumerWidget {
 
     final int playlistsCount = playlists.value?.playlistsCount ?? 0;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // "Ваши плейлисты".
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // "Ваши плейлисты".
-            Text(
-              l18n.music_myPlaylistsChip,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.primary,
-                fontWeight: FontWeight.w500,
-              ),
+    return MusicCategory(
+      title: l18n.music_myPlaylistsChip,
+      count: playlistsCount,
+      onDismiss: () {
+        final preferences = ref.read(preferencesProvider.notifier);
+
+        preferences.setPlaylistsChipEnabled(false);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              l18n.music_categoryClosedTitle(l18n.music_myPlaylistsChip),
             ),
-            const Gap(8),
-
-            // Надпись с количеством плейлистов.
-            if (playlistsCount > 0)
-              Text(
-                playlistsCount.toString(),
-                style: TextStyle(
-                  color:
-                      Theme.of(context).colorScheme.secondary.withOpacity(0.75),
-                ),
-              ),
-          ],
-        ),
-        const Gap(14),
-
-        // Содержимое.
+            duration: const Duration(
+              seconds: 5,
+            ),
+            action: SnackBarAction(
+              label: l18n.general_restore,
+              onPressed: () => preferences.setPlaylistsChipEnabled(true),
+            ),
+          ),
+        );
+      },
+      children: [
         ScrollConfiguration(
           behavior: AlwaysScrollableScrollBehavior(),
           child: SizedBox(

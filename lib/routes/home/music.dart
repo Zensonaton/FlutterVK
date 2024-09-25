@@ -580,24 +580,22 @@ class ChipFilters extends ConsumerWidget {
     ref.watch(playerLoadedStateProvider);
 
     final bool hasRecommendations = secondaryToken != null;
+    final bool mobileLayout = isMobileLayout(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // "Активные разделы".
-        if (showLabel)
-          Padding(
-            padding: const EdgeInsets.only(
-              bottom: 14,
-            ),
-            child: Text(
-              l18n.music_filterChipsLabel,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.primary,
-                fontWeight: FontWeight.w500,
-              ),
+        if (showLabel) ...[
+          Text(
+            l18n.music_filterChipsLabel,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.w500,
             ),
           ),
+          const Gap(14),
+        ],
 
         Wrap(
           spacing: 8,
@@ -619,14 +617,15 @@ class ChipFilters extends ConsumerWidget {
               ),
 
             // "Моя музыка".
-            FilterChip(
-              onSelected: (bool value) =>
-                  prefsNotifier.setMyMusicChipEnabled(value),
-              selected: preferences.myMusicChipEnabled,
-              label: Text(
-                l18n.music_myMusicChip,
+            if (!mobileLayout)
+              FilterChip(
+                onSelected: (bool value) =>
+                    prefsNotifier.setMyMusicChipEnabled(value),
+                selected: preferences.myMusicChipEnabled,
+                label: Text(
+                  l18n.music_myMusicChip,
+                ),
               ),
-            ),
 
             // "Ваши плейлисты".
             FilterChip(
@@ -766,44 +765,42 @@ class HomeMusicPage extends HookConsumerWidget {
 
     /// [List], содержащий в себе список из виджетов/разделов на главном экране, которые доожны быть разделены [Divider]'ом.
     final List<Widget> activeBlocks = useMemoized(
-        () => [
-              // Раздел "Моя музыка".
-              if (myMusic)
-                MyMusicBlock(
-                  useTopButtons: mobileLayout,
-                ),
+      () => [
+        // Раздел "Моя музыка".
+        if (myMusic && !mobileLayout) const MyMusicBlock(),
 
-              // Раздел "Ваши плейлисты".
-              if (playlists) const MyPlaylistsBlock(),
+        // Раздел "Ваши плейлисты".
+        if (playlists) const MyPlaylistsBlock(),
 
-              // Раздел "В реальном времени".
-              if (realtimePlaylists) const RealtimePlaylistsBlock(),
+        // Раздел "В реальном времени".
+        if (realtimePlaylists) const RealtimePlaylistsBlock(),
 
-              // Раздел "Плейлисты для Вас".
-              if (recommendedPlaylists) const RecommendedPlaylistsBlock(),
+        // Раздел "Плейлисты для Вас".
+        if (recommendedPlaylists) const RecommendedPlaylistsBlock(),
 
-              // Раздел "Совпадения по вкусам".
-              if (similarMusic) const SimillarMusicBlock(),
+        // Раздел "Совпадения по вкусам".
+        if (similarMusic) const SimillarMusicBlock(),
 
-              // Раздел "Собрано редакцией".
-              if (byVK) const ByVKPlaylistsBlock(),
+        // Раздел "Собрано редакцией".
+        if (byVK) const ByVKPlaylistsBlock(),
 
-              // Нижняя часть интерфейса с переключателями при Mobile Layout'е.
-              if (mobileLayout) const ChipFilters(),
+        // Нижняя часть интерфейса с переключателями при Mobile Layout'е.
+        if (mobileLayout) const ChipFilters(),
 
-              // Случай, если пользователь отключил все возможные разделы музыки.
-              if (everythingIsDisabled) const EverythingIsDisabledBlock(),
-            ],
-        [
-          myMusic,
-          playlists,
-          realtimePlaylists,
-          recommendedPlaylists,
-          similarMusic,
-          byVK,
-          everythingIsDisabled,
-          mobileLayout,
-        ]);
+        // Случай, если пользователь отключил все возможные разделы музыки.
+        if (everythingIsDisabled) const EverythingIsDisabledBlock(),
+      ],
+      [
+        myMusic,
+        playlists,
+        realtimePlaylists,
+        recommendedPlaylists,
+        similarMusic,
+        byVK,
+        everythingIsDisabled,
+        mobileLayout,
+      ],
+    );
 
     return Scaffold(
       appBar: mobileLayout
@@ -967,14 +964,11 @@ class HomeMusicPage extends HookConsumerWidget {
                       activeBlocks[i],
 
                       // Divider в случае, если это не последний элемент.
-                      if (i < activeBlocks.length - 1)
-                        const Padding(
-                          padding: EdgeInsets.only(
-                            top: 12,
-                            bottom: 4,
-                          ),
-                          child: Divider(),
-                        ),
+                      if (i < activeBlocks.length - 1) ...[
+                        const Gap(8),
+                        const Divider(),
+                        const Gap(4),
+                      ],
                     ],
 
                     // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.

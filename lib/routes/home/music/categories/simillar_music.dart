@@ -11,10 +11,12 @@ import "../../../../main.dart";
 import "../../../../provider/l18n.dart";
 import "../../../../provider/player_events.dart";
 import "../../../../provider/playlists.dart";
+import "../../../../provider/preferences.dart";
 import "../../../../provider/user.dart";
 import "../../../../services/logger.dart";
 import "../../../../utils.dart";
 import "../../../../widgets/audio_track.dart";
+import "../../../../widgets/music_category.dart";
 import "../playlist.dart";
 
 /// Виджет, отображающий несколько треков из плейлиста раздела "Совпадения по вкусам".
@@ -253,20 +255,29 @@ class SimillarMusicBlock extends HookConsumerWidget {
     ref.watch(playerStateProvider);
     ref.watch(playerLoadedStateProvider);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // "Совпадения по вкусам".
-        Text(
-          l18n.music_similarMusicChip,
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.primary,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const Gap(14),
+    return MusicCategory(
+      title: l18n.music_similarMusicChip,
+      onDismiss: () {
+        final preferences = ref.read(preferencesProvider.notifier);
 
-        // Содержимое.
+        preferences.setSimilarMusicChipEnabled(false);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              l18n.music_categoryClosedTitle(l18n.music_similarMusicChip),
+            ),
+            duration: const Duration(
+              seconds: 5,
+            ),
+            action: SnackBarAction(
+              label: l18n.general_restore,
+              onPressed: () => preferences.setSimilarMusicChipEnabled(true),
+            ),
+          ),
+        );
+      },
+      children: [
         ScrollConfiguration(
           behavior: AlwaysScrollableScrollBehavior(),
           child: SizedBox(

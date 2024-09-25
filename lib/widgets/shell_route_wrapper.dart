@@ -53,8 +53,8 @@ class NavigationItem {
   /// Текст, используемый в [BottomNavigationBar].
   final String label;
 
-  /// Указывает, что данная запись будет показана и в [BottomNavigationBar] при Mobile Layout'е.
-  final bool showOnMobileLayout;
+  /// Указывает, что данная запись будет видна только в Mobile Layout'е.
+  final bool mobileOnly;
 
   /// Опциональный список из путей, которые могут быть использованы в [GoRouter].
   final List<RouteBase> routes;
@@ -65,7 +65,7 @@ class NavigationItem {
     required this.icon,
     this.selectedIcon,
     required this.label,
-    this.showOnMobileLayout = true,
+    this.mobileOnly = false,
     this.routes = const [],
   });
 }
@@ -218,17 +218,23 @@ class ShellRouteWrapper extends HookConsumerWidget {
       [],
     );
 
-    final List<NavigationItem> mobileNavigationItems = useMemoized(
-      () => navigationItems.where((item) => item.showOnMobileLayout).toList(),
-    );
-
     final bool mobileLayout = isMobileLayout(context);
-    final int currentIndex =
-        navigationItems.indexWhere((item) => currentPath.startsWith(item.path));
-    final int mobileCurrentIndex = mobileNavigationItems
-        .indexWhere((item) => currentPath.startsWith(item.path));
 
-    /// TODO: Проверка на то, что мы попали на недопустимую страницу.
+    final List<NavigationItem> navigationItems = useMemoized(
+      () => this.navigationItems.where(
+        (item) {
+          return !item.mobileOnly || (item.mobileOnly && mobileLayout);
+        },
+      ).toList(),
+      [mobileLayout],
+    );
+    int currentIndex = clampInt(
+      navigationItems.indexWhere(
+        (item) => currentPath.startsWith(item.path),
+      ),
+      0,
+      navigationItems.length,
+    );
 
     /// Обработчик выбора элемента в [NavigationRail].
     void onDestinationSelected(int index) {
@@ -291,49 +297,24 @@ class ShellRouteWrapper extends HookConsumerWidget {
       ),
       bottomNavigationBar: mobileLayout
           ? NavigationBar(
-              selectedIndex: mobileCurrentIndex >= 0 ? mobileCurrentIndex : 2,
+              selectedIndex: currentIndex,
               onDestinationSelected: (int index) {
-                final List<NavigationItem> realNavigationItems = [
-                  ...mobileNavigationItems,
-                ];
-
-                // Учитываем, что у нас появляется элемент в [NavigationBar] на 2 индексе,
-                // если мы находимся на странице, которая не показывается в [NavigationBar].
-                if (navigationItems.any(
-                  (item) =>
-                      item.path == currentPath && !item.showOnMobileLayout,
-                )) {
-                  realNavigationItems.insert(
-                    2,
-                    navigationItems.firstWhere(
-                      (item) => item.path == currentPath,
-                    ),
-                  );
-                }
-
-                // Поскольку мы используем [mobileNavigationItems] вместо [navigationItems],
-                // мы должны найти реальный индекс относительно [navigationItems].
-                final NavigationItem mobilePage = realNavigationItems[index];
-
                 onDestinationSelected(
-                  navigationItems.indexWhere(
-                    (page) => page == mobilePage,
-                  ),
+                  index,
                 );
               },
               destinations: [
                 for (final item in navigationItems)
-                  if (item.showOnMobileLayout || item.path == currentPath)
-                    NavigationDestination(
-                      icon: Icon(
-                        item.icon,
-                      ),
-                      selectedIcon: Icon(
-                        item.selectedIcon ?? item.icon,
-                      ),
-                      label: item.label,
-                      enabled: item.body != null,
+                  NavigationDestination(
+                    icon: Icon(
+                      item.icon,
                     ),
+                    selectedIcon: Icon(
+                      item.selectedIcon ?? item.icon,
+                    ),
+                    label: item.label,
+                    enabled: item.body != null,
+                  ),
               ],
             )
           : null,

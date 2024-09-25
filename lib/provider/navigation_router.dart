@@ -64,12 +64,13 @@ GoRouter router(RouterRef ref) {
     });
 
   final List<NavigationItem> navigationItems = [
+    // Музыка.
     NavigationItem(
       path: "/music",
-      body: (_) => const HomeMusicPage(),
       icon: Icons.music_note_outlined,
       selectedIcon: Icons.music_note,
       label: l18n.music_label,
+      body: (_) => const HomeMusicPage(),
       routes: [
         GoRoute(
           path: "playlist/:owner_id/:id",
@@ -96,12 +97,35 @@ GoRouter router(RouterRef ref) {
         ),
       ],
     ),
+
+    // Моя медиатека.
+    NavigationItem(
+      path: "/library",
+      icon: Icons.favorite_outline,
+      selectedIcon: Icons.favorite,
+      label: l18n.music_libraryLabel,
+      mobileOnly: true,
+      body: (_) {
+        final ExtendedPlaylist? playlist = ref.read(favoritesPlaylistProvider);
+        assert(
+          playlist != null,
+          "Playlist not found",
+        );
+
+        return PlaylistRoute(
+          ownerID: playlist!.ownerID,
+          id: playlist.id,
+        );
+      },
+    ),
+
+    // Профиль.
     NavigationItem(
       path: "/profile",
-      body: (_) => const HomeProfilePage(),
       icon: Icons.person_outline,
       selectedIcon: Icons.person,
       label: l18n.home_profilePageLabel,
+      body: (_) => const HomeProfilePage(),
       routes: [
         GoRoute(
           path: "downloadManager",

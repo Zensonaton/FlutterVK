@@ -7,6 +7,7 @@
 	"general_reset": "Сбросить",
 	"general_close": "Закрыть",
 	"general_loading": "Загрузка...",
+	"general_restore": "Вернуть",
 	"general_addedToQueue": "Трек добавлен в очередь.",
 	"general_restartApp": "Пожалуйста, перезагрузите приложение.",
 
@@ -91,6 +92,8 @@
 	"music_label": "Музыка",
 	"music_labelOffline": "Музыка (оффлайн)",
 
+	"music_libraryLabel": "Моя медиатека",
+
 	"music_welcomeTitle": "Добро пожаловать, {name}! 👋",
 	"@music_welcomeTitle": {
 		"placeholders": {
@@ -122,6 +125,16 @@
 	},
 
 	"music_filterChipsLabel": "Активные разделы",
+
+	"music_categoryClosedTitle": "Вы закрыли раздел «{category}». Вы можете вернуть его, нажав на кнопку в «активных разделах».",
+	"@music_categoryClosedTitle": {
+		"placeholders": {
+			"category": {
+				"type": "String",
+				"description": "Название закрытого раздела."
+			}
+		}
+	},
 
 	"music_myMusicChip": "Моя музыка",
 	"music_myPlaylistsChip": "Ваши плейлисты",
