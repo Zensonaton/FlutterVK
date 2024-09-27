@@ -579,33 +579,41 @@ class Playlists extends _$Playlists {
     //
     // Если в audios нет того или иного трека, то это значит, что трек был удалён.
     // В audiosToUpdate могут быть только те треки, которые были обновлены, но не удалены.
-    List<ExtendedAudio> newAudios = [];
+    List<ExtendedAudio> newAudios = [...(oldPlaylist.audios ?? [])];
     List<ExtendedAudio> deletedAudios = [];
 
     /// Метод, обновляющий либо добавляющий трек в список треков.
     void updateOrAddAudio(
-      int? oldIndex,
       ExtendedAudio newAudio,
-      bool insertInFront,
+      bool removeNonPresent,
     ) {
-      final ExtendedAudio? oldAudio =
-          oldIndex != null ? newAudios.elementAtOrNull(oldIndex) : null;
+      final index = newAudios.indexWhere(
+        (old) => old.ownerID == newAudio.ownerID && old.id == newAudio.id,
+      );
 
-      // Проверяем схожесть либо отсутствие трека.
-      if (oldAudio == null || oldAudio.isEquals(newAudio)) {
-        final insertAudio = oldAudio ?? newAudio;
-        if (insertInFront) {
-          newAudios.insert(0, insertAudio);
-        } else {
-          newAudios.add(insertAudio);
-        }
+      // Если трек отсутствует, то просто добавляем его.
+      if (index == -1) {
+        // logger.d("[$index] [${newAudio.title}]: add (non-present)");
 
-        if (oldIndex == null) playlistChanged = true;
+        newAudios.add(newAudio);
+        playlistChanged = true;
 
         return;
       }
 
-      newAudios[oldIndex!] = oldAudio.copyWith(
+      // Если трек ничем не отличается (кроме URL), то ничего не делаем.
+      final ExtendedAudio oldAudio = newAudios[index];
+      if ((oldAudio.url != null) == (newAudio.url != null) &&
+          oldAudio.isEquals(newAudio)) {
+        // logger.d("[$index] [${newAudio.title}]: skip");
+
+        return;
+      }
+
+      // Если трек отличается, то обновляем его.
+      // logger.d("[$index] [${newAudio.title}]: replace");
+
+      newAudios[index] = oldAudio.copyWith(
         title: newAudio.title,
         artist: newAudio.artist,
         url: newAudio.url,
@@ -634,22 +642,32 @@ class Playlists extends _$Playlists {
     // Если такой список передаётся во второй раз, то информация должна обновиться.
     if (newPlaylist.audios != null) {
       for (var newAudio in newPlaylist.audios!) {
-        final index = oldPlaylist.audios?.indexWhere(
-          (old) => old.ownerID == newAudio.ownerID && old.id == newAudio.id,
-        );
-
         updateOrAddAudio(
-          index != -1 ? index : null,
           newAudio,
-          false,
+          true,
         );
       }
-    } else {
-      // Здесь мы делаем копию списка треков, если новый список не был передан.
-      //
-      // Копия делается по той причине, что мы не можем изменять список треков
-      // напрямую, так как это приведёт к ошибке в Riverpod.
-      newAudios = [...(oldPlaylist.audios ?? [])];
+
+      // Ищем удалённые треки. Если мы находим хотя бы один, то считаем, что плейлист изменился.
+      deletedAudios.addAll(
+        oldPlaylist.audios!.where(
+          (audio) => newPlaylist.audios!.every(
+            (newAudio) =>
+                newAudio.ownerID != audio.ownerID || newAudio.id != audio.id,
+          ),
+        ),
+      );
+
+      if (deletedAudios.isNotEmpty) {
+        newAudios.removeWhere(
+          (audio) => deletedAudios.any(
+            (deleted) =>
+                deleted.ownerID == audio.ownerID && deleted.id == audio.id,
+          ),
+        );
+
+        playlistChanged = true;
+      }
     }
 
     // Проходимся по списку из "обновлённых" треков. Здесь используется другая логика:
@@ -657,30 +675,10 @@ class Playlists extends _$Playlists {
     // - трека нет -> добавляем его.
     if (newPlaylist.audiosToUpdate != null) {
       for (var newAudio in newPlaylist.audiosToUpdate!) {
-        final index = oldPlaylist.audios?.indexWhere(
-          (old) => old.ownerID == newAudio.ownerID && old.id == newAudio.id,
-        );
-
         updateOrAddAudio(
-          index != -1 ? index : null,
           newAudio,
-          true,
+          false,
         );
-      }
-    }
-
-    // Ищем удалённые треки. Если мы находим хотя бы один, то считаем, что плейлист изменился.
-    if (oldPlaylist.audios != null && newPlaylist.audios != null) {
-      deletedAudios.addAll(
-        oldPlaylist.audios!.where(
-          (audio) => newAudios.every(
-            (item) => item.ownerID != audio.ownerID || item.id != audio.id,
-          ),
-        ),
-      );
-
-      if (deletedAudios.isNotEmpty) {
-        playlistChanged = true;
       }
     }
 

@@ -469,7 +469,8 @@ class ExtendedThumbnails {
   bool operator ==(covariant ExtendedThumbnails other) {
     if (identical(this, other)) return true;
 
-    return other.runtimeType == ExtendedAudio && other.photoSmall == photoSmall;
+    return other.runtimeType == ExtendedThumbnails &&
+        other.photoSmall == photoSmall;
   }
 
   @override
@@ -640,7 +641,8 @@ class ExtendedAudio {
     if (title != other.title ||
         artist != other.artist ||
         isLiked != other.isLiked ||
-        frequentColorInt != other.frequentColorInt) {
+        (other.frequentColorInt != null &&
+            frequentColorInt != other.frequentColorInt)) {
       return false;
     }
 
@@ -656,8 +658,8 @@ class ExtendedAudio {
 
     // Тексты.
     if (hasLyrics != other.hasLyrics ||
-        vkLyrics != other.vkLyrics ||
-        lrcLibLyrics != other.lrcLibLyrics) {
+        (other.vkLyrics != null && vkLyrics != other.vkLyrics) ||
+        (other.lrcLibLyrics != null && lrcLibLyrics != other.lrcLibLyrics)) {
       return false;
     }
 
