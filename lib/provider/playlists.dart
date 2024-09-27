@@ -188,8 +188,11 @@ class Playlists extends _$Playlists {
   Future<PlaylistsState?> build() async {
     // FIXME: Неиспользованные ключи локализации: music_basicDataLoadError, music_recommendationsDataLoadError.
 
+    // Если у пользователя нет Access-токена, то ничего не делаем.
+    if (ref.read(tokenProvider) == null) return null;
+
     // Если же плейлисты не были загружены через API, то пытаемся загрузить их из БД.
-    if (state.value == null || !state.value!.fromAPI) {
+    if (state.value == null) {
       final Stopwatch watch = Stopwatch()..start();
       final PlaylistsState? playlistsState =
           await ref.read(dbPlaylistsProvider.future);
@@ -237,13 +240,15 @@ class Playlists extends _$Playlists {
           results[1] as List<ExtendedPlaylist>;
 
       // Если state не был установлен, то устанавливаем его.
-      state = AsyncData(
-        PlaylistsState(
-          playlists: state.value?.playlists ?? [],
-          fromAPI: true,
-          playlistsCount: userPlaylists.$2,
-        ),
-      );
+      if (state.value == null) {
+        state = AsyncData(
+          PlaylistsState(
+            playlists: state.value?.playlists ?? [],
+            fromAPI: true,
+            playlistsCount: userPlaylists.$2,
+          ),
+        );
+      }
 
       // Обновляем плейлисты. Данный метод обновит UI и сохранит в БД, если плейлисты отличаются от тех, что уже есть.
       final List<PlaylistUpdateResult> updatedPlaylists = await updatePlaylists(
@@ -808,9 +813,6 @@ class Playlists extends _$Playlists {
       state.value?.playlists.firstWhereOrNull(
         (playlist) => playlist.ownerID == ownerID && playlist.id == id,
       );
-
-  /// Сбрасывает [state] данного Provider, сбрасывая список всех плейлистов.
-  void reset() => state = const AsyncLoading();
 
   /// Загружает информацию с API ВКонтакте по [playlist], если она не была загружена ранее, и обновляет state данного объекта.
   ///

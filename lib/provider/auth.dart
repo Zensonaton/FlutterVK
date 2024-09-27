@@ -73,11 +73,12 @@ class CurrentAuthState extends _$CurrentAuthState {
     }
 
     // Сбрасываем различные состояния.
-    ref.read(playlistsProvider.notifier).reset();
     ref
-      ..invalidateSelf()
       ..invalidate(dbPlaylistsProvider)
-      ..invalidate(playlistsProvider);
+      ..invalidate(playlistsProvider)
+      ..invalidate(tokenProvider)
+      ..invalidate(secondaryTokenProvider)
+      ..invalidateSelf();
   }
 }
 
