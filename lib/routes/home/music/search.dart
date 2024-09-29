@@ -277,7 +277,7 @@ class SearchDisplayDialog extends HookConsumerWidget {
                       return buildListTrackWidget(
                         ref,
                         context,
-                        audios.elementAt(index),
+                        audios[index],
                         playlist!,
                         allowImageCache: false,
                       );

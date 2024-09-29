@@ -462,32 +462,8 @@ class MobilePlaylistInfoWidget extends ConsumerWidget {
               ],
 
               // Пояснение того, что это за плейлист.
-              Skeletonizer(
-                enabled: playlist.audios == null,
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    l18n.music_bottomPlaylistInfo(
-                      playlist.count ?? 0,
-                      playlistType,
-                      humanizeDuration(
-                        playlist.duration ?? Duration.zero,
-                        language: getLanguageByLocale(
-                          l18n.localeName,
-                        ),
-                        options: const HumanizeOptions(
-                          units: [
-                            Units.hour,
-                            Units.minute,
-                          ],
-                        ),
-                      ),
-                    ),
-                    style: TextStyle(
-                      color: safeScheme.onSurface.withOpacity(0.8),
-                    ),
-                  ),
-                ),
+              PlaylistTypeDescriptionWidget(
+                playlist: playlist,
               ),
             ],
           ),
@@ -678,8 +654,8 @@ class PlaylistAudiosListWidget extends HookConsumerWidget {
       [searchText, playlistAudios],
     );
 
-    final bool hasTracksList = playlist.audios != null;
-    final bool trackListFullyLoaded = hasTracksList && playlist.areTracksLive;
+    final bool hasTracksList =
+        playlist.areTracksLive && playlist.audios != null;
 
     final bool mobileLayout = isMobileLayout(context);
 
@@ -699,9 +675,7 @@ class PlaylistAudiosListWidget extends HookConsumerWidget {
     }
 
     // У пользователя есть треки, но поиск ничего не выдал.
-    if (trackListFullyLoaded &&
-        playlistAudios.isNotEmpty &&
-        filteredAudios.isEmpty) {
+    if (hasTracksList && playlistAudios.isNotEmpty && filteredAudios.isEmpty) {
       return SliverToBoxAdapter(
         child: Padding(
           padding: EdgeInsets.symmetric(
@@ -746,9 +720,6 @@ class PlaylistAudiosListWidget extends HookConsumerWidget {
                     title: fakeTrackNames[index % fakeTrackNames.length],
                     artist: fakeTrackNames[(index + 1) % fakeTrackNames.length],
                     duration: 60 * 3,
-                    accessKey: "",
-                    url: "",
-                    date: 0,
                   ),
                 ),
               ),
@@ -762,7 +733,7 @@ class PlaylistAudiosListWidget extends HookConsumerWidget {
             child: buildListTrackWidget(
               ref,
               context,
-              filteredAudios.elementAt(index),
+              filteredAudios[index],
               playlist,
               showCachedIcon: true,
               showDuration: !mobileLayout,
@@ -1213,6 +1184,105 @@ class BackgroundGradientWidget extends HookConsumerWidget {
   }
 }
 
+/// Виджет, используемый для [DesktopAppBarWidget] и [MobilePlaylistInfoWidget], отображающий описание плейлиста вида "рекомендуемый плейлист - 50 треков - 3 часа".
+class PlaylistTypeDescriptionWidget extends HookConsumerWidget {
+  /// [ExtendedPlaylist], данные которого будут показаны.
+  final ExtendedPlaylist playlist;
+
+  const PlaylistTypeDescriptionWidget({
+    super.key,
+    required this.playlist,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l18n = ref.read(l18nProvider);
+
+    final String playlistType = useMemoized(
+      () => getPlaylistTypeString(l18n, playlist),
+    );
+    final String durationString = useMemoized(
+      () => humanizeDuration(
+        playlist.duration ??
+            const Duration(
+              hours: 1,
+              minutes: 30,
+            ),
+        language: getLanguageByLocale(
+          l18n.localeName,
+        ),
+        options: const HumanizeOptions(
+          units: [
+            Units.hour,
+            Units.minute,
+          ],
+        ),
+      ),
+      [
+        playlist.duration,
+      ],
+    );
+
+    final areTracksLoaded = !playlist.areTracksLive;
+
+    final scheme = Theme.of(context).colorScheme;
+
+    return Skeletonizer(
+      enabled: playlist.audios == null,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: RichText(
+          text: TextSpan(
+            style: TextStyle(
+              color: scheme.onSurface.withOpacity(0.8),
+            ),
+            children: [
+              // Тип плейлиста.
+              TextSpan(
+                text: playlistType,
+              ),
+              const TextSpan(
+                text: " • ",
+              ),
+
+              // Количество треков.
+              WidgetSpan(
+                child: Skeletonizer(
+                  enabled: areTracksLoaded,
+                  child: Text(
+                    l18n.music_playlistInfoCount(
+                      playlist.count ?? 50,
+                    ),
+                    style: TextStyle(
+                      color: scheme.onSurface.withOpacity(0.8),
+                    ),
+                  ),
+                ),
+              ),
+              const TextSpan(
+                text: " • ",
+              ),
+
+              // Длительность.
+              WidgetSpan(
+                child: Skeletonizer(
+                  enabled: areTracksLoaded,
+                  child: Text(
+                    durationString,
+                    style: TextStyle(
+                      color: scheme.onSurface.withOpacity(0.8),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// [AppBar] для [PlaylistRoute] Desktop Layout'а.
 class DesktopAppBarWidget extends HookConsumerWidget {
   /// Плейлист, для которого отображается данный [AppBar].
@@ -1238,8 +1308,6 @@ class DesktopAppBarWidget extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l18n = ref.watch(l18nProvider);
-
-    final String playlistType = getPlaylistTypeString(l18n, playlist);
 
     final scheme = Theme.of(context).colorScheme;
 
@@ -1324,32 +1392,8 @@ class DesktopAppBarWidget extends HookConsumerWidget {
                             if (playlist.description != null) const Gap(4),
 
                             // Пояснение того, что это за плейлист.
-                            Skeletonizer(
-                              enabled: playlist.audios == null,
-                              child: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  l18n.music_bottomPlaylistInfo(
-                                    playlist.count ?? 0,
-                                    playlistType,
-                                    humanizeDuration(
-                                      playlist.duration ?? Duration.zero,
-                                      language: getLanguageByLocale(
-                                        l18n.localeName,
-                                      ),
-                                      options: const HumanizeOptions(
-                                        units: [
-                                          Units.hour,
-                                          Units.minute,
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  style: TextStyle(
-                                    color: scheme.onSurface.withOpacity(0.8),
-                                  ),
-                                ),
-                              ),
+                            PlaylistTypeDescriptionWidget(
+                              playlist: playlist,
                             ),
                           ],
                         ),
