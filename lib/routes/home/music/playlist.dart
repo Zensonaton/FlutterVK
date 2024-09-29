@@ -423,7 +423,6 @@ class MobilePlaylistInfoWidget extends ConsumerWidget {
 
     final String playlistName =
         playlist.title ?? l18n.music_fullscreenFavoritePlaylistName;
-    final String playlistType = getPlaylistTypeString(l18n, playlist);
 
     return SliverToBoxAdapter(
       child: SizedBox(

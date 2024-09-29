@@ -581,24 +581,25 @@ class HomeProfilePage extends HookConsumerWidget {
                     ),
 
                     // Спойлер следующего трека перед окончанием текущего.
-                    SwitchListTile(
-                      secondary: const Icon(
-                        Icons.queue_music,
-                      ),
-                      title: Text(
-                        l18n.profile_spoilerNextAudioTitle,
-                      ),
-                      subtitle: Text(
-                        l18n.profile_spoilerNextAudioDescription,
-                      ),
-                      value: preferences.spoilerNextTrack,
-                      onChanged: (bool? enabled) async {
-                        HapticFeedback.lightImpact();
-                        if (enabled == null) return;
+                    if (!mobileLayout)
+                      SwitchListTile(
+                        secondary: const Icon(
+                          Icons.queue_music,
+                        ),
+                        title: Text(
+                          l18n.profile_spoilerNextAudioTitle,
+                        ),
+                        subtitle: Text(
+                          l18n.profile_spoilerNextAudioDescription,
+                        ),
+                        value: preferences.spoilerNextTrack,
+                        onChanged: (bool? enabled) async {
+                          HapticFeedback.lightImpact();
+                          if (enabled == null) return;
 
-                        prefsNotifier.setSpoilerNextTrackEnabled(enabled);
-                      },
-                    ),
+                          prefsNotifier.setSpoilerNextTrackEnabled(enabled);
+                        },
+                      ),
                   ],
                 ),
                 const Gap(16),

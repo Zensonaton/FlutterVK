@@ -14,6 +14,7 @@
 - Перенос кнопок с выключателями разделов наверх на Mobile Layout.
 - Кнопка "share playlists dump" на экране debug playlists viewer.
 - Использование indent'ов для JSON DB dump.
+- Настройка "спойлер следующего трека" теперь прячется при Mobile Layout.
 
 ## Исправления
 
