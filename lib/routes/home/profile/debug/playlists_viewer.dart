@@ -5,6 +5,7 @@ import "package:flutter/services.dart";
 import "package:gap/gap.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:share_plus/share_plus.dart";
 
 import "../../../../main.dart";
 import "../../../../provider/playlists.dart";
@@ -30,6 +31,11 @@ class PlaylistsViewerDebugMenu extends ConsumerWidget {
 
     final playlistsInfo = playlists.value!;
 
+    Future<String> getJSONString() async =>
+        const JsonEncoder.withIndent("\t").convert(
+          await appStorage.exportAsJSON(),
+        );
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -48,23 +54,47 @@ class PlaylistsViewerDebugMenu extends ConsumerWidget {
           ),
           const Gap(20),
 
-          // Кнопка для копирования плейлистов как JSON.
-          FilledButton.icon(
-            label: const Text(
-              "Dump playlists as JSON",
-            ),
-            icon: const Icon(
-              Icons.javascript_outlined,
-            ),
-            onPressed: () async {
-              final List<Map<String, dynamic>> json =
-                  await appStorage.exportAsJSON();
-              final String jsonString = jsonEncode(json);
+          Row(
+            // spacing: 8,
+            children: [
+              // Кнопка для копирования плейлистов как JSON.
+              Expanded(
+                child: FilledButton.icon(
+                  label: const Text(
+                    "Copy playlists dump",
+                  ),
+                  icon: const Icon(
+                    Icons.copy,
+                  ),
+                  onPressed: () async => Clipboard.setData(
+                    ClipboardData(
+                      text: await getJSONString(),
+                    ),
+                  ),
+                ),
+              ),
+              const Gap(8),
 
-              await Clipboard.setData(
-                ClipboardData(text: jsonString),
-              );
-            },
+              // Кнопка для того, что бы поделиться плейлистами как JSON.
+              Expanded(
+                child: FilledButton.icon(
+                  label: const Text(
+                    "Share playlists dump",
+                  ),
+                  icon: const Icon(
+                    Icons.share,
+                  ),
+                  onPressed: () async {
+                    final String jsonString = await getJSONString();
+
+                    await Share.share(
+                      jsonString,
+                      subject: "Playlists JSON.json",
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
           const Gap(8),
 

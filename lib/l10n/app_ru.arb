@@ -124,8 +124,6 @@
 		}
 	},
 
-	"music_filterChipsLabel": "Активные разделы",
-
 	"music_categoryClosedTitle": "Вы закрыли раздел «{category}». Вы можете вернуть его, нажав на кнопку в «активных разделах».",
 	"@music_categoryClosedTitle": {
 		"placeholders": {

@@ -255,6 +255,7 @@ class Playlists extends _$Playlists {
         [...userPlaylists.$1, ...recommendedPlaylists],
         saveInDB: true,
         fromAPI: true,
+        playlistsCount: userPlaylists.$2,
       );
 
       // Проходимся по всем модифицированным плейлистам, и запускаем задачи по их кэшированию.
@@ -538,6 +539,7 @@ class Playlists extends _$Playlists {
     ExtendedPlaylist newPlaylist, {
     bool saveInDB = false,
     bool fromAPI = false,
+    int? userOwnedPlaylistsCount,
   }) async {
     assert(
       state.value != null,
@@ -724,6 +726,8 @@ class Playlists extends _$Playlists {
       state = AsyncData(
         state.value!.copyWith(
           playlists: allPlaylists,
+          fromAPI: fromAPI,
+          playlistsCount: userOwnedPlaylistsCount,
         ),
       );
 
@@ -753,12 +757,14 @@ class Playlists extends _$Playlists {
     List<ExtendedPlaylist> newPlaylists, {
     bool saveInDB = false,
     bool fromAPI = false,
+    int? playlistsCount,
   }) async {
     final List<PlaylistUpdateResult> changedPlaylists = [];
     for (ExtendedPlaylist playlist in newPlaylists) {
       final PlaylistUpdateResult result = await updatePlaylist(
         playlist,
         fromAPI: fromAPI,
+        userOwnedPlaylistsCount: playlistsCount,
       );
 
       // Если этот плейлист считается изменённым, то запоминаем его что бы потом массово сохранить.

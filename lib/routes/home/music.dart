@@ -563,12 +563,12 @@ class AudioPlaylistWidget extends HookConsumerWidget {
 
 /// Виджет, показывающий кучку переключателей-фильтров класса [FilterChip] для включения различных разделов "музыки".
 class ChipFilters extends ConsumerWidget {
-  /// Указывает, что над этим блоком будет надпись "Активные разделы".
-  final bool showLabel;
+  /// Указывает, что будет использоваться [Wrap] вместо [SingleChildScrollView].
+  final bool useWrap;
 
   const ChipFilters({
     super.key,
-    this.showLabel = true,
+    this.useWrap = true,
   });
 
   @override
@@ -582,107 +582,102 @@ class ChipFilters extends ConsumerWidget {
     final bool hasRecommendations = secondaryToken != null;
     final bool mobileLayout = isMobileLayout(context);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // "Активные разделы".
-        if (showLabel) ...[
-          Text(
-            l18n.music_filterChipsLabel,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.w500,
-            ),
+    final List<Widget> children = [
+      // Подключение рекомендаций.
+      if (!hasRecommendations)
+        ActionChip(
+          avatar: const Icon(
+            Icons.auto_fix_high,
           ),
-          const Gap(14),
-        ],
-
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            // Подключение рекомендаций.
-            if (!hasRecommendations)
-              ActionChip(
-                avatar: const Icon(
-                  Icons.auto_fix_high,
-                ),
-                label: Text(
-                  l18n.music_connectRecommendationsChipTitle,
-                ),
-                onPressed: () => showDialog(
-                  context: context,
-                  builder: (context) => const ConnectRecommendationsDialog(),
-                ),
-              ),
-
-            // "Моя музыка".
-            if (!mobileLayout)
-              FilterChip(
-                onSelected: (bool value) =>
-                    prefsNotifier.setMyMusicChipEnabled(value),
-                selected: preferences.myMusicChipEnabled,
-                label: Text(
-                  l18n.music_myMusicChip,
-                ),
-              ),
-
-            // "Ваши плейлисты".
-            FilterChip(
-              onSelected: (bool value) =>
-                  prefsNotifier.setPlaylistsChipEnabled(value),
-              selected: preferences.playlistsChipEnabled,
-              label: Text(
-                l18n.music_myPlaylistsChip,
-              ),
-            ),
-
-            // "В реальном времени".
-            if (hasRecommendations)
-              FilterChip(
-                onSelected: (bool value) =>
-                    prefsNotifier.setRealtimePlaylistsChipEnabled(value),
-                selected: preferences.realtimePlaylistsChipEnabled,
-                label: Text(
-                  l18n.music_realtimePlaylistsChip,
-                ),
-              ),
-
-            // "Плейлисты для Вас".
-            if (hasRecommendations)
-              FilterChip(
-                onSelected: (bool value) =>
-                    prefsNotifier.setRecommendedPlaylistsChipEnabled(value),
-                selected: preferences.recommendedPlaylistsChipEnabled,
-                label: Text(
-                  l18n.music_recommendedPlaylistsChip,
-                ),
-              ),
-
-            // "Совпадения по вкусам".
-            if (hasRecommendations)
-              FilterChip(
-                onSelected: (bool value) =>
-                    prefsNotifier.setSimilarMusicChipEnabled(value),
-                selected: preferences.similarMusicChipEnabled,
-                label: Text(
-                  l18n.music_similarMusicChip,
-                ),
-              ),
-
-            // "Собрано редакцией".
-            if (hasRecommendations)
-              FilterChip(
-                onSelected: (bool value) =>
-                    prefsNotifier.setByVKChipEnabled(value),
-                selected: preferences.byVKChipEnabled,
-                label: Text(
-                  l18n.music_byVKChip,
-                ),
-              ),
-          ],
+          label: Text(
+            l18n.music_connectRecommendationsChipTitle,
+          ),
+          onPressed: () => showDialog(
+            context: context,
+            builder: (context) => const ConnectRecommendationsDialog(),
+          ),
         ),
-      ],
+
+      // "Моя музыка".
+      if (!mobileLayout)
+        FilterChip(
+          onSelected: (bool value) =>
+              prefsNotifier.setMyMusicChipEnabled(value),
+          selected: preferences.myMusicChipEnabled,
+          label: Text(
+            l18n.music_myMusicChip,
+          ),
+        ),
+
+      // "Ваши плейлисты".
+      FilterChip(
+        onSelected: (bool value) =>
+            prefsNotifier.setPlaylistsChipEnabled(value),
+        selected: preferences.playlistsChipEnabled,
+        label: Text(
+          l18n.music_myPlaylistsChip,
+        ),
+      ),
+
+      // "В реальном времени".
+      if (hasRecommendations)
+        FilterChip(
+          onSelected: (bool value) =>
+              prefsNotifier.setRealtimePlaylistsChipEnabled(value),
+          selected: preferences.realtimePlaylistsChipEnabled,
+          label: Text(
+            l18n.music_realtimePlaylistsChip,
+          ),
+        ),
+
+      // "Плейлисты для Вас".
+      if (hasRecommendations)
+        FilterChip(
+          onSelected: (bool value) =>
+              prefsNotifier.setRecommendedPlaylistsChipEnabled(value),
+          selected: preferences.recommendedPlaylistsChipEnabled,
+          label: Text(
+            l18n.music_recommendedPlaylistsChip,
+          ),
+        ),
+
+      // "Совпадения по вкусам".
+      if (hasRecommendations)
+        FilterChip(
+          onSelected: (bool value) =>
+              prefsNotifier.setSimilarMusicChipEnabled(value),
+          selected: preferences.similarMusicChipEnabled,
+          label: Text(
+            l18n.music_similarMusicChip,
+          ),
+        ),
+
+      // "Собрано редакцией".
+      if (hasRecommendations)
+        FilterChip(
+          onSelected: (bool value) => prefsNotifier.setByVKChipEnabled(value),
+          selected: preferences.byVKChipEnabled,
+          label: Text(
+            l18n.music_byVKChip,
+          ),
+        ),
+    ];
+
+    if (useWrap) {
+      return Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: children,
+      );
+    }
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      clipBehavior: Clip.none,
+      child: Wrap(
+        spacing: 8,
+        children: children,
+      ),
     );
   }
 }
@@ -739,7 +734,7 @@ class HomeMusicPage extends HookConsumerWidget {
     /// Указывает, что у пользователя подключены рекомендации музыки от ВКонтакте.
     final bool hasRecommendations = ref.read(secondaryTokenProvider) != null;
 
-    final bool myMusic = preferences.myMusicChipEnabled;
+    final bool myMusic = !mobileLayout && preferences.myMusicChipEnabled;
     final bool playlists = preferences.playlistsChipEnabled;
     final bool realtimePlaylists =
         hasRecommendations && preferences.realtimePlaylistsChipEnabled;
@@ -749,47 +744,45 @@ class HomeMusicPage extends HookConsumerWidget {
         hasRecommendations && preferences.similarMusicChipEnabled;
     final bool byVK = hasRecommendations && preferences.byVKChipEnabled;
 
-    bool everythingIsDisabled;
-
-    // Если рекомендации включены, то мы должны учитывать и другие разделы.
-    if (hasRecommendations) {
-      everythingIsDisabled = (!(myMusic ||
-          playlists ||
-          realtimePlaylists ||
-          recommendedPlaylists ||
-          similarMusic ||
-          byVK));
-    } else {
-      everythingIsDisabled = (!(myMusic || playlists));
-    }
-
     /// [List], содержащий в себе список из виджетов/разделов на главном экране, которые доожны быть разделены [Divider]'ом.
     final List<Widget> activeBlocks = useMemoized(
-      () => [
-        // Раздел "Моя музыка".
-        if (myMusic && !mobileLayout) const MyMusicBlock(),
+      () {
+        bool everythingIsDisabled = () {
+          if (hasRecommendations) {
+            return !myMusic &&
+                !playlists &&
+                !realtimePlaylists &&
+                !recommendedPlaylists &&
+                !similarMusic &&
+                !byVK;
+          }
 
-        // Раздел "Ваши плейлисты".
-        if (playlists) const MyPlaylistsBlock(),
+          return !myMusic && !playlists;
+        }();
 
-        // Раздел "В реальном времени".
-        if (realtimePlaylists) const RealtimePlaylistsBlock(),
+        return [
+          // Раздел "Моя музыка".
+          if (myMusic && !mobileLayout) const MyMusicBlock(),
 
-        // Раздел "Плейлисты для Вас".
-        if (recommendedPlaylists) const RecommendedPlaylistsBlock(),
+          // Раздел "Ваши плейлисты".
+          if (playlists) const MyPlaylistsBlock(),
 
-        // Раздел "Совпадения по вкусам".
-        if (similarMusic) const SimillarMusicBlock(),
+          // Раздел "В реальном времени".
+          if (realtimePlaylists) const RealtimePlaylistsBlock(),
 
-        // Раздел "Собрано редакцией".
-        if (byVK) const ByVKPlaylistsBlock(),
+          // Раздел "Плейлисты для Вас".
+          if (recommendedPlaylists) const RecommendedPlaylistsBlock(),
 
-        // Нижняя часть интерфейса с переключателями при Mobile Layout'е.
-        if (mobileLayout) const ChipFilters(),
+          // Раздел "Совпадения по вкусам".
+          if (similarMusic) const SimillarMusicBlock(),
 
-        // Случай, если пользователь отключил все возможные разделы музыки.
-        if (everythingIsDisabled) const EverythingIsDisabledBlock(),
-      ],
+          // Раздел "Собрано редакцией".
+          if (byVK) const ByVKPlaylistsBlock(),
+
+          // Случай, если пользователь отключил все возможные разделы музыки.
+          if (everythingIsDisabled) const EverythingIsDisabledBlock(),
+        ];
+      },
       [
         myMusic,
         playlists,
@@ -797,7 +790,6 @@ class HomeMusicPage extends HookConsumerWidget {
         recommendedPlaylists,
         similarMusic,
         byVK,
-        everythingIsDisabled,
         mobileLayout,
       ],
     );
@@ -853,110 +845,100 @@ class HomeMusicPage extends HookConsumerWidget {
             children: [
               Expanded(
                 child: ListView(
-                  padding: EdgeInsets.only(
-                    left: mobileLayout ? 16 : 24,
-                    right: mobileLayout ? 16 : 24,
-                    top: mobileLayout ? 4 : 30,
-                    bottom: mobileLayout ? 20 : 30,
+                  padding: EdgeInsets.all(
+                    mobileLayout ? 16 : 24,
                   ),
                   children: [
                     // Часть интерфейса "Добро пожаловать", а так же кнопка поиска.
-                    if (!mobileLayout)
-                      Padding(
-                        padding: const EdgeInsets.only(
-                          bottom: 36,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Flexible(
-                              child: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    // Аватарка пользователя.
-                                    if (user.photoMaxUrl != null) ...[
-                                      CachedNetworkImage(
-                                        imageUrl: user.photoMaxUrl!,
-                                        cacheKey: "${user.id}400",
-                                        imageBuilder: (
-                                          BuildContext context,
-                                          ImageProvider imageProvider,
-                                        ) {
-                                          return Container(
-                                            width: 40,
-                                            height: 40,
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              image: DecorationImage(
-                                                image: imageProvider,
-                                                fit: BoxFit.cover,
-                                              ),
+                    if (!mobileLayout) ...[
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Flexible(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  // Аватарка пользователя.
+                                  if (user.photoMaxUrl != null) ...[
+                                    CachedNetworkImage(
+                                      imageUrl: user.photoMaxUrl!,
+                                      cacheKey: "${user.id}400",
+                                      imageBuilder: (
+                                        BuildContext context,
+                                        ImageProvider imageProvider,
+                                      ) {
+                                        return Container(
+                                          width: 40,
+                                          height: 40,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            image: DecorationImage(
+                                              image: imageProvider,
+                                              fit: BoxFit.cover,
                                             ),
-                                          );
-                                        },
-                                        cacheManager:
-                                            CachedNetworkImagesManager.instance,
-                                      ),
-                                      const Gap(18),
-                                    ],
-
-                                    // Текст "Добро пожаловать".
-                                    Text(
-                                      l18n.music_welcomeTitle(
-                                        user.firstName,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .displayMedium!
-                                          .copyWith(
-                                            fontWeight: FontWeight.w500,
                                           ),
+                                        );
+                                      },
+                                      cacheManager:
+                                          CachedNetworkImagesManager.instance,
                                     ),
+                                    const Gap(18),
                                   ],
-                                ),
+
+                                  // Текст "Добро пожаловать".
+                                  Text(
+                                    l18n.music_welcomeTitle(
+                                      user.firstName,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .displayMedium!
+                                        .copyWith(
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                  ),
+                                ],
                               ),
                             ),
-                            const Gap(18),
+                          ),
+                          const Gap(18),
 
-                            // Поиск.
-                            IconButton.filledTonal(
-                              onPressed: () {
-                                if (!networkRequiredDialog(ref, context)) {
-                                  return;
-                                }
+                          // Поиск.
+                          IconButton.filledTonal(
+                            onPressed: () {
+                              if (!networkRequiredDialog(ref, context)) {
+                                return;
+                              }
 
-                                showDialog(
-                                  context: context,
-                                  builder: (context) {
-                                    return const SearchDisplayDialog();
-                                  },
-                                );
-                              },
-                              icon: const Icon(
-                                Icons.search,
-                              ),
+                              showDialog(
+                                context: context,
+                                builder: (context) {
+                                  return const SearchDisplayDialog();
+                                },
+                              );
+                            },
+                            icon: const Icon(
+                              Icons.search,
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
+                      const Gap(36),
+                    ],
 
-                    // Верхняя часть интерфейса с переключателями при Desktop Layout'е.
-                    if (!mobileLayout)
-                      const ChipFilters(
-                        showLabel: false,
-                      ),
-                    if (!mobileLayout)
-                      const Padding(
-                        padding: EdgeInsets.only(
-                          top: 8,
-                          bottom: 2,
-                        ),
-                        child: Divider(),
-                      ),
+                    // Верхняя часть интерфейса с переключателями при Desktop Layout'е, использующие Wrap.
+                    ChipFilters(
+                      useWrap: !mobileLayout,
+                    ),
+                    const Gap(8),
+                    if (!mobileLayout) ...[
+                      const Divider(),
+                      const Gap(4),
+                    ],
 
                     // Проходимся по всем активным разделам, создавая виджеты [Divider] и [SizedBox].
                     for (int i = 0; i < activeBlocks.length; i++) ...[
@@ -964,11 +946,14 @@ class HomeMusicPage extends HookConsumerWidget {
                       activeBlocks[i],
 
                       // Divider в случае, если это не последний элемент.
-                      if (i < activeBlocks.length - 1) ...[
-                        const Gap(8),
-                        const Divider(),
-                        const Gap(4),
-                      ],
+                      if (i < activeBlocks.length - 1)
+                        if (mobileLayout)
+                          const Gap(20)
+                        else ...[
+                          const Gap(8),
+                          const Divider(),
+                          const Gap(4),
+                        ],
                     ],
 
                     // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.

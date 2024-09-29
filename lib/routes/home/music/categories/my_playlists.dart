@@ -32,7 +32,7 @@ class MyPlaylistsBlock extends HookConsumerWidget {
     ref.watch(playerStateProvider);
     ref.watch(playerLoadedStateProvider);
 
-    final int playlistsCount = playlists.value?.playlistsCount ?? 0;
+    final int? playlistsCount = playlists.value?.playlistsCount;
 
     return MusicCategory(
       title: l18n.music_myPlaylistsChip,

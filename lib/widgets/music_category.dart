@@ -4,6 +4,8 @@ import "package:gap/gap.dart";
 
 import "../utils.dart";
 
+/// Виджет для [MusicCategory], отображающий анимированное число элементов в категории.
+
 /// Виджет, отображающий отдельную категорию для раздела "музыки". У категории есть название, иногда количество элементов в категории.
 class MusicCategory extends HookWidget {
   /// Название категории.
@@ -38,59 +40,106 @@ class MusicCategory extends HookWidget {
 
     final showDismiss = useState(false);
 
+    final oldCount = useState(count ?? 0);
+    final controller = useAnimationController(
+      duration: const Duration(seconds: 1),
+    );
+
+    final animation = useMemoized(
+      () {
+        return IntTween(
+          begin: oldCount.value,
+          end: count ?? 0,
+        ).animate(controller);
+      },
+      [count],
+    );
+    final animatedCount = useAnimation(animation);
+
+    useEffect(
+      () {
+        if (count != null) {
+          oldCount.value = count ?? 0;
+          controller.reset();
+          controller.forward();
+        }
+
+        return null;
+      },
+      [count],
+    );
+
     return MouseRegion(
       onEnter: onDismiss != null ? (_) => showDismiss.value = true : null,
       onExit: onDismiss != null ? (_) => showDismiss.value = false : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Название категории, а так же количество элементов в нём.
+          // Название с количеством, а так же кнопка для закрытия.
           Row(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Название категории.
-              Text(
-                title,
-                style: titleStyle.copyWith(
-                  fontWeight: FontWeight.w500,
-                  color: Theme.of(context).colorScheme.primary,
+              // Название, количество.
+              RichText(
+                text: TextSpan(
+                  children: [
+                    // Название.
+                    TextSpan(
+                      text: title,
+                      style: titleStyle.copyWith(
+                        fontWeight: FontWeight.w500,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+
+                    // Количество, при наличии.
+                    WidgetSpan(
+                      baseline: TextBaseline.alphabetic,
+                      alignment: PlaceholderAlignment.baseline,
+                      child: AnimatedOpacity(
+                        duration: const Duration(
+                          milliseconds: 500,
+                        ),
+                        curve: Curves.ease,
+                        opacity: count != null ? 1.0 : 0.0,
+                        child: Text(
+                          "  $animatedCount",
+                          style: titleStyle.copyWith(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .secondary
+                                .withOpacity(0.75),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
+                overflow: TextOverflow.ellipsis,
               ),
 
-              if (mobileLayout) const Spacer() else const Gap(8),
-
-              // Количество элементов в категории.
-              // TODO: Анимация появления.
-              if (count != null)
-                Text(
-                  count.toString(),
-                  style: titleStyle.copyWith(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .secondary
-                        .withOpacity(0.75),
-                  ),
-                ),
-
               // Кнопка для закрытия категории.
-              // FIXME: Кнопка имеет неправильный размер.
-              if (onDismiss != null) ...[
-                const Spacer(),
-                AnimatedOpacity(
-                  duration: const Duration(
-                    milliseconds: 200,
+              if (onDismiss != null)
+                Padding(
+                  padding: EdgeInsets.only(
+                    right: mobileLayout ? 0 : 8,
                   ),
-                  opacity: showDismiss.value ? 1.0 : 0.0,
-                  child: IconButton.filled(
-                    icon: const Icon(
-                      Icons.close,
+                  child: AnimatedOpacity(
+                    duration: const Duration(
+                      milliseconds: 250,
                     ),
-                    onPressed: onDismiss,
-                    constraints: const BoxConstraints(),
-                    padding: EdgeInsets.zero,
+                    opacity: showDismiss.value ? 1.0 : 0.0,
+                    child: IconButton.filled(
+                      icon: Icon(
+                        Icons.close,
+                        color: Theme.of(context).colorScheme.surface,
+                      ),
+                      onPressed: onDismiss,
+                      constraints: const BoxConstraints(),
+                      padding: EdgeInsets.zero,
+                    ),
                   ),
                 ),
-              ],
             ],
           ),
           const Gap(14),
