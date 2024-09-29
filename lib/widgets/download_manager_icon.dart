@@ -57,42 +57,60 @@ class ProgressIndicatorIcon extends StatelessWidget {
             duration: const Duration(
               milliseconds: 250,
             ),
-            child: isHovered
-                ? Icon(
-                    key: const ValueKey(
-                      "hover",
+            transitionBuilder: (Widget child, Animation<double> animation) {
+              return FadeTransition(
+                opacity: animation,
+                child: child,
+              );
+            },
+            child: () {
+              // Наведение.
+              if (isHovered) {
+                return Icon(
+                  key: const ValueKey(
+                    "hover",
+                  ),
+                  Icons.open_in_new,
+                  color: scheme.onSecondaryContainer,
+                  size: 22,
+                );
+              }
+
+              // Завершено.
+              if (isCompleted) {
+                return Icon(
+                  key: const ValueKey(
+                    "completed",
+                  ),
+                  Icons.check,
+                  color: scheme.onSecondaryContainer,
+                  size: 22,
+                );
+              }
+
+              // Загрузка.
+              return Icon(
+                key: const ValueKey(
+                  "loading",
+                ),
+                Icons.arrow_downward,
+                color: scheme.onSecondaryContainer,
+                size: 22,
+              )
+                  .animate(
+                    onPlay: (controller) => controller.repeat(
+                      reverse: true,
                     ),
-                    Icons.open_in_new,
-                    color: scheme.onSecondaryContainer,
-                    size: 22,
                   )
-                : isCompleted
-                    ? Icon(
-                        key: const ValueKey(
-                          "completed",
-                        ),
-                        Icons.check,
-                        color: scheme.onSecondaryContainer,
-                        size: 22,
-                      )
-                    : Icon(
-                        key: const ValueKey(
-                          "loading",
-                        ),
-                        Icons.arrow_downward,
-                        color: scheme.onSecondaryContainer,
-                        size: 22,
-                      )
-                        .animate(
-                          onPlay: (controller) =>
-                              controller.repeat(reverse: true),
-                        )
-                        .moveY(
-                          duration: const Duration(milliseconds: 1000),
-                          curve: Curves.ease,
-                          begin: -2,
-                          end: 2,
-                        ),
+                  .moveY(
+                    duration: const Duration(
+                      milliseconds: 1000,
+                    ),
+                    curve: Curves.ease,
+                    begin: -2,
+                    end: 2,
+                  );
+            }(),
           ),
         ],
       ),
