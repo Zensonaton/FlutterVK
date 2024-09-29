@@ -48,13 +48,16 @@ Future<void> openFullscreenPlayer(
   BuildContext context, {
   bool fullscreenOnDesktop = true,
 }) async {
-// Не позволяем открыть полноэкранный плеер, если плеер остановлен.
+  // Не позволяем открыть полноэкранный плеер, если плеер уже остановлен.
   if (!player.loaded) return;
 
   // Если плеер уже открыт, то ничего не делаем.
   if (isFullscreenPlayerOpen || isMiniplayerOpen) {
     return;
   }
+
+  // Убираем фокус с поля ввода, если оно есть.
+  FocusScope.of(context).unfocus();
 
   // Если приложение запущено на Desktop, то нужно отобразить окно на весь экран.
   if (isDesktop && fullscreenOnDesktop) {

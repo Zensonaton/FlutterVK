@@ -1816,6 +1816,9 @@ class PlaylistRoute extends HookConsumerWidget {
       );
       if (foundAudio == null || !foundAudio.canPlay) return;
 
+      // Убираем фокус с поля поиска.
+      searchFocusNode.unfocus();
+
       // Если у нас уже запущен этот же трек, то переключаем паузу/воспроизведение.
       if (player.currentAudio == foundAudio) {
         await player.togglePlay();

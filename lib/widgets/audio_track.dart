@@ -38,7 +38,8 @@ Widget buildListTrackWidget(
 }) {
   final logger = getLogger("buildListTrackWidget");
   final l18n = ref.watch(l18nProvider);
-  final bool isSelected = audio == player.currentAudio;
+  final bool isSelected = audio.ownerID == player.currentAudio?.ownerID &&
+      audio.id == player.currentAudio?.id;
 
   return AudioTrackTile(
     isSelected: isSelected && player.loaded,
@@ -50,13 +51,6 @@ Widget buildListTrackWidget(
     showDuration: showDuration,
     allowImageCache: allowImageCache,
     onPlayToggle: () async {
-      // Если этот трек уже играет, то просто делаем toggle воспроизведения.
-      if (isSelected) {
-        await player.togglePlay();
-
-        return;
-      }
-
       // Если мы не можем начать воспроизведение этого трека, то выдаём ошибку.
       if (!audio.canPlay) {
         showErrorDialog(
@@ -64,6 +58,16 @@ Widget buildListTrackWidget(
           title: l18n.music_trackUnavailableTitle,
           description: l18n.music_trackUnavailableDescription,
         );
+
+        return;
+      }
+
+      // Убираем фокус с поля ввода, если оно есть.
+      FocusScope.of(context).unfocus();
+
+      // Если этот трек уже играет, то просто делаем toggle воспроизведения.
+      if (isSelected) {
+        await player.togglePlay();
 
         return;
       }
