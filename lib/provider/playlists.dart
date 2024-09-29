@@ -656,24 +656,26 @@ class Playlists extends _$Playlists {
       }
 
       // Ищем удалённые треки. Если мы находим хотя бы один, то считаем, что плейлист изменился.
-      deletedAudios.addAll(
-        oldPlaylist.audios!.where(
-          (audio) => newPlaylist.audios!.every(
-            (newAudio) =>
-                newAudio.ownerID != audio.ownerID || newAudio.id != audio.id,
-          ),
-        ),
-      );
-
-      if (deletedAudios.isNotEmpty) {
-        newAudios.removeWhere(
-          (audio) => deletedAudios.any(
-            (deleted) =>
-                deleted.ownerID == audio.ownerID && deleted.id == audio.id,
+      if (oldPlaylist.audios != null) {
+        deletedAudios.addAll(
+          oldPlaylist.audios!.where(
+            (audio) => newPlaylist.audios!.every(
+              (newAudio) =>
+                  newAudio.ownerID != audio.ownerID || newAudio.id != audio.id,
+            ),
           ),
         );
 
-        playlistChanged = true;
+        if (deletedAudios.isNotEmpty) {
+          newAudios.removeWhere(
+            (audio) => deletedAudios.any(
+              (deleted) =>
+                  deleted.ownerID == audio.ownerID && deleted.id == audio.id,
+            ),
+          );
+
+          playlistChanged = true;
+        }
       }
     }
 
