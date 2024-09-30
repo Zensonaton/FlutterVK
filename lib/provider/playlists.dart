@@ -588,6 +588,7 @@ class Playlists extends _$Playlists {
     // В audiosToUpdate могут быть только те треки, которые были обновлены, но не удалены.
     List<ExtendedAudio> newAudios = [...(oldPlaylist.audios ?? [])];
     List<ExtendedAudio> deletedAudios = [];
+    int insertionIndex = 0;
 
     /// Метод, обновляющий либо добавляющий трек в список треков.
     void updateOrAddAudio(
@@ -600,10 +601,11 @@ class Playlists extends _$Playlists {
 
       // Если трек отсутствует, то просто добавляем его.
       if (index == -1) {
-        // logger.d("[$index] [${newAudio.title}]: add (non-present)");
+        // logger.d("[$index] [${newAudio.title}]: add (non-present), insertion index: $insertionIndex");
 
-        newAudios.add(newAudio);
+        newAudios.insert(insertionIndex, newAudio);
         playlistChanged = true;
+        insertionIndex += 1;
 
         return;
       }
