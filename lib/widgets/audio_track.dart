@@ -110,18 +110,22 @@ Widget buildListTrackWidget(
         );
       }
     },
-    onSecondaryAction: () => showModalBottomSheet(
-      context: context,
-      useRootNavigator: true,
-      isScrollControlled: true,
-      useSafeArea: true,
-      builder: (BuildContext context) {
-        return BottomAudioOptionsDialog(
-          audio: audio,
-          playlist: playlist,
-        );
-      },
-    ),
+    onSecondaryAction: () {
+      FocusScope.of(context).unfocus();
+
+      showModalBottomSheet(
+        context: context,
+        useRootNavigator: true,
+        isScrollControlled: true,
+        useSafeArea: true,
+        builder: (BuildContext context) {
+          return BottomAudioOptionsDialog(
+            audio: audio,
+            playlist: playlist,
+          );
+        },
+      );
+    },
   );
 }
 

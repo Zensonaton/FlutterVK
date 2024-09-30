@@ -82,18 +82,22 @@ class TopFullscreenControls extends ConsumerWidget {
             icon: Icon(
               Icons.adaptive.more,
             ),
-            onPressed: () => showModalBottomSheet(
-              context: context,
-              useRootNavigator: true,
-              isScrollControlled: true,
-              useSafeArea: true,
-              builder: (BuildContext context) {
-                return BottomAudioOptionsDialog(
-                  audio: player.currentAudio!,
-                  playlist: player.currentPlaylist!,
-                );
-              },
-            ),
+            onPressed: () {
+              FocusScope.of(context).unfocus();
+
+              showModalBottomSheet(
+                context: context,
+                useRootNavigator: true,
+                isScrollControlled: true,
+                useSafeArea: true,
+                builder: (BuildContext context) {
+                  return BottomAudioOptionsDialog(
+                    audio: player.currentAudio!,
+                    playlist: player.currentPlaylist!,
+                  );
+                },
+              );
+            },
           ),
       ],
     );
