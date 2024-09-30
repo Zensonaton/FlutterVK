@@ -653,8 +653,7 @@ class PlaylistAudiosListWidget extends HookConsumerWidget {
       [searchText, playlistAudios],
     );
 
-    final bool hasTracksList =
-        playlist.areTracksLive && playlist.audios != null;
+    final bool hasTracksList = playlist.audios != null;
 
     final bool mobileLayout = isMobileLayout(context);
 
