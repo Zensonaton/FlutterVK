@@ -1,7 +1,6 @@
 import "dart:async";
 import "dart:ui";
 
-import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
@@ -28,6 +27,7 @@ import "../services/cache_manager.dart";
 import "../services/logger.dart";
 import "../utils.dart";
 import "../widgets/fading_list_view.dart";
+import "../widgets/isolated_cached_network_image.dart";
 import "fullscreen_player/desktop.dart";
 import "fullscreen_player/mobile.dart";
 
@@ -579,7 +579,7 @@ class BlurredBackgroundImage extends ConsumerWidget {
           sigmaX: 50,
           sigmaY: 50,
         ),
-        child: CachedNetworkImage(
+        child: IsolatedCachedImage(
           imageUrl: player.currentAudio!.maxThumbnail!,
           cacheKey: "${player.currentAudio!.mediaKey}max",
           fit: BoxFit.cover,

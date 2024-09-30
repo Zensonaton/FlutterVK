@@ -1,4 +1,3 @@
-import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
@@ -15,6 +14,7 @@ import "../../../services/cache_manager.dart";
 import "../../../services/download_manager.dart";
 import "../../../utils.dart";
 import "../../../widgets/fallback_audio_photo.dart";
+import "../../../widgets/isolated_cached_network_image.dart";
 
 /// Виджет, отображаемый отдельный загружающийся элемент, например, плейлист.
 class DownloadItemWidget extends HookConsumerWidget {
@@ -200,16 +200,14 @@ class DownloadItemIconWidget extends StatelessWidget {
           globalBorderRadius,
         ),
         child: playlist.photo != null
-            ? CachedNetworkImage(
+            ? IsolatedCachedImage(
                 imageUrl: playlist.photo!.photo600,
                 cacheKey: "${playlist.mediaKey}600",
                 width: 50,
                 height: 50,
                 memCacheHeight: memCacheSize,
                 memCacheWidth: memCacheSize,
-                placeholder: (BuildContext context, String url) {
-                  return const FallbackAudioAvatar();
-                },
+                placeholder: const FallbackAudioAvatar(),
                 cacheManager: CachedNetworkImagesManager.instance,
               )
             : FallbackAudioPlaylistAvatar(

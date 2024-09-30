@@ -1,4 +1,3 @@
-import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
 import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
@@ -14,6 +13,7 @@ import "../../../../provider/preferences.dart";
 import "../../../../provider/user.dart";
 import "../../../../services/logger.dart";
 import "../../../../utils.dart";
+import "../../../../widgets/isolated_cached_network_image.dart";
 import "../../../../widgets/music_category.dart";
 import "../playlist.dart";
 
@@ -257,7 +257,7 @@ class MoodPlaylistWidget extends StatelessWidget {
                   globalBorderRadius,
                 ),
                 child: backgroundUrl != null
-                    ? CachedNetworkImage(
+                    ? IsolatedCachedImage(
                         imageUrl: backgroundUrl!,
                         cacheKey: cacheKey,
                         fit: BoxFit.fill,

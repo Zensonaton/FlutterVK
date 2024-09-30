@@ -1,4 +1,3 @@
-import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
 import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
@@ -19,6 +18,7 @@ import "../../utils.dart";
 import "../../widgets/dialogs.dart";
 import "../../widgets/fading_list_view.dart";
 import "../../widgets/fallback_audio_photo.dart";
+import "../../widgets/isolated_cached_network_image.dart";
 import "../../widgets/loading_button.dart";
 import "../../widgets/responsive_slider.dart";
 import "../../widgets/scrollable_slider.dart";
@@ -153,14 +153,12 @@ class NextTrackInfoWidget extends ConsumerWidget {
                   globalBorderRadius,
                 ),
                 child: player.smartNextAudio!.smallestThumbnail != null
-                    ? CachedNetworkImage(
+                    ? IsolatedCachedImage(
                         imageUrl: player.smartNextAudio!.smallestThumbnail!,
                         cacheKey: "${player.smartNextAudio!.mediaKey}small",
                         width: 32,
                         height: 32,
-                        placeholder: (BuildContext context, String url) {
-                          return const FallbackAudioAvatar();
-                        },
+                        placeholder: const FallbackAudioAvatar(),
                         cacheManager: CachedAlbumImagesManager.instance,
                       )
                     : const FallbackAudioAvatar(
@@ -451,14 +449,14 @@ class FullscreenMediaControls extends ConsumerWidget {
                               !preferences.fullscreenBigThumbnail,
                             ),
                             child: player.currentAudio!.maxThumbnail != null
-                                ? CachedNetworkImage(
+                                ? IsolatedCachedImage(
                                     imageUrl:
                                         player.currentAudio!.maxThumbnail!,
                                     cacheKey:
                                         "${player.currentAudio!.mediaKey}max",
                                     fit: BoxFit.fill,
                                     placeholder:
-                                        (BuildContext context, String url) =>
+
                                             const FallbackAudioAvatar(),
                                     cacheManager:
                                         CachedAlbumImagesManager.instance,

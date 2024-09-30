@@ -2,7 +2,6 @@ import "dart:async";
 import "dart:math";
 import "dart:ui";
 
-import "package:cached_network_image/cached_network_image.dart";
 import "package:collection/collection.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
@@ -36,6 +35,7 @@ import "../../../utils.dart";
 import "../../../widgets/audio_track.dart";
 import "../../../widgets/dialogs.dart";
 import "../../../widgets/fallback_audio_photo.dart";
+import "../../../widgets/isolated_cached_network_image.dart";
 import "../../../widgets/loading_button.dart";
 import "categories/realtime_playlists.dart";
 
@@ -789,7 +789,7 @@ class AppBarPlaylistImageWidget extends StatelessWidget {
           globalBorderRadius,
         ),
         child: imageUrl != null
-            ? CachedNetworkImage(
+            ? IsolatedCachedImage(
                 imageUrl: imageUrl,
                 cacheKey: "${playlist.mediaKey}1200",
                 fit: BoxFit.cover,
@@ -797,9 +797,7 @@ class AppBarPlaylistImageWidget extends StatelessWidget {
                 height: size,
                 memCacheHeight: cacheSize,
                 memCacheWidth: cacheSize,
-                placeholder: (BuildContext context, String url) {
-                  return fallbackWidget;
-                },
+                placeholder: fallbackWidget,
                 cacheManager: CachedNetworkImagesManager.instance,
               )
             : fallbackWidget,
@@ -1632,11 +1630,21 @@ class PlaylistRoute extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final playlist = ref.watch(getPlaylistProvider(ownerID, id))!;
     final l18n = ref.watch(l18nProvider);
+    final playlist = ref.watch(getPlaylistProvider(ownerID, id))!;
+    ref.watch(playerLoadedStateProvider);
+
+    // Если поменялось изображение плейлиста, то нужно обновить цветовую схему.
+    useEffect(
+      () {
+        ref.invalidate(colorInfoFromPlaylistProvider(ownerID, id));
+
+        return null;
+      },
+      [playlist.photo?.photo34],
+    );
     final playlistColorInfo =
         ref.watch(colorInfoFromPlaylistProvider(ownerID, id));
-    ref.watch(playerLoadedStateProvider);
 
     final scrollController = useScrollController();
     final searchController = useTextEditingController();
@@ -1674,17 +1682,29 @@ class PlaylistRoute extends HookConsumerWidget {
 
     final bool mobileLayout = isMobileLayout(context);
 
-    final oldScheme = Theme.of(context).colorScheme;
-    final ColorScheme? scheme = playlist.photo != null
-        ? playlistColorInfo.value != null
-            ? ColorScheme.fromSeed(
-                seedColor: Color(
-                  playlistColorInfo.value!.scoredColorInts.first,
-                ),
-                brightness: Theme.of(context).brightness,
-              )
-            : null
-        : oldScheme;
+    final theme = Theme.of(context);
+    final oldScheme = theme.colorScheme;
+    final brightness = theme.brightness;
+
+    final ColorScheme? scheme = useMemoized(
+      () {
+        // Если у плейлиста нет фотографии, то возвращаем стандартную цветовую схему.
+        if (playlist.photo == null) return oldScheme;
+
+        // Если у нас есть информация о цвете плейлиста, то возвращаем цветовую схему из него.
+        if (playlistColorInfo.value != null) {
+          return ColorScheme.fromSeed(
+            seedColor: Color(
+              playlistColorInfo.value!.scoredColorInts.first,
+            ),
+            brightness: brightness,
+          );
+        }
+
+        return null;
+      },
+      [brightness, playlistColorInfo.value],
+    );
 
     final double statusBarHeight = MediaQuery.of(context).padding.top;
     final double infoBoxHeight = mobileLayout
@@ -1970,7 +1990,7 @@ class PlaylistRoute extends HookConsumerWidget {
         resizeToAvoidBottomInset: false,
         body: Theme(
           data: ThemeData(
-            colorScheme: scheme ?? Theme.of(context).colorScheme,
+            colorScheme: scheme ?? oldScheme,
           ),
           child: Stack(
             alignment: Alignment.topCenter,

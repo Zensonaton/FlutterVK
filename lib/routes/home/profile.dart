@@ -1,6 +1,5 @@
 import "dart:io";
 
-import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
@@ -27,6 +26,7 @@ import "../../services/logger.dart";
 import "../../utils.dart";
 import "../../widgets/dialogs.dart";
 import "../../widgets/fallback_user_avatar.dart";
+import "../../widgets/isolated_cached_network_image.dart";
 import "profile/dialogs.dart";
 
 /// Вызывает окно, дающее пользователю возможность поделиться файлом логов приложения ([logFilePath]), либо же открывающее проводник (`explorer.exe`) с файлом логов (на OS Windows).
@@ -335,19 +335,14 @@ class ProfileAvatar extends ConsumerWidget {
       children: [
         // Аватар пользователя, при наличии.
         if (user.photoMaxUrl != null)
-          CachedNetworkImage(
+          IsolatedCachedImage(
             imageUrl: user.photoMaxUrl!,
             cacheKey: "${user.id}400",
             memCacheWidth: 80 * MediaQuery.of(context).devicePixelRatio.toInt(),
             memCacheHeight:
                 80 * MediaQuery.of(context).devicePixelRatio.toInt(),
-            fadeInDuration: Duration.zero,
-            fadeOutDuration: Duration.zero,
-            placeholderFadeInDuration: Duration.zero,
             cacheManager: CachedNetworkImagesManager.instance,
-            placeholder: (BuildContext context, String url) {
-              return const UserAvatarPlaceholder();
-            },
+            placeholder: const UserAvatarPlaceholder(),
             imageBuilder: (_, imageProvider) {
               return Container(
                 width: 80,

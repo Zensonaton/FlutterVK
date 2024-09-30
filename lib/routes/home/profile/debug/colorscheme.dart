@@ -1,4 +1,3 @@
-import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
 import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
@@ -9,6 +8,7 @@ import "../../../../provider/player_events.dart";
 import "../../../../provider/user.dart";
 import "../../../../services/cache_manager.dart";
 import "../../../../widgets/fallback_audio_photo.dart";
+import "../../../../widgets/isolated_cached_network_image.dart";
 
 /// Небольшой контейнер с цветом.
 class ColorPill extends ConsumerWidget {
@@ -92,11 +92,10 @@ class ColorSchemeDebugMenu extends ConsumerWidget {
             width: 300,
             height: 300,
             child: player.currentAudio!.maxThumbnail != null
-                ? CachedNetworkImage(
+                ? IsolatedCachedImage(
                     imageUrl: player.currentAudio!.maxThumbnail!,
                     cacheKey: "${player.currentAudio!.mediaKey}max",
-                    placeholder: (BuildContext context, String url) =>
-                        const FallbackAudioAvatar(),
+                    placeholder: const FallbackAudioAvatar(),
                     cacheManager: CachedAlbumImagesManager.instance,
                   )
                 : const FallbackAudioAvatar(),

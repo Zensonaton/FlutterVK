@@ -716,7 +716,10 @@ class Playlists extends _$Playlists {
         scoredColorInts: newPlaylist.scoredColorInts,
         frequentColorInt: newPlaylist.frequentColorInt,
         colorCount: newPlaylist.colorCount,
-        audios: newAudios,
+        audios:
+            (newPlaylist.audios != null || newPlaylist.audiosToUpdate != null)
+                ? newAudios
+                : null,
       );
 
       // Обновляем плейлист.

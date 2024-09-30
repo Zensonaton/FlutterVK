@@ -1,4 +1,3 @@
-import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
@@ -12,6 +11,7 @@ import "../provider/user.dart";
 import "../services/cache_manager.dart";
 import "../utils.dart";
 import "fallback_audio_photo.dart";
+import "isolated_cached_network_image.dart";
 import "loading_button.dart";
 import "responsive_slider.dart";
 import "scrollable_slider.dart";
@@ -447,13 +447,11 @@ class BottomMusicPlayer extends HookConsumerWidget {
 
     /// [Widget] для отображения изображения этого трека.
     final Widget trackImageWidget = imageUrl != null
-        ? CachedNetworkImage(
+        ? IsolatedCachedImage(
             imageUrl: imageUrl,
             cacheKey: "${audio!.mediaKey}small",
             cacheManager: CachedAlbumImagesManager.instance,
-            placeholder: (BuildContext context, String url) {
-              return const FallbackAudioAvatar();
-            },
+            placeholder: const FallbackAudioAvatar(),
             fit: BoxFit.contain,
           )
         : const FallbackAudioAvatar();

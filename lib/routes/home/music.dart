@@ -1,6 +1,5 @@
 import "dart:async";
 
-import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:gap/gap.dart";
@@ -22,6 +21,7 @@ import "../../services/logger.dart";
 import "../../utils.dart";
 import "../../widgets/dialogs.dart";
 import "../../widgets/fallback_audio_photo.dart";
+import "../../widgets/isolated_cached_network_image.dart";
 import "music/categories/by_vk_playlists.dart";
 import "music/categories/my_music.dart";
 import "music/categories/my_playlists.dart";
@@ -369,7 +369,7 @@ class AudioPlaylistWidget extends HookConsumerWidget {
                         globalBorderRadius,
                       ),
                       child: backgroundUrl != null
-                          ? CachedNetworkImage(
+                          ? IsolatedCachedImage(
                               imageUrl: backgroundUrl!,
                               cacheKey: cacheKey,
                               memCacheHeight:
@@ -378,7 +378,7 @@ class AudioPlaylistWidget extends HookConsumerWidget {
                               memCacheWidth:
                                   (200 * MediaQuery.devicePixelRatioOf(context))
                                       .round(),
-                              placeholder: (BuildContext context, String url) =>
+                              placeholder:
                                   const FallbackAudioPlaylistAvatar(),
                               cacheManager: CachedNetworkImagesManager.instance,
                             )
@@ -862,7 +862,7 @@ class HomeMusicPage extends HookConsumerWidget {
                                 children: [
                                   // Аватарка пользователя.
                                   if (user.photoMaxUrl != null) ...[
-                                    CachedNetworkImage(
+                                    IsolatedCachedImage(
                                       imageUrl: user.photoMaxUrl!,
                                       cacheKey: "${user.id}400",
                                       imageBuilder: (

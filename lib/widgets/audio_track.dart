@@ -1,6 +1,5 @@
 import "dart:ui";
 
-import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
@@ -22,6 +21,7 @@ import "../utils.dart";
 import "audio_player.dart";
 import "dialogs.dart";
 import "fallback_audio_photo.dart";
+import "isolated_cached_network_image.dart";
 import "loading_button.dart";
 
 /// Создаёт виджет типа [AudioTrackTile] для отображения в [ListView.builder] или подобном.
@@ -201,17 +201,14 @@ class AudioTrackImage extends HookWidget {
         );
       }
 
-      return CachedNetworkImage(
+      return IsolatedCachedImage(
         imageUrl: imageUrl!,
         cacheKey: cacheKey,
         width: imageSize,
         height: imageSize,
         memCacheWidth: memorySize,
         memCacheHeight: memorySize,
-        fadeInDuration: Duration.zero,
-        fadeOutDuration: Duration.zero,
-        placeholderFadeInDuration: Duration.zero,
-        placeholder: (BuildContext context, String url) => placeholder,
+        placeholder: placeholder,
         cacheManager: CachedAlbumImagesManager.instance,
       );
     }
