@@ -142,6 +142,10 @@ class UserPreferences {
   @JsonKey(name: "SpoilerNextTrack")
   final bool spoilerNextTrack;
 
+  /// Указывает, включён ли показ debugging-опций в "профиле" даже в release-режиме.
+  @JsonKey(name: "DebugOptionsEnabled")
+  final bool debugOptionsEnabled;
+
   UserPreferences({
     this.dbVersion = IsarDBMigrator.maxDBVersion,
     this.myMusicChipEnabled = true,
@@ -173,6 +177,7 @@ class UserPreferences {
     this.volume = 1.0,
     this.rewindOnPreviousBehavior = RewindBehavior.always,
     this.spoilerNextTrack = true,
+    this.debugOptionsEnabled = false,
   });
 
   /// Делает копию этого класа с новыми передаваемыми значениями.
@@ -207,6 +212,7 @@ class UserPreferences {
     double? volume,
     RewindBehavior? rewindOnPreviousBehavior,
     bool? spoilerNextTrack,
+    bool? debugOptionsEnabled,
   }) =>
       UserPreferences(
         dbVersion: dbVersion ?? this.dbVersion,
@@ -246,6 +252,7 @@ class UserPreferences {
         rewindOnPreviousBehavior:
             rewindOnPreviousBehavior ?? this.rewindOnPreviousBehavior,
         spoilerNextTrack: spoilerNextTrack ?? this.spoilerNextTrack,
+        debugOptionsEnabled: debugOptionsEnabled ?? this.debugOptionsEnabled,
       );
 
   factory UserPreferences.fromJson(Map<String, dynamic> json) =>
@@ -296,6 +303,7 @@ class Preferences extends _$Preferences {
       rewindOnPreviousBehavior:
           RewindBehavior.values[prefs.getInt("RewindOnPreviousBehavior") ?? 0],
       spoilerNextTrack: prefs.getBool("SpoilerNextTrack"),
+      debugOptionsEnabled: prefs.getBool("DebugOptionsEnabled"),
     );
   }
 
@@ -435,4 +443,7 @@ class Preferences extends _$Preferences {
 
   void setSpoilerNextTrackEnabled(bool enabled) =>
       state = state.copyWith(spoilerNextTrack: enabled);
+
+  void setDebugOptionsEnabled(bool enabled) =>
+      state = state.copyWith(debugOptionsEnabled: enabled);
 }

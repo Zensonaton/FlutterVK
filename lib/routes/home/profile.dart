@@ -971,13 +971,28 @@ class HomeProfilePage extends HookConsumerWidget {
                 const Gap(16),
 
                 // Debug-опции.
-                if (kDebugMode) ...[
+                if (kDebugMode || preferences.debugOptionsEnabled) ...[
                   ProfileSettingCategory(
                     icon: Icons.logo_dev,
                     title: "Debugging options",
                     centerTitle: mobileLayout,
                     padding: settingsPadding,
                     children: [
+                      // Информация о том, что данный раздел показан поскольку включен режим отладки.
+                      Padding(
+                        padding: const EdgeInsets.all(
+                          24,
+                        ),
+                        child: Text(
+                          kDebugMode
+                              ? "Those options are shown because the app is running in debug mode."
+                              : "This section is shown because \"force-show debug\" is enabled in settings.\nNormally, this section is hidden in non-debug modes.",
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      ),
+
                       // Кнопка для копирования ID пользователя.
                       ListTile(
                         leading: const Icon(
@@ -1131,6 +1146,26 @@ class HomeProfilePage extends HookConsumerWidget {
                               ),
                             ),
                           );
+                        },
+                      ),
+
+                      // Включение отладочного режима.
+                      SwitchListTile(
+                        secondary: const Icon(
+                          Icons.developer_mode,
+                        ),
+                        title: const Text(
+                          "Force-show debug",
+                        ),
+                        subtitle: const Text(
+                          "Shows debugging options in profile even in non-debug modes",
+                        ),
+                        value: preferences.debugOptionsEnabled,
+                        onChanged: (bool? enabled) async {
+                          HapticFeedback.lightImpact();
+                          if (enabled == null) return;
+
+                          prefsNotifier.setDebugOptionsEnabled(enabled);
                         },
                       ),
                     ],
