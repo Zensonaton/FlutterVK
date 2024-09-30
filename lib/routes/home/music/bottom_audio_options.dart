@@ -70,6 +70,8 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
 
         dio.head(geniusUrl).then(
           (response) {
+            if (!context.mounted) return;
+
             hasGeniusInfo.value = response.statusCode == 200;
           },
         );
