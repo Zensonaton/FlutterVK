@@ -83,10 +83,17 @@ Future<List<DeezerTrack>> deezer_search_sorted(
   int? duration,
   String? album,
 }) async {
+  String cleanString(String input) => input.replaceAll("?", "");
+
+  final String cleanArtist = cleanString(artist);
+  final String cleanTitle = cleanString(title);
+  final String? cleanSubtitle = subtitle != null ? cleanString(subtitle) : null;
+  final String? cleanAlbum = album != null ? cleanString(album) : null;
+
   final DeezerAPISearchResponse response = await deezer_search(
-    artist,
-    title,
-    album: album,
+    cleanArtist,
+    cleanTitle,
+    album: cleanAlbum,
     duration: duration,
   );
   List<DeezerTrack> tracks = response.data;
@@ -94,11 +101,17 @@ Future<List<DeezerTrack>> deezer_search_sorted(
   double calculateSimilarity(DeezerTrack track) {
     double score = 0;
 
-    score += track.artist.name.similarityTo(artist) * 3;
-    score += track.title.similarityTo(title) * 3;
-    if (subtitle != null) {
-      if (track.subtitle != null) {
-        score += track.subtitle!.similarityTo(subtitle) * 2;
+    final String cleanTrackArtist = cleanString(track.artist.name);
+    final String cleanTrackTitle = cleanString(track.title);
+    final String? cleanTrackSubtitle =
+        track.subtitle != null ? cleanString(track.subtitle!) : null;
+    final String cleanTrackAlbum = cleanString(track.album.title);
+
+    score += cleanTrackArtist.similarityTo(cleanArtist) * 3;
+    score += cleanTrackTitle.similarityTo(cleanTitle) * 3;
+    if (cleanSubtitle != null) {
+      if (cleanTrackSubtitle != null) {
+        score += cleanTrackSubtitle.similarityTo(cleanSubtitle) * 2;
       } else {
         score -= 1;
       }
@@ -106,8 +119,8 @@ Future<List<DeezerTrack>> deezer_search_sorted(
     if (duration != null) {
       score *= 1 - (track.duration - duration).abs() / duration;
     }
-    if (album != null) {
-      score += track.album.title.similarityTo(album) * 2;
+    if (cleanAlbum != null) {
+      score += cleanTrackAlbum.similarityTo(cleanAlbum) * 2;
     }
 
     return score;
