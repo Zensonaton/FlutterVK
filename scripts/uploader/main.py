@@ -24,7 +24,7 @@ local_bot_api_url = sys.argv[5].lower().strip()
 is_local_bot_api = local_bot_api_url not in ("false", "0", "no")
 files = [i.strip() for i in sys.argv[6:]]
 
-github_url = "https://github.com/Zensonaton/FlutterVK/releases/tag/v" + version
+github_url = "https://github.com/Zensonaton/FlutterVK/releases/tag/" + version
 info_text = (
 	f" • <b>Версия</b>: v{version}.\n"
 	f" • <b>Список изменений</b>: <a href=\"{github_url}\">🔗 Github</a>.\n"
