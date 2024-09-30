@@ -1,5 +1,6 @@
 import "dart:async";
 import "dart:math";
+import "dart:ui";
 
 import "package:cached_network_image/cached_network_image.dart";
 import "package:collection/collection.dart";
@@ -19,6 +20,7 @@ import "package:styled_text/widgets/styled_text.dart";
 import "../../../api/vk/shared.dart";
 import "../../../consts.dart";
 import "../../../enums.dart";
+import "../../../extensions.dart";
 import "../../../main.dart";
 import "../../../provider/color.dart";
 import "../../../provider/download_manager.dart";
@@ -1095,23 +1097,29 @@ class AppBarWidget extends HookConsumerWidget {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            scheme.primary.withOpacity(0.75),
-                            scheme.primary.withOpacity(0.3),
+                            scheme.primary.darken(0.5).withOpacity(0.75),
+                            scheme.primary.darken(0.5).withOpacity(0.3),
                           ],
                         )
                       : null,
                 ),
-                child: AppBarRealAppBarWidget(
-                  controller: searchController,
-                  focusNode: searchFocusNode,
-                  title: title,
-                  count: playlist.count ?? 0,
-                  isSearchOpen: isSearchOpen,
-                  titleOpacity: titleOpacity,
-                  onSearchPressed: mobileLayout ? onSearchPressed : null,
-                  onMorePressed: mobileLayout ? onMorePressed : null,
-                  onSearchInput: onSearchInput,
-                  onSearchSubmitted: onSearchSubmitted,
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(
+                    sigmaX: titleOpacity * 5,
+                    sigmaY: titleOpacity * 5,
+                  ),
+                  child: AppBarRealAppBarWidget(
+                    controller: searchController,
+                    focusNode: searchFocusNode,
+                    title: title,
+                    count: playlist.count ?? 0,
+                    isSearchOpen: isSearchOpen,
+                    titleOpacity: titleOpacity,
+                    onSearchPressed: mobileLayout ? onSearchPressed : null,
+                    onMorePressed: mobileLayout ? onMorePressed : null,
+                    onSearchInput: onSearchInput,
+                    onSearchSubmitted: onSearchSubmitted,
+                  ),
                 ),
               ),
             ],
