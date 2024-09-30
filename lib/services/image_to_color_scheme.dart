@@ -17,6 +17,9 @@ import "logger.dart";
 class ImageSchemeExtractor {
   static final AppLogger logger = getLogger("ImageSchemeExtractor");
 
+  /// Цвет, который будет использован в качестве fallback-цвета, если не удастся извлечь цвета из изображения.
+  static const int fallbackColor = 0xFFFFFFFF;
+
   /// {@template ImageSchemeExtractor.colorInts}
   /// [Map] из извлечённых цветов обложки трека, где каждый цвет является типом [int], а так же количеством этого цвета.
   /// {@endtemplate}
@@ -366,20 +369,29 @@ class ImageSchemeExtractor {
         );
 
         // Получаем список из самых "частых" цветов.
-        final List<int> scoredResults = Score.score(colorToCount, desired: 12);
+        final List<int> scoredResults = Score.score(
+          colorToCount,
+          desired: 12,
+          fallbackColorARGB: fallbackColor,
+        );
 
         // Ищем самый частый цвет из всех цветов, а так же общее количество цветов.
-        int totalColors = 0;
-        int largestColorCount = 0;
-        int mostFrequentColor = 0;
-        for (int color in colorToCount.keys) {
-          final int count = colorToCount[color]!;
+        final int mostFrequentColor = colorToCount.entries
+            .reduce(
+              (a, b) => a.value > b.value ? a : b,
+            )
+            .key;
+        final int totalColors = colorToCount.values.reduce(
+          (a, b) => a + b,
+        );
 
-          totalColors += count;
-          if (count > largestColorCount) {
-            largestColorCount = count;
-            mostFrequentColor = color;
-          }
+        // Если мы получили fallback-цвет, то возвращаем вместо этого самый частый цвет.
+        if (scoredResults.length == 1 && scoredResults.first == fallbackColor) {
+          logger.d(
+            "Fallback color detected, replacing with most frequent (mostFrequentColor).",
+          );
+
+          scoredResults[0] = mostFrequentColor;
         }
 
         return (colorToCount, scoredResults, mostFrequentColor, totalColors);
