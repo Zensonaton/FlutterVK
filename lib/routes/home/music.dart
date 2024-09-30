@@ -378,8 +378,7 @@ class AudioPlaylistWidget extends HookConsumerWidget {
                               memCacheWidth:
                                   (200 * MediaQuery.devicePixelRatioOf(context))
                                       .round(),
-                              placeholder:
-                                  const FallbackAudioPlaylistAvatar(),
+                              placeholder: const FallbackAudioPlaylistAvatar(),
                               cacheManager: CachedNetworkImagesManager.instance,
                             )
                           : const FallbackAudioPlaylistAvatar(),
@@ -862,27 +861,33 @@ class HomeMusicPage extends HookConsumerWidget {
                                 children: [
                                   // Аватарка пользователя.
                                   if (user.photoMaxUrl != null) ...[
-                                    IsolatedCachedImage(
-                                      imageUrl: user.photoMaxUrl!,
-                                      cacheKey: "${user.id}400",
-                                      imageBuilder: (
-                                        BuildContext context,
-                                        ImageProvider imageProvider,
-                                      ) {
-                                        return Container(
-                                          width: 40,
-                                          height: 40,
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            image: DecorationImage(
-                                              image: imageProvider,
-                                              fit: BoxFit.cover,
+                                    SizedBox(
+                                      width: 40,
+                                      height: 40,
+                                      child: IsolatedCachedImage(
+                                        imageUrl: user.photoMaxUrl!,
+                                        cacheKey: "${user.id}400",
+                                        width: 40,
+                                        height: 40,
+                                        imageBuilder: (
+                                          BuildContext context,
+                                          ImageProvider imageProvider,
+                                        ) {
+                                          return Container(
+                                            width: 40,
+                                            height: 40,
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              image: DecorationImage(
+                                                image: imageProvider,
+                                                fit: BoxFit.cover,
+                                              ),
                                             ),
-                                          ),
-                                        );
-                                      },
-                                      cacheManager:
-                                          CachedNetworkImagesManager.instance,
+                                          );
+                                        },
+                                        cacheManager:
+                                            CachedNetworkImagesManager.instance,
+                                      ),
                                     ),
                                     const Gap(18),
                                   ],

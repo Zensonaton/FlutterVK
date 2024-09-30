@@ -180,13 +180,14 @@ class IsolatedCachedImage extends StatelessWidget {
       matchTextDirection: matchTextDirection,
       color: color,
       filterQuality: filterQuality,
-
-      // TODO: Вероятнее всего, так делать не стоит.
-      frameBuilder: placeholder != null
+      frameBuilder: placeholder != null || imageBuilder != null
           ? (context, child, frame, loaded) {
-              if (loaded || frame != null) return child;
+              // TODO: Вероятнее всего, так делать не стоит.
+              if (loaded || frame != null) {
+                return imageBuilder?.call(context, provider) ?? child;
+              }
 
-              return placeholder!;
+              return placeholder ?? child;
             }
           : null,
     );
