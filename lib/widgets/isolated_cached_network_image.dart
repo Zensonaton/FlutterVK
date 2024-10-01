@@ -179,6 +179,7 @@ class IsolatedCachedImage extends StatelessWidget {
       repeat: repeat,
       matchTextDirection: matchTextDirection,
       color: color,
+      colorBlendMode: colorBlendMode,
       filterQuality: filterQuality,
       frameBuilder: placeholder != null || imageBuilder != null
           ? (context, child, frame, loaded) {
