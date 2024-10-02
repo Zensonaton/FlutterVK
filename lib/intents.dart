@@ -40,17 +40,17 @@ class VolumeDownIntent extends Intent {
   const VolumeDownIntent();
 }
 
-/// [Intent], вызываемый при нажатии [LogicalKeyboardKey.s], который переключает shuffle в плеере.
+/// [Intent], вызываемый при нажатии [LogicalKeyboardKey.control] + [LogicalKeyboardKey.s], который переключает shuffle в плеере.
 class ShuffleIntent extends Intent {
   const ShuffleIntent();
 }
 
-/// [Intent], вызываемый при нажатии [LogicalKeyboardKey.l], который переключает повтор текущего трека в плеере.
+/// [Intent], вызываемый при нажатии [LogicalKeyboardKey.control] + [LogicalKeyboardKey.l], который переключает повтор текущего трека в плеере.
 class LoopModeIntent extends Intent {
   const LoopModeIntent();
 }
 
-/// [Intent], вызываемый при нажатии [LogicalKeyboardKey.ctrlLeft] + [LogicalKeyboardKey.q], который закрывает приложение.
+/// [Intent], вызываемый при нажатии [LogicalKeyboardKey.control] + [LogicalKeyboardKey.q], который закрывает приложение.
 class CloseAppIntent extends Intent {
   const CloseAppIntent();
 }

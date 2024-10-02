@@ -258,11 +258,13 @@ class FlutterVKApp extends HookConsumerWidget {
             // Переключение shuffle.
             LogicalKeySet(
               LogicalKeyboardKey.keyS,
+              LogicalKeyboardKey.control,
             ): const ShuffleIntent(),
 
             // Переключение повтора.
             LogicalKeySet(
               LogicalKeyboardKey.keyL,
+              LogicalKeyboardKey.control,
             ): const LoopModeIntent(),
 
             // Закрытие приложения.
