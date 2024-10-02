@@ -28,7 +28,11 @@ class ProgressIndicatorIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
+    final isStarted = progress > 0.0;
     final isCompleted = progress >= 1.0;
+    final bool shouldAnimate = progress > 0.0 && progress < 1.0;
+
+    // FIXME: После первого открытия, анимация ломается из-за проверки с shouldAnimate.
 
     return SizedBox(
       width: downloadManagerMinimizedSize,
@@ -37,20 +41,23 @@ class ProgressIndicatorIcon extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           // Анимация загрузки.
-          CircularProgressIndicator(
-            strokeWidth: 3,
-            value: progress,
-          )
-              .animate(
-                onComplete: (controller) => controller.loop(),
-              )
-              .rotate(
-                duration: const Duration(
-                  seconds: 2,
-                ),
-                begin: 0,
-                end: 1,
+          if (isStarted)
+            CircularProgressIndicator(
+              strokeWidth: 3,
+              value: progress,
+            ).animate(
+              onComplete: (controller) {
+                if (!shouldAnimate) return;
+
+                controller.loop();
+              },
+            ).rotate(
+              duration: const Duration(
+                seconds: 2,
               ),
+              begin: 0,
+              end: 1,
+            ),
 
           // Иконка загрузки, либо же галочка, если загрузка была завершена.
           AnimatedSwitcher(
@@ -96,20 +103,22 @@ class ProgressIndicatorIcon extends StatelessWidget {
                 Icons.arrow_downward,
                 color: scheme.onSecondaryContainer,
                 size: 22,
-              )
-                  .animate(
-                    onPlay: (controller) => controller.repeat(
-                      reverse: true,
-                    ),
-                  )
-                  .moveY(
-                    duration: const Duration(
-                      milliseconds: 1000,
-                    ),
-                    curve: Curves.ease,
-                    begin: -2,
-                    end: 2,
+              ).animate(
+                onPlay: (controller) {
+                  if (!shouldAnimate) return;
+
+                  controller.repeat(
+                    reverse: true,
                   );
+                },
+              ).moveY(
+                duration: const Duration(
+                  milliseconds: 1000,
+                ),
+                curve: Curves.ease,
+                begin: -2,
+                end: 2,
+              );
             }(),
           ),
         ],
