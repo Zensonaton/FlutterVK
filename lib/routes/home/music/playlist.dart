@@ -1703,7 +1703,7 @@ class PlaylistRoute extends HookConsumerWidget {
 
         return null;
       },
-      [brightness, playlistColorInfo.value],
+      [brightness, playlistColorInfo.value, oldScheme.primary],
     );
 
     final double statusBarHeight = MediaQuery.of(context).padding.top;
