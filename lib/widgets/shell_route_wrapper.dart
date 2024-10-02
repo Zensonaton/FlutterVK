@@ -13,6 +13,7 @@ import "package:just_audio/just_audio.dart";
 import "../api/vk/shared.dart";
 import "../consts.dart";
 import "../enums.dart";
+import "../intents.dart";
 import "../main.dart";
 import "../provider/color.dart";
 import "../provider/download_manager.dart";
@@ -245,55 +246,64 @@ class ShellRouteWrapper extends HookConsumerWidget {
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      body: Stack(
-        children: [
-          // NavigationRail и содержимое экрана на Desktop Layout.
-          if (!mobileLayout)
-            Row(
-              children: [
-                // NavigationRail с иконкой загрузки.
-                if (!mobileLayout)
-                  RepaintBoundary(
-                    child: NavigationRail(
-                      selectedIndex: currentIndex,
-                      onDestinationSelected: onDestinationSelected,
-                      labelType: NavigationRailLabelType.all,
-                      destinations: [
-                        for (final item in navigationItems)
-                          NavigationRailDestination(
-                            icon: Icon(
-                              item.icon,
-                            ),
-                            selectedIcon: Icon(
-                              item.selectedIcon ?? item.icon,
-                            ),
-                            label: Text(
-                              item.label,
-                            ),
-                            disabled: item.body == null,
-                          ),
-                      ],
-                    ),
-                  ),
-
-                // Само содержимое страницы.
-                Expanded(
-                  child: child,
-                ),
-              ],
-            ),
-
-          // Содержимое экрана на Mobile Layout.
-          if (mobileLayout) child,
-
-          // Иконка загрузки.
-          if (!mobileLayout) const DownloadManagerWrapperWidget(),
-
-          // Мини-плеер снизу.
-          const RepaintBoundary(
-            child: BottomMusicPlayerWrapper(),
+      body: Actions(
+        actions: {
+          FullscreenPlayerIntent: CallbackAction(
+            onInvoke: (intent) {
+              return toggleFullscreenPlayer(context);
+            },
           ),
-        ],
+        },
+        child: Stack(
+          children: [
+            // NavigationRail и содержимое экрана на Desktop Layout.
+            if (!mobileLayout)
+              Row(
+                children: [
+                  // NavigationRail с иконкой загрузки.
+                  if (!mobileLayout)
+                    RepaintBoundary(
+                      child: NavigationRail(
+                        selectedIndex: currentIndex,
+                        onDestinationSelected: onDestinationSelected,
+                        labelType: NavigationRailLabelType.all,
+                        destinations: [
+                          for (final item in navigationItems)
+                            NavigationRailDestination(
+                              icon: Icon(
+                                item.icon,
+                              ),
+                              selectedIcon: Icon(
+                                item.selectedIcon ?? item.icon,
+                              ),
+                              label: Text(
+                                item.label,
+                              ),
+                              disabled: item.body == null,
+                            ),
+                        ],
+                      ),
+                    ),
+
+                  // Само содержимое страницы.
+                  Expanded(
+                    child: child,
+                  ),
+                ],
+              ),
+
+            // Содержимое экрана на Mobile Layout.
+            if (mobileLayout) child,
+
+            // Иконка загрузки.
+            if (!mobileLayout) const DownloadManagerWrapperWidget(),
+
+            // Мини-плеер снизу.
+            const RepaintBoundary(
+              child: BottomMusicPlayerWrapper(),
+            ),
+          ],
+        ),
       ),
       bottomNavigationBar: mobileLayout
           ? NavigationBar(

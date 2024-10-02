@@ -540,10 +540,13 @@ class VKMusicPlayer {
         )
       : 0.0;
 
-  /// Возвращает текущую позицию трека.
+  /// Возвращает текущую позицию воспроизведения трека. Данное поле может возвращать слегка другое значение, если был вызван метод [seek] или ему подобные, что бы мгновенно изменить позицию воспроизведения после вызова. Если Вам нужно истинное значение, то воспользуйтесь полем [realPosition], которое возвращает реальное значение позиции воспроизведения даже если был вызван метод [seek].
   ///
   /// Для полной длительности трека воспользуйтесь полем [duration]. Если Вам необходим процент (число от 0.0 до 1.0), отображающий прогресс прослушивания текущего трека, то для этого есть поле [progress].
   Duration get position => _fakeCurrentPosition ?? _player.position;
+
+  /// Возвращает реальное значение позиции воспроизведения даже если был вызван метод [seek].
+  Duration get realPosition => _player.position;
 
   /// {@template VKMusicPlayer.positionStream}
   /// Stream, возвращающий события о изменения текущей позиции воспроизведения.
@@ -950,8 +953,8 @@ class VKMusicPlayer {
     bool play = false,
   }) async {
     _fakeCurrentPosition = position;
-
     _seekStateController.add(position);
+
     await _player.seek(position);
     _fakeCurrentPosition = null;
 
@@ -983,6 +986,19 @@ class VKMusicPlayer {
     );
   }
 
+  /// Добавляет к текущему времени трека указанное количество времени.
+  ///
+  /// Если [play] = true, то при перемотке плеер будет автоматически запущен, если он до этого был приостановлен.
+  Future<void> seekBy(
+    Duration duration, {
+    bool play = false,
+  }) async {
+    return await seek(
+      realPosition + duration,
+      play: play,
+    );
+  }
+
   /// Переключает на трек с указанным индексом.
   Future<void> jump(int index) async {
     _fakeCurrentTrackIndex = index;
@@ -993,14 +1009,16 @@ class VKMusicPlayer {
     );
   }
 
-  /// Указывает громкость плеера. Передаваемое значение громкости [volume] обязано быть в пределах от 0.0 до 1.0.
-  Future<void> setVolume(double volume) async {
+  /// Указывает громкость плеера. Передаваемое значение громкости [value] обязано быть в пределах от 0.0 до 1.0.
+  Future<void> setVolume(double value) async {
     assert(
-      volume >= 0.0 && volume <= 1.0,
-      "setVolume given volume $volume is not in range from 0.0 to 1.0",
+      value >= 0.0 && value <= 1.0,
+      "setVolume given volume $value is not in range from 0.0 to 1.0",
     );
 
-    return await _player.setVolume(volume);
+    if (value == volume) return;
+
+    return await _player.setVolume(value);
   }
 
   /// Останавливает плеер, освобождая ресурсы.

@@ -23,6 +23,9 @@ const String browserUA =
 /// Олицетворяет приложение "Flutter VK".
 const int discordAppID = 1195224178996027412;
 
+/// Количество секунд, которое используется при перемотке трека при помощи кнопок "вперед" и "назад" на клавиатуре.
+const int seekSeconds = 5;
+
 /// Значение скругления многих элементов интерфейса.
 const double globalBorderRadius = 8;
 

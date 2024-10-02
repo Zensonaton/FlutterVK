@@ -20,6 +20,7 @@ import "../../../api/vk/shared.dart";
 import "../../../consts.dart";
 import "../../../enums.dart";
 import "../../../extensions.dart";
+import "../../../intents.dart";
 import "../../../main.dart";
 import "../../../provider/color.dart";
 import "../../../provider/download_manager.dart";
@@ -1986,58 +1987,76 @@ class PlaylistRoute extends HookConsumerWidget {
           return;
         }
       },
-      child: Scaffold(
-        resizeToAvoidBottomInset: false,
-        body: Theme(
-          data: ThemeData(
-            colorScheme: scheme ?? oldScheme,
-          ),
-          child: Stack(
-            alignment: Alignment.topCenter,
-            children: [
-              // Градиент на фоне, который будет меняться в зависимости от прокрутки.
-              BackgroundGradientWidget(
-                scheme: scheme,
-                scrollController: scrollController,
-                maxHeight: maxAppBarHeight + infoBoxHeight,
-              ),
-
-              // Содержимое.
-              Column(
-                children: [
-                  // Содержимое плейлиста.
-                  Expanded(
-                    child: ScrollConfiguration(
-                      behavior: AlwaysScrollableScrollBehavior(),
-                      child: CustomScrollView(
-                        controller: scrollController,
-                        slivers: customScrollViewSlivers,
-                      ),
-                    ),
+      child: Focus(
+        autofocus: true,
+        canRequestFocus: true,
+        child: Scaffold(
+          resizeToAvoidBottomInset: false,
+          body: Theme(
+            data: ThemeData(
+              colorScheme: scheme ?? oldScheme,
+            ),
+            child: CallbackShortcuts(
+              bindings: {
+                const SingleActivator(
+                  LogicalKeyboardKey.escape,
+                ): () => Navigator.of(context).maybePop(),
+              },
+              child: Actions(
+                actions: {
+                  FavoriteTracksIntent: CallbackAction(
+                    onInvoke: (intent) => searchFocusNode.requestFocus(),
                   ),
+                },
+                child: Stack(
+                  alignment: Alignment.topCenter,
+                  children: [
+                    // Градиент на фоне, который будет меняться в зависимости от прокрутки.
+                    BackgroundGradientWidget(
+                      scheme: scheme,
+                      scrollController: scrollController,
+                      maxHeight: maxAppBarHeight + infoBoxHeight,
+                    ),
 
-                  // Данный Gap нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
-                  // Мы его располагаем после ListView, что бы ScrollBar не был закрыт плеером.
-                  if (player.loaded && !mobileLayout)
-                    const Gap(desktopMiniPlayerHeight),
-                ],
-              ),
+                    // Содержимое.
+                    Column(
+                      children: [
+                        // Содержимое плейлиста.
+                        Expanded(
+                          child: ScrollConfiguration(
+                            behavior: AlwaysScrollableScrollBehavior(),
+                            child: CustomScrollView(
+                              controller: scrollController,
+                              slivers: customScrollViewSlivers,
+                            ),
+                          ),
+                        ),
 
-              // Ряд из кнопок управления плейлистом: кнопка лайка/дизлайка, воспроизведения/паузы, кэширования.
-              if (mobileLayout && !isSearchOpen.value)
-                MobileControlButtonsWidget(
-                  playlist: playlist,
-                  scrollController: scrollController,
-                  maxAppBarHeight: maxAppBarHeight,
-                  minAppBarHeight: minAppBarHeight,
-                  infoBoxHeight: infoBoxHeight,
-                  onLikePressed: playlist.type == PlaylistType.favorites
-                      ? null
-                      : () async => showWipDialog(context),
-                  onPlayPausePressed: onPlayTapped,
-                  onCachePressed: onCacheTap,
+                        // Данный Gap нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
+                        // Мы его располагаем после ListView, что бы ScrollBar не был закрыт плеером.
+                        if (player.loaded && !mobileLayout)
+                          const Gap(desktopMiniPlayerHeight),
+                      ],
+                    ),
+
+                    // Ряд из кнопок управления плейлистом: кнопка лайка/дизлайка, воспроизведения/паузы, кэширования.
+                    if (mobileLayout && !isSearchOpen.value)
+                      MobileControlButtonsWidget(
+                        playlist: playlist,
+                        scrollController: scrollController,
+                        maxAppBarHeight: maxAppBarHeight,
+                        minAppBarHeight: minAppBarHeight,
+                        infoBoxHeight: infoBoxHeight,
+                        onLikePressed: playlist.type == PlaylistType.favorites
+                            ? null
+                            : () async => showWipDialog(context),
+                        onPlayPausePressed: onPlayTapped,
+                        onCachePressed: onCacheTap,
+                      ),
+                  ],
                 ),
-            ],
+              ),
+            ),
           ),
         ),
       ),
