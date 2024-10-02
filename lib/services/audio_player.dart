@@ -534,8 +534,8 @@ class VKMusicPlayer {
           _player.duration != Duration.zero &&
           !buffering
       ? clampDouble(
-          _player.position.inMilliseconds / _player.duration!.inMilliseconds,
-          0.0,
+          position.inMilliseconds / _player.duration!.inMilliseconds,
+          0.0, 
           1.0,
         )
       : 0.0;
