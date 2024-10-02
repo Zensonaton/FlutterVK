@@ -5,6 +5,7 @@ import "package:shared_preferences/shared_preferences.dart";
 
 import "../enums.dart";
 import "../services/db.dart";
+import "../services/logger.dart";
 import "../utils.dart";
 import "shared_prefs.dart";
 
@@ -264,6 +265,8 @@ class UserPreferences {
 /// [Provider] для хранения настроек пользователя.
 @riverpod
 class Preferences extends _$Preferences {
+  static final AppLogger logger = getLogger("Preferences");
+
   @override
   UserPreferences build() {
     final SharedPreferences prefs = ref.read(sharedPrefsProvider);
@@ -354,7 +357,11 @@ class Preferences extends _$Preferences {
     }
 
     // Если были изменения, то обновляем состояние.
-    if (hasChanges) super.state = newState;
+    if (hasChanges) {
+      logger.d("Preferences updated");
+
+      super.state = newState;
+    }
   }
 
   void setDBVersion(int version) => state = state.copyWith(dbVersion: version);

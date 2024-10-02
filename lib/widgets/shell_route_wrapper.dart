@@ -157,8 +157,9 @@ class ShellRouteWrapper extends HookConsumerWidget {
 
     // Отображаем уведомление о бета-обновлении, если мы находимся на бета-версии.
     if (isPrerelease && !preferences.preReleaseWarningShown) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        showDialog(
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        preferencesNotifier.setPreReleaseWarningShown(true);
+        await showDialog(
           context: context,
           builder: (context) => const PreReleaseInstalledDialog(),
         );
@@ -166,7 +167,6 @@ class ShellRouteWrapper extends HookConsumerWidget {
         // Обновляем настройки.
         updateBranch = UpdateBranch.preReleases;
         preferencesNotifier.setUpdateBranch(updateBranch);
-        preferencesNotifier.setPreReleaseWarningShown(true);
       });
     }
 
@@ -191,7 +191,7 @@ class ShellRouteWrapper extends HookConsumerWidget {
     useEffect(
       () {
         // Проверяем на наличие обновлений, если мы не в debug-режиме.
-        if (!kDebugMode) checkForUpdates(ref, context);
+        if (!kDebugMode || true) checkForUpdates(ref, context);
 
         // Слушаем события подключения к интернету.
         final subscription =
