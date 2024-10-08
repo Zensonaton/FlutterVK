@@ -262,5 +262,27 @@ final playerLoopModeProvider = AutoDisposeStreamProvider<LoopMode>.internal(
 );
 
 typedef PlayerLoopModeRef = AutoDisposeStreamProviderRef<LoopMode>;
+String _$playerCurrentPlaylistHash() =>
+    r'eefed72c181bb8b4cca3db9dc1d1f15fe0324c2a';
+
+/// [Provider] для получения значения [VKMusicPlayer.currentPlaylistStream].
+///
+/// {@macro VKMusicPlayer.currentPlaylistStream}
+///
+/// Copied from [playerCurrentPlaylist].
+@ProviderFor(playerCurrentPlaylist)
+final playerCurrentPlaylistProvider =
+    AutoDisposeStreamProvider<ExtendedPlaylist?>.internal(
+  playerCurrentPlaylist,
+  name: r'playerCurrentPlaylistProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$playerCurrentPlaylistHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef PlayerCurrentPlaylistRef
+    = AutoDisposeStreamProviderRef<ExtendedPlaylist?>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

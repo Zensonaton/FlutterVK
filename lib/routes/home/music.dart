@@ -19,6 +19,7 @@ import "../../provider/vk_api.dart";
 import "../../services/cache_manager.dart";
 import "../../services/logger.dart";
 import "../../utils.dart";
+import "../../widgets/audio_player.dart";
 import "../../widgets/dialogs.dart";
 import "../../widgets/fallback_audio_photo.dart";
 import "../../widgets/isolated_cached_network_image.dart";
@@ -963,7 +964,7 @@ class HomeMusicPage extends HookConsumerWidget {
 
                     // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
                     if (player.loaded && mobileLayout)
-                      const Gap(mobileMiniPlayerHeight),
+                      const Gap(MusicPlayerWidget.mobileHeightWithPadding),
                   ],
                 ),
               ),
@@ -971,7 +972,7 @@ class HomeMusicPage extends HookConsumerWidget {
               // Данный Gap нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
               // Мы его располагаем после ListView, что бы ScrollBar не был закрыт плеером.
               if (player.loaded && !mobileLayout)
-                const Gap(desktopMiniPlayerHeight),
+                const Gap(MusicPlayerWidget.desktopMiniPlayerHeight),
             ],
           ),
         ),

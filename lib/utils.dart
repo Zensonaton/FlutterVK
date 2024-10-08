@@ -4,9 +4,9 @@ import "dart:ui";
 import "package:diacritic/diacritic.dart";
 import "package:dynamic_color/dynamic_color.dart";
 import "package:flutter/material.dart";
-import "package:responsive_builder/responsive_builder.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart"
     show AppLocalizations;
+import "package:responsive_builder/responsive_builder.dart";
 
 import "enums.dart";
 import "provider/user.dart";
@@ -79,12 +79,17 @@ String? extractAccessToken(String input) {
 String secondsAsString(int seconds) {
   if (seconds <= 0) return "00:00";
 
-  final Duration duration = Duration(seconds: seconds);
-  final String hrs = (duration.inHours).toString().padLeft(2, "0");
+  final Duration duration = Duration(
+    seconds: seconds,
+  );
   final String mins = (duration.inMinutes % 60).toString().padLeft(2, "0");
   final String scnds = (duration.inSeconds % 60).toString().padLeft(2, "0");
 
-  if (seconds >= 3600) return "$hrs:$mins:$scnds";
+  if (seconds >= 3600) {
+    final String hrs = (duration.inHours).toString().padLeft(2, "0");
+
+    return "$hrs:$mins:$scnds";
+  }
 
   return "$mins:$scnds";
 }

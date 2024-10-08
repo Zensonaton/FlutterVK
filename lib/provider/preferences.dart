@@ -147,6 +147,14 @@ class UserPreferences {
   @JsonKey(name: "DebugOptionsEnabled")
   final bool debugOptionsEnabled;
 
+  /// Указывает, что будет использоваться альтернативный вид Slider'а у мини-плеера при Desktop Layout'е.
+  @JsonKey(name: "AlternateDesktopMiniplayerSlider")
+  final bool alternateDesktopMiniplayerSlider;
+
+  /// Указывает, что вместо прогресса воспроизведения трека будет показано оставшееся время до конца трека.
+  @JsonKey(name: "ShowRemainingTime")
+  final bool showRemainingTime;
+
   UserPreferences({
     this.dbVersion = IsarDBMigrator.maxDBVersion,
     this.myMusicChipEnabled = true,
@@ -179,6 +187,8 @@ class UserPreferences {
     this.rewindOnPreviousBehavior = RewindBehavior.always,
     this.spoilerNextTrack = true,
     this.debugOptionsEnabled = false,
+    this.alternateDesktopMiniplayerSlider = false,
+    this.showRemainingTime = false,
   });
 
   /// Делает копию этого класа с новыми передаваемыми значениями.
@@ -214,6 +224,8 @@ class UserPreferences {
     RewindBehavior? rewindOnPreviousBehavior,
     bool? spoilerNextTrack,
     bool? debugOptionsEnabled,
+    bool? alternateDesktopMiniplayerSlider,
+    bool? showRemainingTime,
   }) =>
       UserPreferences(
         dbVersion: dbVersion ?? this.dbVersion,
@@ -254,6 +266,9 @@ class UserPreferences {
             rewindOnPreviousBehavior ?? this.rewindOnPreviousBehavior,
         spoilerNextTrack: spoilerNextTrack ?? this.spoilerNextTrack,
         debugOptionsEnabled: debugOptionsEnabled ?? this.debugOptionsEnabled,
+        alternateDesktopMiniplayerSlider: alternateDesktopMiniplayerSlider ??
+            this.alternateDesktopMiniplayerSlider,
+        showRemainingTime: showRemainingTime ?? this.showRemainingTime,
       );
 
   factory UserPreferences.fromJson(Map<String, dynamic> json) =>
@@ -307,6 +322,9 @@ class Preferences extends _$Preferences {
           RewindBehavior.values[prefs.getInt("RewindOnPreviousBehavior") ?? 0],
       spoilerNextTrack: prefs.getBool("SpoilerNextTrack"),
       debugOptionsEnabled: prefs.getBool("DebugOptionsEnabled"),
+      alternateDesktopMiniplayerSlider:
+          prefs.getBool("AlternateDesktopMiniplayerSlider"),
+      showRemainingTime: prefs.getBool("ShowRemainingTime"),
     );
   }
 
@@ -453,4 +471,10 @@ class Preferences extends _$Preferences {
 
   void setDebugOptionsEnabled(bool enabled) =>
       state = state.copyWith(debugOptionsEnabled: enabled);
+
+  void setAlternateDesktopMiniplayerSlider(bool enabled) =>
+      state = state.copyWith(alternateDesktopMiniplayerSlider: enabled);
+
+  void setShowRemainingTime(bool enabled) =>
+      state = state.copyWith(showRemainingTime: enabled);
 }

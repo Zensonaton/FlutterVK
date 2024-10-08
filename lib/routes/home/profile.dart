@@ -24,6 +24,7 @@ import "../../provider/vk_api.dart";
 import "../../services/cache_manager.dart";
 import "../../services/logger.dart";
 import "../../utils.dart";
+import "../../widgets/audio_player.dart";
 import "../../widgets/dialogs.dart";
 import "../../widgets/fallback_user_avatar.dart";
 import "../../widgets/isolated_cached_network_image.dart";
@@ -555,6 +556,29 @@ class HomeProfilePage extends HookConsumerWidget {
                             l18n.profile_playerDynamicColorSchemeMonochrome,
                       }[preferences.dynamicSchemeType]!,
                     ),
+
+                    // Альтернативный слайдер воспроизведения.
+                    if (!mobileLayout)
+                      SwitchListTile(
+                        secondary: const Icon(
+                          Icons.swap_horiz,
+                        ),
+                        title: Text(
+                          l18n.profile_alternateSliderTitle,
+                        ),
+                        value: preferences.alternateDesktopMiniplayerSlider,
+                        onChanged: recommendationsConnected
+                            ? (bool? enabled) async {
+                                HapticFeedback.lightImpact();
+                                if (enabled == null) return;
+
+                                prefsNotifier
+                                    .setAlternateDesktopMiniplayerSlider(
+                                  enabled,
+                                );
+                              }
+                            : null,
+                      ),
 
                     // Использование изображения трека для фона в полноэкранном плеере.
                     SwitchListTile(
@@ -1170,7 +1194,7 @@ class HomeProfilePage extends HookConsumerWidget {
 
                 // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
                 if (player.loaded && mobileLayout)
-                  const Gap(mobileMiniPlayerHeight),
+                  const Gap(MusicPlayerWidget.mobileHeightWithPadding),
               ],
             ),
           ),
@@ -1178,7 +1202,7 @@ class HomeProfilePage extends HookConsumerWidget {
           // Данный Gap нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
           // Мы его располагаем после ListView, что бы ScrollBar не был закрыт плеером.
           if (player.loaded && !mobileLayout)
-            const Gap(desktopMiniPlayerHeight),
+            const Gap(MusicPlayerWidget.desktopMiniPlayerHeight),
         ],
       ),
     );

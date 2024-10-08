@@ -6,12 +6,16 @@ class ResponsiveSlider extends HookWidget {
   /// Значение, используемое у [Slider].
   final double value;
 
+  /// Callback-метод, вызываемый во время скроллинга.
+  final Function(double)? onChange;
+
   /// Callback-метод, вызываемый после окончания скроллинга.
   final Function(double)? onChangeEnd;
 
   const ResponsiveSlider({
     super.key,
     required this.value,
+    this.onChange,
     this.onChangeEnd,
   });
 
@@ -21,7 +25,13 @@ class ResponsiveSlider extends HookWidget {
 
     return Slider(
       value: scrollValue.value ?? value,
-      onChanged: (double value) => scrollValue.value = value,
+      onChanged: (double value) {
+        if (onChange != null) {
+          onChange!(value);
+        }
+
+        scrollValue.value = value;
+      },
       onChangeEnd: (double value) async {
         if (onChangeEnd != null) {
           await onChangeEnd!(value);

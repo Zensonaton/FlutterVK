@@ -42,7 +42,8 @@ class RecommendedPlaylistsBlock extends HookConsumerWidget {
           SnackBar(
             content: Text(
               l18n.music_categoryClosedTitle(
-                  l18n.music_recommendedPlaylistsChip),
+                l18n.music_recommendedPlaylistsChip,
+              ),
             ),
             duration: const Duration(
               seconds: 5,

@@ -535,7 +535,7 @@ class VKMusicPlayer {
           !buffering
       ? clampDouble(
           position.inMilliseconds / _player.duration!.inMilliseconds,
-          0.0, 
+          0.0,
           1.0,
         )
       : 0.0;
@@ -714,6 +714,17 @@ class VKMusicPlayer {
 
     return _audiosQueue?.elementAtOrNull(smartNextTrackIndex!);
   }
+
+  final StreamController<ExtendedPlaylist?> _currentPlaylistStateController =
+      StreamController.broadcast();
+
+  /// {@template VKMusicPlayer.currentPlaylistStream}
+  /// [Stream], возвращающий события об изменении текущего плейлиста.
+  /// {@endtemplate}
+  ///
+  /// Не путайте с [playlistModificationsStream], который возвращает события об *изменении* текущего плейлиста (например, изменения трека), этот [Stream] возвращает события о *установке* текущего плейлиста.
+  Stream<ExtendedPlaylist?> get currentPlaylistStream =>
+      _currentPlaylistStateController.stream.asBroadcastStream();
 
   /// Возвращает текущий плейлист.
   ///
@@ -1166,6 +1177,7 @@ class VKMusicPlayer {
     // Обработка запуска пустого плейлиста.
     if (audios.isEmpty) return;
 
+    _currentPlaylistStateController.add(playlist);
     _playlist = playlist;
 
     // Если нам нужно объеденить со старой очередью треков, то делаем это.

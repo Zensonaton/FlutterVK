@@ -53,6 +53,9 @@ UserPreferences _$UserPreferencesFromJson(Map<String, dynamic> json) =>
           RewindBehavior.always,
       spoilerNextTrack: json['SpoilerNextTrack'] as bool? ?? true,
       debugOptionsEnabled: json['DebugOptionsEnabled'] as bool? ?? false,
+      alternateDesktopMiniplayerSlider:
+          json['AlternateDesktopMiniplayerSlider'] as bool? ?? false,
+      showRemainingTime: json['ShowRemainingTime'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$UserPreferencesToJson(UserPreferences instance) =>
@@ -90,6 +93,9 @@ Map<String, dynamic> _$UserPreferencesToJson(UserPreferences instance) =>
           intFromEnum(instance.rewindOnPreviousBehavior),
       'SpoilerNextTrack': instance.spoilerNextTrack,
       'DebugOptionsEnabled': instance.debugOptionsEnabled,
+      'AlternateDesktopMiniplayerSlider':
+          instance.alternateDesktopMiniplayerSlider,
+      'ShowRemainingTime': instance.showRemainingTime,
     };
 
 const _$ThemeModeEnumMap = {
@@ -133,7 +139,7 @@ const _$RewindBehaviorEnumMap = {
 // RiverpodGenerator
 // **************************************************************************
 
-String _$preferencesHash() => r'dbaf786801648530046399ee57671344f3b9fb34';
+String _$preferencesHash() => r'bf286dd3d908dbeb3e64feb555f9bbf79d10d950';
 
 /// [Provider] для хранения настроек пользователя.
 ///

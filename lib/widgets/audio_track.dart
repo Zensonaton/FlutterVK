@@ -132,7 +132,7 @@ Widget buildListTrackWidget(
 /// Часть [AudioTrackTile], используемая для отображения изображения трека, при его наличии.
 class AudioTrackImage extends HookWidget {
   /// Размер для изображения трека.
-  static const double imageSize = 50;
+  final double imageSize;
 
   /// Url на изображение трека.
   ///
@@ -167,6 +167,7 @@ class AudioTrackImage extends HookWidget {
     super.key,
     this.imageUrl,
     this.cacheKey,
+    this.imageSize = 50,
     this.isAvailable = true,
     this.isSelected = false,
     this.isLoading = false,
@@ -176,7 +177,10 @@ class AudioTrackImage extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    const Widget placeholder = FallbackAudioAvatar();
+    Widget placeholder = FallbackAudioAvatar(
+      height: imageSize,
+      width: imageSize,
+    );
     final int memorySize =
         (MediaQuery.of(context).devicePixelRatio * imageSize).toInt();
     final bool selectedAndPlaying = isSelected && isPlaying;
@@ -193,6 +197,7 @@ class AudioTrackImage extends HookWidget {
           height: imageSize,
           cacheWidth: memorySize,
           cacheHeight: memorySize,
+          fit: BoxFit.cover,
           frameBuilder: (_, Widget child, int? frame, bool loaded) {
             if (loaded || frame != null) return child;
 
@@ -208,6 +213,7 @@ class AudioTrackImage extends HookWidget {
         height: imageSize,
         memCacheWidth: memorySize,
         memCacheHeight: memorySize,
+        fit: BoxFit.cover,
         placeholder: placeholder,
         cacheManager: CachedAlbumImagesManager.instance,
       );

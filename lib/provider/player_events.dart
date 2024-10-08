@@ -94,3 +94,10 @@ Stream<bool> playerShuffleModeEnabled(PlayerShuffleModeEnabledRef ref) =>
 /// {@macro VKMusicPlayer.loopModeStream}
 @riverpod
 Stream<LoopMode> playerLoopMode(PlayerLoopModeRef ref) => player.loopModeStream;
+
+/// [Provider] для получения значения [VKMusicPlayer.currentPlaylistStream].
+///
+/// {@macro VKMusicPlayer.currentPlaylistStream}
+@riverpod
+Stream<ExtendedPlaylist?> playerCurrentPlaylist(PlayerCurrentPlaylistRef ref) =>
+    player.currentPlaylistStream;

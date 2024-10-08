@@ -4,11 +4,9 @@ import "package:audio_service/audio_service.dart";
 import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
-import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:just_audio/just_audio.dart";
 
 import "../api/vk/shared.dart";
 import "../consts.dart";
@@ -25,7 +23,6 @@ import "../provider/updater.dart";
 import "../provider/user.dart";
 import "../provider/vk_api.dart";
 import "../routes/fullscreen_player.dart";
-import "../routes/home/music.dart";
 import "../routes/home/music/categories/realtime_playlists.dart";
 import "../services/cache_manager.dart";
 import "../services/download_manager.dart";
@@ -33,7 +30,6 @@ import "../services/image_to_color_scheme.dart";
 import "../services/logger.dart";
 import "../utils.dart";
 import "audio_player.dart";
-import "dialogs.dart";
 import "download_manager_icon.dart";
 import "update_dialog.dart";
 
@@ -110,7 +106,8 @@ class DownloadManagerWrapperWidget extends HookConsumerWidget {
         milliseconds: 500,
       ),
       left: position + 4,
-      bottom: (player.loaded ? desktopMiniPlayerHeight : 0) + position,
+      bottom: (player.loaded ? MusicPlayerWidget.desktopMiniPlayerHeight : 0) +
+          position,
       child: AnimatedSlide(
         offset: Offset(
           0,
@@ -191,7 +188,7 @@ class ShellRouteWrapper extends HookConsumerWidget {
     useEffect(
       () {
         // Проверяем на наличие обновлений, если мы не в debug-режиме.
-        if (!kDebugMode || true) checkForUpdates(ref, context);
+        if (!kDebugMode) checkForUpdates(ref, context);
 
         // Слушаем события подключения к интернету.
         final subscription =
@@ -332,11 +329,14 @@ class ShellRouteWrapper extends HookConsumerWidget {
   }
 }
 
-/// Виджет, являющийся wrapper'ом для [BottomMusicPlayer], который добавляет обработку для различных событий.
+/// Виджет, являющийся wrapper'ом для [OldBottomMusicPlayer], который добавляет обработку для различных событий.
 ///
 /// Данный виджет так же регистрирует listener'ы для некоторых событий плеера, благодаря чему появляется поддержка кэширования, получения цветов обложек и прочего.
 class BottomMusicPlayerWrapper extends HookConsumerWidget {
   static final AppLogger logger = getLogger("BottomMusicPlayerWrapper");
+
+  /// Длительность анимации появления/исчезновения мини-плеера.
+  static const Duration playerAnimationDuration = Duration(milliseconds: 500);
 
   const BottomMusicPlayerWrapper({
     super.key,
@@ -344,45 +344,98 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final trackImageInfoNotifier = ref.watch(trackSchemeInfoProvider.notifier);
-    final trackImageInfo = ref.watch(trackSchemeInfoProvider);
-    final preferences = ref.watch(preferencesProvider);
-    final playlistsNotifier = ref.watch(playlistsProvider.notifier);
-    final preferencesNotifier = ref.watch(preferencesProvider.notifier);
     final l18n = ref.watch(l18nProvider);
-    ref.watch(playerPlaylistModificationsProvider);
-    ref.watch(playerShuffleModeEnabledProvider);
-    ref.watch(playerCurrentIndexProvider);
+    final trackImageInfoNotifier = ref.watch(trackSchemeInfoProvider.notifier);
+    final playlistsNotifier = ref.watch(playlistsProvider.notifier);
     ref.watch(playerLoadedStateProvider);
-    ref.watch(playerLoopModeProvider);
-    ref.watch(playerVolumeProvider);
-    ref.watch(playerStateProvider);
 
-    /// Метод, создающий цветовую схему из обложки трека [audio], если таковая имеется, и возвращающий [ImageSchemeExtractor] в случае успеха.
-    Future<ImageSchemeExtractor?> getColorScheme(ExtendedAudio audio) async {
-      if (audio.thumbnail == null) return null;
+    /// Метод, загружающий данные по треку (обложки, цвета, ...) и сохраняющий их в БД.
+    Future<void> loadAudioData(
+      ExtendedAudio audio, {
+      required bool current,
+    }) async {
+      final preferences = ref.read(preferencesProvider);
+      final playlist = player.currentPlaylist!.copyWith();
 
-      // Если цвета обложки уже были получены, и они хранятся в БД, то просто загружаем их.
-      if (audio.colorCount != null) {
-        logger.d("Image colors are loaded from DB");
+      Future<ImageSchemeExtractor?> getColorScheme(
+        ExtendedAudio audio, {
+        bool setColorScheme = false,
+      }) async {
+        if (audio.thumbnail == null) return null;
 
-        return trackImageInfoNotifier.fromColors(
-          colorInts: audio.colorInts!,
-          scoredColorInts: audio.scoredColorInts!,
-          frequentColorInt: audio.frequentColorInt!,
-          colorCount: audio.colorCount!,
+        // Если цвета обложки уже были получены, и они хранятся в БД, то просто возвращаем их.
+        if (audio.colorCount != null) {
+          final extractor = ImageSchemeExtractor(
+            colorInts: audio.colorInts!,
+            scoredColorInts: audio.scoredColorInts!,
+            frequentColorInt: audio.frequentColorInt!,
+            colorCount: audio.colorCount!,
+          );
+          if (setColorScheme) {
+            trackImageInfoNotifier.fromExtractor(extractor);
+          }
+
+          return extractor;
+        }
+
+        // Заставляем плеер извлекать цветовую схему из обложки трека.
+        final extractor = await ImageSchemeExtractor.fromImageProvider(
+          CachedNetworkImageProvider(
+            audio.smallestThumbnail!,
+            cacheKey: "${audio.mediaKey}small",
+            cacheManager: CachedAlbumImagesManager.instance,
+          ),
         );
+        if (setColorScheme) {
+          trackImageInfoNotifier.fromExtractor(extractor);
+        }
+
+        return extractor;
       }
 
-      // Заставляем плеер извлекать цветовую схему из обложки трека.
-      logger.d("Extracting image colors from network");
+      // Пытаемся получить цвета обложки трека.
+      // Здесь мы можем получить null, если обложки у трека нет.
+      ImageSchemeExtractor? extractedColors = await getColorScheme(
+        audio,
+        setColorScheme: current,
+      );
 
-      return await trackImageInfoNotifier.fromImageProvider(
-        CachedNetworkImageProvider(
-          audio.smallestThumbnail!,
-          cacheKey: "${audio.mediaKey}small",
-          cacheManager: CachedAlbumImagesManager.instance,
+      // Загружаем метаданные трека (его обложки, текст песни, ...)
+      final newAudio = await PlaylistCacheDownloadItem.downloadWithMetadata(
+        playlistsNotifier.ref,
+        playlist,
+        audio,
+        downloadAudio: false,
+        deezerThumbnails: preferences.deezerThumbnails,
+        lrcLibLyricsEnabled: preferences.lrcLibEnabled,
+      );
+      if (newAudio == null) return;
+
+      // Повторно пытаемся получить цвета обложек трека, если они не были загружены ранее.
+      extractedColors ??= await getColorScheme(
+        newAudio,
+        setColorScheme: current,
+      );
+
+      // Сохраняем новую версию трека.
+      await playlistsNotifier.updatePlaylist(
+        playlist.basicCopyWith(
+          audiosToUpdate: [
+            newAudio.basicCopyWith(
+              colorInts: extractedColors?.colorInts,
+              scoredColorInts: extractedColors?.scoredColorInts,
+              frequentColorInt: extractedColors?.frequentColorInt,
+              colorCount: extractedColors?.colorCount,
+
+              // Повторяем следующие поля, поскольку они могли быть загружены в downloadWithMetadata,
+              // а .basicCopyWith проигнорирует их (превратит их в null), поэтому их нужно продублировать.
+              vkLyrics: newAudio.vkLyrics,
+              lrcLibLyrics: newAudio.lrcLibLyrics,
+              deezerThumbs: newAudio.deezerThumbs,
+            ),
+          ],
         ),
+        saveInDB: true,
       );
     }
 
@@ -391,8 +444,6 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
         final List<StreamSubscription> subscriptions = [
           // Слушаем события нажатия на медиа-уведомление.
           AudioService.notificationClicked.listen((tapped) {
-            // logger.d("Handling player notification clicked event");
-
             // AudioService иногда создаёт это событие при запуске плеера. Такой случай мы игнорируем.
             // Если плеер не загружен, то ничего не делаем.
             if (!tapped || !player.loaded) return;
@@ -400,54 +451,23 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
             openFullscreenPlayer(context);
           }),
 
-          // Слушаем события изменения текущего трека в плеере, что бы загружать обложку, текст песни, а так же создание цветовой схемы.
+          // Слушаем события изменения текущего трека в плеере, что бы загружать метадананные трека (обложки, тексты, ...) для текущего, а потом ещё и для следующего трека.
           player.currentIndexStream.listen((int? index) async {
             if (index == null || !player.loaded) return;
 
-            final preferences = ref.read(preferencesProvider);
-
-            final playlist = player.currentPlaylist!.copyWith();
-            final audio = player.currentAudio!.copyWith();
-
-            // Пытаемся получить цвета обложки трека.
-            // Здесь мы можем получить null, если обложки у трека нет.
-            ImageSchemeExtractor? extractedColors = await getColorScheme(audio);
-
-            // Загружаем метаданные трека (его обложки, текст песни, ...)
-            final newAudio =
-                await PlaylistCacheDownloadItem.downloadWithMetadata(
-              playlistsNotifier.ref,
-              playlist,
-              audio,
-              downloadAudio: false,
-              deezerThumbnails: preferences.deezerThumbnails,
-              lrcLibLyricsEnabled: preferences.lrcLibEnabled,
+            // Текущий трек.
+            await loadAudioData(
+              player.currentAudio!,
+              current: true,
             );
-            if (newAudio == null) return;
 
-            // Повторно пытаемся получить цвета обложек трека, если они не были загружены ранее.
-            extractedColors ??= await getColorScheme(newAudio);
-
-            // Сохраняем новую версию трека.
-            await playlistsNotifier.updatePlaylist(
-              playlist.basicCopyWith(
-                audiosToUpdate: [
-                  newAudio.basicCopyWith(
-                    colorInts: extractedColors?.colorInts,
-                    scoredColorInts: extractedColors?.scoredColorInts,
-                    frequentColorInt: extractedColors?.frequentColorInt,
-                    colorCount: extractedColors?.colorCount,
-
-                    // Повторяем следующие поля, поскольку они могли быть загружены в downloadWithMetadata,
-                    // а .basicCopyWith проигнорирует их (превратит их в null), поэтому их нужно продублировать.
-                    vkLyrics: newAudio.vkLyrics,
-                    lrcLibLyrics: newAudio.lrcLibLyrics,
-                    deezerThumbs: newAudio.deezerThumbs,
-                  ),
-                ],
-              ),
-              saveInDB: true,
-            );
+            // Следующий.
+            if (player.smartNextAudio != null) {
+              await loadAudioData(
+                player.smartNextAudio!,
+                current: false,
+              );
+            }
           }),
 
           // Слушаем события изменения текущего трека, что бы в случае, если запущен рекомендательный плейлист, мы передавали информацию об этом ВКонтакте.
@@ -565,191 +585,39 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
       [],
     );
 
-    final brightness = Theme.of(context).brightness;
-    final ColorScheme? scheme = useMemoized(
-      () => trackImageInfo?.createScheme(
-        brightness,
-        schemeVariant: preferences.dynamicSchemeType,
-      ),
-      [brightness, trackImageInfo, preferences.dynamicSchemeType],
-    );
-
-    final bool mobileLayout = isMobileLayout(context);
-
-    const Alignment alignment =
-        Alignment.bottomLeft; // TODO: navigationPage.audioPlayerAlign,
-    const bool allowBigPlayer =
-        true; // TODO: navigationPage.allowBigAudioPlayer
-    final double? width = mobileLayout
-        ? null
-        : (allowBigPlayer
-            ? MediaQuery.sizeOf(context).width.clamp(500, double.infinity)
-            // ignore: dead_code
-            : 360);
-
     final bool isLoaded = player.loaded;
-    final bool isRepeatEnabled = player.loopMode == LoopMode.one;
-    final bool isLiked = player.smartCurrentAudio?.isLiked ?? false;
-    final bool isRecommendation =
-        player.currentPlaylist?.isRecommendationTypePlaylist ?? false;
-    final isMixPlaylist = player.currentPlaylist?.type == PlaylistType.audioMix;
-
-    Future<void> onLikeTap() async {
-      if (!networkRequiredDialog(ref, context)) return;
-
-      if (!player.currentAudio!.isLiked && preferences.checkBeforeFavorite) {
-        if (!await checkForDuplicates(
-          ref,
-          context,
-          player.currentAudio!,
-        )) return;
-      }
-
-      try {
-        await toggleTrackLike(
-          player.ref,
-          player.currentAudio!,
-          !player.currentAudio!.isLiked,
-          sourcePlaylist: player.currentPlaylist,
-        );
-      } on VKAPIException catch (error, stackTrace) {
-        if (!context.mounted) return;
-
-        if (error.errorCode == 15) {
-          showErrorDialog(
-            context,
-            description: l18n.music_likeRestoreTooLate,
-          );
-
-          return;
+    final animation = useAnimationController(
+      duration: playerAnimationDuration,
+      initialValue: isLoaded ? 1.0 : 0.0,
+    );
+    useValueListenable(animation);
+    useEffect(
+      () {
+        if (isLoaded) {
+          animation.forward();
+        } else {
+          animation.reverse();
         }
 
-        showLogErrorDialog(
-          "Error while restoring audio:",
-          error,
-          stackTrace,
-          logger,
-          context,
-        );
-      }
-    }
+        return null;
+      },
+      [isLoaded],
+    );
 
-    Future<void> onDislike() async {
-      if (!networkRequiredDialog(ref, context)) return;
+    // Если плеер не загружен, то ничего не показываем.
+    if (animation.value == 0.0) return const SizedBox();
 
-      await dislikeTrack(
-        player.ref,
-        player.currentAudio!,
-      );
-
-      await player.next();
-    }
-
-    void onPlayToggle() => player.togglePlay();
-
-    void onSeek(double progress) => player.seekNormalized(progress);
-
-    void onVolumeChange(double volume) => player.setVolume(volume);
-
-    void onDismiss() => player.stop();
-
-    void onFullscreen(bool viaSwipeUp) async {
-      final bool fullscreenOnDesktop =
-          !mobileLayout && !HardwareKeyboard.instance.isShiftPressed;
-
-      await openFullscreenPlayer(
-        context,
-        fullscreenOnDesktop: fullscreenOnDesktop,
-      );
-    }
-
-    void onMiniplayer() => openMiniPlayer(context);
-
-    void onShuffleToggle() async {
-      await player.toggleShuffle();
-
-      preferencesNotifier.setShuffleEnabled(player.shuffleModeEnabled);
-    }
-
-    void onRepeatToggle() async {
-      await player.toggleLoopMode();
-
-      preferencesNotifier.setLoopModeEnabled(player.loopMode == LoopMode.one);
-    }
-
-    void onNextTrack(bool viaSwipe) => player.next();
-
-    void onPreviousTrack(bool viaSwipe) {
-      if (viaSwipe) {
-        player.previous(allowSeekToBeginning: !viaSwipe);
-
-        return;
-      }
-
-      player.smartPrevious();
-    }
-
-    return AnimatedAlign(
-      duration: const Duration(
-        milliseconds: 500,
-      ),
-      alignment: alignment,
-      child: StreamBuilder<Duration>(
-        stream: player.positionStream,
-        builder: (BuildContext context, AsyncSnapshot<Duration> snapshot) {
-          return AnimatedOpacity(
-            opacity: isLoaded ? 1.0 : 0.0,
-            curve: Curves.ease,
-            duration: const Duration(
-              milliseconds: 500,
-            ),
-            child: AnimatedSlide(
-              offset: Offset(
-                0,
-                player.loaded ? 0.0 : 1.0,
-              ),
-              duration: const Duration(
-                milliseconds: 500,
-              ),
-              curve: Curves.ease,
-              child: Container(
-                width: width,
-                padding: EdgeInsets.all(
-                  mobileLayout ? 8 : 0,
-                ),
-                child: BottomMusicPlayer(
-                  audio: player.smartCurrentAudio,
-                  nextAudio: player.smartNextAudio,
-                  previousAudio: player.smartPreviousAudio,
-                  scheme: scheme ?? Theme.of(context).colorScheme,
-                  progress: player.progress,
-                  volume: player.volume,
-                  position: player.position,
-                  duration: player.duration ?? Duration.zero,
-                  isPlaying: player.playing,
-                  isBuffering: player.buffering,
-                  isShuffleEnabled: player.shuffleModeEnabled,
-                  isRepeatEnabled: isRepeatEnabled,
-                  spoilerNextTrackEnabled: preferences.spoilerNextTrack,
-                  isLiked: isLiked,
-                  useBigLayout: !mobileLayout,
-                  onLikeTap: onLikeTap,
-                  onDislike: isRecommendation ? onDislike : null,
-                  onPlayToggle: onPlayToggle,
-                  onSeek: onSeek,
-                  onVolumeChange: onVolumeChange,
-                  onDismiss: onDismiss,
-                  onFullscreen: onFullscreen,
-                  onMiniplayer: onMiniplayer,
-                  onShuffleToggle: isMixPlaylist ? null : onShuffleToggle,
-                  onRepeatToggle: onRepeatToggle,
-                  onNextTrack: onNextTrack,
-                  onPreviousTrack: onPreviousTrack,
-                ),
-              ),
-            ),
-          );
-        },
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: Opacity(
+        opacity: animation.value,
+        child: FractionalTranslation(
+          translation: Offset(
+            0.0,
+            1.0 - animation.value,
+          ),
+          child: const MusicPlayerWidget(),
+        ),
       ),
     );
   }

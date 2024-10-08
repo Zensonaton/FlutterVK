@@ -10,24 +10,28 @@ class LoadingIconButton extends HookWidget {
   /// Виджет, отображаемый как label.
   final Widget? label;
 
+  /// Размер для иконки.
+  final double? iconSize;
+
+  /// Ограничения для размера виджета.
+  final BoxConstraints? constraints;
+
+  /// Цвет для [CircularProgressIndicator].
+  final Color? color;
+
   /// Метод, вызываемый при нажатии на эту кнопку.
   ///
   /// Во время выполнения этого Future, [icon] будет заменён [CircularProgressIndicator].
   final AsyncCallback? onPressed;
 
-  /// Размер для иконки.
-  final double iconSize;
-
-  /// Цвет для [CircularProgressIndicator].
-  final Color? color;
-
   const LoadingIconButton({
     super.key,
     required this.icon,
     this.label,
-    this.iconSize = 24,
-    required this.onPressed,
+    this.iconSize,
+    this.constraints,
     this.color,
+    required this.onPressed,
   });
 
   @override
@@ -74,6 +78,7 @@ class LoadingIconButton extends HookWidget {
       onPressed: onPressedWrapper,
       icon: widgetIcon,
       iconSize: iconSize,
+      constraints: constraints,
     );
   }
 
