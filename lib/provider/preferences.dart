@@ -159,6 +159,10 @@ class UserPreferences {
   @JsonKey(name: "AndroidKeepPlayingOnClose")
   final bool androidKeepPlayingOnClose;
 
+  /// Указывает, что при нажатии на кнопку воспроизведения трека, будет запускаться воспроизведение случайного трека с включённым shuffle.
+  @JsonKey(name: "ShuffleOnPlay")
+  final bool shuffleOnPlay;
+
   UserPreferences({
     this.dbVersion = IsarDBMigrator.maxDBVersion,
     this.myMusicChipEnabled = true,
@@ -194,6 +198,7 @@ class UserPreferences {
     this.alternateDesktopMiniplayerSlider = false,
     this.showRemainingTime = false,
     this.androidKeepPlayingOnClose = false,
+    this.shuffleOnPlay = true,
   });
 
   /// Делает копию этого класа с новыми передаваемыми значениями.
@@ -232,6 +237,7 @@ class UserPreferences {
     bool? alternateDesktopMiniplayerSlider,
     bool? showRemainingTime,
     bool? androidKeepPlayingOnClose,
+    bool? shuffleOnPlay,
   }) =>
       UserPreferences(
         dbVersion: dbVersion ?? this.dbVersion,
@@ -277,6 +283,7 @@ class UserPreferences {
         showRemainingTime: showRemainingTime ?? this.showRemainingTime,
         androidKeepPlayingOnClose:
             androidKeepPlayingOnClose ?? this.androidKeepPlayingOnClose,
+        shuffleOnPlay: shuffleOnPlay ?? this.shuffleOnPlay,
       );
 
   factory UserPreferences.fromJson(Map<String, dynamic> json) =>
@@ -334,6 +341,7 @@ class Preferences extends _$Preferences {
           prefs.getBool("AlternateDesktopMiniplayerSlider"),
       showRemainingTime: prefs.getBool("ShowRemainingTime"),
       androidKeepPlayingOnClose: prefs.getBool("AndroidKeepPlayingOnClose"),
+      shuffleOnPlay: prefs.getBool("ShuffleOnPlay"),
     );
   }
 
@@ -489,4 +497,7 @@ class Preferences extends _$Preferences {
 
   void setAndroidKeepPlayingOnClose(bool enabled) =>
       state = state.copyWith(androidKeepPlayingOnClose: enabled);
+
+  void setShuffleOnPlay(bool enabled) =>
+      state = state.copyWith(shuffleOnPlay: enabled);
 }

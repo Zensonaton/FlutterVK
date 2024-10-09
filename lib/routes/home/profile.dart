@@ -667,6 +667,26 @@ class HomeProfilePage extends HookConsumerWidget {
                         },
                       ),
 
+                    // Перемешка при воспроизведении.
+                    SwitchListTile(
+                      secondary: const Icon(
+                        Icons.shuffle,
+                      ),
+                      title: Text(
+                        l18n.profile_shuffleOnPlayTitle,
+                      ),
+                      subtitle: Text(
+                        l18n.profile_shuffleOnPlayDescription,
+                      ),
+                      value: preferences.shuffleOnPlay,
+                      onChanged: (bool? enabled) async {
+                        HapticFeedback.lightImpact();
+                        if (enabled == null) return;
+
+                        prefsNotifier.setShuffleOnPlay(enabled);
+                      },
+                    ),
+
                     // Пауза воспроизведения при минимальной громкости (OS Windows).
                     if (isDesktop)
                       SwitchListTile(

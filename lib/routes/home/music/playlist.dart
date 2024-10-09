@@ -27,6 +27,7 @@ import "../../../provider/download_manager.dart";
 import "../../../provider/l18n.dart";
 import "../../../provider/player_events.dart";
 import "../../../provider/playlists.dart";
+import "../../../provider/preferences.dart";
 import "../../../provider/user.dart";
 import "../../../provider/vk_api.dart";
 import "../../../services/cache_manager.dart";
@@ -1476,11 +1477,14 @@ class DesktopPlaylistControlsWidget extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l18n = ref.watch(l18nProvider);
+    final preferences = ref.watch(preferencesProvider);
     ref.watch(playerStateProvider);
 
     useListenable(searchController);
 
-    final bool hasTracksLoaded = playlist.audios != null;
+    final hasTracksLoaded = playlist.audios != null;
+    final isSelected = player.currentPlaylist?.ownerID == playlist.ownerID &&
+        player.currentPlaylist?.id == playlist.id;
     final safeScheme = scheme ?? Theme.of(context).colorScheme;
 
     void onSearchClear() => searchController?.clear();
@@ -1513,11 +1517,11 @@ class DesktopPlaylistControlsWidget extends HookConsumerWidget {
                             onPressed: onPlayPressed,
                             iconSize: 38,
                             icon: Icon(
-                              player.currentPlaylist?.mediaKey ==
-                                          playlist.mediaKey &&
-                                      player.playing
+                              isSelected && player.playing
                                   ? Icons.pause
-                                  : Icons.play_arrow,
+                                  : preferences.shuffleOnPlay
+                                      ? Icons.shuffle
+                                      : Icons.play_arrow,
                             ),
                           ),
                         const Gap(12),
@@ -1820,6 +1824,8 @@ class PlaylistRoute extends HookConsumerWidget {
     }
 
     void onPlayTapped() async {
+      final preferences = ref.watch(preferencesProvider);
+
       // Если у нас уже запущен этот же плейлист, то переключаем паузу/воспроизведение.
       if (player.currentPlaylist?.mediaKey == playlist.mediaKey) {
         await player.togglePlay();
@@ -1828,12 +1834,12 @@ class PlaylistRoute extends HookConsumerWidget {
       }
 
       await player.setShuffle(
-        true,
+        preferences.shuffleOnPlay,
         disableAudioMixCheck: true,
       );
       await player.setPlaylist(
         playlist,
-        randomTrack: true,
+        randomTrack: preferences.shuffleOnPlay,
       );
     }
 
@@ -1856,10 +1862,6 @@ class PlaylistRoute extends HookConsumerWidget {
         return;
       }
 
-      await player.setShuffle(
-        true,
-        disableAudioMixCheck: true,
-      );
       await player.setPlaylist(
         playlist,
         selectedTrack: foundAudio,

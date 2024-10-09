@@ -146,9 +146,10 @@
 	"music_connectRecommendationsDescription": "Подключив рекомендации, Вы получите доступ к разделам музыки «Плейлисты для Вас», «VK Mix» и другие, а так же Вы начнёте видеть обложки треков.\n\nДля подключения рекомендаций, Вам будет необходимо повторно авторизоваться.",
 	"music_connectRecommendationsConnect": "Подключить",
 
-	"music_shuffleAndPlay": "Перемешать",
+	"music_shuffleAndPlayShuffle": "Перемешать",
+	"music_shuffleAndPlayNonShuffle": "Воспроизвести",
 	"music_shuffleAndPlayPause": "Пауза",
-	"music_shuffleAndPlayResume": "Воспроизвести",
+	"music_shuffleAndPlayResume": "Продолжить",
 	"music_showAllFavoriteTracks": "Все треки",
 
 	"music_trackUnavailableTitle": "Трек недоступен",
@@ -397,6 +398,9 @@
 
 	"profile_androidKeepPlayingOnCloseTitle": "Воспроизведение после закрытия",
 	"profile_androidKeepPlayingOnCloseDescription": "Определяет, продолжится ли воспроизведение после закрытия",
+
+	"profile_shuffleOnPlayTitle": "Перемешка при воспроизведении",
+	"profile_shuffleOnPlayDescription": "Перемешивает треки в плейлисте при запуске воспроизведения",
 
 	"profile_pauseOnMuteTitle": "Пауза при минимальной громкости",
 	"profile_pauseOnMuteDescription": "Поставив громкость на минимум, воспроизведение приостановится",

@@ -5,7 +5,6 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:skeletonizer/skeletonizer.dart";
 
 import "../../../../consts.dart";
-import "../../../../extensions.dart";
 import "../../../../main.dart";
 import "../../../../provider/l18n.dart";
 import "../../../../provider/player_events.dart";
@@ -24,6 +23,7 @@ class MyMusicBlock extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final preferences = ref.watch(preferencesProvider);
     final playlist = ref.watch(favoritesPlaylistProvider);
     final l18n = ref.watch(l18nProvider);
     ref.watch(playerStateProvider);
@@ -41,19 +41,18 @@ class MyMusicBlock extends HookConsumerWidget {
       }
 
       await player.setShuffle(
-        true,
+        preferences.shuffleOnPlay,
         disableAudioMixCheck: true,
       );
       await player.setPlaylist(
         playlist!,
-        selectedTrack: playlist.audios!.randomItem(),
+        randomTrack: preferences.shuffleOnPlay,
       );
     }
 
     final bool selected =
         player.currentPlaylist?.ownerID == playlist?.ownerID &&
             player.currentPlaylist?.id == playlist?.id;
-    final bool selectedAndPlaying = selected && player.playing;
     final int? musicCount = playlist?.count;
     final int clampedMusicCount = clampInt(
       musicCount ?? 0,
@@ -127,14 +126,22 @@ class MyMusicBlock extends HookConsumerWidget {
             // "Перемешать".
             FilledButton.icon(
               icon: Icon(
-                selectedAndPlaying ? Icons.pause : Icons.play_arrow,
+                selected
+                    ? player.playing
+                        ? Icons.pause
+                        : Icons.play_arrow
+                    : preferences.shuffleOnPlay
+                        ? Icons.shuffle
+                        : Icons.play_arrow,
               ),
               label: Text(
                 selected
                     ? player.playing
                         ? l18n.music_shuffleAndPlayPause
                         : l18n.music_shuffleAndPlayResume
-                    : l18n.music_shuffleAndPlay,
+                    : preferences.shuffleOnPlay
+                        ? l18n.music_shuffleAndPlayShuffle
+                        : l18n.music_shuffleAndPlayNonShuffle,
               ),
               onPressed: playlist?.audios != null ? onPlayPressed : null,
             ),
