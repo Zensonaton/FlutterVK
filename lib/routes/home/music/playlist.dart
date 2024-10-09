@@ -781,7 +781,7 @@ class AppBarPlaylistImageWidget extends StatelessWidget {
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
-            color: scheme.primary,
+            color: scheme.surface,
             spreadRadius: 1,
             blurRadius: 50,
           ),
@@ -1166,25 +1166,23 @@ class BackgroundGradientWidget extends HookConsumerWidget {
       child: SizedBox(
         width: MediaQuery.sizeOf(context).width,
         height: maxHeight,
-        child: RepaintBoundary(
-          child: AnimatedContainer(
-            duration: const Duration(
-              milliseconds: 1500,
-            ),
-            curve: Curves.easeOut,
-            decoration: BoxDecoration(
-              gradient: scheme != null
-                  ? LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        scheme!.primary.withOpacity(0.5),
-                        Colors.transparent,
-                      ],
-                      stops: const [0.5, 1.0],
-                    )
-                  : null,
-            ),
+        child: AnimatedContainer(
+          duration: const Duration(
+            milliseconds: 1500,
+          ),
+          curve: Curves.easeOut,
+          decoration: BoxDecoration(
+            gradient: scheme != null
+                ? LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      scheme!.primary.withOpacity(0.5),
+                      Colors.transparent,
+                    ],
+                    stops: const [0.5, 1.0],
+                  )
+                : null,
           ),
         ),
       ),
