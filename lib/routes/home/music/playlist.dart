@@ -780,7 +780,7 @@ class AppBarPlaylistImageWidget extends StatelessWidget {
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
-            color: scheme.surface,
+            color: scheme.primary,
             spreadRadius: 1,
             blurRadius: 50,
           ),
@@ -1177,7 +1177,7 @@ class BackgroundGradientWidget extends HookConsumerWidget {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        scheme!.primary,
+                        scheme!.primary.withOpacity(0.5),
                         Colors.transparent,
                       ],
                       stops: const [0.5, 1.0],

@@ -22,6 +22,7 @@ import "provider/navigation_router.dart";
 import "provider/preferences.dart";
 import "provider/user.dart";
 import "routes/home/profile.dart";
+import "services/logger.dart";
 import "utils.dart";
 import "widgets/loading_overlay.dart";
 
@@ -110,24 +111,58 @@ class EagerInitialization extends ConsumerWidget {
 ///
 /// В случае, если по какой-то причине произойдёт ошибка, вместо этого класса будет вызван [runApp], но для класса [ErroredApp], который символизирует ошибку запуска приложения.
 class FlutterVKApp extends HookConsumerWidget {
+  static final AppLogger logger = getLogger("FlutterVKApp");
+
   const FlutterVKApp({
     super.key,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final brightness = usePlatformBrightness();
+    final appLifecycleState = useAppLifecycleState();
     useEffect(
       () {
+        logger.d("App lifecycle state: $appLifecycleState");
+
+        if (appLifecycleState == AppLifecycleState.resumed) {
+          // Понятия не имею почему, но без Future.microtask() это не работает.
+          Future.microtask(
+            () async {
+              final uiStyle = brightness == Brightness.light
+                  ? SystemUiOverlayStyle.dark
+                  : SystemUiOverlayStyle.light;
+
+              await SystemChrome.setEnabledSystemUIMode(
+                SystemUiMode.edgeToEdge,
+              );
+              SystemChrome.setSystemUIOverlayStyle(
+                uiStyle.copyWith(
+                  systemNavigationBarColor: Colors.transparent,
+                  systemNavigationBarDividerColor: Colors.transparent,
+                ),
+              );
+            },
+          );
+        }
+
+        return null;
+      },
+      [appLifecycleState, brightness],
+    );
+
+    useEffect(
+      () {
+        // Обработчик событий окна приложения.
         final manager = FlutterVKWindowManager(ref: ref);
-        windowManager.addListener(manager);
+        if (Platform.isWindows) {
+          windowManager.addListener(manager);
+        }
 
         return () => windowManager.removeListener(manager);
       },
       [],
     );
-
-    // Делаем панель навигации прозрачной.
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
     final router = ref.watch(routerProvider);
     final preferences = ref.watch(preferencesProvider);
@@ -190,13 +225,7 @@ class FlutterVKApp extends HookConsumerWidget {
           themeAnimationCurve: Curves.ease,
           builder: (BuildContext context, Widget? child) {
             return LoadingOverlay(
-              child: AnnotatedRegion(
-                value: const SystemUiOverlayStyle(
-                  systemNavigationBarColor: Colors.transparent,
-                  systemNavigationBarDividerColor: Colors.transparent,
-                ),
-                child: child!,
-              ),
+              child: child!,
             );
           },
           routerConfig: router,

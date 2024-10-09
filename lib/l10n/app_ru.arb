@@ -395,6 +395,9 @@
 	"profile_closeActionMinimize": "Свернуться",
 	"profile_closeActionMinimizeIfPlaying": "Свернуться, если играет музыка",
 
+	"profile_androidKeepPlayingOnCloseTitle": "Воспроизведение после закрытия",
+	"profile_androidKeepPlayingOnCloseDescription": "Определяет, продолжится ли воспроизведение после закрытия",
+
 	"profile_pauseOnMuteTitle": "Пауза при минимальной громкости",
 	"profile_pauseOnMuteDescription": "Поставив громкость на минимум, воспроизведение приостановится",
 

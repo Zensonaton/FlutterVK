@@ -630,7 +630,7 @@ class HomeProfilePage extends HookConsumerWidget {
                   centerTitle: mobileLayout,
                   padding: settingsPadding,
                   children: [
-                    // Поведение при закрытии.
+                    // Действие при закрытии (OS Windows).
                     if (isDesktop)
                       SettingWithDialog(
                         icon: Icons.close,
@@ -646,7 +646,28 @@ class HomeProfilePage extends HookConsumerWidget {
                         }[preferences.closeBehavior]!,
                       ),
 
-                    // Пауза воспроизведения при минимальной громкости.
+                    // Воспроизведение после закрытия приложения (OS Android).
+                    if (isMobile)
+                      SwitchListTile(
+                        secondary: const Icon(
+                          Icons.exit_to_app,
+                        ),
+                        title: Text(
+                          l18n.profile_androidKeepPlayingOnCloseTitle,
+                        ),
+                        subtitle: Text(
+                          l18n.profile_androidKeepPlayingOnCloseDescription,
+                        ),
+                        value: preferences.androidKeepPlayingOnClose,
+                        onChanged: (bool? enabled) async {
+                          HapticFeedback.lightImpact();
+                          if (enabled == null) return;
+
+                          prefsNotifier.setAndroidKeepPlayingOnClose(enabled);
+                        },
+                      ),
+
+                    // Пауза воспроизведения при минимальной громкости (OS Windows).
                     if (isDesktop)
                       SwitchListTile(
                         secondary: const Icon(

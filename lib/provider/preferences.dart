@@ -85,7 +85,7 @@ class UserPreferences {
   @JsonKey(name: "OLEDTheme")
   final bool oledTheme;
 
-  /// Указывает поведение в случае закрытия приложения.
+  /// Указывает поведение в случае закрытия приложения на OS Windows.
   @JsonKey(name: "CloseBehavior", toJson: intFromEnum)
   final CloseBehavior closeBehavior;
 
@@ -155,6 +155,10 @@ class UserPreferences {
   @JsonKey(name: "ShowRemainingTime")
   final bool showRemainingTime;
 
+  /// Указывает, что при закрытии приложения на OS Android приложение не будет закрываться, а будет скрываться в фоне.
+  @JsonKey(name: "AndroidKeepPlayingOnClose")
+  final bool androidKeepPlayingOnClose;
+
   UserPreferences({
     this.dbVersion = IsarDBMigrator.maxDBVersion,
     this.myMusicChipEnabled = true,
@@ -189,6 +193,7 @@ class UserPreferences {
     this.debugOptionsEnabled = false,
     this.alternateDesktopMiniplayerSlider = false,
     this.showRemainingTime = false,
+    this.androidKeepPlayingOnClose = false,
   });
 
   /// Делает копию этого класа с новыми передаваемыми значениями.
@@ -226,6 +231,7 @@ class UserPreferences {
     bool? debugOptionsEnabled,
     bool? alternateDesktopMiniplayerSlider,
     bool? showRemainingTime,
+    bool? androidKeepPlayingOnClose,
   }) =>
       UserPreferences(
         dbVersion: dbVersion ?? this.dbVersion,
@@ -269,6 +275,8 @@ class UserPreferences {
         alternateDesktopMiniplayerSlider: alternateDesktopMiniplayerSlider ??
             this.alternateDesktopMiniplayerSlider,
         showRemainingTime: showRemainingTime ?? this.showRemainingTime,
+        androidKeepPlayingOnClose:
+            androidKeepPlayingOnClose ?? this.androidKeepPlayingOnClose,
       );
 
   factory UserPreferences.fromJson(Map<String, dynamic> json) =>
@@ -325,6 +333,7 @@ class Preferences extends _$Preferences {
       alternateDesktopMiniplayerSlider:
           prefs.getBool("AlternateDesktopMiniplayerSlider"),
       showRemainingTime: prefs.getBool("ShowRemainingTime"),
+      androidKeepPlayingOnClose: prefs.getBool("AndroidKeepPlayingOnClose"),
     );
   }
 
@@ -477,4 +486,7 @@ class Preferences extends _$Preferences {
 
   void setShowRemainingTime(bool enabled) =>
       state = state.copyWith(showRemainingTime: enabled);
+
+  void setAndroidKeepPlayingOnClose(bool enabled) =>
+      state = state.copyWith(androidKeepPlayingOnClose: enabled);
 }

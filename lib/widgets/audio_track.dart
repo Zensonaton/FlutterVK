@@ -181,9 +181,10 @@ class AudioTrackImage extends HookWidget {
       height: imageSize,
       width: imageSize,
     );
-    final int memorySize =
+    final memorySize =
         (MediaQuery.of(context).devicePixelRatio * imageSize).toInt();
-    final bool selectedAndPlaying = isSelected && isPlaying;
+    final selectedAndPlaying = isSelected && isPlaying;
+    final scheme = Theme.of(context).colorScheme;
 
     Widget getImageWidget() {
       // Возвращаем fallbackAvatar, если изображения трека нету.
@@ -219,7 +220,7 @@ class AudioTrackImage extends HookWidget {
       );
     }
 
-    final Widget imageWidget = getImageWidget();
+    final imageWidget = getImageWidget();
 
     return Stack(
       alignment: Alignment.center,
@@ -231,8 +232,8 @@ class AudioTrackImage extends HookWidget {
           ),
           child: isLoading || isSelected || isHovered || !isAvailable
               ? Container(
-                  foregroundDecoration: const BoxDecoration(
-                    color: Colors.black54,
+                  foregroundDecoration: BoxDecoration(
+                    color: scheme.shadow.withOpacity(0.5),
                   ),
                   child: (isLoading && isSelected)
                       ? ImageFiltered(

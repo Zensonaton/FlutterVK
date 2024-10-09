@@ -1644,7 +1644,19 @@ class AudioPlayerService extends BaseAudioHandler
   Future<void> stop() => _player.stop();
 
   @override
-  Future<void> onTaskRemoved() => _player.stop();
+  Future<void> onTaskRemoved() {
+    final keepPlayingOnClose =
+        _ref.read(preferencesProvider).androidKeepPlayingOnClose;
+
+    // Если пользователь хочет, чтобы музыка продолжала играть после закрытия приложения, то не останавливаем плеер.
+    if (_player.playing && keepPlayingOnClose) {
+      logger.d("User removed task, but I'm still alive, ha-ha!");
+
+      return Future.value();
+    }
+
+    return _player.stop();
+  }
 
   @override
   Future<void> onNotificationDeleted() => _player.stop();
