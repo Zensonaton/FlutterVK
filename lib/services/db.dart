@@ -167,90 +167,108 @@ class IsarDBMigrator {
     final preferencesNotifier = _ref.read(preferencesProvider.notifier);
 
     int currentDBVersion = preferences.dbVersion;
+    try {
+      // Если версия БД больше максимальной, то это значит, что пользователь запустил
+      // старую версию Flutter VK при новой версии БД. В таком случае, нам нужно
+      // полностью сбросить БД, что бы предотвратить возможные ошибки.
+      if (currentDBVersion > maxDBVersion) {
+        logger.w(
+          "DB version ($currentDBVersion) is greater than supported version ($maxDBVersion), resetting DB",
+        );
 
-    // Если версия БД больше максимальной, то это значит, что пользователь запустил
-    // старую версию Flutter VK при новой версии БД. В таком случае, нам нужно
-    // полностью сбросить БД, что бы предотвратить возможные ошибки.
-    if (currentDBVersion > maxDBVersion) {
-      logger.w(
-        "DB version ($currentDBVersion) is greater than supported version ($maxDBVersion), resetting DB",
-      );
+        await _resetDB();
+        currentDBVersion = maxDBVersion;
+      }
 
-      await appStorage.resetDB();
-      currentDBVersion = maxDBVersion;
-      preferencesNotifier.setDBVersion(currentDBVersion);
-    }
+      // Поскольку Flutter VK не делал учёт версии БД в предыдущих версиях,
+      // то нам нужно определить то, с какой версии нам нужно начать миграцию.
+      //
+      // У "новых" пользователей версия БД будет равна maxDBVersion, и это правильно,
+      // однако, у "старых" пользователей версия БД будет такой же, и это неправильно.
+      //
+      // Поэтому, мы должны определить, с какой версии начать миграцию: для этого мы
+      // проверяем то, существует ли одна из "старых" папок для хранения кэша треков.
+      // Если хотя бы одна из них существует, то начинаем миграцию с версии 0.
+      final oldCacheDirs =
+          await CachedStreamAudioSource.getOldTrackStorageDirectories();
+      if (oldCacheDirs.any((dir) => dir.existsSync())) {
+        logger.i(
+          "Found old tracks cache directory, starting DB migration from version 0",
+        );
 
-    // Поскольку Flutter VK не делал учёт версии БД в предыдущих версиях,
-    // то нам нужно определить то, с какой версии нам нужно начать миграцию.
-    //
-    // У "новых" пользователей версия БД будет равна maxDBVersion, и это правильно,
-    // однако, у "старых" пользователей версия БД будет такой же, и это неправильно.
-    //
-    // Поэтому, мы должны определить, с какой версии начать миграцию: для этого мы
-    // проверяем то, существует ли одна из "старых" папок для хранения кэша треков.
-    // Если хотя бы одна из них существует, то начинаем миграцию с версии 0.
-    final oldCacheDirs =
-        await CachedStreamAudioSource.getOldTrackStorageDirectories();
-    if (oldCacheDirs.any((dir) => dir.existsSync())) {
+        currentDBVersion = 0;
+      }
+
+      // Если версия БД равна максимальной, то миграция не требуется.
+      if (currentDBVersion == maxDBVersion) {
+        logger.d("Database is up-to-date, no migration required");
+
+        return;
+      }
+
+      // Производим миграции.
       logger.i(
-        "Found old tracks cache directory, starting DB migration from version 0",
+        "Starting database migration from v$currentDBVersion to v$maxDBVersion...",
       );
 
-      currentDBVersion = 0;
-    }
+      final migrationMethods = getMigrationMethodsFromVersion(currentDBVersion);
+      if (migrationMethods.length != maxDBVersion - currentDBVersion) {
+        throw Exception(
+          "Not all migration methods are implemented. Expected ${maxDBVersion - currentDBVersion}, got ${migrationMethods.length}",
+        );
+      }
+      final Stopwatch migrationTimer = Stopwatch()..start();
 
-    // Если версия БД равна максимальной, то миграция не требуется.
-    if (currentDBVersion == maxDBVersion) {
-      logger.d("Database is up-to-date, no migration required");
+      int curMigratedVersion = currentDBVersion;
+      List<DBPlaylist> curPlaylists = await appStorage.getPlaylists();
+      for (final migrationMethod in migrationMethods) {
+        logger.d("Migrating from v$curMigratedVersion...");
 
-      return;
-    }
+        final Stopwatch curMigrationTimer = Stopwatch()..start();
+        curPlaylists = await migrationMethod([...curPlaylists]);
 
-    // Производим миграции.
-    logger.i(
-      "Starting database migration from v$currentDBVersion to v$maxDBVersion...",
-    );
+        // Миграция для текущей версии завершена.
+        // Сохраняем плейлисты и увеличиваем версию БД.
+        currentDBVersion++;
+        await appStorage.replaceAllPlaylists(curPlaylists);
+        preferencesNotifier.setDBVersion(curMigratedVersion + 1);
 
-    final migrationMethods = getMigrationMethodsFromVersion(currentDBVersion);
-    if (migrationMethods.length != maxDBVersion - currentDBVersion) {
-      throw Exception(
-        "Not all migration methods are implemented. Expected ${maxDBVersion - currentDBVersion}, got ${migrationMethods.length}",
+        curMigrationTimer.stop();
+        logger.d(
+          "Migration from v$curMigratedVersion completed in ${curMigrationTimer.elapsedMilliseconds}ms",
+        );
+      }
+
+      // Общая миграция завершена.
+      if (currentDBVersion != maxDBVersion) {
+        throw Exception(
+          "Database migration failed: expected version $maxDBVersion, got $currentDBVersion",
+        );
+      }
+
+      migrationTimer.stop();
+      logger.i(
+        "DB migration completed in ${migrationTimer.elapsedMilliseconds}ms to v$currentDBVersion",
       );
-    }
-    final Stopwatch migrationTimer = Stopwatch()..start();
-
-    int curMigratedVersion = currentDBVersion;
-    List<DBPlaylist> curPlaylists = await appStorage.getPlaylists();
-    for (final migrationMethod in migrationMethods) {
-      logger.d("Migrating from v$curMigratedVersion...");
-
-      final Stopwatch curMigrationTimer = Stopwatch()..start();
-      curPlaylists = await migrationMethod([...curPlaylists]);
-
-      // Миграция для текущей версии завершена.
-      // Сохраняем плейлисты и увеличиваем версию БД.
-      currentDBVersion++;
-      await appStorage.replaceAllPlaylists(curPlaylists);
-      preferencesNotifier.setDBVersion(curMigratedVersion + 1);
-
-      curMigrationTimer.stop();
-      logger.d(
-        "Migration from v$curMigratedVersion completed in ${curMigrationTimer.elapsedMilliseconds}ms",
+    } catch (e, stackTrace) {
+      logger.e(
+        "Failed to perform migration from v$currentDBVersion to $maxDBVersion.",
+        error: e,
+        stackTrace: stackTrace,
       );
-    }
 
-    // Общая миграция завершена.
-    if (currentDBVersion != maxDBVersion) {
-      throw Exception(
-        "Database migration failed: expected version $maxDBVersion, got $currentDBVersion",
-      );
+      // Сбрасываем БД.
+      currentDBVersion = maxDBVersion;
+      await _resetDB();
     }
+  }
 
-    migrationTimer.stop();
-    logger.i(
-      "DB migration completed in ${migrationTimer.elapsedMilliseconds}ms to v$currentDBVersion",
-    );
+  /// Сбрасывает БД, а так же устанавливает версию БД как самую последнюю.
+  Future<void> _resetDB() async {
+    logger.i("Resetting database...");
+
+    await appStorage.resetDB();
+    _ref.read(preferencesProvider.notifier).setDBVersion(maxDBVersion);
   }
 
   /// Миграция базы данных с версии 0.
