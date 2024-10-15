@@ -113,10 +113,9 @@ class VKAPIInterceptor extends Interceptor {
     final bool useSecondary = extras["useSecondary"] ?? false;
     final token = body.remove("access_token") ??
         _ref.read(useSecondary ? secondaryTokenProvider : tokenProvider);
-    assert(
-      token != null,
-      "Access token is null (secondary: $useSecondary)",
-    );
+    if (token == null) {
+      throw Exception("Access token is null (secondary: $useSecondary)");
+    }
 
     headers["Authorization"] = "Bearer $token";
 

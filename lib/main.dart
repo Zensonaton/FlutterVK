@@ -130,10 +130,9 @@ void notificationTap(NotificationResponse notificationResponse) {
 
 /// Инициализирует запись в системном трее Windows.
 Future<void> initSystemTray(AppLocalizations l18n) async {
-  assert(
-    isDesktop,
-    "initSystemTray() can only be called on Desktop platforms",
-  );
+  if (!isDesktop) {
+    throw Exception("initSystemTray() can only be called on Desktop platforms");
+  }
 
   // Инициализируем меню в трее.
   final SystemTray systemTray = SystemTray();

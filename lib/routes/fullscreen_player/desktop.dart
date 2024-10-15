@@ -112,10 +112,9 @@ class NextTrackInfoWidget extends ConsumerWidget {
     ref.watch(playerPositionProvider);
     ref.watch(playerCurrentIndexProvider);
 
-    assert(
-      player.smartNextAudio != null,
-      "Next audio is not known",
-    );
+    if (player.smartNextAudio == null) {
+      throw Exception("Next audio is not known");
+    }
 
     /// Определяет по оставшейся длине трека то, стоит ли показывать надпись со следующим треком.
     final bool displayNextTrack = preferences.spoilerNextTrack &&
@@ -290,7 +289,9 @@ class FullscreenMediaControls extends ConsumerWidget {
   ) async {
     final l18n = ref.read(l18nProvider);
 
-    assert(player.currentAudio != null, "Current audio is null");
+    if (player.currentAudio == null) {
+      throw Exception("Current audio is null");
+    }
     if (!networkRequiredDialog(ref, context)) return;
 
     if (!player.currentAudio!.isLiked && checkDuplicate) {
@@ -328,11 +329,12 @@ class FullscreenMediaControls extends ConsumerWidget {
 
   /// Добавляет дизлайк для трека, который играет в данный момент.
   Future<void> _toggleDislike(WidgetRef ref, BuildContext context) async {
-    assert(player.currentAudio != null, "Current audio is null");
-    assert(
-      player.currentPlaylist!.isRecommendationTypePlaylist,
-      "Attempted to dislike non-recommendation track",
-    );
+    if (player.currentAudio == null) {
+      throw Exception("Current audio is null");
+    }
+    if (!player.currentPlaylist!.isRecommendationTypePlaylist) {
+      throw Exception("Attempted to dislike non-recommendation track");
+    }
     if (!networkRequiredDialog(ref, context)) return;
 
     // Делаем трек дизлайкнутым.
@@ -455,9 +457,7 @@ class FullscreenMediaControls extends ConsumerWidget {
                                     cacheKey:
                                         "${player.currentAudio!.mediaKey}max",
                                     fit: BoxFit.fill,
-                                    placeholder:
-
-                                            const FallbackAudioAvatar(),
+                                    placeholder: const FallbackAudioAvatar(),
                                     cacheManager:
                                         CachedAlbumImagesManager.instance,
                                   )

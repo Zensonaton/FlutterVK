@@ -44,10 +44,9 @@ class MaterialDialog extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    assert(
-      text != null || contents != null,
-      "Expected text or contents to be specified",
-    );
+    if (text == null && contents == null) {
+      throw ArgumentError("Expected text or contents to be specified");
+    }
 
     final l18n = ref.watch(l18nProvider);
 

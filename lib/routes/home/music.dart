@@ -108,10 +108,9 @@ Future<void> toggleTrackLike(
   final favsPlaylist = ref.read(favoritesPlaylistProvider);
   final user = ref.read(userProvider);
   final api = ref.read(vkAPIProvider);
-  assert(
-    favsPlaylist != null,
-    "Favorites playlist is null",
-  );
+  if (favsPlaylist == null) {
+    throw Exception("Favorites playlist is null");
+  }
 
   // Новый объект ExtendedAudio, хранящий в себе новую версию трека после лайка/дизлайка.
   ExtendedAudio newAudio = audio.copyWith();
@@ -123,7 +122,7 @@ Future<void> toggleTrackLike(
     // Пользователь попытался лайкнуть трек.
 
     // Здесь мы должны проверить, пытается ли пользователь восстановить ранее удалённый трек или нет.
-    final bool shouldRestore = favsPlaylist!.audios!.contains(newAudio);
+    final bool shouldRestore = favsPlaylist.audios!.contains(newAudio);
 
     // Если пользователь пытается восстановить трек, то вызываем audio.restore,
     // в ином случае просто добавляем его методом audio.add.
@@ -204,7 +203,7 @@ Future<void> toggleTrackLike(
 
     // Запоминаем новую версию плейлиста "любимые треки" с удалённым треком.
     playlistsModified.add(
-      favsPlaylist!.basicCopyWith(
+      favsPlaylist.basicCopyWith(
         audiosToUpdate: [
           newAudio.basicCopyWith(
             isLiked: false,
@@ -238,13 +237,14 @@ Future<void> toggleTrackLike(
         newAudio.savedPlaylistOwnerID!,
         newAudio.savedPlaylistID!,
       );
-      assert(
-        savedPlaylist != null,
-        "Attempted to delete track with non-existing parent playlist",
-      );
+      if (savedPlaylist == null) {
+        throw Exception(
+          "Attempted to delete track with non-existing parent playlist",
+        );
+      }
 
       playlistsModified.add(
-        savedPlaylist!.basicCopyWith(
+        savedPlaylist.basicCopyWith(
           audiosToUpdate: [
             newAudio.basicCopyWith(
               isLiked: false,
@@ -268,10 +268,9 @@ Future<void> dislikeTrack(Ref ref, ExtendedAudio audio) async {
 
   final bool response = await api.audio.addDislike([audio.mediaKey]);
 
-  assert(
-    response,
-    "Track is not disliked: $response",
-  );
+  if (!response) {
+    throw Exception("Track is not disliked: $response");
+  }
 }
 
 /// Виджет, отображающий плейлист, как обычный так и рекомендательный.

@@ -117,10 +117,9 @@ class ImageSchemeExtractor {
         final int height = image.height;
         double paintWidth = width.toDouble();
         double paintHeight = height.toDouble();
-        assert(
-          width > 0 && height > 0,
-          "Both width and height must be positive",
-        );
+        if (width <= 0 || height <= 0) {
+          throw ArgumentError("Both width and height must be positive");
+        }
 
         final bool rescale = width > maxDimension || height > maxDimension;
         if (rescale) {

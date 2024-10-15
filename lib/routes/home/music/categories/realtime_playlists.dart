@@ -210,10 +210,9 @@ class MoodPlaylistWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (backgroundUrl != null) {
-      assert(
-        cacheKey != null,
-        "Expected cacheKey to be set",
-      );
+      if (cacheKey == null) {
+        throw ArgumentError("Expected cacheKey to be set");
+      }
     }
 
     final bool selectedAndPlaying = selected && currentlyPlaying;

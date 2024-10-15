@@ -555,7 +555,9 @@ class DownloadTask {
 
   /// Начинает задачу по загрузке всех [tasks].
   Future<void> download() async {
-    assert(!_downloading, "Download already started");
+    if (_downloading) {
+      throw StateError("Download already started");
+    }
     _downloading = true;
 
     for (DownloadItem item in [...tasks]) {

@@ -526,10 +526,11 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
                   await api.audio.getStreamMixAudiosWithAlbums(
                 count: remainingTracksToAdd,
               );
-              assert(
-                response.length == remainingTracksToAdd,
-                "Invalid response length, expected $remainingTracksToAdd, got ${response.length} instead",
-              );
+              if (response.length != remainingTracksToAdd) {
+                throw Exception(
+                  "Invalid response length, expected $remainingTracksToAdd, got ${response.length} instead",
+                );
+              }
 
               final List<ExtendedAudio> newAudios = response
                   .map(

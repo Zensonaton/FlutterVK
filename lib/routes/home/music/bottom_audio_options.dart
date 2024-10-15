@@ -129,10 +129,9 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
     }
 
     void onGeniusSearchTap() async {
-      assert(
-        hasGeniusInfo.value != null,
-        "Genius info isn't loaded yet",
-      );
+      if (hasGeniusInfo.value == null) {
+        throw Exception("Genius info isn't loaded yet");
+      }
 
       Navigator.of(context).pop();
 

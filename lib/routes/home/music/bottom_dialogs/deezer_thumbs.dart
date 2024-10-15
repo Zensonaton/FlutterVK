@@ -148,10 +148,9 @@ class TrackThumbnailEditDialog extends HookConsumerWidget {
     }
 
     void onThumbnailSave() {
-      assert(
-        selectedTrack.value != null,
-        "No track selected",
-      );
+      if (selectedTrack.value == null) {
+        throw Exception("No track selected");
+      }
 
       if (context.mounted) Navigator.of(context).pop();
 
@@ -167,10 +166,9 @@ class TrackThumbnailEditDialog extends HookConsumerWidget {
     }
 
     void onThumbnailReset() async {
-      assert(
-        audio.forceDeezerThumbs,
-        "Deezer thumbnails aren't forced for that track",
-      );
+      if (!audio.forceDeezerThumbs) {
+        throw Exception("Deezer thumbnails aren't forced for that track");
+      }
 
       if (context.mounted) Navigator.of(context).pop();
 

@@ -211,14 +211,12 @@ class CachedStreamAudioSource extends StreamAudioSource {
 
   /// Загружает трек, и возвращает [StreamAudioResponse].
   Future<StreamAudioResponse> fetch({int? start, int? end}) async {
-    assert(
-      audio.url != null,
-      "Audio URL is null",
-    );
-    assert(
-      audio.url!.contains(".mp3"),
-      "Expected audio URL to be mp3 file",
-    );
+    if (audio.url == null) {
+      throw Exception("Audio URL is null");
+    }
+    if (!audio.url!.contains(".mp3")) {
+      throw Exception("Expected audio URL to be mp3 file");
+    }
 
     // Подготавливаем запрос на загрузку трека.
     // Здесь трек не загружется, а просто извлекается информация по его размеру.
@@ -981,10 +979,11 @@ class VKMusicPlayer {
     double position, {
     bool play = false,
   }) async {
-    assert(
-      position >= 0.0 && position <= 1.0,
-      "seekNormalized position $position is not in range from 0.0 to 1.0",
-    );
+    if (position < 0.0 || position > 1.0) {
+      throw ArgumentError(
+        "seekNormalized position $position is not in range from 0.0 to 1.0",
+      );
+    }
 
     // Если нам неизвестна длительность трека, то мы не можем перемотать на указанный момент.
     if (duration == null) return;
@@ -1022,10 +1021,11 @@ class VKMusicPlayer {
 
   /// Указывает громкость плеера. Передаваемое значение громкости [value] обязано быть в пределах от 0.0 до 1.0.
   Future<void> setVolume(double value) async {
-    assert(
-      value >= 0.0 && value <= 1.0,
-      "setVolume given volume $value is not in range from 0.0 to 1.0",
-    );
+    if (value < 0.0 || value > 1.0) {
+      throw ArgumentError(
+        "setVolume given volume $value is not in range from 0.0 to 1.0",
+      );
+    }
 
     if (value == volume) return;
 
@@ -1123,11 +1123,10 @@ class VKMusicPlayer {
     bool shuffle, {
     bool disableAudioMixCheck = false,
   }) async {
-    if (shuffle && !disableAudioMixCheck) {
-      assert(
-        currentPlaylist?.type != PlaylistType.audioMix,
-        "Attempted to enable shuffle for audio mix",
-      );
+    if (shuffle &&
+        !disableAudioMixCheck &&
+        currentPlaylist?.type == PlaylistType.audioMix) {
+      throw Exception("Attempted to enable shuffle for audio mix");
     }
 
     return await _player.setShuffleModeEnabled(shuffle);
@@ -1162,10 +1161,9 @@ class VKMusicPlayer {
     ExtendedPlaylist playlist, {
     bool mergeWithOldQueue = false,
   }) async {
-    assert(
-      playlist.audios != null,
-      "audios of ExtendedPlaylist is null",
-    );
+    if (playlist.audios == null) {
+      throw Exception("audios of ExtendedPlaylist is null");
+    }
 
     // Создаём список из треков в плейлисте, которые можно воспроизвести.
     final List<ExtendedAudio> audios = playlist.audios!
@@ -1208,11 +1206,8 @@ class VKMusicPlayer {
     bool randomTrack = false,
     bool setLoopAll = true,
   }) async {
-    if (randomTrack) {
-      assert(
-        selectedTrack == null,
-        "randomTrack and index cannot be specified together",
-      );
+    if (randomTrack && selectedTrack != null) {
+      throw ArgumentError("randomTrack and index cannot be specified together");
     }
 
     final bool isAudioMix = playlist.mixID != null;
@@ -1278,10 +1273,9 @@ class VKMusicPlayer {
 
   /// Добавляет указанный трек как следующий для воспроизведения.
   Future<void> addNextToQueue(ExtendedAudio audio) async {
-    assert(
-      _queue != null,
-      "Queue cannot be empty",
-    );
+    if (_queue == null) {
+      throw Exception("Queue cannot be empty");
+    }
 
     await _queue!.insert(
       nextTrackIndex!,
@@ -1299,10 +1293,9 @@ class VKMusicPlayer {
 
   /// Добавляет указанный трек в конец очереди воспроизведения.
   Future<void> addToQueueEnd(ExtendedAudio audio) async {
-    assert(
-      _queue != null,
-      "Queue cannot be empty",
-    );
+    if (_queue == null) {
+      throw Exception("Queue cannot be empty");
+    }
 
     await _queue!.add(
       CachedStreamAudioSource(
@@ -1320,11 +1313,8 @@ class VKMusicPlayer {
   Future<void> setDiscordRPCEnabled(bool enabled) async {
     logger.d("Called setDiscordRPCEnabled($enabled)");
 
-    if (enabled) {
-      assert(
-        isDesktop,
-        "Discord RPC can only be enabled on Desktop-platforms.",
-      );
+    if (enabled && !isDesktop) {
+      throw Exception("Discord RPC can only be enabled on Desktop-platforms.");
     }
 
     if (enabled == _discordRPCEnabled) return;
@@ -1341,9 +1331,8 @@ class VKMusicPlayer {
   Future<void> setPauseOnMuteEnabled(bool enabled) async {
     logger.d("Called setPauseOnMuteEnabled($enabled)");
 
-    if (enabled) {
-      assert(
-        isDesktop,
+    if (enabled && !isDesktop) {
+      throw Exception(
         "setPauseOnMuteEnabled can only be enabled on Desktop-platforms.",
       );
     }

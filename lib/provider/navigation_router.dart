@@ -80,16 +80,15 @@ GoRouter router(RouterRef ref) {
                       int.parse(state.pathParameters["owner_id"]!),
                       int.parse(state.pathParameters["id"]!),
                     );
-            assert(
-              playlist != null,
-              "Playlist not found",
-            );
+            if (playlist == null) {
+              throw Exception("Playlist not found");
+            }
 
             return buildPageWithDefaultTransition(
               context: context,
               state: state,
               child: PlaylistRoute(
-                ownerID: playlist!.ownerID,
+                ownerID: playlist.ownerID,
                 id: playlist.id,
               ),
             );
@@ -107,13 +106,12 @@ GoRouter router(RouterRef ref) {
       mobileOnly: true,
       body: (_) {
         final ExtendedPlaylist? playlist = ref.read(favoritesPlaylistProvider);
-        assert(
-          playlist != null,
-          "Playlist not found",
-        );
+        if (playlist == null) {
+          throw Exception("Playlist not found");
+        }
 
         return PlaylistRoute(
-          ownerID: playlist!.ownerID,
+          ownerID: playlist.ownerID,
           id: playlist.id,
         );
       },

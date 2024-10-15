@@ -172,10 +172,9 @@ class CloseActionDialog extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    assert(
-      isDesktop,
-      "CloseActionDialog can only be called on desktop",
-    );
+    if (!isDesktop) {
+      throw Exception("CloseActionDialog can only be called on desktop");
+    }
 
     final prefsNotifier = ref.read(preferencesProvider.notifier);
     final preferences = ref.watch(preferencesProvider);
@@ -675,7 +674,9 @@ class ExportTracksListDialog extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l18n = ref.watch(l18nProvider);
     final playlist = ref.watch(favoritesPlaylistProvider);
-    assert(playlist?.audios != null, "Expected tracks list to be loaded");
+    if (playlist?.audios == null) {
+      throw Exception("Expected tracks list to be loaded");
+    }
 
     final String exportContents = playlist!.audios!
         .map((ExtendedAudio audio) => "${audio.artist} • ${audio.title}")

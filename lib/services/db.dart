@@ -150,10 +150,11 @@ class IsarDBMigrator {
   IsarDBMigrator({
     required Ref ref,
   }) : _ref = ref {
-    assert(
-      migrationMethods.length == maxDBVersion,
-      "Not all migration methods are implemented. Expected $maxDBVersion, got ${migrationMethods.length}",
-    );
+    if (migrationMethods.length != maxDBVersion) {
+      throw Exception(
+        "Not all migration methods are implemented. Expected $maxDBVersion, got ${migrationMethods.length}",
+      );
+    }
   }
 
   /// Запускает миграцию базы данных Isar.
@@ -212,10 +213,11 @@ class IsarDBMigrator {
     );
 
     final migrationMethods = getMigrationMethodsFromVersion(currentDBVersion);
-    assert(
-      migrationMethods.length == maxDBVersion - currentDBVersion,
-      "Not all migration methods are implemented. Expected ${maxDBVersion - currentDBVersion}, got ${migrationMethods.length}",
-    );
+    if (migrationMethods.length != maxDBVersion - currentDBVersion) {
+      throw Exception(
+        "Not all migration methods are implemented. Expected ${maxDBVersion - currentDBVersion}, got ${migrationMethods.length}",
+      );
+    }
     final Stopwatch migrationTimer = Stopwatch()..start();
 
     int curMigratedVersion = currentDBVersion;
@@ -239,10 +241,11 @@ class IsarDBMigrator {
     }
 
     // Общая миграция завершена.
-    assert(
-      currentDBVersion == maxDBVersion,
-      "Database migration failed: expected version $maxDBVersion, got $currentDBVersion",
-    );
+    if (currentDBVersion != maxDBVersion) {
+      throw Exception(
+        "Database migration failed: expected version $maxDBVersion, got $currentDBVersion",
+      );
+    }
 
     migrationTimer.stop();
     logger.i(

@@ -29,10 +29,9 @@ class WavyTrackShape extends RoundedRectSliderTrackShape {
     bool isEnabled = false,
     double additionalActiveTrackHeight = 2,
   }) {
-    assert(
-      waveHeightPercent >= 0.0 && waveHeightPercent <= 1.0,
-      "waveHeightPercent must be between 0.0 and 1.0",
-    );
+    if (waveHeightPercent < 0.0 || waveHeightPercent > 1.0) {
+      throw ArgumentError("waveHeightPercent must be between 0.0 and 1.0");
+    }
 
     final paint = Paint()
       ..color = sliderTheme.activeTrackColor!

@@ -29,10 +29,9 @@ class MobileLoginWidget extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // InAppWebView, используемый для рендеринга Web-страницы, не поддерживается на Desktop-платформах.
-    assert(
-      isMobile,
-      "MobileLoginWidget предназначен для работы на мобильных платформах.",
-    );
+    if (!isMobile) {
+      throw Exception("MobileLoginWidget can only work on mobile platforms.");
+    }
 
     final isWebViewShown = useState(true);
     final l18n = ref.watch(l18nProvider);

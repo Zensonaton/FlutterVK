@@ -154,8 +154,7 @@ class _PlayerImageWidget extends ConsumerWidget {
                     width: _playerImageSize,
                     height: _playerImageSize,
                     fit: BoxFit.fill,
-                    placeholder:
-                        const FallbackAudioAvatar(),
+                    placeholder: const FallbackAudioAvatar(),
                     cacheManager: CachedAlbumImagesManager.instance,
                   )
                 : const FallbackAudioAvatar(
@@ -387,10 +386,9 @@ class FullscreenMediaControls extends ConsumerWidget {
     void onMiniplayerCloseTap() => closeMiniPlayer(context);
 
     void onShuffleTap() async {
-      assert(
-        canToggleShuffle,
-        "Called onShuffleTap, but canToggleShuffle is false",
-      );
+      if (!canToggleShuffle) {
+        throw Exception("Called onShuffleTap, but canToggleShuffle is false");
+      }
 
       await player.toggleShuffle();
 

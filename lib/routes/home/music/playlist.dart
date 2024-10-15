@@ -99,10 +99,9 @@ Future<void> onMixPlayToggle(
   WidgetRef ref,
   ExtendedPlaylist playlist,
 ) async {
-  assert(
-    playlist.type == PlaylistType.audioMix,
-    "onMixPlayToggle can only be called for audio mix playlists",
-  );
+  if (playlist.type != PlaylistType.audioMix) {
+    throw Exception("onMixPlayToggle can only be called for audio mix playlists");
+  }
 
   final api = ref.read(vkAPIProvider);
   final playlists = ref.read(playlistsProvider.notifier);

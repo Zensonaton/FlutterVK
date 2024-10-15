@@ -325,13 +325,13 @@ class _MusicLeftSide extends HookConsumerWidget {
       double progress = 0.0,
       bool forceFullDuration = false,
     }) async {
-      assert(
-        progress >= -1.0 && progress <= 1.0,
-        "Progress must be between -1.0 and 1.0, but got $progress instead",
-      );
-      if (forceFullDuration) {
-        assert(
-          progress == 1.0 || progress == -1.0,
+      if (progress < -1.0 || progress > 1.0) {
+        throw ArgumentError(
+          "Progress must be between -1.0 and 1.0, but got $progress instead",
+        );
+      }
+      if (forceFullDuration && (progress != 1.0 && progress != -1.0)) {
+        throw ArgumentError(
           "Progress must be 1.0 or -1.0 if forceFullDuration is set, but got $progress instead",
         );
       }
@@ -655,10 +655,9 @@ class _MiddleControls extends ConsumerWidget {
     final isAudioMix = playlist?.type == PlaylistType.audioMix;
 
     void onShuffleToggle() async {
-      assert(
-        !isAudioMix,
-        "Attempted to enable shuffle for audio mix",
-      );
+      if (isAudioMix) {
+        throw Exception("Attempted to enable shuffle for audio mix");
+      }
 
       await player.toggleShuffle();
 
@@ -736,10 +735,9 @@ class NextTrackSpoilerWidget extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    assert(
-      !isMobileLayout(context),
-      "This widget is only for Desktop Layout",
-    );
+    if (isMobileLayout(context)) {
+      throw Exception("This widget is only for Desktop Layout");
+    }
 
     ref.watch(playerShuffleModeEnabledProvider);
     ref.watch(playerCurrentIndexProvider);
@@ -844,10 +842,9 @@ class _MusicMiddleSide extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    assert(
-      !isMobileLayout(context),
-      "This widget is only for Desktop Layout",
-    );
+    if (isMobileLayout(context)) {
+      throw Exception("This widget is only for Desktop Layout");
+    }
 
     ref.watch(playerPlayingStateProvider);
     ref.watch(playerPositionProvider);

@@ -28,10 +28,9 @@ Future<void> createPlaylistCacheTask(
   ExtendedPlaylist playlist, {
   List<ExtendedAudio> deletedAudios = const [],
 }) async {
-  assert(
-    playlist.audios != null,
-    "Expected playlist audios to be loaded",
-  );
+  if (playlist.audios == null) {
+    throw Exception("Expected playlist audios to be loaded");
+  }
 
   final downloadManager = ref.read(downloadManagerProvider.notifier);
   final l18n = ref.read(l18nProvider);
@@ -541,10 +540,9 @@ class Playlists extends _$Playlists {
     bool fromAPI = false,
     int? userOwnedPlaylistsCount,
   }) async {
-    assert(
-      state.value != null,
-      "State was not set before calling updatePlaylist",
-    );
+    if (state.value == null) {
+      throw Exception("State was not set before calling updatePlaylist");
+    }
 
     final List<ExtendedPlaylist> allPlaylists = state.value?.playlists ?? [];
     final ExtendedPlaylist? oldPlaylist = allPlaylists.firstWhereOrNull(
@@ -894,6 +892,9 @@ class Playlists extends _$Playlists {
 /// [Provider], возвращающий [ExtendedPlaylist], характеризующий фейковый плейлист "Любимая музыка".
 @riverpod
 ExtendedPlaylist? favoritesPlaylist(FavoritesPlaylistRef ref) {
+  // TODO: Если плейлист не найден, то создать фейковый.
+  // FIXME: Этот Provider не должен возвращать null даже если такого плейлиста нет.
+
   final PlaylistsState? state =
       ref.watch(playlistsProvider).unwrapPrevious().valueOrNull;
   if (state == null) return null;

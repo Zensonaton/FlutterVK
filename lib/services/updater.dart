@@ -356,10 +356,10 @@ class Updater {
       return;
     } else if (Platform.isAndroid) {
       // Запрашиваем разрешение на установку.
-      assert(
-        (await Permission.requestInstallPackages.request()).isGranted,
-        "Packages install permission is not given",
-      );
+      // TODO: Отображать ошибку пользователю, если он не дал разрешение.
+      if (!(await Permission.requestInstallPackages.request()).isGranted) {
+        throw Exception("Packages install permission is not given");
+      }
 
       // Запускаем установщик .apk-файла.
       final status = await InstallPlugin.installApk(

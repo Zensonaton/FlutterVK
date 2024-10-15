@@ -65,10 +65,11 @@ class SimillarMusicPlaylistWidget extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    assert(
-      tracks.length == 3,
-      "Expected tracks amount to be 3, but got ${tracks.length} instead",
-    );
+    if (tracks.length != 3) {
+      throw ArgumentError(
+        "Expected tracks amount to be 3, but got ${tracks.length} instead",
+      );
+    }
 
     final l18n = ref.watch(l18nProvider);
 

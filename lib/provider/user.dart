@@ -1002,10 +1002,13 @@ class User extends _$User {
   @override
   UserData build() {
     final AuthState state = ref.read(currentAuthStateProvider);
-    assert(
-      state == AuthState.authenticated,
-      "Attempted to read userProvider without authorization ($state)",
-    );
+
+    // Если пользователь по какой-то причине не авторизован, то выбрасываем ошибку.
+    if (state != AuthState.authenticated) {
+      throw Exception(
+        "Attempted to read userProvider without authorization ($state)",
+      );
+    }
 
     final SharedPreferences prefs = ref.read(sharedPrefsProvider);
 

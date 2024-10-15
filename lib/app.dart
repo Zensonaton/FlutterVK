@@ -41,10 +41,9 @@ class FlutterVKWindowManager extends WindowListener {
   /// В этом методе обрабатывается закрытие окна в зависимости от настройки [UserPreferences.closeBehavior].
   @override
   void onWindowClose() async {
-    assert(
-      isDesktop,
-      "onWindowClose() called on non-desktop platform",
-    );
+    if (!isDesktop) {
+      throw Exception("onWindowClose() called on non-desktop platform");
+    }
 
     final AppLocalizations l18n = ref.read(l18nProvider);
     final UserPreferences preferences = ref.read(preferencesProvider);
