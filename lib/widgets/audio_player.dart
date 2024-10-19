@@ -591,11 +591,13 @@ class _MusicLeftSide extends HookConsumerWidget {
                           ),
                           children: [
                             Flexible(
-                              child: TrackTitleAndArtist(
-                                title: audio?.title ?? "Unknown",
-                                artist: audio?.artist ?? "Unknown",
-                                subtitle: audio?.subtitle,
-                                explicit: audio?.isExplicit ?? false,
+                              child: SelectionArea(
+                                child: TrackTitleAndArtist(
+                                  title: "${audio?.title ?? "Unknown"} ",
+                                  artist: audio?.artist ?? "Unknown",
+                                  subtitle: audio?.subtitle,
+                                  explicit: audio?.isExplicit ?? false,
+                                ),
                               ),
                             ),
                             Gap(gapSize),
