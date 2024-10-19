@@ -100,7 +100,9 @@ Future<void> onMixPlayToggle(
   ExtendedPlaylist playlist,
 ) async {
   if (playlist.type != PlaylistType.audioMix) {
-    throw Exception("onMixPlayToggle can only be called for audio mix playlists");
+    throw Exception(
+      "onMixPlayToggle can only be called for audio mix playlists",
+    );
   }
 
   final api = ref.read(vkAPIProvider);
@@ -529,6 +531,7 @@ class MobileControlButtonsWidget extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final preferences = ref.watch(preferencesProvider);
     ref.watch(playerPlayingStateProvider);
 
     useListenable(scrollController.position);
@@ -559,8 +562,9 @@ class MobileControlButtonsWidget extends HookConsumerWidget {
 
     const double realButtonSize = buttonSize - 8 * 2;
 
-    final bool isPlaying =
-        player.currentPlaylist?.mediaKey == playlist.mediaKey && player.playing;
+    final bool isSelected =
+        player.currentPlaylist?.ownerID == playlist.ownerID &&
+            player.currentPlaylist?.id == playlist.id;
 
     return Positioned(
       top: positionFromTop,
@@ -591,10 +595,16 @@ class MobileControlButtonsWidget extends HookConsumerWidget {
 
               // Кнопка для воспроизведения/паузы.
               IconButton.filled(
-                icon: Icon(
-                  isPlaying ? Icons.pause : Icons.play_arrow,
-                  color: scheme.onPrimary,
-                ),
+                icon: isSelected
+                    ? PlayPauseAnimatedIcon(
+                        color: scheme.onPrimary,
+                      )
+                    : Icon(
+                        preferences.shuffleOnPlay
+                            ? Icons.shuffle
+                            : Icons.play_arrow,
+                        color: scheme.onPrimary,
+                      ),
                 iconSize: realButtonSize,
                 onPressed: onPlayPausePressed,
                 color: scheme.primary,
@@ -1513,13 +1523,16 @@ class DesktopPlaylistControlsWidget extends HookConsumerWidget {
                           IconButton.filled(
                             onPressed: onPlayPressed,
                             iconSize: 38,
-                            icon: Icon(
-                              isSelected && player.playing
-                                  ? Icons.pause
-                                  : preferences.shuffleOnPlay
-                                      ? Icons.shuffle
-                                      : Icons.play_arrow,
-                            ),
+                            icon: isSelected
+                                ? PlayPauseAnimatedIcon(
+                                    color: scheme?.onPrimary,
+                                  )
+                                : Icon(
+                                    preferences.shuffleOnPlay
+                                        ? Icons.shuffle
+                                        : Icons.play_arrow,
+                                    color: scheme?.onPrimary,
+                                  ),
                           ),
                         const Gap(12),
 
