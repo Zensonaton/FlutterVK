@@ -70,11 +70,11 @@ jobs:
           mkdir app-build
 
           if [ "${{ inputs.pre-release }}" = "true" ]; then
-            flutter build apk --release --dart-define PRERELEASE=1 --enable-impeller
-            flutter build apk --release --split-per-abi --dart-define PRERELEASE=1 --enable-impeller
+            flutter build apk --release --dart-define PRERELEASE=1
+            flutter build apk --release --split-per-abi --dart-define PRERELEASE=1
           else
-            flutter build apk --release --enable-impeller
-            flutter build apk --release --split-per-abi --enable-impeller
+            flutter build apk --release
+            flutter build apk --release --split-per-abi
           fi
 
           cp ./build/app/outputs/flutter-apk/app-release.apk "./app-build/Flutter VK Android.apk"
