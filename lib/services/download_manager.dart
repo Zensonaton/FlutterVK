@@ -10,6 +10,7 @@ import "../api/deezer/search.dart";
 import "../api/lrclib/get.dart";
 import "../api/lrclib/search.dart";
 import "../api/vk/audio/get_lyrics.dart";
+import "../main.dart";
 import "../provider/playlists.dart";
 import "../provider/preferences.dart";
 import "../provider/user.dart";
@@ -140,13 +141,6 @@ class PlaylistCacheDeleteDownloadItem extends DownloadItem {
 class PlaylistCacheDownloadItem extends DownloadItem {
   static final AppLogger logger = getLogger("PlaylistCacheDownloadItem");
 
-  // TODO: Использовать глобальный Dio.
-  final Dio dio = Dio(
-    BaseOptions(
-      responseType: ResponseType.bytes,
-    ),
-  );
-
   /// Плейлист, в котором находится данный трек.
   final ExtendedPlaylist playlist;
 
@@ -172,6 +166,9 @@ class PlaylistCacheDownloadItem extends DownloadItem {
     if (!file.existsSync() && audio.url != null) {
       final response = await dio.get(
         audio.url!,
+        options: Options(
+          responseType: ResponseType.bytes,
+        ),
         onReceiveProgress: (int received, int total) {
           progress.value = received / total;
         },
@@ -436,12 +433,6 @@ class AppUpdaterDownloadItem extends DownloadItem {
   /// Полный путь, куда будет сохранён данный файл после загрузки.
   final File file;
 
-  final Dio dio = Dio(
-    BaseOptions(
-      responseType: ResponseType.bytes,
-    ),
-  );
-
   AppUpdaterDownloadItem({
     required this.url,
     required this.file,
@@ -452,6 +443,9 @@ class AppUpdaterDownloadItem extends DownloadItem {
   Future<void> download() async {
     final response = await dio.get(
       url,
+      options: Options(
+        responseType: ResponseType.bytes,
+      ),
       onReceiveProgress: (int received, int total) {
         progress.value = received / total;
       },

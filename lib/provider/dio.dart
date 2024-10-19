@@ -18,6 +18,12 @@ import "auth.dart";
 
 part "dio.g.dart";
 
+/// [HttpClient], в котором отключена SSL-проверка.
+///
+/// Вместо этого, рекомендуется использовать [dio].
+final HttpClient httpClient = HttpClient()
+  ..badCertificateCallback = (cert, host, port) => true;
+
 /// Request Encoder для [Dio], реализовывающий поддержку GZip.
 List<int> gzipEncoder(
   String request,
@@ -39,12 +45,8 @@ void initDioInterceptors(
   // TODO: Обработчик для LRCLIB. Он возвращает 404, если трек не найден.
 
   // Игнорируем плохие SSL-сертификаты.
-  (dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
-    final client = HttpClient()
-      ..badCertificateCallback = (cert, host, port) => true;
-
-    return client;
-  };
+  (dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient =
+      () => httpClient;
 
   dio.interceptors.addAll([
     // Обработчик для добавления версии API и access_token для VK API.

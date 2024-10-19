@@ -20,6 +20,7 @@ import "../api/vk/shared.dart";
 import "../consts.dart";
 import "../enums.dart";
 import "../main.dart";
+import "../provider/dio.dart";
 import "../provider/player.dart";
 import "../provider/playlists.dart";
 import "../provider/preferences.dart";
@@ -47,9 +48,6 @@ class CachedStreamAudioSource extends StreamAudioSource {
 
   /// Размер `.mp3`-файла в байтах, который считается повреждённым.
   static const int corruptedFileSizeBytes = 100 * 1024;
-
-  /// [HttpClient] для загрузки треков.
-  final HttpClient _client = HttpClient();
 
   /// [Ref] для определения того, будет ли трек кэшироваться после загрузки плеером.
   final Ref _ref;
@@ -220,7 +218,7 @@ class CachedStreamAudioSource extends StreamAudioSource {
 
     // Подготавливаем запрос на загрузку трека.
     // Здесь трек не загружется, а просто извлекается информация по его размеру.
-    final request = await _client.getUrl(Uri.parse(audio.url!))
+    final request = await httpClient.getUrl(Uri.parse(audio.url!))
       ..headers.add("Range", "bytes=${start ?? 0}-");
     final response = await request.close();
     if (response.statusCode >= 300) {
