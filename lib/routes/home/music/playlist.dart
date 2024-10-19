@@ -1238,12 +1238,13 @@ class PlaylistTypeDescriptionWidget extends HookConsumerWidget {
       ],
     );
 
-    final areTracksLoaded = !playlist.areTracksLive;
+    final hasInfo = playlist.isLiveData;
+    final areTracksLoaded = playlist.audios != null;
 
     final scheme = Theme.of(context).colorScheme;
 
     return Skeletonizer(
-      enabled: playlist.audios == null,
+      enabled: !hasInfo,
       child: FittedBox(
         fit: BoxFit.scaleDown,
         child: RichText(
@@ -1263,7 +1264,7 @@ class PlaylistTypeDescriptionWidget extends HookConsumerWidget {
               // Количество треков.
               WidgetSpan(
                 child: Skeletonizer(
-                  enabled: areTracksLoaded,
+                  enabled: !areTracksLoaded,
                   child: Text(
                     l18n.music_playlistInfoCount(
                       playlist.count ?? 50,
@@ -1281,7 +1282,7 @@ class PlaylistTypeDescriptionWidget extends HookConsumerWidget {
               // Длительность.
               WidgetSpan(
                 child: Skeletonizer(
-                  enabled: areTracksLoaded,
+                  enabled: !areTracksLoaded,
                   child: Text(
                     durationString,
                     style: TextStyle(
