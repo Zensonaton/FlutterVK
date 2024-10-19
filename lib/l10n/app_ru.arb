@@ -396,8 +396,8 @@
 	"profile_closeActionMinimize": "Свернуться",
 	"profile_closeActionMinimizeIfPlaying": "Свернуться, если играет музыка",
 
-	"profile_androidKeepPlayingOnCloseTitle": "Воспроизведение после закрытия",
-	"profile_androidKeepPlayingOnCloseDescription": "Определяет, продолжится ли воспроизведение после закрытия",
+	"profile_androidKeepPlayingOnCloseTitle": "Игра после смахивания приложения",
+	"profile_androidKeepPlayingOnCloseDescription": "Определяет, продолжится ли воспроизведение после закрытия приложения в списке открытых приложений на Android",
 
 	"profile_shuffleOnPlayTitle": "Перемешка при воспроизведении",
 	"profile_shuffleOnPlayDescription": "Перемешивает треки в плейлисте при запуске воспроизведения",
