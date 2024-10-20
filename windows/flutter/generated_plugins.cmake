@@ -6,6 +6,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   connectivity_plus
   discord_rpc
   dynamic_color
+  flutter_inappwebview_windows
   fullscreen_window
   isar_flutter_libs
   local_notifier

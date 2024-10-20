@@ -20,7 +20,7 @@ import path_provider_foundation
 import screen_retriever
 import share_plus
 import shared_preferences_foundation
-import sqflite
+import sqflite_darwin
 import system_tray
 import url_launcher_macos
 import wakelock_plus
