@@ -840,6 +840,9 @@ class NextTrackSpoilerWidget extends HookConsumerWidget {
 ///
 /// В такой части отображаются кнопки для управления воспроизведением, а так же прогресс-бар для текущего трека. Отображается только при Desktop Layout'е.
 class _MusicMiddleSide extends HookConsumerWidget {
+  /// Длительность анимации для [Slider] во время переключения треков или перемотки.
+  static const Duration sliderAnimationDuration = Durations.long2;
+
   const _MusicMiddleSide();
 
   @override
@@ -857,32 +860,56 @@ class _MusicMiddleSide extends HookConsumerWidget {
 
     final scheme = Theme.of(context).colorScheme;
 
-    final isBuffering = player.buffering;
     final isPlaying = player.playing;
-    final progress = player.progress;
     final position = player.position.inSeconds;
     final duration = player.duration?.inSeconds;
 
-    final waveAnimation = useAnimationController(
+    final sliderWaveAnimation = useAnimationController(
       duration: MusicPlayerWidget.switchAnimationDuration,
       initialValue: isPlaying ? 1.0 : 0.0,
     );
-    useValueListenable(waveAnimation);
+    useValueListenable(sliderWaveAnimation);
     useEffect(
       () {
-        waveAnimation.animateTo(isPlaying ? 1.0 : 0.0);
+        sliderWaveAnimation.animateTo(
+          isPlaying ? 1.0 : 0.0,
+          curve: Curves.ease,
+        );
 
         return null;
       },
       [isPlaying],
     );
 
-    final seekProgress = useState<double?>(null);
+    final seekAnimation = useAnimationController(
+      duration: sliderAnimationDuration,
+      initialValue: player.progress,
+    );
+    useEffect(
+      () {
+        seekAnimation.animateTo(
+          player.progress,
+          curve: Curves.easeInOutCubicEmphasized,
+        );
+
+        return null;
+      },
+      [player.trackIndex],
+    );
+    useEffect(
+      () {
+        if (seekAnimation.isAnimating) return;
+        seekAnimation.value = player.progress;
+
+        return null;
+      },
+      [player.progress],
+    );
+    final progress = useValueListenable(seekAnimation);
+
     final positionString = useMemoized(
       () {
-        final positionSeconds = seekProgress.value == null
-            ? position
-            : ((duration ?? 0) * seekProgress.value!).toInt();
+        final positionSeconds = ((duration ?? 0) * seekAnimation.value).toInt();
 
         // Если нам нужно показывать количество оставшегося времени, то показываем его.
         if (showRemainingTime) {
@@ -893,7 +920,7 @@ class _MusicMiddleSide extends HookConsumerWidget {
 
         return secondsAsString(positionSeconds);
       },
-      [position, seekProgress.value, showRemainingTime],
+      [position, seekAnimation.value, showRemainingTime],
     );
     final durationString = useMemoized(
       () => secondsAsString(duration ?? 0),
@@ -912,40 +939,23 @@ class _MusicMiddleSide extends HookConsumerWidget {
           // Slider для отображения прогресса воспроизведения трека,
           // либо индикатор загрузки, если идёт буферизация.
           if (!alternateSlider)
-            if (!isBuffering)
-              SliderTheme(
-                data: SliderThemeData(
-                  trackShape: WavyTrackShape(
-                    waveHeightPercent: waveAnimation.value,
-                  ),
-                  overlayShape: SliderComponentShape.noOverlay,
-                  activeTrackColor: scheme.onPrimaryContainer,
-                  thumbColor: scheme.onPrimaryContainer,
-                  inactiveTrackColor:
-                      scheme.onPrimaryContainer.withOpacity(0.5),
+            SliderTheme(
+              data: SliderThemeData(
+                trackShape: WavyTrackShape(
+                  waveHeightPercent: sliderWaveAnimation.value,
                 ),
-                child: ResponsiveSlider(
-                  value: progress,
-                  onChange: (double progress) => seekProgress.value = progress,
-                  onChangeEnd: (double progress) {
-                    player.seekNormalized(progress);
-
-                    seekProgress.value = null;
-                  },
-                ),
-              )
-            else
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 8,
-                ),
-                child: LinearProgressIndicator(
-                  borderRadius: BorderRadius.circular(
-                    globalBorderRadius,
-                  ),
-                  backgroundColor: scheme.onPrimaryContainer.withOpacity(0.5),
-                ),
+                overlayShape: SliderComponentShape.noOverlay,
+                activeTrackColor: scheme.onPrimaryContainer,
+                thumbColor: scheme.onPrimaryContainer,
+                inactiveTrackColor: scheme.onPrimaryContainer.withOpacity(0.5),
               ),
+              child: ResponsiveSlider(
+                value: progress,
+                onChange: (double progress) => seekAnimation.value = progress,
+                onChangeEnd: (double progress) =>
+                    player.seekNormalized(progress),
+              ),
+            ),
 
           // Ряд из прогресса воспроизведения, кнопками управления, длительности трека.
           Row(
@@ -1270,7 +1280,10 @@ class MusicPlayerBackgroundWidget extends HookConsumerWidget {
 }
 
 /// Виджет для [_MusicContents], отображающий прогресс-бар внизу плеера. В случае, если идёт буферизация, то вместо прогресс-бара отображается индикатор загрузки.
-class BottomMusicProgressBar extends ConsumerWidget {
+class BottomMusicProgressBar extends HookConsumerWidget {
+  /// Длительность анимации для [Slider] во время переключения треков или перемотки.
+  static const Duration sliderAnimationDuration = Durations.long2;
+
   const BottomMusicProgressBar({
     super.key,
   });
@@ -1280,9 +1293,34 @@ class BottomMusicProgressBar extends ConsumerWidget {
     ref.watch(playerStateProvider).value;
     ref.watch(playerPositionProvider);
 
-    final isBuffering = player.buffering;
     final isPlaying = player.playing;
-    final progress = player.progress;
+    final playerProgress = player.progress;
+
+    final progressAnimation = useAnimationController(
+      duration: sliderAnimationDuration,
+      initialValue: playerProgress,
+    );
+    useEffect(
+      () {
+        progressAnimation.animateTo(
+          playerProgress,
+          curve: Curves.easeInOutCubicEmphasized,
+        );
+
+        return null;
+      },
+      [player.trackIndex],
+    );
+    useEffect(
+      () {
+        if (progressAnimation.isAnimating) return;
+        progressAnimation.value = playerProgress;
+
+        return null;
+      },
+      [playerProgress],
+    );
+    final animatedProgress = useValueListenable(progressAnimation);
 
     final scheme = Theme.of(context).colorScheme;
     final color = scheme.onPrimaryContainer.withOpacity(
@@ -1301,7 +1339,7 @@ class BottomMusicProgressBar extends ConsumerWidget {
           horizontal: mobileLayout ? 6 : 0,
         ),
         child: LinearProgressIndicator(
-          value: isBuffering ? null : progress,
+          value: animatedProgress,
           color: color,
           backgroundColor: Colors.transparent,
           minHeight: 2,
