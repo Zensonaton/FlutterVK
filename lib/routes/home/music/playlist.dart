@@ -1238,7 +1238,8 @@ class PlaylistTypeDescriptionWidget extends HookConsumerWidget {
       ],
     );
 
-    final hasInfo = playlist.isLiveData;
+    final hasInfo =
+        playlist.isLiveData || playlist.type == PlaylistType.favorites;
     final areTracksLoaded = playlist.audios != null;
 
     final scheme = Theme.of(context).colorScheme;
