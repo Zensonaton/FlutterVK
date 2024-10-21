@@ -106,6 +106,8 @@ class DownloadManagerWrapperWidget extends HookConsumerWidget {
           timer.value = Timer(
             const Duration(seconds: 5),
             () {
+              if (!context.mounted) return;
+
               showAnimation.animateTo(
                 0.0,
                 curve: Easing.emphasizedAccelerate,
@@ -216,25 +218,24 @@ class ShellRouteWrapper extends HookConsumerWidget {
         if (!kDebugMode) checkForUpdates(ref, context);
 
         // Слушаем события подключения к интернету.
-        final subscription =
-            connectivityManager.connectionChange.listen((bool isConnected) {
-          logger.d("Network connectivity state: $isConnected");
+        final subscription = connectivityManager.connectionChange.listen(
+          (bool isConnected) {
+            logger.d("Network connectivity state: $isConnected");
 
-          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            if (isConnected || !context.mounted) return;
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              duration: Duration(
-                seconds: isConnected ? 2 : 6,
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                duration: Duration(
+                  seconds: isConnected ? 2 : 6,
+                ),
+                content: Text(
+                  l18n.noInternetConnectionDescription,
+                ),
               ),
-              content: Text(
-                isConnected
-                    ? l18n.internetConnectionRestoredDescription
-                    : l18n.noInternetConnectionDescription,
-              ),
-            ),
-          );
-        });
+            );
+          },
+        );
 
         return subscription.cancel;
       },

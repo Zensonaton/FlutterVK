@@ -1991,7 +1991,7 @@ class PlaylistRoute extends HookConsumerWidget {
 
     return PopScope(
       canPop: !isSearchOpen.value,
-      onPopInvoked: (bool didPop) async {
+      onPopInvokedWithResult: (bool didPop, _) async {
         if (didPop) return;
 
         // Если у нас открыт поиск, то сначала закрыаем его.

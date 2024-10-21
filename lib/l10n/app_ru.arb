@@ -24,7 +24,6 @@
 	},
 
 	"noInternetConnectionDescription": "Соеднинение с серверами потеряно. Часть функционала приложения будет отключена.",
-	"internetConnectionRestoredDescription": "Соединение успешно восстановлено!",
 
 	"internetConnectionRequiredTitle": "Нет подключения",
 	"internetConnectionRequiredDescription": "Данное действие можно выполнить лишь при подключении к интернету. Пожалуйста, подключитесь к сети и попробуйте ещё раз.",

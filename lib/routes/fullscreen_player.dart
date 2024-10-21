@@ -617,7 +617,7 @@ class _FullscreenPlayerRouteState extends ConsumerState<FullscreenPlayerRoute> {
       // Изменение состояния паузы плеера.
       player.loadedStateStream.listen(
         (bool loaded) {
-          if (loaded) return;
+          if (loaded || !mounted) return;
 
           closeFullscreenPlayer(context);
         },
@@ -737,7 +737,7 @@ class _FullscreenPlayerRouteState extends ConsumerState<FullscreenPlayerRoute> {
                 ): () => closePlayer(context),
               },
               child: PopScope(
-                onPopInvoked: (_) {
+                onPopInvokedWithResult: (_, __) {
                   closePlayer(
                     context,
                     popRoute: false,
