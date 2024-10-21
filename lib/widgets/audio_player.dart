@@ -755,9 +755,15 @@ class NextTrackSpoilerWidget extends HookConsumerWidget {
     useEffect(
       () {
         if (show) {
-          animation.forward();
+          animation.animateTo(
+            1.0,
+            curve: Curves.ease,
+          );
         } else {
-          animation.reverse();
+          animation.animateTo(
+            0.0,
+            curve: Curves.ease,
+          );
         }
 
         return null;
@@ -765,11 +771,12 @@ class NextTrackSpoilerWidget extends HookConsumerWidget {
       [show],
     );
 
-    if (animation.value == 0.0) {
-      return const SizedBox();
-    }
+    if (animation.value == 0.0) return const SizedBox();
 
     final audio = useState(player.smartNextAudio);
+    final artist = audio.value?.artist;
+    final title = audio.value?.title;
+    final subtitle = audio.value?.subtitle;
     useEffect(
       () {
         if (player.smartNextAudio != null && animation.value == 0.0) {
@@ -784,21 +791,6 @@ class NextTrackSpoilerWidget extends HookConsumerWidget {
     final position =
         MusicPlayerWidget.desktopMiniPlayerHeight - 5.0 + animation.value * 15;
     final opacity = animation.value;
-    final audioString = useMemoized(
-      () {
-        final currentAudio = audio.value;
-        if (currentAudio == null) {
-          return "Unknown";
-        }
-
-        if (currentAudio.subtitle == null) {
-          return "${audio.value?.artist} • ${audio.value?.title}";
-        }
-
-        return "${audio.value?.artist} (${currentAudio.subtitle}) • ${audio.value?.title}";
-      },
-      [audio.value],
-    );
 
     final scheme = Theme.of(context).colorScheme;
 
@@ -808,27 +800,51 @@ class NextTrackSpoilerWidget extends HookConsumerWidget {
         opacity: opacity,
         child: AnimatedSwitcher(
           duration: MusicPlayerWidget.switchAnimationDuration,
-          child: Row(
-            key: ValueKey(
-              audio.value?.id,
-            ),
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Иконка.
-              Icon(
-                Icons.music_note,
+          child: RichText(
+            text: TextSpan(
+              style: TextStyle(
                 color: scheme.primary,
               ),
-              const Gap(8),
-
-              // Название следующего трека.
-              Text(
-                audioString,
-                style: TextStyle(
-                  color: scheme.primary,
+              children: [
+                // Иконка.
+                WidgetSpan(
+                  alignment: PlaceholderAlignment.middle,
+                  child: Icon(
+                    Icons.music_note,
+                    color: scheme.primary,
+                  ),
                 ),
-              ),
-            ],
+
+                // Исполнитель.
+                TextSpan(
+                  text: " ${artist ?? "Unknown"}",
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                TextSpan(
+                  text: " • ",
+                  style: TextStyle(
+                    color: scheme.onSurface.withOpacity(0.8),
+                  ),
+                ),
+
+                // Название трека.
+                TextSpan(
+                  text: title ?? "Unknown",
+                ),
+
+                // Подпись, если таковая имеется.
+                if (subtitle != null)
+                  TextSpan(
+                    text: " ($subtitle)",
+                    style: TextStyle(
+                      color: scheme.primary.withOpacity(0.8),
+                      fontWeight: FontWeight.w300,
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
@@ -1279,7 +1295,7 @@ class MusicPlayerBackgroundWidget extends HookConsumerWidget {
   }
 }
 
-/// Виджет для [_MusicContents], отображающий прогресс-бар внизу плеера. В случае, если идёт буферизация, то вместо прогресс-бара отображается индикатор загрузки.
+/// Виджет для [_MusicContents], отображающий прогресс-бар внизу плеера.
 class BottomMusicProgressBar extends HookConsumerWidget {
   /// Длительность анимации для [Slider] во время переключения треков или перемотки.
   static const Duration sliderAnimationDuration = Durations.long2;
