@@ -55,7 +55,7 @@ class DownloadItemWidget extends HookConsumerWidget {
     final allTasks = task.tasks;
 
     return AnimatedContainer(
-      curve: Curves.ease,
+      curve: Curves.easeInOutCubicEmphasized,
       duration: const Duration(
         milliseconds: 500,
       ),
@@ -153,7 +153,7 @@ class DownloadItemWidget extends HookConsumerWidget {
 
                           // Прогресс загрузки.
                           AnimatedOpacity(
-                            curve: Curves.ease,
+                            curve: Curves.easeInOutCubicEmphasized,
                             duration: const Duration(
                               milliseconds: 500,
                             ),

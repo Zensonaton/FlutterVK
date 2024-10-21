@@ -194,8 +194,8 @@ class ImageLyricsBlock extends HookConsumerWidget {
       reverseDuration: const Duration(
         milliseconds: 200,
       ),
-      switchInCurve: Curves.ease,
-      switchOutCurve: Curves.ease,
+      switchInCurve: Curves.easeInOutCubicEmphasized,
+      switchOutCurve: Curves.easeInOutCubicEmphasized,
       child: !lyricsLoadedAndShown
           ? MouseRegion(
               key: ValueKey(
@@ -291,7 +291,7 @@ class ImageLyricsBlock extends HookConsumerWidget {
                 duration: const Duration(
                   milliseconds: 500,
                 ),
-                curve: Curves.ease,
+                curve: Curves.easeInOutCubicEmphasized,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 18,

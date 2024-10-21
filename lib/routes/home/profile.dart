@@ -22,6 +22,7 @@ import "../../provider/updater.dart";
 import "../../provider/user.dart";
 import "../../provider/vk_api.dart";
 import "../../services/cache_manager.dart";
+import "../../services/download_manager.dart";
 import "../../services/logger.dart";
 import "../../utils.dart";
 import "../../widgets/audio_player.dart";
@@ -1141,6 +1142,33 @@ class HomeProfilePage extends HookConsumerWidget {
                       ),
 
                       // Кнопка для запуска фейковой загрузки.
+                      ListTile(
+                        leading: const Icon(
+                          Icons.download,
+                        ),
+                        title: const Text(
+                          "Fake download task",
+                        ),
+                        onTap: () {
+                          final downloadManagerNotifier =
+                              ref.read(downloadManagerProvider.notifier);
+
+                          downloadManagerNotifier.newTask(
+                            DownloadTask(
+                              id: "debug",
+                              smallTitle: "Debug",
+                              longTitle: "Fake debug download task",
+                              tasks: [
+                                FakeDownloadItem(
+                                  ref: downloadManagerNotifier.ref,
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+
+                      // Кнопка для force-запуска обновления.
                       ListTile(
                         leading: const Icon(
                           Icons.update,

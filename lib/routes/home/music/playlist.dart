@@ -382,7 +382,7 @@ class CachePlaylistButtonWidget extends HookConsumerWidget {
 
               // Прогресс загрузки.
               AnimatedOpacity(
-                curve: Curves.ease,
+                curve: Curves.easeInOutCubicEmphasized,
                 duration: const Duration(
                   milliseconds: 500,
                 ),
@@ -1179,7 +1179,7 @@ class BackgroundGradientWidget extends HookConsumerWidget {
           duration: const Duration(
             milliseconds: 1500,
           ),
-          curve: Curves.easeOut,
+          curve: Curves.easeInOutCubicEmphasized,
           decoration: BoxDecoration(
             gradient: scheme != null
                 ? LinearGradient(
@@ -1885,7 +1885,7 @@ class PlaylistRoute extends HookConsumerWidget {
           duration: const Duration(
             milliseconds: 300,
           ),
-          curve: Curves.ease,
+          curve: Curves.easeInOutCubicEmphasized,
         );
 
     void onSearchPressed() {

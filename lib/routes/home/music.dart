@@ -348,7 +348,7 @@ class AudioPlaylistWidget extends HookConsumerWidget {
                 duration: const Duration(
                   milliseconds: 500,
                 ),
-                curve: Curves.ease,
+                curve: Curves.easeInOutCubicEmphasized,
                 height: 200,
                 decoration: BoxDecoration(
                   boxShadow: [

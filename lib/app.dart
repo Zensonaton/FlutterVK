@@ -212,16 +212,13 @@ class FlutterVKApp extends HookConsumerWidget {
                     fallbackDarkColorScheme)
                 .copyWith(
               surface: preferences.oledTheme ? Colors.black : null,
-              // Некоторые части интерфейса Flutter до сих пор используют background.
-              // ignore: deprecated_member_use
-              background: preferences.oledTheme ? Colors.black : null,
             ),
           ),
           themeMode: preferences.theme,
           themeAnimationDuration: const Duration(
             milliseconds: 500,
           ),
-          themeAnimationCurve: Curves.ease,
+          themeAnimationCurve: Curves.easeInOutCubicEmphasized,
           builder: (BuildContext context, Widget? child) {
             return LoadingOverlay(
               child: child!,

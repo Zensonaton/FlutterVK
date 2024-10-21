@@ -100,7 +100,7 @@ class MusicCategory extends HookWidget {
                         duration: const Duration(
                           milliseconds: 500,
                         ),
-                        curve: Curves.ease,
+                        curve: Curves.easeInOutCubicEmphasized,
                         opacity: count != null ? 1.0 : 0.0,
                         child: Text(
                           "  $animatedCount",

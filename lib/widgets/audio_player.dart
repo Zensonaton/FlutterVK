@@ -190,7 +190,7 @@ class _LeftSideThumbnail extends ConsumerWidget {
         onTap: mobileLayout ? null : () => openFullscreenPlayer(context),
         child: AnimatedContainer(
           duration: MusicPlayerWidget.switchAnimationDuration,
-          curve: Curves.ease,
+          curve: Curves.easeInOutCubicEmphasized,
           decoration: BoxDecoration(
             boxShadow: [
               if (isPlaying)
@@ -757,12 +757,12 @@ class NextTrackSpoilerWidget extends HookConsumerWidget {
         if (show) {
           animation.animateTo(
             1.0,
-            curve: Curves.ease,
+            curve: Curves.easeInOutCubicEmphasized,
           );
         } else {
           animation.animateTo(
             0.0,
-            curve: Curves.ease,
+            curve: Curves.easeInOutCubicEmphasized,
           );
         }
 
@@ -889,7 +889,7 @@ class _MusicMiddleSide extends HookConsumerWidget {
       () {
         sliderWaveAnimation.animateTo(
           isPlaying ? 1.0 : 0.0,
-          curve: Curves.ease,
+          curve: Curves.easeInOutCubicEmphasized,
         );
 
         return null;
@@ -1282,7 +1282,7 @@ class MusicPlayerBackgroundWidget extends HookConsumerWidget {
 
     return AnimatedContainer(
       duration: MusicPlayerWidget.switchAnimationDuration,
-      curve: Curves.ease,
+      curve: Curves.easeInOutCubicEmphasized,
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: mobileLayout

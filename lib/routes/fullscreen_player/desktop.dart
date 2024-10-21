@@ -127,12 +127,12 @@ class NextTrackInfoWidget extends ConsumerWidget {
       duration: const Duration(
         milliseconds: 500,
       ),
-      curve: Curves.ease,
+      curve: Curves.easeInOutCubicEmphasized,
       child: AnimatedSlide(
         duration: const Duration(
           milliseconds: 500,
         ),
-        curve: Curves.ease,
+        curve: Curves.easeInOutCubicEmphasized,
         offset: Offset(
           displayNextTrack ? 0.0 : -0.1,
           0.0,
@@ -220,7 +220,7 @@ class LyricsBlockWidget extends ConsumerWidget {
       duration: const Duration(
         milliseconds: 500,
       ),
-      curve: Curves.ease,
+      curve: Curves.easeInOutCubicEmphasized,
       opacity: preferences.trackLyricsEnabled ? 1.0 : 0.0,
       child: Align(
         alignment: Alignment.topRight,
@@ -410,7 +410,7 @@ class FullscreenMediaControls extends ConsumerWidget {
                       duration: const Duration(
                         milliseconds: 500,
                       ),
-                      curve: Curves.ease,
+                      curve: Curves.easeInOutCubicEmphasized,
                       width: 130 *
                           ((preferences.fullscreenBigThumbnail &&
                                   MediaQuery.sizeOf(context).height > 600)

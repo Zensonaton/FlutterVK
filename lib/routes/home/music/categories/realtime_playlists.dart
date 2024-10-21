@@ -82,7 +82,7 @@ class LivePlaylistWidget extends StatelessWidget {
       duration: const Duration(
         milliseconds: 500,
       ),
-      curve: Curves.ease,
+      curve: Curves.easeInOutCubicEmphasized,
       child: InkWell(
         onTap: onPlayToggle,
         borderRadius: BorderRadius.circular(
@@ -223,7 +223,7 @@ class MoodPlaylistWidget extends StatelessWidget {
       duration: const Duration(
         milliseconds: 500,
       ),
-      curve: Curves.ease,
+      curve: Curves.easeInOutCubicEmphasized,
       decoration: BoxDecoration(
         boxShadow: [
           if (selected)

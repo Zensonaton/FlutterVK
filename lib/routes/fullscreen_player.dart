@@ -752,7 +752,7 @@ class _FullscreenPlayerRouteState extends ConsumerState<FullscreenPlayerRoute> {
                     duration: const Duration(
                       milliseconds: 500,
                     ),
-                    curve: Curves.ease,
+                    curve: Curves.easeInOutCubicEmphasized,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.bottomCenter,

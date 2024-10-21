@@ -69,6 +69,9 @@ class NavigationItem {
 
 /// Обёртка для [DownloadManagerIconWidget], добавляющая анимацию появления и исчезновения этого виджета.
 class DownloadManagerWrapperWidget extends HookConsumerWidget {
+  /// Длительность анимации появления/исчезновения иконки менеджера загрузок.
+  static const Duration slideAnimationDuration = Duration(milliseconds: 500);
+
   const DownloadManagerWrapperWidget({
     super.key,
   });
@@ -78,53 +81,75 @@ class DownloadManagerWrapperWidget extends HookConsumerWidget {
     final downloadManager = ref.watch(downloadManagerProvider);
     ref.watch(playerLoadedStateProvider);
 
+    final isLoaded = player.loaded;
     final downloadStarted = downloadManager.downloadStarted;
+
     final progressValue = useValueListenable(downloadManager.progress);
-    final shown = useState(downloadStarted);
+    final showAnimation = useAnimationController(
+      duration: slideAnimationDuration,
+      initialValue: downloadStarted ? 1.0 : 0.0,
+    );
+    useValueListenable(showAnimation);
+
     final timer = useRef<Timer?>(null);
-    useValueChanged(downloadStarted, (_, __) {
-      timer.value?.cancel();
+    useEffect(
+      () {
+        timer.value?.cancel();
 
-      if (downloadStarted) {
-        shown.value = true;
-      } else {
-        // Прячем виджет, если прошло 5 секунд после полной загрузки.
-        timer.value = Timer(
-          const Duration(seconds: 5),
-          () => shown.value = false,
-        );
-      }
+        if (downloadStarted) {
+          showAnimation.animateTo(
+            1.0,
+            curve: Easing.emphasizedDecelerate,
+          );
+        } else {
+          // Прячем виджет, если прошло 5 секунд после полной загрузки.
+          timer.value = Timer(
+            const Duration(seconds: 5),
+            () {
+              showAnimation.animateTo(
+                0.0,
+                curve: Easing.emphasizedAccelerate,
+              );
+            },
+          );
+        }
 
-      return true;
-    });
+        return null;
+      },
+      [downloadStarted],
+    );
+
+    if (showAnimation.value == 0.0) return const SizedBox();
 
     const double position = 40 - downloadManagerMinimizedSize / 2;
+    const double left = position + 4;
+    final double bottom =
+        (isLoaded ? MusicPlayerWidget.desktopMiniPlayerHeight : 0) + position;
 
-    return AnimatedPositioned(
-      curve: Curves.ease,
-      duration: const Duration(
-        milliseconds: 500,
-      ),
-      left: position + 4,
-      bottom: (player.loaded ? MusicPlayerWidget.desktopMiniPlayerHeight : 0) +
-          position,
-      child: AnimatedSlide(
-        offset: Offset(
-          0,
-          shown.value ? 0 : 2,
-        ),
-        curve: Curves.ease,
-        duration: const Duration(
-          milliseconds: 500,
-        ),
-        child: RepaintBoundary(
-          child: DownloadManagerIconWidget(
-            progress: progressValue,
-            title: downloadManager.currentTask?.smallTitle ?? "",
-            onTap: () => context.go("/profile/downloadManager"),
+    return AnimatedBuilder(
+      animation: showAnimation,
+      builder: (context, child) {
+        return Positioned(
+          left: left,
+          bottom: bottom,
+          child: FractionalTranslation(
+            translation: Offset(
+              0,
+              1 - showAnimation.value,
+            ),
+            child: Opacity(
+              opacity: showAnimation.value,
+              child: RepaintBoundary(
+                child: DownloadManagerIconWidget(
+                  progress: progressValue,
+                  title: downloadManager.currentTask?.smallTitle ?? "",
+                  onTap: () => context.go("/profile/downloadManager"),
+                ),
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -594,11 +619,12 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
     useValueListenable(animation);
     useEffect(
       () {
-        if (isLoaded) {
-          animation.forward();
-        } else {
-          animation.reverse();
-        }
+        animation.animateTo(
+          isLoaded ? 1.0 : 0.0,
+          curve: isLoaded
+              ? Easing.emphasizedDecelerate
+              : Easing.emphasizedAccelerate,
+        );
 
         return null;
       },

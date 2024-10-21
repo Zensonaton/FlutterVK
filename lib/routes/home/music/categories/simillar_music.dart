@@ -179,7 +179,7 @@ class SimillarMusicPlaylistWidget extends HookConsumerWidget {
                     duration: const Duration(
                       milliseconds: 300,
                     ),
-                    curve: Curves.ease,
+                    curve: Curves.easeInOutCubicEmphasized,
                     child: Container(
                       height: 90,
                       width: double.infinity,

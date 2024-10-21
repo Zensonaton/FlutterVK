@@ -396,7 +396,7 @@ class PlaylistCacheDownloadItem extends DownloadItem {
 
 /// [DownloadTask], загружающий обновление для Flutter VK.
 ///
-/// Используйте [AppUpdaterDownloadItem] для загрузки файла обновления.
+/// Используйте [UrlDownloadItem] для загрузки файла обновления.
 class AppUpdaterDownloadTask extends DownloadTask {
   /// [Ref], используемый для доступа к контексту и другим важным объектам.
   final Ref ref;
@@ -416,7 +416,7 @@ class AppUpdaterDownloadTask extends DownloadTask {
     required this.file,
   }) : super(
           tasks: [
-            AppUpdaterDownloadItem(
+            UrlDownloadItem(
               url: url,
               file: file,
               ref: ref,
@@ -425,15 +425,41 @@ class AppUpdaterDownloadTask extends DownloadTask {
         );
 }
 
+/// [DownloadItem], используемый для фейковой задачи, которая ничего не делает.
+class FakeDownloadItem extends DownloadItem {
+  static const double step = 0.01;
+  static const Duration delay = Duration(milliseconds: 100);
+
+  FakeDownloadItem({
+    required super.ref,
+  });
+
+  @override
+  Future<void> download() async {
+    while (progress.value + step < 1.0) {
+      progress.value += step;
+
+      await Future.delayed(
+        delay,
+      );
+    }
+  }
+
+  @override
+  Future<void> cancel() async {
+    progress.value = 1.0;
+  }
+}
+
 /// [DownloadItem], загружающий файл обновления по передаваемому [url], и дальше сохраняет его в [file] после успешной загрузки.
-class AppUpdaterDownloadItem extends DownloadItem {
+class UrlDownloadItem extends DownloadItem {
   /// Url на загрузку данного файла.
   final String url;
 
   /// Полный путь, куда будет сохранён данный файл после загрузки.
   final File file;
 
-  AppUpdaterDownloadItem({
+  UrlDownloadItem({
     required this.url,
     required this.file,
     required super.ref,
@@ -455,7 +481,11 @@ class AppUpdaterDownloadItem extends DownloadItem {
   }
 
   @override
-  Future<void> cancel() async => dio.close(force: true);
+  Future<void> cancel() async {
+    // TODO: Не закрывать объект dio, поскольку он используется где-то ещё.
+
+    dio.close(force: true);
+  }
 }
 
 /// Отдельная, под-задача для [DownloadTask], олицетворяющая маленькую задачу для загрузки чего-либо.

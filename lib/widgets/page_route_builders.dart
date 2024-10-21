@@ -94,7 +94,7 @@ class SlideFromBottomPageRoute<T> extends PageRouteBuilder<T> {
               end: end,
             ).chain(
               CurveTween(
-                curve: Curves.ease,
+                curve: Curves.easeInOutCubicEmphasized,
               ),
             );
             var fadeTween = Tween(
