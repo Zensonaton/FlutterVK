@@ -281,10 +281,10 @@ class Playlists extends _$Playlists {
         logger.d("Found playlist with caching enabled: $playlist");
         await loadPlaylist(playlist);
       }
-    } catch (e, stackTrace) {
+    } catch (error, stackTrace) {
       logger.e(
         "Failed to load playlists via API",
-        error: e,
+        error: error,
         stackTrace: stackTrace,
       );
     }

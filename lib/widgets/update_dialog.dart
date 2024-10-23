@@ -69,10 +69,10 @@ class UpdateAvailableDialog extends ConsumerWidget {
 
       try {
         await ref.read(updaterProvider).downloadAndInstallUpdate(release);
-      } catch (e, stackTrace) {
+      } catch (error, stackTrace) {
         showLogErrorDialog(
           "Update download/installation error:",
-          e,
+          error,
           stackTrace,
           logger,
           // ignore: use_build_context_synchronously

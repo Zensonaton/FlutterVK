@@ -103,10 +103,10 @@ class TrackInfoEditDialog extends HookConsumerWidget {
             e.toString(),
           ),
         );
-      } catch (e, stackTrace) {
+      } catch (error, stackTrace) {
         showLogErrorDialog(
           "Error while modifying track:",
-          e,
+          error,
           stackTrace,
           logger,
           // ignore: use_build_context_synchronously

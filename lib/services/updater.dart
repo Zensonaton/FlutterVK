@@ -209,10 +209,10 @@ class Updater {
       }
 
       return false;
-    } catch (e, stackTrace) {
+    } catch (error, stackTrace) {
       logger.e(
         "Couldn't check for updates:",
-        error: e,
+        error: error,
         stackTrace: stackTrace,
       );
 
@@ -220,7 +220,7 @@ class Updater {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              l18n.updatesRetrieveError(e.toString()),
+              l18n.updatesRetrieveError(error.toString()),
             ),
           ),
         );
@@ -263,10 +263,10 @@ class Updater {
 
         return;
       }
-    } catch (e, stackTrace) {
+    } catch (error, stackTrace) {
       showLogErrorDialog(
         "Couldn't get changelog",
-        e,
+        error,
         stackTrace,
         logger,
         // ignore: use_build_context_synchronously

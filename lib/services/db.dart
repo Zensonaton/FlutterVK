@@ -250,10 +250,10 @@ class IsarDBMigrator {
       logger.i(
         "DB migration completed in ${migrationTimer.elapsedMilliseconds}ms to v$currentDBVersion",
       );
-    } catch (e, stackTrace) {
+    } catch (error, stackTrace) {
       logger.e(
         "Failed to perform migration from v$currentDBVersion to $maxDBVersion.",
-        error: e,
+        error: error,
         stackTrace: stackTrace,
       );
 

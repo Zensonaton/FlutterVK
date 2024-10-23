@@ -86,7 +86,6 @@ Widget buildListTrackWidget(
         await toggleTrackLike(
           player.ref,
           audio,
-          !audio.isLiked,
           sourcePlaylist: playlist,
         );
       } on VKAPIException catch (error, stackTrace) {
@@ -299,6 +298,9 @@ class AudioTrackTitle extends ConsumerWidget {
   /// Указывает, что этот трек играет в данный момент.
   final bool isSelected;
 
+  /// Управляет возможностью выделить и скопировать название трека.
+  final bool allowTextSelection;
+
   const AudioTrackTitle({
     super.key,
     required this.title,
@@ -307,6 +309,7 @@ class AudioTrackTitle extends ConsumerWidget {
     this.isAvailable = true,
     this.isExplicit = true,
     this.isSelected = false,
+    this.allowTextSelection = false,
   });
 
   @override
@@ -316,7 +319,7 @@ class AudioTrackTitle extends ConsumerWidget {
         isSelected ? scheme.primary : scheme.onSurface;
     final Color primaryIconColor = primaryTextColor.withOpacity(0.75);
 
-    return Column(
+    final widget = Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -327,6 +330,7 @@ class AudioTrackTitle extends ConsumerWidget {
           textColor: primaryTextColor.withOpacity(isAvailable ? 1.0 : 0.5),
           isExplicit: isExplicit,
           explicitColor: primaryIconColor.withOpacity(isAvailable ? 0.75 : 0.3),
+          allowTextSelection: allowTextSelection,
         ),
 
         // Исполнитель.
@@ -339,6 +343,14 @@ class AudioTrackTitle extends ConsumerWidget {
         ),
       ],
     );
+
+    if (allowTextSelection) {
+      return SelectionArea(
+        child: widget,
+      );
+    }
+
+    return widget;
   }
 }
 
@@ -453,6 +465,9 @@ class AudioTrackTile extends HookConsumerWidget {
   /// Указывает, что будет показана длительность этого трека.
   final bool showDuration;
 
+  /// Управляет возможностью выделить и скопировать название трека.
+  final bool allowTextSelection;
+
   /// Действие, вызываемое при нажатии на этот виджет.
   ///
   /// Обычно, по нажатию на этот виджет должно запускаться воспроизведение этого трека, а если он уже играет, то он должен ставиться на паузу/возобновляться.
@@ -479,6 +494,7 @@ class AudioTrackTile extends HookConsumerWidget {
     this.forceAvailable = false,
     this.allowImageCache = true,
     this.showDuration = true,
+    this.allowTextSelection = false,
     this.onPlayToggle,
     this.onLikeTap,
     this.onSecondaryAction,
@@ -553,6 +569,7 @@ class AudioTrackTile extends HookConsumerWidget {
                     isAvailable: forceAvailable || audio.canPlay,
                     isExplicit: audio.isExplicit,
                     isSelected: isSelected,
+                    allowTextSelection: allowTextSelection,
                   ),
                 ),
                 const Gap(12),
