@@ -8,7 +8,6 @@ import "package:audio_session/audio_session.dart";
 import "package:collection/collection.dart";
 import "package:crypto/crypto.dart";
 import "package:discord_rpc/discord_rpc.dart";
-import "package:flutter/foundation.dart";
 import "package:flutter/services.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:just_audio/just_audio.dart";
@@ -526,14 +525,19 @@ class VKMusicPlayer {
   /// Возвращает null, если сейчас ничего не играет.
   ///
   /// Если Вам необходим Stream для отслеживания изменения данного поля, то воспользуйтесь [positionStream].
-  double get progress =>
-      _player.duration != null && _player.duration != Duration.zero
-          ? clampDouble(
-              position.inMilliseconds / _player.duration!.inMilliseconds,
-              0.0,
-              1.0,
-            )
-          : 0.0;
+  double get progress {
+    if (_player.duration == null || _player.duration == Duration.zero) {
+      return 0.0;
+    }
+
+    final position = _fakeCurrentPosition ?? _player.position;
+    final duration = _player.duration!;
+
+    return (position.inMilliseconds / duration.inMilliseconds).clamp(
+      0.0,
+      1.0,
+    );
+  }
 
   /// Возвращает текущую позицию воспроизведения трека. Данное поле может возвращать слегка другое значение, если был вызван метод [seek] или ему подобные, что бы мгновенно изменить позицию воспроизведения после вызова. Если Вам нужно истинное значение, то воспользуйтесь полем [realPosition], которое возвращает реальное значение позиции воспроизведения даже если был вызван метод [seek].
   ///
@@ -548,8 +552,7 @@ class VKMusicPlayer {
   ///
   /// Если Вам необходим процент (число от 0.0 до 1.0), отображающий прогресс прослушивания текущего трека, то для этого есть поле [progress].
   /// {@endtemplate}
-  Stream<Duration> get positionStream =>
-      _player.positionStream.asBroadcastStream();
+  Stream<Duration> get positionStream => _player.positionStream;
 
   /// Возвращает длительность трека.
   ///

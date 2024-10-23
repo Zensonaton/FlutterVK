@@ -1,3 +1,4 @@
+import "dart:async";
 import "dart:ui";
 
 import "package:animations/animations.dart";
@@ -149,6 +150,7 @@ class TrackTitleAndArtist extends StatelessWidget {
             subtitle: subtitle,
             textColor: scheme.onPrimaryContainer,
             isExplicit: explicit,
+            explicitColor: scheme.onPrimaryContainer.withOpacity(0.75),
           ),
         ),
 
@@ -909,25 +911,58 @@ class _MusicMiddleSide extends HookConsumerWidget {
       duration: sliderAnimationDuration,
       initialValue: player.progress,
     );
+    void runSeekAnimation({double? progress}) {
+      seekAnimation.animateTo(
+        progress ?? player.progress,
+        curve: Curves.easeInOutCubicEmphasized,
+      );
+    }
+
     useEffect(
       () {
-        seekAnimation.animateTo(
-          player.progress,
-          curve: Curves.easeInOutCubicEmphasized,
-        );
+        final List<StreamSubscription> subscriptions = [
+          // Переключение трека.
+          player.currentIndexStream.listen((_) {
+            runSeekAnimation(progress: 0.0);
+          }),
 
-        return null;
-      },
-      [player.trackIndex],
-    );
-    useEffect(
-      () {
-        if (seekAnimation.isAnimating) return;
-        seekAnimation.value = player.progress;
+          // Перемотка.
+          player.seekStateStream.listen((_) {
+            runSeekAnimation();
+          }),
 
-        return null;
+          // Позиция трека.
+          player.positionStream.listen((_) async {
+            // Эта задержка нужна, что бы событие изменения позиции обрабатывалось слегка позже,
+            // чем обработчики события currentIndexStream или seekStateStream.
+            await Future.delayed(
+              const Duration(
+                milliseconds: 1,
+              ),
+            );
+
+            // Если анимация Slider'а переключения идёт, то ничего не меняем.
+            // Единственное, когда нам разрешено менять значение, это когда
+            // текущее значение меньше, чем значение воспроизведения.
+            if (seekAnimation.isAnimating &&
+                seekAnimation.value > player.progress) return;
+
+            // Если анимация уже идёт, то останавливаем её.
+            if (seekAnimation.isAnimating) {
+              seekAnimation.stop();
+            }
+
+            seekAnimation.value = player.progress;
+          }),
+        ];
+
+        return () {
+          for (StreamSubscription subscription in subscriptions) {
+            subscription.cancel();
+          }
+        };
       },
-      [player.progress],
+      [],
     );
     final progress = useValueListenable(seekAnimation);
 
@@ -976,8 +1011,11 @@ class _MusicMiddleSide extends HookConsumerWidget {
               child: ResponsiveSlider(
                 value: progress,
                 onChange: (double progress) => seekAnimation.value = progress,
-                onChangeEnd: (double progress) =>
-                    player.seekNormalized(progress),
+                onChangeEnd: (double progress) {
+                  seekAnimation.value = progress;
+
+                  return player.seekNormalized(progress);
+                },
               ),
             ),
 
@@ -1112,9 +1150,8 @@ class _MusicRightSide extends HookConsumerWidget {
     final audio = useState<ExtendedAudio?>(player.smartCurrentAudio);
     useEffect(
       () {
-        if (player.smartCurrentAudio != null) {
-          audio.value = player.smartCurrentAudio;
-        }
+        if (player.smartCurrentAudio == null) return;
+        audio.value = player.smartCurrentAudio;
 
         return null;
       },
