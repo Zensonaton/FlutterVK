@@ -321,28 +321,12 @@ class AudioTrackTitle extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Ряд с названием, subtitle, иконкой explicit.
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Название, а так же subtitle.
-            Flexible(
-              child: TrackTitleWithSubtitle(
-                title: title,
-                subtitle: subtitle,
-                color: primaryTextColor.withOpacity(isAvailable ? 1.0 : 0.5),
-              ),
-            ),
-
-            // Explicit.
-            if (isExplicit) ...[
-              const Gap(4),
-              Icon(
-                Icons.explicit,
-                size: 18,
-                color: primaryIconColor.withOpacity(isAvailable ? 0.75 : 0.3),
-              ),
-            ],
-          ],
+        TrackTitleWithSubtitle(
+          title: title,
+          subtitle: subtitle,
+          textColor: primaryTextColor.withOpacity(isAvailable ? 1.0 : 0.5),
+          isExplicit: isExplicit,
+          explicitColor: primaryIconColor.withOpacity(isAvailable ? 0.75 : 0.3),
         ),
 
         // Исполнитель.

@@ -33,7 +33,7 @@ import "responsive_slider.dart";
 import "scrollable_slider.dart";
 import "wavy_slider.dart";
 
-/// Виджет, являющийся частью [MusicPlayerWidget] и [AudioTrackTile], который либо использует [Text], либо [RichText] в зависимости от того, указан [subtitle] или нет.
+/// Виджет, являющийся частью [MusicPlayerWidget] и [AudioTrackTile], который отображает название трека ([title]) и подпись ([subtitle]), если таковая имеется.
 class TrackTitleWithSubtitle extends StatelessWidget {
   /// Название трека.
   final String title;
@@ -41,47 +41,73 @@ class TrackTitleWithSubtitle extends StatelessWidget {
   /// Подпись трека. Может отсутствовать.
   final String? subtitle;
 
-  /// Цвет текста.
-  final Color color;
+  /// Цвет текста для [title] и [subtitle].
+  final Color textColor;
+
+  /// Указывает, что это Explicit-трек.
+  final bool isExplicit;
+
+  /// Если [isExplicit] правдив, то указывает цвет для иконки Explicit.
+  final Color? explicitColor;
 
   const TrackTitleWithSubtitle({
     super.key,
     required this.title,
     this.subtitle,
-    required this.color,
+    required this.textColor,
+    this.isExplicit = false,
+    this.explicitColor,
   });
 
   @override
   Widget build(BuildContext context) {
     final TextStyle titleStyle = TextStyle(
       fontWeight: FontWeight.w500,
-      color: color,
+      color: textColor,
     );
 
-    // Если есть subtitle, то делаем RichText.
-    if (subtitle != null) {
-      return RichText(
-        text: TextSpan(
-          text: title,
-          style: titleStyle,
-          children: [
+    return Text.rich(
+      TextSpan(
+        style: titleStyle,
+        children: [
+          // Название трека.
+          TextSpan(
+            text: title,
+          ),
+
+          // Подпись трека, если таковая имеется.
+          if (subtitle != null)
             TextSpan(
               text: " ($subtitle)",
               style: TextStyle(
                 fontWeight: FontWeight.w300,
-                color: color.withOpacity(0.75),
+                color: textColor.withOpacity(0.75),
               ),
             ),
-          ],
-        ),
-        overflow: TextOverflow.ellipsis,
-      );
-    }
 
-    return Text(
-      title,
+          // Explicit.
+          if (isExplicit)
+            WidgetSpan(
+              alignment: PlaceholderAlignment.middle,
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  left: 4,
+                ),
+                child: Icon(
+                  Icons.explicit,
+                  color: explicitColor,
+                  size: 18,
+                ),
+              ),
+            ),
+
+          // Дополнительный пробел, что бы при выделении текста был пробел.
+          const TextSpan(
+            text: " ",
+          ),
+        ],
+      ),
       overflow: TextOverflow.ellipsis,
-      style: titleStyle,
     );
   }
 }
@@ -116,32 +142,14 @@ class TrackTitleAndArtist extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Информация по названию трека и прочей информацией.
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Название трека, а так же subtitle, при наличии.
-            Flexible(
-              child: TrackTitleWithSubtitle(
-                title: title,
-                subtitle: subtitle,
-                color: scheme.onPrimaryContainer,
-              ),
-            ),
-
-            // Плашка "Explicit".
-            if (explicit)
-              Padding(
-                padding: const EdgeInsets.only(
-                  left: 4,
-                ),
-                child: Icon(
-                  Icons.explicit,
-                  color: scheme.onPrimaryContainer.withOpacity(0.5),
-                  size: 14,
-                ),
-              ),
-          ],
+        // Информация по названию трека, subtitle, иконка Explicit.
+        Flexible(
+          child: TrackTitleWithSubtitle(
+            title: title,
+            subtitle: subtitle,
+            textColor: scheme.onPrimaryContainer,
+            isExplicit: explicit,
+          ),
         ),
 
         // Исполнитель.
@@ -593,7 +601,7 @@ class _MusicLeftSide extends HookConsumerWidget {
                             Flexible(
                               child: SelectionArea(
                                 child: TrackTitleAndArtist(
-                                  title: "${audio?.title ?? "Unknown"} ",
+                                  title: audio?.title ?? "Unknown",
                                   artist: audio?.artist ?? "Unknown",
                                   subtitle: audio?.subtitle,
                                   explicit: audio?.isExplicit ?? false,
