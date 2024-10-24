@@ -7503,29 +7503,34 @@ const DBAudioSchema = Schema(
       name: r'ownerID',
       type: IsarType.long,
     ),
-    r'scoredColorInts': PropertySchema(
+    r'replacedLocally': PropertySchema(
       id: 20,
+      name: r'replacedLocally',
+      type: IsarType.bool,
+    ),
+    r'scoredColorInts': PropertySchema(
+      id: 21,
       name: r'scoredColorInts',
       type: IsarType.longList,
     ),
     r'subtitle': PropertySchema(
-      id: 21,
+      id: 22,
       name: r'subtitle',
       type: IsarType.string,
     ),
     r'title': PropertySchema(
-      id: 22,
+      id: 23,
       name: r'title',
       type: IsarType.string,
     ),
     r'vkLyrics': PropertySchema(
-      id: 23,
+      id: 24,
       name: r'vkLyrics',
       type: IsarType.object,
       target: r'DBLyrics',
     ),
     r'vkThumbs': PropertySchema(
-      id: 24,
+      id: 25,
       name: r'vkThumbs',
       type: IsarType.object,
       target: r'DBExtendedThumbnail',
@@ -7660,17 +7665,18 @@ void _dBAudioSerialize(
     object.lrcLibLyrics,
   );
   writer.writeLong(offsets[19], object.ownerID);
-  writer.writeLongList(offsets[20], object.scoredColorInts);
-  writer.writeString(offsets[21], object.subtitle);
-  writer.writeString(offsets[22], object.title);
+  writer.writeBool(offsets[20], object.replacedLocally);
+  writer.writeLongList(offsets[21], object.scoredColorInts);
+  writer.writeString(offsets[22], object.subtitle);
+  writer.writeString(offsets[23], object.title);
   writer.writeObject<DBLyrics>(
-    offsets[23],
+    offsets[24],
     allOffsets,
     DBLyricsSchema.serialize,
     object.vkLyrics,
   );
   writer.writeObject<DBExtendedThumbnail>(
-    offsets[24],
+    offsets[25],
     allOffsets,
     DBExtendedThumbnailSchema.serialize,
     object.vkThumbs,
@@ -7715,16 +7721,17 @@ DBAudio _dBAudioDeserialize(
       allOffsets,
     ),
     ownerID: reader.readLongOrNull(offsets[19]),
-    scoredColorInts: reader.readLongList(offsets[20]),
-    subtitle: reader.readStringOrNull(offsets[21]),
-    title: reader.readStringOrNull(offsets[22]),
+    replacedLocally: reader.readBoolOrNull(offsets[20]),
+    scoredColorInts: reader.readLongList(offsets[21]),
+    subtitle: reader.readStringOrNull(offsets[22]),
+    title: reader.readStringOrNull(offsets[23]),
     vkLyrics: reader.readObjectOrNull<DBLyrics>(
-      offsets[23],
+      offsets[24],
       DBLyricsSchema.deserialize,
       allOffsets,
     ),
     vkThumbs: reader.readObjectOrNull<DBExtendedThumbnail>(
-      offsets[24],
+      offsets[25],
       DBExtendedThumbnailSchema.deserialize,
       allOffsets,
     ),
@@ -7792,18 +7799,20 @@ P _dBAudioDeserializeProp<P>(
     case 19:
       return (reader.readLongOrNull(offset)) as P;
     case 20:
-      return (reader.readLongList(offset)) as P;
+      return (reader.readBoolOrNull(offset)) as P;
     case 21:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readLongList(offset)) as P;
     case 22:
       return (reader.readStringOrNull(offset)) as P;
     case 23:
+      return (reader.readStringOrNull(offset)) as P;
+    case 24:
       return (reader.readObjectOrNull<DBLyrics>(
         offset,
         DBLyricsSchema.deserialize,
         allOffsets,
       )) as P;
-    case 24:
+    case 25:
       return (reader.readObjectOrNull<DBExtendedThumbnail>(
         offset,
         DBExtendedThumbnailSchema.deserialize,
@@ -9051,6 +9060,34 @@ extension DBAudioQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<DBAudio, DBAudio, QAfterFilterCondition>
+      replacedLocallyIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'replacedLocally',
+      ));
+    });
+  }
+
+  QueryBuilder<DBAudio, DBAudio, QAfterFilterCondition>
+      replacedLocallyIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'replacedLocally',
+      ));
+    });
+  }
+
+  QueryBuilder<DBAudio, DBAudio, QAfterFilterCondition> replacedLocallyEqualTo(
+      bool? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'replacedLocally',
+        value: value,
       ));
     });
   }

@@ -326,6 +326,9 @@ class DBAudio {
   /// null если трек не кэширован ([isCached]).
   final int? cachedSize;
 
+  /// Указывает, что этот трек был заменён локально.
+  final bool? replacedLocally;
+
   /// {@macro ImageSchemeExtractor.colorInts}
   final List<int>? colorInts;
 
@@ -360,6 +363,7 @@ class DBAudio {
         forceDeezerThumbs: audio.forceDeezerThumbs,
         isCached: audio.isCached,
         cachedSize: audio.cachedSize,
+        replacedLocally: audio.replacedLocally,
         colorInts: audio.colorInts?.keys.toList(),
         scoredColorInts: audio.scoredColorInts,
         frequentColorInt: audio.frequentColorInt,
@@ -391,6 +395,7 @@ class DBAudio {
     int? genreID,
     bool? isCached,
     int? cachedSize,
+    bool? replacedLocally,
     List<int>? colorInts,
     List<int>? scoredColorInts,
     int? frequentColorInt,
@@ -416,6 +421,7 @@ class DBAudio {
         genreID: genreID ?? this.genreID,
         isCached: isCached ?? this.isCached,
         cachedSize: cachedSize ?? this.cachedSize,
+        replacedLocally: replacedLocally ?? this.replacedLocally,
         colorInts: colorInts ?? this.colorInts,
         scoredColorInts: scoredColorInts ?? this.scoredColorInts,
         frequentColorInt: frequentColorInt ?? this.frequentColorInt,
@@ -462,6 +468,7 @@ class DBAudio {
     this.genreID,
     this.isCached,
     this.cachedSize,
+    this.replacedLocally,
     this.colorInts,
     this.scoredColorInts,
     this.frequentColorInt,

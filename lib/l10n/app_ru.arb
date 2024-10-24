@@ -271,6 +271,12 @@
 	"music_detailsReuploadFromYoutubeTitle": "Перезалить с Youtube",
 	"music_detailsReuploadFromYoutubeDescription": "Заменит этот трек другой версией с Youtube для обхода «недоступности» трека",
 
+	"music_detailsReplaceWithLocalAudioTitle": "Заменить трек локально",
+	"music_detailsReplaceWithLocalAudioDescription": "Локально заменяет это аудио на другое, загруженное на Вашем устройстве",
+
+	"music_replaceWithLocalFilepickerDialogTitle": "Выберите трек для замены",
+	"music_replaceWithLocalSuccess": "Трек был успешно заменён на этом устройстве.",
+
 	"music_detailsTrackDetailsTitle": "Детали трека",
 
 	"music_setThumbnailSearchText": "Запрос для Deezer",

@@ -1,6 +1,7 @@
 import "dart:io";
 
 import "package:collection/collection.dart";
+import "package:file_picker/file_picker.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
@@ -258,6 +259,70 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
       );
     }
 
+    void onReplaceWithLocalAudioTap() async {
+      final messenger = ScaffoldMessenger.of(context);
+      final playlists = ref.read(playlistsProvider.notifier);
+      Navigator.of(context).pop();
+
+      // Просим пользователя выбрать файл.
+      try {
+        FilePickerResult? result = await FilePicker.platform.pickFiles(
+          dialogTitle: l18n.music_replaceWithLocalFilepickerDialogTitle,
+          type: FileType.custom,
+          allowedExtensions: ["mp3"],
+          lockParentWindow: true,
+        );
+        if (result == null) return;
+
+        // Узнаём параметры переданного трека.
+        final passedAudio = File(result.files.single.path!);
+        final passedAudioLength = await passedAudio.length();
+
+        if (passedAudioLength <=
+            CachedStreamAudioSource.corruptedFileSizeBytes) {
+          throw Exception(
+            "File is too small to be a valid audio file.",
+          );
+        }
+
+        // Вставляем кэшированный файл.
+        final cacheFile =
+            await CachedStreamAudioSource.getCachedAudioByKey(audio.mediaKey);
+        await passedAudio.copy(cacheFile.path);
+
+        // Помечаем трек как кэшированный.
+        newAudio = newAudio.copyWith(
+          isCached: true,
+          cachedSize: passedAudioLength,
+          replacedLocally: true,
+        );
+        await playlists.updatePlaylist(
+          playlist.basicCopyWith(
+            audiosToUpdate: [newAudio],
+          ),
+          saveInDB: true,
+        );
+
+        // Показываем уведомление.
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              l18n.music_replaceWithLocalSuccess,
+            ),
+          ),
+        );
+      } catch (error, stackTrace) {
+        showLogErrorDialog(
+          "Error while replacing audio with local file:",
+          error,
+          stackTrace,
+          logger,
+          // ignore: use_build_context_synchronously
+          context,
+        );
+      }
+    }
+
     void onReplaceFromYoutubeTap() {
       if (!networkRequiredDialog(ref, context)) return;
 
@@ -404,6 +469,21 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
                   l18n.music_detailsSetThumbnailDescription,
                 ),
                 onTap: onDeezerThumbsTap,
+              ),
+
+              // Заменить трек локально.
+              // TODO: Удалить локальную версию трека.
+              ListTile(
+                leading: const Icon(
+                  Icons.music_note,
+                ),
+                title: Text(
+                  l18n.music_detailsReplaceWithLocalAudioTitle,
+                ),
+                subtitle: Text(
+                  l18n.music_detailsReplaceWithLocalAudioDescription,
+                ),
+                onTap: onReplaceWithLocalAudioTap,
               ),
 
               // TODO: Перезалить с Youtube.

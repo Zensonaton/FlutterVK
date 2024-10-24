@@ -598,6 +598,9 @@ class ExtendedAudio {
   /// null если трек не кэширован ([isCached]).
   final int? cachedSize;
 
+  /// Указывает, что этот трек был заменён локально.
+  final bool? replacedLocally;
+
   /// Указывает, возможно ли воспроизвести данный трек. Данное поле проверяет наличие интернета и существование Url на mp3 файл, либо же то, что трек кэширован.
   bool get canPlay =>
       (isCached ?? false) || (connectivityManager.hasConnection && url != null);
@@ -653,6 +656,12 @@ class ExtendedAudio {
 
     // Кэширование.
     if (isCached != other.isCached && other.isCached != null) {
+      return false;
+    }
+
+    // Локальная замена.
+    if (replacedLocally != other.replacedLocally &&
+        other.replacedLocally != null) {
       return false;
     }
 
@@ -752,6 +761,7 @@ class ExtendedAudio {
         isLiked: isLiked,
         isCached: audio.isCached ?? false,
         cachedSize: audio.cachedSize,
+        replacedLocally: audio.replacedLocally,
         colorInts: audio.colorInts != null
             ? Map.fromIterable(audio.colorInts!, key: (item) => item)
             : null,
@@ -784,6 +794,7 @@ class ExtendedAudio {
     bool? isLiked,
     bool? isCached,
     int? cachedSize,
+    bool? replacedLocally,
     bool? savedFromPlaylist,
     int? relativeID,
     int? relativeOwnerID,
@@ -817,6 +828,7 @@ class ExtendedAudio {
         isLiked: isLiked ?? this.isLiked,
         isCached: isCached,
         cachedSize: cachedSize,
+        replacedLocally: replacedLocally,
         savedFromPlaylist: savedFromPlaylist ?? this.savedFromPlaylist,
         relativeID: relativeID,
         relativeOwnerID: relativeOwnerID,
@@ -854,6 +866,7 @@ class ExtendedAudio {
     bool? isLiked,
     bool? isCached,
     int? cachedSize,
+    bool? replacedLocally,
     bool? savedFromPlaylist,
     int? relativeID,
     int? relativeOwnerID,
@@ -887,6 +900,7 @@ class ExtendedAudio {
         isLiked: isLiked ?? this.isLiked,
         isCached: isCached ?? this.isCached,
         cachedSize: cachedSize ?? this.cachedSize,
+        replacedLocally: replacedLocally ?? this.replacedLocally,
         savedFromPlaylist: savedFromPlaylist ?? this.savedFromPlaylist,
         relativeID: relativeID ?? this.relativeID,
         relativeOwnerID: relativeOwnerID ?? this.relativeOwnerID,
@@ -949,6 +963,7 @@ class ExtendedAudio {
     this.isLiked = false,
     this.isCached,
     this.cachedSize,
+    this.replacedLocally,
     this.savedFromPlaylist = false,
     this.relativeID,
     this.relativeOwnerID,
