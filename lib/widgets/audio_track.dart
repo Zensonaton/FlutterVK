@@ -502,9 +502,6 @@ class AudioTrackTile extends HookConsumerWidget {
   /// Указывает, что будет показана длительность этого трека.
   final bool showDuration;
 
-  /// Управляет возможностью выделить и скопировать название трека.
-  final bool allowTextSelection;
-
   /// Делает расположение кнопок справа более плотным (сжатым).
   final bool dense;
 
@@ -513,6 +510,9 @@ class AudioTrackTile extends HookConsumerWidget {
 
   /// Указывает, что данный виджет будет иметь скруглённые углы.
   final bool roundedCorners;
+
+  /// Управляет возможностью выделить и скопировать название трека.
+  final bool allowTextSelection;
 
   /// Действие, вызываемое при нажатии на этот виджет.
   ///
@@ -545,10 +545,10 @@ class AudioTrackTile extends HookConsumerWidget {
     this.forceAvailable = false,
     this.allowImageCache = true,
     this.showDuration = true,
-    this.allowTextSelection = false,
     this.dense = false,
     this.padding,
     this.roundedCorners = true,
+    this.allowTextSelection = false,
     this.onPlayToggle,
     this.onLikeTap,
     this.onSecondaryAction,
