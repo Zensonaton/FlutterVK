@@ -636,6 +636,9 @@ class MobileControlButtonsWidget extends HookConsumerWidget {
 
 /// Виджет, отображающий список из треков для [PlaylistRoute].
 class PlaylistAudiosListWidget extends HookConsumerWidget {
+  /// Расстояние между треками.
+  static const double tracksSpacing = 8.0;
+
   /// [ExtendedPlaylist], треки которого будут отображены.
   final ExtendedPlaylist playlist;
 
@@ -710,49 +713,63 @@ class PlaylistAudiosListWidget extends HookConsumerWidget {
     }
 
     // Содержимое плейлиста.
-    return SliverPadding(
-      padding: EdgeInsets.symmetric(
-        horizontal: horizontalPadding,
-      ),
-      sliver: SliverFixedExtentList.builder(
-        itemCount: hasTracksList ? filteredAudios.length : playlist.count,
-        itemExtent: 50 + 8,
-        itemBuilder: (BuildContext context, int index) {
-          // Если ничего не загружено, то отображаем Skeleton Loader вместо реального трека.
-          if (!hasTracksList) {
-            return Padding(
-              padding: const EdgeInsets.only(
-                bottom: 8,
-              ),
-              child: Skeletonizer(
-                child: AudioTrackTile(
-                  audio: ExtendedAudio(
-                    id: -1,
-                    ownerID: -1,
-                    title: fakeTrackNames[index % fakeTrackNames.length],
-                    artist: fakeTrackNames[(index + 1) % fakeTrackNames.length],
-                    duration: 60 * 3,
-                  ),
-                ),
-              ),
-            );
-          }
-
+    return SliverFixedExtentList.builder(
+      itemCount: hasTracksList ? filteredAudios.length : playlist.count,
+      itemExtent: 50 + tracksSpacing,
+      itemBuilder: (BuildContext context, int index) {
+        // Если ничего не загружено, то отображаем Skeleton Loader вместо реального трека.
+        if (!hasTracksList) {
           return Padding(
-            padding: const EdgeInsets.only(
-              bottom: 8,
+            padding: EdgeInsets.only(
+              bottom: tracksSpacing,
+              left: mobileLayout ? 0 : horizontalPadding,
+              right: mobileLayout ? 0 : horizontalPadding,
             ),
-            child: buildListTrackWidget(
-              ref,
-              context,
-              filteredAudios[index],
-              playlist,
-              showCachedIcon: true,
-              showDuration: !mobileLayout,
+            child: Skeletonizer(
+              child: AudioTrackTile(
+                audio: ExtendedAudio(
+                  id: -1,
+                  ownerID: -1,
+                  title: fakeTrackNames[index % fakeTrackNames.length],
+                  artist: fakeTrackNames[(index + 1) % fakeTrackNames.length],
+                  duration: 60 * 3,
+                ),
+                dense: mobileLayout,
+                roundedCorners: !mobileLayout,
+                padding: mobileLayout
+                    ? EdgeInsets.symmetric(
+                        horizontal: horizontalPadding,
+                      )
+                    : null,
+              ),
             ),
           );
-        },
-      ),
+        }
+
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: tracksSpacing,
+            left: mobileLayout ? 0 : horizontalPadding,
+            right: mobileLayout ? 0 : horizontalPadding,
+          ),
+          child: buildListTrackWidget(
+            ref,
+            context,
+            filteredAudios[index],
+            playlist,
+            showCachedIcon: true,
+            showDuration: !mobileLayout,
+            replaceLikeWithMore: mobileLayout,
+            dense: mobileLayout,
+            roundedCorners: !mobileLayout,
+            padding: mobileLayout
+                ? EdgeInsets.symmetric(
+                    horizontal: horizontalPadding,
+                  )
+                : null,
+          ),
+        );
+      },
     );
   }
 }
@@ -1248,8 +1265,8 @@ class PlaylistTypeDescriptionWidget extends HookConsumerWidget {
       enabled: !hasInfo,
       child: FittedBox(
         fit: BoxFit.scaleDown,
-        child: RichText(
-          text: TextSpan(
+        child: Text.rich(
+          TextSpan(
             style: TextStyle(
               color: scheme.onSurface.withOpacity(0.8),
             ),
@@ -1264,6 +1281,7 @@ class PlaylistTypeDescriptionWidget extends HookConsumerWidget {
 
               // Количество треков.
               WidgetSpan(
+                alignment: PlaceholderAlignment.middle,
                 child: Skeletonizer(
                   enabled: !areTracksLoaded,
                   child: Text(
@@ -1282,6 +1300,7 @@ class PlaylistTypeDescriptionWidget extends HookConsumerWidget {
 
               // Длительность.
               WidgetSpan(
+                alignment: PlaceholderAlignment.middle,
                 child: Skeletonizer(
                   enabled: !areTracksLoaded,
                   child: Text(
@@ -1724,6 +1743,7 @@ class PlaylistRoute extends HookConsumerWidget {
       [brightness, playlistColorInfo.value, oldScheme.primary],
     );
 
+    final double screenHeight = MediaQuery.sizeOf(context).height;
     final double statusBarHeight = MediaQuery.of(context).padding.top;
     final double infoBoxHeight = mobileLayout
         ? playlist.description != null
@@ -1731,10 +1751,7 @@ class PlaylistRoute extends HookConsumerWidget {
             : 100
         : 0;
     final double maxAppBarHeight = (mobileLayout
-            ? (MediaQuery.sizeOf(context).height / 2)
-                    .roundToDouble()
-                    .clamp(0, 500) -
-                infoBoxHeight
+            ? (screenHeight / 2).roundToDouble().clamp(0, 500) - infoBoxHeight
             : 272) +
         statusBarHeight;
     final double minAppBarHeight = 70 + statusBarHeight;
@@ -1975,9 +1992,6 @@ class PlaylistRoute extends HookConsumerWidget {
         // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
         if (player.loaded && mobileLayout)
           const SliverGap(MusicPlayerWidget.mobileHeightWithPadding),
-
-        // Небольшой Gap, что бы интерфейс был не слишком сжат.
-        const SliverGap(8),
       ],
       [
         mobileLayout,
@@ -1992,6 +2006,8 @@ class PlaylistRoute extends HookConsumerWidget {
     return PopScope(
       canPop: !isSearchOpen.value,
       onPopInvokedWithResult: (bool didPop, _) async {
+        logger.d("Pop scope, didPop: $didPop");
+
         if (didPop) return;
 
         // Если у нас открыт поиск, то сначала закрыаем его.
@@ -2002,73 +2018,93 @@ class PlaylistRoute extends HookConsumerWidget {
           return;
         }
       },
-      child: Focus(
-        autofocus: true,
-        canRequestFocus: true,
-        child: Scaffold(
-          resizeToAvoidBottomInset: false,
-          body: Theme(
-            data: ThemeData(
-              colorScheme: scheme ?? oldScheme,
-            ),
-            child: CallbackShortcuts(
-              bindings: {
-                const SingleActivator(
-                  LogicalKeyboardKey.escape,
-                ): () => Navigator.of(context).maybePop(),
-              },
-              child: Actions(
-                actions: {
-                  FavoriteTracksIntent: CallbackAction(
-                    onInvoke: (intent) => searchFocusNode.requestFocus(),
-                  ),
-                },
-                child: Stack(
-                  alignment: Alignment.topCenter,
-                  children: [
-                    // Градиент на фоне, который будет меняться в зависимости от прокрутки.
-                    BackgroundGradientWidget(
-                      scheme: scheme,
-                      scrollController: scrollController,
-                      maxHeight: maxAppBarHeight + infoBoxHeight,
-                    ),
+      child: BackButtonListener(
+        onBackButtonPressed: () async {
+          logger.d("Back button");
 
-                    // Содержимое.
-                    Column(
-                      children: [
-                        // Содержимое плейлиста.
-                        Expanded(
-                          child: ScrollConfiguration(
-                            behavior: AlwaysScrollableScrollBehavior(),
-                            child: CustomScrollView(
-                              controller: scrollController,
-                              slivers: customScrollViewSlivers,
+          // Если у нас открыт поиск, то сначала закрыаем его.
+          if (isSearchOpen.value) {
+            searchController.clear();
+            isSearchOpen.value = false;
+
+            return true;
+          }
+
+          return false;
+        },
+        child: Focus(
+          autofocus: true,
+          canRequestFocus: true,
+          child: Scaffold(
+            resizeToAvoidBottomInset: false,
+            body: Theme(
+              data: ThemeData(
+                colorScheme: scheme ?? oldScheme,
+              ),
+              child: CallbackShortcuts(
+                bindings: {
+                  const SingleActivator(
+                    LogicalKeyboardKey.escape,
+                  ): () => Navigator.of(context).maybePop(),
+                },
+                child: Actions(
+                  actions: {
+                    FavoriteTracksIntent: CallbackAction(
+                      onInvoke: (intent) => searchFocusNode.requestFocus(),
+                    ),
+                  },
+                  child: Stack(
+                    alignment: Alignment.topCenter,
+                    children: [
+                      // Градиент на фоне, который будет меняться в зависимости от прокрутки.
+                      BackgroundGradientWidget(
+                        scheme: scheme,
+                        scrollController: scrollController,
+                        maxHeight: maxAppBarHeight + infoBoxHeight,
+                      ),
+
+                      // Содержимое.
+                      Column(
+                        children: [
+                          // Содержимое плейлиста.
+                          Expanded(
+                            child: ScrollConfiguration(
+                              behavior:
+                                  AlwaysScrollableScrollBehavior().copyWith(
+                                overscroll: !isSearchOpen.value,
+                              ),
+                              child: CustomScrollView(
+                                controller: scrollController,
+                                slivers: customScrollViewSlivers,
+                              ),
                             ),
                           ),
-                        ),
 
-                        // Данный Gap нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
-                        // Мы его располагаем после ListView, что бы ScrollBar не был закрыт плеером.
-                        if (player.loaded && !mobileLayout)
-                          const Gap(MusicPlayerWidget.desktopMiniPlayerHeight),
-                      ],
-                    ),
-
-                    // Ряд из кнопок управления плейлистом: кнопка лайка/дизлайка, воспроизведения/паузы, кэширования.
-                    if (mobileLayout && !isSearchOpen.value)
-                      MobileControlButtonsWidget(
-                        playlist: playlist,
-                        scrollController: scrollController,
-                        maxAppBarHeight: maxAppBarHeight,
-                        minAppBarHeight: minAppBarHeight,
-                        infoBoxHeight: infoBoxHeight,
-                        onLikePressed: playlist.type == PlaylistType.favorites
-                            ? null
-                            : () async => showWipDialog(context),
-                        onPlayPausePressed: onPlayTapped,
-                        onCachePressed: onCacheTap,
+                          // Данный Gap нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
+                          // Мы его располагаем после ListView, что бы ScrollBar не был закрыт плеером.
+                          if (player.loaded && !mobileLayout)
+                            const Gap(
+                              MusicPlayerWidget.desktopMiniPlayerHeight,
+                            ),
+                        ],
                       ),
-                  ],
+
+                      // Ряд из кнопок управления плейлистом: кнопка лайка/дизлайка, воспроизведения/паузы, кэширования.
+                      if (mobileLayout && !isSearchOpen.value)
+                        MobileControlButtonsWidget(
+                          playlist: playlist,
+                          scrollController: scrollController,
+                          maxAppBarHeight: maxAppBarHeight,
+                          minAppBarHeight: minAppBarHeight,
+                          infoBoxHeight: infoBoxHeight,
+                          onLikePressed: playlist.type == PlaylistType.favorites
+                              ? null
+                              : () async => showWipDialog(context),
+                          onPlayPausePressed: onPlayTapped,
+                          onCachePressed: onCacheTap,
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ),

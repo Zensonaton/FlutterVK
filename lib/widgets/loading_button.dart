@@ -55,8 +55,8 @@ class LoadingIconButton extends HookWidget {
 
     final widgetIcon = isLoading.value
         ? SizedBox(
-            width: iconSize,
-            height: iconSize,
+            width: iconSize ?? 24,
+            height: iconSize ?? 24,
             child: CircularProgressIndicator.adaptive(
               strokeWidth: 3,
               valueColor: AlwaysStoppedAnimation(
@@ -89,6 +89,7 @@ class LoadingIconButton extends HookWidget {
     required AsyncCallback? onPressed,
     double iconSize = 24,
     Color? color,
+    BoxConstraints? constraints,
   }) {
     return LoadingIconButton(
       icon: icon,
@@ -96,6 +97,7 @@ class LoadingIconButton extends HookWidget {
       onPressed: onPressed,
       iconSize: iconSize,
       color: color,
+      constraints: constraints,
     );
   }
 }

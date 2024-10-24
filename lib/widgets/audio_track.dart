@@ -35,11 +35,93 @@ Widget buildListTrackWidget(
   bool showCachedIcon = false,
   bool showDuration = true,
   bool allowImageCache = true,
+  bool replaceLikeWithMore = false,
+  bool dense = false,
+  EdgeInsets? padding,
+  bool roundedCorners = true,
 }) {
   final logger = getLogger("buildListTrackWidget");
   final l18n = ref.watch(l18nProvider);
   final bool isSelected = audio.ownerID == player.currentAudio?.ownerID &&
       audio.id == player.currentAudio?.id;
+
+  Future<void> onPlayToggle() async {
+    // Если мы не можем начать воспроизведение этого трека, то выдаём ошибку.
+    if (!audio.canPlay) {
+      showErrorDialog(
+        context,
+        title: l18n.music_trackUnavailableTitle,
+        description: l18n.music_trackUnavailableDescription,
+      );
+
+      return;
+    }
+
+    // Убираем фокус с поля ввода, если оно есть.
+    FocusScope.of(context).unfocus();
+
+    // Если этот трек уже играет, то просто делаем toggle воспроизведения.
+    if (isSelected) {
+      await player.togglePlay();
+
+      return;
+    }
+
+    // Запускаем воспроизведение.
+    await player.setPlaylist(playlist, selectedTrack: audio);
+  }
+
+  Future<void> onLikeTap() async {
+    if (!networkRequiredDialog(ref, context)) return;
+
+    if (!audio.isLiked && ref.read(preferencesProvider).checkBeforeFavorite) {
+      if (!await checkForDuplicates(ref, context, audio)) return;
+    }
+
+    try {
+      await toggleTrackLike(
+        player.ref,
+        audio,
+        sourcePlaylist: playlist,
+      );
+    } on VKAPIException catch (error, stackTrace) {
+      if (!context.mounted) return;
+
+      if (error.errorCode == 15) {
+        showErrorDialog(
+          context,
+          description: l18n.music_likeRestoreTooLate,
+        );
+
+        return;
+      }
+
+      showLogErrorDialog(
+        "Error while restoring audio:",
+        error,
+        stackTrace,
+        logger,
+        context,
+      );
+    }
+  }
+
+  void showMore() {
+    FocusScope.of(context).unfocus();
+
+    showModalBottomSheet(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (BuildContext context) {
+        return BottomAudioOptionsDialog(
+          audio: audio,
+          playlist: playlist,
+        );
+      },
+    );
+  }
 
   return AudioTrackTile(
     isSelected: isSelected && player.loaded,
@@ -50,81 +132,13 @@ Widget buildListTrackWidget(
     showCachedIcon: showCachedIcon,
     showDuration: showDuration,
     allowImageCache: allowImageCache,
-    onPlayToggle: () async {
-      // Если мы не можем начать воспроизведение этого трека, то выдаём ошибку.
-      if (!audio.canPlay) {
-        showErrorDialog(
-          context,
-          title: l18n.music_trackUnavailableTitle,
-          description: l18n.music_trackUnavailableDescription,
-        );
-
-        return;
-      }
-
-      // Убираем фокус с поля ввода, если оно есть.
-      FocusScope.of(context).unfocus();
-
-      // Если этот трек уже играет, то просто делаем toggle воспроизведения.
-      if (isSelected) {
-        await player.togglePlay();
-
-        return;
-      }
-
-      // Запускаем воспроизведение.
-      await player.setPlaylist(playlist, selectedTrack: audio);
-    },
-    onLikeTap: () async {
-      if (!networkRequiredDialog(ref, context)) return;
-
-      if (!audio.isLiked && ref.read(preferencesProvider).checkBeforeFavorite) {
-        if (!await checkForDuplicates(ref, context, audio)) return;
-      }
-
-      try {
-        await toggleTrackLike(
-          player.ref,
-          audio,
-          sourcePlaylist: playlist,
-        );
-      } on VKAPIException catch (error, stackTrace) {
-        if (!context.mounted) return;
-
-        if (error.errorCode == 15) {
-          showErrorDialog(
-            context,
-            description: l18n.music_likeRestoreTooLate,
-          );
-
-          return;
-        }
-
-        showLogErrorDialog(
-          "Error while restoring audio:",
-          error,
-          stackTrace,
-          logger,
-          context,
-        );
-      }
-    },
-    onSecondaryAction: () {
-      FocusScope.of(context).unfocus();
-
-      showModalBottomSheet(
-        context: context,
-        useRootNavigator: true,
-        isScrollControlled: true,
-        useSafeArea: true,
-        builder: (BuildContext context) {
-          return BottomAudioOptionsDialog(
-            audio: audio,
-            playlist: playlist,
-          );
-        },
-      );
-    },
+    dense: dense,
+    padding: padding,
+    roundedCorners: roundedCorners,
+    onPlayToggle: onPlayToggle,
+    onLikeTap: !replaceLikeWithMore ? onLikeTap : null,
+    onSecondaryAction: showMore,
+    onMoreTap: replaceLikeWithMore ? showMore : null,
   );
 }
 
@@ -373,10 +387,18 @@ class AudioTrackOtherInfo extends ConsumerWidget {
   /// Указывает, что в случае, если трек кэширован ([ExtendedAudio.isCached]), то будет показана соответствующая иконка.
   final bool showCachedIcon;
 
+  /// Делает расположение кнопок справа более плотным (сжатым).
+  final bool dense;
+
   /// Callback-метод, вызываемый при нажатии на кнопку "лайка" трека.
   ///
   /// Если не указан, то кнопки лайка не будет.
   final AsyncCallback? onLikeTap;
+
+  /// Действие, вызываемое при нажатии на `...` справа.
+  ///
+  /// Если не указано, то кнопка `...` не будет показана.
+  final VoidCallback? onMoreTap;
 
   const AudioTrackOtherInfo({
     super.key,
@@ -385,7 +407,9 @@ class AudioTrackOtherInfo extends ConsumerWidget {
     this.isFavorite = false,
     this.isCached = false,
     this.showCachedIcon = true,
+    this.dense = false,
     this.onLikeTap,
+    this.onMoreTap,
   });
 
   @override
@@ -399,10 +423,10 @@ class AudioTrackOtherInfo extends ConsumerWidget {
         if (isCached && showCachedIcon) ...[
           Icon(
             Icons.arrow_downward,
-            size: 18,
+            size: dense ? 16 : 18,
             color: color.withOpacity(0.75),
           ),
-          const Gap(14),
+          Gap(dense ? 4 : 14),
         ],
 
         // Блок с длительностью трека, а так же иконкой кэша.
@@ -417,13 +441,26 @@ class AudioTrackOtherInfo extends ConsumerWidget {
 
         // Кнопка для лайка.
         if (onLikeTap != null) ...[
-          const Gap(8),
+          if (!dense) const Gap(8),
           LoadingIconButton(
             icon: Icon(
               isFavorite ? Icons.favorite : Icons.favorite_outline,
               color: scheme.primary,
             ),
             onPressed: onLikeTap,
+            color: scheme.primary,
+          ),
+        ],
+
+        // Кнопка `...`.
+        if (onMoreTap != null) ...[
+          if (!dense) const Gap(8),
+          IconButton(
+            icon: Icon(
+              Icons.adaptive.more,
+              color: scheme.primary,
+            ),
+            onPressed: onMoreTap,
             color: scheme.primary,
           ),
         ],
@@ -468,6 +505,15 @@ class AudioTrackTile extends HookConsumerWidget {
   /// Управляет возможностью выделить и скопировать название трека.
   final bool allowTextSelection;
 
+  /// Делает расположение кнопок справа более плотным (сжатым).
+  final bool dense;
+
+  /// Внутренний Padding.
+  final EdgeInsetsGeometry? padding;
+
+  /// Указывает, что данный виджет будет иметь скруглённые углы.
+  final bool roundedCorners;
+
   /// Действие, вызываемое при нажатии на этот виджет.
   ///
   /// Обычно, по нажатию на этот виджет должно запускаться воспроизведение этого трека, а если он уже играет, то он должен ставиться на паузу/возобновляться.
@@ -483,6 +529,11 @@ class AudioTrackTile extends HookConsumerWidget {
   /// Чаще всего используется для открытия контекстного меню.
   final VoidCallback? onSecondaryAction;
 
+  /// Действие, вызываемое при нажатии на `...` справа.
+  ///
+  /// Если не указано, то кнопка `...` не будет показана.
+  final VoidCallback? onMoreTap;
+
   const AudioTrackTile({
     super.key,
     required this.audio,
@@ -495,9 +546,13 @@ class AudioTrackTile extends HookConsumerWidget {
     this.allowImageCache = true,
     this.showDuration = true,
     this.allowTextSelection = false,
+    this.dense = false,
+    this.padding,
+    this.roundedCorners = true,
     this.onPlayToggle,
     this.onLikeTap,
     this.onSecondaryAction,
+    this.onMoreTap,
   });
 
   @override
@@ -527,65 +582,72 @@ class AudioTrackTile extends HookConsumerWidget {
           onTap: onPlayToggle,
           onSecondaryTap: onSecondaryAction,
           onLongPress: isMobile ? onSecondaryAction : null,
-          borderRadius: BorderRadius.circular(
-            globalBorderRadius,
-          ),
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: isSelected && glowIfSelected
-                  ? LinearGradient(
-                      colors: [
-                        scheme.primary.withOpacity(
-                          0.1,
-                        ),
-                        Colors.transparent,
-                      ],
-                    )
-                  : null,
-              borderRadius: BorderRadius.circular(
-                globalBorderRadius,
+          borderRadius: roundedCorners
+              ? BorderRadius.circular(
+                  globalBorderRadius,
+                )
+              : null,
+          child: Padding(
+            padding: padding ?? EdgeInsets.zero,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: isSelected && glowIfSelected
+                    ? LinearGradient(
+                        colors: [
+                          scheme.primary.withOpacity(
+                            0.1,
+                          ),
+                          Colors.transparent,
+                        ],
+                      )
+                    : null,
+                borderRadius: BorderRadius.circular(
+                  globalBorderRadius,
+                ),
               ),
-            ),
-            child: Row(
-              children: [
-                // Изображение трека. (слева)
-                AudioTrackImage(
-                  imageUrl: audio.smallestThumbnail,
-                  cacheKey: allowImageCache ? "${audio.mediaKey}small" : null,
-                  isAvailable: forceAvailable || audio.canPlay,
-                  isSelected: isSelected,
-                  isPlaying: isPlaying,
-                  isLoading: isLoading,
-                  isHovered: isHovered.value,
-                ),
-                const Gap(12),
-
-                // Название, и прочая информация по треку. (центр)
-                Expanded(
-                  child: AudioTrackTitle(
-                    title: audio.title,
-                    artist: audio.artist,
-                    subtitle: audio.subtitle,
+              child: Row(
+                children: [
+                  // Изображение трека. (слева)
+                  AudioTrackImage(
+                    imageUrl: audio.smallestThumbnail,
+                    cacheKey: allowImageCache ? "${audio.mediaKey}small" : null,
                     isAvailable: forceAvailable || audio.canPlay,
-                    isExplicit: audio.isExplicit,
                     isSelected: isSelected,
-                    allowTextSelection: allowTextSelection,
+                    isPlaying: isPlaying,
+                    isLoading: isLoading,
+                    isHovered: isHovered.value,
                   ),
-                ),
-                const Gap(12),
+                  const Gap(12),
 
-                // Прочая информация по треку. (справа)
-                // Данный блок можно не отображать, если ничего не было передано.
-                if (showDuration || onLikeTap != null)
-                  AudioTrackOtherInfo(
-                    duration: showDuration ? audio.durationString : null,
-                    isFavorite: audio.isLiked,
-                    isSelected: isSelected,
-                    isCached: audio.isCached ?? false,
-                    showCachedIcon: showCachedIcon,
-                    onLikeTap: onLikeTap,
+                  // Название, и прочая информация по треку. (центр)
+                  Expanded(
+                    child: AudioTrackTitle(
+                      title: audio.title,
+                      artist: audio.artist,
+                      subtitle: audio.subtitle,
+                      isAvailable: forceAvailable || audio.canPlay,
+                      isExplicit: audio.isExplicit,
+                      isSelected: isSelected,
+                      allowTextSelection: allowTextSelection,
+                    ),
                   ),
-              ],
+                  const Gap(12),
+
+                  // Прочая информация по треку. (справа)
+                  // Данный блок можно не отображать, если ничего не было передано.
+                  if (showDuration || onLikeTap != null || onMoreTap != null)
+                    AudioTrackOtherInfo(
+                      duration: showDuration ? audio.durationString : null,
+                      isFavorite: audio.isLiked,
+                      isSelected: isSelected,
+                      isCached: audio.isCached ?? false,
+                      showCachedIcon: showCachedIcon,
+                      dense: dense,
+                      onLikeTap: onLikeTap,
+                      onMoreTap: onMoreTap,
+                    ),
+                ],
+              ),
             ),
           ),
         ),
