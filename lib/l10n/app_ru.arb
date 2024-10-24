@@ -254,17 +254,24 @@
 	"music_likeRestoreTooLate": "Трек не может быть восстановлен, поскольку прошло немало времени с момента его удаления.\nВоспользуйтесь поиском, что бы найти этот трек и добавить снова.",
 
 	"music_detailsEditTitle": "Редактировать",
-	"music_detailsDeleteTrackTitle": "Удалить из этого плейлиста",
-	"music_detailsAddToOtherPlaylistTitle": "Добавить в другой плейлист",
+	"music_detailsAddAsFavoritesTitle": "Добавить как «любимый» трек",
+	"music_detailsRemoveFromFavoritesTitle": "Удалить из «любимых» треков",
+	"music_detailsAddToPlaylistTitle": "Добавить в плейлист",
 	"music_detailsPlayNextTitle": "Сыграть следующим",
+
 	"music_detailsGeniusSearchTitle": "Поиск по Genius",
 	"music_detailsGeniusSearchDescription": "Текст песни, и прочая информация с Genius",
-	"music_detailsCacheTrackTitle": "Кэшировать этот трек",
+
+	"music_detailsCacheTrackTitle": "Кэшировать",
 	"music_detailsCacheTrackDescription": "Позволяет прослушать трек даже без подключения к интернету",
+
 	"music_detailsSetThumbnailTitle": "Заменить обложку",
 	"music_detailsSetThumbnailDescription": "Устанавливает обложку, выполняя поиск с сервиса Deezer",
+
 	"music_detailsReuploadFromYoutubeTitle": "Перезалить с Youtube",
 	"music_detailsReuploadFromYoutubeDescription": "Заменит этот трек другой версией с Youtube для обхода «недоступности» трека",
+
+	"music_detailsTrackDetailsTitle": "Детали трека",
 
 	"music_setThumbnailSearchText": "Запрос для Deezer",
 	"music_setThumbnailNoQuery": "Введите название трека сверху, что бы выполнить поиск по обложкам.",
@@ -436,6 +443,14 @@
 
 	"profile_exportMusicListTitle": "Экспорт списка треков",
 	"profile_exportMusicListDescription": "Список из {count, plural, one{{count} лайкнутого трека} other{{count} лайкнутых треков}}:",
+	"@profile_exportMusicListDescription": {
+		"placeholders": {
+			"count": {
+				"type": "int",
+				"description": "Количество лайкнутых треков, которые будут экспортированы."
+			}
+		}
+	},
 	"profile_exportMusicListShareTitle": "Поделиться",
 
 

@@ -792,10 +792,10 @@ class VKMusicPlayer {
               break;
           }
         });
-      } catch (e, stackTrace) {
+      } catch (error, stackTrace) {
         logger.e(
           "SMTC event error: ",
-          error: e,
+          error: error,
           stackTrace: stackTrace,
         );
       }
@@ -1604,7 +1604,6 @@ class AudioPlayerService extends BaseAudioHandler
         await toggleTrackLike(
           _ref,
           _player.currentAudio!,
-          !_player.currentAudio!.isLiked,
         );
         await _updateEvent();
 

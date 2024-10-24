@@ -82,13 +82,11 @@ Future<bool> tryAuthorize(
     }
 
     // При основной авторизации мы сохраняем основной токен.
-    ref
-        .read(currentAuthStateProvider.notifier)
-        .login(token, response.first);
-  } catch (e, stackTrace) {
+    ref.read(currentAuthStateProvider.notifier).login(token, response.first);
+  } catch (error, stackTrace) {
     showLogErrorDialog(
-      "Ошибка при авторизации: ",
-      e,
+      "Authorization error: ",
+      error,
       stackTrace,
       logger,
       // ignore: use_build_context_synchronously

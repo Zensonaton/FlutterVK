@@ -1,5 +1,6 @@
 import "dart:io";
 
+import "package:collection/collection.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
@@ -9,6 +10,7 @@ import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:url_launcher/url_launcher_string.dart";
 
+import "../../../api/vk/shared.dart";
 import "../../../main.dart";
 import "../../../provider/download_manager.dart";
 import "../../../provider/l18n.dart";
@@ -20,8 +22,25 @@ import "../../../services/download_manager.dart";
 import "../../../services/logger.dart";
 import "../../../widgets/audio_track.dart";
 import "../../../widgets/dialogs.dart";
+import "../music.dart";
 import "bottom_dialogs/deezer_thumbs.dart";
 import "bottom_dialogs/info_edit.dart";
+
+/// Виджет для [BottomAudioOptionsDialog], отображающий [CircularProgressIndicator] во время загрузки.
+class _LoadingProgressIndicator extends StatelessWidget {
+  const _LoadingProgressIndicator();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox(
+      width: 24,
+      height: 24,
+      child: CircularProgressIndicator.adaptive(
+        strokeWidth: 2.5,
+      ),
+    );
+  }
+}
 
 /// Диалог, появляющийся снизу экрана, дающий пользователю действия над выбранным треком.
 ///
@@ -49,11 +68,19 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final newPlaylist =
+        ref.watch(getPlaylistProvider(playlist.ownerID, playlist.id));
+    ExtendedAudio newAudio = newPlaylist?.audios?.firstWhereOrNull(
+          (element) =>
+              element.ownerID == audio.ownerID && element.id == audio.id,
+        ) ??
+        audio;
+
     final l18n = ref.watch(l18nProvider);
 
     final geniusUrl = useMemoized(
       () {
-        final titleAndArtist = "${audio.artist}-${audio.title}"
+        final titleAndArtist = "${newAudio.artist}-${newAudio.title}"
             .replaceAll(RegExp(r"[^\w\s-]"), "")
             .replaceAll(RegExp(r"\s+"), "-")
             .toLowerCase();
@@ -81,6 +108,8 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
       [],
     );
 
+    final isTogglingLikeState = useState(false);
+
     void onDetailsEditTap() {
       if (!networkRequiredDialog(ref, context)) return;
 
@@ -89,19 +118,57 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
       showDialog(
         context: context,
         builder: (BuildContext context) => TrackInfoEditDialog(
-          audio: audio,
+          audio: newAudio,
           playlist: playlist,
         ),
       );
     }
 
-    void onRemoveFromPlaylistTap() {
+    void onAddAsFavoritesTap() async {
       if (!networkRequiredDialog(ref, context)) return;
 
-      showWipDialog(context);
+      isTogglingLikeState.value = true;
+      try {
+        await toggleTrackLike(
+          player.ref,
+          newAudio,
+        );
+      } on VKAPIException catch (error, stackTrace) {
+        if (!context.mounted) return;
+
+        if (error.errorCode == 15) {
+          showErrorDialog(
+            context,
+            description: l18n.music_likeRestoreTooLate,
+          );
+
+          return;
+        }
+
+        showLogErrorDialog(
+          "Error while restoring audio:",
+          error,
+          stackTrace,
+          logger,
+          context,
+        );
+      } catch (error, stackTrace) {
+        showLogErrorDialog(
+          "Error while toggling like state:",
+          error,
+          stackTrace,
+          logger,
+          // ignore: use_build_context_synchronously
+          context,
+        );
+      } finally {}
+
+      if (!context.mounted) return;
+
+      isTogglingLikeState.value = false;
     }
 
-    void onAddToOtherPlaylistTap() {
+    void addToPlaylistTap() {
       if (!networkRequiredDialog(ref, context)) return;
 
       showWipDialog(context);
@@ -109,9 +176,7 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
 
     void onAddToQueueTap() async {
       // FIXME: Этот метод не работает, если включён shuffle, и это косяк на стороне just_audio.
-      await player.addNextToQueue(
-        audio,
-      );
+      await player.addNextToQueue(newAudio);
 
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -146,15 +211,15 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
       Navigator.of(context).pop();
 
       try {
-        final newAudio = await PlaylistCacheDownloadItem.downloadWithMetadata(
-          ref.read(downloadManagerProvider.notifier).ref,
-          playlist,
-          audio,
-          deezerThumbnails: preferences.deezerThumbnails,
-          lrcLibLyricsEnabled: preferences.lrcLibEnabled,
-        );
+        newAudio = await PlaylistCacheDownloadItem.downloadWithMetadata(
+              ref.read(downloadManagerProvider.notifier).ref,
+              playlist,
+              newAudio,
+              deezerThumbnails: preferences.deezerThumbnails,
+              lrcLibLyricsEnabled: preferences.lrcLibEnabled,
+            ) ??
+            newAudio;
 
-        if (newAudio == null) return;
         await playlists.updatePlaylist(
           playlist.basicCopyWith(
             audiosToUpdate: [newAudio],
@@ -186,7 +251,7 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
         context: context,
         builder: (BuildContext context) {
           return TrackThumbnailEditDialog(
-            audio: audio,
+            audio: newAudio,
             playlist: playlist,
           );
         },
@@ -194,6 +259,12 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
     }
 
     void onReplaceFromYoutubeTap() {
+      if (!networkRequiredDialog(ref, context)) return;
+
+      showWipDialog(context);
+    }
+
+    void onTrackDetailsTap() {
       if (!networkRequiredDialog(ref, context)) return;
 
       showWipDialog(context);
@@ -222,7 +293,8 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
                   children: [
                     // Трек.
                     AudioTrackTile(
-                      audio: audio,
+                      audio: newAudio,
+                      allowTextSelection: true,
                     ),
                     const Gap(8),
 
@@ -244,28 +316,34 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
                 onTap: onDetailsEditTap,
               ),
 
-              // TODO: Удалить из текущего плейлиста.
-              if (kDebugMode)
-                ListTile(
-                  leading: const Icon(
-                    Icons.playlist_remove,
-                  ),
-                  title: Text(
-                    l18n.music_detailsDeleteTrackTitle,
-                  ),
-                  onTap: onRemoveFromPlaylistTap,
+              // Добавить или удалить как "любимый" трек.
+              ListTile(
+                leading: isTogglingLikeState.value
+                    ? const _LoadingProgressIndicator()
+                    : Icon(
+                        newAudio.isLiked
+                            ? Icons.favorite
+                            : Icons.favorite_outline,
+                      ),
+                enabled: !isTogglingLikeState.value,
+                title: Text(
+                  newAudio.isLiked
+                      ? l18n.music_detailsRemoveFromFavoritesTitle
+                      : l18n.music_detailsAddAsFavoritesTitle,
                 ),
+                onTap: onAddAsFavoritesTap,
+              ),
 
-              // TODO: Добавить в другой плейлист.
+              // TODO: Добавить в плейлист...
               if (kDebugMode)
                 ListTile(
                   leading: const Icon(
                     Icons.playlist_add,
                   ),
                   title: Text(
-                    l18n.music_detailsAddToOtherPlaylistTitle,
+                    l18n.music_detailsAddToPlaylistTitle,
                   ),
-                  onTap: onAddToOtherPlaylistTap,
+                  onTap: addToPlaylistTap,
                 ),
 
               // TODO: Добавить в очередь.
@@ -277,35 +355,23 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
                   title: Text(
                     l18n.music_detailsPlayNextTitle,
                   ),
-                  enabled: audio.canPlay,
+                  enabled: newAudio.canPlay,
                   onTap: onAddToQueueTap,
                 ),
 
               // Поиск по Genius.
               ListTile(
-                leading: const Icon(
-                  Icons.lyrics_outlined,
-                ),
+                leading: hasGeniusInfo.value == null
+                    ? const _LoadingProgressIndicator()
+                    : const Icon(
+                        Icons.lyrics_outlined,
+                      ),
                 title: Text(
                   l18n.music_detailsGeniusSearchTitle,
                 ),
-                subtitle: () {
-                  // Загрузка.
-                  if (hasGeniusInfo.value == null) {
-                    return Text(
-                      l18n.general_loading,
-                    );
-                  }
-
-                  // Есть информация.
-                  if (hasGeniusInfo.value!) {
-                    return Text(
-                      l18n.music_detailsGeniusSearchDescription,
-                    );
-                  }
-
-                  return null;
-                }(),
+                subtitle: Text(
+                  l18n.music_detailsGeniusSearchDescription,
+                ),
                 enabled: hasGeniusInfo.value ?? false,
                 onTap: onGeniusSearchTap,
               ),
@@ -321,7 +387,8 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
                 subtitle: Text(
                   l18n.music_detailsCacheTrackDescription,
                 ),
-                enabled: !audio.isRestricted && !(audio.isCached ?? false),
+                enabled:
+                    !newAudio.isRestricted && !(newAudio.isCached ?? false),
                 onTap: onCacheTrackTap,
               ),
 
@@ -354,6 +421,18 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
                   onTap: onReplaceFromYoutubeTap,
                 ),
 
+              // TODO: Детали трека.
+              if (kDebugMode)
+                ListTile(
+                  leading: const Icon(
+                    Icons.info,
+                  ),
+                  title: Text(
+                    l18n.music_detailsTrackDetailsTitle,
+                  ),
+                  onTap: onTrackDetailsTap,
+                ),
+
               // Debug-опции.
               if (kDebugMode) ...[
                 // Скопировать ID трека.
@@ -367,7 +446,7 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
                   onTap: () {
                     Clipboard.setData(
                       ClipboardData(
-                        text: audio.mediaKey,
+                        text: newAudio.mediaKey,
                       ),
                     );
 
@@ -384,13 +463,13 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
                     title: const Text(
                       "Open folder with audio",
                     ),
-                    enabled: audio.isCached ?? false,
+                    enabled: newAudio.isCached ?? false,
                     onTap: () async {
                       Navigator.of(context).pop();
 
                       final File path =
                           await CachedStreamAudioSource.getCachedAudioByKey(
-                        audio.mediaKey,
+                        newAudio.mediaKey,
                       );
                       await Process.run(
                         "explorer.exe",

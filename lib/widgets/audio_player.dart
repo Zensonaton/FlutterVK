@@ -51,6 +51,9 @@ class TrackTitleWithSubtitle extends StatelessWidget {
   /// Если [isExplicit] правдив, то указывает цвет для иконки Explicit.
   final Color? explicitColor;
 
+  /// Управляет возможностью выделить и скопировать название трека.
+  final bool allowTextSelection;
+
   const TrackTitleWithSubtitle({
     super.key,
     required this.title,
@@ -58,6 +61,7 @@ class TrackTitleWithSubtitle extends StatelessWidget {
     required this.textColor,
     this.isExplicit = false,
     this.explicitColor,
+    this.allowTextSelection = false,
   });
 
   @override
@@ -103,9 +107,10 @@ class TrackTitleWithSubtitle extends StatelessWidget {
             ),
 
           // Дополнительный пробел, что бы при выделении текста был пробел.
-          const TextSpan(
-            text: " ",
-          ),
+          if (allowTextSelection)
+            const TextSpan(
+              text: " ",
+            ),
         ],
       ),
       overflow: TextOverflow.ellipsis,
@@ -151,6 +156,7 @@ class TrackTitleAndArtist extends StatelessWidget {
             textColor: scheme.onPrimaryContainer,
             isExplicit: explicit,
             explicitColor: scheme.onPrimaryContainer.withOpacity(0.75),
+            allowTextSelection: true,
           ),
         ),
 
@@ -1473,7 +1479,6 @@ class _MusicContents extends ConsumerWidget {
         await toggleTrackLike(
           player.ref,
           player.currentAudio!,
-          !player.currentAudio!.isLiked,
           sourcePlaylist: player.currentPlaylist,
         );
       } on VKAPIException catch (error, stackTrace) {

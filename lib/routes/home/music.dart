@@ -99,8 +99,7 @@ Future<bool> checkForDuplicates(
 /// Если [isLiked] = true, то трек будет восстановлен (если он был удалён ранее), либо же лайкнут. В ином же случае, трек будет удалён из лайкнутых.
 Future<void> toggleTrackLike(
   Ref ref,
-  ExtendedAudio audio,
-  bool isLiked, {
+  ExtendedAudio audio, {
   ExtendedPlaylist? sourcePlaylist,
 }) async {
   final logger = getLogger("toggleTrackLike");
@@ -112,13 +111,15 @@ Future<void> toggleTrackLike(
     throw Exception("Favorites playlist is null");
   }
 
+  final newLikeState = !audio.isLiked;
+
   // Новый объект ExtendedAudio, хранящий в себе новую версию трека после лайка/дизлайка.
   ExtendedAudio newAudio = audio.copyWith();
 
   // Список из плейлистов, которые должны быть сохранены.
   List<ExtendedPlaylist> playlistsModified = [];
 
-  if (isLiked) {
+  if (newLikeState) {
     // Пользователь попытался лайкнуть трек.
 
     // Здесь мы должны проверить, пытается ли пользователь восстановить ранее удалённый трек или нет.

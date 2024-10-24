@@ -326,10 +326,10 @@ class PlaylistCacheDownloadItem extends DownloadItem {
 
         try {
           return await future;
-        } catch (e, stackTrace) {
+        } catch (error, stackTrace) {
           logger.e(
             "Error while downloading metadata for $audio:",
-            error: e,
+            error: error,
             stackTrace: stackTrace,
           );
 

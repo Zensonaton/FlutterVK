@@ -302,7 +302,6 @@ class FullscreenMediaControls extends ConsumerWidget {
       await toggleTrackLike(
         player.ref,
         player.currentAudio!,
-        !player.currentAudio!.isLiked,
         sourcePlaylist: player.currentPlaylist,
       );
     } on VKAPIException catch (error, stackTrace) {

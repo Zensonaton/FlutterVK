@@ -277,10 +277,10 @@ Future main() async {
         if (!updaterInstaller.existsSync()) continue;
 
         await updaterInstaller.delete();
-      } catch (e, stackTrace) {
+      } catch (error, stackTrace) {
         logger.w(
           "Error while deleting updater on path ${updaterInstaller.path}: ",
-          error: e,
+          error: error,
           stackTrace: stackTrace,
         );
       }
@@ -430,10 +430,10 @@ Future main() async {
         );
       },
     );
-  } catch (e, stackTrace) {
+  } catch (error, stackTrace) {
     logger.f(
       "Exception while running FlutterVKApp (main): ",
-      error: e,
+      error: error,
       stackTrace: stackTrace,
     );
 
@@ -442,14 +442,14 @@ Future main() async {
       runApp(
         ProviderScope(
           child: ErroredApp(
-            error: e.toString(),
+            error: error.toString(),
           ),
         ),
       );
-    } catch (e, stackTrace) {
+    } catch (error, stackTrace) {
       logger.f(
         "Couldn't run ErroredApp: ",
-        error: e,
+        error: error,
         stackTrace: stackTrace,
       );
     }

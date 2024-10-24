@@ -514,10 +514,10 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
             // Делаем API-запрос, передавая информацию серверам ВКонтакте.
             try {
               await api.audio.sendStartEvent(player.currentAudio!.mediaKey);
-            } catch (e, stackTrace) {
+            } catch (error, stackTrace) {
               logger.w(
                 "Couldn't notify VK about track listening state: ",
-                error: e,
+                error: error,
                 stackTrace: stackTrace,
               );
             }
@@ -577,10 +577,10 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
               for (ExtendedAudio audio in newAudios) {
                 await player.addToQueueEnd(audio);
               }
-            } catch (e, stackTrace) {
+            } catch (error, stackTrace) {
               logger.e(
                 "Couldn't load audio mix tracks: ",
-                error: e,
+                error: error,
                 stackTrace: stackTrace,
               );
 
@@ -588,7 +588,7 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
-                      l18n.musicMixAudiosAddError(e.toString()),
+                      l18n.musicMixAudiosAddError(error.toString()),
                     ),
                   ),
                 );
