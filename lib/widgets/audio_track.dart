@@ -32,7 +32,7 @@ Widget buildListTrackWidget(
   BuildContext context,
   ExtendedAudio audio,
   ExtendedPlaylist playlist, {
-  bool showCachedIcon = false,
+  bool showStatusIcons = false,
   bool showDuration = true,
   bool allowImageCache = true,
   bool replaceLikeWithMore = false,
@@ -50,8 +50,12 @@ Widget buildListTrackWidget(
     if (!audio.canPlay) {
       showErrorDialog(
         context,
-        title: l18n.music_trackUnavailableTitle,
-        description: l18n.music_trackUnavailableDescription,
+        title: audio.isRestricted
+            ? l18n.music_trackRestrictedTitle
+            : l18n.music_trackUnavailableOfflineTitle,
+        description: audio.isRestricted
+            ? l18n.music_trackRestrictedDescription
+            : l18n.music_trackUnavailableOfflineDescription,
       );
 
       return;
@@ -129,7 +133,7 @@ Widget buildListTrackWidget(
     isLoading: isSelected && player.buffering,
     audio: audio,
     glowIfSelected: true,
-    showCachedIcon: showCachedIcon,
+    showStatusIcons: showStatusIcons,
     showDuration: showDuration,
     allowImageCache: allowImageCache,
     dense: dense,
@@ -368,6 +372,93 @@ class AudioTrackTitle extends ConsumerWidget {
   }
 }
 
+/// Часть [AudioTrackOtherInfo], отображающая [Column] из иконок, символизирующих состояние кэширования и прочей информации.
+class AudioTrackOtherInfoIcons extends ConsumerWidget {
+  /// Цвет для иконок.
+  final Color color;
+
+  /// Указывает, что будет отображена более плотная версия иконок.
+  final bool dense;
+
+  /// Указывает, что будет показана иконка кэша.
+  final bool isCached;
+
+  /// Указывает, что трек был заменён локально.
+  final bool isReplacedLocally;
+
+  /// Указывает, что трек ограничен.
+  final bool isRestricted;
+
+  const AudioTrackOtherInfoIcons({
+    super.key,
+    required this.color,
+    this.dense = false,
+    this.isCached = false,
+    this.isReplacedLocally = false,
+    this.isRestricted = false,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l18n = ref.watch(l18nProvider);
+
+    final List<IconData> icons = [
+      // Кэширование.
+      if (isCached) Icons.arrow_downward,
+
+      // Локально заменённый трек.
+      if (isReplacedLocally) Icons.sd_card,
+
+      // Ограниченный трек.
+      if (isRestricted) Icons.music_off,
+    ];
+    final List<String> tooltips = [
+      // Кэширование.
+      if (isCached) l18n.music_iconTooltipCached,
+
+      // Локально заменённый трек.
+      if (isReplacedLocally) l18n.music_iconTooltipReplacedLocally,
+
+      // Ограниченный трек.
+      if (isRestricted)
+        isReplacedLocally
+            ? l18n.music_iconTooltipRestrictedButReplacedLocally
+            : l18n.music_iconTooltipRestricted,
+    ];
+    final tooltip = tooltips.join(", ");
+
+    return Tooltip(
+      message: tooltip,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(
+          maxHeight: 50,
+        ),
+        child: Theme(
+          data: Theme.of(context).copyWith(
+            iconTheme: IconThemeData(
+              size: dense ? 16 : 18,
+              color: color.withOpacity(0.75),
+            ),
+          ),
+          child: Wrap(
+            direction: Axis.vertical,
+            spacing: 4,
+            runSpacing: dense ? 4 : 8,
+            alignment: WrapAlignment.center,
+            children: icons.map(
+              (iconData) {
+                return Icon(
+                  iconData,
+                );
+              },
+            ).toList(),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Часть [AudioTrackTile], используемая для отображения информации по длительности трека, а так же кнопки для лайка трека, при необходимости.
 class AudioTrackOtherInfo extends ConsumerWidget {
   /// Длительность трека.
@@ -381,11 +472,17 @@ class AudioTrackOtherInfo extends ConsumerWidget {
   /// Указывает, что этот трек играет в данный момент.
   final bool isSelected;
 
+  /// Указывает, что будут указаны иконки состояния справа (кэширования, локальной замены, недоступности, ...).
+  final bool showStatusIcons;
+
   /// Кэширован ли трек.
   final bool isCached;
 
-  /// Указывает, что в случае, если трек кэширован ([ExtendedAudio.isCached]), то будет показана соответствующая иконка.
-  final bool showCachedIcon;
+  /// Указывает, что трек был заменён локально.
+  final bool isReplacedLocally;
+
+  /// Указывает, что трек ограничен.
+  final bool isRestricted;
 
   /// Делает расположение кнопок справа более плотным (сжатым).
   final bool dense;
@@ -406,7 +503,9 @@ class AudioTrackOtherInfo extends ConsumerWidget {
     this.isSelected = false,
     this.isFavorite = false,
     this.isCached = false,
-    this.showCachedIcon = true,
+    this.showStatusIcons = true,
+    this.isReplacedLocally = false,
+    this.isRestricted = false,
     this.dense = false,
     this.onLikeTap,
     this.onMoreTap,
@@ -419,12 +518,14 @@ class AudioTrackOtherInfo extends ConsumerWidget {
 
     return Row(
       children: [
-        // Иконка кэша, при наличии.
-        if (isCached && showCachedIcon) ...[
-          Icon(
-            Icons.arrow_downward,
-            size: dense ? 16 : 18,
-            color: color.withOpacity(0.75),
+        // Множество иконок, отображающих состояние трека.
+        if (showStatusIcons) ...[
+          AudioTrackOtherInfoIcons(
+            color: color,
+            dense: dense,
+            isCached: isCached,
+            isReplacedLocally: isReplacedLocally,
+            isRestricted: isRestricted,
           ),
           Gap(dense ? 4 : 14),
         ],
@@ -490,8 +591,8 @@ class AudioTrackTile extends HookConsumerWidget {
   /// Указывает, что в случае, если [isSelected] равен true, то у данного виджета будет эффект "свечения".
   final bool glowIfSelected;
 
-  /// Указывает, что в случае, если трек кэширован ([ExtendedAudio.isCached]), то будет показана соответствующая иконка.
-  final bool showCachedIcon;
+  /// Указывает, что будут указаны иконки состояния справа (кэширования, локальной замены, недоступности, ...).
+  final bool showStatusIcons;
 
   /// Если true, то данный виджет будет не будет иметь эффект прозрачности даже если [ExtendedAudio.canPlay] равен false.
   final bool forceAvailable;
@@ -541,7 +642,7 @@ class AudioTrackTile extends HookConsumerWidget {
     this.isLoading = false,
     this.isPlaying = false,
     this.glowIfSelected = false,
-    this.showCachedIcon = true,
+    this.showStatusIcons = true,
     this.forceAvailable = false,
     this.allowImageCache = true,
     this.showDuration = true,
@@ -570,6 +671,12 @@ class AudioTrackTile extends HookConsumerWidget {
             brightness,
             schemeVariant: preferences.dynamicSchemeType,
           );
+
+    final canPlay = audio.canPlay;
+    final isExplicit = audio.isExplicit;
+    final durationString = audio.durationString;
+    final isCached = audio.isCached ?? false;
+    final isReplacedLocally = audio.replacedLocally ?? false;
 
     return Theme(
       data: ThemeData(
@@ -611,7 +718,7 @@ class AudioTrackTile extends HookConsumerWidget {
                   AudioTrackImage(
                     imageUrl: audio.smallestThumbnail,
                     cacheKey: allowImageCache ? "${audio.mediaKey}small" : null,
-                    isAvailable: forceAvailable || audio.canPlay,
+                    isAvailable: forceAvailable || canPlay,
                     isSelected: isSelected,
                     isPlaying: isPlaying,
                     isLoading: isLoading,
@@ -619,14 +726,14 @@ class AudioTrackTile extends HookConsumerWidget {
                   ),
                   const Gap(12),
 
-                  // Название, и прочая информация по треку. (центр)
+                  // Название, и прочая информация по треку. (правее от изображения/центр)
                   Expanded(
                     child: AudioTrackTitle(
                       title: audio.title,
                       artist: audio.artist,
                       subtitle: audio.subtitle,
-                      isAvailable: forceAvailable || audio.canPlay,
-                      isExplicit: audio.isExplicit,
+                      isAvailable: forceAvailable || canPlay,
+                      isExplicit: isExplicit,
                       isSelected: isSelected,
                       allowTextSelection: allowTextSelection,
                     ),
@@ -637,11 +744,13 @@ class AudioTrackTile extends HookConsumerWidget {
                   // Данный блок можно не отображать, если ничего не было передано.
                   if (showDuration || onLikeTap != null || onMoreTap != null)
                     AudioTrackOtherInfo(
-                      duration: showDuration ? audio.durationString : null,
+                      duration: showDuration ? durationString : null,
                       isFavorite: audio.isLiked,
                       isSelected: isSelected,
-                      isCached: audio.isCached ?? false,
-                      showCachedIcon: showCachedIcon,
+                      showStatusIcons: showStatusIcons,
+                      isCached: isCached && !isReplacedLocally,
+                      isReplacedLocally: isCached && isReplacedLocally,
+                      isRestricted: audio.isRestricted,
                       dense: dense,
                       onLikeTap: onLikeTap,
                       onMoreTap: onMoreTap,

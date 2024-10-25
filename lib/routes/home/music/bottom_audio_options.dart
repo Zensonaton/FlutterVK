@@ -1,6 +1,5 @@
 import "dart:io";
 
-import "package:collection/collection.dart";
 import "package:file_picker/file_picker.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
@@ -71,13 +70,15 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final newPlaylist =
         ref.watch(getPlaylistProvider(playlist.ownerID, playlist.id));
-    ExtendedAudio newAudio = newPlaylist?.audios?.firstWhereOrNull(
-          (element) =>
-              element.ownerID == audio.ownerID && element.id == audio.id,
-        ) ??
-        audio;
+    ExtendedAudio newAudio = newPlaylist!.audios!.firstWhere(
+      (element) => element.ownerID == audio.ownerID && element.id == audio.id,
+    );
 
     final l18n = ref.watch(l18nProvider);
+
+    final isCached = newAudio.isCached ?? false;
+    final isRestricted = newAudio.isRestricted;
+    final isReplacedLocally = newAudio.replacedLocally ?? false;
 
     final geniusUrl = useMemoized(
       () {
@@ -263,6 +264,62 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
       final messenger = ScaffoldMessenger.of(context);
       final playlists = ref.read(playlistsProvider.notifier);
       Navigator.of(context).pop();
+
+      // Если трек уже заменён локально, то предлагаем удалить его.
+      if (isReplacedLocally) {
+        // Если трек недоступен, то уточняем у пользователя, уверен ли он в том что хочет удалить его.
+        if (isRestricted) {
+          final result = await showYesNoDialog(
+            context,
+            title:
+                l18n.music_detailsReplaceWithLocalAudioRestoreRestrictedTitle,
+            description: l18n
+                .music_detailsReplaceWithLocalAudioRestoreRestrictedDescription,
+            icon: Icons.music_off,
+          );
+
+          if (result != true) return;
+        }
+
+        try {
+          // Удаляем локальную версию трека.
+          final cacheFile =
+              await CachedStreamAudioSource.getCachedAudioByKey(audio.mediaKey);
+          await cacheFile.delete();
+
+          newAudio = newAudio.copyWith(
+            isCached: false,
+            cachedSize: 0,
+            replacedLocally: false,
+          );
+          await playlists.updatePlaylist(
+            playlist.basicCopyWith(
+              audiosToUpdate: [newAudio],
+            ),
+            saveInDB: true,
+          );
+
+          // Показываем уведомление.
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text(
+                l18n.music_replaceWithLocalRestoreSuccess,
+              ),
+            ),
+          );
+        } catch (error, stackTrace) {
+          showLogErrorDialog(
+            "Error while removing local audio:",
+            error,
+            stackTrace,
+            logger,
+            // ignore: use_build_context_synchronously
+            context,
+          );
+        }
+
+        return;
+      }
 
       // Просим пользователя выбрать файл.
       try {
@@ -452,8 +509,7 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
                 subtitle: Text(
                   l18n.music_detailsCacheTrackDescription,
                 ),
-                enabled:
-                    !newAudio.isRestricted && !(newAudio.isCached ?? false),
+                enabled: !isRestricted && !isCached,
                 onTap: onCacheTrackTap,
               ),
 
@@ -471,18 +527,21 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
                 onTap: onDeezerThumbsTap,
               ),
 
-              // Заменить трек локально.
-              // TODO: Удалить локальную версию трека.
+              // Заменить трек локально, либо удалить локальную версию.
               ListTile(
-                leading: const Icon(
-                  Icons.music_note,
+                leading: Icon(
+                  isReplacedLocally ? Icons.music_off : Icons.sd_card,
                 ),
                 title: Text(
-                  l18n.music_detailsReplaceWithLocalAudioTitle,
+                  isReplacedLocally
+                      ? l18n.music_detailsReplaceWithLocalAudioRestoreTitle
+                      : l18n.music_detailsReplaceWithLocalAudioTitle,
                 ),
-                subtitle: Text(
-                  l18n.music_detailsReplaceWithLocalAudioDescription,
-                ),
+                subtitle: !isReplacedLocally
+                    ? Text(
+                        l18n.music_detailsReplaceWithLocalAudioDescription,
+                      )
+                    : null,
                 onTap: onReplaceWithLocalAudioTap,
               ),
 
@@ -543,7 +602,7 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
                     title: const Text(
                       "Open folder with audio",
                     ),
-                    enabled: newAudio.isCached ?? false,
+                    enabled: isCached,
                     onTap: () async {
                       Navigator.of(context).pop();
 

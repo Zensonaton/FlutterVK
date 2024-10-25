@@ -757,7 +757,7 @@ class PlaylistAudiosListWidget extends HookConsumerWidget {
             context,
             filteredAudios[index],
             playlist,
-            showCachedIcon: true,
+            showStatusIcons: true,
             showDuration: !mobileLayout,
             replaceLikeWithMore: mobileLayout,
             dense: mobileLayout,

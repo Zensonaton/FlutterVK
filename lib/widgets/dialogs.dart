@@ -130,6 +130,70 @@ class MaterialDialog extends ConsumerWidget {
   }
 }
 
+/// Диалог типа [MaterialDialog], отображающий кастомное содержимое, с кнопками "Да" и "Нет".
+class YesNoMaterialDialog extends ConsumerWidget {
+  /// [IconData], используемый как содержимое иконки, располагаемая в самой верхушке диалога.
+  final IconData? icon;
+
+  /// Текст, отображаемый после [icon], располагаемый по центру диалога.
+  final String title;
+
+  /// Текстовое содержимое данного диалога.
+  ///
+  /// Данное поле либо [contents] не должно быть null.
+  final String description;
+
+  const YesNoMaterialDialog({
+    super.key,
+    this.icon,
+    required this.title,
+    required this.description,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l18n = ref.watch(l18nProvider);
+
+    return MaterialDialog(
+      icon: icon ?? Icons.help_outline,
+      title: title,
+      text: description,
+      actions: [
+        TextButton(
+          child: Text(
+            l18n.general_no,
+          ),
+          onPressed: () => Navigator.of(context).pop(false),
+        ),
+        FilledButton(
+          child: Text(
+            l18n.general_yes,
+          ),
+          onPressed: () => Navigator.of(context).pop(true),
+        ),
+      ],
+    );
+  }
+}
+
+/// Показывает модальньный диалог, спрашивающий у пользователя о каком-то действии, показывая кнопки "Да" и "Нет".
+///
+/// В качестве параметров принимает [context] - контекст, в котором нужно показать диалог, [icon] - опциональная иконка, [title] - заголовок диалога, [description] - описание диалога.
+Future<bool?> showYesNoDialog(
+  BuildContext context, {
+  IconData? icon,
+  required String title,
+  required String description,
+}) =>
+    showDialog(
+      context: context,
+      builder: (BuildContext context) => YesNoMaterialDialog(
+        icon: icon,
+        title: title,
+        description: description,
+      ),
+    );
+
 /// Диалог типа [MaterialDialog], отображаемый в случае, если какой-то контент ещё не разработан/находится в разработке.
 ///
 /// Удобства ради, вместо вызова данного класса можно воспользоваться удобной функцией [showWipDialog]:

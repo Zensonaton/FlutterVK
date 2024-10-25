@@ -151,8 +151,11 @@
 	"music_shuffleAndPlayResume": "Продолжить",
 	"music_showAllFavoriteTracks": "Все треки",
 
-	"music_trackUnavailableTitle": "Трек недоступен",
-	"music_trackUnavailableDescription": "Вы не можете прослушать данный трек, поскольку Вы не кэшировали его ранее.",
+	"music_trackUnavailableOfflineTitle": "Трек недоступен оффлайн",
+	"music_trackUnavailableOfflineDescription": "Вы не можете прослушать данный трек в оффлайн-режиме, поскольку Вы не кэшировали его ранее.",
+
+	"music_trackRestrictedTitle": "Аудиозапись недоступна",
+	"music_trackRestrictedDescription": "Сервера ВКонтакте сообщили, что эта аудиозапись недоступна. Вероятнее всего, так решил исполнитель трека либо его лейбл.\nПоскольку Вы не кэшировали этот трек ранее, воспроизведение невозможно.\n\nВоспользуйтесь опцией «заменить трек локально» при наличии загруженного аудио в формате .mp3.",
 
 	"music_searchTextInPlaylist": "Поиск среди {count, plural, one{{count} трека} other{{count} треков}} здесь",
 	"@music_searchTextInPlaylist": {
@@ -277,6 +280,12 @@
 	"music_replaceWithLocalFilepickerDialogTitle": "Выберите трек для замены",
 	"music_replaceWithLocalSuccess": "Трек был успешно заменён на этом устройстве.",
 
+	"music_detailsReplaceWithLocalAudioRestoreTitle": "Удалить локальную версию трека",
+	"music_detailsReplaceWithLocalAudioRestoreRestrictedTitle": "Трек ограничен",
+	"music_detailsReplaceWithLocalAudioRestoreRestrictedDescription": "Данный трек недоступен для прослушивания со стороны ВКонтакте, поскольку так решил его исполнитель. Продолжив, Вы удалите этот трек со своего устройства, и более Вы не сможете его прослушивать здесь.\n\nВы уверены, что хотите потерять доступ к этому треку?",
+
+	"music_replaceWithLocalRestoreSuccess": "Трек был успешно восстановлен.",
+
 	"music_detailsTrackDetailsTitle": "Детали трека",
 
 	"music_setThumbnailSearchText": "Запрос для Deezer",
@@ -285,6 +294,11 @@
 	"@music_setThumbnailNoResults": {
 		"description": "<click>...</click> очищает результаты поиска."
 	},
+
+	"music_iconTooltipCached": "Кэширован",
+	"music_iconTooltipReplacedLocally": "Заменён локально",
+	"music_iconTooltipRestricted": "Недоступен",
+	"music_iconTooltipRestrictedButReplacedLocally": "Ограничен с возможностью воспроизведения",
 
 	"music_trackTitle": "Название",
 	"music_trackArtist": "Исполнитель",
