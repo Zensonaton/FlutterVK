@@ -1,9 +1,13 @@
+import "dart:convert";
 import "dart:io";
 import "dart:ui";
 
+import "package:crypto/crypto.dart";
 import "package:diacritic/diacritic.dart";
 import "package:dynamic_color/dynamic_color.dart";
+import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart"
     show AppLocalizations;
 import "package:responsive_builder/responsive_builder.dart";
@@ -284,6 +288,8 @@ int fastHash(String input) {
   ColorScheme lightDynamic,
   ColorScheme darkDynamic,
 ) {
+  // FIXME: Проверить, нужен ли этот костыль?
+
   List<Color> extractAdditionalColors(
     ColorScheme scheme,
   ) =>
@@ -346,3 +352,32 @@ String getPlaylistTypeString(AppLocalizations l18n, ExtendedPlaylist playlist) {
       return l18n.music_savedPlaylistTitle;
   }
 }
+
+/// Возвращает SHA256 хэш из передаваемой строки.
+String sha256String(String str) => sha256
+    .convert(
+      utf8.encode(str),
+    )
+    .toString();
+
+/// Возвращает UNIX-timestamp, отображающий количество секунд, прошедших с 1 января 1970 года.
+int getUnixTimestamp() => DateTime.now().millisecondsSinceEpoch ~/ 1000;
+
+/// Производит шифрование байтов [input] при помощи XOR-шифрования с ключом [key].
+///
+/// Дешифровка производится так же, как и шифровка, поскольку XOR-шифрование является симметричным.
+Uint8List xorCrypt(Uint8List input, Uint8List key) {
+  final List<int> output = List<int>.filled(input.length, 0);
+
+  for (int i = 0; i < input.length; i++) {
+    output[i] = input[i] ^ key[i % key.length];
+  }
+
+  return Uint8List.fromList(output);
+}
+
+/// Isolated-версия метода [xorCrypt].
+Future<Uint8List> xorCryptIsolate(Uint8List input, Uint8List key) => compute(
+      (input) => xorCrypt(input, key),
+      input,
+    );

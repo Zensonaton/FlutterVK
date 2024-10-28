@@ -166,7 +166,7 @@ class TrackThumbnailEditDialog extends HookConsumerWidget {
     }
 
     void onThumbnailReset() async {
-      if (!audio.forceDeezerThumbs) {
+      if (audio.forceDeezerThumbs != true) {
         throw Exception("Deezer thumbnails aren't forced for that track");
       }
 
@@ -397,7 +397,7 @@ class TrackThumbnailEditDialog extends HookConsumerWidget {
                 runSpacing: 8,
                 children: [
                   // Сбросить.
-                  if (audio.forceDeezerThumbs)
+                  if (audio.forceDeezerThumbs == true)
                     FilledButton.tonalIcon(
                       onPressed: onThumbnailReset,
                       icon: const Icon(

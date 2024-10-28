@@ -12,6 +12,8 @@ import "../routes/home/profile/debug/colorscheme.dart";
 import "../routes/home/profile/debug/markdown_viewer.dart";
 import "../routes/home/profile/debug/playlists_viewer.dart";
 import "../routes/home/profile/download_manager.dart";
+import "../routes/home/profile/settings_exporter.dart";
+import "../routes/home/profile/settings_importer.dart";
 import "../routes/login.dart";
 import "../routes/welcome.dart";
 import "../widgets/shell_route_wrapper.dart";
@@ -132,6 +134,26 @@ GoRouter router(RouterRef ref) {
               context: context,
               state: state,
               child: const DownloadManagerRoute(),
+            );
+          },
+        ),
+        GoRoute(
+          path: "settings_exporter",
+          pageBuilder: (BuildContext context, GoRouterState state) {
+            return buildPageWithDefaultTransition(
+              context: context,
+              state: state,
+              child: const SettingsExporterRoute(),
+            );
+          },
+        ),
+        GoRoute(
+          path: "settings_importer",
+          pageBuilder: (BuildContext context, GoRouterState state) {
+            return buildPageWithDefaultTransition(
+              context: context,
+              state: state,
+              child: const SettingsImporterRoute(),
             );
           },
         ),

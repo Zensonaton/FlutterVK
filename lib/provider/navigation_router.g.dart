@@ -6,7 +6,7 @@ part of 'navigation_router.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$routerHash() => r'02a47ca15f92b8ea088b9570d555c9a659784c1a';
+String _$routerHash() => r'1bb04aaa15867ca19393f1a4cc5373fe542a525d';
 
 /// [GoRouter], используемый для навигации по приложению.
 ///

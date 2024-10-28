@@ -531,11 +531,11 @@ class ExtendedAudio {
   final ExtendedThumbnails? deezerThumbs;
 
   /// Указывает, что вместо [vkThumbs] будет использоваться [deezerThumbs].
-  final bool forceDeezerThumbs;
+  final bool? forceDeezerThumbs;
 
   /// Возвращает объект типа [ExtendedThumbnails], берущий значение с переменной [vkThumbs] или [deezerThumbs].
   ExtendedThumbnails? get thumbnail {
-    if (forceDeezerThumbs) return deezerThumbs ?? vkThumbs;
+    if (forceDeezerThumbs == true) return deezerThumbs ?? vkThumbs;
 
     return vkThumbs ?? deezerThumbs;
   }
@@ -603,7 +603,9 @@ class ExtendedAudio {
 
   /// Указывает, возможно ли воспроизвести данный трек. Данное поле проверяет наличие интернета и существование Url на mp3 файл, либо же то, что трек кэширован.
   bool get canPlay =>
-      (isCached ?? false) || (connectivityManager.hasConnection && url != null);
+      isCached == true ||
+      replacedLocally == true ||
+      (connectivityManager.hasConnection && url != null);
 
   /// Указывает, что данный трек был сохранён из другого плейлиста, и значит, что вместо [id] (и его подобным) стоит пользоваться [relativeID].
   final bool savedFromPlaylist;
@@ -753,7 +755,7 @@ class ExtendedAudio {
         album: audio.album?.asAudioAlbum,
         vkThumbs: audio.vkThumbs?.asExtendedThumbnails,
         deezerThumbs: audio.deezerThumbs?.asExtendedThumbnails,
-        forceDeezerThumbs: audio.forceDeezerThumbs ?? false,
+        forceDeezerThumbs: audio.forceDeezerThumbs,
         hasLyrics: audio.hasLyrics,
         genreID: audio.genreID ?? 18,
         vkLyrics: audio.vkLyrics?.asLyrics,
@@ -820,7 +822,7 @@ class ExtendedAudio {
         album: album,
         vkThumbs: vkThumbs,
         deezerThumbs: deezerThumbs,
-        forceDeezerThumbs: forceDeezerThumbs ?? this.forceDeezerThumbs,
+        forceDeezerThumbs: forceDeezerThumbs,
         hasLyrics: hasLyrics,
         genreID: genreID,
         vkLyrics: vkLyrics,
@@ -955,8 +957,8 @@ class ExtendedAudio {
     this.album,
     this.vkThumbs,
     this.deezerThumbs,
-    this.forceDeezerThumbs = false,
-    this.hasLyrics = false,
+    this.forceDeezerThumbs,
+    this.hasLyrics,
     this.genreID,
     this.vkLyrics,
     this.lrcLibLyrics,

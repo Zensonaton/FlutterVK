@@ -29,6 +29,7 @@ import "../../widgets/audio_player.dart";
 import "../../widgets/dialogs.dart";
 import "../../widgets/fallback_user_avatar.dart";
 import "../../widgets/isolated_cached_network_image.dart";
+import "../../widgets/tip_widget.dart";
 import "profile/dialogs.dart";
 
 /// Вызывает окно, дающее пользователю возможность поделиться файлом логов приложения ([logFilePath]), либо же открывающее проводник (`explorer.exe`) с файлом логов (на OS Windows).
@@ -247,78 +248,6 @@ class SettingWithDialog extends StatelessWidget {
   }
 }
 
-/// Виджет для [HomeProfilePage], отображающий предупреждение о том, что рекомендации не подключены.
-class ProfileRecommendationsWarning extends ConsumerWidget {
-  const ProfileRecommendationsWarning({
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l18n = ref.watch(l18nProvider);
-
-    return Card(
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(
-          globalBorderRadius,
-        ),
-      ),
-      child: InkWell(
-        onTap: () => showDialog(
-          context: context,
-          builder: (context) {
-            return const ConnectRecommendationsDialog();
-          },
-        ),
-        borderRadius: BorderRadius.circular(
-          globalBorderRadius,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(
-            16,
-          ),
-          child: Row(
-            children: [
-              // Иконка.
-              Icon(
-                Icons.auto_fix_high,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const Gap(12),
-
-              // Содержимое.
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // "Рекомендации не подключены".
-                    Text(
-                      l18n.profile_recommendationsNotConnectedTitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const Gap(4),
-
-                    // "Рекомендации не подключены".
-                    Text(
-                      l18n.profile_recommendationsNotConnectedDescription,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 /// Виджет для [HomeProfilePage], отображающий аватар пользователя, а так же кнопку для выхода из аккаунта.
 class ProfileAvatar extends ConsumerWidget {
   const ProfileAvatar({super.key});
@@ -474,8 +403,19 @@ class HomeProfilePage extends HookConsumerWidget {
 
                 // Блок, предупреждающий пользователя о том, что рекомендации не подключены.
                 if (!recommendationsConnected) ...[
-                  const ProfileRecommendationsWarning(),
-                  const Gap(18),
+                  TipWidget(
+                    icon: Icons.auto_fix_high,
+                    title: l18n.profile_recommendationsNotConnectedTitle,
+                    description:
+                        l18n.profile_recommendationsNotConnectedDescription,
+                    onTap: () => showDialog(
+                      context: context,
+                      builder: (context) {
+                        return const ConnectRecommendationsDialog();
+                      },
+                    ),
+                  ),
+                  const Gap(16),
                 ],
 
                 // Визуал.
@@ -877,6 +817,37 @@ class HomeProfilePage extends HookConsumerWidget {
                         prefsNotifier.setLRCLIBEnabled(enabled);
                       },
                     ),
+
+                    // Экспорт настроек.
+                    ListTile(
+                      leading: const Icon(
+                        Icons.file_upload_outlined,
+                      ),
+                      title: Text(
+                        l18n.profile_exportModificationsTitle,
+                      ),
+                      subtitle: Text(
+                        l18n.profile_exportModificationsDescription,
+                      ),
+                      onTap: () {
+                        context.go("/profile/settings_exporter");
+                      },
+                    ),
+
+                    // TODO: Импорт настроек.
+                    if (kDebugMode)
+                      ListTile(
+                        leading: const Icon(
+                          Icons.file_download_outlined,
+                        ),
+                        title: Text(
+                          l18n.profile_importModificationsTitle,
+                        ),
+                        subtitle: Text(
+                          l18n.profile_importModificationsDescription,
+                        ),
+                        onTap: () => context.go("/profile/settings_importer"),
+                      ),
 
                     // Экспорт списка треков.
                     ListTile(

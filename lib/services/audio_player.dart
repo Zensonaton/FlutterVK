@@ -1,12 +1,10 @@
 import "dart:async";
-import "dart:convert";
 import "dart:io";
 import "dart:math";
 
 import "package:audio_service/audio_service.dart";
 import "package:audio_session/audio_session.dart";
 import "package:collection/collection.dart";
-import "package:crypto/crypto.dart";
 import "package:discord_rpc/discord_rpc.dart";
 import "package:flutter/services.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
@@ -85,11 +83,7 @@ class CachedStreamAudioSource extends StreamAudioSource {
   ///
   /// Учтите, что данный метод не проверяет на существование файла. Для проверки на существование файла воспользуйтесь методом [File.existsSync].
   static Future<File> getCachedAudioByKey(String mediaKey) async {
-    final hash = sha256
-        .convert(
-          utf8.encode(mediaKey),
-        )
-        .toString();
+    final hash = sha256String(mediaKey);
 
     return File(
       join(
@@ -118,7 +112,8 @@ class CachedStreamAudioSource extends StreamAudioSource {
     final playlists = _ref.read(playlistsProvider.notifier);
     final file = await getAudioCacheFile();
     final fileExists = file.existsSync();
-    final markedAsCached = audio.isCached ?? false;
+    final markedAsCached =
+        audio.isCached == true || audio.replacedLocally == true;
     bool? newCachedState;
     int? newFileSize;
 
@@ -1434,10 +1429,8 @@ class VKMusicPlayer {
           smallImageText: playing
               ? "${currentAudio!.artist} • ${currentAudio!.title}"
               : null,
-          startTimeStamp: playing
-              ? (DateTime.now().millisecondsSinceEpoch ~/ 1000) -
-                  position.inSeconds
-              : null,
+          startTimeStamp:
+              playing ? getUnixTimestamp() - position.inSeconds : null,
         ),
       );
     }

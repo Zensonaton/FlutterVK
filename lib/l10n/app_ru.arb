@@ -5,13 +5,14 @@
 	"general_no": "Нет",
 	"general_save": "Сохранить",
 	"general_reset": "Сбросить",
+	"general_cancel": "Отменить",
 	"general_close": "Закрыть",
 	"general_loading": "Загрузка...",
 	"general_restore": "Вернуть",
 	"general_addedToQueue": "Трек добавлен в очередь.",
 	"general_restartApp": "Пожалуйста, перезагрузите приложение.",
 
-	"general_appMinimized": "Flutter VK свернулся.\nВоспользуйтесь треем или откройте приложение ещё раз, что бы вернуть окошко.",
+	"general_appMinimized": "Flutter VK свернулся.\nВоспользуйтесь треем или откройте приложение ещё раз, чтобы вернуть окошко.",
 	"general_appMinimizedClose": "Закрыть",
 	"general_appMinimizedRestore": "Вернуть",
 
@@ -155,7 +156,7 @@
 	"music_trackUnavailableOfflineDescription": "Вы не можете прослушать данный трек в оффлайн-режиме, поскольку Вы не кэшировали его ранее.",
 
 	"music_trackRestrictedTitle": "Аудиозапись недоступна",
-	"music_trackRestrictedDescription": "Сервера ВКонтакте сообщили, что эта аудиозапись недоступна. Вероятнее всего, так решил исполнитель трека либо его лейбл.\nПоскольку Вы не кэшировали этот трек ранее, воспроизведение невозможно.\n\nВоспользуйтесь опцией «заменить трек локально» при наличии загруженного аудио в формате .mp3.",
+	"music_trackRestrictedDescription": "Сервера ВКонтакте сообщили, что эта аудиозапись недоступна. Вероятнее всего, так решил исполнитель трека либо его лейбл.\nПоскольку Вы не кэшировали этот трек ранее, воспроизведение невозможно.\n\nВоспользуйтесь опцией «локальная замена трека» при наличии загруженного аудио в формате .mp3.",
 
 	"music_searchTextInPlaylist": "Поиск среди {count, plural, one{{count} трека} other{{count} треков}} здесь",
 	"@music_searchTextInPlaylist": {
@@ -254,7 +255,7 @@
 		"description": "Название фейкового плейлиста, который создаётся для запуска воспроизведения трека из результатов поиска. Данная надпись показывается в полноэкранном плеере."
 	},
 
-	"music_likeRestoreTooLate": "Трек не может быть восстановлен, поскольку прошло немало времени с момента его удаления.\nВоспользуйтесь поиском, что бы найти этот трек и добавить снова.",
+	"music_likeRestoreTooLate": "Трек не может быть восстановлен, поскольку прошло немало времени с момента его удаления.\nВоспользуйтесь поиском, чтобы найти этот трек и добавить снова.",
 
 	"music_detailsEditTitle": "Редактировать",
 	"music_detailsAddAsFavoritesTitle": "Добавить как «любимый» трек",
@@ -274,7 +275,7 @@
 	"music_detailsReuploadFromYoutubeTitle": "Перезалить с Youtube",
 	"music_detailsReuploadFromYoutubeDescription": "Заменит этот трек другой версией с Youtube для обхода «недоступности» трека",
 
-	"music_detailsReplaceWithLocalAudioTitle": "Заменить трек локально",
+	"music_detailsReplaceWithLocalAudioTitle": "Локальная замена трека",
 	"music_detailsReplaceWithLocalAudioDescription": "Локально заменяет это аудио на другое, загруженное на Вашем устройстве",
 
 	"music_replaceWithLocalFilepickerDialogTitle": "Выберите трек для замены",
@@ -289,7 +290,7 @@
 	"music_detailsTrackDetailsTitle": "Детали трека",
 
 	"music_setThumbnailSearchText": "Запрос для Deezer",
-	"music_setThumbnailNoQuery": "Введите название трека сверху, что бы выполнить поиск по обложкам.",
+	"music_setThumbnailNoQuery": "Введите название трека сверху, чтобы выполнить поиск по обложкам.",
 	"music_setThumbnailNoResults": "По Вашему запросу ничего не найдено. Попробуйте <click>очистить свой запрос</click>.",
 	"@music_setThumbnailNoResults": {
 		"description": "<click>...</click> очищает результаты поиска."
@@ -353,7 +354,7 @@
 		}
 	},
 
-	"music_fullscreenNoAudio": "<bold>Тс-с-с, собачка спит</bold>!\n\nВ данный момент, у Вас ничего не играет.\nНажмите <exit>сюда</exit>, что бы закрыть плеер.",
+	"music_fullscreenNoAudio": "<bold>Тс-с-с, собачка спит</bold>!\n\nВ данный момент, у Вас ничего не играет.\nНажмите <exit>сюда</exit>, чтобы закрыть плеер.",
 	"@music_fullscreenNoAudio": {
 		"description": "В случае, если запущен полноэкранный плеер, однако ничего на самом деле не играет. В таком случае, в интерфейсе показывается изображение спящей собачки. Эта надпись располагается под этой собачкой. <bold>....</bold> делает текст жирным, <exit>...</exit> закрывает полноэкранный плеер."
 	},
@@ -385,7 +386,7 @@
 
 
 	"profile_recommendationsNotConnectedTitle": "Рекомендации ВКонтакте не подключены",
-	"profile_recommendationsNotConnectedDescription": "Из-за этого у треков нет обложек, а так же Вы теряете доступ к \"умным\" плейлистам с новыми треками.\n\nНажмите на это поле, что бы подключить рекомендации и исправить это.",
+	"profile_recommendationsNotConnectedDescription": "Из-за этого у треков нет обложек, а так же Вы теряете доступ к \"умным\" плейлистам с новыми треками.\n\nНажмите на это поле, чтобы подключить рекомендации и исправить это.",
 
 	"profile_visualTitle": "Визуал, косметические настройки",
 
@@ -442,7 +443,7 @@
 	"profile_rewindOnPreviousDisabled": "Никогда",
 
 	"profile_checkBeforeFavoriteTitle": "Защита от создания дубликатов",
-	"profile_checkBeforeFavoriteDescription": "Вы увидите предупреждение о том, что трек уже лайкнут, что бы не сохранить его дважды",
+	"profile_checkBeforeFavoriteDescription": "Вы увидите предупреждение о том, что трек уже лайкнут, чтобы не сохранить его дважды",
 	"checkBeforeFavoriteWarningTitle": "Обнаружен дубликат трека",
 	"checkBeforeFavoriteWarningDescription": "Похоже, что этот трек уже лайкнут Вами. Сохранив этот трек, у Вас будет ещё одна копия этого трека.\nВы уверены, что хотите сделать дубликат данного трека?",
 
@@ -461,6 +462,12 @@
 	"profile_LRCLibLyricsTitle": "Тексты песен через LRCLIB",
 	"profile_LRCLibLyricsDescription": "Загружает тексты песен из LRCLIB, если у трека его нет, либо он не синхронизирован.\nИногда может выдавать неправильные/некачественные тексты",
 
+	"profile_exportModificationsTitle": "Экспорт настроек",
+	"profile_exportModificationsDescription": "Сохраняет локальные изменения треков (обложки и прочие), а так же настроек приложения в файл, чтобы восстановить их на другом устройстве",
+
+	"profile_importModificationsTitle": "Импорт настроек",
+	"profile_importModificationsDescription": "Загружает файл, ранее созданный при помощи «экспорта настроек»",
+
 	"profile_exportMusicListTitle": "Экспорт списка треков",
 	"profile_exportMusicListDescription": "Список из {count, plural, one{{count} лайкнутого трека} other{{count} лайкнутых треков}}:",
 	"@profile_exportMusicListDescription": {
@@ -473,6 +480,91 @@
 	},
 	"profile_exportMusicListShareTitle": "Поделиться",
 
+	"profile_settingsExporterTitle": "Экспорт настроек",
+
+	"profile_settingsExporterTipTitle": "Об экспорте настроек",
+	"profile_settingsExporterTipDescription": "Экспорт настроек — функция, которая позволяет сохранить настройки приложения и треков в специальный файл для ручного переноса на другое устройство.\n\nПосле экспорта Вам будет нужно перенести файл на другое устройство и воспользоваться функцией <importSettings><importSettingsIcon></importSettingsIcon> Импорт настроек</importSettings>, чтобы загрузить изменения.",
+
+	"profile_settingsExporterNothingFound": "Ничего не найдено.",
+
+	"profile_settingsExporterSettingsTitle": "Настройки Flutter VK",
+	"profile_settingsExporterSettingsDescription": "Изменен{count, plural, one{а {count} настройка} few{о {count} настройки} other{о {count} настроек}}.",
+	"@profile_settingsExporterSettingsDescription": {
+		"placeholders": {
+			"count": {
+				"type": "int",
+				"description": "Количество изменённых настроек приложения."
+			}
+		}
+	},
+
+	"profile_settingsExporterModifiedThumbnailsTitle": "Изменённые обложки треков",
+	"profile_settingsExporterModifiedThumbnailsDescription": "Изменен{count, plural, one{а {count} обложка} few{о {count} обложки} other{о {count} обложек}}.",
+	"@profile_settingsExporterModifiedThumbnailsDescription": {
+		"placeholders": {
+			"count": {
+				"type": "int",
+				"description": "Количество изменённых обложек треков."
+			}
+		}
+	},
+
+	"profile_settingsExporterModifiedLyricsTitle": "Изменённые тексты песен",
+	"profile_settingsExporterModifiedLyricsDescription": "Измен{count, plural, one{ён {count} текст песни} few{ено {count} текста песен} other{ено {count} текстов песен}}.",
+	"@profile_settingsExporterModifiedLyricsDescription": {
+		"placeholders": {
+			"count": {
+				"type": "int",
+				"description": "Количество изменённых текстов песен."
+			}
+		}
+	},
+
+	"profile_settingsExporterModifiedLocalMetadataTitle": "Изменённые параметры треков",
+	"profile_settingsExporterModifiedLocalMetadataDescription": "Измен{count, plural, one{ён {count} трек} few{ено {count} трека} other{ено {count} треков}}.",
+	"@profile_settingsExporterModifiedLocalMetadataDescription": {
+		"placeholders": {
+			"count": {
+				"type": "int",
+				"description": "Количество изменённых параметров треков."
+			}
+		}
+	},
+
+	"profile_settingsExporterCachedRestrictedTitle": "Кэшированные, но ограниченные треки",
+	"profile_settingsExporterCachedRestrictedDescription": "Кэширован{count, plural, one{ {count} недоступный трек} few{о {count} недоступных трека} other{о {count} недоступных треков}}.",
+	"@profile_settingsExporterCachedRestrictedDescription": {
+		"placeholders": {
+			"count": {
+				"type": "int",
+				"description": "Количество кэшированных ограниченных треков."
+			}
+		}
+	},
+
+	"profile_settingsExporterLocallyReplacedTitle": "Локально заменённые треки",
+	"profile_settingsExporterLocallyReplacedDescription": "Замен{count, plural, one{ён {count} трек} few{ено {count} трека} other{ено {count} треков}}.",
+	"@profile_settingsExporterLocallyReplacedDescription": {
+		"placeholders": {
+			"count": {
+				"type": "int",
+				"description": "Количество локально заменённых треков."
+			}
+		}
+	},
+
+	"profile_settingsExporterExport": "Экспортировать",
+
+	"profile_settingsExporterSuccessTitle": "Экспорт завершён",
+	"profile_settingsExporterSuccessDescription": "Экспорт завершён успешно! Вручную перенесите файл на другое устройство и воспользуйтесь опцией «импорт настроек» что бы восстановить изменения.",
+
+	"profile_settingsExporterSuccessShare": "Поделиться",
+	"profile_settingsExporterSuccessOpenFolder": "Открыть папку",
+
+	"profile_settingsImporterTitle": "Импорт настроек",
+
+	"profile_settingsImporterTipTitle": "Об импорте настроек",
+	"profile_settingsImporterTipDescription": "Импорт настроек — это WIP-функция. Привет всем тем, кто смотрит содержимое коммитов! :)\n\nТут будет иконка: <exportSettings><exportSettingsIcon></exportSettingsIcon> Экспорт настроек</exportSettings>, крута?",
 
 	"profile_aboutTitle": "О Flutter VK",
 
@@ -613,7 +705,7 @@
 	},
 
 	"profile_appVersionTitle": "О приложении",
-	"profile_appVersionDescription": "Установленная версия приложения: {version}.\nНажмите сюда, что бы проверить на наличие новых обновлений",
+	"profile_appVersionDescription": "Установленная версия приложения: {version}.\nНажмите сюда, чтобы проверить на наличие новых обновлений",
 	"@profile_appVersionDescription": {
 		"placeholders": {
 			"version": {

@@ -421,7 +421,7 @@ class AudioTrackOtherInfoIcons extends ConsumerWidget {
 
       // Ограниченный трек.
       if (isRestricted)
-        isReplacedLocally
+        (isReplacedLocally || isCached)
             ? l18n.music_iconTooltipRestrictedButReplacedLocally
             : l18n.music_iconTooltipRestricted,
     ];
@@ -748,8 +748,8 @@ class AudioTrackTile extends HookConsumerWidget {
                       isFavorite: audio.isLiked,
                       isSelected: isSelected,
                       showStatusIcons: showStatusIcons,
-                      isCached: isCached && !isReplacedLocally,
-                      isReplacedLocally: isCached && isReplacedLocally,
+                      isCached: isCached,
+                      isReplacedLocally: isReplacedLocally,
                       isRestricted: audio.isRestricted,
                       dense: dense,
                       onLikeTap: onLikeTap,

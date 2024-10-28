@@ -108,7 +108,7 @@ class ProgressIndicatorIcon extends StatelessWidget {
                     duration: const Duration(
                       milliseconds: 1000,
                     ),
-                    curve: Curves.easeInOutCubicEmphasized,
+                    curve: Curves.ease,
                     begin: -2,
                     end: 2,
                   );

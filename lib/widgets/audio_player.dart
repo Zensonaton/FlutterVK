@@ -1596,7 +1596,8 @@ class MusicPlayerWidget extends HookConsumerWidget {
   static const double mobileHeight = 66;
 
   /// Размер мини-плеера для Mobile Layout'а с учётом padding'ов.
-  static const double mobileHeightWithPadding = mobileHeight + mobilePadding;
+  static const double mobileHeightWithPadding =
+      mobileHeight + mobilePadding * 2;
 
   /// Размер мини-плеера для Desktop Layout.
   static const double desktopMiniPlayerHeight = 88;

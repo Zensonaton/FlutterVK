@@ -288,7 +288,6 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
           await cacheFile.delete();
 
           newAudio = newAudio.copyWith(
-            isCached: false,
             cachedSize: 0,
             replacedLocally: false,
           );
@@ -349,7 +348,6 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
 
         // Помечаем трек как кэшированный.
         newAudio = newAudio.copyWith(
-          isCached: true,
           cachedSize: passedAudioLength,
           replacedLocally: true,
         );
