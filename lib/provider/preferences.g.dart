@@ -59,6 +59,10 @@ UserPreferences _$UserPreferencesFromJson(Map<String, dynamic> json) =>
       androidKeepPlayingOnClose:
           json['AndroidKeepPlayingOnClose'] as bool? ?? false,
       shuffleOnPlay: json['ShuffleOnPlay'] as bool? ?? true,
+      exportedSections: (json['ExportedSections'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
     );
 
 Map<String, dynamic> _$UserPreferencesToJson(UserPreferences instance) =>
@@ -101,6 +105,7 @@ Map<String, dynamic> _$UserPreferencesToJson(UserPreferences instance) =>
       'ShowRemainingTime': instance.showRemainingTime,
       'AndroidKeepPlayingOnClose': instance.androidKeepPlayingOnClose,
       'ShuffleOnPlay': instance.shuffleOnPlay,
+      'ExportedSections': instance.exportedSections,
     };
 
 const _$ThemeModeEnumMap = {
@@ -144,7 +149,7 @@ const _$RewindBehaviorEnumMap = {
 // RiverpodGenerator
 // **************************************************************************
 
-String _$preferencesHash() => r'bbda3d4e0ecd6b6b3623b7ee2f693c8a6f5c84b0';
+String _$preferencesHash() => r'4af6ff0dbbdec5385da205cec49e4529caeb049f';
 
 /// [Provider] для хранения настроек пользователя.
 ///

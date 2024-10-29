@@ -163,6 +163,12 @@ class UserPreferences {
   @JsonKey(name: "ShuffleOnPlay")
   final bool shuffleOnPlay;
 
+  /// Список из ранее экспортированных, либо импортированных секций для настройки "экспорт настроек".
+  ///
+  /// Названия секций берутся из [ExportedSections].
+  @JsonKey(name: "ExportedSections")
+  final List<String> exportedSections;
+
   UserPreferences({
     this.dbVersion = IsarDBMigrator.maxDBVersion,
     this.myMusicChipEnabled = true,
@@ -199,6 +205,7 @@ class UserPreferences {
     this.showRemainingTime = false,
     this.androidKeepPlayingOnClose = false,
     this.shuffleOnPlay = true,
+    this.exportedSections = const [],
   });
 
   /// Делает копию этого класа с новыми передаваемыми значениями.
@@ -238,6 +245,7 @@ class UserPreferences {
     bool? showRemainingTime,
     bool? androidKeepPlayingOnClose,
     bool? shuffleOnPlay,
+    List<String>? exportedSections,
   }) =>
       UserPreferences(
         dbVersion: dbVersion ?? this.dbVersion,
@@ -284,6 +292,7 @@ class UserPreferences {
         androidKeepPlayingOnClose:
             androidKeepPlayingOnClose ?? this.androidKeepPlayingOnClose,
         shuffleOnPlay: shuffleOnPlay ?? this.shuffleOnPlay,
+        exportedSections: exportedSections ?? this.exportedSections,
       );
 
   factory UserPreferences.fromJson(Map<String, dynamic> json) =>
@@ -342,6 +351,7 @@ class Preferences extends _$Preferences {
       showRemainingTime: prefs.getBool("ShowRemainingTime"),
       androidKeepPlayingOnClose: prefs.getBool("AndroidKeepPlayingOnClose"),
       shuffleOnPlay: prefs.getBool("ShuffleOnPlay"),
+      exportedSections: prefs.getStringList("ExportedSections") ?? [],
     );
   }
 
@@ -382,6 +392,8 @@ class Preferences extends _$Preferences {
         prefs.setDouble(key, newValue);
       } else if (newValue is String) {
         prefs.setString(key, newValue);
+      } else if (newValue is List<String>) {
+        prefs.setStringList(key, newValue);
       } else if (newValue == null) {
         prefs.remove(key);
       } else {
@@ -500,4 +512,7 @@ class Preferences extends _$Preferences {
 
   void setShuffleOnPlay(bool enabled) =>
       state = state.copyWith(shuffleOnPlay: enabled);
+
+  void setExportedSections(List<String> sections) =>
+      state = state.copyWith(exportedSections: sections);
 }

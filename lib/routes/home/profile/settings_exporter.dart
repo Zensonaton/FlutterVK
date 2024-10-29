@@ -302,7 +302,9 @@ class SettingsExporterRoute extends HookConsumerWidget {
       [],
     );
 
-    final enabledSections = useState<Set<String>>({});
+    final enabledSections = useState<Set<String>>(
+      preferences.exportedSections.toSet(),
+    );
     final isExportInProgress = useState(false);
 
     final animatedExportProgress = useAnimationController();
@@ -328,8 +330,6 @@ class SettingsExporterRoute extends HookConsumerWidget {
     useValueListenable(animatedExportProgressOpacity);
 
     Future<void> onExportTap() async {
-      // TODO: Сохранить выбор пользователя в настройках.
-
       final sectionsList = enabledSections.value.toList();
       final settings = sectionsList.contains("settings");
       final modifiedThumbnails = sectionsList.contains("modifiedThumbnails");
@@ -339,6 +339,9 @@ class SettingsExporterRoute extends HookConsumerWidget {
       final cachedRestricted = sectionsList.contains("cachedRestricted");
       final locallyReplacedAudios =
           sectionsList.contains("locallyReplacedAudios");
+
+      // Сохраняем выбор пользователя.
+      ref.read(preferencesProvider.notifier).setExportedSections(sectionsList);
 
       isExportInProgress.value = true;
       animatedExportProgress.value = 0.0;
