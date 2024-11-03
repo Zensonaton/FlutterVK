@@ -328,7 +328,7 @@ Future main() async {
     // Инициализируем плеер.
     JustAudioMediaKit.title = "Flutter VK";
     JustAudioMediaKit.prefetchPlaylist = !kDebugMode;
-    if (preferences.debugPlayerLogging) {
+    if (preferences.debugPlayerLogging && isDesktop) {
       logger.i("Media kit debug logger is enabled");
 
       JustAudioMediaKit.mpvLogLevel = MPVLogLevel.debug;
@@ -358,7 +358,7 @@ Future main() async {
     }
 
     // Восстанавливаем значение настройки "пауза при отключении громкости".
-    if (preferences.pauseOnMuteEnabled) {
+    if (preferences.pauseOnMuteEnabled && isDesktop) {
       player.setPauseOnMuteEnabled(true);
     }
 

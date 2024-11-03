@@ -27,6 +27,9 @@ class TipWidget extends StatelessWidget {
   /// Указывает, что иконка будет расположена сверху, а [title] будет тоже по центру.
   final bool iconOnTop;
 
+  /// Список из виджетов-действий, отображаемых снизу.
+  final List<Widget> actions;
+
   /// Обработчик нажатия на виджет.
   final void Function()? onTap;
 
@@ -37,6 +40,7 @@ class TipWidget extends StatelessWidget {
     this.description,
     this.descriptionWidget,
     this.iconOnTop = false,
+    this.actions = const [],
     this.onTap,
   });
 
@@ -108,6 +112,12 @@ class TipWidget extends StatelessWidget {
 
                     // Описание.
                     descriptionWidget ?? Text(description!),
+
+                    // Дополнительные действия.
+                    if (actions.isNotEmpty) ...[
+                      const Gap(20),
+                      ...actions,
+                    ],
                   ],
                 ),
               ),

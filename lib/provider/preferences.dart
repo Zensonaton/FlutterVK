@@ -21,153 +21,237 @@ class UserPreferences {
     "DBVersion",
   ];
 
+  /// Список из JSON-ключей, которые не стоит экспортировать.
+  static final List<String> exportIgnoreKeys = [
+    "DBVersion",
+    "ExportedSections",
+  ];
+
   /// Указывает версию базы данных Isar. Используется для миграции.
-  @JsonKey(name: "DBVersion")
+  @JsonKey(name: "DBVersion", defaultValue: IsarDBMigrator.maxDBVersion)
   final int dbVersion;
 
   /// Указывает, что поле "Моя музыка" включено на экране с музыкой.
-  @JsonKey(name: "MyMusicChipEnabled")
+  @JsonKey(name: "MyMusicChipEnabled", defaultValue: true)
   final bool myMusicChipEnabled;
 
   /// Указывает, что поле "Ваши плейлисты" включено на экране с музыкой.
-  @JsonKey(name: "PlaylistsChipEnabled")
+  @JsonKey(name: "PlaylistsChipEnabled", defaultValue: true)
   final bool playlistsChipEnabled;
 
   /// Указывает, что поле "В реальном времени" включено на экране с музыкой.
-  @JsonKey(name: "RealtimePlaylistsChipEnabled")
+  @JsonKey(name: "RealtimePlaylistsChipEnabled", defaultValue: true)
   final bool realtimePlaylistsChipEnabled;
 
   /// Указывает, что поле "Плейлисты для Вас" включено на экране с музыкой.
-  @JsonKey(name: "RecommendedPlaylistsChipEnabled")
+  @JsonKey(name: "RecommendedPlaylistsChipEnabled", defaultValue: true)
   final bool recommendedPlaylistsChipEnabled;
 
   /// Указывает, что поле "Совпадения по вкусам" включено на экране с музыкой.
-  @JsonKey(name: "SimilarMusicChipEnabled")
+  @JsonKey(name: "SimilarMusicChipEnabled", defaultValue: true)
   final bool similarMusicChipEnabled;
 
   /// Указывает, что поле "Собрано редакцией" включено на экране с музыкой.
-  @JsonKey(name: "ByVKChipEnabled")
+  @JsonKey(name: "ByVKChipEnabled", defaultValue: true)
   final bool byVKChipEnabled;
 
   /// Указывает, что при последнем прослушивании shuffle был включён.
-  @JsonKey(name: "ShuffleEnabled")
+  @JsonKey(name: "ShuffleEnabled", defaultValue: false)
   final bool shuffleEnabled;
 
   /// Указывает, что Discord Rich Presence включён.
-  @JsonKey(name: "DiscordRPCEnabled")
+  @JsonKey(name: "DiscordRPCEnabled", defaultValue: true)
   final bool discordRPCEnabled;
 
   /// Указывает, что настройка "пауза при минимальной громкости" включена.
-  @JsonKey(name: "PauseOnMuteEnabled")
+  @JsonKey(name: "PauseOnMuteEnabled", defaultValue: false)
   final bool pauseOnMuteEnabled;
 
   /// Указывает, что при установке плеера на паузу, воспроизведение музыки будет автоматически остановлено ([VKMusicPlayer.stop]) через некоторое время.
-  @JsonKey(name: "StopOnPauseEnabled")
+  @JsonKey(name: "StopOnPauseEnabled", defaultValue: true)
   final bool stopOnPauseEnabled;
 
   /// Указывает, что полноэкранный плеер использует изображение трека в качестве фона.
-  @JsonKey(name: "PlayerThumbAsBackground")
+  @JsonKey(name: "PlayerThumbAsBackground", defaultValue: true)
   final bool playerThumbAsBackground;
 
   /// Указывает, что включён показ текста трека в полноэкранном плеере.
-  @JsonKey(name: "TrackLyricsEnabled")
+  @JsonKey(name: "TrackLyricsEnabled", defaultValue: true)
   final bool trackLyricsEnabled;
 
   /// Указывает, что цвета плеера распространяются на всё приложение.
-  @JsonKey(name: "PlayerColorsAppWide")
+  @JsonKey(name: "PlayerColorsAppWide", defaultValue: true)
   final bool playerColorsAppWide;
 
   /// Указывает, какая тема приложения используется.
-  @JsonKey(name: "Theme", toJson: intFromEnum)
+  @JsonKey(
+    name: "Theme",
+    toJson: intFromEnum,
+    fromJson: _themeFromJson,
+    defaultValue: ThemeMode.system,
+  )
   final ThemeMode theme;
+  static _themeFromJson(int value) => ThemeMode.values[value];
 
   /// Указывает, что включена OLED тема приложения.
-  @JsonKey(name: "OLEDTheme")
+  @JsonKey(name: "OLEDTheme", defaultValue: false)
   final bool oledTheme;
 
   /// Указывает поведение в случае закрытия приложения на OS Windows.
-  @JsonKey(name: "CloseBehavior", toJson: intFromEnum)
+  @JsonKey(
+    name: "CloseBehavior",
+    toJson: intFromEnum,
+    fromJson: _closeBehaviorFromJson,
+    defaultValue: CloseBehavior.close,
+  )
   final CloseBehavior closeBehavior;
+  static _closeBehaviorFromJson(int value) => CloseBehavior.values[value];
 
   /// Указывает, что приложение показывает предупреждение при попытке сохранить уже лайкнутый трек.
-  @JsonKey(name: "CheckBeforeFavorite")
+  @JsonKey(name: "CheckBeforeFavorite", defaultValue: true)
   final bool checkBeforeFavorite;
 
   /// Указывает политику для автообновлений.
-  @JsonKey(name: "UpdatePolicy", toJson: intFromEnum)
+  @JsonKey(
+    name: "UpdatePolicy",
+    toJson: intFromEnum,
+    fromJson: _updatePolicyFromJson,
+    defaultValue: UpdatePolicy.dialog,
+  )
   final UpdatePolicy updatePolicy;
+  static _updatePolicyFromJson(int value) => UpdatePolicy.values[value];
 
   /// Указывает ветку для автообновлений.
-  @JsonKey(name: "UpdateBranch", toJson: intFromEnum)
+  @JsonKey(
+    name: "UpdateBranch",
+    toJson: intFromEnum,
+    fromJson: _updateBranchFromJson,
+    defaultValue: UpdateBranch.releasesOnly,
+  )
   final UpdateBranch updateBranch;
+  static _updateBranchFromJson(int value) => UpdateBranch.values[value];
 
   /// Указывает, что приложение может загружать обложки треков с Deezer.
-  @JsonKey(name: "DeezerThumbnails")
+  @JsonKey(name: "DeezerThumbnails", defaultValue: false)
   final bool deezerThumbnails;
 
   /// Указывает, какой тип палитры цветов будет использоваться при извлечении цветов из обложек треков.
-  @JsonKey(name: "DynamicSchemeType", toJson: intFromEnum)
+  @JsonKey(
+    name: "DynamicSchemeType",
+    toJson: intFromEnum,
+    fromJson: _dynamicSchemeTypeFromJson,
+    defaultValue: DynamicSchemeType.tonalSpot,
+  )
   final DynamicSchemeType dynamicSchemeType;
+  static _dynamicSchemeTypeFromJson(int value) =>
+      DynamicSchemeType.values[value];
 
   /// Указывает, что полноэкранный плеер будет использовать изображение большого размера при Desktop Layout'е.
-  @JsonKey(name: "FullscreenBigThumbnail")
+  @JsonKey(name: "FullscreenBigThumbnail", defaultValue: false)
   final bool fullscreenBigThumbnail;
 
   /// Указывает, что включено debug-логирование media_kit плеера.
-  @JsonKey(name: "DebugPlayerLogging")
+  @JsonKey(name: "DebugPlayerLogging", defaultValue: false)
   final bool debugPlayerLogging;
 
   /// Указывает, что было показано предупреждение о том, что пользователь запустил бета-версию приложения.
-  @JsonKey(name: "PreReleaseWarningShown")
+  @JsonKey(name: "PreReleaseWarningShown", defaultValue: false)
   final bool preReleaseWarningShown;
 
   /// Указывает, что приложение будет загружать тексты песен с LRCLIB.
-  @JsonKey(name: "LRCLIBEnabled")
+  @JsonKey(name: "LRCLIBEnabled", defaultValue: false)
   final bool lrcLibEnabled;
 
   /// Указывает, включён ли loop-mode для плеера.
-  @JsonKey(name: "LoopModeEnabled")
+  @JsonKey(name: "LoopModeEnabled", defaultValue: false)
   final bool loopModeEnabled;
 
   /// Указывает, какая громкость у плеера.
   ///
   /// Принимается значение от `0.0` (0%) либо `1.0` (100%).
-  @JsonKey(name: "Volume")
+  @JsonKey(name: "Volume", defaultValue: 1.0)
   final double volume;
 
   /// Указывает, в каких случаях трек будет перематываться в начало при попытке запустить предыдущий.
-  @JsonKey(name: "RewindOnPreviousBehavior", toJson: intFromEnum)
+  @JsonKey(
+    name: "RewindOnPreviousBehavior",
+    toJson: intFromEnum,
+    fromJson: _rewindOnPreviousBehaviorFromJson,
+    defaultValue: RewindBehavior.always,
+  )
   final RewindBehavior rewindOnPreviousBehavior;
+  static _rewindOnPreviousBehaviorFromJson(int value) =>
+      RewindBehavior.values[value];
 
   /// Указывает, включена ли настройка "спойлер следующего трека".
-  @JsonKey(name: "SpoilerNextTrack")
+  @JsonKey(name: "SpoilerNextTrack", defaultValue: true)
   final bool spoilerNextTrack;
 
   /// Указывает, включён ли показ debugging-опций в "профиле" даже в release-режиме.
-  @JsonKey(name: "DebugOptionsEnabled")
+  @JsonKey(name: "DebugOptionsEnabled", defaultValue: false)
   final bool debugOptionsEnabled;
 
   /// Указывает, что будет использоваться альтернативный вид Slider'а у мини-плеера при Desktop Layout'е.
-  @JsonKey(name: "AlternateDesktopMiniplayerSlider")
+  @JsonKey(name: "AlternateDesktopMiniplayerSlider", defaultValue: false)
   final bool alternateDesktopMiniplayerSlider;
 
   /// Указывает, что вместо прогресса воспроизведения трека будет показано оставшееся время до конца трека.
-  @JsonKey(name: "ShowRemainingTime")
+  @JsonKey(name: "ShowRemainingTime", defaultValue: false)
   final bool showRemainingTime;
 
   /// Указывает, что при закрытии приложения на OS Android приложение не будет закрываться, а будет скрываться в фоне.
-  @JsonKey(name: "AndroidKeepPlayingOnClose")
+  @JsonKey(name: "AndroidKeepPlayingOnClose", defaultValue: false)
   final bool androidKeepPlayingOnClose;
 
   /// Указывает, что при нажатии на кнопку воспроизведения трека, будет запускаться воспроизведение случайного трека с включённым shuffle.
-  @JsonKey(name: "ShuffleOnPlay")
+  @JsonKey(name: "ShuffleOnPlay", defaultValue: true)
   final bool shuffleOnPlay;
 
   /// Список из ранее экспортированных, либо импортированных секций для настройки "экспорт настроек".
   ///
   /// Названия секций берутся из [ExportedSections].
-  @JsonKey(name: "ExportedSections")
+  @JsonKey(name: "ExportedSections", defaultValue: [])
   final List<String> exportedSections;
+
+  /// Возвращает [Map] из всех ключей этого класса, где value - тип ключа.
+  static Map<String, Type> getKeyTypes() => {
+        "DBVersion": int,
+        "MyMusicChipEnabled": bool,
+        "PlaylistsChipEnabled": bool,
+        "RealtimePlaylistsChipEnabled": bool,
+        "RecommendedPlaylistsChipEnabled": bool,
+        "SimilarMusicChipEnabled": bool,
+        "ByVKChipEnabled": bool,
+        "ShuffleEnabled": bool,
+        "DiscordRPCEnabled": bool,
+        "PauseOnMuteEnabled": bool,
+        "StopOnPauseEnabled": bool,
+        "PlayerThumbAsBackground": bool,
+        "TrackLyricsEnabled": bool,
+        "PlayerColorsAppWide": bool,
+        "Theme": ThemeMode,
+        "OLEDTheme": bool,
+        "CloseBehavior": CloseBehavior,
+        "CheckBeforeFavorite": bool,
+        "UpdatePolicy": UpdatePolicy,
+        "UpdateBranch": UpdateBranch,
+        "DeezerThumbnails": bool,
+        "DynamicSchemeType": DynamicSchemeType,
+        "FullscreenBigThumbnail": bool,
+        "DebugPlayerLogging": bool,
+        "PreReleaseWarningShown": bool,
+        "LRCLIBEnabled": bool,
+        "LoopModeEnabled": bool,
+        "Volume": double,
+        "RewindOnPreviousBehavior": RewindBehavior,
+        "SpoilerNextTrack": bool,
+        "DebugOptionsEnabled": bool,
+        "AlternateDesktopMiniplayerSlider": bool,
+        "ShowRemainingTime": bool,
+        "AndroidKeepPlayingOnClose": bool,
+        "ShuffleOnPlay": bool,
+        "ExportedSections": List<String>,
+      };
 
   UserPreferences({
     this.dbVersion = IsarDBMigrator.maxDBVersion,
@@ -298,7 +382,21 @@ class UserPreferences {
   factory UserPreferences.fromJson(Map<String, dynamic> json) =>
       _$UserPreferencesFromJson(json);
 
+  /// Возвращает JSON-представление этого класса.
+  ///
+  /// Если Вы делаете экспорт настроек (например, как в функции "экспорт настроек"), то используйте [toExportedJson], что бы исключить ненужные ключи.
   Map<String, dynamic> toJson() => _$UserPreferencesToJson(this);
+
+  /// Возвращает JSON-представление этого класса, но без ключей из [exportIgnoreKeys].
+  Map<String, dynamic> toExportedJson() {
+    final Map<String, dynamic> json = toJson();
+
+    for (String key in exportIgnoreKeys) {
+      json.remove(key);
+    }
+
+    return json;
+  }
 }
 
 /// [Provider] для хранения настроек пользователя.
@@ -308,51 +406,20 @@ class Preferences extends _$Preferences {
 
   @override
   UserPreferences build() {
+    return UserPreferences.fromJson(getPreferencesMap());
+  }
+
+  /// Загружает [sharedPrefsProvider], и возвращает [Map], содержащий в себе изменённые настройки.
+  Map<String, dynamic> getPreferencesMap() {
     final SharedPreferences prefs = ref.read(sharedPrefsProvider);
 
-    return UserPreferences().copyWith(
-      dbVersion: prefs.getInt("DBVersion"),
-      myMusicChipEnabled: prefs.getBool("MyMusicChipEnabled"),
-      playlistsChipEnabled: prefs.getBool("PlaylistsChipEnabled"),
-      realtimePlaylistsChipEnabled:
-          prefs.getBool("RealtimePlaylistsChipEnabled"),
-      recommendedPlaylistsChipEnabled:
-          prefs.getBool("RecommendedPlaylistsChipEnabled"),
-      similarMusicChipEnabled: prefs.getBool("SimilarMusicChipEnabled"),
-      byVKChipEnabled: prefs.getBool("ByVKChipEnabled"),
-      shuffleEnabled: prefs.getBool("ShuffleEnabled"),
-      discordRPCEnabled: prefs.getBool("DiscordRPCEnabled"),
-      pauseOnMuteEnabled: prefs.getBool("PauseOnMuteEnabled"),
-      stopOnPauseEnabled: prefs.getBool("StopOnPauseEnabled"),
-      playerThumbAsBackground: prefs.getBool("PlayerThumbAsBackground"),
-      trackLyricsEnabled: prefs.getBool("TrackLyricsEnabled"),
-      playerColorsAppWide: prefs.getBool("PlayerColorsAppWide"),
-      theme: ThemeMode.values[prefs.getInt("Theme") ?? 0],
-      oledTheme: prefs.getBool("OLEDTheme"),
-      closeBehavior: CloseBehavior.values[prefs.getInt("CloseBehavior") ?? 0],
-      checkBeforeFavorite: prefs.getBool("CheckBeforeFavorite"),
-      updatePolicy: UpdatePolicy.values[prefs.getInt("UpdatePolicy") ?? 0],
-      updateBranch: UpdateBranch.values[prefs.getInt("UpdateBranch") ?? 0],
-      deezerThumbnails: prefs.getBool("DeezerThumbnails"),
-      dynamicSchemeType:
-          DynamicSchemeType.values[prefs.getInt("DynamicSchemeType") ?? 0],
-      fullscreenBigThumbnail: prefs.getBool("FullscreenBigThumbnail"),
-      debugPlayerLogging: prefs.getBool("DebugPlayerLogging"),
-      preReleaseWarningShown: prefs.getBool("PreReleaseWarningShown"),
-      lrcLibEnabled: prefs.getBool("LRCLIBEnabled"),
-      loopModeEnabled: prefs.getBool("LoopModeEnabled"),
-      volume: prefs.getDouble("Volume"),
-      rewindOnPreviousBehavior:
-          RewindBehavior.values[prefs.getInt("RewindOnPreviousBehavior") ?? 0],
-      spoilerNextTrack: prefs.getBool("SpoilerNextTrack"),
-      debugOptionsEnabled: prefs.getBool("DebugOptionsEnabled"),
-      alternateDesktopMiniplayerSlider:
-          prefs.getBool("AlternateDesktopMiniplayerSlider"),
-      showRemainingTime: prefs.getBool("ShowRemainingTime"),
-      androidKeepPlayingOnClose: prefs.getBool("AndroidKeepPlayingOnClose"),
-      shuffleOnPlay: prefs.getBool("ShuffleOnPlay"),
-      exportedSections: prefs.getStringList("ExportedSections") ?? [],
-    );
+    final Map<String, dynamic> map = {};
+    final Iterable<String> keys = UserPreferences.getKeyTypes().keys;
+    for (String key in keys) {
+      map[key] = prefs.get(key);
+    }
+
+    return map;
   }
 
   @override
@@ -382,6 +449,14 @@ class Preferences extends _$Preferences {
       // Если ничего не изменилось, то пропускаем ключ.
       if (newValue == oldValue) continue;
 
+      // Если передан null, то удаляем ключ из SharedPreferences, если он там есть.
+      if (newValue == null) {
+        if (prefs.containsKey(key)) hasChanges = true;
+        prefs.remove(key);
+
+        continue;
+      }
+
       // Мы получили новое значение, теперь его нужно записать в SharedPreferences.
       hasChanges = true;
       if (newValue is bool) {
@@ -394,8 +469,6 @@ class Preferences extends _$Preferences {
         prefs.setString(key, newValue);
       } else if (newValue is List<String>) {
         prefs.setStringList(key, newValue);
-      } else if (newValue == null) {
-        prefs.remove(key);
       } else {
         throw Exception(
           "'$key' has an unsupported type: ${newValue.runtimeType}",
@@ -409,6 +482,27 @@ class Preferences extends _$Preferences {
 
       super.state = newState;
     }
+  }
+
+  /// Производит объединение текущего состояния с новым состоянием.
+  void setFromJson(
+    Map<String, dynamic> json, {
+    bool useExportIgnoreKeys = true,
+  }) {
+    final Map<String, dynamic> newJson = state.toJson();
+    for (MapEntry<String, dynamic> entry in json.entries) {
+      final value = entry.value;
+      if (value == null) continue;
+
+      if (useExportIgnoreKeys &&
+          UserPreferences.exportIgnoreKeys.contains(entry.key)) {
+        continue;
+      }
+
+      newJson[entry.key] = entry.value;
+    }
+
+    state = UserPreferences.fromJson(newJson);
   }
 
   void setDBVersion(int version) => state = state.copyWith(dbVersion: version);

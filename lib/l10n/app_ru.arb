@@ -485,10 +485,10 @@
 	"profile_settingsExporterTipTitle": "Об экспорте настроек",
 	"profile_settingsExporterTipDescription": "Экспорт настроек — функция, которая позволяет сохранить настройки приложения и треков в специальный файл для ручного переноса на другое устройство.\n\nПосле экспорта Вам будет нужно перенести файл на другое устройство и воспользоваться функцией <importSettings><importSettingsIcon></importSettingsIcon> Импорт настроек</importSettings>, чтобы загрузить изменения.",
 
-	"profile_settingsExporterNothingFound": "Ничего не найдено.",
+	"profile_settingsExporterNothingFound": "Ничего не найдено",
 
 	"profile_settingsExporterSettingsTitle": "Настройки Flutter VK",
-	"profile_settingsExporterSettingsDescription": "Изменен{count, plural, one{а {count} настройка} few{о {count} настройки} other{о {count} настроек}}.",
+	"profile_settingsExporterSettingsDescription": "Изменен{count, plural, one{а {count} настройка} few{о {count} настройки} other{о {count} настроек}}",
 	"@profile_settingsExporterSettingsDescription": {
 		"placeholders": {
 			"count": {
@@ -499,7 +499,7 @@
 	},
 
 	"profile_settingsExporterModifiedThumbnailsTitle": "Изменённые обложки треков",
-	"profile_settingsExporterModifiedThumbnailsDescription": "Изменен{count, plural, one{а {count} обложка} few{о {count} обложки} other{о {count} обложек}}.",
+	"profile_settingsExporterModifiedThumbnailsDescription": "Опцией <colored><icon></icon> Заменить обложку</colored> было изменен{count, plural, one{а {count} обложка} few{о {count} обложки} other{о {count} обложек}}",
 	"@profile_settingsExporterModifiedThumbnailsDescription": {
 		"placeholders": {
 			"count": {
@@ -510,7 +510,7 @@
 	},
 
 	"profile_settingsExporterModifiedLyricsTitle": "Изменённые тексты песен",
-	"profile_settingsExporterModifiedLyricsDescription": "Измен{count, plural, one{ён {count} текст песни} few{ено {count} текста песен} other{ено {count} текстов песен}}.",
+	"profile_settingsExporterModifiedLyricsDescription": "Измен{count, plural, one{ён {count} текст песни} few{ено {count} текста песен} other{ено {count} текстов песен}}",
 	"@profile_settingsExporterModifiedLyricsDescription": {
 		"placeholders": {
 			"count": {
@@ -521,7 +521,7 @@
 	},
 
 	"profile_settingsExporterModifiedLocalMetadataTitle": "Изменённые параметры треков",
-	"profile_settingsExporterModifiedLocalMetadataDescription": "Измен{count, plural, one{ён {count} трек} few{ено {count} трека} other{ено {count} треков}}.",
+	"profile_settingsExporterModifiedLocalMetadataDescription": "Измен{count, plural, one{ён {count} трек} few{ено {count} трека} other{ено {count} треков}}",
 	"@profile_settingsExporterModifiedLocalMetadataDescription": {
 		"placeholders": {
 			"count": {
@@ -532,7 +532,7 @@
 	},
 
 	"profile_settingsExporterCachedRestrictedTitle": "Кэшированные, но ограниченные треки",
-	"profile_settingsExporterCachedRestrictedDescription": "Кэширован{count, plural, one{ {count} недоступный трек} few{о {count} недоступных трека} other{о {count} недоступных треков}}.",
+	"profile_settingsExporterCachedRestrictedDescription": "{count, plural, one{{count} трек доступен} few{{count} трека доступно} other{{count} треков доступно}} для прослушивания несмотря на ограниченный доступ благодаря кэшированию",
 	"@profile_settingsExporterCachedRestrictedDescription": {
 		"placeholders": {
 			"count": {
@@ -543,7 +543,7 @@
 	},
 
 	"profile_settingsExporterLocallyReplacedTitle": "Локально заменённые треки",
-	"profile_settingsExporterLocallyReplacedDescription": "Замен{count, plural, one{ён {count} трек} few{ено {count} трека} other{ено {count} треков}}.",
+	"profile_settingsExporterLocallyReplacedDescription": "Замен{count, plural, one{ён {count} трек} few{ено {count} трека} other{ено {count} .mp3-файлов треков}} при помощи <colored><icon></icon> Локальной замены трека</colored>",
 	"@profile_settingsExporterLocallyReplacedDescription": {
 		"placeholders": {
 			"count": {
@@ -564,7 +564,30 @@
 	"profile_settingsImporterTitle": "Импорт настроек",
 
 	"profile_settingsImporterTipTitle": "Об импорте настроек",
-	"profile_settingsImporterTipDescription": "Импорт настроек — это WIP-функция. Привет всем тем, кто смотрит содержимое коммитов! :)\n\nТут будет иконка: <exportSettings><exportSettingsIcon></exportSettingsIcon> Экспорт настроек</exportSettings>, крута?",
+	"profile_settingsImporterTipDescription": "Импорт настроек — функций, синхронизирующая настройки приложения Flutter VK а так же изменения треков, совершённые на другом устройстве.\n\nНе понимаете с чего начать? Обратитесь к функции <exportSettings><exportSettingsIcon></exportSettingsIcon> Экспорт настроек</exportSettings>.",
+
+	"profile_settingsImporterFileSelectorDescription":"Файл для импорта настроек не выбран.",
+	"profile_settingsImporterFileSelectorSelect":"Выбрать",
+
+	"profile_settingsImporterSelectFile": "Выберите файл для импорта настроек и треков",
+
+	"profile_settingsImporterVersionMissmatchTitle": "Проблема совместимости",
+	"profile_settingsImporterVersionMissmatchDescription": "Этот файл был создан в предыдущей версии Flutter VK (v{version}), ввиду чего могут быть проблемы с импортом.\n\nУверены, что хотите продолжить?",
+	"@profile_settingsImporterVersionMissmatchDescription": {
+		"placeholders": {
+			"version": {
+				"type": "String",
+				"description": "Версия приложения, в которой был создан файл для импорта."
+			}
+		}
+	},
+
+	"profile_settingsImporterImport": "Импортировать",
+
+	"profile_settingsImporterSuccessTitle": "Импорт настроек успешен",
+	"profile_settingsImporterSuccessDescriptionNoDelete": "Импорт настроек и треков был завершён успешно. Возможно, Вам понадобится перезагрузить приложение, что бы некоторые из настроек успешно сохранились и применились.\n\nПосле импорта, файл экспорта уже не нужен. Хотите удалить его?",
+	"profile_settingsImporterSuccessDescriptionDelete": "Импорт настроек и треков был завершён успешно.\n\nВозможно, Вам понадобится перезагрузить приложение, что бы некоторые из настроек успешно сохранились и применились.",
+
 
 	"profile_aboutTitle": "О Flutter VK",
 

@@ -8,8 +8,7 @@ part of 'preferences.dart';
 
 UserPreferences _$UserPreferencesFromJson(Map<String, dynamic> json) =>
     UserPreferences(
-      dbVersion:
-          (json['DBVersion'] as num?)?.toInt() ?? IsarDBMigrator.maxDBVersion,
+      dbVersion: (json['DBVersion'] as num?)?.toInt() ?? 1,
       myMusicChipEnabled: json['MyMusicChipEnabled'] as bool? ?? true,
       playlistsChipEnabled: json['PlaylistsChipEnabled'] as bool? ?? true,
       realtimePlaylistsChipEnabled:
@@ -25,32 +24,38 @@ UserPreferences _$UserPreferencesFromJson(Map<String, dynamic> json) =>
       playerThumbAsBackground: json['PlayerThumbAsBackground'] as bool? ?? true,
       trackLyricsEnabled: json['TrackLyricsEnabled'] as bool? ?? true,
       playerColorsAppWide: json['PlayerColorsAppWide'] as bool? ?? true,
-      theme: $enumDecodeNullable(_$ThemeModeEnumMap, json['Theme']) ??
-          ThemeMode.system,
+      theme: json['Theme'] == null
+          ? ThemeMode.system
+          : UserPreferences._themeFromJson((json['Theme'] as num).toInt()),
       oledTheme: json['OLEDTheme'] as bool? ?? false,
-      closeBehavior:
-          $enumDecodeNullable(_$CloseBehaviorEnumMap, json['CloseBehavior']) ??
-              CloseBehavior.close,
+      closeBehavior: json['CloseBehavior'] == null
+          ? CloseBehavior.close
+          : UserPreferences._closeBehaviorFromJson(
+              (json['CloseBehavior'] as num).toInt()),
       checkBeforeFavorite: json['CheckBeforeFavorite'] as bool? ?? true,
-      updatePolicy:
-          $enumDecodeNullable(_$UpdatePolicyEnumMap, json['UpdatePolicy']) ??
-              UpdatePolicy.dialog,
-      updateBranch:
-          $enumDecodeNullable(_$UpdateBranchEnumMap, json['UpdateBranch']) ??
-              UpdateBranch.releasesOnly,
+      updatePolicy: json['UpdatePolicy'] == null
+          ? UpdatePolicy.dialog
+          : UserPreferences._updatePolicyFromJson(
+              (json['UpdatePolicy'] as num).toInt()),
+      updateBranch: json['UpdateBranch'] == null
+          ? UpdateBranch.releasesOnly
+          : UserPreferences._updateBranchFromJson(
+              (json['UpdateBranch'] as num).toInt()),
       deezerThumbnails: json['DeezerThumbnails'] as bool? ?? false,
-      dynamicSchemeType: $enumDecodeNullable(
-              _$DynamicSchemeTypeEnumMap, json['DynamicSchemeType']) ??
-          DynamicSchemeType.tonalSpot,
+      dynamicSchemeType: json['DynamicSchemeType'] == null
+          ? DynamicSchemeType.tonalSpot
+          : UserPreferences._dynamicSchemeTypeFromJson(
+              (json['DynamicSchemeType'] as num).toInt()),
       fullscreenBigThumbnail: json['FullscreenBigThumbnail'] as bool? ?? false,
       debugPlayerLogging: json['DebugPlayerLogging'] as bool? ?? false,
       preReleaseWarningShown: json['PreReleaseWarningShown'] as bool? ?? false,
       lrcLibEnabled: json['LRCLIBEnabled'] as bool? ?? false,
       loopModeEnabled: json['LoopModeEnabled'] as bool? ?? false,
       volume: (json['Volume'] as num?)?.toDouble() ?? 1.0,
-      rewindOnPreviousBehavior: $enumDecodeNullable(
-              _$RewindBehaviorEnumMap, json['RewindOnPreviousBehavior']) ??
-          RewindBehavior.always,
+      rewindOnPreviousBehavior: json['RewindOnPreviousBehavior'] == null
+          ? RewindBehavior.always
+          : UserPreferences._rewindOnPreviousBehaviorFromJson(
+              (json['RewindOnPreviousBehavior'] as num).toInt()),
       spoilerNextTrack: json['SpoilerNextTrack'] as bool? ?? true,
       debugOptionsEnabled: json['DebugOptionsEnabled'] as bool? ?? false,
       alternateDesktopMiniplayerSlider:
@@ -62,7 +67,7 @@ UserPreferences _$UserPreferencesFromJson(Map<String, dynamic> json) =>
       exportedSections: (json['ExportedSections'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
-          const [],
+          [],
     );
 
 Map<String, dynamic> _$UserPreferencesToJson(UserPreferences instance) =>
@@ -108,48 +113,11 @@ Map<String, dynamic> _$UserPreferencesToJson(UserPreferences instance) =>
       'ExportedSections': instance.exportedSections,
     };
 
-const _$ThemeModeEnumMap = {
-  ThemeMode.system: 'system',
-  ThemeMode.light: 'light',
-  ThemeMode.dark: 'dark',
-};
-
-const _$CloseBehaviorEnumMap = {
-  CloseBehavior.close: 'close',
-  CloseBehavior.minimize: 'minimize',
-  CloseBehavior.minimizeIfPlaying: 'minimizeIfPlaying',
-};
-
-const _$UpdatePolicyEnumMap = {
-  UpdatePolicy.dialog: 'dialog',
-  UpdatePolicy.popup: 'popup',
-  UpdatePolicy.disabled: 'disabled',
-};
-
-const _$UpdateBranchEnumMap = {
-  UpdateBranch.releasesOnly: 'releasesOnly',
-  UpdateBranch.preReleases: 'preReleases',
-};
-
-const _$DynamicSchemeTypeEnumMap = {
-  DynamicSchemeType.tonalSpot: 'tonalSpot',
-  DynamicSchemeType.neutral: 'neutral',
-  DynamicSchemeType.content: 'content',
-  DynamicSchemeType.monochrome: 'monochrome',
-};
-
-const _$RewindBehaviorEnumMap = {
-  RewindBehavior.always: 'always',
-  RewindBehavior.onlyViaUI: 'onlyViaUI',
-  RewindBehavior.onlyViaNotification: 'onlyViaNotification',
-  RewindBehavior.disabled: 'disabled',
-};
-
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$preferencesHash() => r'4af6ff0dbbdec5385da205cec49e4529caeb049f';
+String _$preferencesHash() => r'57a6f01dc7a100ff23acc9add1fbfaef7b770963';
 
 /// [Provider] для хранения настроек пользователя.
 ///

@@ -834,20 +834,19 @@ class HomeProfilePage extends HookConsumerWidget {
                       },
                     ),
 
-                    // TODO: Импорт настроек.
-                    if (kDebugMode)
-                      ListTile(
-                        leading: const Icon(
-                          Icons.file_download_outlined,
-                        ),
-                        title: Text(
-                          l18n.profile_importModificationsTitle,
-                        ),
-                        subtitle: Text(
-                          l18n.profile_importModificationsDescription,
-                        ),
-                        onTap: () => context.go("/profile/settings_importer"),
+                    // Импорт настроек.
+                    ListTile(
+                      leading: const Icon(
+                        Icons.file_download_outlined,
                       ),
+                      title: Text(
+                        l18n.profile_importModificationsTitle,
+                      ),
+                      subtitle: Text(
+                        l18n.profile_importModificationsDescription,
+                      ),
+                      onTap: () => context.go("/profile/settings_importer"),
+                    ),
 
                     // Экспорт списка треков.
                     ListTile(

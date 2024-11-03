@@ -16,8 +16,8 @@ import "../../../provider/l18n.dart";
 import "../../../provider/player_events.dart";
 import "../../../provider/playlists.dart";
 import "../../../provider/preferences.dart";
+import "../../../provider/settings_exporter_importer.dart";
 import "../../../provider/user.dart";
-import "../../../services/exporter.dart";
 import "../../../services/logger.dart";
 import "../../../utils.dart";
 import "../../../widgets/audio_player.dart";
@@ -106,9 +106,9 @@ class SuccessSettingsExportDialog extends ConsumerWidget {
   }
 }
 
-/// Виджет, в котором отображены параметры, которые можно экспортировать.
-class ModificationsSelector extends HookConsumerWidget {
-  static final AppLogger logger = getLogger("ModificationsSelector");
+/// Виджет, в котором отображены параметры, которые можно экспортировать либо импортировать.
+class SettingsExporterSelector extends HookConsumerWidget {
+  static final AppLogger logger = getLogger("SettingsExporterSelector");
 
   /// Список из включённых секций.
   final Set<String> enabledSections;
@@ -122,7 +122,7 @@ class ModificationsSelector extends HookConsumerWidget {
   /// Метод, вызываемый при новом списке из [enabledSections].
   final void Function(Set<String> sections) onSectionsChanged;
 
-  const ModificationsSelector({
+  const SettingsExporterSelector({
     super.key,
     required this.enabledSections,
     required this.sectionsInfo,
@@ -144,7 +144,6 @@ class ModificationsSelector extends HookConsumerWidget {
       required IconData icon,
       required String title,
       String Function(int)? subtitle,
-      bool enabled = true,
     }) {
       final count = exportedInfoMap[key]?.length ?? 0;
 
@@ -164,12 +163,24 @@ class ModificationsSelector extends HookConsumerWidget {
             );
           }
 
-          return Text(
-            subtitle(count),
+          return StyledText(
+            text: subtitle(count),
+            tags: {
+              "colored": StyledTextTag(
+                style: TextStyle(
+                  color:
+                      disabled ? null : Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              "icon": StyledTextIconTag(
+                icon,
+                size: 20,
+              ),
+            },
           );
         }(),
         value: enabledSections.contains(key),
-        onChanged: (!disabled && enabled && count > 0)
+        onChanged: (!disabled && count > 0)
             ? (bool? enabled) async {
                 HapticFeedback.lightImpact();
                 if (enabled == null) return;
@@ -217,7 +228,7 @@ class ModificationsSelector extends HookConsumerWidget {
               key: "modifiedLyrics",
               icon: Icons.lyrics,
               title: l18n.profile_settingsExporterModifiedLyricsTitle,
-              enabled: false,
+              subtitle: l18n.profile_settingsExporterModifiedLyricsDescription,
             ),
 
             // Изменённые параметры треков.
@@ -225,7 +236,8 @@ class ModificationsSelector extends HookConsumerWidget {
               key: "modifiedLocalMetadata",
               icon: Icons.edit,
               title: l18n.profile_settingsExporterModifiedLocalMetadataTitle,
-              enabled: false,
+              subtitle:
+                  l18n.profile_settingsExporterModifiedLocalMetadataDescription,
             ),
 
             // Кэшированные ограниченные треки.
@@ -277,10 +289,8 @@ class SettingsExporterRoute extends HookConsumerWidget {
 
     final sectionsInfo = useMemoized(
       () {
-        final sections = AudiosInfoExporter.exportSectionsData(
-          playlists: playlists.playlists,
-          preferences: preferences.toJson(),
-        );
+        final sections =
+            ref.read(settingsExporterProvider).exportSectionsData();
 
         logger.d("Sections info: ${sections.toJson()}");
 
@@ -347,40 +357,45 @@ class SettingsExporterRoute extends HookConsumerWidget {
       animatedExportProgress.value = 0.0;
       File? exportedFile;
       try {
-        exportedFile = await AudiosInfoExporter.export(
-          userID: user.id,
-          sections: ExportedSections(
-            settings: settings ? sectionsInfo.settings : null,
-            modifiedThumbnails:
-                modifiedThumbnails ? sectionsInfo.modifiedThumbnails : null,
-            modifiedLyrics: modifiedLyrics ? sectionsInfo.modifiedLyrics : null,
-            modifiedLocalMetadata: modifiedLocalMetadata
-                ? sectionsInfo.modifiedLocalMetadata
-                : null,
-            cachedRestricted:
-                cachedRestricted ? sectionsInfo.cachedRestricted : null,
-            locallyReplacedAudios: locallyReplacedAudios
-                ? sectionsInfo.locallyReplacedAudios
-                : null,
-          ),
-          cancellationToken: cancellationToken,
-          onProgress: (progress) {
-            animatedExportProgress.animateTo(
-              progress,
-              duration: progressAnimationDuration,
-              curve: Curves.ease,
+        exportedFile = await ref.read(settingsExporterProvider).export(
+              userID: user.id,
+              sections: ExportedSections(
+                settings: settings ? sectionsInfo.settings : null,
+                modifiedThumbnails:
+                    modifiedThumbnails ? sectionsInfo.modifiedThumbnails : null,
+                modifiedLyrics:
+                    modifiedLyrics ? sectionsInfo.modifiedLyrics : null,
+                modifiedLocalMetadata: modifiedLocalMetadata
+                    ? sectionsInfo.modifiedLocalMetadata
+                    : null,
+                cachedRestricted:
+                    cachedRestricted ? sectionsInfo.cachedRestricted : null,
+                locallyReplacedAudios: locallyReplacedAudios
+                    ? sectionsInfo.locallyReplacedAudios
+                    : null,
+              ),
+              cancellationToken: cancellationToken,
+              onProgress: (progress) {
+                animatedExportProgress.animateTo(
+                  progress,
+                  duration: progressAnimationDuration,
+                  curve: Curves.ease,
+                );
+              },
             );
-          },
-        );
       } catch (error, stackTrace) {
         showLogErrorDialog(
-          "Error while exporting audio sections $sectionsList:",
+          "Error while exporting settings (selected sections: $sectionsList):",
           error,
           stackTrace,
           logger,
           // ignore: use_build_context_synchronously
           context,
         );
+
+        if (context.mounted) {
+          animatedExportProgress.value = 0.0;
+        }
       }
 
       if (context.mounted) {
@@ -391,7 +406,7 @@ class SettingsExporterRoute extends HookConsumerWidget {
       if (exportedFile == null || !context.mounted) return;
 
       // Экспорт был успешен, отображаем диалог.
-      showDialog(
+      await showDialog(
         context: context,
         builder: (BuildContext context) {
           return SuccessSettingsExportDialog(
@@ -399,6 +414,19 @@ class SettingsExporterRoute extends HookConsumerWidget {
           );
         },
       );
+
+      // Пытаемся удалить файл после закрытия диалога.
+      try {
+        if (exportedFile.existsSync()) {
+          await exportedFile.delete();
+        }
+      } catch (error, stackTrace) {
+        logger.e(
+          "Error while deleting exported file ${exportedFile.path}:",
+          error: error,
+          stackTrace: stackTrace,
+        );
+      }
     }
 
     return Scaffold(
@@ -444,7 +472,7 @@ class SettingsExporterRoute extends HookConsumerWidget {
                     Gap(mobileLayout ? 16 : 24),
 
                     // Экспортируемые опции.
-                    ModificationsSelector(
+                    SettingsExporterSelector(
                       enabledSections: enabledSections.value,
                       sectionsInfo: sectionsInfo,
                       disabled: isExportInProgress.value,

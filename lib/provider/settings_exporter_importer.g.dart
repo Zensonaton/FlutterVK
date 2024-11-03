@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'exporter.dart';
+part of 'settings_exporter_importer.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
@@ -36,6 +36,7 @@ ExportedAudio _$ExportedAudioFromJson(Map<String, dynamic> json) =>
               json['deezerThumbs'] as Map<String, dynamic>),
       isCached: json['isCached'] as bool?,
       replacedLocally: json['replacedLocally'] as bool?,
+      debugComment: json['debugComment'] as String?,
     );
 
 Map<String, dynamic> _$ExportedAudioToJson(ExportedAudio instance) {
@@ -120,3 +121,27 @@ Map<String, dynamic> _$ExportedAudiosInfoMetadataToJson(
       'hash': instance.hash,
       'sections': instance.sections,
     };
+
+// **************************************************************************
+// RiverpodGenerator
+// **************************************************************************
+
+String _$settingsExporterHash() => r'75c5fb83b798940fc91c80434c763f8b5f1c1d92';
+
+/// [Provider] для получения объекта [SettingsExporter].
+///
+/// Copied from [settingsExporter].
+@ProviderFor(settingsExporter)
+final settingsExporterProvider = AutoDisposeProvider<SettingsExporter>.internal(
+  settingsExporter,
+  name: r'settingsExporterProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$settingsExporterHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef SettingsExporterRef = AutoDisposeProviderRef<SettingsExporter>;
+// ignore_for_file: type=lint
+// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
