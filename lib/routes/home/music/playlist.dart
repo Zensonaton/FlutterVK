@@ -2064,29 +2064,14 @@ class PlaylistRoute extends HookConsumerWidget {
                       ),
 
                       // Содержимое.
-                      Column(
-                        children: [
-                          // Содержимое плейлиста.
-                          Expanded(
-                            child: ScrollConfiguration(
-                              behavior:
-                                  AlwaysScrollableScrollBehavior().copyWith(
-                                overscroll: !isSearchOpen.value,
-                              ),
-                              child: CustomScrollView(
-                                controller: scrollController,
-                                slivers: customScrollViewSlivers,
-                              ),
-                            ),
-                          ),
-
-                          // Данный Gap нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
-                          // Мы его располагаем после ListView, что бы ScrollBar не был закрыт плеером.
-                          if (player.loaded && !mobileLayout)
-                            const Gap(
-                              MusicPlayerWidget.desktopMiniPlayerHeight,
-                            ),
-                        ],
+                      ScrollConfiguration(
+                        behavior: AlwaysScrollableScrollBehavior().copyWith(
+                          overscroll: !isSearchOpen.value,
+                        ),
+                        child: CustomScrollView(
+                          controller: scrollController,
+                          slivers: customScrollViewSlivers,
+                        ),
                       ),
 
                       // Ряд из кнопок управления плейлистом: кнопка лайка/дизлайка, воспроизведения/паузы, кэширования.

@@ -233,107 +233,95 @@ class SettingsImporterRoute extends HookConsumerWidget {
       body: Stack(
         children: [
           // Содержимое.
-          Column(
+          ListView(
+            padding: EdgeInsets.all(
+              mobileLayout ? 16 : 24,
+            ),
             children: [
-              Expanded(
-                child: ListView(
-                  padding: EdgeInsets.all(
-                    mobileLayout ? 16 : 24,
-                  ),
-                  children: [
-                    // Подсказка.
-                    TipWidget(
-                      iconOnTop: true,
-                      title: l18n.profile_settingsImporterTipTitle,
-                      descriptionWidget: StyledText(
-                        text: l18n.profile_settingsImporterTipDescription,
-                        tags: {
-                          "exportSettingsIcon": StyledTextIconTag(
-                            Icons.file_upload_outlined,
-                            size: 20,
-                          ),
-                          "exportSettings": StyledTextActionTag(
-                            (String? text, Map<String?, String?> attrs) {
-                              context.push("/profile/settings_exporter");
-                            },
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                          ),
-                        },
+              // Подсказка.
+              TipWidget(
+                iconOnTop: true,
+                title: l18n.profile_settingsImporterTipTitle,
+                descriptionWidget: StyledText(
+                  text: l18n.profile_settingsImporterTipDescription,
+                  tags: {
+                    "exportSettingsIcon": StyledTextIconTag(
+                      Icons.file_upload_outlined,
+                      size: 20,
+                    ),
+                    "exportSettings": StyledTextActionTag(
+                      (String? text, Map<String?, String?> attrs) {
+                        context.push("/profile/settings_exporter");
+                      },
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
-                    Gap(mobileLayout ? 16 : 24),
-
-                    // Поле для выбора файла, если он ещё не загружен.
-                    if (loadedSectionsInfo.value == null)
-                      TipWidget(
-                        iconOnTop: true,
-                        icon: Icons.file_download_off_outlined,
-                        description: l18n
-                            .profile_settingsImporterFileSelectorDescription,
-                        actions: [
-                          FilledButton.icon(
-                            icon: const Icon(
-                              Icons.file_download_outlined,
-                            ),
-                            label: Text(
-                              l18n.profile_settingsImporterFileSelectorSelect,
-                            ),
-                            onPressed: onFileSelectTap,
-                          ),
-                        ],
-                      ),
-
-                    // Поле для выбора секций, если файл загружен, а так же кнопка для импорта.
-                    if (loadedSectionsInfo.value != null) ...[
-                      // Выбор для секций.
-                      SettingsExporterSelector(
-                        enabledSections: enabledSections.value,
-                        sectionsInfo: loadedSectionsInfo.value!.sections,
-                        disabled: isImportInProgress.value,
-                        onSectionsChanged: (value) =>
-                            enabledSections.value = value,
-                      ),
-                      Gap(mobileLayout ? 16 : 24),
-
-                      // Кнопка импорта.
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: FilledButton.icon(
-                          icon: isImportInProgress.value
-                              ? const SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator.adaptive(
-                                    strokeWidth: 2.5,
-                                  ),
-                                )
-                              : const Icon(
-                                  Icons.file_download_outlined,
-                                ),
-                          label: Text(
-                            l18n.profile_settingsImporterImport,
-                          ),
-                          onPressed: enabledSections.value.isNotEmpty &&
-                                  !isImportInProgress.value
-                              ? onImportTap
-                              : null,
-                        ),
-                      ),
-                    ],
-
-                    // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
-                    if (player.loaded && mobileLayout)
-                      const Gap(MusicPlayerWidget.mobileHeightWithPadding),
-                  ],
+                  },
                 ),
               ),
+              Gap(mobileLayout ? 16 : 24),
 
-              // Данный Gap нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
-              // Мы его располагаем после ListView, что бы ScrollBar не был закрыт плеером.
-              if (player.loaded && !mobileLayout)
-                const Gap(MusicPlayerWidget.desktopMiniPlayerHeight),
+              // Поле для выбора файла, если он ещё не загружен.
+              if (loadedSectionsInfo.value == null)
+                TipWidget(
+                  iconOnTop: true,
+                  icon: Icons.file_download_off_outlined,
+                  description:
+                      l18n.profile_settingsImporterFileSelectorDescription,
+                  actions: [
+                    FilledButton.icon(
+                      icon: const Icon(
+                        Icons.file_download_outlined,
+                      ),
+                      label: Text(
+                        l18n.profile_settingsImporterFileSelectorSelect,
+                      ),
+                      onPressed: onFileSelectTap,
+                    ),
+                  ],
+                ),
+
+              // Поле для выбора секций, если файл загружен, а так же кнопка для импорта.
+              if (loadedSectionsInfo.value != null) ...[
+                // Выбор для секций.
+                SettingsExporterSelector(
+                  enabledSections: enabledSections.value,
+                  sectionsInfo: loadedSectionsInfo.value!.sections,
+                  disabled: isImportInProgress.value,
+                  onSectionsChanged: (value) => enabledSections.value = value,
+                ),
+                Gap(mobileLayout ? 16 : 24),
+
+                // Кнопка импорта.
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: FilledButton.icon(
+                    icon: isImportInProgress.value
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator.adaptive(
+                              strokeWidth: 2.5,
+                            ),
+                          )
+                        : const Icon(
+                            Icons.file_download_outlined,
+                          ),
+                    label: Text(
+                      l18n.profile_settingsImporterImport,
+                    ),
+                    onPressed: enabledSections.value.isNotEmpty &&
+                            !isImportInProgress.value
+                        ? onImportTap
+                        : null,
+                  ),
+                ),
+              ],
+
+              // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
+              if (player.loaded && mobileLayout)
+                const Gap(MusicPlayerWidget.mobileHeightWithPadding),
             ],
           ),
 

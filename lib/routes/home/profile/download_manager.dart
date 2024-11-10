@@ -353,51 +353,40 @@ class DownloadManagerRoute extends HookConsumerWidget {
         ),
         centerTitle: true,
       ),
-      body: Column(
+      body: ListView(
+        padding: EdgeInsets.symmetric(
+          horizontal: mobileLayout ? 16 : 24,
+          vertical: mobileLayout ? 20 : 30,
+        ).copyWith(
+          bottom: 0,
+        ),
         children: [
-          Expanded(
-            child: ListView(
-              padding: EdgeInsets.symmetric(
-                horizontal: mobileLayout ? 16 : 24,
-                vertical: mobileLayout ? 20 : 30,
-              ).copyWith(
-                bottom: 0,
-              ),
-              children: [
-                // Раздел "загружаются сейчас".
-                DownloadCategory(
-                  title: l18n.downloadManagerCurrentTasksTitle,
-                  tasks: downloadManager.tasks,
-                  currentTask: downloadManager.currentTask,
-                  showNoTasksIfEmpty: true,
-                ),
-                const Gap(18),
-
-                // Раздел "загружено ранее".
-                if (downloadManager.oldTasks.isNotEmpty) ...[
-                  // Разделитель.
-                  const Divider(),
-                  const Gap(18),
-
-                  // Раздел.
-                  DownloadCategory(
-                    title: l18n.downloadManagerOldTasksTitle,
-                    tasks: downloadManager.oldTasks,
-                    currentTask: null,
-                  ),
-                ],
-
-                // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
-                if (player.loaded && mobileLayout)
-                  const Gap(MusicPlayerWidget.mobileHeightWithPadding),
-              ],
-            ),
+          // Раздел "загружаются сейчас".
+          DownloadCategory(
+            title: l18n.downloadManagerCurrentTasksTitle,
+            tasks: downloadManager.tasks,
+            currentTask: downloadManager.currentTask,
+            showNoTasksIfEmpty: true,
           ),
+          const Gap(18),
 
-          // Данный Gap нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
-          // Мы его располагаем после ListView, что бы ScrollBar не был закрыт плеером.
-          if (player.loaded && !mobileLayout)
-            const Gap(MusicPlayerWidget.desktopMiniPlayerHeight),
+          // Раздел "загружено ранее".
+          if (downloadManager.oldTasks.isNotEmpty) ...[
+            // Разделитель.
+            const Divider(),
+            const Gap(18),
+
+            // Раздел.
+            DownloadCategory(
+              title: l18n.downloadManagerOldTasksTitle,
+              tasks: downloadManager.oldTasks,
+              currentTask: null,
+            ),
+          ],
+
+          // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
+          if (player.loaded && mobileLayout)
+            const Gap(MusicPlayerWidget.mobileHeightWithPadding),
         ],
       ),
     );

@@ -125,8 +125,10 @@ class DownloadManagerWrapperWidget extends HookConsumerWidget {
 
     const double position = 40 - downloadManagerMinimizedSize / 2;
     const double left = position + 4;
-    final double bottom =
-        (isLoaded ? MusicPlayerWidget.desktopMiniPlayerHeight : 0) + position;
+    final double bottom = (isLoaded
+            ? MusicPlayerWidget.desktopMiniPlayerHeightWithSafeArea(context)
+            : 0) +
+        position;
 
     return AnimatedBuilder(
       animation: showAnimation,
@@ -211,169 +213,10 @@ class ShellRouteWrapper extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l18n = ref.watch(l18nProvider);
-
-    useEffect(
-      () {
-        // Проверяем на наличие обновлений, если мы не в debug-режиме.
-        if (!kDebugMode) checkForUpdates(ref, context);
-
-        // Слушаем события подключения к интернету.
-        final subscription = connectivityManager.connectionChange.listen(
-          (bool isConnected) {
-            logger.d("Network connectivity state: $isConnected");
-
-            if (isConnected || !context.mounted) return;
-
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                duration: Duration(
-                  seconds: isConnected ? 2 : 6,
-                ),
-                content: Text(
-                  l18n.noInternetConnectionDescription,
-                ),
-              ),
-            );
-          },
-        );
-
-        return subscription.cancel;
-      },
-      [],
-    );
-
-    final bool mobileLayout = isMobileLayout(context);
-
-    final List<NavigationItem> navigationItems = useMemoized(
-      () => this.navigationItems.where(
-        (item) {
-          return !item.mobileOnly || (item.mobileOnly && mobileLayout);
-        },
-      ).toList(),
-      [mobileLayout],
-    );
-    int currentIndex = clampInt(
-      navigationItems.indexWhere(
-        (item) => currentPath.startsWith(item.path),
-      ),
-      0,
-      navigationItems.length,
-    );
-
-    /// Обработчик выбора элемента в [NavigationRail].
-    void onDestinationSelected(int index) {
-      if (index == currentIndex) return;
-
-      context.go(navigationItems[index].path);
-    }
-
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      body: Actions(
-        actions: {
-          FullscreenPlayerIntent: CallbackAction(
-            onInvoke: (intent) {
-              return toggleFullscreenPlayer(context);
-            },
-          ),
-        },
-        child: Stack(
-          children: [
-            // NavigationRail и содержимое экрана на Desktop Layout.
-            if (!mobileLayout)
-              Row(
-                children: [
-                  // NavigationRail с иконкой загрузки.
-                  if (!mobileLayout)
-                    RepaintBoundary(
-                      child: NavigationRail(
-                        selectedIndex: currentIndex,
-                        onDestinationSelected: onDestinationSelected,
-                        labelType: NavigationRailLabelType.all,
-                        destinations: [
-                          for (final item in navigationItems)
-                            NavigationRailDestination(
-                              icon: Icon(
-                                item.icon,
-                              ),
-                              selectedIcon: Icon(
-                                item.selectedIcon ?? item.icon,
-                              ),
-                              label: Text(
-                                item.label,
-                              ),
-                              disabled: item.body == null,
-                            ),
-                        ],
-                      ),
-                    ),
-
-                  // Само содержимое страницы.
-                  Expanded(
-                    child: child,
-                  ),
-                ],
-              ),
-
-            // Содержимое экрана на Mobile Layout.
-            if (mobileLayout) child,
-
-            // Иконка загрузки.
-            if (!mobileLayout) const DownloadManagerWrapperWidget(),
-
-            // Мини-плеер снизу.
-            const RepaintBoundary(
-              child: BottomMusicPlayerWrapper(),
-            ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: mobileLayout
-          ? NavigationBar(
-              selectedIndex: currentIndex,
-              onDestinationSelected: (int index) {
-                onDestinationSelected(
-                  index,
-                );
-              },
-              destinations: [
-                for (final item in navigationItems)
-                  NavigationDestination(
-                    icon: Icon(
-                      item.icon,
-                    ),
-                    selectedIcon: Icon(
-                      item.selectedIcon ?? item.icon,
-                    ),
-                    label: item.label,
-                    enabled: item.body != null,
-                  ),
-              ],
-            )
-          : null,
-    );
-  }
-}
-
-/// Виджет, являющийся wrapper'ом для [OldBottomMusicPlayer], который добавляет обработку для различных событий.
-///
-/// Данный виджет так же регистрирует listener'ы для некоторых событий плеера, благодаря чему появляется поддержка кэширования, получения цветов обложек и прочего.
-class BottomMusicPlayerWrapper extends HookConsumerWidget {
-  static final AppLogger logger = getLogger("BottomMusicPlayerWrapper");
-
-  /// Длительность анимации появления/исчезновения мини-плеера.
-  static const Duration playerAnimationDuration = Duration(milliseconds: 500);
-
-  const BottomMusicPlayerWrapper({
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l18n = ref.watch(l18nProvider);
     final trackImageInfoNotifier = ref.watch(trackSchemeInfoProvider.notifier);
     final playlistsNotifier = ref.watch(playlistsProvider.notifier);
-    ref.watch(playerLoadedStateProvider);
+
+    final bool mobileLayout = isMobileLayout(context);
 
     /// Метод, загружающий данные по треку (обложки, цвета, ...) и сохраняющий их в БД.
     Future<void> loadAudioData(
@@ -467,7 +310,30 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
 
     useEffect(
       () {
+        // Проверяем на наличие обновлений, если мы не в debug-режиме.
+        if (!kDebugMode) checkForUpdates(ref, context);
+
         final List<StreamSubscription> subscriptions = [
+          // Обрабатываем события изменения состояния интернет-соединения.
+          connectivityManager.connectionChange.listen(
+            (bool isConnected) {
+              logger.d("Network connectivity state: $isConnected");
+
+              if (isConnected || !context.mounted) return;
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  duration: Duration(
+                    seconds: isConnected ? 2 : 6,
+                  ),
+                  content: Text(
+                    l18n.noInternetConnectionDescription,
+                  ),
+                ),
+              );
+            },
+          ),
+
           // Слушаем события нажатия на медиа-уведомление.
           AudioService.notificationClicked.listen((tapped) {
             // AudioService иногда создаёт это событие при запуске плеера. Такой случай мы игнорируем.
@@ -611,6 +477,149 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
       },
       [],
     );
+
+    final List<NavigationItem> navigationItems = useMemoized(
+      () => this.navigationItems.where(
+        (item) {
+          return !item.mobileOnly || (item.mobileOnly && mobileLayout);
+        },
+      ).toList(),
+      [mobileLayout],
+    );
+    int currentIndex = clampInt(
+      navigationItems.indexWhere(
+        (item) => currentPath.startsWith(item.path),
+      ),
+      0,
+      navigationItems.length,
+    );
+
+    /// Обработчик выбора элемента в [NavigationRail].
+    void onDestinationSelected(int index) {
+      if (index == currentIndex) return;
+
+      context.go(navigationItems[index].path);
+    }
+
+    final Widget wrappedChild = useMemoized(
+      () {
+        if (mobileLayout) {
+          return Stack(
+            children: [
+              // Содержимое страницы, которое может меняться.
+              child,
+
+              // Плеер.
+              const BottomMusicPlayerWrapper(),
+            ],
+          );
+        }
+
+        return Stack(
+          children: [
+            Column(
+              children: [
+                // Содержимое страницы, вместе с [NavigationRail].
+                Expanded(
+                  child: Row(
+                    children: [
+                      RepaintBoundary(
+                        child: NavigationRail(
+                          selectedIndex: currentIndex,
+                          onDestinationSelected: onDestinationSelected,
+                          labelType: NavigationRailLabelType.all,
+                          destinations: [
+                            for (final item in navigationItems)
+                              NavigationRailDestination(
+                                icon: Icon(
+                                  item.icon,
+                                ),
+                                selectedIcon: Icon(
+                                  item.selectedIcon ?? item.icon,
+                                ),
+                                label: Text(
+                                  item.label,
+                                ),
+                                disabled: item.body == null,
+                              ),
+                          ],
+                        ),
+                      ),
+
+                      // Само содержимое страницы.
+                      Expanded(
+                        child: child,
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Плеер.
+                const BottomMusicPlayerWrapper(),
+              ],
+            ),
+
+            // Иконка загрузки.
+            const DownloadManagerWrapperWidget(),
+          ],
+        );
+      },
+      [mobileLayout, currentIndex, child],
+    );
+
+    return Scaffold(
+      resizeToAvoidBottomInset: false,
+      body: Actions(
+        actions: {
+          FullscreenPlayerIntent: CallbackAction(
+            onInvoke: (intent) {
+              return toggleFullscreenPlayer(context);
+            },
+          ),
+        },
+        child: wrappedChild,
+      ),
+      bottomNavigationBar: mobileLayout
+          ? NavigationBar(
+              selectedIndex: currentIndex,
+              onDestinationSelected: (int index) {
+                onDestinationSelected(
+                  index,
+                );
+              },
+              destinations: [
+                for (final item in navigationItems)
+                  NavigationDestination(
+                    icon: Icon(
+                      item.icon,
+                    ),
+                    selectedIcon: Icon(
+                      item.selectedIcon ?? item.icon,
+                    ),
+                    label: item.label,
+                    enabled: item.body != null,
+                  ),
+              ],
+            )
+          : null,
+    );
+  }
+}
+
+/// Виджет, являющийся wrapper'ом для [MusicPlayerWidget], который добавляет анимацию появления и исчезновения мини-плеера.
+class BottomMusicPlayerWrapper extends HookConsumerWidget {
+  static final AppLogger logger = getLogger("BottomMusicPlayerWrapper");
+
+  /// Длительность анимации появления/исчезновения мини-плеера.
+  static const Duration playerAnimationDuration = Duration(milliseconds: 500);
+
+  const BottomMusicPlayerWrapper({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(playerLoadedStateProvider);
 
     final bool isLoaded = player.loaded;
     final animation = useAnimationController(

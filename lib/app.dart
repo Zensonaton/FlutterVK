@@ -122,7 +122,11 @@ class FlutterVKApp extends HookConsumerWidget {
     final appLifecycleState = useAppLifecycleState();
     useEffect(
       () {
-        logger.d("App lifecycle state: $appLifecycleState");
+        final mobileLayout = isMobileLayout(context);
+
+        logger.d(
+          "Lifecycle state: $appLifecycleState, mobileLayout: $mobileLayout",
+        );
 
         if (appLifecycleState == AppLifecycleState.resumed) {
           // Понятия не имею почему, но без Future.microtask() это не работает.

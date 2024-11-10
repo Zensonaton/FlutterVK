@@ -439,84 +439,72 @@ class SettingsExporterRoute extends HookConsumerWidget {
       body: Stack(
         children: [
           // Содержимое.
-          Column(
+          ListView(
+            padding: EdgeInsets.all(
+              mobileLayout ? 16 : 24,
+            ),
             children: [
-              Expanded(
-                child: ListView(
-                  padding: EdgeInsets.all(
-                    mobileLayout ? 16 : 24,
-                  ),
-                  children: [
-                    // Подсказка.
-                    TipWidget(
-                      iconOnTop: true,
-                      title: l18n.profile_settingsExporterTipTitle,
-                      descriptionWidget: StyledText(
-                        text: l18n.profile_settingsExporterTipDescription,
-                        tags: {
-                          "importSettingsIcon": StyledTextIconTag(
-                            Icons.file_download_outlined,
-                            size: 20,
-                          ),
-                          "importSettings": StyledTextActionTag(
-                            (String? text, Map<String?, String?> attrs) {
-                              context.push("/profile/settings_importer");
-                            },
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                          ),
-                        },
+              // Подсказка.
+              TipWidget(
+                iconOnTop: true,
+                title: l18n.profile_settingsExporterTipTitle,
+                descriptionWidget: StyledText(
+                  text: l18n.profile_settingsExporterTipDescription,
+                  tags: {
+                    "importSettingsIcon": StyledTextIconTag(
+                      Icons.file_download_outlined,
+                      size: 20,
+                    ),
+                    "importSettings": StyledTextActionTag(
+                      (String? text, Map<String?, String?> attrs) {
+                        context.push("/profile/settings_importer");
+                      },
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
-                    Gap(mobileLayout ? 16 : 24),
+                  },
+                ),
+              ),
+              Gap(mobileLayout ? 16 : 24),
 
-                    // Экспортируемые опции.
-                    SettingsExporterSelector(
-                      enabledSections: enabledSections.value,
-                      sectionsInfo: sectionsInfo,
-                      disabled: isExportInProgress.value,
-                      onSectionsChanged: (value) =>
-                          enabledSections.value = value,
-                    ),
-                    Gap(mobileLayout ? 16 : 24),
+              // Экспортируемые опции.
+              SettingsExporterSelector(
+                enabledSections: enabledSections.value,
+                sectionsInfo: sectionsInfo,
+                disabled: isExportInProgress.value,
+                onSectionsChanged: (value) => enabledSections.value = value,
+              ),
+              Gap(mobileLayout ? 16 : 24),
 
-                    // Кнопка экспорта.
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: FilledButton.icon(
-                        icon: isExportInProgress.value
-                            ? const SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator.adaptive(
-                                  strokeWidth: 2.5,
-                                ),
-                              )
-                            : const Icon(
-                                Icons.file_upload_outlined,
-                              ),
-                        label: Text(
-                          l18n.profile_settingsExporterExport,
+              // Кнопка экспорта.
+              Align(
+                alignment: Alignment.centerRight,
+                child: FilledButton.icon(
+                  icon: isExportInProgress.value
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator.adaptive(
+                            strokeWidth: 2.5,
+                          ),
+                        )
+                      : const Icon(
+                          Icons.file_upload_outlined,
                         ),
-                        onPressed: enabledSections.value.isNotEmpty &&
-                                !isExportInProgress.value
-                            ? onExportTap
-                            : null,
-                      ),
-                    ),
-
-                    // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
-                    if (player.loaded && mobileLayout)
-                      const Gap(MusicPlayerWidget.mobileHeightWithPadding),
-                  ],
+                  label: Text(
+                    l18n.profile_settingsExporterExport,
+                  ),
+                  onPressed: enabledSections.value.isNotEmpty &&
+                          !isExportInProgress.value
+                      ? onExportTap
+                      : null,
                 ),
               ),
 
-              // Данный Gap нужен, что бы плеер снизу при Desktop Layout'е не закрывал ничего важного.
-              // Мы его располагаем после ListView, что бы ScrollBar не был закрыт плеером.
-              if (player.loaded && !mobileLayout)
-                const Gap(MusicPlayerWidget.desktopMiniPlayerHeight),
+              // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
+              if (player.loaded && mobileLayout)
+                const Gap(MusicPlayerWidget.mobileHeightWithPadding),
             ],
           ),
 

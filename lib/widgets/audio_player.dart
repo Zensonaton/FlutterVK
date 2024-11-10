@@ -618,6 +618,17 @@ class _MusicLeftSide extends HookConsumerWidget {
                             ),
                             Gap(gapSize),
 
+                            // Кнопка лайка.
+                            LoadingIconButton(
+                              onPressed: onLike,
+                              icon: Icon(
+                                isLiked
+                                    ? Icons.favorite
+                                    : Icons.favorite_outline,
+                                color: scheme.onPrimaryContainer,
+                              ),
+                            ),
+
                             // Кнопка дизлайка, если это рекомендованный плейлист.
                             if (isRecommendation) ...[
                               LoadingIconButton(
@@ -629,17 +640,6 @@ class _MusicLeftSide extends HookConsumerWidget {
                               ),
                               const Gap(4),
                             ],
-
-                            // Кнопка лайка.
-                            LoadingIconButton(
-                              onPressed: onLike,
-                              icon: Icon(
-                                isLiked
-                                    ? Icons.favorite
-                                    : Icons.favorite_outline,
-                                color: scheme.onPrimaryContainer,
-                              ),
-                            ),
                           ],
                         ),
                       ),
@@ -805,7 +805,9 @@ class NextTrackSpoilerWidget extends HookConsumerWidget {
     );
 
     final position =
-        MusicPlayerWidget.desktopMiniPlayerHeight - 5.0 + animation.value * 15;
+        MusicPlayerWidget.desktopMiniPlayerHeightWithSafeArea(context) -
+            5.0 +
+            animation.value * 15;
     final opacity = animation.value;
 
     final scheme = Theme.of(context).colorScheme;
@@ -1220,32 +1222,36 @@ class _MusicRightSide extends HookConsumerWidget {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           // Slider для управления громкостью.
-          Flexible(
-            child: SizedBox(
-              width: 150,
-              child: ScrollableSlider(
-                value: volume,
-                activeColor: scheme.onPrimaryContainer,
-                inactiveColor: scheme.onPrimaryContainer.withOpacity(0.5),
-                onChanged: (double newVolume) {
-                  if (isMobile) return;
+          if (isDesktop) ...[
+            Flexible(
+              child: SizedBox(
+                width: 150,
+                child: ScrollableSlider(
+                  value: volume,
+                  activeColor: scheme.onPrimaryContainer,
+                  inactiveColor: scheme.onPrimaryContainer.withOpacity(0.5),
+                  onChanged: (double newVolume) {
+                    if (isMobile) return;
 
-                  player.setVolume(newVolume);
-                },
+                    player.setVolume(newVolume);
+                  },
+                ),
               ),
             ),
-          ),
-          const Gap(10),
+            const Gap(10),
+          ],
 
           // Кнопка для перехода в мини-плеер.
-          IconButton(
-            onPressed: () => openMiniPlayer(context),
-            icon: Icon(
-              Icons.picture_in_picture_alt,
-              color: scheme.onPrimaryContainer,
+          if (isDesktop) ...[
+            IconButton(
+              onPressed: () => openMiniPlayer(context),
+              icon: Icon(
+                Icons.picture_in_picture_alt,
+                color: scheme.onPrimaryContainer,
+              ),
             ),
-          ),
-          const Gap(2),
+            const Gap(2),
+          ],
 
           // Кнопка для перехода в полноэкранный режим.
           if (isDesktop)
@@ -1438,6 +1444,9 @@ class _MusicContents extends ConsumerWidget {
     final playlist = player.currentPlaylist;
     final isRecommendation = playlist?.isRecommendationTypePlaylist ?? false;
 
+    final height = mobileLayout
+        ? MusicPlayerWidget.mobileHeight
+        : MusicPlayerWidget.desktopMiniPlayerHeight;
     final padding = (mobileLayout) ? mobilePadding : desktopPadding;
     final freeSpace = MediaQuery.of(context).size.width -
         (mobileLayout ? MusicPlayerWidget.mobilePadding * 2 : 0) -
@@ -1515,7 +1524,7 @@ class _MusicContents extends ConsumerWidget {
     }
 
     return Stack(
-      alignment: Alignment.center,
+      alignment: Alignment.topCenter,
       clipBehavior: Clip.none,
       children: [
         // Спойлер следующего трека.
@@ -1526,38 +1535,41 @@ class _MusicContents extends ConsumerWidget {
         const MusicPlayerBackgroundWidget(),
 
         // Содержимое плеера.
-        Padding(
-          padding: EdgeInsets.all(
-            padding,
-          ),
-          child: Row(
-            children: [
-              RepaintBoundary(
-                child: SizedBox(
-                  width: leftBlockSize,
-                  child: _MusicLeftSide(
-                    onLike: onLikeTap,
-                    onDislike: onDislikeTap,
-                  ),
-                ),
-              ),
-              if (!mobileLayout)
+        SizedBox(
+          height: height,
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: padding,
+            ),
+            child: Row(
+              children: [
                 RepaintBoundary(
                   child: SizedBox(
-                    width: middleBlockSize!,
-                    child: const _MusicMiddleSide(),
+                    width: leftBlockSize,
+                    child: _MusicLeftSide(
+                      onLike: onLikeTap,
+                      onDislike: onDislikeTap,
+                    ),
                   ),
                 ),
-              RepaintBoundary(
-                child: SizedBox(
-                  width: rightBlockSize,
-                  child: _MusicRightSide(
-                    onLike: onLikeTap,
-                    onDislike: onDislikeTap,
+                if (!mobileLayout)
+                  RepaintBoundary(
+                    child: SizedBox(
+                      width: middleBlockSize!,
+                      child: const _MusicMiddleSide(),
+                    ),
+                  ),
+                RepaintBoundary(
+                  child: SizedBox(
+                    width: rightBlockSize,
+                    child: _MusicRightSide(
+                      onLike: onLikeTap,
+                      onDislike: onDislikeTap,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
 
@@ -1592,18 +1604,26 @@ class MusicPlayerWidget extends HookConsumerWidget {
   /// Padding для этого виджета при Mobile Layout.
   static const double mobilePadding = 8;
 
-  /// Размер мини-плеера для Mobile Layout без учёта padding'а.
+  /// Высота мини-плеера для Mobile Layout без учёта padding'а.
   static const double mobileHeight = 66;
 
-  /// Размер мини-плеера для Mobile Layout'а с учётом padding'ов.
+  /// Высота мини-плеера для Mobile Layout'а с учётом padding'ов.
   static const double mobileHeightWithPadding =
       mobileHeight + mobilePadding * 2;
 
-  /// Размер мини-плеера для Desktop Layout.
+  /// Высота мини-плеера для Desktop Layout.
+  ///
+  /// Учтите, что Padding ([MediaQuery.paddingOf]) не учитывается в данном размере. Если вам нужно учесть padding, то используйте метод [desktopMiniPlayerHeightWithSafeArea].
   static const double desktopMiniPlayerHeight = 88;
 
   /// Длительность анимации переключения треков, а так же кнопки паузы/воспроизведения.
   static const Duration switchAnimationDuration = Duration(milliseconds: 400);
+
+  /// Возвращает высоту мини-плеера для Desktop Layout с учётом [MediaQuery.paddingOf].
+  static double desktopMiniPlayerHeightWithSafeArea(BuildContext context) {
+    return MusicPlayerWidget.desktopMiniPlayerHeight +
+        MediaQuery.paddingOf(context).bottom;
+  }
 
   const MusicPlayerWidget({
     super.key,
@@ -1633,7 +1653,9 @@ class MusicPlayerWidget extends HookConsumerWidget {
         mobileLayout ? mobilePadding : 0,
       ),
       child: SizedBox(
-        height: mobileLayout ? mobileHeight : desktopMiniPlayerHeight,
+        height: mobileLayout
+            ? mobileHeight
+            : desktopMiniPlayerHeightWithSafeArea(context),
         child: AnimatedContainer(
           duration: const Duration(
             milliseconds: 500,
