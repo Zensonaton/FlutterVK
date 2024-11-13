@@ -22,7 +22,7 @@ AppLogger getLogger<T>(T owner) {
 Future<File> logFilePath() async {
   final String dir = (await getApplicationSupportDirectory()).path;
 
-  return File(path.join(dir, "fluttervk.log"));
+  return File(path.join(dir, "Flutter VK logs.txt"));
 }
 
 /// Возвращает файл, в котором хранятся логи приложения. Если такового файла нет, то он будет создан.
