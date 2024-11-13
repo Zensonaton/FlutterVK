@@ -99,7 +99,7 @@ GoRouter router(RouterRef ref) {
       ],
     ),
 
-    // Моя медиатека.
+    // Библиотека.
     NavigationItem(
       path: "/library",
       icon: Icons.favorite_outline,

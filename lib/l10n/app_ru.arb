@@ -92,7 +92,7 @@
 	"music_label": "Музыка",
 	"music_labelOffline": "Музыка (оффлайн)",
 
-	"music_libraryLabel": "Моя медиатека",
+	"music_libraryLabel": "Библиотека",
 
 	"music_welcomeTitle": "Добро пожаловать, {name}! 👋",
 	"@music_welcomeTitle": {
