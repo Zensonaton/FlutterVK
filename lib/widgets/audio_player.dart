@@ -7,6 +7,7 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:gap/gap.dart";
+import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:just_audio/just_audio.dart";
 
@@ -54,6 +55,9 @@ class TrackTitleWithSubtitle extends StatelessWidget {
   /// Управляет возможностью выделить и скопировать название трека.
   final bool allowTextSelection;
 
+  /// Действие при нажатии на [title].
+  final VoidCallback? onTitleTap;
+
   const TrackTitleWithSubtitle({
     super.key,
     required this.title,
@@ -62,6 +66,7 @@ class TrackTitleWithSubtitle extends StatelessWidget {
     this.isExplicit = false,
     this.explicitColor,
     this.allowTextSelection = false,
+    this.onTitleTap,
   });
 
   @override
@@ -76,8 +81,14 @@ class TrackTitleWithSubtitle extends StatelessWidget {
         style: titleStyle,
         children: [
           // Название трека.
-          TextSpan(
-            text: title,
+          WidgetSpan(
+            child: InkWell(
+              onTap: onTitleTap,
+              child: Text(
+                title,
+                style: titleStyle,
+              ),
+            ),
           ),
 
           // Подпись трека, если таковая имеется.
@@ -132,12 +143,16 @@ class TrackTitleAndArtist extends StatelessWidget {
   /// Указывает, что это Explicit-трек.
   final bool explicit;
 
+  /// Действие при нажатии на [title].
+  final VoidCallback? onTitleTap;
+
   const TrackTitleAndArtist({
     super.key,
     required this.title,
     required this.artist,
     this.subtitle,
     this.explicit = false,
+    this.onTitleTap,
   });
 
   @override
@@ -157,6 +172,7 @@ class TrackTitleAndArtist extends StatelessWidget {
             isExplicit: explicit,
             explicitColor: scheme.onPrimaryContainer.withOpacity(0.75),
             allowTextSelection: true,
+            onTitleTap: onTitleTap,
           ),
         ),
 
@@ -420,6 +436,14 @@ class _MusicLeftSide extends HookConsumerWidget {
     final isLiked = audio?.isLiked ?? false;
     final isRecommendation = playlist?.isRecommendationTypePlaylist ?? false;
 
+    void onTitleTap() {
+      if (playlist == null) return;
+
+      if (playlist.type == PlaylistType.audioMix) return;
+
+      context.go("/music/playlist/${playlist.ownerID}/${playlist.id}");
+    }
+
     final scheme = Theme.of(context).colorScheme;
 
     return LayoutBuilder(
@@ -613,6 +637,7 @@ class _MusicLeftSide extends HookConsumerWidget {
                                   artist: audio?.artist ?? "Unknown",
                                   subtitle: audio?.subtitle,
                                   explicit: audio?.isExplicit ?? false,
+                                  onTitleTap: onTitleTap,
                                 ),
                               ),
                             ),
