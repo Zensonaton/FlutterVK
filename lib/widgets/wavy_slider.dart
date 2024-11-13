@@ -36,11 +36,13 @@ class WavyTrackShape extends RoundedRectSliderTrackShape {
     final paint = Paint()
       ..color = sliderTheme.activeTrackColor!
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 3;
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
     final inactivePaint = Paint()
       ..color = sliderTheme.inactiveTrackColor!
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 3;
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
 
     final height = parentBox.size.height;
     final width = parentBox.size.width;
