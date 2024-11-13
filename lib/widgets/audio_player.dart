@@ -915,16 +915,18 @@ class _MusicMiddleSide extends HookConsumerWidget {
       [isPlaying],
     );
 
-    final seekAnimation = useAnimationController(
+    final positionAnimation = useAnimationController(
       duration: sliderAnimationDuration,
       initialValue: player.progress,
     );
     void runSeekAnimation({double? progress}) {
-      seekAnimation.animateTo(
+      positionAnimation.animateTo(
         progress ?? player.progress,
         curve: Curves.easeInOutCubicEmphasized,
       );
     }
+
+    final seekPosition = useState<double?>(null);
 
     useEffect(
       () {
@@ -952,15 +954,15 @@ class _MusicMiddleSide extends HookConsumerWidget {
             // Если анимация Slider'а переключения идёт, то ничего не меняем.
             // Единственное, когда нам разрешено менять значение, это когда
             // текущее значение меньше, чем значение воспроизведения.
-            if (seekAnimation.isAnimating &&
-                seekAnimation.value > player.progress) return;
+            if (positionAnimation.isAnimating &&
+                positionAnimation.value > player.progress) return;
 
             // Если анимация уже идёт, то останавливаем её.
-            if (seekAnimation.isAnimating) {
-              seekAnimation.stop();
+            if (positionAnimation.isAnimating) {
+              positionAnimation.stop();
             }
 
-            seekAnimation.value = player.progress;
+            positionAnimation.value = player.progress;
           }),
         ];
 
@@ -972,22 +974,29 @@ class _MusicMiddleSide extends HookConsumerWidget {
       },
       [],
     );
-    final progress = useValueListenable(seekAnimation);
+    final progress = useValueListenable(positionAnimation);
 
     final positionString = useMemoized(
       () {
-        final positionSeconds = ((duration ?? 0) * seekAnimation.value).toInt();
+        final safeDuration = duration ?? 0;
+        final safePosition = seekPosition.value ?? positionAnimation.value;
+        final positionSeconds = (safeDuration * safePosition).toInt();
 
         // Если нам нужно показывать количество оставшегося времени, то показываем его.
         if (showRemainingTime) {
-          final remainingSeconds = (duration ?? 0) - positionSeconds;
+          final remainingSeconds = safeDuration - positionSeconds;
 
           return secondsAsString(remainingSeconds);
         }
 
         return secondsAsString(positionSeconds);
       },
-      [position, seekAnimation.value, showRemainingTime],
+      [
+        position,
+        seekPosition.value,
+        positionAnimation.value,
+        showRemainingTime,
+      ],
     );
     final durationString = useMemoized(
       () => secondsAsString(duration ?? 0),
@@ -1003,8 +1012,7 @@ class _MusicMiddleSide extends HookConsumerWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Slider для отображения прогресса воспроизведения трека,
-          // либо индикатор загрузки, если идёт буферизация.
+          // Slider для отображения прогресса воспроизведения трека.
           if (!alternateSlider)
             SliderTheme(
               data: SliderThemeData(
@@ -1018,9 +1026,10 @@ class _MusicMiddleSide extends HookConsumerWidget {
               ),
               child: ResponsiveSlider(
                 value: progress,
-                onChange: (double progress) => seekAnimation.value = progress,
+                onChange: (double progress) => seekPosition.value = progress,
                 onChangeEnd: (double progress) {
-                  seekAnimation.value = progress;
+                  positionAnimation.value = progress;
+                  seekPosition.value = null;
 
                   return player.seekNormalized(progress);
                 },
@@ -1543,6 +1552,7 @@ class _MusicContents extends ConsumerWidget {
             ),
             child: Row(
               children: [
+                // Левая часть.
                 RepaintBoundary(
                   child: SizedBox(
                     width: leftBlockSize,
@@ -1552,6 +1562,8 @@ class _MusicContents extends ConsumerWidget {
                     ),
                   ),
                 ),
+
+                // Правая (при Desktop Layout).
                 if (!mobileLayout)
                   RepaintBoundary(
                     child: SizedBox(
@@ -1559,6 +1571,8 @@ class _MusicContents extends ConsumerWidget {
                       child: const _MusicMiddleSide(),
                     ),
                   ),
+
+                // Правая часть.
                 RepaintBoundary(
                   child: SizedBox(
                     width: rightBlockSize,
