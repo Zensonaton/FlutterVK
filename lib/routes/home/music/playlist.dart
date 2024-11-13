@@ -1132,8 +1132,8 @@ class AppBarWidget extends HookConsumerWidget {
                 ),
                 child: BackdropFilter(
                   filter: ImageFilter.blur(
-                    sigmaX: titleOpacity * 5,
-                    sigmaY: titleOpacity * 5,
+                    sigmaX: titleOpacity * 25,
+                    sigmaY: titleOpacity * 25,
                   ),
                   child: AppBarRealAppBarWidget(
                     controller: searchController,
