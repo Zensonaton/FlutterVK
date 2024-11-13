@@ -242,11 +242,6 @@ Future main() async {
           // Инициализируем иконку в трее.
           await initSystemTray(l18n);
 
-          // Убираем полноэкранный режим.
-          if (kDebugMode) {
-            await windowManager.setFullScreen(false);
-          }
-
           // Делаем название окна в debug-режиме.
           if (kDebugMode) {
             await windowManager.setTitle("Flutter VK (DEBUG)");
