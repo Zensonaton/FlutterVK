@@ -206,13 +206,60 @@ class PlaylistCacheDownloadItem extends DownloadItem {
     ]);
   }
 
-  /// Загружает обложки трека, передаваемые серверами ВКонтакте, если они есть. Возвращает true, если обложка была успешно загружена, либо null, если обложек вообще нет.
-  Future<bool?> _downloadThumbnails() async {
-    if (audio.thumbnail == null) return null;
+  /// Загружает обложки трека с ВКонтакте, либо с Deezer, если они есть, и помещает их в [CachedAlbumImagesManager].
+  ///
+  /// Если [deezer] равен true, то также пытается загрузить обложки с Deezer при помощи метода [_downloadDeezerThumbnails].
+  Future<ExtendedAudio?> _downloadThumbnails({
+    bool vk = true,
+    bool deezer = true,
+  }) async {
+    ExtendedThumbnails? vkThumbnails;
+    ExtendedThumbnails? deezerThumbnails;
 
-    await _downloadAndCacheThumbnails(audio.thumbnail!);
+    // Обложки с ВКонтакте.
+    if (vk) {
+      vkThumbnails ??= audio.vkThumbs;
+    }
 
-    return true;
+    // Обложки с Deezer.
+    if (deezer) {
+      deezerThumbnails ??= audio.deezerThumbs;
+
+      // Если обложек с Deezer нет, то пытаемся узнать URL на обложки, что бы их потом загрузить.
+      if (deezerThumbnails == null) {
+        final results = await deezer_search_sorted(
+          audio.artist,
+          audio.title,
+          subtitle: audio.subtitle,
+          duration: audio.duration,
+          album: audio.album?.title,
+        );
+        final match = results.firstOrNull;
+        if (match == null) return null;
+
+        // В очень редких случаях Deezer возвращает альбом, но не возвращает обложки.
+        if (match.album.coverSmall == null) {
+          logger.w("Deezer returned album without cover: ${match.toJson()}");
+
+          return null;
+        }
+
+        deezerThumbnails = ExtendedThumbnails.fromDeezerTrack(match);
+      }
+    }
+
+    // Загружаем обложки как изображения, если мы их смогли найти.
+    ExtendedThumbnails? thumbsToCache = vkThumbnails ?? deezerThumbnails;
+    if (thumbsToCache != null) {
+      await _downloadAndCacheThumbnails(thumbsToCache);
+
+      return audio.basicCopyWith(
+        vkThumbs: vkThumbnails,
+        deezerThumbs: deezerThumbnails,
+      );
+    }
+
+    return null;
   }
 
   /// Загружает текст песни с ВКонтакте, и возвращает объект [Lyrics] с текстом песни.
@@ -223,35 +270,6 @@ class PlaylistCacheDownloadItem extends DownloadItem {
         await ref.read(vkAPIProvider).audio.getLyrics(audio.mediaKey);
 
     return response.lyrics;
-  }
-
-  /// Пытается найти обложки для трека с сервиса Deezer, и загружает их, если они есть, возвращая объект [ExtendedThumbnails].
-  Future<ExtendedThumbnails?> _downloadDeezerThumbnails() async {
-    final AppLogger logger = getLogger("_downloadDeezerThumbnails");
-
-    if (audio.deezerThumbs != null) return null;
-
-    final results = await deezer_search_sorted(
-      audio.artist,
-      audio.title,
-      subtitle: audio.subtitle,
-      duration: audio.duration,
-      album: audio.album?.title,
-    );
-    final match = results.firstOrNull;
-    if (match == null) return null;
-
-    // В очень редких случаях Deezer возвращает альбом, но не возвращает обложки.
-    if (match.album.coverSmall == null) {
-      logger.w("Deezer returned album without cover: ${match.toJson()}");
-
-      return null;
-    }
-
-    final thumbnails = ExtendedThumbnails.fromDeezerTrack(match);
-    await _downloadAndCacheThumbnails(thumbnails);
-
-    return thumbnails;
   }
 
   /// Ищет тексты песен с сервиса LRCLIB, и загружает их, если они есть, возвращая объект [Lyrics].
@@ -316,10 +334,22 @@ class PlaylistCacheDownloadItem extends DownloadItem {
     //  который заменяется пустым Future.wait() внутри Future.wait().
     final result = await Future.wait(
       [
+        // [0]: Сам трек.
         if (downloadAudio) item._downloadAudio() else null,
-        if (downloadThumbnails) item._downloadThumbnails() else null,
+
+        // [1]: Обложки с ВКонтакте, Deezer.
+        if (downloadThumbnails || deezerThumbnails)
+          item._downloadThumbnails(
+            vk: downloadThumbnails,
+            deezer: deezerThumbnails,
+          )
+        else
+          null,
+
+        // [2]: Текст песни с ВКонтакте.
         if (downloadLyrics) item._downloadLyrics() else null,
-        if (deezerThumbnails) item._downloadDeezerThumbnails() else null,
+
+        // [3]: Текст песни с LRCLIB.
         if (lrcLibLyricsEnabled) item._downloadLRCLIBLyrics() else null,
       ].map((element) async {
         final future = element ?? Future.value();
@@ -344,15 +374,15 @@ class PlaylistCacheDownloadItem extends DownloadItem {
 
     // Извлекаем результаты.
     final audioSize = result[0] as int?;
+    final audiosWithThumbs = result[1] as ExtendedAudio?;
     final lyricsDownloaded = result[2] as Lyrics?;
-    final deezerThumbs = result[3] as ExtendedThumbnails?;
-    final lrcLibLyrics = result[4] as Lyrics?;
+    final lrcLibLyrics = result[3] as Lyrics?;
 
     return audio.basicCopyWith(
       isCached: downloadAudio ? true : null,
       cachedSize: audioSize,
       vkLyrics: lyricsDownloaded,
-      deezerThumbs: deezerThumbs,
+      deezerThumbs: audiosWithThumbs?.deezerThumbs,
       lrcLibLyrics: lrcLibLyrics,
     );
   }
