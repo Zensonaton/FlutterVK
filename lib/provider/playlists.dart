@@ -17,22 +17,26 @@ import "../utils.dart";
 import "auth.dart";
 import "download_manager.dart";
 import "l18n.dart";
+import "preferences.dart";
 import "user.dart";
 import "vk_api.dart";
 
 part "playlists.g.dart";
 
-/// Создаёт задачу [PlaylistCacheDownloadTask] по кэшированию плейлиста [playlist]. После вызова этого метода, будет создана задача для [DownloadManager], которая будет кэшировать треки плейлиста, и так же очищать данные для удалённых треков [deletedAudios].
+/// Создаёт задачу [PlaylistCacheDownloadTask] по кэшированию плейлиста [playlist].
+///
+/// После вызова этого метода, будет создана задача для [DownloadManager], которая будет кэшировать треки плейлиста, и так же очищать данные для удалённых треков [deletedAudios].
 Future<void> createPlaylistCacheTask(
   Ref ref,
   ExtendedPlaylist playlist, {
   List<ExtendedAudio> deletedAudios = const [],
 }) async {
-  if (playlist.audios == null) {
+  if (playlist.audios == null && playlist.audiosToUpdate == null) {
     throw Exception("Expected playlist audios to be loaded");
   }
 
   final downloadManager = ref.read(downloadManagerProvider.notifier);
+  final preferences = ref.read(preferencesProvider);
   final l18n = ref.read(l18nProvider);
   final playlistName =
       playlist.title ?? l18n.music_fullscreenFavoritePlaylistName;
@@ -57,6 +61,20 @@ Future<void> createPlaylistCacheTask(
           ),
         ),
 
+        // Обновлённые треки в переданном плейлисте.
+        if (playlist.audiosToUpdate != null)
+          for (int index = 0;
+              index < playlist.audiosToUpdate!.length;
+              index += 1)
+            PlaylistCacheDownloadItem(
+              ref: ref,
+              playlist: playlist,
+              audio: playlist.audiosToUpdate![index],
+              index: index,
+              downloadAudio: false,
+              deezerThumbnails: preferences.deezerThumbnails,
+            ),
+
         // Некэшированные треки.
         //
         // Мы кэшируем те, которые:
@@ -74,6 +92,8 @@ Future<void> createPlaylistCacheTask(
                   ref: ref,
                   playlist: playlist,
                   audio: audio,
+                  deezerThumbnails: preferences.deezerThumbnails,
+                  lrcLibLyricsEnabled: preferences.lrcLibEnabled,
                 ),
               ),
       ],

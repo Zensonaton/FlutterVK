@@ -545,7 +545,9 @@ class SettingsExporter {
   }
 
   /// Производит импорт настроек и треков пользователя по файлу [exportedFile], который был создан при помощи метода [export].
-  Future<void> import({
+  ///
+  /// Возвращает список из [ExtendedPlaylist], в которых есть изменения треков.
+  Future<List<ExtendedPlaylist>> import({
     required int userID,
     required File exportedFile,
     ExportedAudiosInfoMetadata? exportedMetadata,
@@ -731,6 +733,8 @@ class SettingsExporter {
         modifiedPlaylists,
         saveInDB: true,
       );
+
+      return modifiedPlaylists;
     } finally {
       if (!isClosed) {
         try {

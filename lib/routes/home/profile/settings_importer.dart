@@ -13,6 +13,7 @@ import "package:styled_text/widgets/styled_text.dart";
 
 import "../../../main.dart";
 import "../../../provider/l18n.dart";
+import "../../../provider/playlists.dart";
 import "../../../provider/settings_exporter_importer.dart";
 import "../../../provider/user.dart";
 import "../../../services/logger.dart";
@@ -137,6 +138,8 @@ class SettingsImporterRoute extends HookConsumerWidget {
       if (isImportInProgress.value) return;
       if (loadedSectionsInfo.value == null) return;
 
+      final importer = ref.read(settingsExporterProvider);
+
       final sectionsList = enabledSections.value.toList();
       final settings = sectionsList.contains("settings");
       final modifiedThumbnails = sectionsList.contains("modifiedThumbnails");
@@ -149,26 +152,27 @@ class SettingsImporterRoute extends HookConsumerWidget {
 
       isImportInProgress.value = true;
       animatedImportProgress.value = 0.0;
+      List<ExtendedPlaylist>? modifiedPlaylists;
       try {
-        await ref.read(settingsExporterProvider).import(
-              userID: user.id,
-              exportedFile: exportedSettingsFile.value!,
-              exportedMetadata: loadedSectionsInfo.value!,
-              settings: settings,
-              modifiedThumbnails: modifiedThumbnails,
-              modifiedLyrics: modifiedLyrics,
-              modifiedLocalMetadata: modifiedLocalMetadata,
-              cachedRestricted: cachedRestricted,
-              locallyReplacedAudios: locallyReplacedAudios,
-              cancellationToken: cancellationToken,
-              onProgress: (progress) {
-                animatedImportProgress.animateTo(
-                  progress,
-                  duration: progressAnimationDuration,
-                  curve: Curves.ease,
-                );
-              },
+        modifiedPlaylists = await importer.import(
+          userID: user.id,
+          exportedFile: exportedSettingsFile.value!,
+          exportedMetadata: loadedSectionsInfo.value!,
+          settings: settings,
+          modifiedThumbnails: modifiedThumbnails,
+          modifiedLyrics: modifiedLyrics,
+          modifiedLocalMetadata: modifiedLocalMetadata,
+          cachedRestricted: cachedRestricted,
+          locallyReplacedAudios: locallyReplacedAudios,
+          cancellationToken: cancellationToken,
+          onProgress: (progress) {
+            animatedImportProgress.animateTo(
+              progress,
+              duration: progressAnimationDuration,
+              curve: Curves.ease,
             );
+          },
+        );
       } catch (error, stackTrace) {
         showLogErrorDialog(
           "Error while importing settings (selected sections: $sectionsList):",
@@ -189,10 +193,16 @@ class SettingsImporterRoute extends HookConsumerWidget {
           isImportInProgress.value = false;
         }
       }
-
-      // Если импорт завершился успешно, то отображаем диалог, где предлагаем
-      // пользователю удалить экспортированный файл.
       if (!context.mounted) return;
+
+      // Если импорт завершился успешно, то запускаем кэширование изменённых плейлистов,
+      // а потом показываем диалог об успешном импорте.
+      for (ExtendedPlaylist playlist in modifiedPlaylists) {
+        createPlaylistCacheTask(
+          importer.ref,
+          playlist,
+        );
+      }
 
       final exportedFile = exportedSettingsFile.value!;
       exportedSettingsFile.value = null;
@@ -203,8 +213,8 @@ class SettingsImporterRoute extends HookConsumerWidget {
         icon: Icons.file_download_outlined,
         title: l18n.profile_settingsImporterSuccessTitle,
         description: Platform.isAndroid
-            ? l18n.profile_settingsImporterSuccessDescriptionNoDelete
-            : l18n.profile_settingsImporterSuccessDescriptionDelete,
+            ? l18n.profile_settingsImporterSuccessDescriptionDelete
+            : l18n.profile_settingsImporterSuccessDescriptionNoDelete,
       );
 
       // Если мы на OS Android, то удаляем файл несмотря на ответ, поскольку он находится в кэше.

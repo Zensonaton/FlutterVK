@@ -12,7 +12,6 @@ import "../api/lrclib/search.dart";
 import "../api/vk/audio/get_lyrics.dart";
 import "../main.dart";
 import "../provider/playlists.dart";
-import "../provider/preferences.dart";
 import "../provider/user.dart";
 import "../provider/vk_api.dart";
 import "../utils.dart";
@@ -141,6 +140,9 @@ class PlaylistCacheDeleteDownloadItem extends DownloadItem {
 class PlaylistCacheDownloadItem extends DownloadItem {
   static final AppLogger logger = getLogger("PlaylistCacheDownloadItem");
 
+  /// Определяет количество треков, которое требуется сохранить на диск, прежде чем вызвать [playlistsProvider.updatePlaylist].
+  static const int saveInDBCount = 5;
+
   /// Плейлист, в котором находится данный трек.
   final ExtendedPlaylist playlist;
 
@@ -150,11 +152,37 @@ class PlaylistCacheDownloadItem extends DownloadItem {
   /// Указывает, будет ли удаление кэша вызывать методы [playlistsProvider.updatePlaylist].
   final bool updatePlaylist;
 
+  /// Индекс трека в плейлисте, который будет кэшироваться.
+  ///
+  /// Используется при [updatePlaylist], что бы не перегружать БД постоянными сохранениями на диск. Если не указано, то индекс будет найден автоматически.
+  final int? index;
+
+  /// Определяет, будет ли загружаться аудио-файл трека.
+  final bool downloadAudio;
+
+  /// Определяет, будет ли загружаться обложки трека.
+  final bool downloadThumbnails;
+
+  /// Определяет, будет ли загружаться текст песни трека.
+  final bool downloadLyrics;
+
+  /// Определяет, будет ли загружаться обложки трека с Deezer.
+  final bool deezerThumbnails;
+
+  /// Определяет, будет ли загружаться текст песни трека с LRCLIB.
+  final bool lrcLibLyricsEnabled;
+
   PlaylistCacheDownloadItem({
     required super.ref,
     required this.playlist,
     required this.audio,
     this.updatePlaylist = true,
+    this.index,
+    this.downloadAudio = true,
+    this.downloadThumbnails = true,
+    this.downloadLyrics = true,
+    this.deezerThumbnails = false,
+    this.lrcLibLyricsEnabled = false,
   });
 
   /// Загружает трек, возвращая его размер в байтах, если он был успешно загружен.
@@ -389,7 +417,6 @@ class PlaylistCacheDownloadItem extends DownloadItem {
 
   @override
   Future<void> download() async {
-    final preferences = ref.read(preferencesProvider);
     final playlists = ref.read(playlistsProvider.notifier);
 
     final newAudio = await downloadWithMetadata(
@@ -397,8 +424,11 @@ class PlaylistCacheDownloadItem extends DownloadItem {
       playlist,
       audio,
       downloadItem: this,
-      deezerThumbnails: preferences.deezerThumbnails,
-      lrcLibLyricsEnabled: preferences.lrcLibEnabled,
+      downloadAudio: downloadAudio,
+      downloadThumbnails: downloadThumbnails,
+      downloadLyrics: downloadLyrics,
+      deezerThumbnails: deezerThumbnails,
+      lrcLibLyricsEnabled: lrcLibLyricsEnabled,
     );
 
     // Если ничего не поменялось, то ничего не делаем.
@@ -406,10 +436,13 @@ class PlaylistCacheDownloadItem extends DownloadItem {
 
     // Сохраняем новую версию трека.
     if (updatePlaylist) {
-      // Сохраняем изменения в БД каждые 5 треков, что бы не перегружать её.
-      final int index =
-          playlist.audios!.indexWhere((item) => item.id == audio.id);
-      final bool saveInDB = index % 5 == 0;
+      final int foundIndex = index ??
+          playlist.audios!.indexWhere((item) {
+            return item.id == audio.id;
+          });
+
+      // Сохраняем изменения в БД (т.е., на диск) не постоянно, что бы не вызывать сильные нагрузки на диск.
+      final bool saveInDB = foundIndex % saveInDBCount == 0;
 
       await playlists.updatePlaylist(
         playlist.basicCopyWith(
