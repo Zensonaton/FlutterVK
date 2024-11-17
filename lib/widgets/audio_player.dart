@@ -656,6 +656,7 @@ class _MusicLeftSide extends HookConsumerWidget {
 
                             // Кнопка дизлайка, если это рекомендованный плейлист.
                             if (isRecommendation) ...[
+                              const Gap(4),
                               LoadingIconButton(
                                 onPressed: onDislike,
                                 icon: Icon(
@@ -663,7 +664,6 @@ class _MusicLeftSide extends HookConsumerWidget {
                                   color: scheme.onPrimaryContainer,
                                 ),
                               ),
-                              const Gap(4),
                             ],
                           ],
                         ),
