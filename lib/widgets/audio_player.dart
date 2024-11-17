@@ -87,6 +87,7 @@ class TrackTitleWithSubtitle extends StatelessWidget {
               child: Text(
                 title,
                 style: titleStyle,
+                maxLines: 1,
               ),
             ),
           ),
