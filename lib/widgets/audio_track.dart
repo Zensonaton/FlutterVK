@@ -32,6 +32,7 @@ Widget buildListTrackWidget(
   BuildContext context,
   ExtendedAudio audio,
   ExtendedPlaylist playlist, {
+  bool? isAvailable,
   bool showStatusIcons = false,
   bool showDuration = true,
   bool allowImageCache = true,
@@ -131,6 +132,7 @@ Widget buildListTrackWidget(
     isSelected: isSelected && player.loaded,
     isPlaying: player.loaded && player.playing,
     isLoading: isSelected && player.buffering,
+    isAvailable: isAvailable ?? audio.canPlay,
     audio: audio,
     glowIfSelected: true,
     showStatusIcons: showStatusIcons,
@@ -588,14 +590,14 @@ class AudioTrackTile extends HookConsumerWidget {
   /// Указывает, что данный трек загружается перед тем, как начать его воспроизведение.
   final bool isLoading;
 
+  /// Указывает, что данный трек доступен для воспроизведения.
+  final bool isAvailable;
+
   /// Указывает, что в случае, если [isSelected] равен true, то у данного виджета будет эффект "свечения".
   final bool glowIfSelected;
 
   /// Указывает, что будут указаны иконки состояния справа (кэширования, локальной замены, недоступности, ...).
   final bool showStatusIcons;
-
-  /// Если true, то данный виджет будет не будет иметь эффект прозрачности даже если [ExtendedAudio.canPlay] равен false.
-  final bool forceAvailable;
 
   /// Указывает, разрешено ли использование кэшированного изображения трека.
   final bool allowImageCache;
@@ -641,9 +643,9 @@ class AudioTrackTile extends HookConsumerWidget {
     this.isSelected = false,
     this.isLoading = false,
     this.isPlaying = false,
+    this.isAvailable = true,
     this.glowIfSelected = false,
     this.showStatusIcons = true,
-    this.forceAvailable = false,
     this.allowImageCache = true,
     this.showDuration = true,
     this.dense = false,
@@ -672,7 +674,6 @@ class AudioTrackTile extends HookConsumerWidget {
             schemeVariant: preferences.dynamicSchemeType,
           );
 
-    final canPlay = audio.canPlay;
     final isExplicit = audio.isExplicit;
     final durationString = audio.durationString;
     final isCached = audio.isCached ?? false;
@@ -718,7 +719,7 @@ class AudioTrackTile extends HookConsumerWidget {
                   AudioTrackImage(
                     imageUrl: audio.smallestThumbnail,
                     cacheKey: allowImageCache ? "${audio.mediaKey}small" : null,
-                    isAvailable: forceAvailable || canPlay,
+                    isAvailable: isAvailable,
                     isSelected: isSelected,
                     isPlaying: isPlaying,
                     isLoading: isLoading,
@@ -732,7 +733,7 @@ class AudioTrackTile extends HookConsumerWidget {
                       title: audio.title,
                       artist: audio.artist,
                       subtitle: audio.subtitle,
-                      isAvailable: forceAvailable || canPlay,
+                      isAvailable: isAvailable,
                       isExplicit: isExplicit,
                       isSelected: isSelected,
                       allowTextSelection: allowTextSelection,

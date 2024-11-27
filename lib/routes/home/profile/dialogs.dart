@@ -438,7 +438,7 @@ class PlayerDynamicSchemeDialog extends ConsumerWidget {
                       ),
                     ),
                     showDuration: false,
-                    forceAvailable: true,
+                    isAvailable: true,
                     allowImageCache: false,
                   ),
                 ),

@@ -230,7 +230,7 @@ class SimillarMusicPlaylistWidget extends HookConsumerWidget {
                 isSelected: player.playing && audio == player.currentAudio,
                 isPlaying: player.loaded && player.playing,
                 isLoading: player.buffering && audio == player.currentAudio,
-                forceAvailable: true,
+                isAvailable: true,
                 showDuration: false,
               ),
             ),

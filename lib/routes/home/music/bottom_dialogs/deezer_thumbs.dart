@@ -375,7 +375,7 @@ class TrackThumbnailEditDialog extends HookConsumerWidget {
                           ),
                         ),
                         allowImageCache: false,
-                        forceAvailable: true,
+                        isAvailable: true,
                         showDuration: false,
                         glowIfSelected: true,
                         isSelected: isSelected,

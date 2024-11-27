@@ -92,6 +92,7 @@ class MyMusicBlock extends HookConsumerWidget {
               context,
               playlist!.audios![index],
               playlist,
+              isAvailable: playlist.audios![index].isLiked,
               showDuration: !mobileLayout,
             ),
             const Gap(trackTileSpacing),

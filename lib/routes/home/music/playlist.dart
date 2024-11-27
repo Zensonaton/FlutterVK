@@ -670,6 +670,7 @@ class PlaylistAudiosListWidget extends HookConsumerWidget {
       [searchText, playlistAudios],
     );
 
+    final bool isFavoritesPlaylist = playlist.type == PlaylistType.favorites;
     final bool hasTracksList = playlist.audios != null;
 
     final bool mobileLayout = isMobileLayout(context);
@@ -757,6 +758,8 @@ class PlaylistAudiosListWidget extends HookConsumerWidget {
             context,
             filteredAudios[index],
             playlist,
+            isAvailable:
+                isFavoritesPlaylist ? filteredAudios[index].isLiked : null,
             showStatusIcons: true,
             showDuration: !mobileLayout,
             replaceLikeWithMore: mobileLayout,
