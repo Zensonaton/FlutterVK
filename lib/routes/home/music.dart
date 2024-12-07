@@ -30,7 +30,7 @@ import "music/categories/realtime_playlists.dart";
 import "music/categories/recommended_playlists.dart";
 import "music/categories/simillar_music.dart";
 import "music/search.dart";
-import "profile/dialogs.dart";
+import "profile.dart";
 
 /// Диалог, предупреждающий о том, что трек уже сохранён.
 class DuplicateWarningDialog extends ConsumerWidget {
