@@ -4,7 +4,9 @@ import "package:flutter_markdown/flutter_markdown.dart";
 import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
-/// Debug-меню, отображаемое в [HomeProfilePage] если включён debug-режим ([kDebugMode]), отображающее текстовое поле для ввода Markdown-разметки, которое будет отображено в виде Markdown-виджета.
+/// Route для Debug-меню отображающее текстовое поле для ввода Markdown-разметки, которое будет отображено в виде Markdown-виджета.
+///
+/// go_route: `/profile/markdown_viewer_debug`.
 class MarkdownViewerDebugMenu extends HookConsumerWidget {
   const MarkdownViewerDebugMenu({
     super.key,

@@ -715,7 +715,9 @@ class EverythingIsDisabledBlock extends ConsumerWidget {
   }
 }
 
-/// Страница для управления музыкой.
+/// Route, отображающий главную страницу с треками пользователя, различными плейлистами и прочей информацией.
+///
+/// go_route: `/music`.
 class HomeMusicPage extends HookConsumerWidget {
   const HomeMusicPage({
     super.key,
@@ -812,7 +814,7 @@ class HomeMusicPage extends HookConsumerWidget {
                 // Кнопка для менеджера загрузок.
                 if (downloadManager.downloadStarted)
                   IconButton(
-                    onPressed: () => context.go("/profile/downloadManager"),
+                    onPressed: () => context.go("/profile/download_manager"),
                     icon: const Icon(
                       Icons.download,
                     ),

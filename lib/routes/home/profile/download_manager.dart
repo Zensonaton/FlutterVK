@@ -327,7 +327,9 @@ class DownloadCategory extends ConsumerWidget {
   }
 }
 
-/// [Route], отображающий менеджер для загрузок.
+/// Route менеджера загрузок, где отображаются активные загрузки, а так же загрузки, которые были завершены ранее.
+///
+/// go_route: `/download_manager`.
 class DownloadManagerRoute extends HookConsumerWidget {
   const DownloadManagerRoute({
     super.key,

@@ -13,7 +13,9 @@ import "../../../../provider/user.dart";
 import "../../../../widgets/dialogs.dart";
 import "../../music.dart";
 
-/// Debug-меню, отображаемое в [HomeProfilePage] если включён debug-режим ([kDebugMode]), отображающее техническую информацию о всех плейлистах, которые хранятся в памяти.
+/// Route для debug-меню, отображающее техническую информацию о всех плейлистах, которые хранятся в памяти.
+///
+/// go_route: `/profile/playlists_viewer_debug`.
 class PlaylistsViewerDebugMenu extends ConsumerWidget {
   const PlaylistsViewerDebugMenu({
     super.key,

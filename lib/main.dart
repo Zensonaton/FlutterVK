@@ -120,7 +120,7 @@ late final AndroidDeviceInfo? androidDeviceInfo;
 /// Обработчик события нажатия на уведомление от [notificationsPlugin].
 @pragma("vm:entry-point")
 void notificationTap(NotificationResponse notificationResponse) {
-  navigatorKey.currentContext?.go("/profile/downloadManager");
+  navigatorKey.currentContext?.go("/profile/download_manager");
 }
 
 /// Инициализирует запись в системном трее Windows.

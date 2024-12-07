@@ -128,7 +128,7 @@ GoRouter router(RouterRef ref) {
       body: (_) => const HomeProfilePage(),
       routes: [
         GoRoute(
-          path: "downloadManager",
+          path: "download_manager",
           pageBuilder: (BuildContext context, GoRouterState state) {
             return buildPageWithDefaultTransition(
               context: context,
@@ -158,7 +158,7 @@ GoRouter router(RouterRef ref) {
           },
         ),
         GoRoute(
-          path: "colorSchemeDebug",
+          path: "color_scheme_debug",
           pageBuilder: (BuildContext context, GoRouterState state) {
             return buildPageWithDefaultTransition(
               context: context,
@@ -168,7 +168,7 @@ GoRouter router(RouterRef ref) {
           },
         ),
         GoRoute(
-          path: "playlistsViewerDebug",
+          path: "playlists_viewer_debug",
           pageBuilder: (BuildContext context, GoRouterState state) {
             return buildPageWithDefaultTransition(
               context: context,
@@ -178,7 +178,7 @@ GoRouter router(RouterRef ref) {
           },
         ),
         GoRoute(
-          path: "markdownViewerDebug",
+          path: "markdown_viewer_debug",
           pageBuilder: (BuildContext context, GoRouterState state) {
             return buildPageWithDefaultTransition(
               context: context,

@@ -307,7 +307,9 @@ class ProfileAvatar extends ConsumerWidget {
   }
 }
 
-/// Страница для [HomeRoute] для просмотра собственного профиля.
+/// Route, отображающий информацию по профилю текущего пользователя, где пользователь может поменять настройки.
+///
+/// go_route: `/profile`.
 class HomeProfilePage extends HookConsumerWidget {
   static final AppLogger logger = getLogger("HomeProfilePage");
 
@@ -389,7 +391,7 @@ class HomeProfilePage extends HookConsumerWidget {
                 // Кнопка для менеджера загрузок.
                 if (downloadManager.downloadStarted)
                   IconButton(
-                    onPressed: () => context.go("/profile/downloadManager"),
+                    onPressed: () => context.go("/profile/download_manager"),
                     icon: const Icon(
                       Icons.download,
                     ),

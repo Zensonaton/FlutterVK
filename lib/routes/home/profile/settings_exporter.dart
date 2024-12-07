@@ -267,7 +267,7 @@ class SettingsExporterSelector extends HookConsumerWidget {
 ///
 /// go_route: `/profile/settings_exporter`.
 class SettingsExporterRoute extends HookConsumerWidget {
-  static final AppLogger logger = getLogger("settingsExporterRoute");
+  static final AppLogger logger = getLogger("SettingsExporterRoute");
 
   /// Длительность анимации прогресса экспорта.
   static const Duration progressAnimationDuration = Duration(milliseconds: 500);

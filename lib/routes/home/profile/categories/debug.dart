@@ -117,7 +117,7 @@ class ProfileDebugSettingsCategory extends HookConsumerWidget {
           title: const Text(
             "ColorScheme test menu",
           ),
-          onTap: () => context.push("/profile/colorSchemeDebug"),
+          onTap: () => context.push("/profile/color_scheme_debug"),
         ),
 
         // Debug-меню для отображения всех плейлистов.
@@ -128,7 +128,7 @@ class ProfileDebugSettingsCategory extends HookConsumerWidget {
           title: const Text(
             "Playlists viewer",
           ),
-          onTap: () => context.push("/profile/playlistsViewerDebug"),
+          onTap: () => context.push("/profile/playlists_viewer_debug"),
         ),
 
         // Debug-меню для отображения Markdown-разметки.
@@ -139,7 +139,7 @@ class ProfileDebugSettingsCategory extends HookConsumerWidget {
           title: const Text(
             "Markdown viewer",
           ),
-          onTap: () => context.push("/profile/markdownViewerDebug"),
+          onTap: () => context.push("/profile/markdown_viewer_debug"),
         ),
 
         // Кнопка для запуска фейковой загрузки.
@@ -193,7 +193,7 @@ class ProfileDebugSettingsCategory extends HookConsumerWidget {
           title: const Text(
             "Open download manager",
           ),
-          onTap: () => context.go("/profile/downloadManager"),
+          onTap: () => context.go("/profile/download_manager"),
         ),
 
         // Кнопка для создания тестового API-запроса.

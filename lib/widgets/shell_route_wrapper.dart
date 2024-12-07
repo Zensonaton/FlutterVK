@@ -147,7 +147,7 @@ class DownloadManagerWrapperWidget extends HookConsumerWidget {
                 child: DownloadManagerIconWidget(
                   progress: progressValue,
                   title: downloadManager.currentTask?.smallTitle ?? "",
-                  onTap: () => context.go("/profile/downloadManager"),
+                  onTap: () => context.go("/profile/download_manager"),
                 ),
               ),
             ),

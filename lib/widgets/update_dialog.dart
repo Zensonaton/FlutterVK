@@ -62,7 +62,7 @@ class UpdateAvailableDialog extends ConsumerWidget {
           action: SnackBarAction(
             label: l18n.installPendingActionText,
             onPressed: () =>
-                navigatorKey.currentContext?.go("/profile/downloadManager"),
+                navigatorKey.currentContext?.go("/profile/download_manager"),
           ),
         ),
       );
