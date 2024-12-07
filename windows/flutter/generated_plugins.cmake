@@ -6,6 +6,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   connectivity_plus
   discord_rpc
   dynamic_color
+  firebase_core
   flutter_inappwebview_windows
   fullscreen_window
   isar_flutter_libs

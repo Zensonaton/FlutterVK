@@ -9,6 +9,7 @@
 #include <connectivity_plus/connectivity_plus_windows_plugin.h>
 #include <discord_rpc/discord_rpc_plugin.h>
 #include <dynamic_color/dynamic_color_plugin_c_api.h>
+#include <firebase_core/firebase_core_plugin_c_api.h>
 #include <flutter_inappwebview_windows/flutter_inappwebview_windows_plugin_c_api.h>
 #include <fullscreen_window/fullscreen_window_plugin_c_api.h>
 #include <isar_flutter_libs/isar_flutter_libs_plugin.h>
@@ -28,6 +29,8 @@ void RegisterPlugins(flutter::PluginRegistry* registry) {
       registry->GetRegistrarForPlugin("DiscordRpcPlugin"));
   DynamicColorPluginCApiRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("DynamicColorPluginCApi"));
+  FirebaseCorePluginCApiRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("FirebaseCorePluginCApi"));
   FlutterInappwebviewWindowsPluginCApiRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("FlutterInappwebviewWindowsPluginCApi"));
   FullscreenWindowPluginCApiRegisterWithRegistrar(

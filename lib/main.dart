@@ -2,6 +2,8 @@ import "dart:io";
 
 import "package:device_info_plus/device_info_plus.dart";
 import "package:dio/dio.dart";
+import "package:firebase_core/firebase_core.dart";
+import "package:firebase_crashlytics/firebase_crashlytics.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart";
@@ -21,6 +23,7 @@ import "package:window_manager/window_manager.dart";
 
 import "app.dart";
 import "consts.dart";
+import "firebase_options.dart";
 import "provider/db_migrator.dart";
 import "provider/dio.dart";
 import "provider/l18n.dart";
@@ -204,6 +207,22 @@ Future main() async {
     final preferences = container.read(preferencesProvider);
     final l18n = container.read(l18nProvider);
     final dbMigrator = container.read(dbMigratorProvider);
+
+    // Инициализируем Firebase, а так же Firebase Crashlytics.
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+
+    PlatformDispatcher.instance.onError = (error, stack) {
+      FirebaseCrashlytics.instance.recordError(
+        error,
+        stack,
+        fatal: true,
+      );
+
+      return true;
+    };
 
     // Инициализируем WindowManager на Desktop-платформах.
     if (isDesktop) {

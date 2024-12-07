@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "546019659445",
+    "project_id": "flutter-vk",
+    "storage_bucket": "flutter-vk.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:546019659445:android:d4374ae1c5334cc8d738fc",
+        "android_client_info": {
+          "package_name": "com.zensonaton.fluttervk"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA70Er9HplwkmRi9m6BeaTAhYW439ZjDrA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
