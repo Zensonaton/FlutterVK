@@ -1475,6 +1475,7 @@ class _MusicContents extends ConsumerWidget {
     final freeSpace = MediaQuery.of(context).size.width -
         (mobileLayout ? MusicPlayerWidget.mobilePadding * 2 : 0) -
         padding * 2;
+    // TODO: Реализовать "сжатую" версию плеера при Desktop Layout.
 
     double leftBlockSize = 0;
     double? middleBlockSize;
@@ -1487,15 +1488,11 @@ class _MusicContents extends ConsumerWidget {
       rightBlockSize = buttonsCount * 48;
       leftBlockSize = freeSpace - rightBlockSize;
     } else {
+      middleBlockPadding = gapSizeDesktop * 2;
       middleBlockSize = clampDouble(
-        freeSpace / 2 + gapSizeDesktop * 2,
+        freeSpace / 2 + middleBlockPadding,
         minMiddleBlockSize,
         maxMiddleBlockSize,
-      );
-      middleBlockPadding = clampDouble(
-        (maxMiddleBlockSize - middleBlockSize) / 2,
-        0,
-        gapSizeDesktop * 2,
       );
       leftBlockSize = rightBlockSize = (freeSpace - middleBlockSize) / 2;
     }
