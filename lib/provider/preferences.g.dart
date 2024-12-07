@@ -68,6 +68,7 @@ UserPreferences _$UserPreferencesFromJson(Map<String, dynamic> json) =>
               ?.map((e) => e as String)
               .toList() ??
           [],
+      crossfadeColors: json['CrossfadeColors'] as bool? ?? true,
     );
 
 Map<String, dynamic> _$UserPreferencesToJson(UserPreferences instance) =>
@@ -111,13 +112,14 @@ Map<String, dynamic> _$UserPreferencesToJson(UserPreferences instance) =>
       'AndroidKeepPlayingOnClose': instance.androidKeepPlayingOnClose,
       'ShuffleOnPlay': instance.shuffleOnPlay,
       'ExportedSections': instance.exportedSections,
+      'CrossfadeColors': instance.crossfadeColors,
     };
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$preferencesHash() => r'57a6f01dc7a100ff23acc9add1fbfaef7b770963';
+String _$preferencesHash() => r'bdfb48b3b235945c9dac41baa756d607bf24d488';
 
 /// [Provider] для хранения настроек пользователя.
 ///

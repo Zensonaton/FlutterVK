@@ -400,6 +400,26 @@ class ProfileVisualSettingsCategory extends ConsumerWidget {
               prefsNotifier.setSpoilerNextTrackEnabled(enabled);
             },
           ),
+
+        // Кроссфейд цветов плеера.
+        SwitchListTile(
+          secondary: const Icon(
+            Icons.colorize,
+          ),
+          title: Text(
+            l18n.profile_crossfadeAudioColorsTitle,
+          ),
+          subtitle: Text(
+            l18n.profile_crossfadeAudioColorsDescription,
+          ),
+          value: preferences.crossfadeColors,
+          onChanged: (bool? enabled) async {
+            HapticFeedback.lightImpact();
+            if (enabled == null) return;
+
+            prefsNotifier.setCrossfadeColors(enabled);
+          },
+        ),
       ],
     );
   }

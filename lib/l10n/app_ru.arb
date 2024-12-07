@@ -412,7 +412,10 @@
 	"profile_useThumbnailAsBackgroundTitle": "Изображение трека как фон полноэкранного плеера",
 
 	"profile_spoilerNextAudioTitle": "Спойлер следующего трека",
-	"profile_spoilerNextAudioDescription": "Показывает название и цвета следующего трека перед тем, как закончится воспроизведение текущего",
+	"profile_spoilerNextAudioDescription": "Отображает название следующего трека перед окончанием воспроизведения текущего",
+
+	"profile_crossfadeAudioColorsTitle": "Кроссфейд цветов плеера",
+	"profile_crossfadeAudioColorsDescription": "Делает плавный переход цветов плеера перед началом следующего трека",
 
 
 	"profile_musicPlayerTitle": "Музыкальный плеер",

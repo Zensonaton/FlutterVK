@@ -213,6 +213,10 @@ class UserPreferences {
   @JsonKey(name: "ExportedSections", defaultValue: [])
   final List<String> exportedSections;
 
+  /// Указывает, что будет плавный переход цветов у плеера перед окончанием воспроизведения текущего трека.
+  @JsonKey(name: "CrossfadeColors", defaultValue: true)
+  final bool crossfadeColors;
+
   /// Возвращает [Map] из всех ключей этого класса, где value - тип ключа.
   static Map<String, Type> getKeyTypes() => {
         "DBVersion": int,
@@ -251,6 +255,7 @@ class UserPreferences {
         "AndroidKeepPlayingOnClose": bool,
         "ShuffleOnPlay": bool,
         "ExportedSections": List<String>,
+        "CrossfadeColors": bool,
       };
 
   UserPreferences({
@@ -290,6 +295,7 @@ class UserPreferences {
     this.androidKeepPlayingOnClose = false,
     this.shuffleOnPlay = true,
     this.exportedSections = const [],
+    this.crossfadeColors = true,
   });
 
   /// Делает копию этого класа с новыми передаваемыми значениями.
@@ -330,6 +336,7 @@ class UserPreferences {
     bool? androidKeepPlayingOnClose,
     bool? shuffleOnPlay,
     List<String>? exportedSections,
+    bool? crossfadeColors,
   }) =>
       UserPreferences(
         dbVersion: dbVersion ?? this.dbVersion,
@@ -377,6 +384,7 @@ class UserPreferences {
             androidKeepPlayingOnClose ?? this.androidKeepPlayingOnClose,
         shuffleOnPlay: shuffleOnPlay ?? this.shuffleOnPlay,
         exportedSections: exportedSections ?? this.exportedSections,
+        crossfadeColors: crossfadeColors ?? this.crossfadeColors,
       );
 
   factory UserPreferences.fromJson(Map<String, dynamic> json) =>
@@ -609,4 +617,7 @@ class Preferences extends _$Preferences {
 
   void setExportedSections(List<String> sections) =>
       state = state.copyWith(exportedSections: sections);
+
+  void setCrossfadeColors(bool enabled) =>
+      state = state.copyWith(crossfadeColors: enabled);
 }

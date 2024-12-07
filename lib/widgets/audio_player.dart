@@ -1338,7 +1338,7 @@ class MusicPlayerBackgroundWidget extends HookConsumerWidget {
 
     final audio = player.smartNextAudio;
     final progress = player.progress;
-    final clampedProgress = preferences.spoilerNextTrack
+    final clampedProgress = preferences.crossfadeColors
         ? ((progress - nextPlayingTextProgress) /
                 (1.0 - nextPlayingTextProgress))
             .clamp(0.0, 1.0)
