@@ -1,4 +1,4 @@
-INNO_VERSION=6.2.0
+INNO_VERSION=6.3.3
 
 innoinstall:
 	powershell curl -o build\inno-installer.exe http://files.jrsoftware.org/is/6/innosetup-${INNO_VERSION}.exe
