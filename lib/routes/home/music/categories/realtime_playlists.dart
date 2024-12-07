@@ -1,6 +1,5 @@
-import "dart:typed_data";
-
 import "package:cached_network_image/cached_network_image.dart";
+import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter_cache_manager/flutter_cache_manager.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
@@ -20,6 +19,7 @@ import "../../../../services/cache_manager.dart";
 import "../../../../services/logger.dart";
 import "../../../../utils.dart";
 import "../../../../widgets/music_category.dart";
+import "../../../../widgets/play_pause_animated_icon.dart";
 import "../playlist.dart";
 
 /// Указывает минимальное треков из аудио микса, которое обязано быть в очереди плеера. Если очередь плейлиста состоит из меньшего количества треков, то очередь будет восполнена этим значением.
@@ -73,8 +73,10 @@ class LivePlaylistWidget extends HookWidget {
 
   /// Действие, вызываемое при переключения паузы/возобновления при нажатии по центру плейлиста.
   ///
+  /// Указывая async-метод, можно сделать анимацию загрузки, пока плеер загружает треки.
+  ///
   /// Если не указывать, то возможность нажать на центр плейлиста будет выключена.
-  final VoidCallback? onPlayToggle;
+  final AsyncCallback? onPlayToggle;
 
   const LivePlaylistWidget({
     super.key,
@@ -143,7 +145,19 @@ class LivePlaylistWidget extends HookWidget {
       [lottieUrl, lottieCacheKey],
     );
 
-    final bool selectedAndPlaying = selected && currentlyPlaying;
+    final isLoading = useState(false);
+
+    Future<void> onPlayToggleWrapper() async {
+      isLoading.value = true;
+
+      try {
+        await onPlayToggle!();
+      } catch (e) {
+        rethrow;
+      } finally {
+        if (context.mounted) isLoading.value = false;
+      }
+    }
 
     return AnimatedContainer(
       height: bigLayout ? 250 : 200,
@@ -153,7 +167,7 @@ class LivePlaylistWidget extends HookWidget {
       ),
       curve: Curves.easeInOutCubicEmphasized,
       child: InkWell(
-        onTap: onPlayToggle,
+        onTap: isLoading.value ? null : onPlayToggleWrapper,
         borderRadius: BorderRadius.circular(
           globalBorderRadius,
         ),
@@ -198,11 +212,24 @@ class LivePlaylistWidget extends HookWidget {
                     children: [
                       // Запуск воспроизведения.
                       IconButton.filledTonal(
-                        icon: Icon(
-                          selectedAndPlaying ? Icons.pause : Icons.play_arrow,
-                          size: bigLayout ? 36 : null,
+                        icon: SizedBox(
+                          width: 36,
+                          height: 36,
+                          child: isLoading.value
+                              ? const Center(
+                                  child: SizedBox(
+                                    width: 30,
+                                    height: 30,
+                                    child: CircularProgressIndicator.adaptive(
+                                      strokeWidth: 3.5,
+                                    ),
+                                  ),
+                                )
+                              : const PlayPauseAnimatedIcon(
+                                  size: 36,
+                                ),
                         ),
-                        onPressed: onPlayToggle,
+                        onPressed: isLoading.value ? null : onPlayToggleWrapper,
                       ),
                       const Gap(12),
 
