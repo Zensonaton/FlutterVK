@@ -24,7 +24,6 @@ import "provider/user.dart";
 import "routes/home/profile.dart";
 import "services/logger.dart";
 import "utils.dart";
-import "widgets/loading_overlay.dart";
 
 /// Класс, расширяющий [WindowListener], позволяющий слушать события окна приложения.
 ///
@@ -223,11 +222,6 @@ class FlutterVKApp extends HookConsumerWidget {
             milliseconds: 500,
           ),
           themeAnimationCurve: Curves.easeInOutCubicEmphasized,
-          builder: (BuildContext context, Widget? child) {
-            return LoadingOverlay(
-              child: child!,
-            );
-          },
           routerConfig: router,
           localizationsDelegates: const [
             AppLocalizations.delegate,

@@ -962,10 +962,7 @@ class HomeProfilePage extends HookConsumerWidget {
                   onTap: () async {
                     if (!networkRequiredDialog(ref, context)) return;
 
-                    await ref.read(updaterProvider).showChangelog(
-                          context,
-                          showLoadingOverlay: true,
-                        );
+                    await ref.read(updaterProvider).showChangelog(context);
                   },
                 ),
 
@@ -989,7 +986,6 @@ class HomeProfilePage extends HookConsumerWidget {
                           context,
                           allowPre: preferences.updateBranch ==
                               UpdateBranch.preReleases,
-                          showLoadingOverlay: true,
                           showMessageOnNoUpdates: true,
                         );
                   },
@@ -1144,7 +1140,6 @@ class HomeProfilePage extends HookConsumerWidget {
                     onTap: () => ref.read(updaterProvider).checkForUpdates(
                           context,
                           allowPre: true,
-                          showLoadingOverlay: true,
                           showMessageOnNoUpdates: true,
                           disableCurrentVersionCheck: true,
                         ),

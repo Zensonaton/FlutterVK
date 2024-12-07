@@ -8,6 +8,7 @@ import "package:url_launcher/url_launcher.dart";
 import "../../api/vk/consts.dart";
 import "../../provider/l18n.dart";
 import "../../utils.dart";
+import "../../widgets/loading_button.dart";
 import "../login.dart";
 
 /// Часть Route'а [LoginRoute], показываемая при запуске на desktop-платформах.
@@ -24,9 +25,17 @@ class DesktopLoginWidget extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final token = useState("");
-    final String? extractedToken = extractAccessToken(token.value);
     final l18n = ref.watch(l18nProvider);
+
+    final controller = useTextEditingController();
+    useValueListenable(controller);
+
+    final String? extractedToken = useMemoized(
+      () => extractAccessToken(controller.text),
+      [controller.text],
+    );
+
+    final isLoading = useState(false);
 
     return Scaffold(
       appBar: AppBar(
@@ -86,6 +95,8 @@ class DesktopLoginWidget extends HookConsumerWidget {
 
                   // Поле для ввода токена.
                   TextField(
+                    controller: controller,
+                    enabled: !isLoading.value,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(
@@ -94,28 +105,32 @@ class DesktopLoginWidget extends HookConsumerWidget {
                       hintText:
                           "https://oauth.vk.com/blank.html#access_token=vk1...",
                     ),
-                    onChanged: (String text) => token.value = text,
                   ),
                   const Gap(36),
 
                   // Кнопки для продолжения авторизации.
                   Align(
                     alignment: Alignment.bottomRight,
-                    child: FilledButton.icon(
-                      onPressed: extractedToken != null
-                          ? () => tryAuthorize(
-                                ref,
-                                context,
-                                extractedToken,
-                                useAlternateAuth,
-                              )
-                          : null,
+                    child: LoadingIconButton(
                       icon: const Icon(
                         Icons.arrow_forward_ios,
                       ),
                       label: Text(
                         l18n.login_desktopContinue,
                       ),
+                      onPressed: extractedToken != null
+                          ? () async {
+                              isLoading.value = true;
+
+                              await tryAuthorize(
+                                ref,
+                                context,
+                                extractedToken,
+                                useAlternateAuth,
+                              );
+                              isLoading.value = false;
+                            }
+                          : null,
                     ),
                   ),
                 ],

@@ -14,7 +14,6 @@ import "../provider/user.dart";
 import "../services/logger.dart";
 import "../utils.dart";
 import "../widgets/dialogs.dart";
-import "../widgets/loading_overlay.dart";
 import "login/desktop.dart";
 import "login/mobile.dart";
 
@@ -30,7 +29,6 @@ Future<bool> tryAuthorize(
 
   logger.d("Trying to authorize with token");
 
-  LoadingOverlay.of(context).show();
   FocusScope.of(context).unfocus();
 
   try {
@@ -94,8 +92,6 @@ Future<bool> tryAuthorize(
     );
 
     return false;
-  } finally {
-    if (context.mounted) LoadingOverlay.of(context).hide();
   }
 
   return true;

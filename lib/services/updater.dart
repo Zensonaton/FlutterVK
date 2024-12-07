@@ -17,7 +17,6 @@ import "../provider/download_manager.dart";
 import "../provider/l18n.dart";
 import "../provider/updater.dart";
 import "../widgets/dialogs.dart";
-import "../widgets/loading_overlay.dart";
 import "../widgets/update_dialog.dart";
 import "download_manager.dart";
 import "logger.dart";
@@ -132,12 +131,11 @@ class Updater {
 
   /// Сверяет текущую версию приложения с последней версией из Github Actions, показывая информацию о результате проверки в интерфейсе. Если версия отличается, то вызывает [showModalBottomSheet] с целью показа информации о новом обновлении, а так же различными действиями с новым обновлением.
   ///
-  /// [showLoadingOverlay] указывает, будет ли вызываться [LoadingOverlay.show] во время получения информации, [showMessageOnNoUpdates] указывает, будет ли показываться [ScaffoldMessenger] с сообщением о том, что обновлений нету, [useSnackbarOnUpdate] указывает, что вместо [showModalBottomSheet] будет использоваться [SnackBar] для отображения информации о появлении нового обновления.
+  /// [showMessageOnNoUpdates] указывает, будет ли показываться [ScaffoldMessenger] с сообщением о том, что обновлений нету, [useSnackbarOnUpdate] указывает, что вместо [showModalBottomSheet] будет использоваться [SnackBar] для отображения информации о появлении нового обновления.
   Future<bool> checkForUpdates(
     BuildContext context, {
     Release? updateRelease,
     bool allowPre = false,
-    bool showLoadingOverlay = false,
     bool showMessageOnNoUpdates = false,
     bool useSnackbarOnUpdate = false,
     bool disableCurrentVersionCheck = false,
@@ -145,8 +143,6 @@ class Updater {
     logger.d("Checking for app updates (current: $appVersion)");
 
     final l18n = ref.read(l18nProvider);
-
-    if (showLoadingOverlay) LoadingOverlay.of(context).show();
 
     try {
       final Release? release = updateRelease ??
@@ -174,7 +170,6 @@ class Updater {
                   context,
                   updateRelease: release,
                   allowPre: allowPre,
-                  showLoadingOverlay: true,
                   showMessageOnNoUpdates: showMessageOnNoUpdates,
                 ),
               ),
@@ -229,20 +224,12 @@ class Updater {
       }
 
       return false;
-    } finally {
-      // ignore: use_build_context_synchronously
-      if (showLoadingOverlay) LoadingOverlay.of(context).hide();
     }
   }
 
   /// Показывает диалог, в котором написана информация об изменениях в этой версии приложения Flutter VK.
-  Future<void> showChangelog(
-    BuildContext context, {
-    bool showLoadingOverlay = false,
-  }) async {
+  Future<void> showChangelog(BuildContext context) async {
     logger.d("Getting changelog for version $appVersion");
-
-    if (showLoadingOverlay) LoadingOverlay.of(context).show();
 
     try {
       final Release? release = await getCurrent();
@@ -274,10 +261,6 @@ class Updater {
         // ignore: use_build_context_synchronously
         context,
       );
-    } finally {
-      if (showLoadingOverlay && context.mounted) {
-        LoadingOverlay.of(context).hide();
-      }
     }
   }
 

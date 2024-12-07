@@ -34,6 +34,7 @@ class MobileLoginWidget extends HookConsumerWidget {
     }
 
     final isWebViewShown = useState(true);
+
     final l18n = ref.watch(l18nProvider);
 
     if (!isWebViewShown.value) {
