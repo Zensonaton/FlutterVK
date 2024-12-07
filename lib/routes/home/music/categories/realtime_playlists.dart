@@ -1,5 +1,9 @@
+import "dart:typed_data";
+
 import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
+import "package:flutter_cache_manager/flutter_cache_manager.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
 import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:lottie/lottie.dart";
@@ -12,6 +16,7 @@ import "../../../../provider/player_events.dart";
 import "../../../../provider/playlists.dart";
 import "../../../../provider/preferences.dart";
 import "../../../../provider/user.dart";
+import "../../../../services/cache_manager.dart";
 import "../../../../services/logger.dart";
 import "../../../../utils.dart";
 import "../../../../widgets/music_category.dart";
@@ -40,7 +45,9 @@ class FallbackMixPlaylistWidget extends StatelessWidget {
 }
 
 /// Виджет, отображающий плейлист типа "VK Mix" или подобный.
-class LivePlaylistWidget extends StatelessWidget {
+class LivePlaylistWidget extends HookWidget {
+  static final AppLogger logger = getLogger("LivePlaylistWidget");
+
   /// Название плейлиста.
   final String title;
 
@@ -48,7 +55,12 @@ class LivePlaylistWidget extends StatelessWidget {
   final String? description;
 
   /// URL на Lottie-анимацию, которая используется для фона.
+  ///
+  /// Для кэширования и повтороного использования анимации, рекомендуется использовать [lottieCacheKey].
   final String? lottieUrl;
+
+  /// Ключ для кэширования Lottie-анимации. Обязан быть указан, если [lottieUrl] задан.
+  final String? lottieCacheKey;
 
   /// Указывает, что будет использоваться большой размер данного плейлиста.
   final bool bigLayout;
@@ -69,6 +81,7 @@ class LivePlaylistWidget extends StatelessWidget {
     required this.title,
     this.description,
     this.lottieUrl,
+    this.lottieCacheKey,
     this.bigLayout = false,
     this.selected = false,
     this.currentlyPlaying = false,
@@ -77,6 +90,59 @@ class LivePlaylistWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (lottieUrl != null) {
+      if (lottieCacheKey == null) {
+        throw ArgumentError("Expected lottieCacheKey to be set");
+      }
+    }
+
+    final lottieComposition = useState<LottieComposition?>(null);
+
+    useEffect(
+      () {
+        if (lottieUrl == null) {
+          return null;
+        }
+
+        Future<void> loadLottieComposition() async {
+          final manager = CachedLottieAnimationsManager.instance;
+
+          final FileInfo? info =
+              await manager.getFileFromCache(lottieCacheKey!);
+          final bool shouldDownload =
+              info == null || info.validTill.isBefore(DateTime.now());
+
+          logger.d("Should download Lottie animation: $shouldDownload");
+
+          if (!shouldDownload) {
+            final Uint8List bytes = await info.file.readAsBytes();
+            final composition = await LottieComposition.fromBytes(bytes);
+
+            if (context.mounted) {
+              lottieComposition.value = composition;
+            }
+
+            return;
+          }
+
+          final FileInfo downloadedInfo =
+              await manager.downloadFile(lottieUrl!, key: lottieCacheKey);
+
+          final Uint8List bytes = await downloadedInfo.file.readAsBytes();
+          final composition = await LottieComposition.fromBytes(bytes);
+
+          if (context.mounted) {
+            lottieComposition.value = composition;
+          }
+        }
+
+        loadLottieComposition();
+
+        return null;
+      },
+      [lottieUrl, lottieCacheKey],
+    );
+
     final bool selectedAndPlaying = selected && currentlyPlaying;
 
     return AnimatedContainer(
@@ -276,22 +342,6 @@ class MoodPlaylistWidget extends StatelessWidget {
                       ),
               ),
 
-              // Затемняющий эффект (градиент) поверх изображения.
-              if (backgroundUrl != null)
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(
-                      globalBorderRadius,
-                    ),
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.black.withValues(alpha: 0.25),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                ),
-
               // Название, а так же кнопка запуска.
               Center(
                 child: Padding(
@@ -397,6 +447,7 @@ class RealtimePlaylistsBlock extends HookConsumerWidget {
               title: playlist.title!,
               description: playlist.description,
               lottieUrl: playlist.backgroundAnimationUrl!,
+              lottieCacheKey: "${playlist.mediaKey}animation",
               bigLayout: !isMobile,
               selected: player.currentPlaylist?.mediaKey == playlist.mediaKey,
               currentlyPlaying: player.playing,

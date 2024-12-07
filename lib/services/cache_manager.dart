@@ -1,11 +1,11 @@
 // ignore_for_file: implementation_imports
 
+import "package:file/src/backends/local/local_file_system.dart";
+import "package:file/src/interface/file.dart";
 import "package:flutter_cache_manager/flutter_cache_manager.dart";
 import "package:flutter_cache_manager/src/storage/file_system/file_system_io.dart";
 import "package:path/path.dart";
 import "package:path_provider/path_provider.dart";
-import "package:file/src/backends/local/local_file_system.dart";
-import "package:file/src/interface/file.dart";
 
 import "../utils.dart";
 
@@ -85,6 +85,26 @@ class CachedAlbumImagesManager {
       ),
       fileService: HttpFileService(),
       maxNrOfCacheObjects: 3000,
+    ),
+  );
+}
+
+/// Класс типа [CacheManager], который используется для кэширования Lottie-анимаций.
+class CachedLottieAnimationsManager {
+  static const String key = "lottie-animations";
+
+  static CacheManager instance = CacheManager(
+    Config(
+      key,
+      repo: JsonCacheInfoRepository(
+        databaseName: key,
+      ),
+      fileSystem: IOCacheManagerExtended(
+        key,
+        storeInCacheDirectory: isMobile,
+      ),
+      fileService: HttpFileService(),
+      maxNrOfCacheObjects: 3,
     ),
   );
 }
