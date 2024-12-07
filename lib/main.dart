@@ -208,21 +208,25 @@ Future main() async {
     final l18n = container.read(l18nProvider);
     final dbMigrator = container.read(dbMigratorProvider);
 
-    // Инициализируем Firebase, а так же Firebase Crashlytics.
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
-
-    PlatformDispatcher.instance.onError = (error, stack) {
-      FirebaseCrashlytics.instance.recordError(
-        error,
-        stack,
-        fatal: true,
+    // Инициализируем Firebase (Analytics, Crashlytics), в release-режиме.
+    // TODO: Реализовать логирование ошибок, даже если Firebase не используется (т.е., повторить функционал catcher_2).
+    if (kReleaseMode) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
       );
+      FlutterError.onError =
+          FirebaseCrashlytics.instance.recordFlutterFatalError;
 
-      return true;
-    };
+      PlatformDispatcher.instance.onError = (error, stack) {
+        FirebaseCrashlytics.instance.recordError(
+          error,
+          stack,
+          fatal: true,
+        );
+
+        return true;
+      };
+    }
 
     // Инициализируем WindowManager на Desktop-платформах.
     if (isDesktop) {
