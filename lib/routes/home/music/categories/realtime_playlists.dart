@@ -201,62 +201,67 @@ class LivePlaylistWidget extends HookWidget {
                 ),
 
               // Текст, а так же кнопка запуска.
-              Theme(
-                data: ThemeData(
-                  brightness: Brightness.dark,
-                ),
-                child: SizedBox(
-                  width: bigLayout ? 500 : 300,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Запуск воспроизведения.
-                      IconButton.filledTonal(
-                        icon: SizedBox(
-                          width: 36,
-                          height: 36,
-                          child: isLoading.value
-                              ? const Center(
-                                  child: SizedBox(
-                                    width: 30,
-                                    height: 30,
-                                    child: CircularProgressIndicator.adaptive(
-                                      strokeWidth: 3.5,
+              SizedBox(
+                width: bigLayout ? 500 : 300,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Запуск воспроизведения.
+                    IconButton.filledTonal(
+                      icon: SizedBox(
+                        width: 36,
+                        height: 36,
+                        child: isLoading.value
+                            ? Center(
+                                child: SizedBox(
+                                  width: 30,
+                                  height: 30,
+                                  child: CircularProgressIndicator.adaptive(
+                                    strokeWidth: 3.5,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Theme.of(context).colorScheme.onSurface,
                                     ),
                                   ),
-                                )
-                              : const PlayPauseAnimatedIcon(
-                                  size: 36,
                                 ),
-                        ),
-                        onPressed: isLoading.value ? null : onPlayToggleWrapper,
+                              )
+                            : selected
+                                ? PlayPauseAnimatedIcon(
+                                    size: 36,
+                                    color:
+                                        Theme.of(context).colorScheme.onSurface,
+                                  )
+                                : Icon(
+                                    Icons.shuffle,
+                                    size: 36,
+                                    color:
+                                        Theme.of(context).colorScheme.onSurface,
+                                  ),
                       ),
-                      const Gap(12),
+                      onPressed: isLoading.value ? null : onPlayToggleWrapper,
+                    ),
+                    const Gap(12),
 
-                      // "Слушать VK Mix".
+                    // "Слушать VK Mix".
+                    Text(
+                      title,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const Gap(2),
+
+                    // Описание плейлиста, при наличии.
+                    if (description != null)
                       Text(
-                        title,
+                        description!,
                         textAlign: TextAlign.center,
                         style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
                         ),
                       ),
-                      const Gap(2),
-
-                      // Описание плейлиста, при наличии.
-                      if (description != null)
-                        Text(
-                          description!,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                          ),
-                        ),
-                    ],
-                  ),
+                  ],
                 ),
               ),
             ],
