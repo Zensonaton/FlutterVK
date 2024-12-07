@@ -1,3 +1,4 @@
+import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
 import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
@@ -18,7 +19,6 @@ import "../../utils.dart";
 import "../../widgets/dialogs.dart";
 import "../../widgets/fading_list_view.dart";
 import "../../widgets/fallback_audio_photo.dart";
-import "../../widgets/isolated_cached_network_image.dart";
 import "../../widgets/loading_button.dart";
 import "../../widgets/responsive_slider.dart";
 import "../../widgets/scrollable_slider.dart";
@@ -78,8 +78,9 @@ class PlaylistTitleWidget extends ConsumerWidget {
               l18n.music_fullscreenPlaylistNameTitle,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color:
-                    Theme.of(context).colorScheme.onSurface.withOpacity(0.75),
+                color: Theme.of(context).colorScheme.onSurface.withValues(
+                      alpha: 0.75,
+                    ),
               ),
             ),
 
@@ -152,12 +153,12 @@ class NextTrackInfoWidget extends ConsumerWidget {
                   globalBorderRadius,
                 ),
                 child: player.smartNextAudio!.smallestThumbnail != null
-                    ? IsolatedCachedImage(
+                    ? CachedNetworkImage(
                         imageUrl: player.smartNextAudio!.smallestThumbnail!,
                         cacheKey: "${player.smartNextAudio!.mediaKey}small",
                         width: 32,
                         height: 32,
-                        placeholder: const FallbackAudioAvatar(),
+                        placeholder: (BuildContext context, String string) {return const FallbackAudioAvatar(); },
                         cacheManager: CachedAlbumImagesManager.instance,
                       )
                     : const FallbackAudioAvatar(
@@ -181,7 +182,7 @@ class NextTrackInfoWidget extends ConsumerWidget {
                       color: Theme.of(context)
                           .colorScheme
                           .onSurface
-                          .withOpacity(0.75),
+                          .withValues(alpha: 0.75),
                     ),
                   ),
 
@@ -433,7 +434,7 @@ class FullscreenMediaControls extends ConsumerWidget {
                               color: (player.currentAudio?.thumbnail != null
                                       ? schemeInfo?.frequentColor
                                       : null) ??
-                                  Colors.blueGrey.withOpacity(0.25),
+                                  Colors.blueGrey.withValues(alpha: 0.25),
                               blurStyle: BlurStyle.outer,
                             ),
                         ],
@@ -450,13 +451,16 @@ class FullscreenMediaControls extends ConsumerWidget {
                               !preferences.fullscreenBigThumbnail,
                             ),
                             child: player.currentAudio!.maxThumbnail != null
-                                ? IsolatedCachedImage(
+                                ? CachedNetworkImage(
                                     imageUrl:
                                         player.currentAudio!.maxThumbnail!,
                                     cacheKey:
                                         "${player.currentAudio!.mediaKey}max",
                                     fit: BoxFit.fill,
-                                    placeholder: const FallbackAudioAvatar(),
+                                    placeholder:
+                                        (BuildContext context, String string) {
+                                      return const FallbackAudioAvatar();
+                                    },
                                     cacheManager:
                                         CachedAlbumImagesManager.instance,
                                   )
@@ -500,7 +504,7 @@ class FullscreenMediaControls extends ConsumerWidget {
                               color: Theme.of(context)
                                   .colorScheme
                                   .onPrimaryContainer
-                                  .withOpacity(0.5),
+                                  .withValues(alpha: 0.5),
                             ),
                           ),
 
@@ -518,7 +522,7 @@ class FullscreenMediaControls extends ConsumerWidget {
                                 color: Theme.of(context)
                                     .colorScheme
                                     .onPrimaryContainer
-                                    .withOpacity(0.5),
+                                    .withValues(alpha: 0.5),
                               ),
                             ),
                           ),
@@ -534,7 +538,7 @@ class FullscreenMediaControls extends ConsumerWidget {
                         color: Theme.of(context)
                             .colorScheme
                             .onPrimaryContainer
-                            .withOpacity(0.75),
+                            .withValues(alpha: 0.75),
                       ),
                     ),
                   ],
@@ -555,7 +559,7 @@ class FullscreenMediaControls extends ConsumerWidget {
                 globalBorderRadius,
               ),
               backgroundColor:
-                  Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
             ),
           ),
 
@@ -566,7 +570,7 @@ class FullscreenMediaControls extends ConsumerWidget {
               trackShape: CustomTrackShape(),
               overlayShape: SliderComponentShape.noOverlay,
               inactiveTrackColor:
-                  Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
             ),
             child: RepaintBoundary(
               child: StreamBuilder(
@@ -794,7 +798,7 @@ class FullscreenMediaControls extends ConsumerWidget {
                                 inactiveColor: Theme.of(context)
                                     .colorScheme
                                     .primary
-                                    .withOpacity(0.5),
+                                    .withValues(alpha: 0.5),
                                 onChanged: (double newVolume) async {
                                   if (isMobile) return;
 
@@ -817,12 +821,14 @@ class FullscreenMediaControls extends ConsumerWidget {
                                   (player.currentAudio!.hasLyrics ?? false)
                               ? Icons.lyrics
                               : Icons.lyrics_outlined,
-                          color:
-                              Theme.of(context).colorScheme.primary.withOpacity(
-                                    player.currentAudio!.hasLyrics ?? false
-                                        ? 1.0
-                                        : 0.5,
-                                  ),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withValues(
+                                alpha: player.currentAudio!.hasLyrics ?? false
+                                    ? 1.0
+                                    : 0.5,
+                              ),
                         ),
                       ),
                       Gap(

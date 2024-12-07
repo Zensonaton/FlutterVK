@@ -108,7 +108,7 @@ class MusicCategory extends HookWidget {
                             color: Theme.of(context)
                                 .colorScheme
                                 .secondary
-                                .withOpacity(0.75),
+                                .withValues(alpha: 0.75),
                           ),
                         ),
                       ),

@@ -1,5 +1,6 @@
 import "dart:io";
 
+import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
@@ -28,7 +29,6 @@ import "../../utils.dart";
 import "../../widgets/audio_player.dart";
 import "../../widgets/dialogs.dart";
 import "../../widgets/fallback_user_avatar.dart";
-import "../../widgets/isolated_cached_network_image.dart";
 import "../../widgets/tip_widget.dart";
 import "profile/dialogs.dart";
 
@@ -257,6 +257,8 @@ class ProfileAvatar extends ConsumerWidget {
     final l18n = ref.watch(l18nProvider);
     final user = ref.watch(userProvider);
 
+    final int cacheSize = 80 * MediaQuery.of(context).devicePixelRatio.toInt();
+
     void onLogoutPressed() => showDialog(
           context: context,
           builder: (context) => const ProfileLogoutExitDialog(),
@@ -266,14 +268,15 @@ class ProfileAvatar extends ConsumerWidget {
       children: [
         // Аватар пользователя, при наличии.
         if (user.photoMaxUrl != null)
-          IsolatedCachedImage(
+          CachedNetworkImage(
             imageUrl: user.photoMaxUrl!,
             cacheKey: "${user.id}400",
-            memCacheWidth: 80 * MediaQuery.of(context).devicePixelRatio.toInt(),
-            memCacheHeight:
-                80 * MediaQuery.of(context).devicePixelRatio.toInt(),
+            memCacheWidth: cacheSize,
+            memCacheHeight: cacheSize,
             cacheManager: CachedNetworkImagesManager.instance,
-            placeholder: const UserAvatarPlaceholder(),
+            placeholder: (BuildContext context, String string) {
+              return const UserAvatarPlaceholder();
+            },
             imageBuilder: (_, imageProvider) {
               return Container(
                 width: 80,
@@ -305,8 +308,10 @@ class ProfileAvatar extends ConsumerWidget {
             "@${user.domain}",
             style: Theme.of(context).textTheme.titleSmall!.copyWith(
                   fontWeight: FontWeight.w400,
-                  color:
-                      Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.5),
                 ),
             textAlign: TextAlign.center,
           ),

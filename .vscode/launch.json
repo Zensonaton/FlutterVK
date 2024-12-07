@@ -18,18 +18,6 @@
 			"type": "dart",
 			"flutterMode": "profile",
 			"args": [
-				"--cache-sksl",
-				"--purge-persistent-cache",
-				"--dart-define", "PRERELEASE=1"
-			]
-		},
-		{
-			"name": "Запустить в profile-режиме (impeller)",
-			"request": "launch",
-			"type": "dart",
-			"flutterMode": "profile",
-			"args": [
-				"--enable-impeller",
 				"--dart-define", "PRERELEASE=1"
 			]
 		},

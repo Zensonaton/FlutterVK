@@ -1,6 +1,7 @@
 import "dart:async";
 import "dart:ui";
 
+import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
@@ -27,7 +28,6 @@ import "../services/cache_manager.dart";
 import "../services/logger.dart";
 import "../utils.dart";
 import "../widgets/fading_list_view.dart";
-import "../widgets/isolated_cached_network_image.dart";
 import "fullscreen_player/desktop.dart";
 import "fullscreen_player/mobile.dart";
 
@@ -286,8 +286,8 @@ class TrackLyric extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color color = Theme.of(context).colorScheme.primary.withOpacity(
-          isActive && !isOld
+    Color color = Theme.of(context).colorScheme.primary.withValues(
+          alpha: isActive && !isOld
               ? 1.0
               : isOld
                   ? 0.75
@@ -497,7 +497,9 @@ class _TrackLyricsBlockState extends State<TrackLyricsBlock> {
     // Если включён таймер для защиты от скроллинга, то ничего не делаем.
     if (!lockAutoScroll &&
         scrollLock != null &&
-        DateTime.now().millisecondsSinceEpoch - scrollLock! <= 500) return;
+        DateTime.now().millisecondsSinceEpoch - scrollLock! <= 500) {
+      return;
+    }
 
     controller.scrollToIndex(
       currentLyricIndex ?? 0,
@@ -579,12 +581,14 @@ class BlurredBackgroundImage extends ConsumerWidget {
           sigmaX: 50,
           sigmaY: 50,
         ),
-        child: IsolatedCachedImage(
+        child: CachedNetworkImage(
           imageUrl: player.currentAudio!.maxThumbnail!,
           cacheKey: "${player.currentAudio!.mediaKey}max",
           fit: BoxFit.cover,
           cacheManager: CachedAlbumImagesManager.instance,
-          color: Colors.black.withOpacity(0.55),
+          color: Colors.black.withValues(
+            alpha: 0.55,
+          ),
           colorBlendMode: BlendMode.darken,
           memCacheWidth: MediaQuery.sizeOf(context).width.toInt(),
           memCacheHeight: MediaQuery.sizeOf(context).height.toInt(),

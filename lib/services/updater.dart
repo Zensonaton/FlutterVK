@@ -81,7 +81,9 @@ class Updater {
 
       // Если нам дано название файла, то проверяем, есть ли он в списке.
       if (!release.assets
-          .any((asset) => downloadFilenames.contains(asset.name))) continue;
+          .any((asset) => downloadFilenames.contains(asset.name))) {
+        continue;
+      }
 
       // Мы нашли подходящую версию!
       return release;

@@ -1,10 +1,5 @@
 import "dart:io";
 
-import "package:catcher_2/core/catcher_2.dart";
-import "package:catcher_2/handlers/console_handler.dart";
-import "package:catcher_2/handlers/file_handler.dart";
-import "package:catcher_2/mode/silent_report_mode.dart";
-import "package:catcher_2/model/catcher_2_options.dart";
 import "package:device_info_plus/device_info_plus.dart";
 import "package:dio/dio.dart";
 import "package:flutter/foundation.dart";
@@ -391,39 +386,14 @@ Future main() async {
       "Running Flutter VK v$appVersion ${isPrerelease ? "(pre-release)" : ""}",
     );
 
-    // Запускаем само приложение, а так же делаем глобальный обработчик ошибок.
-    Catcher2(
-      debugConfig: Catcher2Options(
-        SilentReportMode(),
-        [
-          ConsoleHandler(
-            enableDeviceParameters: false,
-            enableApplicationParameters: false,
-          ),
-        ],
-        logger: CatcherLogger(),
+    // Запускаем само приложение.
+    runApp(
+      UncontrolledProviderScope(
+        container: container,
+        child: const EagerInitialization(
+          app: FlutterVKApp(),
+        ),
       ),
-      releaseConfig: Catcher2Options(
-        SilentReportMode(),
-        [
-          ConsoleHandler(),
-          if (!kIsWeb)
-            FileHandler(
-              await logFilePath(),
-            ),
-        ],
-        logger: CatcherLogger(),
-      ),
-      runAppFunction: () {
-        runApp(
-          UncontrolledProviderScope(
-            container: container,
-            child: const EagerInitialization(
-              app: FlutterVKApp(),
-            ),
-          ),
-        );
-      },
     );
   } catch (error, stackTrace) {
     logger.f(

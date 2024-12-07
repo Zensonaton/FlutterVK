@@ -1,5 +1,6 @@
 import "dart:async";
 
+import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:gap/gap.dart";
@@ -22,7 +23,6 @@ import "../../utils.dart";
 import "../../widgets/audio_player.dart";
 import "../../widgets/dialogs.dart";
 import "../../widgets/fallback_audio_photo.dart";
-import "../../widgets/isolated_cached_network_image.dart";
 import "music/categories/by_vk_playlists.dart";
 import "music/categories/my_music.dart";
 import "music/categories/my_playlists.dart";
@@ -327,6 +327,7 @@ class AudioPlaylistWidget extends HookConsumerWidget {
     final isHovered = useState(false);
 
     final bool selectedAndPlaying = selected && currentlyPlaying;
+    final int cacheSize = MediaQuery.devicePixelRatioOf(context).round() * 200;
 
     return Tooltip(
       message: description ?? "",
@@ -370,16 +371,15 @@ class AudioPlaylistWidget extends HookConsumerWidget {
                         globalBorderRadius,
                       ),
                       child: backgroundUrl != null
-                          ? IsolatedCachedImage(
+                          ? CachedNetworkImage(
                               imageUrl: backgroundUrl!,
                               cacheKey: cacheKey,
-                              memCacheHeight:
-                                  (200 * MediaQuery.devicePixelRatioOf(context))
-                                      .round(),
-                              memCacheWidth:
-                                  (200 * MediaQuery.devicePixelRatioOf(context))
-                                      .round(),
-                              placeholder: const FallbackAudioPlaylistAvatar(),
+                              memCacheHeight: cacheSize,
+                              memCacheWidth: cacheSize,
+                              placeholder:
+                                  (BuildContext context, String string) {
+                                return const FallbackAudioPlaylistAvatar();
+                              },
                               cacheManager: CachedNetworkImagesManager.instance,
                             )
                           : const FallbackAudioPlaylistAvatar(),
@@ -455,7 +455,7 @@ class AudioPlaylistWidget extends HookConsumerWidget {
                           color: Theme.of(context)
                               .colorScheme
                               .surface
-                              .withOpacity(0.3),
+                              .withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(
                             globalBorderRadius,
                           ),
@@ -862,7 +862,7 @@ class HomeMusicPage extends HookConsumerWidget {
                                 SizedBox(
                                   width: 40,
                                   height: 40,
-                                  child: IsolatedCachedImage(
+                                  child: CachedNetworkImage(
                                     imageUrl: user.photoMaxUrl!,
                                     cacheKey: "${user.id}400",
                                     width: 40,

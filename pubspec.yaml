@@ -20,15 +20,14 @@ dependencies:
   awesome_dio_interceptor: ^1.2.0
   cached_network_image: ^3.3.1
   cancellation_token: ^2.0.1
-  catcher_2: ^1.2.6
   collection: ^1.17.2
   connectivity_plus: ^6.0.3
   crypto: ^3.0.3
-  device_info_plus: ^10.1.2
+  device_info_plus: ^11.1.1
   diacritic: ^0.1.5
   dio: ^5.5.0+1
   dio_http2_adapter: ^2.5.3
-  dio_smart_retry: ^6.0.0
+  dio_smart_retry: ^7.0.1
   discord_rpc: ^0.0.2
   dynamic_color: ^1.6.9
   file: ^7.0.0
@@ -39,7 +38,7 @@ dependencies:
   flutter_cache_manager: ^3.3.1
   flutter_hooks: ^0.20.5
   flutter_inappwebview: ^6.0.0
-  flutter_local_notifications: ^17.2.1+1
+  flutter_local_notifications: ^18.0.1
   flutter_localizations:
     sdk: flutter
   flutter_markdown: ^0.7.1
@@ -95,7 +94,7 @@ dependency_overrides:
 dev_dependencies:
   build_runner: ^2.4.11
   custom_lint: ^0.5.11
-  flutter_lints: ^4.0.0
+  flutter_lints: ^5.0.0
   isar_generator: ^3.1.0+1
   json_serializable: ^6.7.1
   riverpod_generator: ^2.3.3

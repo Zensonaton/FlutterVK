@@ -1,3 +1,4 @@
+import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
 import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
@@ -13,7 +14,6 @@ import "../../../../provider/preferences.dart";
 import "../../../../provider/user.dart";
 import "../../../../services/logger.dart";
 import "../../../../utils.dart";
-import "../../../../widgets/isolated_cached_network_image.dart";
 import "../../../../widgets/music_category.dart";
 import "../playlist.dart";
 
@@ -31,7 +31,10 @@ class FallbackMixPlaylistWidget extends StatelessWidget {
     return Container(
       width: double.infinity,
       height: 250,
-      color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.25),
+      color: Theme.of(context)
+          .colorScheme
+          .primaryContainer
+          .withValues(alpha: 0.25),
     );
   }
 }
@@ -216,6 +219,8 @@ class MoodPlaylistWidget extends StatelessWidget {
     }
 
     final bool selectedAndPlaying = selected && currentlyPlaying;
+    final int cacheWidth = MediaQuery.devicePixelRatioOf(context).round() * 200;
+    final int cacheHeight = MediaQuery.devicePixelRatioOf(context).round() * 50;
 
     return AnimatedContainer(
       width: 200,
@@ -256,18 +261,14 @@ class MoodPlaylistWidget extends StatelessWidget {
                   globalBorderRadius,
                 ),
                 child: backgroundUrl != null
-                    ? IsolatedCachedImage(
+                    ? CachedNetworkImage(
                         imageUrl: backgroundUrl!,
                         cacheKey: cacheKey,
                         fit: BoxFit.fill,
                         width: 200,
                         height: 50,
-                        memCacheWidth:
-                            (200 * MediaQuery.devicePixelRatioOf(context))
-                                .round(),
-                        memCacheHeight:
-                            (50 * MediaQuery.devicePixelRatioOf(context))
-                                .round(),
+                        memCacheWidth: cacheWidth,
+                        memCacheHeight: cacheHeight,
                       )
                     : const SizedBox(
                         width: 200,
@@ -284,7 +285,7 @@ class MoodPlaylistWidget extends StatelessWidget {
                     ),
                     gradient: LinearGradient(
                       colors: [
-                        Colors.black.withOpacity(0.25),
+                        Colors.black.withValues(alpha: 0.25),
                         Colors.transparent,
                       ],
                     ),

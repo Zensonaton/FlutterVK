@@ -1,5 +1,6 @@
 import "dart:ui";
 
+import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
@@ -21,7 +22,6 @@ import "../utils.dart";
 import "audio_player.dart";
 import "dialogs.dart";
 import "fallback_audio_photo.dart";
-import "isolated_cached_network_image.dart";
 import "loading_button.dart";
 
 /// Создаёт виджет типа [AudioTrackTile] для отображения в [ListView.builder] или подобном.
@@ -226,7 +226,7 @@ class AudioTrackImage extends HookWidget {
         );
       }
 
-      return IsolatedCachedImage(
+      return CachedNetworkImage(
         imageUrl: imageUrl!,
         cacheKey: cacheKey,
         width: imageSize,
@@ -234,7 +234,9 @@ class AudioTrackImage extends HookWidget {
         memCacheWidth: memorySize,
         memCacheHeight: memorySize,
         fit: BoxFit.cover,
-        placeholder: placeholder,
+        placeholder: (BuildContext context, String string) {
+          return placeholder;
+        },
         cacheManager: CachedAlbumImagesManager.instance,
       );
     }
@@ -252,7 +254,7 @@ class AudioTrackImage extends HookWidget {
           child: isLoading || isSelected || isHovered || !isAvailable
               ? Container(
                   foregroundDecoration: BoxDecoration(
-                    color: scheme.shadow.withOpacity(0.5),
+                    color: scheme.shadow.withValues(alpha: 0.5),
                   ),
                   child: (isLoading && isSelected)
                       ? ImageFiltered(
@@ -337,7 +339,7 @@ class AudioTrackTitle extends ConsumerWidget {
     final ColorScheme scheme = Theme.of(context).colorScheme;
     final Color primaryTextColor =
         isSelected ? scheme.primary : scheme.onSurface;
-    final Color primaryIconColor = primaryTextColor.withOpacity(0.75);
+    final Color primaryIconColor = primaryTextColor.withValues(alpha: 0.75);
 
     final widget = Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -347,9 +349,11 @@ class AudioTrackTitle extends ConsumerWidget {
         TrackTitleWithSubtitle(
           title: title,
           subtitle: subtitle,
-          textColor: primaryTextColor.withOpacity(isAvailable ? 1.0 : 0.5),
+          textColor:
+              primaryTextColor.withValues(alpha: isAvailable ? 1.0 : 0.5),
           isExplicit: isExplicit,
-          explicitColor: primaryIconColor.withOpacity(isAvailable ? 0.75 : 0.3),
+          explicitColor:
+              primaryIconColor.withValues(alpha: isAvailable ? 0.75 : 0.3),
           allowTextSelection: allowTextSelection,
         ),
 
@@ -358,7 +362,7 @@ class AudioTrackTitle extends ConsumerWidget {
           artist,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
-            color: primaryTextColor.withOpacity(isAvailable ? 0.9 : 0.5),
+            color: primaryTextColor.withValues(alpha: isAvailable ? 0.9 : 0.5),
           ),
         ),
       ],
@@ -439,7 +443,7 @@ class AudioTrackOtherInfoIcons extends ConsumerWidget {
           data: Theme.of(context).copyWith(
             iconTheme: IconThemeData(
               size: dense ? 16 : 18,
-              color: color.withOpacity(0.75),
+              color: color.withValues(alpha: 0.75),
             ),
           ),
           child: Wrap(
@@ -538,7 +542,7 @@ class AudioTrackOtherInfo extends ConsumerWidget {
           Text(
             duration!,
             style: TextStyle(
-              color: color.withOpacity(0.75),
+              color: color.withValues(alpha: 0.75),
             ),
           ),
 
@@ -702,8 +706,8 @@ class AudioTrackTile extends HookConsumerWidget {
                 gradient: isSelected && glowIfSelected
                     ? LinearGradient(
                         colors: [
-                          scheme.primary.withOpacity(
-                            0.1,
+                          scheme.primary.withValues(
+                            alpha: 0.1,
                           ),
                           Colors.transparent,
                         ],

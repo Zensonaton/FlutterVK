@@ -1,3 +1,4 @@
+import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
@@ -15,7 +16,6 @@ import "../../../services/download_manager.dart";
 import "../../../utils.dart";
 import "../../../widgets/audio_player.dart";
 import "../../../widgets/fallback_audio_photo.dart";
-import "../../../widgets/isolated_cached_network_image.dart";
 
 /// Виджет, отображаемый отдельный загружающийся элемент, например, плейлист.
 class DownloadItemWidget extends HookConsumerWidget {
@@ -66,8 +66,8 @@ class DownloadItemWidget extends HookConsumerWidget {
         gradient: isCurrent
             ? LinearGradient(
                 colors: [
-                  scheme.primary.withOpacity(
-                    0.1,
+                  scheme.primary.withValues(
+                    alpha: 0.1,
                   ),
                   Colors.transparent,
                 ],
@@ -101,7 +101,7 @@ class DownloadItemWidget extends HookConsumerWidget {
                   Text(
                     l18n.downloadManagerTotalTaskItems(allTasks.length),
                     style: TextStyle(
-                      color: scheme.onSurfaceVariant.withOpacity(0.8),
+                      color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
                     ),
                   ),
               ],
@@ -201,14 +201,16 @@ class DownloadItemIconWidget extends StatelessWidget {
           globalBorderRadius,
         ),
         child: playlist.photo != null
-            ? IsolatedCachedImage(
+            ? CachedNetworkImage(
                 imageUrl: playlist.photo!.photo600,
                 cacheKey: "${playlist.mediaKey}600",
                 width: 50,
                 height: 50,
                 memCacheHeight: memCacheSize,
                 memCacheWidth: memCacheSize,
-                placeholder: const FallbackAudioAvatar(),
+                placeholder: (BuildContext context, String string) {
+                  return const FallbackAudioAvatar();
+                },
                 cacheManager: CachedNetworkImagesManager.instance,
               )
             : FallbackAudioPlaylistAvatar(
@@ -290,8 +292,10 @@ class DownloadCategory extends ConsumerWidget {
               Text(
                 tasks.length.toString(),
                 style: TextStyle(
-                  color:
-                      Theme.of(context).colorScheme.secondary.withOpacity(0.75),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .secondary
+                      .withValues(alpha: 0.75),
                 ),
               ),
           ],
@@ -315,7 +319,7 @@ class DownloadCategory extends ConsumerWidget {
               color: Theme.of(context)
                   .colorScheme
                   .onSurfaceVariant
-                  .withOpacity(0.8),
+                  .withValues(alpha: 0.8),
             ),
           ),
       ],

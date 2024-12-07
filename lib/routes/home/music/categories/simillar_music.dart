@@ -117,7 +117,7 @@ class SimillarMusicPlaylistWidget extends HookConsumerWidget {
                       gradient: LinearGradient(
                         colors: [
                           topColor,
-                          topColor.withOpacity(0.8),
+                          topColor.withValues(alpha: 0.8),
                         ],
                         begin: Alignment.bottomCenter,
                         end: Alignment.topCenter,
@@ -230,7 +230,6 @@ class SimillarMusicPlaylistWidget extends HookConsumerWidget {
                 isSelected: player.playing && audio == player.currentAudio,
                 isPlaying: player.loaded && player.playing,
                 isLoading: player.buffering && audio == player.currentAudio,
-                isAvailable: true,
                 showDuration: false,
               ),
             ),

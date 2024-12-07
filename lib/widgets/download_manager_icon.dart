@@ -223,7 +223,8 @@ class DownloadManagerIconWidget extends HookConsumerWidget {
                         maxLines: 1,
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: scheme.onSecondaryContainer.withOpacity(0.75),
+                          color: scheme.onSecondaryContainer
+                              .withValues(alpha: 0.75),
                         ),
                       ),
                     ),

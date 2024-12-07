@@ -2,6 +2,7 @@ import "dart:async";
 import "dart:ui";
 
 import "package:animations/animations.dart";
+import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
@@ -23,13 +24,13 @@ import "../provider/preferences.dart";
 import "../provider/user.dart";
 import "../routes/fullscreen_player.dart";
 import "../routes/home/music.dart";
+import "../services/cache_manager.dart";
 import "../services/image_to_color_scheme.dart";
 import "../services/logger.dart";
 import "../utils.dart";
 import "audio_track.dart";
 import "dialogs.dart";
 import "fallback_audio_photo.dart";
-import "isolated_cached_network_image.dart";
 import "loading_button.dart";
 import "responsive_slider.dart";
 import "scrollable_slider.dart";
@@ -98,7 +99,7 @@ class TrackTitleWithSubtitle extends StatelessWidget {
               text: " ($subtitle)",
               style: TextStyle(
                 fontWeight: FontWeight.w300,
-                color: textColor.withOpacity(0.75),
+                color: textColor.withValues(alpha: 0.75),
               ),
             ),
 
@@ -171,7 +172,7 @@ class TrackTitleAndArtist extends StatelessWidget {
             subtitle: subtitle,
             textColor: scheme.onPrimaryContainer,
             isExplicit: explicit,
-            explicitColor: scheme.onPrimaryContainer.withOpacity(0.75),
+            explicitColor: scheme.onPrimaryContainer.withValues(alpha: 0.75),
             allowTextSelection: true,
             onTitleTap: onTitleTap,
           ),
@@ -183,7 +184,7 @@ class TrackTitleAndArtist extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
             fontSize: 12,
-            color: scheme.onPrimaryContainer.withOpacity(0.9),
+            color: scheme.onPrimaryContainer.withValues(alpha: 0.9),
           ),
         ),
       ],
@@ -255,8 +256,10 @@ class _LeftSideThumbnail extends ConsumerWidget {
                   child: AnimatedSwitcher(
                     duration: MusicPlayerWidget.switchAnimationDuration,
                     child: thumbnailUrl != null
-                        ? IsolatedCachedImage(
-                            key: ValueKey(thumbnailUrl),
+                        ? CachedNetworkImage(
+                            key: ValueKey(
+                              thumbnailUrl,
+                            ),
                             cacheKey: cacheKey,
                             imageUrl: thumbnailUrl,
                             width: thumbnailSize,
@@ -264,13 +267,21 @@ class _LeftSideThumbnail extends ConsumerWidget {
                             memCacheHeight: memCacheSize,
                             memCacheWidth: memCacheSize,
                             fit: BoxFit.cover,
-                            placeholder: FallbackAudioAvatar(
-                              width: thumbnailSize,
-                              height: thumbnailSize,
-                            ),
+                            fadeInDuration: Duration.zero,
+                            fadeOutDuration: Duration.zero,
+                            placeholderFadeInDuration: Duration.zero,
+                            cacheManager: CachedAlbumImagesManager.instance,
+                            placeholder: (BuildContext context, String string) {
+                              return FallbackAudioAvatar(
+                                width: thumbnailSize,
+                                height: thumbnailSize,
+                              );
+                            },
                           )
                         : FallbackAudioAvatar(
-                            key: const ValueKey(null),
+                            key: const ValueKey(
+                              null,
+                            ),
                             width: thumbnailSize,
                             height: thumbnailSize,
                           ),
@@ -869,7 +880,7 @@ class NextTrackSpoilerWidget extends HookConsumerWidget {
                 TextSpan(
                   text: " • ",
                   style: TextStyle(
-                    color: scheme.onSurface.withOpacity(0.8),
+                    color: scheme.onSurface.withValues(alpha: 0.8),
                   ),
                 ),
 
@@ -883,7 +894,7 @@ class NextTrackSpoilerWidget extends HookConsumerWidget {
                   TextSpan(
                     text: " ($subtitle)",
                     style: TextStyle(
-                      color: scheme.primary.withOpacity(0.8),
+                      color: scheme.primary.withValues(alpha: 0.8),
                       fontWeight: FontWeight.w300,
                     ),
                   ),
@@ -981,7 +992,9 @@ class _MusicMiddleSide extends HookConsumerWidget {
             // Единственное, когда нам разрешено менять значение, это когда
             // текущее значение меньше, чем значение воспроизведения.
             if (positionAnimation.isAnimating &&
-                positionAnimation.value > player.progress) return;
+                positionAnimation.value > player.progress) {
+              return;
+            }
 
             // Если анимация уже идёт, то останавливаем её.
             if (positionAnimation.isAnimating) {
@@ -1048,7 +1061,8 @@ class _MusicMiddleSide extends HookConsumerWidget {
                 overlayShape: SliderComponentShape.noOverlay,
                 activeTrackColor: scheme.onPrimaryContainer,
                 thumbColor: scheme.onPrimaryContainer,
-                inactiveTrackColor: scheme.onPrimaryContainer.withOpacity(0.5),
+                inactiveTrackColor:
+                    scheme.onPrimaryContainer.withValues(alpha: 0.5),
               ),
               child: ResponsiveSlider(
                 value: progress,
@@ -1083,7 +1097,7 @@ class _MusicMiddleSide extends HookConsumerWidget {
                         positionString,
                         style: TextStyle(
                           color: scheme.onPrimaryContainer
-                              .withOpacity(isPlaying ? 1.0 : 0.75),
+                              .withValues(alpha: isPlaying ? 1.0 : 0.75),
                         ),
                       ),
                     ),
@@ -1104,7 +1118,7 @@ class _MusicMiddleSide extends HookConsumerWidget {
                     durationString,
                     style: TextStyle(
                       color: scheme.onPrimaryContainer
-                          .withOpacity(isPlaying ? 1.0 : 0.75),
+                          .withValues(alpha: isPlaying ? 1.0 : 0.75),
                     ),
                   ),
                 ),
@@ -1264,7 +1278,8 @@ class _MusicRightSide extends HookConsumerWidget {
                 child: ScrollableSlider(
                   value: volume,
                   activeColor: scheme.onPrimaryContainer,
-                  inactiveColor: scheme.onPrimaryContainer.withOpacity(0.5),
+                  inactiveColor:
+                      scheme.onPrimaryContainer.withValues(alpha: 0.5),
                   onChanged: (double newVolume) {
                     if (isMobile) return;
 
@@ -1359,10 +1374,10 @@ class MusicPlayerBackgroundWidget extends HookConsumerWidget {
         }
 
         // Если вот-вот начнётся воспроизведение следующего трека, то плавно переходим к его цвету.
-        if (clampedProgress > 0.0) {
+        if (nextScheme != null && clampedProgress > 0.0) {
           baseColor = Color.lerp(
             baseColor,
-            nextScheme?.primaryContainer ?? baseColor,
+            nextScheme.primaryContainer,
             clampedProgress,
           )!;
         }
@@ -1431,8 +1446,8 @@ class BottomMusicProgressBar extends HookConsumerWidget {
     final animatedProgress = useValueListenable(progressAnimation);
 
     final scheme = Theme.of(context).colorScheme;
-    final color = scheme.onPrimaryContainer.withOpacity(
-      isPlaying ? 1 : 0.5,
+    final color = scheme.onPrimaryContainer.withValues(
+      alpha: isPlaying ? 1 : 0.5,
     );
 
     final mobileLayout = isMobileLayout(context);
@@ -1516,7 +1531,9 @@ class _MusicContents extends ConsumerWidget {
           ref,
           context,
           player.currentAudio!,
-        )) return;
+        )) {
+          return;
+        }
       }
 
       try {

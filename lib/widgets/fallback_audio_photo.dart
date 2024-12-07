@@ -25,8 +25,10 @@ class FallbackAudioAvatar extends StatelessWidget {
         child: Skeleton.keep(
           child: Icon(
             Icons.music_note,
-            color:
-                Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
+            color: Theme.of(context)
+                .colorScheme
+                .onSurfaceVariant
+                .withValues(alpha: 0.5),
           ),
         ),
       ),
@@ -72,8 +74,10 @@ class FallbackAudioPlaylistAvatar extends StatelessWidget {
         child: Skeleton.keep(
           child: Icon(
             favoritesPlaylist ? Icons.favorite : Icons.queue_music,
-            color:
-                Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
+            color: Theme.of(context)
+                .colorScheme
+                .onSurfaceVariant
+                .withValues(alpha: 0.5),
             size: size > 50 ? 56 : null,
           ),
         ),

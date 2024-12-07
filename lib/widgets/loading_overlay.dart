@@ -70,7 +70,7 @@ class LoadingOverlay extends StatelessWidget {
           children: [
             child!,
             Container(
-              color: Theme.of(context).colorScheme.scrim.withOpacity(0.5),
+              color: Theme.of(context).colorScheme.scrim.withValues(alpha: 0.5),
               child: Center(
                 child: FutureBuilder(
                   future: Future.delayed(delay ?? Duration.zero),

@@ -35,24 +35,6 @@ extension HexColor on Color {
       ),
     );
   }
-
-  /// Конвертирует данный объект [Color] в строку Hex-цвета.
-  ///
-  /// Если [leadingHashSign] правдив, то данный метод добавит символ хэша (`#`).
-  String toHex({
-    bool leadingHashSign = true,
-  }) {
-    final String a = alpha.toRadixString(16).padLeft(2, "0");
-    final String r = red.toRadixString(16).padLeft(2, "0");
-    final String g = green.toRadixString(16).padLeft(2, "0");
-    final String b = blue.toRadixString(16).padLeft(2, "0");
-
-    if (leadingHashSign) {
-      return "#$a$r$g$b";
-    }
-
-    return "$a$r$g$b";
-  }
 }
 
 extension ColorBrightness on Color {
@@ -69,24 +51,20 @@ extension ColorBrightness on Color {
 
     factor = 1.0 - factor;
 
-    final int r = max(
-      0,
-      (red * factor).round(),
-    );
-    final int g = max(
-      0,
-      (green * factor).round(),
-    );
-    final int b = max(
-      0,
-      (blue * factor).round(),
-    );
-
     return Color.fromARGB(
-      alpha,
-      r,
-      g,
-      b,
+      (a * 255).toInt(),
+      max(
+        0,
+        (r * factor * 255).toInt(),
+      ),
+      max(
+        0,
+        (g * factor * 255).toInt(),
+      ),
+      max(
+        0,
+        (b * factor * 255).toInt(),
+      ),
     );
   }
 
@@ -103,24 +81,20 @@ extension ColorBrightness on Color {
 
     factor = 1.0 + factor;
 
-    final int r = min(
-      255,
-      (red * factor).round(),
-    );
-    final int g = min(
-      255,
-      (green * factor).round(),
-    );
-    final int b = min(
-      255,
-      (blue * factor).round(),
-    );
-
     return Color.fromARGB(
-      alpha,
-      r,
-      g,
-      b,
+      (a * 255).toInt(),
+      min(
+        255,
+        (r * factor * 255).toInt(),
+      ),
+      min(
+        255,
+        (g * factor * 255).toInt(),
+      ),
+      min(
+        255,
+        (b * factor * 255).toInt(),
+      ),
     );
   }
 }

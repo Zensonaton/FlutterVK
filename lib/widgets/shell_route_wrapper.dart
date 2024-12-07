@@ -198,7 +198,9 @@ class ShellRouteWrapper extends HookConsumerWidget {
 
     // Проверяем, есть ли разрешение на обновления, а так же работу интернета.
     if (preferences.updatePolicy == UpdatePolicy.disabled ||
-        !connectivityManager.hasConnection) return;
+        !connectivityManager.hasConnection) {
+      return;
+    }
 
     // Проверяем на наличие обновлений.
     if (context.mounted) {
@@ -396,7 +398,9 @@ class ShellRouteWrapper extends HookConsumerWidget {
 
             if (index == null ||
                 !player.loaded ||
-                player.currentPlaylist?.type != PlaylistType.audioMix) return;
+                player.currentPlaylist?.type != PlaylistType.audioMix) {
+              return;
+            }
 
             final int playlistItemCount = player.currentPlaylist!.count ?? 0;
             final int remainingTracks = playlistItemCount - index;

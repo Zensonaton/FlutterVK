@@ -1,5 +1,6 @@
 import "dart:ui";
 
+import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:gap/gap.dart";
@@ -20,7 +21,6 @@ import "../../services/logger.dart";
 import "../../utils.dart";
 import "../../widgets/dialogs.dart";
 import "../../widgets/fallback_audio_photo.dart";
-import "../../widgets/isolated_cached_network_image.dart";
 import "../../widgets/loading_button.dart";
 import "../../widgets/responsive_slider.dart";
 import "../fullscreen_player.dart";
@@ -60,8 +60,10 @@ class TopFullscreenControls extends ConsumerWidget {
                 l18n.music_fullscreenPlaylistNameTitle,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  color:
-                      Theme.of(context).colorScheme.onSurface.withOpacity(0.75),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.75),
                 ),
               ),
               Text(
@@ -138,7 +140,7 @@ class _PlayerImageWidget extends ConsumerWidget {
                   color: (audio.thumbnail != null
                           ? schemeInfo?.frequentColor
                           : null) ??
-                      Colors.blueGrey.withOpacity(0.25),
+                      Colors.blueGrey.withValues(alpha: 0.25),
                   blurStyle: BlurStyle.outer,
                 ),
             ],
@@ -148,13 +150,15 @@ class _PlayerImageWidget extends ConsumerWidget {
               globalBorderRadius,
             ),
             child: audio.maxThumbnail != null
-                ? IsolatedCachedImage(
+                ? CachedNetworkImage(
                     imageUrl: audio.maxThumbnail!,
                     cacheKey: "${audio.mediaKey}max",
                     width: _playerImageSize,
                     height: _playerImageSize,
                     fit: BoxFit.fill,
-                    placeholder: const FallbackAudioAvatar(),
+                    placeholder: (BuildContext context, String string) {
+                      return const FallbackAudioAvatar();
+                    },
                     cacheManager: CachedAlbumImagesManager.instance,
                   )
                 : const FallbackAudioAvatar(
@@ -473,7 +477,7 @@ class FullscreenMediaControls extends ConsumerWidget {
                               color: Theme.of(context)
                                   .colorScheme
                                   .onPrimaryContainer
-                                  .withOpacity(0.5),
+                                  .withValues(alpha: 0.5),
                               size: 12,
                             ),
                           ),
@@ -493,7 +497,7 @@ class FullscreenMediaControls extends ConsumerWidget {
                                   color: Theme.of(context)
                                       .colorScheme
                                       .onPrimaryContainer
-                                      .withOpacity(0.5),
+                                      .withValues(alpha: 0.5),
                                 ),
                               ),
                             ),
@@ -509,7 +513,7 @@ class FullscreenMediaControls extends ConsumerWidget {
                         color: Theme.of(context)
                             .colorScheme
                             .onPrimaryContainer
-                            .withOpacity(0.75),
+                            .withValues(alpha: 0.75),
                       ),
                     ),
                   ],
@@ -532,8 +536,8 @@ class FullscreenMediaControls extends ConsumerWidget {
                                 player.currentAudio!.lyrics != null)
                         ? Icons.lyrics
                         : Icons.lyrics_outlined,
-                    color: Theme.of(context).colorScheme.primary.withOpacity(
-                          ((player.currentAudio!.hasLyrics ?? false) ||
+                    color: Theme.of(context).colorScheme.primary.withValues(
+                          alpha: ((player.currentAudio!.hasLyrics ?? false) ||
                                   player.currentAudio!.lyrics != null)
                               ? 1.0
                               : 0.5,
@@ -567,7 +571,7 @@ class FullscreenMediaControls extends ConsumerWidget {
                 globalBorderRadius,
               ),
               backgroundColor:
-                  Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
             ),
           ),
 
@@ -582,8 +586,10 @@ class FullscreenMediaControls extends ConsumerWidget {
                 trackShape: CustomTrackShape(),
                 overlayShape: SliderComponentShape.noOverlay,
                 activeTrackColor: Theme.of(context).colorScheme.primary,
-                inactiveTrackColor:
-                    Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                inactiveTrackColor: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withValues(alpha: 0.5),
               ),
               child: RepaintBoundary(
                 child: StreamBuilder<Duration>(

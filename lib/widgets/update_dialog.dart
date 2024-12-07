@@ -138,17 +138,17 @@ class UpdateAvailableDialog extends ConsumerWidget {
                         ),
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: scheme.onSurface.withOpacity(0.75),
+                          color: scheme.onSurface.withValues(alpha: 0.75),
                         ),
                         tags: {
                           "arrow": StyledTextIconTag(
                             Icons.arrow_right,
-                            color: scheme.onSurface.withOpacity(0.75),
+                            color: scheme.onSurface.withValues(alpha: 0.75),
                             size: 18,
                           ),
                           "debug": StyledTextIconTag(
                             Icons.bug_report,
-                            color: scheme.onSurface.withOpacity(0.75),
+                            color: scheme.onSurface.withValues(alpha: 0.75),
                             size: 18,
                           ),
                         },

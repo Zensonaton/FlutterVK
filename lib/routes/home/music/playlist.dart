@@ -2,6 +2,7 @@ import "dart:async";
 import "dart:math";
 import "dart:ui";
 
+import "package:cached_network_image/cached_network_image.dart";
 import "package:collection/collection.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
@@ -38,7 +39,6 @@ import "../../../widgets/audio_player.dart";
 import "../../../widgets/audio_track.dart";
 import "../../../widgets/dialogs.dart";
 import "../../../widgets/fallback_audio_photo.dart";
-import "../../../widgets/isolated_cached_network_image.dart";
 import "../../../widgets/loading_button.dart";
 import "categories/realtime_playlists.dart";
 
@@ -460,7 +460,7 @@ class MobilePlaylistInfoWidget extends ConsumerWidget {
                   overflow: TextOverflow.ellipsis,
                   maxLines: 2,
                   style: TextStyle(
-                    color: safeScheme.onSurface.withOpacity(0.9),
+                    color: safeScheme.onSurface.withValues(alpha: 0.9),
                   ),
                 ),
                 const Gap(4),
@@ -821,7 +821,7 @@ class AppBarPlaylistImageWidget extends StatelessWidget {
           globalBorderRadius,
         ),
         child: imageUrl != null
-            ? IsolatedCachedImage(
+            ? CachedNetworkImage(
                 imageUrl: imageUrl,
                 cacheKey: "${playlist.mediaKey}1200",
                 fit: BoxFit.cover,
@@ -829,7 +829,9 @@ class AppBarPlaylistImageWidget extends StatelessWidget {
                 height: size,
                 memCacheHeight: cacheSize,
                 memCacheWidth: cacheSize,
-                placeholder: fallbackWidget,
+                placeholder: (BuildContext context, String string) {
+                  return fallbackWidget;
+                },
                 cacheManager: CachedNetworkImagesManager.instance,
               )
             : fallbackWidget,
@@ -1127,8 +1129,8 @@ class AppBarWidget extends HookConsumerWidget {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            scheme.primary.darken(0.5).withOpacity(0.75),
-                            scheme.primary.darken(0.5).withOpacity(0.3),
+                            scheme.primary.darken(0.5).withValues(alpha: 0.75),
+                            scheme.primary.darken(0.5).withValues(alpha: 0.3),
                           ],
                         )
                       : null,
@@ -1206,7 +1208,7 @@ class BackgroundGradientWidget extends HookConsumerWidget {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      scheme!.primary.withOpacity(0.5),
+                      scheme!.primary.withValues(alpha: 0.5),
                       Colors.transparent,
                     ],
                     stops: const [0.5, 1.0],
@@ -1271,7 +1273,7 @@ class PlaylistTypeDescriptionWidget extends HookConsumerWidget {
         child: Text.rich(
           TextSpan(
             style: TextStyle(
-              color: scheme.onSurface.withOpacity(0.8),
+              color: scheme.onSurface.withValues(alpha: 0.8),
             ),
             children: [
               // Тип плейлиста.
@@ -1292,7 +1294,7 @@ class PlaylistTypeDescriptionWidget extends HookConsumerWidget {
                       playlist.count ?? 50,
                     ),
                     style: TextStyle(
-                      color: scheme.onSurface.withOpacity(0.8),
+                      color: scheme.onSurface.withValues(alpha: 0.8),
                     ),
                   ),
                 ),
@@ -1309,7 +1311,7 @@ class PlaylistTypeDescriptionWidget extends HookConsumerWidget {
                   child: Text(
                     durationString,
                     style: TextStyle(
-                      color: scheme.onSurface.withOpacity(0.8),
+                      color: scheme.onSurface.withValues(alpha: 0.8),
                     ),
                   ),
                 ),
@@ -1425,7 +1427,7 @@ class DesktopAppBarWidget extends HookConsumerWidget {
                                   color: Theme.of(context)
                                       .colorScheme
                                       .onSurface
-                                      .withOpacity(0.9),
+                                      .withValues(alpha: 0.9),
                                 ),
                               ),
                             if (playlist.description != null) const Gap(4),
@@ -1613,8 +1615,8 @@ class DesktopPlaylistControlsWidget extends HookConsumerWidget {
                             prefixIconColor: Theme.of(context)
                                 .colorScheme
                                 .onSurface
-                                .withOpacity(
-                                  hasTracksLoaded ? 1.0 : 0.5,
+                                .withValues(
+                                  alpha: hasTracksLoaded ? 1.0 : 0.5,
                                 ),
                             prefixIcon: const Icon(
                               Icons.search,
