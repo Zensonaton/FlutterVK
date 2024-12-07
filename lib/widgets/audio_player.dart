@@ -89,6 +89,7 @@ class TrackTitleWithSubtitle extends StatelessWidget {
               child: Text(
                 title,
                 style: titleStyle,
+                overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),
             ),
@@ -1437,11 +1438,23 @@ class BottomMusicProgressBar extends HookConsumerWidget {
 class _MusicContents extends ConsumerWidget {
   static final AppLogger logger = getLogger("MusicPlayerContentsWidget");
 
+  /// Минимальный размер центрального блока ([_MiddleControls]) при Desktop Layout.
+  static const double minMiddleBlockSize = 100;
+
+  /// Максимальный размер центрального блока ([_MiddleControls]) при Desktop Layout.
+  static const double maxMiddleBlockSize = 650;
+
   /// Внутренний padding для содержимого плеера при Mobile Layout.
   static const double mobilePadding = 8;
 
   /// Внутренний padding для содержимого плеера при Desktop Layout.
   static const double desktopPadding = 12;
+
+  /// Padding для [_MiddleControls] (центральный блок), что бы он не прижимался к левой и правой части плеера, отображаемый в Desktop Layout.
+  static const double gapSizeDesktop = 8;
+
+  /// Debug-опция, чтобы отобразить различные разделы плеера в разных цветах для отладки.
+  static bool debugSections = false;
 
   const _MusicContents();
 
@@ -1465,6 +1478,7 @@ class _MusicContents extends ConsumerWidget {
 
     double leftBlockSize = 0;
     double? middleBlockSize;
+    double? middleBlockPadding;
     double rightBlockSize = 0;
 
     if (mobileLayout) {
@@ -1474,9 +1488,14 @@ class _MusicContents extends ConsumerWidget {
       leftBlockSize = freeSpace - rightBlockSize;
     } else {
       middleBlockSize = clampDouble(
-        freeSpace / 2,
-        100,
-        650,
+        freeSpace / 2 + gapSizeDesktop * 2,
+        minMiddleBlockSize,
+        maxMiddleBlockSize,
+      );
+      middleBlockPadding = clampDouble(
+        (maxMiddleBlockSize - middleBlockSize) / 2,
+        0,
+        gapSizeDesktop * 2,
       );
       leftBlockSize = rightBlockSize = (freeSpace - middleBlockSize) / 2;
     }
@@ -1558,8 +1577,9 @@ class _MusicContents extends ConsumerWidget {
               children: [
                 // Левая часть.
                 RepaintBoundary(
-                  child: SizedBox(
+                  child: Container(
                     width: leftBlockSize,
+                    color: debugSections ? Colors.red : null,
                     child: _MusicLeftSide(
                       onLike: onLikeTap,
                       onDislike: onDislikeTap,
@@ -1569,17 +1589,22 @@ class _MusicContents extends ConsumerWidget {
 
                 // Правая (при Desktop Layout).
                 if (!mobileLayout)
-                  RepaintBoundary(
-                    child: SizedBox(
-                      width: middleBlockSize!,
-                      child: const _MusicMiddleSide(),
+                  Container(
+                    width: middleBlockSize!,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: middleBlockPadding!,
+                    ),
+                    color: debugSections ? Colors.green : null,
+                    child: const RepaintBoundary(
+                      child: _MusicMiddleSide(),
                     ),
                   ),
 
                 // Правая часть.
-                RepaintBoundary(
-                  child: SizedBox(
-                    width: rightBlockSize,
+                Container(
+                  width: rightBlockSize,
+                  color: debugSections ? Colors.blue : null,
+                  child: RepaintBoundary(
                     child: _MusicRightSide(
                       onLike: onLikeTap,
                       onDislike: onDislikeTap,
