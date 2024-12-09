@@ -20,6 +20,7 @@
 - Переход на новую версию Innosetup.
 - Анимация загрузки, паузы/воспроизведения для VK Mix.
 - Padding для центрального блока мини-плеера для Desktop Layout.
+- `enableOnBackInvokedCallback` для Android OS.
 
 ## Исправления
 
