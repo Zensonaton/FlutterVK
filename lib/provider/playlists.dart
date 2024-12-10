@@ -877,17 +877,11 @@ class Playlists extends _$Playlists {
             .toList() ??
         [];
 
-    final Stopwatch watch = Stopwatch()..start();
-
     final APIMassAudioGetResponse response = await api.audio.getWithAlbums(
       playlist.ownerID,
       albumID: playlist.id,
       accessKey: playlist.accessKey,
       audiosWithKnownAlbums: existingWithAlbums,
-    );
-
-    logger.d(
-      "Took ${watch.elapsedMilliseconds}ms to load playlist ${playlist.id} from VK API",
     );
 
     // Обновляем плейлист.
