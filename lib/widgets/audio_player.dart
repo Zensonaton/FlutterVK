@@ -693,6 +693,69 @@ class _MusicLeftSide extends HookConsumerWidget {
   }
 }
 
+/// Кнопка, которая меняет форму в зависимости от того, поставлен ли плеер на паузу или нет.
+class PlayPauseAnimatedButton extends HookConsumerWidget {
+  /// Callback-метод, вызываемый при нажатии на эту кнопку.
+  final VoidCallback onPressed;
+
+  /// Callback-метод, вызываемый при длительном нажатии на эту кнопку.
+  final VoidCallback? onLongPress;
+
+  const PlayPauseAnimatedButton({
+    super.key,
+    required this.onPressed,
+    this.onLongPress,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(playerPlayingStateProvider);
+
+    final isPlaying = player.playing;
+    final playPauseAnimation = useAnimationController(
+      duration: MusicPlayerWidget.switchAnimationDuration,
+      initialValue: isPlaying ? 1.0 : 0.0,
+    );
+    useEffect(
+      () {
+        if (isPlaying) {
+          playPauseAnimation.forward();
+        } else {
+          playPauseAnimation.reverse();
+        }
+
+        return null;
+      },
+      [isPlaying],
+    );
+    useValueListenable(playPauseAnimation);
+
+    final BorderRadius borderRadius =
+        BorderRadius.circular(20 - 6 * playPauseAnimation.value);
+
+    final scheme = Theme.of(context).colorScheme;
+
+    return InkWell(
+      onTap: onPressed,
+      onLongPress: onLongPress,
+      borderRadius: borderRadius,
+      child: Material(
+        color: Colors.transparent,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: borderRadius,
+            color: scheme.onPrimaryContainer,
+          ),
+          padding: const EdgeInsets.all(8),
+          child: PlayPauseAnimatedIcon(
+            color: scheme.primaryContainer,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Виджет для [_MusicMiddleSide], отображающий ряд из кнопок для управления воспроизведением.
 class _MiddleControls extends ConsumerWidget {
   const _MiddleControls();
@@ -754,12 +817,9 @@ class _MiddleControls extends ConsumerWidget {
         ),
 
         // Кнопка воспроизведения/паузы.
-        GestureDetector(
-          onLongPress: () => player.stop(),
-          child: FilledButton(
-            onPressed: () => player.togglePlay(),
-            child: const PlayPauseAnimatedIcon(),
-          ),
+        PlayPauseAnimatedButton(
+          onPressed: player.togglePlay,
+          onLongPress: player.stop,
         ),
 
         // Кнопка следующего трека.
@@ -1098,6 +1158,7 @@ class _MusicMiddleSide extends HookConsumerWidget {
                 ),
               ),
             ),
+          const Gap(4),
 
           // Ряд из прогресса воспроизведения, кнопками управления, длительности трека.
           Row(
@@ -1469,7 +1530,7 @@ class _MusicContents extends ConsumerWidget {
   static const double mobilePadding = 8;
 
   /// Внутренний padding для содержимого плеера при Desktop Layout.
-  static const double desktopPadding = 12;
+  static const double desktopPadding = 14;
 
   /// Padding для [_MiddleControls] (центральный блок), что бы он не прижимался к левой и правой части плеера, отображаемый в Desktop Layout.
   static const double gapSizeDesktop = 8;
