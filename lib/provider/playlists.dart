@@ -305,8 +305,22 @@ class Playlists extends _$Playlists {
     final user = ref.read(userProvider);
     final api = ref.read(vkAPIProvider);
 
+    final ExtendedPlaylist? favorites = getFavoritesPlaylist();
+    final List<int> favoritesWithAlbums = favorites?.audios
+            ?.where(
+              (audio) => audio.album != null,
+            )
+            .map(
+              (audio) => audio.id,
+            )
+            .toList() ??
+        [];
+
     final APIMassAudioGetResponse regularPlaylists =
-        await api.audio.getWithAlbums(user.id);
+        await api.audio.getWithAlbums(
+      user.id,
+      audiosWithKnownAlbums: favoritesWithAlbums,
+    );
 
     return (
       [
@@ -851,10 +865,29 @@ class Playlists extends _$Playlists {
 
     // logger.d("Loading data for $playlist");
 
+    final ExtendedPlaylist? existingPlaylist =
+        getPlaylist(playlist.ownerID, playlist.id);
+    final List<int> existingWithAlbums = existingPlaylist?.audios
+            ?.where(
+              (audio) => audio.album != null,
+            )
+            .map(
+              (audio) => audio.id,
+            )
+            .toList() ??
+        [];
+
+    final Stopwatch watch = Stopwatch()..start();
+
     final APIMassAudioGetResponse response = await api.audio.getWithAlbums(
       playlist.ownerID,
       albumID: playlist.id,
       accessKey: playlist.accessKey,
+      audiosWithKnownAlbums: existingWithAlbums,
+    );
+
+    logger.d(
+      "Took ${watch.elapsedMilliseconds}ms to load playlist ${playlist.id} from VK API",
     );
 
     // Обновляем плейлист.

@@ -160,11 +160,12 @@ class VKAPIAudio extends VKAPICategory {
 
   /// {@macro VKAPI.audio.get}
   ///
-  /// В отличии от [get], данный метод добавляет трекам информацию о их альбомах.
+  /// В отличии от [get], данный метод добавляет к трекам информацию об их альбомах. Если вам это не нужно, то либо воспользуйтесь методом [get], либо передайте список из [Audio.id] треков в [audiosWithKnownAlbums].
   Future<APIMassAudioGetResponse> getWithAlbums(
     int ownerID, {
     int? albumID,
     String? accessKey,
+    List<int> audiosWithKnownAlbums = const [],
   }) async {
     final api = _ref.read(vkAPIExecuteProvider);
 
@@ -178,9 +179,19 @@ class VKAPIAudio extends VKAPICategory {
     // Если вторичного токена нет, то возвращаем ответ без дополнительной информации.
     if (this.secondaryToken == null) return response;
 
-    final albums = await api.massGetAlbums(
-      response.audios.map((audio) => audio.mediaKey).toList(),
-    );
+    // Получаем список из треков, для которых нужно получить альбомы.
+    final audiosToRetrieve = response.audios
+        .where(
+          (audio) => !audiosWithKnownAlbums.contains(audio.id),
+        )
+        .map(
+          (audio) => audio.mediaKey,
+        )
+        .toList();
+
+    if (audiosToRetrieve.isEmpty) return response;
+
+    final albums = await api.massGetAlbums(audiosToRetrieve);
 
     return APIMassAudioGetResponse(
       audioCount: response.audioCount,
