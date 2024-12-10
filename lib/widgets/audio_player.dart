@@ -1156,7 +1156,7 @@ class _MusicMiddleSide extends HookConsumerWidget {
 
 /// Виджет для [_MusicContents], отображающий содержимое правой части плеера.
 ///
-/// В такой части отображаются дополнительне кнопки для управления воспроизведением в Desktop Layout, либо ряд из некоторых простых кнопок (лайк, пауза) для Mobile Layout.
+/// В такой части отображаются дополнительные кнопки для управления воспроизведением в Desktop Layout, либо ряд из некоторых простых кнопок (лайк, пауза) для Mobile Layout.
 class _MusicRightSide extends HookConsumerWidget {
   static const BoxConstraints buttonConstraints = BoxConstraints(
     minWidth: kMinInteractiveDimension,
