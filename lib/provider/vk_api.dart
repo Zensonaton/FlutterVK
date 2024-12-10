@@ -18,6 +18,7 @@ import "../api/vk/execute/mass_get_albums.dart";
 import "../api/vk/execute/mass_get_audio.dart";
 import "../api/vk/shared.dart";
 import "../api/vk/users/get.dart";
+import "../services/logger.dart";
 import "auth.dart";
 
 part "vk_api.g.dart";
@@ -127,6 +128,7 @@ class VKAPIAudio extends VKAPICategory {
     String mixID = "common",
     int count = 10,
   }) async {
+    final logger = getLogger("getStreamMixAudiosWithAlbums");
     final api = _ref.read(vkAPIExecuteProvider);
 
     // Получаем список треков.
@@ -135,24 +137,41 @@ class VKAPIAudio extends VKAPICategory {
       count: count,
     );
 
+    // Иногда VK Mix возвращает треки без ссылок на аудиозаписи.
+    // Сам был максимально удивлён, когда увидел, что VK Mix вернул недоступный трек. 👍
+    for (final audio in response) {
+      if (audio.url != null) continue;
+
+      logger.w(
+        "VK Mix returned an audio without a URL (e.g., unavailable audio): $audio",
+      );
+      response.remove(audio);
+    }
+
     // Если вторичного токена нет, то возвращаем ответ без дополнительной информации.
     if (this.secondaryToken == null) return response;
 
     final albums = await api.massGetAlbums(
-      response.map((audio) => audio.mediaKey).toList(),
+      response
+          .map(
+            (audio) => audio.mediaKey,
+          )
+          .toList(),
     );
 
-    return response.map((audio) {
-      audio.album = albums
-          .firstWhereOrNull(
-            (albumAudio) =>
-                albumAudio.ownerID == audio.ownerID &&
-                albumAudio.id == audio.id,
-          )
-          ?.album;
+    return response.map(
+      (audio) {
+        audio.album = albums
+            .firstWhereOrNull(
+              (albumAudio) =>
+                  albumAudio.ownerID == audio.ownerID &&
+                  albumAudio.id == audio.id,
+            )
+            ?.album;
 
-      return audio;
-    }).toList();
+        return audio;
+      },
+    ).toList();
   }
 
   /// {@macro VKAPI.audio.get}
