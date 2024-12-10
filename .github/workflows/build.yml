@@ -48,8 +48,7 @@ jobs:
         with:
           cache: true
           channel: "beta"
-          # flutter-version-file: pubspec.yaml
-          flutter-version: fc011960a2
+          flutter-version-file: pubspec.yaml
 
       - name: Get dependencies
         run: flutter pub get
@@ -120,8 +119,7 @@ jobs:
         with:
           cache: true
           channel: "beta"
-          # flutter-version-file: pubspec.yaml
-          flutter-version: fc011960a2
+          flutter-version-file: pubspec.yaml
 
       - name: Get dependencies
         run: flutter pub get
