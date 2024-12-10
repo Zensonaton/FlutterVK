@@ -182,13 +182,12 @@ class LivePlaylistWidget extends HookWidget {
               if (lottieUrl != null)
                 SizedBox(
                   width: 1200,
-                  child: Lottie.network(
-                    lottieUrl!,
+                  child: Lottie(
+                    composition: lottieComposition.value,
                     width: double.infinity,
                     height: 250,
                     fit: BoxFit.fill,
                     addRepaintBoundary: true,
-                    backgroundLoading: true,
                     repeat: true,
                     animate: currentlyPlaying && selected,
                   ),
