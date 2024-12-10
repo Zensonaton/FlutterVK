@@ -938,7 +938,7 @@ class _MusicMiddleSide extends HookConsumerWidget {
     final duration = player.duration?.inSeconds;
 
     final sliderWaveAnimation = useAnimationController(
-      duration: MusicPlayerWidget.switchAnimationDuration,
+      duration: MusicPlayerWidget.sliderWaveAnimationDuration,
       initialValue: isPlaying ? 1.0 : 0.0,
     );
     useValueListenable(sliderWaveAnimation);
@@ -948,6 +948,23 @@ class _MusicMiddleSide extends HookConsumerWidget {
           isPlaying ? 1.0 : 0.0,
           curve: Curves.easeInOutCubicEmphasized,
         );
+
+        return null;
+      },
+      [isPlaying],
+    );
+
+    final sliderWaveOffsetAnimation = useAnimationController(
+      duration: MusicPlayerWidget.sliderWaveOffsetAnimationDuration,
+    );
+    useValueListenable(sliderWaveOffsetAnimation);
+    useEffect(
+      () {
+        if (isPlaying) {
+          sliderWaveOffsetAnimation.repeat();
+        } else {
+          sliderWaveOffsetAnimation.stop();
+        }
 
         return null;
       },
@@ -1055,26 +1072,30 @@ class _MusicMiddleSide extends HookConsumerWidget {
         children: [
           // Slider для отображения прогресса воспроизведения трека.
           if (!alternateSlider)
-            SliderTheme(
-              data: SliderThemeData(
-                trackShape: WavyTrackShape(
-                  waveHeightPercent: sliderWaveAnimation.value,
+            RepaintBoundary(
+              child: SliderTheme(
+                data: SliderThemeData(
+                  trackShape: WavyTrackShape(
+                    waveHeightPercent: sliderWaveAnimation.value,
+                    waveOffsetPercent: sliderWaveOffsetAnimation.value,
+                  ),
+                  overlayShape: SliderComponentShape.noOverlay,
+                  activeTrackColor: scheme.onPrimaryContainer,
+                  thumbShape: MaterialYouThumbShape(),
+                  thumbColor: scheme.onPrimaryContainer,
+                  inactiveTrackColor:
+                      scheme.onPrimaryContainer.withValues(alpha: 0.5),
                 ),
-                overlayShape: SliderComponentShape.noOverlay,
-                activeTrackColor: scheme.onPrimaryContainer,
-                thumbColor: scheme.onPrimaryContainer,
-                inactiveTrackColor:
-                    scheme.onPrimaryContainer.withValues(alpha: 0.5),
-              ),
-              child: ResponsiveSlider(
-                value: progress,
-                onChange: (double progress) => seekPosition.value = progress,
-                onChangeEnd: (double progress) {
-                  positionAnimation.value = progress;
-                  seekPosition.value = null;
+                child: ResponsiveSlider(
+                  value: progress,
+                  onChange: (double progress) => seekPosition.value = progress,
+                  onChangeEnd: (double progress) {
+                    positionAnimation.value = progress;
+                    seekPosition.value = null;
 
-                  return player.seekNormalized(progress);
-                },
+                    return player.seekNormalized(progress);
+                  },
+                ),
               ),
             ),
 
@@ -1658,6 +1679,14 @@ class MusicPlayerWidget extends HookConsumerWidget {
 
   /// Длительность анимации переключения треков, а так же кнопки паузы/воспроизведения.
   static const Duration switchAnimationDuration = Duration(milliseconds: 400);
+
+  /// Длительность анимации для перехода из линии в волну для [Slider], который отображает прогресс воспроизведения.
+  static const Duration sliderWaveAnimationDuration =
+      Duration(milliseconds: 1000);
+
+  /// Длительность анимации "движения" волны для [Slider], который отображает прогресс воспроизведения.
+  static const Duration sliderWaveOffsetAnimationDuration =
+      Duration(milliseconds: 2500);
 
   /// Возвращает высоту мини-плеера для Desktop Layout с учётом [MediaQuery.paddingOf].
   static double desktopMiniPlayerHeightWithSafeArea(BuildContext context) {
