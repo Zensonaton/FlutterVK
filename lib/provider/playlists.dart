@@ -110,11 +110,6 @@ class PlaylistsState {
   static Stream<ExtendedPlaylist> get playlistModificationsStream =>
       playlistModificationsController.stream.asBroadcastStream();
 
-  /// Указывает, загружены ли плейлисты через API ВКонтакте.
-  ///
-  /// Если false, то значит, что плейлисты кэшированы.
-  final bool fromAPI;
-
   /// [List] из всех плейлистов у пользователя.
   final List<ExtendedPlaylist> playlists;
 
@@ -123,29 +118,24 @@ class PlaylistsState {
 
   /// Делает копию этого класа с новыми передаваемыми значениями.
   PlaylistsState copyWith({
-    bool? fromAPI,
     List<ExtendedPlaylist>? playlists,
     int? playlistsCount,
   }) =>
       PlaylistsState(
-        fromAPI: fromAPI ?? this.fromAPI,
         playlists: playlists ?? this.playlists,
         playlistsCount: playlistsCount ?? this.playlistsCount,
       );
 
   @override
   bool operator ==(covariant PlaylistsState other) {
-    return other.fromAPI == fromAPI &&
-        other.playlistsCount == playlistsCount &&
+    return other.playlistsCount == playlistsCount &&
         listEquals(other.playlists, playlists);
   }
 
   @override
-  int get hashCode =>
-      playlists.hashCode ^ fromAPI.hashCode ^ playlistsCount.hashCode;
+  int get hashCode => playlists.hashCode ^ playlistsCount.hashCode;
 
   PlaylistsState({
-    this.fromAPI = false,
     required this.playlists,
     this.playlistsCount,
   });
@@ -263,7 +253,6 @@ class Playlists extends _$Playlists {
         state = AsyncData(
           PlaylistsState(
             playlists: state.value?.playlists ?? [],
-            fromAPI: true,
             playlistsCount: userPlaylists.$2,
           ),
         );
@@ -273,7 +262,6 @@ class Playlists extends _$Playlists {
       final List<PlaylistUpdateResult> updatedPlaylists = await updatePlaylists(
         [...userPlaylists.$1, ...recommendedPlaylists],
         saveInDB: true,
-        fromAPI: true,
         playlistsCount: userPlaylists.$2,
       );
 
@@ -557,7 +545,6 @@ class Playlists extends _$Playlists {
   Future<PlaylistUpdateResult> updatePlaylist(
     ExtendedPlaylist newPlaylist, {
     bool saveInDB = false,
-    bool fromAPI = false,
     int? userOwnedPlaylistsCount,
   }) async {
     if (state.value == null) {
@@ -753,7 +740,6 @@ class Playlists extends _$Playlists {
       state = AsyncData(
         state.value!.copyWith(
           playlists: allPlaylists,
-          fromAPI: fromAPI,
           playlistsCount: userOwnedPlaylistsCount,
         ),
       );
@@ -783,14 +769,12 @@ class Playlists extends _$Playlists {
   Future<List<PlaylistUpdateResult>> updatePlaylists(
     List<ExtendedPlaylist> newPlaylists, {
     bool saveInDB = false,
-    bool fromAPI = false,
     int? playlistsCount,
   }) async {
     final List<PlaylistUpdateResult> changedPlaylists = [];
     for (ExtendedPlaylist playlist in newPlaylists) {
       final PlaylistUpdateResult result = await updatePlaylist(
         playlist,
-        fromAPI: fromAPI,
         userOwnedPlaylistsCount: playlistsCount,
       );
 
@@ -820,7 +804,6 @@ class Playlists extends _$Playlists {
   /// Данный метод используется лишь в тех случаях, при которых БД Isar был изменён каким-то образом. Если Вы хотите сохранить уже имеющийся плейлист, то воспользуйтесь методом [updatePlaylist] или [updatePlaylists].
   void setPlaylists(
     List<ExtendedPlaylist> playlists, {
-    bool? fromAPI,
     bool invalidateDBProvider = false,
   }) {
     if (invalidateDBProvider) {
@@ -830,7 +813,6 @@ class Playlists extends _$Playlists {
     state = AsyncData(
       state.value!.copyWith(
         playlists: playlists,
-        fromAPI: fromAPI,
       ),
     );
   }
@@ -894,7 +876,6 @@ class Playlists extends _$Playlists {
 
     final update = await updatePlaylist(
       newPlaylist,
-      fromAPI: true,
       saveInDB: true,
     );
 
@@ -950,7 +931,7 @@ List<ExtendedPlaylist>? userPlaylists(UserPlaylistsRef ref) {
         (ExtendedPlaylist playlist) => playlist.type == PlaylistType.regular,
       )
       .toList();
-  if (playlists.isEmpty && !state.fromAPI) return null;
+  if (playlists.isEmpty) return null;
 
   return playlists;
 }
@@ -967,7 +948,7 @@ List<ExtendedPlaylist>? mixPlaylists(MixPlaylistsRef ref) {
         (ExtendedPlaylist playlist) => playlist.type == PlaylistType.audioMix,
       )
       .toList();
-  if (playlists.isEmpty && !state.fromAPI) return null;
+  if (playlists.isEmpty) return null;
 
   return playlists;
 }
@@ -984,7 +965,7 @@ List<ExtendedPlaylist>? moodPlaylists(MoodPlaylistsRef ref) {
         (ExtendedPlaylist playlist) => playlist.type == PlaylistType.mood,
       )
       .toList();
-  if (playlists.isEmpty && !state.fromAPI) return null;
+  if (playlists.isEmpty) return null;
 
   return playlists;
 }
@@ -1003,7 +984,7 @@ List<ExtendedPlaylist>? recommendedPlaylists(RecommendedPlaylistsRef ref) {
       )
       .sorted((a, b) => b.id.compareTo(a.id))
       .toList();
-  if (playlists.isEmpty && !state.fromAPI) return null;
+  if (playlists.isEmpty) return null;
 
   return playlists;
 }
@@ -1021,7 +1002,7 @@ List<ExtendedPlaylist>? simillarPlaylists(SimillarPlaylistsRef ref) {
       )
       .sorted((a, b) => b.simillarity!.compareTo(a.simillarity!))
       .toList();
-  if (playlists.isEmpty && !state.fromAPI) return null;
+  if (playlists.isEmpty) return null;
 
   return playlists;
 }
@@ -1038,7 +1019,7 @@ List<ExtendedPlaylist>? madeByVKPlaylists(MadeByVKPlaylistsRef ref) {
         (ExtendedPlaylist playlist) => playlist.type == PlaylistType.madeByVK,
       )
       .toList();
-  if (playlists.isEmpty && !state.fromAPI) return null;
+  if (playlists.isEmpty) return null;
 
   return playlists;
 }

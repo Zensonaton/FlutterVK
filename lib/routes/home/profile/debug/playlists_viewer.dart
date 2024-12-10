@@ -52,7 +52,7 @@ class PlaylistsViewerDebugMenu extends ConsumerWidget {
         children: [
           // Информация по загруженным плейлистам.
           Text(
-            "Total playlists count: ${playlistsInfo.playlists.length}, user owned: ${playlistsInfo.playlistsCount}, from API: ${playlistsInfo.fromAPI}",
+            "Total playlists count: ${playlistsInfo.playlists.length}, user owned: ${playlistsInfo.playlistsCount}",
           ),
           const Gap(20),
 
@@ -134,7 +134,6 @@ class PlaylistsViewerDebugMenu extends ConsumerWidget {
 
               ref.read(playlistsProvider.notifier).setPlaylists(
                     playlists,
-                    fromAPI: true,
                     invalidateDBProvider: true,
                   );
             },
