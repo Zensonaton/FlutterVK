@@ -114,8 +114,6 @@ class LivePlaylistWidget extends HookWidget {
           final bool shouldDownload =
               info == null || info.validTill.isBefore(DateTime.now());
 
-          logger.d("Should download Lottie animation: $shouldDownload");
-
           if (!shouldDownload) {
             final Uint8List bytes = await info.file.readAsBytes();
             final composition = await LottieComposition.fromBytes(bytes);

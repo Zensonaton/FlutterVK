@@ -398,8 +398,6 @@ class VKMusicPlayer {
           _volumeSaveTimer = Timer(
             const Duration(seconds: 2),
             () {
-              logger.d("Will save player volume ($volume) to disk");
-
               ref.read(preferencesProvider.notifier).setVolume(volume);
             },
           );
