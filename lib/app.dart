@@ -170,8 +170,8 @@ class FlutterVKApp extends HookConsumerWidget {
     final preferences = ref.watch(preferencesProvider);
     final schemeInfo = ref.watch(trackSchemeInfoProvider);
 
-    final bool appwideColors = preferences.playerColorsAppWide;
-    final playerLightColorScheme = appwideColors
+    final bool appWideColors = preferences.playerColorsAppWide;
+    final playerLightColorScheme = appWideColors
         ? useMemoized(
             () => schemeInfo?.createScheme(
               Brightness.light,
@@ -180,7 +180,7 @@ class FlutterVKApp extends HookConsumerWidget {
             [schemeInfo, preferences.dynamicSchemeType],
           )
         : null;
-    final playerDarkColorScheme = appwideColors
+    final playerDarkColorScheme = appWideColors
         ? useMemoized(
             () => schemeInfo?.createScheme(
               Brightness.dark,
@@ -192,30 +192,27 @@ class FlutterVKApp extends HookConsumerWidget {
 
     return DynamicColorBuilder(
       builder:
-          (ColorScheme? lightDynamicScheme, ColorScheme? darkDynamicScheme) {
-        final (ColorScheme, ColorScheme)? dynamicSchemesFixed =
-            lightDynamicScheme != null
-                ? generateDynamicColorSchemes(
-                    lightDynamicScheme,
-                    darkDynamicScheme!,
-                  )
-                : null;
-        final ColorScheme? lightDynamicSchemeFixed = dynamicSchemesFixed?.$1;
-        final ColorScheme? darkDynamicSchemeFixed = dynamicSchemesFixed?.$2;
+          (ColorScheme? dynamicLightScheme, ColorScheme? dynamicDarkScheme) {
+        final lightScheme = playerLightColorScheme ??
+            dynamicLightScheme ??
+            fallbackLightColorScheme;
+        final darkScheme = playerDarkColorScheme ??
+            dynamicDarkScheme ??
+            fallbackDarkColorScheme;
 
         return MaterialApp.router(
           theme: ThemeData(
-            colorScheme: playerLightColorScheme ??
-                lightDynamicSchemeFixed ??
-                fallbackLightColorScheme,
+            colorScheme: lightScheme,
           ),
           darkTheme: ThemeData(
-            colorScheme: (playerDarkColorScheme ??
-                    darkDynamicSchemeFixed ??
-                    fallbackDarkColorScheme)
-                .copyWith(
+            colorScheme: darkScheme.copyWith(
               surface: preferences.oledTheme ? Colors.black : null,
             ),
+            cardTheme: preferences.oledTheme
+                ? CardTheme(
+                    color: darkScheme.surface,
+                  )
+                : null,
           ),
           themeMode: preferences.theme,
           themeAnimationDuration: const Duration(

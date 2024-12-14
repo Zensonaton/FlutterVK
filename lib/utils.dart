@@ -4,7 +4,6 @@ import "dart:ui";
 
 import "package:crypto/crypto.dart";
 import "package:diacritic/diacritic.dart";
-import "package:dynamic_color/dynamic_color.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
@@ -276,62 +275,6 @@ int fastHash(String input) {
   }
 
   return hash;
-}
-
-/// Создаёт две [ColorScheme]: [Brightness.light] и [Brightness.dark] из передаваемых от [DynamicColorBuilder] цветов.
-///
-/// Данный метод нужен для "исправления" цветов, передаваемых [DynamicColorBuilder]'ом, поскольку [DynamicColorBuilder] не поддерживает новые [ColorScheme], ввиду чего итоговый [ColorScheme] имеет тёмные оттенки.
-///
-/// Код взят и адаптирован из комментария Github Issue:
-/// https://github.com/material-foundation/flutter-packages/issues/582#issuecomment-2081174158
-(ColorScheme light, ColorScheme dark) generateDynamicColorSchemes(
-  ColorScheme lightDynamic,
-  ColorScheme darkDynamic,
-) {
-  // FIXME: Проверить, нужен ли этот костыль?
-
-  List<Color> extractAdditionalColors(
-    ColorScheme scheme,
-  ) =>
-      [
-        scheme.surface,
-        scheme.surfaceDim,
-        scheme.surfaceBright,
-        scheme.surfaceContainerLowest,
-        scheme.surfaceContainerLow,
-        scheme.surfaceContainer,
-        scheme.surfaceContainerHigh,
-        scheme.surfaceContainerHighest,
-      ];
-
-  ColorScheme insertAdditionalColors(
-    ColorScheme scheme,
-    List<Color> additionalColours,
-  ) =>
-      scheme.copyWith(
-        surface: additionalColours[0],
-        surfaceDim: additionalColours[1],
-        surfaceBright: additionalColours[2],
-        surfaceContainerLowest: additionalColours[3],
-        surfaceContainerLow: additionalColours[4],
-        surfaceContainer: additionalColours[5],
-        surfaceContainerHigh: additionalColours[6],
-        surfaceContainerHighest: additionalColours[7],
-      );
-
-  var lightBase = ColorScheme.fromSeed(seedColor: lightDynamic.primary);
-  var darkBase = ColorScheme.fromSeed(
-    seedColor: darkDynamic.primary,
-    brightness: Brightness.dark,
-  );
-
-  var lightAdditionalColours = extractAdditionalColors(lightBase);
-  var darkAdditionalColours = extractAdditionalColors(darkBase);
-
-  var lightScheme = insertAdditionalColors(lightBase, lightAdditionalColours);
-  var darkScheme = insertAdditionalColors(darkBase, darkAdditionalColours);
-
-  return (lightScheme.harmonized(), darkScheme.harmonized());
 }
 
 /// Возвращает строку, описывающую тип плейлиста в зависимости от его [ExtendedPlaylist.type].
