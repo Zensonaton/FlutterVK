@@ -70,10 +70,10 @@ packages:
     description:
       path: audio_service
       ref: minor
-      resolved-ref: "437cf12f39fb48ae24be8fdb2aa4003c79e46f0f"
+      resolved-ref: e70974e53aef76136816b762bd633c311144f578
       url: "https://github.com/Zensonaton/audio_service.git"
     source: git
-    version: "0.18.13"
+    version: "0.18.15"
   audio_service_platform_interface:
     dependency: transitive
     description:
