@@ -121,32 +121,26 @@ class FlutterVKApp extends HookConsumerWidget {
     final appLifecycleState = useAppLifecycleState();
     useEffect(
       () {
-        final mobileLayout = isMobileLayout(context);
+        if (appLifecycleState != AppLifecycleState.resumed) return;
 
-        logger.d(
-          "Lifecycle state: $appLifecycleState, mobileLayout: $mobileLayout",
+        // Понятия не имею почему, но без Future.microtask() это не работает.
+        Future.microtask(
+          () async {
+            final uiStyle = brightness == Brightness.light
+                ? SystemUiOverlayStyle.dark
+                : SystemUiOverlayStyle.light;
+
+            await SystemChrome.setEnabledSystemUIMode(
+              SystemUiMode.edgeToEdge,
+            );
+            SystemChrome.setSystemUIOverlayStyle(
+              uiStyle.copyWith(
+                systemNavigationBarColor: Colors.transparent,
+                systemNavigationBarDividerColor: Colors.transparent,
+              ),
+            );
+          },
         );
-
-        if (appLifecycleState == AppLifecycleState.resumed) {
-          // Понятия не имею почему, но без Future.microtask() это не работает.
-          Future.microtask(
-            () async {
-              final uiStyle = brightness == Brightness.light
-                  ? SystemUiOverlayStyle.dark
-                  : SystemUiOverlayStyle.light;
-
-              await SystemChrome.setEnabledSystemUIMode(
-                SystemUiMode.edgeToEdge,
-              );
-              SystemChrome.setSystemUIOverlayStyle(
-                uiStyle.copyWith(
-                  systemNavigationBarColor: Colors.transparent,
-                  systemNavigationBarDividerColor: Colors.transparent,
-                ),
-              );
-            },
-          );
-        }
 
         return null;
       },
