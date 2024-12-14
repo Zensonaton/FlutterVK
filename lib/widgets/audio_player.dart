@@ -1723,7 +1723,7 @@ class MusicPlayerWidget extends HookConsumerWidget {
 
   /// Длительность анимации "движения" волны для [Slider], который отображает прогресс воспроизведения.
   static const Duration sliderWaveOffsetAnimationDuration =
-      Duration(milliseconds: 2500);
+      Duration(milliseconds: 3500);
 
   /// Возвращает высоту мини-плеера для Desktop Layout с учётом [MediaQuery.paddingOf].
   static double desktopMiniPlayerHeightWithSafeArea(BuildContext context) {
