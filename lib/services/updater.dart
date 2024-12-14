@@ -252,6 +252,9 @@ class Updater {
 
         return;
       }
+
+      // Release не был найден.
+      throw Exception("Release not found for version $appVersion");
     } catch (error, stackTrace) {
       showLogErrorDialog(
         "Couldn't get changelog",
