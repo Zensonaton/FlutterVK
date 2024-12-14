@@ -670,13 +670,19 @@ class AudioTrackTile extends HookConsumerWidget {
     final preferences = ref.watch(preferencesProvider);
     final brightness = Theme.of(context).brightness;
 
-    // FIXME: Нужно каким-то образом оптимизировать это.
-    final ColorScheme scheme = (!isSelected || schemeInfo == null)
-        ? Theme.of(context).colorScheme
-        : schemeInfo.createScheme(
-            brightness,
-            schemeVariant: preferences.dynamicSchemeType,
-          );
+    final ColorScheme scheme = useMemoized(
+      () {
+        if (!isSelected || schemeInfo == null) {
+          return Theme.of(context).colorScheme;
+        }
+
+        return schemeInfo.createScheme(
+          brightness,
+          schemeVariant: preferences.dynamicSchemeType,
+        );
+      },
+      [isSelected, preferences.dynamicSchemeType, brightness, schemeInfo],
+    );
 
     final isExplicit = audio.isExplicit;
     final durationString = audio.durationString;
