@@ -1657,7 +1657,7 @@ class DesktopPlaylistControlsWidget extends HookConsumerWidget {
 ///
 /// go_route: `/music/playlist/:ownerID/:id`.
 class PlaylistRoute extends HookConsumerWidget {
-  static final AppLogger logger = getLogger("OldPlaylistInfoRoute");
+  static final AppLogger logger = getLogger("PlaylistRoute");
 
   /// ID владельца плейлиста. [ExtendedPlaylist.ownerID]
   final int ownerID;
