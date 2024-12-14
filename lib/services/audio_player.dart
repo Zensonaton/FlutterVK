@@ -6,6 +6,7 @@ import "package:audio_service/audio_service.dart";
 import "package:audio_session/audio_session.dart";
 import "package:collection/collection.dart";
 import "package:discord_rpc/discord_rpc.dart";
+import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:just_audio/just_audio.dart";
@@ -55,6 +56,11 @@ class CachedStreamAudioSource extends StreamAudioSource {
   /// Плейлист, в котором находится данный трек.
   final ExtendedPlaylist playlist;
 
+  /// Язык для озвучки, который используется в случае, если при загрузке трека произошла ошибка. Для подробной информации, смотрите [getPlaceholder].
+  ///
+  /// Пример: `ru`, `en`. В случае, если не указано, то будет использован язык устройства, либо же `en` (английский).
+  final String? language;
+
   /// Возвращает путь к корневой папке, хранящий в себе кэшированные треки.
   ///
   /// К примеру, на Windows это `%APPDATA%/com.zensonaton/Flutter VK/audios-v2`.
@@ -103,12 +109,13 @@ class CachedStreamAudioSource extends StreamAudioSource {
     required Ref ref,
     required this.audio,
     required this.playlist,
+    this.language,
   }) : _ref = ref;
 
   /// Загружает трек из кэша, и возвращает [StreamAudioResponse]. Если кэшированного трека нет, то возвращает null.
   ///
   /// Если по какой-то причине кэш поломан (скажем, [ExtendedAudio.isCached] но файла нет или наоборот), то данный метод может пометить трек как (не-)кэшированный.
-  Future<StreamAudioResponse?> acquireCache({int? start, int? end}) async {
+  Future<StreamAudioResponse?> acquireFromCache({int? start, int? end}) async {
     final playlists = _ref.read(playlistsProvider.notifier);
     final file = await getAudioCacheFile();
     final fileExists = file.existsSync();
@@ -202,7 +209,7 @@ class CachedStreamAudioSource extends StreamAudioSource {
   }
 
   /// Загружает трек, и возвращает [StreamAudioResponse].
-  Future<StreamAudioResponse> fetch({int? start, int? end}) async {
+  Future<StreamAudioResponse> fetchAudio({int? start, int? end}) async {
     if (audio.url == null) {
       throw Exception("Audio URL is null");
     }
@@ -234,16 +241,79 @@ class CachedStreamAudioSource extends StreamAudioSource {
     );
   }
 
+  /// Возвращает placeholder-аудио в случае, если при загрузке трека произошла ошибка.
+  ///
+  /// Placeholder-аудио используется для того, что бы плеер не останавливался, если произошла ошибка при загрузке трека.
+  /// Так же это реализовано, поскольку just_audio_media_kit может заглючить, если произошла ошибка при воспроизведении трека.
+  Future<StreamAudioResponse> getPlaceholder() async {
+    final String? uiLanguage = navigatorKey.currentContext != null
+        ? Localizations.localeOf(navigatorKey.currentContext!).languageCode
+        : null;
+    final String placeholderLanguage = language ?? uiLanguage ?? "en";
+
+    final ByteData placeholder = await rootBundle.load(
+      "assets/audios/playback-error-$placeholderLanguage.mp3",
+    );
+
+    return StreamAudioResponse(
+      sourceLength: placeholder.lengthInBytes,
+      contentLength: placeholder.lengthInBytes,
+      offset: 0,
+      contentType: "audio/mpeg",
+      stream: Stream.fromIterable(
+        [placeholder.buffer.asUint8List()],
+      ).asBroadcastStream(),
+    );
+  }
+
   @override
   Future<StreamAudioResponse> request([int? start, int? end]) async {
-    // Пытаемся загрузить трек из кэша.
-    final cacheFile = await acquireCache();
-    if (cacheFile != null) {
-      return cacheFile;
+    StreamAudioResponse? response;
+
+    try {
+      // В первую очередь, пытаемся загрузить трек из кэша,
+      // если мы уже знаем, что он там есть.
+      final cacheFile = await acquireFromCache(
+        start: start,
+        end: end,
+      );
+      if (cacheFile != null) {
+        response = cacheFile;
+      }
+    } catch (error, stackTrace) {
+      logger.e(
+        "Failed to load audio $audio from cache:",
+        error: error,
+        stackTrace: stackTrace,
+      );
     }
 
-    // Загружаем трек.
-    return await fetch(start: start, end: end);
+    // Кэшированного трека нет, пытаемся стримить его с серверов ВКонтакте.
+    try {
+      response ??= await fetchAudio(
+        start: start,
+        end: end,
+      );
+    } catch (error, stackTrace) {
+      logger.e(
+        "Failed to fetch (stream) audio $audio:",
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    // Если мы успешно получили трек, то начинаем его стримить.
+    if (response != null) {
+      return response;
+    }
+
+    // Что-то пошло не так, и произошла ошибка при загрузке трека.
+    // В таком случае, возвращаем Placeholder-аудио.
+    logger.w(
+      "Failed to load audio $audio, returning placeholder audio!",
+    );
+
+    return await getPlaceholder();
   }
 }
 
