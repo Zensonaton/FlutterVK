@@ -4,6 +4,7 @@ import "dart:ui";
 
 import "package:crypto/crypto.dart";
 import "package:diacritic/diacritic.dart";
+import "package:dynamic_color/dynamic_color.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
@@ -324,3 +325,59 @@ Future<Uint8List> xorCryptIsolate(Uint8List input, Uint8List key) => compute(
       (input) => xorCrypt(input, key),
       input,
     );
+
+/// Создаёт две [ColorScheme]: [Brightness.light] и [Brightness.dark] из передаваемых от [DynamicColorBuilder] цветов.
+///
+/// Данный метод нужен для "исправления" цветов, передаваемых [DynamicColorBuilder]'ом, поскольку [DynamicColorBuilder] не поддерживает новые [ColorScheme], ввиду чего итоговый [ColorScheme] имеет тёмные оттенки.
+///
+/// Код взят и адаптирован из комментария Github Issue:
+/// https://github.com/material-foundation/flutter-packages/issues/582#issuecomment-2081174158
+(ColorScheme light, ColorScheme dark) generateDynamicColorSchemes(
+  ColorScheme lightDynamic,
+  ColorScheme darkDynamic,
+) {
+  // FIXME: Проверить, нужен ли этот костыль?
+
+  List<Color> extractAdditionalColors(
+    ColorScheme scheme,
+  ) =>
+      [
+        scheme.surface,
+        scheme.surfaceDim,
+        scheme.surfaceBright,
+        scheme.surfaceContainerLowest,
+        scheme.surfaceContainerLow,
+        scheme.surfaceContainer,
+        scheme.surfaceContainerHigh,
+        scheme.surfaceContainerHighest,
+      ];
+
+  ColorScheme insertAdditionalColors(
+    ColorScheme scheme,
+    List<Color> additionalColors,
+  ) =>
+      scheme.copyWith(
+        surface: additionalColors[0],
+        surfaceDim: additionalColors[1],
+        surfaceBright: additionalColors[2],
+        surfaceContainerLowest: additionalColors[3],
+        surfaceContainerLow: additionalColors[4],
+        surfaceContainer: additionalColors[5],
+        surfaceContainerHigh: additionalColors[6],
+        surfaceContainerHighest: additionalColors[7],
+      );
+
+  var lightBase = ColorScheme.fromSeed(seedColor: lightDynamic.primary);
+  var darkBase = ColorScheme.fromSeed(
+    seedColor: darkDynamic.primary,
+    brightness: Brightness.dark,
+  );
+
+  var lightAdditionalColors = extractAdditionalColors(lightBase);
+  var darkAdditionalColours = extractAdditionalColors(darkBase);
+
+  var lightScheme = insertAdditionalColors(lightBase, lightAdditionalColors);
+  var darkScheme = insertAdditionalColors(darkBase, darkAdditionalColours);
+
+  return (lightScheme.harmonized(), darkScheme.harmonized());
+}

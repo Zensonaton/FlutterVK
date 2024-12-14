@@ -193,11 +193,19 @@ class FlutterVKApp extends HookConsumerWidget {
     return DynamicColorBuilder(
       builder:
           (ColorScheme? dynamicLightScheme, ColorScheme? dynamicDarkScheme) {
+        final (ColorScheme, ColorScheme)? dynamicSchemesFixed =
+            dynamicLightScheme != null
+                ? generateDynamicColorSchemes(
+                    dynamicLightScheme,
+                    dynamicDarkScheme!,
+                  )
+                : null;
+
         final lightScheme = playerLightColorScheme ??
-            dynamicLightScheme ??
+            dynamicSchemesFixed?.$1 ??
             fallbackLightColorScheme;
         final darkScheme = playerDarkColorScheme ??
-            dynamicDarkScheme ??
+            dynamicSchemesFixed?.$2 ??
             fallbackDarkColorScheme;
 
         return MaterialApp.router(
