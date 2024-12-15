@@ -311,6 +311,9 @@ class AudioTrackTitle extends ConsumerWidget {
   /// Подпись трека. Может отсутствовать.
   final String? subtitle;
 
+  /// Название альбома. Может отсутствовать.
+  final String? album;
+
   /// Доступен ли трек.
   ///
   /// Если false, то текст становится серым.
@@ -330,6 +333,7 @@ class AudioTrackTitle extends ConsumerWidget {
     required this.title,
     required this.artist,
     this.subtitle,
+    this.album,
     this.isAvailable = true,
     this.isExplicit = true,
     this.isSelected = false,
@@ -367,6 +371,17 @@ class AudioTrackTitle extends ConsumerWidget {
             color: primaryTextColor.withValues(alpha: isAvailable ? 0.9 : 0.5),
           ),
         ),
+
+        // Название альбома, если это разрешено и альбом есть.
+        if (album != null)
+          Text(
+            album!,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color:
+                  primaryTextColor.withValues(alpha: isAvailable ? 0.75 : 0.5),
+            ),
+          ),
       ],
     );
 
@@ -602,6 +617,9 @@ class AudioTrackTile extends HookConsumerWidget {
   /// Указывает, что в случае, если [isSelected] равен true, то у данного виджета будет эффект "свечения".
   final bool glowIfSelected;
 
+  /// Указывает, что под именем исполнителя будет отображаться название альбома (если он присутствует).
+  final bool showAlbumName;
+
   /// Указывает, что будут указаны иконки состояния справа (кэширования, локальной замены, недоступности, ...).
   final bool showStatusIcons;
 
@@ -651,6 +669,7 @@ class AudioTrackTile extends HookConsumerWidget {
     this.isPlaying = false,
     this.isAvailable = true,
     this.glowIfSelected = false,
+    this.showAlbumName = false,
     this.showStatusIcons = true,
     this.allowImageCache = true,
     this.showDuration = true,
@@ -751,6 +770,7 @@ class AudioTrackTile extends HookConsumerWidget {
                       title: audio.title,
                       artist: audio.artist,
                       subtitle: audio.subtitle,
+                      album: showAlbumName ? audio.album?.title : null,
                       isAvailable: isAvailable,
                       isExplicit: isExplicit,
                       isSelected: isSelected,

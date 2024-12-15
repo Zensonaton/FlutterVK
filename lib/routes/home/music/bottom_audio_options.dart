@@ -197,6 +197,16 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
       context.pop();
     }
 
+    void onGoToAlbumTap() {
+      if (newAudio.album == null) {
+        throw Exception("This audio doesn't have an album");
+      }
+
+      if (!networkRequiredDialog(ref, context)) return;
+
+      showWipDialog(context);
+    }
+
     void onGeniusSearchTap() async {
       if (hasGeniusInfo.value == null) {
         throw Exception("Genius info isn't loaded yet");
@@ -405,6 +415,7 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
           child: ListView(
             controller: controller,
             children: [
+              // Изображение трека.
               Padding(
                 padding: const EdgeInsets.only(
                   left: 4,
@@ -417,6 +428,7 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
                     AudioTrackTile(
                       audio: newAudio,
                       allowTextSelection: true,
+                      showAlbumName: true,
                     ),
                     const Gap(8),
 
@@ -479,6 +491,26 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
                   ),
                   enabled: newAudio.canPlay,
                   onTap: onAddToQueueTap,
+                ),
+
+              // TODO: Перейти к альбому.
+              if (kDebugMode)
+                ListTile(
+                  leading: const Icon(
+                    Icons.album,
+                  ),
+                  title: Text(
+                    l18n.music_detailsGoToAlbumTitle,
+                  ),
+                  subtitle: newAudio.album != null
+                      ? Text(
+                          l18n.music_detailsGoToAlbumDescription(
+                            newAudio.album!.title,
+                          ),
+                        )
+                      : null,
+                  enabled: newAudio.album != null,
+                  onTap: onGoToAlbumTap,
                 ),
 
               // Поиск по Genius.

@@ -263,6 +263,17 @@
 	"music_detailsAddToPlaylistTitle": "Добавить в плейлист",
 	"music_detailsPlayNextTitle": "Сыграть следующим",
 
+	"music_detailsGoToAlbumTitle": "Перейти к альбому",
+	"music_detailsGoToAlbumDescription": "Откроет страницу альбома «{title}»",
+	"@music_detailsGoToAlbumDescription": {
+		"placeholders": {
+			"title": {
+				"type": "String",
+				"description": "Название альбома, к которому переходит пользователь."
+			}
+		}
+	},
+
 	"music_detailsGeniusSearchTitle": "Поиск по Genius",
 	"music_detailsGeniusSearchDescription": "Текст песни, и прочая информация с Genius",
 
