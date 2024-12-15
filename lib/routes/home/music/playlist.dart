@@ -748,6 +748,8 @@ class PlaylistAudiosListWidget extends HookConsumerWidget {
           );
         }
 
+        final audio = filteredAudios[index];
+
         return Padding(
           padding: EdgeInsets.only(
             bottom: tracksSpacing,
@@ -757,10 +759,10 @@ class PlaylistAudiosListWidget extends HookConsumerWidget {
           child: buildListTrackWidget(
             ref,
             context,
-            filteredAudios[index],
+            audio,
             playlist,
             isAvailable:
-                isFavoritesPlaylist ? filteredAudios[index].isLiked : null,
+                audio.canPlay && (!isFavoritesPlaylist || audio.isLiked),
             showStatusIcons: true,
             showDuration: !mobileLayout,
             replaceLikeWithMore: mobileLayout,

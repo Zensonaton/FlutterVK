@@ -254,7 +254,9 @@ class AudioTrackImage extends HookWidget {
           child: isLoading || isSelected || isHovered || !isAvailable
               ? Container(
                   foregroundDecoration: BoxDecoration(
-                    color: scheme.shadow.withValues(alpha: 0.5),
+                    color: scheme.surface.withValues(
+                      alpha: 0.5,
+                    ),
                   ),
                   child: (isLoading && isSelected)
                       ? ImageFiltered(
@@ -286,12 +288,12 @@ class AudioTrackImage extends HookWidget {
                           "assets/images/audioEqualizer.gif",
                           width: 18,
                           height: 18,
-                          color: Theme.of(context).colorScheme.primary,
+                          color: scheme.primary,
                         ),
                 )
               : Icon(
                   selectedAndPlaying ? Icons.pause : Icons.play_arrow,
-                  color: Theme.of(context).colorScheme.primary,
+                  color: scheme.primary,
                 ),
       ],
     );
@@ -681,7 +683,13 @@ class AudioTrackTile extends HookConsumerWidget {
           schemeVariant: preferences.dynamicSchemeType,
         );
       },
-      [isSelected, preferences.dynamicSchemeType, brightness, schemeInfo],
+      [
+        isSelected,
+        preferences.dynamicSchemeType,
+        brightness,
+        schemeInfo,
+        Theme.of(context).colorScheme,
+      ],
     );
 
     final isExplicit = audio.isExplicit;
