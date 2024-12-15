@@ -653,32 +653,33 @@ class ExtendedAudio {
     }
 
     // Альбомы.
-    if (album != other.album && other.album != null) {
+    if (other.album != null && album != other.album) {
       return false;
     }
 
     // Кэширование.
-    if (isCached != other.isCached && other.isCached != null) {
+    if (other.isCached != null && isCached != other.isCached) {
       return false;
     }
 
     // Локальная замена.
-    if (replacedLocally != other.replacedLocally &&
-        other.replacedLocally != null) {
+    if (other.replacedLocally != null &&
+        replacedLocally != other.replacedLocally) {
       return false;
     }
 
     // Тексты.
-    if (hasLyrics != other.hasLyrics ||
+    if ((other.hasLyrics != null && hasLyrics != other.hasLyrics) ||
         (other.vkLyrics != null && vkLyrics != other.vkLyrics) ||
         (other.lrcLibLyrics != null && lrcLibLyrics != other.lrcLibLyrics)) {
       return false;
     }
 
     // Обложки.
-    if (vkThumbs != other.vkThumbs ||
-        deezerThumbs != other.deezerThumbs ||
-        forceDeezerThumbs != other.forceDeezerThumbs) {
+    if ((other.vkThumbs != null && vkThumbs != other.vkThumbs) ||
+        (other.deezerThumbs != null && deezerThumbs != other.deezerThumbs) ||
+        (other.forceDeezerThumbs != null &&
+            forceDeezerThumbs != other.forceDeezerThumbs)) {
       return false;
     }
 

@@ -629,9 +629,10 @@ class Playlists extends _$Playlists {
         return;
       }
 
-      // Если трек ничем не отличается (кроме URL), то ничего не делаем.
+      // Если трек ничем не отличается (кроме факта наличия URL), то ничего не делаем.
       final ExtendedAudio oldAudio = newAudios[index];
-      if ((oldAudio.url != null) == (newAudio.url != null) &&
+      if (((oldAudio.url != null) == (newAudio.url != null) ||
+              newAudio.url == null) &&
           oldAudio.isEquals(newAudio)) {
         // logger.d("[$index] [${newAudio.title}]: skip");
 
