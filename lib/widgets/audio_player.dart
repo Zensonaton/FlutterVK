@@ -994,7 +994,27 @@ class _MusicMiddleSide extends HookConsumerWidget {
 
     final isPlaying = player.playing;
     final position = player.position.inSeconds;
-    final duration = player.duration?.inSeconds;
+    final duration = (player.duration != Duration.zero
+            ? player.duration?.inSeconds
+            : null) ??
+        player.smartCurrentAudio?.duration;
+
+    // final lastDuration = useState<int>(duration ?? 0);
+    // useEffect(
+    //   () {
+    //     if (duration != null && duration > 0) {
+    //       lastDuration.value = duration;
+    //     }
+
+    //     return null;
+    //   },
+    //   [duration],
+    // );
+
+    final durationString = useMemoized(
+      () => secondsAsString(duration ?? 0),
+      [duration],
+    );
 
     final sliderWaveAnimation = useAnimationController(
       duration: MusicPlayerWidget.sliderWaveAnimationDuration,
@@ -1114,10 +1134,6 @@ class _MusicMiddleSide extends HookConsumerWidget {
         positionAnimation.value,
         showRemainingTime,
       ],
-    );
-    final durationString = useMemoized(
-      () => secondsAsString(duration ?? 0),
-      [duration],
     );
 
     void onPositionTextTap() => ref

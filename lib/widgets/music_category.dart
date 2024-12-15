@@ -54,8 +54,6 @@ class MusicCategory extends HookWidget {
       },
       [count],
     );
-    final animatedCount = useAnimation(animation);
-
     useEffect(
       () {
         if (count != null) {
@@ -68,6 +66,8 @@ class MusicCategory extends HookWidget {
       },
       [count],
     );
+
+    final animatedCount = useAnimation(animation);
 
     return MouseRegion(
       onEnter: onDismiss != null ? (_) => showDismiss.value = true : null,
