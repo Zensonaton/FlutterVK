@@ -180,7 +180,7 @@ class TrackTitleAndArtist extends StatelessWidget {
 }
 
 /// Виджет для [_MusicLeftSide], отображающий миниатюру текущего трека.
-class _LeftSideThumbnail extends ConsumerWidget {
+class _LeftSideThumbnail extends HookConsumerWidget {
   /// Трек, который играет в данный момент, и миниатюра которого будет показана.
   final ExtendedAudio? audio;
 
@@ -204,6 +204,29 @@ class _LeftSideThumbnail extends ConsumerWidget {
 
     final isPlaying = player.playing;
     final isBuffering = player.buffering;
+    final showLoading = useState(false);
+    final bufferingTimer = useRef<Timer?>(null);
+
+    useEffect(
+      () {
+        bufferingTimer.value?.cancel();
+
+        if (isBuffering) {
+          bufferingTimer.value = Timer(
+            MusicPlayerWidget.bufferingIndicatorDuration,
+            () {
+              showLoading.value = true;
+            },
+          );
+        } else {
+          showLoading.value = false;
+        }
+
+        return bufferingTimer.value?.cancel;
+      },
+      [isBuffering, player.trackIndex],
+    );
+    final double loadingBlurSigma = showLoading.value ? 3 : 0;
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -236,8 +259,8 @@ class _LeftSideThumbnail extends ConsumerWidget {
                 // Анимированное изображение.
                 ImageFiltered(
                   imageFilter: ImageFilter.blur(
-                    sigmaX: isBuffering ? 3 : 0,
-                    sigmaY: isBuffering ? 3 : 0,
+                    sigmaX: loadingBlurSigma,
+                    sigmaY: loadingBlurSigma,
                     tileMode: TileMode.decal,
                   ),
                   child: AnimatedSwitcher(
@@ -276,7 +299,7 @@ class _LeftSideThumbnail extends ConsumerWidget {
                 ),
 
                 // Анимация загрузки поверх.
-                if (isBuffering)
+                if (showLoading.value)
                   Container(
                     width: thumbnailSize,
                     height: thumbnailSize,
@@ -1730,6 +1753,10 @@ class MusicPlayerWidget extends HookConsumerWidget {
     return MusicPlayerWidget.desktopMiniPlayerHeight +
         MediaQuery.paddingOf(context).bottom;
   }
+
+  /// Длительность того, сколько [player.isBuffering] должен быть `true`, что бы показать индикатор загрузки.
+  static const Duration bufferingIndicatorDuration =
+      Duration(milliseconds: 100);
 
   const MusicPlayerWidget({
     super.key,
