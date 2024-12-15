@@ -134,13 +134,14 @@ class ExtendedPlaylist {
   /// По сравнению с [==], данный метод сравнивает больше полей, что активно используется для [updatePlaylist], однако, данный метод не проверяет равенство треков в плейлисте.
   bool isEquals(ExtendedPlaylist other) {
     // Базовые поля.
-    if (count != other.count ||
-        title != other.title ||
-        description != other.description ||
-        subtitle != other.subtitle ||
-        backgroundAnimationUrl != other.backgroundAnimationUrl ||
-        photo != other.photo ||
-        colorCount != other.colorCount) {
+    if ((other.count != null && count != other.count) ||
+        (other.title != null && title != other.title) ||
+        (other.description != null && description != other.description) ||
+        (other.subtitle != null && subtitle != other.subtitle) ||
+        (other.backgroundAnimationUrl != null &&
+            backgroundAnimationUrl != other.backgroundAnimationUrl) ||
+        (other.photo != null && photo != other.photo) ||
+        (other.colorCount != null && colorCount != other.colorCount)) {
       return false;
     }
 
