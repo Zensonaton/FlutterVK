@@ -6,24 +6,6 @@ part of 'shared.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-APIError _$APIErrorFromJson(Map<String, dynamic> json) => APIError(
-      errorCode: (json['error_code'] as num).toInt(),
-      errorMessage: json['error_msg'] as String,
-      requestParams: (json['request_params'] as List<dynamic>)
-          .map((e) => Map<String, String>.from(e as Map))
-          .toList(),
-      captchaSID: json['captcha_sid'] as String?,
-      captchaUrl: json['captcha_img'] as String?,
-    );
-
-Map<String, dynamic> _$APIErrorToJson(APIError instance) => <String, dynamic>{
-      'error_code': instance.errorCode,
-      'error_msg': instance.errorMessage,
-      'request_params': instance.requestParams,
-      'captcha_sid': instance.captchaSID,
-      'captcha_img': instance.captchaUrl,
-    };
-
 APIUser _$APIUserFromJson(Map<String, dynamic> json) => APIUser(
       id: (json['id'] as num).toInt(),
       firstName: json['first_name'] as String,

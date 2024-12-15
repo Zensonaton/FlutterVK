@@ -28,16 +28,3 @@ Map<String, dynamic> _$LRCLIBTrackToJson(LRCLIBTrack instance) =>
       'plainLyrics': instance.plainLyrics,
       'syncedLyrics': instance.syncedLyrics,
     };
-
-LRCLIBError _$LRCLIBErrorFromJson(Map<String, dynamic> json) => LRCLIBError(
-      code: (json['code'] as num).toInt(),
-      name: json['name'] as String,
-      message: json['message'] as String,
-    );
-
-Map<String, dynamic> _$LRCLIBErrorToJson(LRCLIBError instance) =>
-    <String, dynamic>{
-      'code': instance.code,
-      'name': instance.name,
-      'message': instance.message,
-    };

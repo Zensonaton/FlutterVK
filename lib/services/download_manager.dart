@@ -9,6 +9,7 @@ import "package:queue/queue.dart";
 import "../api/deezer/search.dart";
 import "../api/lrclib/get.dart";
 import "../api/lrclib/search.dart";
+import "../api/lrclib/shared.dart";
 import "../api/vk/audio/get_lyrics.dart";
 import "../main.dart";
 import "../provider/playlists.dart";
@@ -305,31 +306,48 @@ class PlaylistCacheDownloadItem extends DownloadItem {
     if (audio.lrcLibLyrics != null) return null;
 
     try {
-      // Метод `get` у LRCLIB работает только в том случае, если дан title, artist, duration и album трека.
-      // В случае с ВКонтакте, не всегда у нас есть альбом, поэтому поиск по текстам через `get` невозможен.
-      //
-      // Что бы избежать этой беды, мы используем метод `search`, который работает без альбома, но менее точен.
-      if (audio.album == null) {
-        final response = await lrcLib_search(
-          audio.title,
-          artist: audio.artist,
-          album: audio.album?.title,
-        );
-
-        return response.firstOrNull?.asLyrics;
-      }
-
-      // Альбом дан, поэтому используем метод `get`, который более точен.
+      // Пытаемся получить текст песни с LRCLib, передавая длительность трека и его альбом (при наличии).
       final response = await lrcLib_get(
         audio.title,
         audio.artist,
-        audio.album!.title,
-        audio.duration,
+        album: audio.album?.title,
+        duration: audio.duration,
       );
 
       return response.asLyrics;
-    } catch (e) {
+    } on LRCLIBException {
       // No-op.
+    } catch (error, stackTrace) {
+      logger.w(
+        "[get] LRCLib error:",
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    // Если мы здесь, то значит, что мы не получили информацию по тексту, передавая альбом и длительность трека.
+    // В таком случае, используем API search (поиска). Он хуже, поскольку get может искать тексты с других источников.
+    //
+    // В документации LRCLib написано, что search стоит использовать лишь как fallback, что мы и делаем здесь.
+    // https://lrclib.net/docs
+
+    try {
+      // Производим поиск.
+      final response = await lrcLib_search(
+        audio.title,
+        artist: audio.artist,
+        album: audio.album?.title,
+      );
+
+      return response.firstOrNull?.asLyrics;
+    } on LRCLIBException {
+      // No-op.
+    } catch (error, stackTrace) {
+      logger.w(
+        "[search] LRCLib error:",
+        error: error,
+        stackTrace: stackTrace,
+      );
     }
 
     return null;

@@ -10,6 +10,7 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 
 import "../api/lrclib/consts.dart";
+import "../api/lrclib/shared.dart";
 import "../api/vk/consts.dart";
 import "../api/vk/shared.dart";
 import "../consts.dart";
@@ -38,11 +39,9 @@ void initDioInterceptors(
   Dio dio, {
   String loggerName = "Dio",
   bool isVK = false,
-  bool isLRCLIB = false,
+  bool isLRCLib = false,
 }) {
   final AppLogger logger = getLogger(loggerName);
-
-  // TODO: Обработчик для LRCLIB. Он возвращает 404, если трек не найден.
 
   // Игнорируем плохие SSL-сертификаты.
   (dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient =
@@ -55,19 +54,27 @@ void initDioInterceptors(
         ref: ref,
       ),
 
+    // Обработчик для ошибок API LRCLib.
+    if (isLRCLib) LRCLIBInterceptor(),
+
     // Обработчик для повтора HTTP-запросов в случае ошибок сети.
     RetryInterceptor(
       dio: dio,
       logPrint: (String log) => logger.d(log),
       retryEvaluator: (DioException error, int attempt) {
-        return error is! VKAPIException && error.response?.statusCode != 404;
+        // Если ошибка является игнорируемой, то не повторяем запрос.
+        if (error is VKAPIException || error is LRCLIBException) {
+          return false;
+        }
+
+        return true;
       },
       retryDelays: [
         Duration(
-          seconds: isLRCLIB ? 2 : 1,
+          seconds: isLRCLib ? 2 : 1,
         ),
       ],
-      retries: isLRCLIB ? 1 : 3,
+      retries: isLRCLib ? 1 : 3,
     ),
 
     // Обработчик для логирования HTTP-запросов и их ответов в debug-режиме.
@@ -141,6 +148,30 @@ class VKAPIInterceptor extends Interceptor {
     // Возвращаем объект `response` из ответа.
     if (data["response"] != null) {
       response.data = data["response"];
+    }
+
+    super.onResponse(response, handler);
+  }
+}
+
+/// [Interceptor] для [Dio], обрабатывающий возможные ошибки, возвращаемые API LRCLib.
+class LRCLIBInterceptor extends Interceptor {
+  LRCLIBInterceptor();
+
+  @override
+  void onResponse(Response response, ResponseInterceptorHandler handler) {
+    // Проверяем на наличие ошибок.
+    if (response.data is Map) {
+      final data = response.data as Map<String, dynamic>;
+
+      if (response.statusCode! >= 300 && data.containsKey("statusCode")) {
+        throw LRCLIBException(
+          code: data["statusCode"],
+          name: data["name"],
+          message: data["message"],
+          requestOptions: response.requestOptions,
+        );
+      }
     }
 
     super.onResponse(response, handler);
@@ -235,6 +266,7 @@ Dio lrcLibDio(LrcLibDioRef ref) {
     BaseOptions(
       baseUrl: lrcLibBaseURL,
       requestEncoder: gzipEncoder,
+      validateStatus: (_) => true,
       headers: {
         "User-Agent": lrcLibUA,
         "Accept-Encoding": "gzip",
@@ -246,8 +278,8 @@ Dio lrcLibDio(LrcLibDioRef ref) {
   initDioInterceptors(
     ref,
     dio,
-    loggerName: "LRCLIB",
-    isLRCLIB: true,
+    loggerName: "LRCLib",
+    isLRCLib: true,
   );
 
   return dio;

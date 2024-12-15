@@ -57,7 +57,7 @@ final vkDioProvider = AutoDisposeProvider<Dio>.internal(
 );
 
 typedef VkDioRef = AutoDisposeProviderRef<Dio>;
-String _$lrcLibDioHash() => r'e9787d7a39bdbdfe62b936cdb08d43b4570cc807';
+String _$lrcLibDioHash() => r'5d33d88ef32cac02fdffb48452a666af33e86213';
 
 /// [Provider], возвращающий объект [Dio] с зарегистрированными [Interceptor]'ами, настроенный для создания API-запросов к сервису LRCLIB.
 ///

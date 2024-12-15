@@ -1,3 +1,4 @@
+import "package:dio/dio.dart";
 import "package:json_annotation/json_annotation.dart";
 
 import "../vk/audio/get_lyrics.dart";
@@ -57,30 +58,21 @@ class LRCLIBTrack {
   Map<String, dynamic> toJson() => _$LRCLIBTrackToJson(this);
 }
 
-/// Объект ошибки API ВКонтакте.
-///
-/// Не следует путать с [VKAPIError].
-@JsonSerializable()
-class LRCLIBError {
+/// Класс, расширяющий [DioException], олицетворяющий ошибку API LRCLib.
+class LRCLIBException extends DioException {
+  /// Цифровой код ошибки.
+  int? code;
+
   /// Код ошибки.
-  final int code;
-
-  /// Название ошибки.
-  final String name;
-
-  /// Сообщение об ошибке.
-  final String message;
+  String? name;
 
   @override
-  String toString() => "LRCLIB Error $name: $message";
+  String toString() => "LRCLib error $name: $message";
 
-  LRCLIBError({
-    required this.code,
-    required this.name,
-    required this.message,
+  LRCLIBException({
+    this.code,
+    this.name,
+    super.message,
+    required super.requestOptions,
   });
-
-  factory LRCLIBError.fromJson(Map<String, dynamic> json) =>
-      _$LRCLIBErrorFromJson(json);
-  Map<String, dynamic> toJson() => _$LRCLIBErrorToJson(this);
 }

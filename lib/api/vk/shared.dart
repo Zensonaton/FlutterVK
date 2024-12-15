@@ -7,47 +7,6 @@ import "../../utils.dart";
 
 part "shared.g.dart";
 
-/// Объект ошибки API ВКонтакте.
-///
-/// Не следует путать с [VKAPIError].
-@JsonSerializable()
-class APIError {
-  /// Код ошибки.
-  @JsonKey(name: "error_code")
-  final int errorCode;
-
-  /// Текст ошибки.
-  @JsonKey(name: "error_msg")
-  final String errorMessage;
-
-  /// Переданные параметры запроса.
-  @JsonKey(name: "request_params")
-  final List<Map<String, String>> requestParams;
-
-  /// ID изображения каптчи.
-  @JsonKey(name: "captcha_sid")
-  final String? captchaSID;
-
-  /// URL на изображение каптчи.
-  @JsonKey(name: "captcha_img")
-  final String? captchaUrl;
-
-  @override
-  String toString() => "API Error $errorCode: $errorMessage";
-
-  APIError({
-    required this.errorCode,
-    required this.errorMessage,
-    required this.requestParams,
-    this.captchaSID,
-    this.captchaUrl,
-  });
-
-  factory APIError.fromJson(Map<String, dynamic> json) =>
-      _$APIErrorFromJson(json);
-  Map<String, dynamic> toJson() => _$APIErrorToJson(this);
-}
-
 /// Объект, олицетворяющий пользователя ВКонтакте.
 @JsonSerializable()
 class APIUser {
