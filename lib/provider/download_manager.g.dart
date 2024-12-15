@@ -167,14 +167,14 @@ class _DownloadTaskByIDProviderElement
   String get id => (origin as DownloadTaskByIDProvider).id;
 }
 
-String _$downloadManagerHash() => r'128bda9e15aa744577564cc5216be65e82555955';
+String _$downloadManagerHash() => r'3dacd8900359301865d501393c3c2c39c2872782';
 
 /// [Provider], предоставляющий доступ к менеджеру загрузок.
 ///
 /// Copied from [DownloadManager].
 @ProviderFor(DownloadManager)
 final downloadManagerProvider =
-    AutoDisposeNotifierProvider<DownloadManager, DownloadManagerState>.internal(
+    NotifierProvider<DownloadManager, DownloadManagerState>.internal(
   DownloadManager.new,
   name: r'downloadManagerProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -184,6 +184,6 @@ final downloadManagerProvider =
   allTransitiveDependencies: null,
 );
 
-typedef _$DownloadManager = AutoDisposeNotifier<DownloadManagerState>;
+typedef _$DownloadManager = Notifier<DownloadManagerState>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

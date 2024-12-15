@@ -59,7 +59,7 @@ class DownloadManagerState {
 }
 
 /// [Provider], предоставляющий доступ к менеджеру загрузок.
-@riverpod
+@Riverpod(keepAlive: true)
 class DownloadManager extends _$DownloadManager {
   static final AppLogger logger = getLogger("DownloadManagerProvider");
 
@@ -217,8 +217,7 @@ class DownloadManager extends _$DownloadManager {
 /// Возвращает [DownloadTask] по его [id].
 @riverpod
 DownloadTask? downloadTaskByID(DownloadTaskByIDRef ref, String id) {
-  return ref
-      .watch(downloadManagerProvider)
-      .tasks
-      .firstWhereOrNull((item) => item.id == id);
+  return ref.watch(downloadManagerProvider).tasks.firstWhereOrNull(
+        (item) => item.id == id,
+      );
 }
