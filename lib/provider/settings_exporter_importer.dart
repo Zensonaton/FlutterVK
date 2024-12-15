@@ -635,32 +635,36 @@ class SettingsExporter {
           throw Exception("Audio file not found: ${audio.mediaKey}");
         }
         final Uint8List encryptedBytes = archiveAudio.content;
+        final int encryptedSize = encryptedBytes.length;
 
-        // Расшифровываем его.
-        final decrypted = await xorCryptIsolate(encryptedBytes, key);
-        updateProgress(i * 2 + 1, totalAudios * 2);
+        // Расшифровываем трек, потом копируем его, и помечаем как кэшированный, если это не было сделано ранее.
+        if (encryptedSize != playlistAudio.cachedSize) {
+          // Расшифровываем трек из архива.
+          final decrypted = await xorCryptIsolate(encryptedBytes, key);
+          updateProgress(i * 2 + 1, totalAudios * 2);
 
-        // Сохраняем аудио на диск.
-        final audioPath =
-            await CachedStreamAudioSource.getCachedAudioByKey(audio.mediaKey);
-        await audioPath.create(recursive: true);
-        await audioPath.writeAsBytes(decrypted);
+          // Сохраняем аудио на диск.
+          final audioPath =
+              await CachedStreamAudioSource.getCachedAudioByKey(audio.mediaKey);
+          await audioPath.create(recursive: true);
+          await audioPath.writeAsBytes(decrypted);
 
-        // Помечаем аудио как кэшированное.
-        //
-        // Сохраяем плейлист в БД каждые 3 трека.
-        await playlists.updatePlaylist(
-          playlist.basicCopyWith(
-            audiosToUpdate: [
-              playlistAudio.basicCopyWith(
-                isCached: audio.isCached,
-                replacedLocally: audio.replacedLocally,
-                cachedSize: decrypted.length,
-              ),
-            ],
-          ),
-          saveInDB: i % 3 == 0,
-        );
+          // Помечаем аудио как кэшированное.
+          //
+          // Сохраяем плейлист в БД каждые 3 трека.
+          await playlists.updatePlaylist(
+            playlist.basicCopyWith(
+              audiosToUpdate: [
+                playlistAudio.basicCopyWith(
+                  isCached: audio.isCached,
+                  replacedLocally: audio.replacedLocally,
+                  cachedSize: encryptedSize,
+                ),
+              ],
+            ),
+            saveInDB: i % 3 == 0,
+          );
+        }
 
         updateProgress(i * 2 + 2, totalAudios * 2);
       }
