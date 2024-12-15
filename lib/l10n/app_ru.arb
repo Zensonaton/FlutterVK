@@ -562,7 +562,10 @@
 	"profile_settingsExporterSuccessDescription": "Экспорт завершён успешно! Вручную перенесите файл на другое устройство и воспользуйтесь опцией «импорт настроек» что бы восстановить изменения.",
 
 	"profile_settingsExporterSuccessShare": "Поделиться",
+	"profile_settingsExporterSuccessCopyToDownloads": "Скопировать в «Загрузки»",
 	"profile_settingsExporterSuccessOpenFolder": "Открыть папку",
+
+	"profile_settingsExporterSuccessCopyToDownloadsSuccess": "Файл был успешно скопирован в папку «Загрузки».",
 
 	"profile_settingsImporterTitle": "Импорт настроек",
 

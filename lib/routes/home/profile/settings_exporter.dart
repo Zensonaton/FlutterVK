@@ -7,6 +7,8 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:gap/gap.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:path/path.dart";
+import "package:path_provider/path_provider.dart";
 import "package:share_plus/share_plus.dart";
 import "package:styled_text/styled_text.dart";
 
@@ -23,6 +25,7 @@ import "../../../utils.dart";
 import "../../../widgets/audio_player.dart";
 import "../../../widgets/dialogs.dart";
 import "../../../widgets/tip_widget.dart";
+import "../music/bottom_audio_options.dart";
 
 /// Диалог, показывающий информацию после успешного экспорта настроек.
 ///
@@ -33,7 +36,9 @@ import "../../../widgets/tip_widget.dart";
 /// 	builder: (context) => const SuccessSettingsExportDialog()
 /// );
 /// ```
-class SuccessSettingsExportDialog extends ConsumerWidget {
+class SuccessSettingsExportDialog extends HookConsumerWidget {
+  static final AppLogger logger = getLogger("SuccessSettingsExportDialog");
+
   /// [File], репрезентирующий файл с экспортированными данными.
   final File file;
 
@@ -46,11 +51,63 @@ class SuccessSettingsExportDialog extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l18n = ref.watch(l18nProvider);
 
+    final copyLoadingState = useState<bool?>(null);
+
     void onCancelTap() => Navigator.of(context).pop();
 
     void onShareTap() => Share.shareXFiles(
           [XFile(file.path)],
         );
+
+    void onCopyToDownloadsTap() async {
+      copyLoadingState.value = false;
+
+      try {
+        final downloadsDir = await getDownloadsDirectory();
+        if (!context.mounted) return;
+
+        // Проверка на случай, если директория загрузок не была найдена.
+        if (downloadsDir == null) {
+          throw Exception("Downloads directory not found");
+        }
+
+        // Копируем файл.
+        final newFile = File(
+          join(
+            downloadsDir.path,
+            basename(
+              file.path,
+            ),
+          ),
+        );
+        await file.copy(newFile.path);
+
+        if (!context.mounted) return;
+
+        // Показываем сообщение об успешном копировании.
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              l18n.profile_settingsExporterSuccessCopyToDownloadsSuccess,
+            ),
+          ),
+        );
+
+        copyLoadingState.value = true;
+      } catch (error, stackTrace) {
+        showLogErrorDialog(
+          "Error while copying exported file to download directory",
+          error,
+          stackTrace,
+          logger,
+          context,
+        );
+
+        if (context.mounted) {
+          copyLoadingState.value = null;
+        }
+      }
+    }
 
     void onOpenFolderTap() async {
       if (!Platform.isWindows) {
@@ -79,6 +136,37 @@ class SuccessSettingsExportDialog extends ConsumerWidget {
             Icons.share,
           ),
           onTap: onShareTap,
+        ),
+
+        // "Скопировать в загрузки".
+        ListTile(
+          title: Text(
+            l18n.profile_settingsExporterSuccessCopyToDownloads,
+          ),
+          leading: () {
+            // Выполняется копирование.
+            if (copyLoadingState.value == false) {
+              return const ListTileLoadingProgressIndicator();
+            }
+
+            // Копирование завершено.
+            if (copyLoadingState.value == true) {
+              return const Icon(
+                Icons.check,
+              );
+            }
+
+            // Начальное состояние.
+            return const Icon(
+              Icons.download,
+            );
+          }(),
+          subtitle: copyLoadingState.value == true
+              ? Text(
+                  l18n.profile_settingsExporterSuccessCopyToDownloadsSuccess,
+                )
+              : null,
+          onTap: copyLoadingState.value == null ? onCopyToDownloadsTap : null,
         ),
 
         // Открыть папку с экспортированным файлом на OS Windows.

@@ -26,9 +26,11 @@ import "../music.dart";
 import "bottom_dialogs/deezer_thumbs.dart";
 import "bottom_dialogs/info_edit.dart";
 
-/// Виджет для [BottomAudioOptionsDialog], отображающий [CircularProgressIndicator] во время загрузки.
-class _LoadingProgressIndicator extends StatelessWidget {
-  const _LoadingProgressIndicator();
+/// Виджет для [ListTile], отображающий [CircularProgressIndicator] во время загрузки.
+class ListTileLoadingProgressIndicator extends StatelessWidget {
+  const ListTileLoadingProgressIndicator({
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -439,7 +441,7 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
               // Добавить или удалить как "любимый" трек.
               ListTile(
                 leading: isTogglingLikeState.value
-                    ? const _LoadingProgressIndicator()
+                    ? const ListTileLoadingProgressIndicator()
                     : Icon(
                         newAudio.isLiked
                             ? Icons.favorite
@@ -482,7 +484,7 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
               // Поиск по Genius.
               ListTile(
                 leading: hasGeniusInfo.value == null
-                    ? const _LoadingProgressIndicator()
+                    ? const ListTileLoadingProgressIndicator()
                     : const Icon(
                         Icons.lyrics_outlined,
                       ),
