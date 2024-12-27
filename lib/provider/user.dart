@@ -683,6 +683,11 @@ class ExtendedAudio {
       return false;
     }
 
+    // Ограничение воспроизведения.
+    if (isRestricted != other.isRestricted) {
+      return false;
+    }
+
     return true;
   }
 
