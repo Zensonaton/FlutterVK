@@ -405,251 +405,261 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
     return DraggableScrollableSheet(
       expand: false,
       builder: (BuildContext context, ScrollController controller) {
-        return Container(
+        return SizedBox(
           width: 500,
           height: 300,
-          padding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 8,
-          ),
-          child: ListView(
-            controller: controller,
-            children: [
-              // Изображение трека.
-              Padding(
-                padding: const EdgeInsets.only(
-                  left: 4,
-                  right: 4,
-                  top: 16,
+          child: ScrollConfiguration(
+            behavior: ScrollConfiguration.of(context).copyWith(
+              scrollbars: false,
+            ),
+            child: Theme(
+              data: Theme.of(context).copyWith(
+                listTileTheme: const ListTileThemeData(
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 36,
+                  ),
                 ),
-                child: Column(
-                  children: [
-                    // Трек.
-                    AudioTrackTile(
+              ),
+              child: ListView(
+                controller: controller,
+                padding: const EdgeInsets.only(
+                  top: 24,
+                ),
+                children: [
+                  // Изображение трека.
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      left: 24,
+                      right: 24,
+                    ),
+                    child: AudioTrackTile(
                       audio: newAudio,
                       allowTextSelection: true,
                       showAlbumName: true,
                     ),
-                    const Gap(8),
-
-                    // Разделитель.
-                    const Divider(),
-                    const Gap(8),
-                  ],
-                ),
-              ),
-
-              // Редактировать данные трека.
-              ListTile(
-                leading: const Icon(
-                  Icons.edit,
-                ),
-                title: Text(
-                  l18n.music_detailsEditTitle,
-                ),
-                onTap: onDetailsEditTap,
-              ),
-
-              // Добавить или удалить как "любимый" трек.
-              ListTile(
-                leading: isTogglingLikeState.value
-                    ? const ListTileLoadingProgressIndicator()
-                    : Icon(
-                        newAudio.isLiked
-                            ? Icons.favorite
-                            : Icons.favorite_outline,
-                      ),
-                enabled: !isTogglingLikeState.value,
-                title: Text(
-                  newAudio.isLiked
-                      ? l18n.music_detailsRemoveFromFavoritesTitle
-                      : l18n.music_detailsAddAsFavoritesTitle,
-                ),
-                onTap: onAddAsFavoritesTap,
-              ),
-
-              // TODO: Добавить в плейлист...
-              if (kDebugMode)
-                ListTile(
-                  leading: const Icon(
-                    Icons.playlist_add,
                   ),
-                  title: Text(
-                    l18n.music_detailsAddToPlaylistTitle,
-                  ),
-                  onTap: addToPlaylistTap,
-                ),
+                  const Gap(6),
 
-              // TODO: Добавить в очередь.
-              if (kDebugMode)
-                ListTile(
-                  leading: const Icon(
-                    Icons.queue_music,
+                  // Разделитель.
+                  const Divider(
+                    indent: 24,
+                    endIndent: 24,
                   ),
-                  title: Text(
-                    l18n.music_detailsPlayNextTitle,
-                  ),
-                  enabled: newAudio.canPlay,
-                  onTap: onAddToQueueTap,
-                ),
+                  const Gap(6),
 
-              // TODO: Перейти к альбому.
-              if (kDebugMode)
-                ListTile(
-                  leading: const Icon(
-                    Icons.album,
-                  ),
-                  title: Text(
-                    l18n.music_detailsGoToAlbumTitle,
-                  ),
-                  subtitle: newAudio.album != null
-                      ? Text(
-                          l18n.music_detailsGoToAlbumDescription(
-                            newAudio.album!.title,
-                          ),
-                        )
-                      : null,
-                  enabled: newAudio.album != null,
-                  onTap: onGoToAlbumTap,
-                ),
-
-              // Поиск по Genius.
-              ListTile(
-                leading: hasGeniusInfo.value == null
-                    ? const ListTileLoadingProgressIndicator()
-                    : const Icon(
-                        Icons.lyrics_outlined,
-                      ),
-                title: Text(
-                  l18n.music_detailsGeniusSearchTitle,
-                ),
-                subtitle: Text(
-                  l18n.music_detailsGeniusSearchDescription,
-                ),
-                enabled: hasGeniusInfo.value ?? false,
-                onTap: onGeniusSearchTap,
-              ),
-
-              // Кэшировать этот трек.
-              ListTile(
-                leading: const Icon(
-                  Icons.download,
-                ),
-                title: Text(
-                  l18n.music_detailsCacheTrackTitle,
-                ),
-                subtitle: Text(
-                  l18n.music_detailsCacheTrackDescription,
-                ),
-                enabled: !isRestricted && !isCached,
-                onTap: onCacheTrackTap,
-              ),
-
-              // Заменить обложку.
-              ListTile(
-                leading: const Icon(
-                  Icons.image_search,
-                ),
-                title: Text(
-                  l18n.music_detailsSetThumbnailTitle,
-                ),
-                subtitle: Text(
-                  l18n.music_detailsSetThumbnailDescription,
-                ),
-                onTap: onDeezerThumbsTap,
-              ),
-
-              // Заменить трек локально, либо удалить локальную версию.
-              ListTile(
-                leading: Icon(
-                  isReplacedLocally ? Icons.music_off : Icons.sd_card,
-                ),
-                title: Text(
-                  isReplacedLocally
-                      ? l18n.music_detailsReplaceWithLocalAudioRestoreTitle
-                      : l18n.music_detailsReplaceWithLocalAudioTitle,
-                ),
-                subtitle: !isReplacedLocally
-                    ? Text(
-                        l18n.music_detailsReplaceWithLocalAudioDescription,
-                      )
-                    : null,
-                onTap: onReplaceWithLocalAudioTap,
-              ),
-
-              // TODO: Перезалить с Youtube.
-              if (kDebugMode)
-                ListTile(
-                  leading: const Icon(
-                    Icons.rotate_left,
-                  ),
-                  title: Text(
-                    l18n.music_detailsReuploadFromYoutubeTitle,
-                  ),
-                  subtitle: Text(
-                    l18n.music_detailsReuploadFromYoutubeDescription,
-                  ),
-                  onTap: onReplaceFromYoutubeTap,
-                ),
-
-              // TODO: Детали трека.
-              if (kDebugMode)
-                ListTile(
-                  leading: const Icon(
-                    Icons.info,
-                  ),
-                  title: Text(
-                    l18n.music_detailsTrackDetailsTitle,
-                  ),
-                  onTap: onTrackDetailsTap,
-                ),
-
-              // Debug-опции.
-              if (kDebugMode) ...[
-                // Скопировать ID трека.
-                ListTile(
-                  leading: const Icon(
-                    Icons.link,
-                  ),
-                  title: const Text(
-                    "Copy mediaKey",
-                  ),
-                  onTap: () {
-                    Clipboard.setData(
-                      ClipboardData(
-                        text: newAudio.mediaKey,
-                      ),
-                    );
-
-                    Navigator.of(context).pop();
-                  },
-                ),
-
-                // Открыть папку с треком.
-                if (Platform.isWindows)
+                  // Редактировать данные трека.
                   ListTile(
                     leading: const Icon(
-                      Icons.folder_open,
+                      Icons.edit,
                     ),
-                    title: const Text(
-                      "Open folder with audio",
+                    title: Text(
+                      l18n.music_detailsEditTitle,
                     ),
-                    enabled: isCached,
-                    onTap: () async {
-                      Navigator.of(context).pop();
-
-                      final File path =
-                          await CachedStreamAudioSource.getCachedAudioByKey(
-                        newAudio.mediaKey,
-                      );
-                      await Process.run(
-                        "explorer.exe",
-                        ["/select,", path.path],
-                      );
-                    },
+                    onTap: onDetailsEditTap,
                   ),
-              ],
-            ],
+
+                  // Добавить или удалить как "любимый" трек.
+                  ListTile(
+                    leading: isTogglingLikeState.value
+                        ? const ListTileLoadingProgressIndicator()
+                        : Icon(
+                            newAudio.isLiked
+                                ? Icons.favorite
+                                : Icons.favorite_outline,
+                          ),
+                    enabled: !isTogglingLikeState.value,
+                    title: Text(
+                      newAudio.isLiked
+                          ? l18n.music_detailsRemoveFromFavoritesTitle
+                          : l18n.music_detailsAddAsFavoritesTitle,
+                    ),
+                    onTap: onAddAsFavoritesTap,
+                  ),
+
+                  // TODO: Добавить в плейлист.
+                  if (kDebugMode)
+                    ListTile(
+                      leading: const Icon(
+                        Icons.playlist_add,
+                      ),
+                      title: Text(
+                        l18n.music_detailsAddToPlaylistTitle,
+                      ),
+                      onTap: addToPlaylistTap,
+                    ),
+
+                  // TODO: Добавить в очередь.
+                  if (kDebugMode)
+                    ListTile(
+                      leading: const Icon(
+                        Icons.queue_music,
+                      ),
+                      title: Text(
+                        l18n.music_detailsPlayNextTitle,
+                      ),
+                      enabled: newAudio.canPlay,
+                      onTap: onAddToQueueTap,
+                    ),
+
+                  // TODO: Перейти к альбому.
+                  if (kDebugMode)
+                    ListTile(
+                      leading: const Icon(
+                        Icons.album,
+                      ),
+                      title: Text(
+                        l18n.music_detailsGoToAlbumTitle,
+                      ),
+                      subtitle: newAudio.album != null
+                          ? Text(
+                              l18n.music_detailsGoToAlbumDescription(
+                                newAudio.album!.title,
+                              ),
+                            )
+                          : null,
+                      enabled: newAudio.album != null,
+                      onTap: onGoToAlbumTap,
+                    ),
+
+                  // Поиск по Genius.
+                  ListTile(
+                    leading: hasGeniusInfo.value == null
+                        ? const ListTileLoadingProgressIndicator()
+                        : const Icon(
+                            Icons.lyrics_outlined,
+                          ),
+                    title: Text(
+                      l18n.music_detailsGeniusSearchTitle,
+                    ),
+                    subtitle: Text(
+                      l18n.music_detailsGeniusSearchDescription,
+                    ),
+                    enabled: hasGeniusInfo.value ?? false,
+                    onTap: onGeniusSearchTap,
+                  ),
+
+                  // Кэшировать этот трек.
+                  ListTile(
+                    leading: const Icon(
+                      Icons.download,
+                    ),
+                    title: Text(
+                      l18n.music_detailsCacheTrackTitle,
+                    ),
+                    subtitle: Text(
+                      l18n.music_detailsCacheTrackDescription,
+                    ),
+                    enabled: !isRestricted && !isCached,
+                    onTap: onCacheTrackTap,
+                  ),
+
+                  // Заменить обложку.
+                  ListTile(
+                    leading: const Icon(
+                      Icons.image_search,
+                    ),
+                    title: Text(
+                      l18n.music_detailsSetThumbnailTitle,
+                    ),
+                    subtitle: Text(
+                      l18n.music_detailsSetThumbnailDescription,
+                    ),
+                    onTap: onDeezerThumbsTap,
+                  ),
+
+                  // Заменить трек локально, либо удалить локальную версию.
+                  ListTile(
+                    leading: Icon(
+                      isReplacedLocally ? Icons.music_off : Icons.sd_card,
+                    ),
+                    title: Text(
+                      isReplacedLocally
+                          ? l18n.music_detailsReplaceWithLocalAudioRestoreTitle
+                          : l18n.music_detailsReplaceWithLocalAudioTitle,
+                    ),
+                    subtitle: !isReplacedLocally
+                        ? Text(
+                            l18n.music_detailsReplaceWithLocalAudioDescription,
+                          )
+                        : null,
+                    onTap: onReplaceWithLocalAudioTap,
+                  ),
+
+                  // TODO: Перезалить с Youtube.
+                  if (kDebugMode)
+                    ListTile(
+                      leading: const Icon(
+                        Icons.rotate_left,
+                      ),
+                      title: Text(
+                        l18n.music_detailsReuploadFromYoutubeTitle,
+                      ),
+                      subtitle: Text(
+                        l18n.music_detailsReuploadFromYoutubeDescription,
+                      ),
+                      onTap: onReplaceFromYoutubeTap,
+                    ),
+
+                  // TODO: Детали трека.
+                  if (kDebugMode)
+                    ListTile(
+                      leading: const Icon(
+                        Icons.info,
+                      ),
+                      title: Text(
+                        l18n.music_detailsTrackDetailsTitle,
+                      ),
+                      onTap: onTrackDetailsTap,
+                    ),
+
+                  // Debug-опции.
+                  if (kDebugMode) ...[
+                    // Скопировать ID трека.
+                    ListTile(
+                      leading: const Icon(
+                        Icons.link,
+                      ),
+                      title: const Text(
+                        "Copy mediaKey",
+                      ),
+                      onTap: () {
+                        Clipboard.setData(
+                          ClipboardData(
+                            text: newAudio.mediaKey,
+                          ),
+                        );
+
+                        Navigator.of(context).pop();
+                      },
+                    ),
+
+                    // Открыть папку с треком.
+                    if (Platform.isWindows)
+                      ListTile(
+                        leading: const Icon(
+                          Icons.folder_open,
+                        ),
+                        title: const Text(
+                          "Open folder with audio",
+                        ),
+                        enabled: isCached,
+                        onTap: () async {
+                          Navigator.of(context).pop();
+
+                          final File path =
+                              await CachedStreamAudioSource.getCachedAudioByKey(
+                            newAudio.mediaKey,
+                          );
+                          await Process.run(
+                            "explorer.exe",
+                            ["/select,", path.path],
+                          );
+                        },
+                      ),
+                  ],
+                ],
+              ),
+            ),
           ),
         );
       },

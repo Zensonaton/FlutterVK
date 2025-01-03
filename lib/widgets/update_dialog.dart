@@ -99,72 +99,77 @@ class UpdateAvailableDialog extends ConsumerWidget {
               children: [
                 // Внутреннее содержимое.
                 Expanded(
-                  child: ListView(
-                    controller: controller,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
+                  child: ScrollConfiguration(
+                    behavior: ScrollConfiguration.of(context).copyWith(
+                      scrollbars: false,
                     ),
-                    children: [
-                      // Иконка обновления.
-                      Icon(
-                        Icons.update,
-                        size: 28,
-                        color: scheme.primary,
+                    child: ListView(
+                      controller: controller,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
                       ),
-                      const Gap(2),
-
-                      // Текст "Доступно обновление Flutter VK".
-                      Text(
-                        l18n.updateAvailableTitle,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
+                      children: [
+                        // Иконка обновления.
+                        Icon(
+                          Icons.update,
+                          size: 28,
                           color: scheme.primary,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w500,
                         ),
-                      ),
-                      const Gap(2),
+                        const Gap(2),
 
-                      // Информация о старой и новой версии.
-                      StyledText(
-                        text: l18n.updateAvailableDescription(
-                          appVersion,
-                          release.tagName,
-                          release.createdAt!.toLocal(),
-                          release.createdAt!.toLocal(),
-                          release.prerelease
-                              ? "(${l18n.updatePreReleaseTitle})"
-                              : "",
-                        ),
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: scheme.onSurface.withValues(alpha: 0.75),
-                        ),
-                        tags: {
-                          "arrow": StyledTextIconTag(
-                            Icons.arrow_right,
-                            color: scheme.onSurface.withValues(alpha: 0.75),
-                            size: 18,
+                        // Текст "Доступно обновление Flutter VK".
+                        Text(
+                          l18n.updateAvailableTitle,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: scheme.primary,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w500,
                           ),
-                          "debug": StyledTextIconTag(
-                            Icons.bug_report,
-                            color: scheme.onSurface.withValues(alpha: 0.75),
-                            size: 18,
+                        ),
+                        const Gap(2),
+
+                        // Информация о старой и новой версии.
+                        StyledText(
+                          text: l18n.updateAvailableDescription(
+                            appVersion,
+                            release.tagName,
+                            release.createdAt!.toLocal(),
+                            release.createdAt!.toLocal(),
+                            release.prerelease
+                                ? "(${l18n.updatePreReleaseTitle})"
+                                : "",
                           ),
-                        },
-                      ),
-                      const Gap(6),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: scheme.onSurface.withValues(alpha: 0.75),
+                          ),
+                          tags: {
+                            "arrow": StyledTextIconTag(
+                              Icons.arrow_right,
+                              color: scheme.onSurface.withValues(alpha: 0.75),
+                              size: 18,
+                            ),
+                            "debug": StyledTextIconTag(
+                              Icons.bug_report,
+                              color: scheme.onSurface.withValues(alpha: 0.75),
+                              size: 18,
+                            ),
+                          },
+                        ),
+                        const Gap(6),
 
-                      const Divider(),
-                      const Gap(6),
+                        const Divider(),
+                        const Gap(6),
 
-                      // Описание обновления.
-                      MarkdownBody(
-                        data: release.body,
-                        shrinkWrap: false,
-                      ),
-                      const Gap(4),
-                    ],
+                        // Описание обновления.
+                        MarkdownBody(
+                          data: release.body,
+                          shrinkWrap: false,
+                        ),
+                        const Gap(4),
+                      ],
+                    ),
                   ),
                 ),
                 const Divider(),
@@ -254,44 +259,49 @@ class ChangelogDialog extends ConsumerWidget {
             children: [
               // Внутреннее содержимое.
               Expanded(
-                child: ListView(
-                  controller: controller,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 16,
+                child: ScrollConfiguration(
+                  behavior: ScrollConfiguration.of(context).copyWith(
+                    scrollbars: false,
                   ),
-                  children: [
-                    // Иконка обновления.
-                    Icon(
-                      Icons.article,
-                      size: 28,
-                      color: scheme.primary,
+                  child: ListView(
+                    controller: controller,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
                     ),
-                    const Gap(2),
-
-                    // Текст "Список изменений в этой версии".
-                    Text(
-                      l18n.profile_changelogDialogTitle(
-                        "v${release.tagName}",
-                      ),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
+                    children: [
+                      // Иконка обновления.
+                      Icon(
+                        Icons.article,
+                        size: 28,
                         color: scheme.primary,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w500,
                       ),
-                    ),
-                    const Gap(2),
+                      const Gap(2),
 
-                    const Divider(),
-                    const Gap(6),
+                      // Текст "Список изменений в этой версии".
+                      Text(
+                        l18n.profile_changelogDialogTitle(
+                          "v${release.tagName}",
+                        ),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: scheme.primary,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const Gap(2),
 
-                    // Описание обновления.
-                    MarkdownBody(
-                      data: release.body,
-                      shrinkWrap: false,
-                    ),
-                  ],
+                      const Divider(),
+                      const Gap(6),
+
+                      // Описание обновления.
+                      MarkdownBody(
+                        data: release.body,
+                        shrinkWrap: false,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
