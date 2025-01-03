@@ -715,67 +715,71 @@ class PlaylistAudiosListWidget extends HookConsumerWidget {
     }
 
     // Содержимое плейлиста.
-    return SliverFixedExtentList.builder(
-      itemCount: hasTracksList ? filteredAudios.length : playlist.count,
-      itemExtent: 50 + tracksSpacing,
-      itemBuilder: (BuildContext context, int index) {
-        // Если ничего не загружено, то отображаем Skeleton Loader вместо реального трека.
-        if (!hasTracksList) {
+    return SliverSafeArea(
+      top: false,
+      bottom: false,
+      sliver: SliverFixedExtentList.builder(
+        itemCount: hasTracksList ? filteredAudios.length : playlist.count,
+        itemExtent: 50 + tracksSpacing,
+        itemBuilder: (BuildContext context, int index) {
+          // Если ничего не загружено, то отображаем Skeleton Loader вместо реального трека.
+          if (!hasTracksList) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: tracksSpacing,
+                left: mobileLayout ? 0 : horizontalPadding,
+                right: mobileLayout ? 0 : horizontalPadding,
+              ),
+              child: Skeletonizer(
+                child: AudioTrackTile(
+                  audio: ExtendedAudio(
+                    id: -1,
+                    ownerID: -1,
+                    title: fakeTrackNames[index % fakeTrackNames.length],
+                    artist: fakeTrackNames[(index + 1) % fakeTrackNames.length],
+                    duration: 60 * 3,
+                  ),
+                  dense: mobileLayout,
+                  roundedCorners: !mobileLayout,
+                  padding: mobileLayout
+                      ? EdgeInsets.symmetric(
+                          horizontal: horizontalPadding,
+                        )
+                      : null,
+                ),
+              ),
+            );
+          }
+
+          final audio = filteredAudios[index];
+
           return Padding(
             padding: EdgeInsets.only(
               bottom: tracksSpacing,
               left: mobileLayout ? 0 : horizontalPadding,
               right: mobileLayout ? 0 : horizontalPadding,
             ),
-            child: Skeletonizer(
-              child: AudioTrackTile(
-                audio: ExtendedAudio(
-                  id: -1,
-                  ownerID: -1,
-                  title: fakeTrackNames[index % fakeTrackNames.length],
-                  artist: fakeTrackNames[(index + 1) % fakeTrackNames.length],
-                  duration: 60 * 3,
-                ),
-                dense: mobileLayout,
-                roundedCorners: !mobileLayout,
-                padding: mobileLayout
-                    ? EdgeInsets.symmetric(
-                        horizontal: horizontalPadding,
-                      )
-                    : null,
-              ),
+            child: buildListTrackWidget(
+              ref,
+              context,
+              audio,
+              playlist,
+              isAvailable:
+                  audio.canPlay && (!isFavoritesPlaylist || audio.isLiked),
+              showStatusIcons: true,
+              showDuration: !mobileLayout,
+              replaceLikeWithMore: mobileLayout,
+              dense: mobileLayout,
+              roundedCorners: !mobileLayout,
+              padding: mobileLayout
+                  ? EdgeInsets.symmetric(
+                      horizontal: horizontalPadding,
+                    )
+                  : null,
             ),
           );
-        }
-
-        final audio = filteredAudios[index];
-
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: tracksSpacing,
-            left: mobileLayout ? 0 : horizontalPadding,
-            right: mobileLayout ? 0 : horizontalPadding,
-          ),
-          child: buildListTrackWidget(
-            ref,
-            context,
-            audio,
-            playlist,
-            isAvailable:
-                audio.canPlay && (!isFavoritesPlaylist || audio.isLiked),
-            showStatusIcons: true,
-            showDuration: !mobileLayout,
-            replaceLikeWithMore: mobileLayout,
-            dense: mobileLayout,
-            roundedCorners: !mobileLayout,
-            padding: mobileLayout
-                ? EdgeInsets.symmetric(
-                    horizontal: horizontalPadding,
-                  )
-                : null,
-          ),
-        );
-      },
+        },
+      ),
     );
   }
 }
