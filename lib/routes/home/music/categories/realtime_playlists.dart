@@ -492,6 +492,7 @@ class RealtimePlaylistsBlock extends HookConsumerWidget {
             child: SizedBox(
               height: 50,
               child: ListView.separated(
+                padding: EdgeInsets.zero,
                 scrollDirection: Axis.horizontal,
                 clipBehavior: Clip.none,
                 physics: moodPlaylists == null

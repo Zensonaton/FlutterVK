@@ -842,130 +842,137 @@ class HomeMusicPage extends HookConsumerWidget {
         behavior: AlwaysScrollableScrollBehavior(),
         child: RefreshIndicator.adaptive(
           onRefresh: () => ref.refresh(playlistsProvider.future),
-          child: SafeArea(
-            child: ListView(
-              padding: EdgeInsets.all(
-                mobileLayout ? 16 : 24,
+          child: ListView(
+            padding: getPadding(
+              context,
+              useLeft: mobileLayout,
+              useRight: mobileLayout,
+              useTop: !mobileLayout,
+              useBottom: !mobileLayout,
+              custom: EdgeInsets.symmetric(
+                horizontal: mobileLayout ? 4 : 12,
               ),
-              children: [
-                // Часть интерфейса "Добро пожаловать", а так же кнопка поиска.
-                if (!mobileLayout) ...[
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Flexible(
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              // Аватарка пользователя.
-                              if (user.photoMaxUrl != null) ...[
-                                SizedBox(
+            ).add(
+              const EdgeInsets.all(12),
+            ),
+            children: [
+              // Часть интерфейса "Добро пожаловать", а так же кнопка поиска.
+              if (!mobileLayout) ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Flexible(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            // Аватарка пользователя.
+                            if (user.photoMaxUrl != null) ...[
+                              SizedBox(
+                                width: 40,
+                                height: 40,
+                                child: CachedNetworkImage(
+                                  imageUrl: user.photoMaxUrl!,
+                                  cacheKey: "${user.id}400",
                                   width: 40,
                                   height: 40,
-                                  child: CachedNetworkImage(
-                                    imageUrl: user.photoMaxUrl!,
-                                    cacheKey: "${user.id}400",
-                                    width: 40,
-                                    height: 40,
-                                    imageBuilder: (
-                                      BuildContext context,
-                                      ImageProvider imageProvider,
-                                    ) {
-                                      return Container(
-                                        width: 40,
-                                        height: 40,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          image: DecorationImage(
-                                            image: imageProvider,
-                                            fit: BoxFit.cover,
-                                          ),
+                                  imageBuilder: (
+                                    BuildContext context,
+                                    ImageProvider imageProvider,
+                                  ) {
+                                    return Container(
+                                      width: 40,
+                                      height: 40,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        image: DecorationImage(
+                                          image: imageProvider,
+                                          fit: BoxFit.cover,
                                         ),
-                                      );
-                                    },
-                                    cacheManager:
-                                        CachedNetworkImagesManager.instance,
-                                  ),
+                                      ),
+                                    );
+                                  },
+                                  cacheManager:
+                                      CachedNetworkImagesManager.instance,
                                 ),
-                                const Gap(18),
-                              ],
-
-                              // Текст "Добро пожаловать".
-                              Text(
-                                l18n.music_welcomeTitle(
-                                  user.firstName,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .displayMedium!
-                                    .copyWith(
-                                      fontWeight: FontWeight.w500,
-                                    ),
                               ),
+                              const Gap(18),
                             ],
-                          ),
+
+                            // Текст "Добро пожаловать".
+                            Text(
+                              l18n.music_welcomeTitle(
+                                user.firstName,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .displayMedium!
+                                  .copyWith(
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                            ),
+                          ],
                         ),
                       ),
-                      const Gap(18),
+                    ),
+                    const Gap(18),
 
-                      // Поиск.
-                      IconButton.filledTonal(
-                        onPressed: () {
-                          if (!networkRequiredDialog(ref, context)) {
-                            return;
-                          }
+                    // Поиск.
+                    IconButton.filledTonal(
+                      onPressed: () {
+                        if (!networkRequiredDialog(ref, context)) {
+                          return;
+                        }
 
-                          showDialog(
-                            context: context,
-                            builder: (context) {
-                              return const SearchDisplayDialog();
-                            },
-                          );
-                        },
-                        icon: const Icon(
-                          Icons.search,
-                        ),
+                        showDialog(
+                          context: context,
+                          builder: (context) {
+                            return const SearchDisplayDialog();
+                          },
+                        );
+                      },
+                      icon: const Icon(
+                        Icons.search,
                       ),
-                    ],
-                  ),
-                  const Gap(36),
-                ],
-
-                // Верхняя часть интерфейса с переключателями при Desktop Layout'е, использующие Wrap.
-                ChipFilters(
-                  useWrap: !mobileLayout,
+                    ),
+                  ],
                 ),
-                const Gap(8),
-                if (!mobileLayout) ...[
-                  const Divider(),
-                  const Gap(4),
-                ],
-
-                // Проходимся по всем активным разделам, создавая виджеты [Divider] и [SizedBox].
-                for (int i = 0; i < activeBlocks.length; i++) ...[
-                  // Содержимое блока.
-                  activeBlocks[i],
-
-                  // Divider в случае, если это не последний элемент.
-                  if (i < activeBlocks.length - 1)
-                    if (mobileLayout)
-                      const Gap(20)
-                    else ...[
-                      const Gap(8),
-                      const Divider(),
-                      const Gap(4),
-                    ],
-                ],
-
-                // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
-                if (player.loaded && mobileLayout)
-                  const Gap(MusicPlayerWidget.mobileHeightWithPadding),
+                const Gap(36),
               ],
-            ),
+
+              // Верхняя часть интерфейса с переключателями при Desktop Layout'е, использующие Wrap.
+              ChipFilters(
+                useWrap: !mobileLayout,
+              ),
+              const Gap(8),
+              if (!mobileLayout) ...[
+                const Divider(),
+                const Gap(4),
+              ],
+
+              // Проходимся по всем активным разделам, создавая виджеты [Divider] и [SizedBox].
+              for (int i = 0; i < activeBlocks.length; i++) ...[
+                // Содержимое блока.
+                activeBlocks[i],
+
+                // Divider в случае, если это не последний элемент.
+                if (i < activeBlocks.length - 1)
+                  if (mobileLayout)
+                    const Gap(20)
+                  else ...[
+                    const Gap(8),
+                    const Divider(),
+                    const Gap(4),
+                  ],
+              ],
+
+              // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
+              if (player.loaded && mobileLayout)
+                const Gap(MusicPlayerWidget.mobileHeightWithPadding),
+            ],
           ),
         ),
       ),

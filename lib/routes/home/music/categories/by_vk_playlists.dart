@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:gap/gap.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:skeletonizer/skeletonizer.dart";
@@ -57,25 +58,23 @@ class ByVKPlaylistsBlock extends HookConsumerWidget {
           behavior: AlwaysScrollableScrollBehavior(),
           child: SizedBox(
             height: 310,
-            child: ListView.builder(
+            child: ListView.separated(
+              padding: EdgeInsets.zero,
               scrollDirection: Axis.horizontal,
               clipBehavior: Clip.none,
               physics: playlists == null
                   ? const NeverScrollableScrollPhysics()
                   : null,
-              itemCount: playlists?.length,
+              itemCount: playlists?.length ?? 8,
+              separatorBuilder: (BuildContext context, int index) {
+                return const Gap(8);
+              },
               itemBuilder: (BuildContext context, int index) {
                 // Skeleton loader.
                 if (playlists == null) {
-                  return Padding(
-                    padding: const EdgeInsets.only(
-                      right: 8,
-                    ),
-                    child: Skeletonizer(
-                      child: AudioPlaylistWidget(
-                        name:
-                            fakePlaylistNames[index % fakePlaylistNames.length],
-                      ),
+                  return Skeletonizer(
+                    child: AudioPlaylistWidget(
+                      name: fakePlaylistNames[index % fakePlaylistNames.length],
                     ),
                   );
                 }
@@ -83,27 +82,22 @@ class ByVKPlaylistsBlock extends HookConsumerWidget {
                 // Настоящие данные.
                 final ExtendedPlaylist playlist = playlists[index];
 
-                return Padding(
-                  padding: const EdgeInsets.only(
-                    right: 8,
+                return AudioPlaylistWidget(
+                  backgroundUrl: playlist.photo!.photo600,
+                  cacheKey: "${playlist.mediaKey}600",
+                  name: playlist.title!,
+                  description: playlist.description,
+                  selected:
+                      player.currentPlaylist?.mediaKey == playlist.mediaKey,
+                  currentlyPlaying: player.playing && player.loaded,
+                  onOpen: () => context.push(
+                    "/music/playlist/${playlist.ownerID}/${playlist.id}",
                   ),
-                  child: AudioPlaylistWidget(
-                    backgroundUrl: playlist.photo!.photo600,
-                    cacheKey: "${playlist.mediaKey}600",
-                    name: playlist.title!,
-                    description: playlist.description,
-                    selected:
-                        player.currentPlaylist?.mediaKey == playlist.mediaKey,
-                    currentlyPlaying: player.playing && player.loaded,
-                    onOpen: () => context.push(
-                      "/music/playlist/${playlist.ownerID}/${playlist.id}",
-                    ),
-                    onPlayToggle: (bool playing) => onPlaylistPlayToggle(
-                      ref,
-                      context,
-                      playlist,
-                      playing,
-                    ),
+                  onPlayToggle: (bool playing) => onPlaylistPlayToggle(
+                    ref,
+                    context,
+                    playlist,
+                    playing,
                   ),
                 );
               },

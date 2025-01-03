@@ -401,28 +401,35 @@ class HomeProfilePage extends HookConsumerWidget {
               centerTitle: true,
             )
           : null,
-      body: SafeArea(
-        child: ListView.separated(
-          padding: EdgeInsets.all(
-            mobileLayout ? 16 : 24,
+      body: ListView.separated(
+        padding: getPadding(
+          context,
+          useLeft: mobileLayout,
+          useRight: mobileLayout,
+          useTop: !mobileLayout,
+          useBottom: !mobileLayout,
+          custom: EdgeInsets.symmetric(
+            horizontal: mobileLayout ? 4 : 12,
           ),
-          itemCount: profileItemsCount + 1 + (showGapOnBottom ? 1 : 0),
-          itemBuilder: (BuildContext context, int index) {
-            if (index == 0) {
-              return const ProfileAvatar();
-            }
-
-            if (showGapOnBottom && index == profileItemsCount + 1) {
-              // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
-              return const Gap(MusicPlayerWidget.mobileHeight - 16);
-            }
-
-            return profileItems[index - 1];
-          },
-          separatorBuilder: (BuildContext context, int index) {
-            return const Gap(16);
-          },
+        ).add(
+          const EdgeInsets.all(12),
         ),
+        itemCount: profileItemsCount + 1 + (showGapOnBottom ? 1 : 0),
+        separatorBuilder: (BuildContext context, int index) {
+          return const Gap(16);
+        },
+        itemBuilder: (BuildContext context, int index) {
+          if (index == 0) {
+            return const ProfileAvatar();
+          }
+
+          if (showGapOnBottom && index == profileItemsCount + 1) {
+            // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
+            return const Gap(MusicPlayerWidget.mobileHeight - 16);
+          }
+
+          return profileItems[index - 1];
+        },
       ),
     );
   }

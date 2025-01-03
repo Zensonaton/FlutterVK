@@ -1,5 +1,6 @@
 import "dart:convert";
 import "dart:io";
+import "dart:math";
 import "dart:ui";
 
 import "package:crypto/crypto.dart";
@@ -380,4 +381,48 @@ Future<Uint8List> xorCryptIsolate(Uint8List input, Uint8List key) => compute(
   var darkScheme = insertAdditionalColors(darkBase, darkAdditionalColours);
 
   return (lightScheme.harmonized(), darkScheme.harmonized());
+}
+
+/// Возвращает самое большое значение горизонтального Padding'а (т.е.. [MediaQuery.paddingOf] left или right).
+double getHorizontalPadding(BuildContext context) {
+  return max(
+    MediaQuery.paddingOf(context).left,
+    MediaQuery.paddingOf(context).right,
+  );
+}
+
+/// Возвращает самое большое значение вертикального Padding'а (т.е.. [MediaQuery.paddingOf] top или bottom).
+double getVerticalPadding(BuildContext context) {
+  return max(
+    MediaQuery.paddingOf(context).top,
+    MediaQuery.paddingOf(context).bottom,
+  );
+}
+
+/// Возвращает EdgeInsets, который учитывает Padding'и ([MediaQuery.paddingOf]), а так же пользовательские значения.
+EdgeInsets getPadding(
+  BuildContext context, {
+  bool useLeft = true,
+  bool useRight = true,
+  bool useTop = true,
+  bool useBottom = true,
+  EdgeInsets? custom,
+}) {
+  final EdgeInsets padding = MediaQuery.paddingOf(context);
+
+  if (custom != null) {
+    return EdgeInsets.only(
+      left: useLeft ? max(padding.left, custom.left) : 0,
+      right: useRight ? max(padding.right, custom.right) : 0,
+      top: useTop ? max(padding.top, custom.top) : 0,
+      bottom: useBottom ? max(padding.bottom, custom.bottom) : 0,
+    );
+  }
+
+  return EdgeInsets.only(
+    left: useLeft ? padding.left : 0,
+    right: useRight ? padding.right : 0,
+    top: useTop ? padding.top : 0,
+    bottom: useBottom ? padding.bottom : 0,
+  );
 }

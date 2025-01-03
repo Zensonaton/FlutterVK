@@ -233,7 +233,6 @@ class SimillarMusicPlaylistWidget extends HookConsumerWidget {
                 showDuration: false,
               ),
             ),
-          const Gap(4),
         ],
       ),
     );
@@ -282,39 +281,36 @@ class SimillarMusicBlock extends HookConsumerWidget {
           behavior: AlwaysScrollableScrollBehavior(),
           child: SizedBox(
             height: 284,
-            child: ListView.builder(
+            child: ListView.separated(
+              padding: EdgeInsets.zero,
               scrollDirection: Axis.horizontal,
               clipBehavior: Clip.none,
               physics: playlists == null
                   ? const NeverScrollableScrollPhysics()
                   : null,
-              itemCount: playlists?.length,
+              itemCount: playlists?.length ?? 10,
+              separatorBuilder: (BuildContext context, int index) {
+                return const Gap(8);
+              },
               itemBuilder: (BuildContext context, int index) {
                 // Skeleton loader.
                 if (playlists == null) {
-                  return Padding(
-                    padding: const EdgeInsets.only(
-                      right: 8,
-                    ),
-                    child: Skeletonizer(
-                      child: SimillarMusicPlaylistWidget(
-                        name:
-                            fakePlaylistNames[index % fakePlaylistNames.length],
-                        simillarity: 0.9,
-                        tracks: List.generate(
-                          3,
-                          (int index) => ExtendedAudio(
-                            id: -1,
-                            ownerID: -1,
-                            title:
-                                fakeTrackNames[index % fakeTrackNames.length],
-                            artist: fakeTrackNames[
-                                (index + 1) % fakeTrackNames.length],
-                            duration: 60 * 3,
-                            accessKey: "",
-                            url: "",
-                            date: 0,
-                          ),
+                  return Skeletonizer(
+                    child: SimillarMusicPlaylistWidget(
+                      name: fakePlaylistNames[index % fakePlaylistNames.length],
+                      simillarity: 0.9,
+                      tracks: List.generate(
+                        3,
+                        (int index) => ExtendedAudio(
+                          id: -1,
+                          ownerID: -1,
+                          title: fakeTrackNames[index % fakeTrackNames.length],
+                          artist: fakeTrackNames[
+                              (index + 1) % fakeTrackNames.length],
+                          duration: 60 * 3,
+                          accessKey: "",
+                          url: "",
+                          date: 0,
                         ),
                       ),
                     ),
@@ -324,29 +320,24 @@ class SimillarMusicBlock extends HookConsumerWidget {
                 // Настоящие данные.
                 final ExtendedPlaylist playlist = playlists[index];
 
-                return Padding(
-                  padding: const EdgeInsets.only(
-                    right: 8,
+                return SimillarMusicPlaylistWidget(
+                  name: playlist.title!,
+                  simillarity: playlist.simillarity!,
+                  color: HexColor.fromHex(
+                    playlist.color!,
                   ),
-                  child: SimillarMusicPlaylistWidget(
-                    name: playlist.title!,
-                    simillarity: playlist.simillarity!,
-                    color: HexColor.fromHex(
-                      playlist.color!,
-                    ),
-                    tracks: playlist.knownTracks!,
-                    selected:
-                        player.currentPlaylist?.mediaKey == playlist.mediaKey,
-                    currentlyPlaying: player.playing && player.loaded,
-                    onOpen: () => context.push(
-                      "/music/playlist/${playlist.ownerID}/${playlist.id}",
-                    ),
-                    onPlayToggle: (bool playing) => onPlaylistPlayToggle(
-                      ref,
-                      context,
-                      playlist,
-                      playing,
-                    ),
+                  tracks: playlist.knownTracks!,
+                  selected:
+                      player.currentPlaylist?.mediaKey == playlist.mediaKey,
+                  currentlyPlaying: player.playing && player.loaded,
+                  onOpen: () => context.push(
+                    "/music/playlist/${playlist.ownerID}/${playlist.id}",
+                  ),
+                  onPlayToggle: (bool playing) => onPlaylistPlayToggle(
+                    ref,
+                    context,
+                    playlist,
+                    playing,
                   ),
                 );
               },
