@@ -657,6 +657,11 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
                         },
                       ),
                   ],
+
+                  // Для нижнего Padding'а.
+                  Gap(
+                    MediaQuery.paddingOf(context).bottom,
+                  ),
                 ],
               ),
             ),
