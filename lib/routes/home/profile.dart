@@ -122,103 +122,6 @@ class SettingWithDialog extends StatelessWidget {
   }
 }
 
-/// Диалог, подтверждающий у пользователя действие для выхода из аккаунта на экране [HomeProfilePage].
-///
-/// Пример использования:
-/// ```dart
-/// showDialog(
-/// 	context: context,
-/// 	builder: (context) => const ProfileLogoutExitDialog()
-/// );
-/// ```
-class ProfileLogoutExitDialog extends ConsumerWidget {
-  const ProfileLogoutExitDialog({
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    void onLogoutPressed() =>
-        ref.read(currentAuthStateProvider.notifier).logout();
-
-    final user = ref.watch(userProvider);
-    final l18n = ref.watch(l18nProvider);
-
-    return MaterialDialog(
-      icon: Icons.logout_outlined,
-      title: l18n.home_profilePageLogoutTitle,
-      text: l18n.home_profilePageLogoutDescription(
-        user.fullName,
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => context.pop(),
-          child: Text(
-            l18n.general_no,
-          ),
-        ),
-        FilledButton(
-          onPressed: onLogoutPressed,
-          child: Text(
-            l18n.general_yes,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// Диалог, подтверждающий у пользователя действие подключения рекомендаций ВКонтакте на экране [HomeMusicPage].
-///
-/// Пример использования:
-/// ```dart
-/// showDialog(
-/// 	context: context,
-/// 	builder: (context) => const ConnectRecommendationsDialog()
-/// );
-/// ```
-class ConnectRecommendationsDialog extends ConsumerWidget {
-  const ConnectRecommendationsDialog({
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l18n = ref.watch(l18nProvider);
-
-    return MaterialDialog(
-      icon: Icons.auto_fix_high,
-      title: l18n.music_connectRecommendationsTitle,
-      text: l18n.music_connectRecommendationsDescription,
-      actions: [
-        TextButton(
-          onPressed: () => context.pop(),
-          child: Text(
-            l18n.general_no,
-          ),
-        ),
-        FilledButton(
-          onPressed: () {
-            context.pop();
-
-            Navigator.push(
-              context,
-              Material3PageRoute(
-                builder: (context) => const LoginRoute(
-                  useAlternateAuth: true,
-                ),
-              ),
-            );
-          },
-          child: Text(
-            l18n.music_connectRecommendationsConnect,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 /// Виджет для [HomeProfilePage], отображающий аватар пользователя, а так же кнопку для выхода из аккаунта.
 class ProfileAvatar extends ConsumerWidget {
   const ProfileAvatar({
@@ -232,10 +135,19 @@ class ProfileAvatar extends ConsumerWidget {
 
     final int cacheSize = 80 * MediaQuery.of(context).devicePixelRatio.toInt();
 
-    void onLogoutPressed() => showDialog(
-          context: context,
-          builder: (context) => const ProfileLogoutExitDialog(),
-        );
+    void onLogoutPressed() async {
+      final result = await showYesNoDialog(
+        context,
+        icon: Icons.logout_outlined,
+        title: l18n.home_profilePageLogoutTitle,
+        description: l18n.home_profilePageLogoutDescription(
+          user.fullName,
+        ),
+      );
+      if (result != true) return;
+
+      ref.read(currentAuthStateProvider.notifier).logout();
+    }
 
     return Column(
       children: [
@@ -340,12 +252,24 @@ class HomeProfilePage extends HookConsumerWidget {
             icon: Icons.auto_fix_high,
             title: l18n.profile_recommendationsNotConnectedTitle,
             description: l18n.profile_recommendationsNotConnectedDescription,
-            onTap: () => showDialog(
-              context: context,
-              builder: (context) {
-                return const ConnectRecommendationsDialog();
-              },
-            ),
+            onTap: () async {
+              final result = await showYesNoDialog(
+                context,
+                icon: Icons.auto_fix_high,
+                title: l18n.music_connectRecommendationsTitle,
+                description: l18n.music_connectRecommendationsDescription,
+              );
+              if (result != true || !context.mounted) return;
+
+              Navigator.push(
+                context,
+                Material3PageRoute(
+                  builder: (context) => const LoginRoute(
+                    useAlternateAuth: true,
+                  ),
+                ),
+              );
+            },
           ),
 
         // Визуал.

@@ -2,7 +2,6 @@ import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
-import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:url_launcher/url_launcher.dart";
 
@@ -17,46 +16,6 @@ import "../../../../utils.dart";
 import "../../../../widgets/dialogs.dart";
 import "../../../../widgets/profile_category.dart";
 import "../../profile.dart";
-
-/// Диалог, подтверждающий у пользователя действие отключения обновлений на экране [HomeMusicPage].
-///
-/// Пример использования:
-/// ```dart
-/// showDialog(
-/// 	context: context,
-/// 	builder: (context) => const ConnectRecommendationsDialog()
-/// );
-/// ```
-class DisableUpdatesDialog extends ConsumerWidget {
-  const DisableUpdatesDialog({
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l18n = ref.watch(l18nProvider);
-
-    return MaterialDialog(
-      icon: Icons.update_disabled,
-      title: l18n.profile_disableUpdatesWarningTitle,
-      text: l18n.profile_disableUpdatesWarningDescription,
-      actions: [
-        TextButton(
-          onPressed: () => context.pop(false),
-          child: Text(
-            l18n.general_no,
-          ),
-        ),
-        FilledButton(
-          onPressed: () => context.pop(true),
-          child: Text(
-            l18n.profile_disableUpdatesWarningDisable,
-          ),
-        ),
-      ],
-    );
-  }
-}
 
 /// Диалог, помогающий пользователю поменять настройку "Отображение новых обновлений".
 ///
@@ -84,16 +43,16 @@ class UpdatesDialogTypeActionDialog extends ConsumerWidget {
 
       // Делаем небольшое предупреждение, если пользователь пытается отключить обновления.
       if (policy == UpdatePolicy.disabled) {
-        final bool response = await showDialog(
-              context: context,
-              builder: (BuildContext context) {
-                return const DisableUpdatesDialog();
-              },
-            ) ??
-            false;
+        final result = await showYesNoDialog(
+          context,
+          icon: Icons.update_disabled,
+          title: l18n.profile_disableUpdatesWarningTitle,
+          description: l18n.profile_disableUpdatesWarningDescription,
+          yesText: l18n.profile_disableUpdatesWarningDisable,
+        );
 
         // Пользователь нажал на "Отключить", тогда мы должны выключить обновления.
-        if (response && context.mounted) {
+        if (result == true && context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
@@ -107,7 +66,7 @@ class UpdatesDialogTypeActionDialog extends ConsumerWidget {
         }
 
         // Пользователь отказался отключать уведомления, тогда ничего не меняем.
-        if (!response) return;
+        if (result != true) return;
       }
 
       prefsNotifier.setUpdatePolicy(policy);
@@ -198,46 +157,6 @@ class UpdatesChannelDialog extends ConsumerWidget {
   }
 }
 
-/// Диалог, подтверждающий у пользователя то, что он хочет сбросить локальную базу данных приложения.
-///
-/// Пример использования:
-/// ```dart
-/// showDialog(
-/// 	context: context,
-/// 	builder: (context) => const ResetDBDialog()
-/// );
-/// ```
-class ResetDBDialog extends ConsumerWidget {
-  const ResetDBDialog({
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l18n = ref.watch(l18nProvider);
-
-    return MaterialDialog(
-      icon: Icons.delete,
-      title: l18n.profile_resetDBDialogTitle,
-      text: l18n.profile_resetDBDialogDescription,
-      actions: [
-        TextButton(
-          onPressed: () => context.pop(false),
-          child: Text(
-            l18n.general_no,
-          ),
-        ),
-        FilledButton(
-          onPressed: () => context.pop(true),
-          child: Text(
-            l18n.profile_resetDBDialogReset,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 /// Раздел настроек для страницы профиля ([HomeProfilePage]), отвечающий за раздел "О Flutter VK".
 class ProfileAboutSettingsCategory extends HookConsumerWidget {
   const ProfileAboutSettingsCategory({
@@ -281,20 +200,6 @@ class ProfileAboutSettingsCategory extends HookConsumerWidget {
                 : l18n.profile_shareLogsNoLogsDescription,
           ),
           onTap: shareLogs,
-        ),
-
-        // Сбросить базу данных.
-        ListTile(
-          leading: const Icon(
-            Icons.delete,
-          ),
-          title: Text(
-            l18n.profile_resetDBTitle,
-          ),
-          subtitle: Text(
-            l18n.profile_resetDBDescription,
-          ),
-          onTap: () => showWipDialog(context),
         ),
 
         // Github.

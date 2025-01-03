@@ -23,6 +23,8 @@ import "../../utils.dart";
 import "../../widgets/audio_player.dart";
 import "../../widgets/dialogs.dart";
 import "../../widgets/fallback_audio_photo.dart";
+import "../../widgets/page_route_builders.dart";
+import "../login.dart";
 import "music/categories/by_vk_playlists.dart";
 import "music/categories/my_music.dart";
 import "music/categories/my_playlists.dart";
@@ -30,39 +32,6 @@ import "music/categories/realtime_playlists.dart";
 import "music/categories/recommended_playlists.dart";
 import "music/categories/simillar_music.dart";
 import "music/search.dart";
-import "profile.dart";
-
-/// Диалог, предупреждающий о том, что трек уже сохранён.
-class DuplicateWarningDialog extends ConsumerWidget {
-  const DuplicateWarningDialog({
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l18n = ref.watch(l18nProvider);
-
-    return MaterialDialog(
-      icon: Icons.copy,
-      title: l18n.checkBeforeFavoriteWarningTitle,
-      text: l18n.checkBeforeFavoriteWarningDescription,
-      actions: [
-        TextButton(
-          child: Text(
-            l18n.general_no,
-          ),
-          onPressed: () => Navigator.of(context).pop(false),
-        ),
-        FilledButton(
-          child: Text(
-            l18n.general_yes,
-          ),
-          onPressed: () => Navigator.of(context).pop(true),
-        ),
-      ],
-    );
-  }
-}
 
 /// Проверяет то, существует ли похожий трек в [playlist], и если да, то показывает диалог, спрашивающий у пользователя то, хочет он сохранить трек или нет.
 ///
@@ -72,6 +41,7 @@ Future<bool> checkForDuplicates(
   BuildContext context,
   ExtendedAudio audio,
 ) async {
+  final l18n = ref.watch(l18nProvider);
   final favorites = ref.read(favoritesPlaylistProvider)!;
 
   final bool isDuplicate = favorites.audios!.any(
@@ -84,14 +54,13 @@ Future<bool> checkForDuplicates(
 
   if (!isDuplicate) return true;
 
-  final bool? duplicateDialogResult = await showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return const DuplicateWarningDialog();
-    },
-  );
-
-  return duplicateDialogResult ?? false;
+  return await showYesNoDialog(
+        context,
+        icon: Icons.copy,
+        title: l18n.checkBeforeFavoriteWarningTitle,
+        description: l18n.checkBeforeFavoriteWarningDescription,
+      ) ??
+      false;
 }
 
 /// Меняет состояние "лайка" у передаваемого трека.
@@ -592,10 +561,24 @@ class ChipFilters extends ConsumerWidget {
           label: Text(
             l18n.music_connectRecommendationsChipTitle,
           ),
-          onPressed: () => showDialog(
-            context: context,
-            builder: (context) => const ConnectRecommendationsDialog(),
-          ),
+          onPressed: () async {
+            final result = await showYesNoDialog(
+              context,
+              icon: Icons.auto_fix_high,
+              title: l18n.music_connectRecommendationsTitle,
+              description: l18n.music_connectRecommendationsDescription,
+            );
+            if (result != true || !context.mounted) return;
+
+            Navigator.push(
+              context,
+              Material3PageRoute(
+                builder: (context) => const LoginRoute(
+                  useAlternateAuth: true,
+                ),
+              ),
+            );
+          },
         ),
 
       // "Моя музыка".

@@ -92,6 +92,36 @@ class ProfileExperimentalSettingsCategory extends ConsumerWidget {
 
     final recommendationsConnected = ref.watch(secondaryTokenProvider) != null;
 
+    void onSettingsExportTap() {
+      context.go("/profile/settings_exporter");
+    }
+
+    void onSettingsImportTap() {
+      context.go("/profile/settings_importer");
+    }
+
+    void onAudiosListExportTap() {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return const ExportTracksListDialog();
+        },
+      );
+    }
+
+    void onDBResetTap() async {
+      final result = await showYesNoDialog(
+        context,
+        icon: Icons.delete,
+        title: l18n.profile_resetDBDialogTitle,
+        description: l18n.profile_resetDBDialogDescription,
+        yesText: l18n.profile_resetDBDialogReset,
+      );
+      if (result != true || !context.mounted) return;
+
+      showWipDialog(context);
+    }
+
     return ProfileSettingCategory(
       icon: Icons.science,
       title: l18n.profile_experimentalTitle,
@@ -153,9 +183,7 @@ class ProfileExperimentalSettingsCategory extends ConsumerWidget {
           subtitle: Text(
             l18n.profile_exportModificationsDescription,
           ),
-          onTap: () {
-            context.go("/profile/settings_exporter");
-          },
+          onTap: onSettingsExportTap,
         ),
 
         // Импорт настроек.
@@ -169,7 +197,7 @@ class ProfileExperimentalSettingsCategory extends ConsumerWidget {
           subtitle: Text(
             l18n.profile_importModificationsDescription,
           ),
-          onTap: () => context.go("/profile/settings_importer"),
+          onTap: onSettingsImportTap,
         ),
 
         // Экспорт списка треков.
@@ -180,12 +208,21 @@ class ProfileExperimentalSettingsCategory extends ConsumerWidget {
           title: Text(
             l18n.profile_exportMusicListTitle,
           ),
-          onTap: () => showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return const ExportTracksListDialog();
-            },
+          onTap: onAudiosListExportTap,
+        ),
+
+        // Сбросить базу данных.
+        ListTile(
+          leading: const Icon(
+            Icons.delete,
           ),
+          title: Text(
+            l18n.profile_resetDBTitle,
+          ),
+          subtitle: Text(
+            l18n.profile_resetDBDescription,
+          ),
+          onTap: onDBResetTap,
         ),
       ],
     );

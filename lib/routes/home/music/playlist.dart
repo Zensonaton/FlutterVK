@@ -135,55 +135,6 @@ Future<void> onMixPlayToggle(
   );
 }
 
-/// Диалог, спрашивающий у пользователя разрешения на запуск кэширования плейлиста.
-class EnableCacheDialog extends ConsumerWidget {
-  /// Плейлист, кэширование треков в котором пытаются включить.
-  final ExtendedPlaylist playlist;
-
-  const EnableCacheDialog({
-    super.key,
-    required this.playlist,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l18n = ref.watch(l18nProvider);
-
-    final int approxSize =
-        ((playlist.duration ?? Duration.zero).inMinutes * trackSizePerMin)
-            .round();
-    final size = approxSize >= 500
-        ? l18n.trackSizeGB(approxSize / 500)
-        : l18n.trackSizeMB(approxSize);
-
-    return MaterialDialog(
-      icon: Icons.file_download,
-      title: l18n.music_enableTrackCachingTitle,
-      text: l18n.music_enableTrackCachingDescription(
-        playlist.count ?? 0,
-        size,
-      ),
-      actions: [
-        // "Нет".
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: Text(
-            l18n.general_no,
-          ),
-        ),
-
-        // "Включить".
-        FilledButton(
-          onPressed: () => Navigator.of(context).pop(true),
-          child: Text(
-            l18n.music_enableTrackCachingButton,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 /// Диалог, предупреждающий пользователя о том, что при отключении кэширования треков будет полностью удалёно всё содержимое плейлиста с памяти устройства.
 ///
 /// Возвращает:
@@ -1836,19 +1787,28 @@ class PlaylistRoute extends HookConsumerWidget {
       // Проверяем наличие интернета.
       if (!networkRequiredDialog(ref, context)) return;
 
+      // Вычисляем примерный размер плейлиста.
+      final int approxSize =
+          ((playlist.duration ?? Duration.zero).inMinutes * trackSizePerMin)
+              .round();
+      final size = approxSize >= 500
+          ? l18n.trackSizeGB(approxSize / 500)
+          : l18n.trackSizeMB(approxSize);
+
       // Спрашиваем, уверен ли он в своих намерениях.
-      final bool dialogResult = await showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return EnableCacheDialog(
-                playlist: playlist,
-              );
-            },
-          ) ??
-          false;
+      final result = await showYesNoDialog(
+        context,
+        icon: Icons.file_download,
+        title: l18n.music_enableTrackCachingTitle,
+        description: l18n.music_enableTrackCachingDescription(
+          playlist.count ?? 0,
+          size,
+        ),
+        yesText: l18n.music_enableTrackCachingButton,
+      );
 
       // Если пользователь нажал на "нет", то выходим.
-      if (!dialogResult || !context.mounted) return;
+      if (result != true || !context.mounted) return;
 
       // Запоминаем, что плейлист теперь кэширован.
       final newPlaylist = await playlistsManager.updatePlaylist(

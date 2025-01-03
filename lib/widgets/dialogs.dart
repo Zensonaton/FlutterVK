@@ -32,6 +32,9 @@ class MaterialDialog extends ConsumerWidget {
   /// Если указать null, то будет использоваться кнопка "Закрыть".
   final List<Widget>? actions;
 
+  /// Общий Padding для всего диалога.
+  final EdgeInsets padding;
+
   const MaterialDialog({
     super.key,
     this.icon,
@@ -40,6 +43,7 @@ class MaterialDialog extends ConsumerWidget {
     this.text,
     this.contents,
     this.actions,
+    this.padding = const EdgeInsets.all(24),
   });
 
   @override
@@ -52,7 +56,7 @@ class MaterialDialog extends ConsumerWidget {
 
     return Dialog(
       child: Container(
-        padding: const EdgeInsets.all(24),
+        padding: padding,
         width: 500,
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -143,11 +147,19 @@ class YesNoMaterialDialog extends ConsumerWidget {
   /// Данное поле либо [contents] не должно быть null.
   final String description;
 
+  /// Текст у кнопки "Да".
+  final String? yesText;
+
+  /// Текст у кнопки "Нет".
+  final String? noText;
+
   const YesNoMaterialDialog({
     super.key,
     this.icon,
     required this.title,
     required this.description,
+    this.yesText,
+    this.noText,
   });
 
   @override
@@ -159,15 +171,18 @@ class YesNoMaterialDialog extends ConsumerWidget {
       title: title,
       text: description,
       actions: [
+        // Нет.
         TextButton(
           child: Text(
-            l18n.general_no,
+            noText ?? l18n.general_no,
           ),
           onPressed: () => Navigator.of(context).pop(false),
         ),
+
+        // Да.
         FilledButton(
           child: Text(
-            l18n.general_yes,
+            yesText ?? l18n.general_yes,
           ),
           onPressed: () => Navigator.of(context).pop(true),
         ),
@@ -184,6 +199,8 @@ Future<bool?> showYesNoDialog(
   IconData? icon,
   required String title,
   required String description,
+  String? yesText,
+  String? noText,
 }) =>
     showDialog(
       context: context,
@@ -191,6 +208,8 @@ Future<bool?> showYesNoDialog(
         icon: icon,
         title: title,
         description: description,
+        yesText: yesText,
+        noText: noText,
       ),
     );
 
@@ -254,8 +273,10 @@ void showWipDialog(
 /// );
 /// ```
 class ErrorDialog extends StatelessWidget {
+  /// Текст титульника данного диалога.
   final String? title;
 
+  /// Текст ошибки.
   final String? description;
 
   const ErrorDialog({
