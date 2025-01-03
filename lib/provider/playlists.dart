@@ -610,10 +610,7 @@ class Playlists extends _$Playlists {
     int insertionIndex = 0;
 
     /// Метод, обновляющий либо добавляющий трек в список треков.
-    void updateOrAddAudio(
-      ExtendedAudio newAudio,
-      bool removeNonPresent,
-    ) {
+    void updateOrAddAudio(ExtendedAudio newAudio) {
       final index = newAudios.indexWhere(
         (old) => old.ownerID == newAudio.ownerID && old.id == newAudio.id,
       );
@@ -672,11 +669,8 @@ class Playlists extends _$Playlists {
     // В нём находится "актуальный" список из треков.
     // Если такой список передаётся во второй раз, то информация должна обновиться.
     if (newPlaylist.audios != null) {
-      for (var newAudio in newPlaylist.audios!) {
-        updateOrAddAudio(
-          newAudio,
-          true,
-        );
+      for (ExtendedAudio newAudio in newPlaylist.audios!) {
+        updateOrAddAudio(newAudio);
       }
 
       // Ищем удалённые треки. Если мы находим хотя бы один, то считаем, что плейлист изменился.
@@ -700,6 +694,27 @@ class Playlists extends _$Playlists {
 
           playlistChanged = true;
         }
+
+        // Сравниваем, одинаковый ли порядок треков в плейлисте.
+        final Iterable<int> oldIDs =
+            oldPlaylist.audios!.map((audio) => audio.id);
+        final Iterable<int> newIDs =
+            newPlaylist.audios!.map((audio) => audio.id);
+
+        if (!const IterableEquality().equals(oldIDs, newIDs)) {
+          logger.d("Reordering");
+
+          // Делаем так, что бы порядок треков в плейлисте соответствовал порядку в новом плейлисте.
+          newAudios.sort(
+            (a, b) =>
+                newPlaylist.audios!.indexWhere(
+                  (audio) => audio.id == a.id,
+                ) -
+                newPlaylist.audios!.indexWhere(
+                  (audio) => audio.id == b.id,
+                ),
+          );
+        }
       }
     }
 
@@ -708,10 +723,7 @@ class Playlists extends _$Playlists {
     // - трека нет -> добавляем его.
     if (newPlaylist.audiosToUpdate != null) {
       for (var newAudio in newPlaylist.audiosToUpdate!) {
-        updateOrAddAudio(
-          newAudio,
-          false,
-        );
+        updateOrAddAudio(newAudio);
       }
     }
 
