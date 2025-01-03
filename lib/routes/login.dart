@@ -74,7 +74,9 @@ Future<bool> tryAuthorize(
       ref.read(userProvider.notifier).loginSecondary(token);
       ref.invalidate(playlistsProvider);
 
-      context.pop();
+      if (context.mounted) {
+        context.pop();
+      }
 
       return true;
     }
