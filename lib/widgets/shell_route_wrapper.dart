@@ -4,6 +4,7 @@ import "package:audio_service/audio_service.dart";
 import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
@@ -498,11 +499,12 @@ class ShellRouteWrapper extends HookConsumerWidget {
       navigationItems.length,
     );
 
-    /// Обработчик выбора элемента в [NavigationRail].
+    /// Обработчик выбора элемента в [NavigationRail] либо [BottomNavigationBar].
     void onDestinationSelected(int index) {
       if (index == currentIndex) return;
 
       context.go(navigationItems[index].path);
+      HapticFeedback.selectionClick();
     }
 
     final Widget wrappedChild = useMemoized(
