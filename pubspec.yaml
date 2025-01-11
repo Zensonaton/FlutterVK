@@ -75,6 +75,7 @@ dependencies:
   permission_handler: ^11.2.1
   queue: ^3.1.0+2
   responsive_builder: ^0.7.0
+  rive: ^0.13.20
   riverpod_annotation: ^2.3.5
   scroll_to_index: ^3.0.1
   share_plus: ^10.0.0
@@ -106,4 +107,5 @@ flutter:
     - assets/icon.png
     - assets/images/
     - assets/audios/
+    - assets/animations/
 

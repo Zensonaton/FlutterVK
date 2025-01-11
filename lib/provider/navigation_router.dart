@@ -8,6 +8,10 @@ import "../routes/fullscreen_player.dart";
 import "../routes/home/music.dart";
 import "../routes/home/music/playlist.dart";
 import "../routes/home/profile.dart";
+import "../routes/home/profile/categories/visual/app_wide_colors.dart";
+import "../routes/home/profile/categories/visual/dynamic_scheme_type.dart";
+import "../routes/home/profile/categories/visual/oled.dart";
+import "../routes/home/profile/categories/visual/theme.dart";
 import "../routes/home/profile/debug/colorscheme.dart";
 import "../routes/home/profile/debug/markdown_viewer.dart";
 import "../routes/home/profile/debug/playlists_viewer.dart";
@@ -127,6 +131,7 @@ GoRouter router(RouterRef ref) {
       label: l18n.home_profilePageLabel,
       body: (_) => const HomeProfilePage(),
       routes: [
+        // Менеджер загрузок.
         GoRoute(
           path: "download_manager",
           pageBuilder: (BuildContext context, GoRouterState state) {
@@ -137,6 +142,8 @@ GoRouter router(RouterRef ref) {
             );
           },
         ),
+
+        // Экспорт настроек.
         GoRoute(
           path: "settings_exporter",
           pageBuilder: (BuildContext context, GoRouterState state) {
@@ -147,6 +154,8 @@ GoRouter router(RouterRef ref) {
             );
           },
         ),
+
+        // Импорт настроек.
         GoRoute(
           path: "settings_importer",
           pageBuilder: (BuildContext context, GoRouterState state) {
@@ -157,6 +166,56 @@ GoRouter router(RouterRef ref) {
             );
           },
         ),
+
+        // Настройка "Тема".
+        GoRoute(
+          path: "setting_theme_mode",
+          pageBuilder: (BuildContext context, GoRouterState state) {
+            return buildPageWithDefaultTransition(
+              context: context,
+              state: state,
+              child: const ThemeSettingPage(),
+            );
+          },
+        ),
+
+        // Настройка "OLED".
+        GoRoute(
+          path: "setting_oled",
+          pageBuilder: (BuildContext context, GoRouterState state) {
+            return buildPageWithDefaultTransition(
+              context: context,
+              state: state,
+              child: const OLEDSettingPage(),
+            );
+          },
+        ),
+
+        // Настройка "Цвета трека по всему приложению".
+        GoRoute(
+          path: "setting_app_wide_colors",
+          pageBuilder: (BuildContext context, GoRouterState state) {
+            return buildPageWithDefaultTransition(
+              context: context,
+              state: state,
+              child: const AppWideColorsSettingPage(),
+            );
+          },
+        ),
+
+        // Настройка "Тип палитры цветов обложки".
+        GoRoute(
+          path: "setting_dynamic_scheme_type",
+          pageBuilder: (BuildContext context, GoRouterState state) {
+            return buildPageWithDefaultTransition(
+              context: context,
+              state: state,
+              child: const DynamicSchemeTypeSettingPage(),
+            );
+          },
+        ),
+
+        // Color Scheme Debug.
         GoRoute(
           path: "color_scheme_debug",
           pageBuilder: (BuildContext context, GoRouterState state) {
@@ -167,6 +226,8 @@ GoRouter router(RouterRef ref) {
             );
           },
         ),
+
+        // Playlists Viewer.
         GoRoute(
           path: "playlists_viewer_debug",
           pageBuilder: (BuildContext context, GoRouterState state) {
@@ -177,6 +238,8 @@ GoRouter router(RouterRef ref) {
             );
           },
         ),
+
+        // Markdown Viewer.
         GoRoute(
           path: "markdown_viewer_debug",
           pageBuilder: (BuildContext context, GoRouterState state) {

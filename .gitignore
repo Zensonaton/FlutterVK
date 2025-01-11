@@ -43,6 +43,9 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Other Android build-related files
+android/app/.cxx/
+
 # Firebase
 /firebase/
 firepit-log.txt

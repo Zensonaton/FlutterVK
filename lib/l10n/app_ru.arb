@@ -12,6 +12,10 @@
 	"general_addedToQueue": "Трек добавлен в очередь.",
 	"general_restartApp": "Пожалуйста, перезагрузите приложение.",
 
+	"general_optionNotAvailableWithLightTheme": "Эта опция недоступна, поскольку сейчас используется светлая тема.",
+	"general_optionNotAvailableWithoutRecommendations": "Настройка недоступна, поскольку у Вас не подключены рекомендации ВКонтакте.",
+	"general_optionNotAvailableWithoutAudio": "Изменения данной настройки не будут видны сейчас, поскольку Вы не запустили воспроизведение музыки.",
+
 	"general_appMinimized": "Flutter VK свернулся.\nВоспользуйтесь треем или откройте приложение ещё раз, чтобы вернуть окошко.",
 	"general_appMinimizedClose": "Закрыть",
 	"general_appMinimizedRestore": "Вернуть",
@@ -402,17 +406,21 @@
 	"profile_visualTitle": "Визуал, косметические настройки",
 
 	"profile_themeTitle": "Тема",
+	"profile_themeDescription": "Тёмная тема делает интерфейс более приятным для глаз, особенно при использовании в тёмное время суток.\n\nДополнительно, Вы можете включить OLED-тему, что сделает фон приложения максимально чёрным для экономии заряда батареи на некоторых устройствах.",
 	"profile_themeSystem": "Системная",
 	"profile_themeLight": "Светлая",
 	"profile_themeDark": "Тёмная",
 
 	"profile_oledThemeTitle": "OLED-тема",
-	"profile_oledThemeDescription": "Ещё больше тьмы! Помогает сохранять заряд аккумулятора на устройствах с OLED-дисплеями",
+	"profile_oledThemeDescription": "При OLED-теме будет использоваться по-настоящему чёрный цвет для фона. Это может сэкономить заряд батареи на некоторых устройствах.",
+	"profile_oledThemeEnable": "Использовать OLED-тему",
 
 	"profile_usePlayerColorsAppWideTitle": "Цвета трека по всему приложению",
+	"profile_usePlayerColorsAppWideDescription": "Если включить эту настройку, то цвета обложки играющего трека будут показаны не только в плеере снизу, но и по всему приложению.",
+	"profile_usePlayerColorsAppWideEnable": "Разрешить использование цветов трека по всему приложению",
 
 	"profile_playerDynamicColorSchemeTypeTitle": "Тип палитры цветов обложки",
-	"profile_playerDynamicColorSchemeTypeDescription": "Задаёт тип палитры, которая используется для цветов обложки играющего трека",
+	"profile_playerDynamicColorSchemeTypeDescription": "Эта настройка диктует то, насколько яркими будут отображаться цвета в плеере снизу при воспроизведнии музыки.\n\nДанная настройка так же может работать с настройкой «Цвета трека по всему приложению», благодаря чему весь интерфейс приложения может меняться, в зависимости от цветов обложки трека, а так же яркости, указанной здесь.",
 	"profile_playerDynamicColorSchemeTonalSpot": "По-умолчанию",
 	"profile_playerDynamicColorSchemeNeutral": "Нейтральный",
 	"profile_playerDynamicColorSchemeContent": "Яркий",
