@@ -122,23 +122,16 @@ class ProfileVisualSettingsCategory extends ConsumerWidget {
 
         // Спойлер следующего трека перед окончанием текущего.
         if (!mobileLayout)
-          SwitchListTile(
-            secondary: const Icon(
+          ListTile(
+            leading: const Icon(
               Icons.queue_music,
             ),
             title: Text(
               l18n.profile_spoilerNextAudioTitle,
             ),
-            subtitle: Text(
-              l18n.profile_spoilerNextAudioDescription,
+            onTap: () => context.push(
+              "/profile/setting_spoiler_next_audio",
             ),
-            value: preferences.spoilerNextTrack,
-            onChanged: (bool? enabled) async {
-              HapticFeedback.lightImpact();
-              if (enabled == null) return;
-
-              prefsNotifier.setSpoilerNextTrackEnabled(enabled);
-            },
           ),
 
         // Кроссфейд цветов плеера.

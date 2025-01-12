@@ -29,6 +29,9 @@ class OLEDSettingPage extends HookConsumerWidget {
 
     return SettingPageWithAnimationWidget(
       title: l18n.profile_oledThemeTitle,
+      description: l18n.profile_oledThemeDescription,
+      warning:
+          !darkTheme ? l18n.general_optionNotAvailableWithLightTheme : null,
       headerImage: RiveAnimationBlock(
         name: "oled",
         artboardName: "OLED",
@@ -39,9 +42,6 @@ class OLEDSettingPage extends HookConsumerWidget {
           smiToggle.value = boolInput;
         },
       ),
-      description: l18n.profile_oledThemeDescription,
-      warning:
-          !darkTheme ? l18n.general_optionNotAvailableWithLightTheme : null,
       children: [
         SettingsCardWidget(
           child: SwitchListTile.adaptive(
