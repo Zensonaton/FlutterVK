@@ -32,6 +32,16 @@ class AppWideColorsSettingPage extends HookConsumerWidget {
 
     return SettingPageWithAnimationWidget(
       title: l18n.profile_usePlayerColorsAppWideTitle,
+      description: l18n.profile_usePlayerColorsAppWideDescription,
+      warning: () {
+        if (!recommendationsConnected) {
+          return l18n.general_optionNotAvailableWithoutRecommendations;
+        }
+
+        if (!player.loaded) {
+          return l18n.general_optionNotAvailableWithoutAudio;
+        }
+      }(),
       headerImage: RiveAnimationBlock(
         name: "appWideColors",
         artboardName: "AppWideColors",
@@ -44,16 +54,6 @@ class AppWideColorsSettingPage extends HookConsumerWidget {
           smiTrigger.value = trigger;
         },
       ),
-      description: l18n.profile_usePlayerColorsAppWideDescription,
-      warning: () {
-        if (!recommendationsConnected) {
-          return l18n.general_optionNotAvailableWithoutRecommendations;
-        }
-
-        if (!player.loaded) {
-          return l18n.general_optionNotAvailableWithoutAudio;
-        }
-      }(),
       children: [
         SettingsCardWidget(
           child: SwitchListTile.adaptive(

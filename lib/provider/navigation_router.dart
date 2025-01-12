@@ -12,6 +12,7 @@ import "../routes/home/profile/categories/visual/alternative_slider.dart";
 import "../routes/home/profile/categories/visual/app_wide_colors.dart";
 import "../routes/home/profile/categories/visual/dynamic_scheme_type.dart";
 import "../routes/home/profile/categories/visual/oled.dart";
+import "../routes/home/profile/categories/visual/spoiler_next_audio.dart";
 import "../routes/home/profile/categories/visual/theme.dart";
 import "../routes/home/profile/debug/colorscheme.dart";
 import "../routes/home/profile/debug/markdown_viewer.dart";
@@ -224,6 +225,18 @@ GoRouter router(RouterRef ref) {
               context: context,
               state: state,
               child: const AlternativeSliderSettingPage(),
+            );
+          },
+        ),
+
+        // Настройка "Спойлер следующего трека".
+        GoRoute(
+          path: "setting_spoiler_next_audio",
+          pageBuilder: (BuildContext context, GoRouterState state) {
+            return buildPageWithDefaultTransition(
+              context: context,
+              state: state,
+              child: const SpoilerNextAudioSettingPage(),
             );
           },
         ),

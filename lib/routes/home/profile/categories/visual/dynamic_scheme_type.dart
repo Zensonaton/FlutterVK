@@ -39,6 +39,9 @@ class DynamicSchemeTypeSettingPage extends HookConsumerWidget {
 
     return SettingPageWithAnimationWidget(
       title: l18n.profile_playerDynamicColorSchemeTypeTitle,
+      description: l18n.profile_playerDynamicColorSchemeTypeDescription,
+      warning:
+          !player.loaded ? l18n.general_optionNotAvailableWithoutAudio : null,
       headerImage: RiveAnimationBlock(
         name: "dynamicSchemeType",
         artboardName: "DynamicSchemeType",
@@ -51,9 +54,6 @@ class DynamicSchemeTypeSettingPage extends HookConsumerWidget {
           smiTrigger.value = trigger;
         },
       ),
-      description: l18n.profile_playerDynamicColorSchemeTypeDescription,
-      warning:
-          !player.loaded ? l18n.general_optionNotAvailableWithoutAudio : null,
       children: [
         SettingsCardWidget(
           isSwitchListTile: false,

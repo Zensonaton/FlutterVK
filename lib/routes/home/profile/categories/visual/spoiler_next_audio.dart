@@ -8,11 +8,11 @@ import "../../../../../provider/l18n.dart";
 import "../../../../../provider/preferences.dart";
 import "../../../../../widgets/setting_widgets.dart";
 
-/// Route для настроек, отображающий параметры настройки "Альтернативный слайдер".
+/// Route для настроек, отображающий параметры настройки "Спойлер следующего трека".
 ///
-/// go_route: `/profile/setting_alternative_slider`.
-class AlternativeSliderSettingPage extends HookConsumerWidget {
-  const AlternativeSliderSettingPage({
+/// go_route: `/profile/setting_spoiler_next_audio`.
+class SpoilerNextAudioSettingPage extends HookConsumerWidget {
+  const SpoilerNextAudioSettingPage({
     super.key,
   });
 
@@ -23,18 +23,18 @@ class AlternativeSliderSettingPage extends HookConsumerWidget {
     final preferences = ref.watch(preferencesProvider);
 
     final smiToggle = useState<SMIBool?>(null);
-    final isAlternativeSlider = preferences.alternateDesktopMiniplayerSlider;
+    final spoilerNextAudio = preferences.spoilerNextTrack;
 
     return SettingPageWithAnimationWidget(
-      title: l18n.profile_alternateSliderTitle,
-      description: l18n.profile_alternateSliderDescription,
+      title: l18n.profile_spoilerNextAudioTitle,
+      description: l18n.profile_spoilerNextAudioDescription,
       headerImage: RiveAnimationBlock(
-        name: "alternativeSlider",
-        artboardName: "AlternativeSlider",
+        name: "spoilerNextAudio",
+        artboardName: "SpoilerNextAudio",
         onStateMachineController: (StateMachineController controller) {
-          final boolInput = controller.getBoolInput("AlternativeSliderEnabled");
+          final boolInput = controller.getBoolInput("SpoilerNextAudioEnabled");
 
-          boolInput!.value = isAlternativeSlider;
+          boolInput!.value = spoilerNextAudio;
           smiToggle.value = boolInput;
         },
       ),
@@ -42,14 +42,14 @@ class AlternativeSliderSettingPage extends HookConsumerWidget {
         SettingsCardWidget(
           child: SwitchListTile.adaptive(
             title: Text(
-              l18n.profile_alternateSliderEnable,
+              l18n.profile_spoilerNextAudioEnable,
             ),
-            value: isAlternativeSlider,
+            value: spoilerNextAudio,
             onChanged: (bool? value) {
               HapticFeedback.lightImpact();
               if (value == null) return;
 
-              prefsNotifier.setAlternateDesktopMiniplayerSlider(value);
+              prefsNotifier.setSpoilerNextTrackEnabled(value);
               smiToggle.value?.value = value;
             },
           ),
