@@ -89,24 +89,16 @@ class ProfileVisualSettingsCategory extends ConsumerWidget {
 
         // Альтернативный слайдер воспроизведения.
         if (!mobileLayout)
-          SwitchListTile(
-            secondary: const Icon(
+          ListTile(
+            leading: const Icon(
               Icons.swap_horiz,
             ),
             title: Text(
               l18n.profile_alternateSliderTitle,
             ),
-            value: preferences.alternateDesktopMiniplayerSlider,
-            onChanged: recommendationsConnected
-                ? (bool? enabled) async {
-                    HapticFeedback.lightImpact();
-                    if (enabled == null) return;
-
-                    prefsNotifier.setAlternateDesktopMiniplayerSlider(
-                      enabled,
-                    );
-                  }
-                : null,
+            onTap: () => context.push(
+              "/profile/setting_alternative_slider",
+            ),
           ),
 
         // Использование изображения трека для фона в полноэкранном плеере.

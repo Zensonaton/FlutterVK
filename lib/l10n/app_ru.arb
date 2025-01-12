@@ -426,7 +426,9 @@
 	"profile_playerDynamicColorSchemeContent": "Яркий",
 	"profile_playerDynamicColorSchemeMonochrome": "Монохромный",
 
-	"profile_alternateSliderTitle": "Альтернативный слайдер воспроизведения",
+	"profile_alternateSliderTitle": "Альтернативный слайдер",
+	"profile_alternateSliderDescription": "Определяет то, где будет располагаться слайдер («полосочка») для отображения прогресса вопроизведения трека в мини-плеере снизу: над плеером, либо внутри.",
+	"profile_alternateSliderEnable": "Переместить слайдер над плеером",
 
 	"profile_useThumbnailAsBackgroundTitle": "Изображение трека как фон полноэкранного плеера",
 

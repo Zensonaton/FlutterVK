@@ -8,6 +8,7 @@ import "../routes/fullscreen_player.dart";
 import "../routes/home/music.dart";
 import "../routes/home/music/playlist.dart";
 import "../routes/home/profile.dart";
+import "../routes/home/profile/categories/visual/alternative_slider.dart";
 import "../routes/home/profile/categories/visual/app_wide_colors.dart";
 import "../routes/home/profile/categories/visual/dynamic_scheme_type.dart";
 import "../routes/home/profile/categories/visual/oled.dart";
@@ -211,6 +212,18 @@ GoRouter router(RouterRef ref) {
               context: context,
               state: state,
               child: const DynamicSchemeTypeSettingPage(),
+            );
+          },
+        ),
+
+        // Настройка "Альтернативный слайдер".
+        GoRoute(
+          path: "setting_alternative_slider",
+          pageBuilder: (BuildContext context, GoRouterState state) {
+            return buildPageWithDefaultTransition(
+              context: context,
+              state: state,
+              child: const AlternativeSliderSettingPage(),
             );
           },
         ),
