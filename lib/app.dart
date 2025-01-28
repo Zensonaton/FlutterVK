@@ -228,6 +228,7 @@ class FlutterVKApp extends HookConsumerWidget {
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
+          supportedLocales: AppLocalizations.supportedLocales,
           shortcuts: {
             // Экран с любимыми треками.
             LogicalKeySet(
@@ -354,10 +355,6 @@ class FlutterVKApp extends HookConsumerWidget {
               onInvoke: (intent) => windowManager.close(),
             ),
           },
-          supportedLocales: const [
-            Locale("ru"),
-            Locale("en"),
-          ],
         );
       },
     );
