@@ -125,8 +125,11 @@ class LivePlaylistWidget extends HookWidget {
             return;
           }
 
-          final FileInfo downloadedInfo =
-              await manager.downloadFile(lottieUrl!, key: lottieCacheKey);
+          final FileInfo downloadedInfo = await manager.downloadFile(
+            lottieUrl!,
+            key: lottieCacheKey,
+            force: true,
+          );
 
           final Uint8List bytes = await downloadedInfo.file.readAsBytes();
           final composition = await LottieComposition.fromBytes(bytes);

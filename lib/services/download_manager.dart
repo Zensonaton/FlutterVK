@@ -230,8 +230,16 @@ class PlaylistCacheDownloadItem extends DownloadItem {
     if (thumbSmall != null && thumbMax != null) return;
 
     await Future.wait([
-      manager.downloadFile(thumbnails.photoSmall, key: smallKey),
-      manager.downloadFile(thumbnails.photoMax, key: maxKey),
+      manager.downloadFile(
+        thumbnails.photoSmall,
+        key: smallKey,
+        force: true,
+      ),
+      manager.downloadFile(
+        thumbnails.photoMax,
+        key: maxKey,
+        force: true,
+      ),
     ]);
   }
 
