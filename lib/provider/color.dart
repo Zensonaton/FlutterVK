@@ -24,7 +24,6 @@ class TrackSchemeInfo extends _$TrackSchemeInfo {
 
     state = await ImageSchemeExtractor.fromImageProvider(
       provider,
-      resizeImage: true,
     );
     logger.d(
       "${watch.elapsedMilliseconds}ms to create ColorScheme (quazer: ${state!.quantizeDuration?.inMilliseconds}ms)",
@@ -95,7 +94,6 @@ Future<ImageSchemeExtractor?> colorInfoFromPlaylist(
       cacheKey: "${playlist.mediaKey}600",
       cacheManager: CachedNetworkImagesManager.instance,
     ),
-    resizeImage: true,
   );
   logger.d(
     "${watch.elapsedMilliseconds}ms to create ColorScheme for playlist (quazer: ${result.quantizeDuration?.inMilliseconds}ms)",

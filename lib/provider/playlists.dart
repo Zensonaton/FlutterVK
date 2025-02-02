@@ -196,8 +196,6 @@ class Playlists extends _$Playlists {
 
   @override
   Future<PlaylistsState?> build() async {
-    // FIXME: Неиспользованные ключи локализации: music_basicDataLoadError, music_recommendationsDataLoadError.
-
     // Если у пользователя нет Access-токена, то ничего не делаем.
     if (ref.read(tokenProvider) == null) return null;
 
