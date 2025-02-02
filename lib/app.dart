@@ -87,24 +87,6 @@ class FlutterVKWindowManager extends WindowListener {
   }
 }
 
-/// Wrapper для [FlutterVKApp], который загружает критически важные [Provider]'ы перед запуском основного приложения.
-class EagerInitialization extends ConsumerWidget {
-  /// Класс самого приложения.
-  final FlutterVKApp app;
-
-  const EagerInitialization({
-    super.key,
-    required this.app,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // В данный момент, этот метод ничего не делает.
-
-    return app;
-  }
-}
-
 /// Основной виджет главного приложения, используемый методом [runApp] внутри [main].
 ///
 /// В случае, если по какой-то причине произойдёт ошибка, вместо этого класса будет вызван [runApp], но для класса [ErroredApp], который символизирует ошибку запуска приложения.

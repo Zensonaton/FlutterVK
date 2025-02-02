@@ -413,9 +413,7 @@ Future main() async {
     runApp(
       UncontrolledProviderScope(
         container: container,
-        child: const EagerInitialization(
-          app: FlutterVKApp(),
-        ),
+        child: const FlutterVKApp(),
       ),
     );
   } catch (error, stackTrace) {
