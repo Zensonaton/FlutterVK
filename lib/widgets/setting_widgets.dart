@@ -146,6 +146,9 @@ class SettingsCardWidget extends StatelessWidget {
 ///
 /// Используется, к примеру, для выбора темы приложения.
 class SettingCardSelectorWidget extends StatelessWidget {
+  /// Длительность анимации при нажатии на кнопку.
+  static const Duration animationDuration = Duration(milliseconds: 300);
+
   /// Иконка, отображаемая сверху [title].
   final IconData icon;
 
@@ -171,17 +174,22 @@ class SettingCardSelectorWidget extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     final backgroundColor = isSelected ? scheme.primary : scheme.inversePrimary;
-    final color = scheme.onPrimary;
+    final color =
+        isSelected ? scheme.onPrimary : scheme.onPrimary.withValues(alpha: 0.8);
 
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(
         12,
       ),
-      child: Card(
-        color: backgroundColor,
-        margin: EdgeInsets.zero,
-        elevation: 0,
+      child: AnimatedContainer(
+        duration: animationDuration,
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(
+            12,
+          ),
+        ),
         child: Padding(
           padding: const EdgeInsets.all(
             12,
@@ -200,6 +208,7 @@ class SettingCardSelectorWidget extends StatelessWidget {
                 title,
                 style: TextStyle(
                   color: color,
+                  fontWeight: isSelected ? FontWeight.w500 : null,
                 ),
               ),
             ],
@@ -303,10 +312,10 @@ class SettingPageWithAnimationWidget extends ConsumerWidget {
       slivers: [
         // AppBar.
         SliverAppBar.large(
+          expandedHeight: 184,
           title: Text(
             title,
           ),
-          expandedHeight: 184,
         ),
 
         // Внутреннее содержимое.
