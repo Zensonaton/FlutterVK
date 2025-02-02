@@ -330,7 +330,7 @@ class ShellRouteWrapper extends HookConsumerWidget {
                     seconds: isConnected ? 2 : 6,
                   ),
                   content: Text(
-                    l18n.noInternetConnectionDescription,
+                    l18n.internet_connection_lost_desc,
                   ),
                 ),
               );
@@ -459,7 +459,9 @@ class ShellRouteWrapper extends HookConsumerWidget {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
-                      l18n.musicMixAudiosAddError(error.toString()),
+                      l18n.audio_mix_add_error(
+                        error: error.toString(),
+                      ),
                     ),
                   ),
                 );

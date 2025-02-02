@@ -139,9 +139,9 @@ class ProfileAvatar extends ConsumerWidget {
       final result = await showYesNoDialog(
         context,
         icon: Icons.logout_outlined,
-        title: l18n.home_profilePageLogoutTitle,
-        description: l18n.home_profilePageLogoutDescription(
-          user.fullName,
+        title: l18n.general_logout,
+        description: l18n.logout_desc(
+          name: user.fullName,
         ),
       );
       if (result != true) return;
@@ -211,7 +211,7 @@ class ProfileAvatar extends ConsumerWidget {
             Icons.logout,
           ),
           label: Text(
-            l18n.home_profilePageLogout,
+            l18n.general_logout,
           ),
         ),
       ],
@@ -250,14 +250,14 @@ class HomeProfilePage extends HookConsumerWidget {
         if (!recommendationsConnected)
           TipWidget(
             icon: Icons.auto_fix_high,
-            title: l18n.profile_recommendationsNotConnectedTitle,
-            description: l18n.profile_recommendationsNotConnectedDescription,
+            title: l18n.no_recommendations_warning,
+            description: l18n.no_recommendations_warning_desc,
             onTap: () async {
               final result = await showYesNoDialog(
                 context,
                 icon: Icons.auto_fix_high,
-                title: l18n.music_connectRecommendationsTitle,
-                description: l18n.music_connectRecommendationsDescription,
+                title: l18n.connect_recommendations_title,
+                description: l18n.connect_recommendations_desc,
               );
               if (result != true || !context.mounted) return;
 
@@ -306,8 +306,8 @@ class HomeProfilePage extends HookConsumerWidget {
 
                   return Text(
                     isConnected
-                        ? l18n.home_profilePageLabel
-                        : l18n.home_profilePageLabelOffline,
+                        ? l18n.profile_label
+                        : l18n.profile_labelOffline,
                   );
                 },
               ),

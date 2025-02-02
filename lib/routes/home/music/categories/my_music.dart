@@ -61,7 +61,7 @@ class MyMusicBlock extends HookConsumerWidget {
     );
 
     return MusicCategory(
-      title: l18n.music_myMusicChip,
+      title: l18n.my_music_chip,
       count: playlist?.count,
       onDismiss: () {
         final preferences = ref.read(preferencesProvider.notifier);
@@ -71,7 +71,9 @@ class MyMusicBlock extends HookConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              l18n.music_categoryClosedTitle(l18n.music_myMusicChip),
+              l18n.category_closed(
+                category: l18n.my_music_chip,
+              ),
             ),
             duration: const Duration(
               seconds: 5,
@@ -139,11 +141,11 @@ class MyMusicBlock extends HookConsumerWidget {
               label: Text(
                 selected
                     ? player.playing
-                        ? l18n.music_shuffleAndPlayPause
-                        : l18n.music_shuffleAndPlayResume
+                        ? l18n.general_pause
+                        : l18n.general_resume
                     : preferences.shuffleOnPlay
-                        ? l18n.music_shuffleAndPlayShuffle
-                        : l18n.music_shuffleAndPlayNonShuffle,
+                        ? l18n.general_shuffle
+                        : l18n.general_play,
               ),
               onPressed: playlist?.audios != null ? onPlayPressed : null,
             ),
@@ -159,7 +161,7 @@ class MyMusicBlock extends HookConsumerWidget {
                 Icons.queue_music,
               ),
               label: Text(
-                l18n.music_showAllFavoriteTracks,
+                l18n.all_tracks,
               ),
             ),
           ],

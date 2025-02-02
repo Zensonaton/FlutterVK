@@ -26,8 +26,8 @@ class AlternativeSliderSettingPage extends HookConsumerWidget {
     final isAlternativeSlider = preferences.alternateDesktopMiniplayerSlider;
 
     return SettingPageWithAnimationWidget(
-      title: l18n.profile_alternateSliderTitle,
-      description: l18n.profile_alternateSliderDescription,
+      title: l18n.alternate_slider,
+      description: l18n.alternate_slider_desc,
       headerImage: RiveAnimationBlock(
         name: "alternativeSlider",
         artboardName: "AlternativeSlider",
@@ -42,7 +42,7 @@ class AlternativeSliderSettingPage extends HookConsumerWidget {
         SettingsCardWidget(
           child: SwitchListTile.adaptive(
             title: Text(
-              l18n.profile_alternateSliderEnable,
+              l18n.enable_alternate_slider,
             ),
             value: isAlternativeSlider,
             onChanged: (bool? value) {

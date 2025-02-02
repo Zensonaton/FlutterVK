@@ -57,8 +57,8 @@ Future<bool> checkForDuplicates(
   return await showYesNoDialog(
         context,
         icon: Icons.copy,
-        title: l18n.checkBeforeFavoriteWarningTitle,
-        description: l18n.checkBeforeFavoriteWarningDescription,
+        title: l18n.track_duplicate_found_title,
+        description: l18n.track_duplicate_found_desc,
       ) ??
       false;
 }
@@ -559,14 +559,14 @@ class ChipFilters extends ConsumerWidget {
             Icons.auto_fix_high,
           ),
           label: Text(
-            l18n.music_connectRecommendationsChipTitle,
+            l18n.connect_recommendations_chip,
           ),
           onPressed: () async {
             final result = await showYesNoDialog(
               context,
               icon: Icons.auto_fix_high,
-              title: l18n.music_connectRecommendationsTitle,
-              description: l18n.music_connectRecommendationsDescription,
+              title: l18n.connect_recommendations_title,
+              description: l18n.connect_recommendations_desc,
             );
             if (result != true || !context.mounted) return;
 
@@ -588,7 +588,7 @@ class ChipFilters extends ConsumerWidget {
               prefsNotifier.setMyMusicChipEnabled(value),
           selected: preferences.myMusicChipEnabled,
           label: Text(
-            l18n.music_myMusicChip,
+            l18n.my_music_chip,
           ),
         ),
 
@@ -598,7 +598,7 @@ class ChipFilters extends ConsumerWidget {
             prefsNotifier.setPlaylistsChipEnabled(value),
         selected: preferences.playlistsChipEnabled,
         label: Text(
-          l18n.music_myPlaylistsChip,
+          l18n.my_playlists_chip,
         ),
       ),
 
@@ -609,7 +609,7 @@ class ChipFilters extends ConsumerWidget {
               prefsNotifier.setRealtimePlaylistsChipEnabled(value),
           selected: preferences.realtimePlaylistsChipEnabled,
           label: Text(
-            l18n.music_realtimePlaylistsChip,
+            l18n.realtime_playlists_chip,
           ),
         ),
 
@@ -620,7 +620,7 @@ class ChipFilters extends ConsumerWidget {
               prefsNotifier.setRecommendedPlaylistsChipEnabled(value),
           selected: preferences.recommendedPlaylistsChipEnabled,
           label: Text(
-            l18n.music_recommendedPlaylistsChip,
+            l18n.recommended_playlists_chip,
           ),
         ),
 
@@ -631,7 +631,7 @@ class ChipFilters extends ConsumerWidget {
               prefsNotifier.setSimilarMusicChipEnabled(value),
           selected: preferences.similarMusicChipEnabled,
           label: Text(
-            l18n.music_similarMusicChip,
+            l18n.simillar_music_chip,
           ),
         ),
 
@@ -641,7 +641,7 @@ class ChipFilters extends ConsumerWidget {
           onSelected: (bool value) => prefsNotifier.setByVKChipEnabled(value),
           selected: preferences.byVKChipEnabled,
           label: Text(
-            l18n.music_byVKChip,
+            l18n.by_vk_chip,
           ),
         ),
     ];
@@ -679,7 +679,7 @@ class EverythingIsDisabledBlock extends ConsumerWidget {
       children: [
         // "Как пусто..."
         Text(
-          l18n.music_allBlocksDisabledTitle,
+          l18n.all_blocks_disabled,
           style: const TextStyle(
             fontWeight: FontWeight.w500,
             fontSize: 18,
@@ -690,7 +690,7 @@ class EverythingIsDisabledBlock extends ConsumerWidget {
 
         // "Соскучились по музыке? ..."
         Text(
-          l18n.music_allBlocksDisabledDescription,
+          l18n.all_blocks_disabled_desc,
           textAlign: TextAlign.center,
         ),
       ],
@@ -788,7 +788,7 @@ class HomeMusicPage extends HookConsumerWidget {
                   final bool isConnected = connectivityManager.hasConnection;
 
                   return Text(
-                    isConnected ? l18n.music_label : l18n.music_labelOffline,
+                    isConnected ? l18n.music_label : l18n.music_label_offline,
                   );
                 },
               ),
@@ -885,8 +885,8 @@ class HomeMusicPage extends HookConsumerWidget {
 
                             // Текст "Добро пожаловать".
                             Text(
-                              l18n.music_welcomeTitle(
-                                user.firstName,
+                              l18n.music_welcome_title(
+                                name: user.firstName,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,

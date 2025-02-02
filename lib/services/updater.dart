@@ -162,10 +162,12 @@ class Updater {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                l18n.updateAvailableSnackbarTitle("v${release.tagName}"),
+                l18n.update_available_popup(
+                  version: "v${release.tagName}",
+                ),
               ),
               action: SnackBarAction(
-                label: l18n.showUpdateDetails,
+                label: l18n.general_details,
                 onPressed: () => checkForUpdates(
                   context,
                   updateRelease: release,
@@ -199,7 +201,7 @@ class Updater {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              l18n.noUpdatesAvailableTitle,
+              l18n.no_updates_available,
             ),
           ),
         );
@@ -217,7 +219,9 @@ class Updater {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              l18n.updatesRetrieveError(error.toString()),
+              l18n.update_check_error(
+                error: error.toString(),
+              ),
             ),
           ),
         );
@@ -316,7 +320,9 @@ class Updater {
       AppUpdaterDownloadTask(
         id: "update-${asset.name}",
         smallTitle: "Flutter VK",
-        longTitle: l18n.downloadManagerAppUpdateLongTitle(release.tagName),
+        longTitle: l18n.app_update_download_long_title(
+          version: release.tagName,
+        ),
         url: asset.browserDownloadUrl,
         ref: ref,
         file: file,
@@ -329,7 +335,7 @@ class Updater {
   }
 
   /// Устанавливает обновление приложения. [update] - установочный файл, с которого должно пойти обновление.
-  static Future<void> installUpdate(File update) async {
+  static Future<void> general_install(File update) async {
     logger.d("Installing update");
 
     if (Platform.isWindows) {
@@ -367,14 +373,14 @@ class Updater {
   }
 
   /// Загружает и устанавливает указанный Release во временную папку, возвращая путь к файлу в случае успешной установки.
-  Future<File> downloadAndInstallUpdate(Release release) async {
+  Future<File> downloadAndgeneral_install(Release release) async {
     // На Android, запрашиваем права для установки .apk-файлов.
     if (Platform.isAndroid) {
       await Permission.requestInstallPackages.request();
     }
 
     final File file = await downloadUpdate(release);
-    await installUpdate(file);
+    await general_install(file);
 
     return file;
   }

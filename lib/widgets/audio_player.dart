@@ -1622,7 +1622,7 @@ class _MusicContents extends ConsumerWidget {
         if (error.errorCode == 15) {
           showErrorDialog(
             context,
-            description: l18n.music_likeRestoreTooLate,
+            description: l18n.audio_restore_too_late_desc,
           );
 
           return;

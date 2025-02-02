@@ -32,7 +32,7 @@ class ByVKPlaylistsBlock extends HookConsumerWidget {
     ref.watch(playerStateProvider);
 
     return MusicCategory(
-      title: l18n.music_byVKChip,
+      title: l18n.by_vk_chip,
       onDismiss: () {
         final preferences = ref.read(preferencesProvider.notifier);
 
@@ -41,7 +41,9 @@ class ByVKPlaylistsBlock extends HookConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              l18n.music_categoryClosedTitle(l18n.music_byVKChip),
+              l18n.category_closed(
+                category: l18n.by_vk_chip,
+              ),
             ),
             duration: const Duration(
               seconds: 5,

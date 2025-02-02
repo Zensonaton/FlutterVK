@@ -57,10 +57,10 @@ class UpdateAvailableDialog extends ConsumerWidget {
             seconds: 10,
           ),
           content: Text(
-            l18n.installPendingDescription,
+            l18n.update_pending,
           ),
           action: SnackBarAction(
-            label: l18n.installPendingActionText,
+            label: l18n.general_show,
             onPressed: () =>
                 navigatorKey.currentContext?.go("/profile/download_manager"),
           ),
@@ -68,7 +68,7 @@ class UpdateAvailableDialog extends ConsumerWidget {
       );
 
       try {
-        await ref.read(updaterProvider).downloadAndInstallUpdate(release);
+        await ref.read(updaterProvider).downloadAndgeneral_install(release);
       } catch (error, stackTrace) {
         showLogErrorDialog(
           "Update download/installation error:",
@@ -77,7 +77,7 @@ class UpdateAvailableDialog extends ConsumerWidget {
           logger,
           // ignore: use_build_context_synchronously
           context,
-          title: l18n.updateErrorTitle,
+          title: l18n.update_install_error,
         );
       } finally {
         messenger.hideCurrentSnackBar();
@@ -119,7 +119,7 @@ class UpdateAvailableDialog extends ConsumerWidget {
 
                         // Текст "Доступно обновление Flutter VK".
                         Text(
-                          l18n.updateAvailableTitle,
+                          l18n.update_available,
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: scheme.primary,
@@ -131,13 +131,13 @@ class UpdateAvailableDialog extends ConsumerWidget {
 
                         // Информация о старой и новой версии.
                         StyledText(
-                          text: l18n.updateAvailableDescription(
-                            appVersion,
-                            release.tagName,
-                            release.createdAt!.toLocal(),
-                            release.createdAt!.toLocal(),
-                            release.prerelease
-                                ? "(${l18n.updatePreReleaseTitle})"
+                          text: l18n.update_available_desc(
+                            oldVersion: appVersion,
+                            newVersion: release.tagName,
+                            date: release.createdAt!.toLocal(),
+                            time: release.createdAt!.toLocal(),
+                            badges: release.prerelease
+                                ? "(${l18n.update_prerelease_type})"
                                 : "",
                           ),
                           textAlign: TextAlign.center,
@@ -190,7 +190,7 @@ class UpdateAvailableDialog extends ConsumerWidget {
                           Icons.library_books,
                         ),
                         label: Text(
-                          l18n.showUpdateDetails,
+                          l18n.general_details,
                         ),
                         onPressed: onMorePressed,
                       ),
@@ -203,7 +203,7 @@ class UpdateAvailableDialog extends ConsumerWidget {
                               : Icons.install_desktop,
                         ),
                         label: Text(
-                          l18n.installUpdate,
+                          l18n.general_install,
                         ),
                         onPressed: () => onInstallPressed(context),
                       ),
@@ -280,8 +280,8 @@ class ChangelogDialog extends ConsumerWidget {
 
                       // Текст "Список изменений в этой версии".
                       Text(
-                        l18n.profile_changelogDialogTitle(
-                          "v${release.tagName}",
+                        l18n.changelog_dialog(
+                          version: "v${release.tagName}",
                         ),
                         textAlign: TextAlign.center,
                         style: TextStyle(
@@ -332,8 +332,8 @@ class PreReleaseInstalledDialog extends ConsumerWidget {
 
     return MaterialDialog(
       icon: Icons.bug_report,
-      title: l18n.preReleaseInstalledTitle,
-      text: l18n.preReleaseInstalledDescription,
+      title: l18n.prerelease_app_version_warning,
+      text: l18n.prerelease_app_version_warning_desc,
     );
   }
 }

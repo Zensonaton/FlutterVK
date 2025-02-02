@@ -37,14 +37,14 @@ class WelcomeRoute extends ConsumerWidget {
                 children: [
                   // "Добро пожаловать!".
                   Text(
-                    l18n.welcome_welcomeTitle,
+                    l18n.welcome_title,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const Gap(12),
 
                   // "Flutter VK - ...".
                   StyledText(
-                    text: l18n.welcome_welcomeDescription,
+                    text: l18n.welcome_desc,
                     style: Theme.of(context).textTheme.bodyLarge,
                     tags: {
                       "bold": StyledTextTag(
@@ -74,7 +74,7 @@ class WelcomeRoute extends ConsumerWidget {
                         Icons.arrow_forward_ios,
                       ),
                       label: Text(
-                        l18n.welcome_welcomeContinue,
+                        l18n.general_continue,
                       ),
                     ),
                   ),

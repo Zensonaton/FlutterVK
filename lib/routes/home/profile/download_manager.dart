@@ -99,7 +99,9 @@ class DownloadItemWidget extends HookConsumerWidget {
                 // Количество выполняемых задач, если их больше 1.
                 if ((isCurrent || isCompleted) && allTasks.length > 1)
                   Text(
-                    l18n.downloadManagerTotalTaskItems(allTasks.length),
+                    l18n.download_manager_all_tasks(
+                      count: allTasks.length,
+                    ),
                     style: TextStyle(
                       color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
                     ),
@@ -314,7 +316,7 @@ class DownloadCategory extends ConsumerWidget {
         // Если ничего нет, то отображаем сообщение об этом.
         if (showNoTasksIfEmpty && tasks.isEmpty)
           Text(
-            l18n.downloadManagerNoTasks,
+            l18n.download_manager_no_tasks,
             style: TextStyle(
               color: Theme.of(context)
                   .colorScheme
@@ -351,9 +353,7 @@ class DownloadManagerRoute extends HookConsumerWidget {
             final bool isConnected = connectivityManager.hasConnection;
 
             return Text(
-              isConnected
-                  ? l18n.home_downloadManagerPageLabel
-                  : l18n.home_downloadManagerPageLabelOffline,
+              isConnected ? l18n.downloads_label : l18n.downloads_label_offline,
             );
           },
         ),
@@ -369,7 +369,7 @@ class DownloadManagerRoute extends HookConsumerWidget {
         children: [
           // Раздел "загружаются сейчас".
           DownloadCategory(
-            title: l18n.downloadManagerCurrentTasksTitle,
+            title: l18n.download_manager_current_tasks,
             tasks: downloadManager.tasks,
             currentTask: downloadManager.currentTask,
             showNoTasksIfEmpty: true,
@@ -384,7 +384,7 @@ class DownloadManagerRoute extends HookConsumerWidget {
 
             // Раздел.
             DownloadCategory(
-              title: l18n.downloadManagerOldTasksTitle,
+              title: l18n.download_manager_old_tasks,
               tasks: downloadManager.oldTasks,
               currentTask: null,
             ),

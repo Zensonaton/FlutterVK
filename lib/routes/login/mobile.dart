@@ -51,7 +51,7 @@ class MobileLoginWidget extends HookConsumerWidget {
 
             // Текст "Авторизация успешна".
             Text(
-              l18n.login_mobileSuccessAuth,
+              l18n.login_success_auth,
               style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                     color: Theme.of(context).colorScheme.primary,
                   ),
@@ -82,7 +82,7 @@ class MobileLoginWidget extends HookConsumerWidget {
                     ),
                   ),
                   child: Text(
-                    l18n.login_mobileAlternateAuthTitle,
+                    l18n.login_mobile_alternate_auth,
                   ),
                 ),
               ];
@@ -118,7 +118,7 @@ class MobileLoginWidget extends HookConsumerWidget {
 
               showErrorDialog(
                 context,
-                description: l18n.login_noTokenFound,
+                description: l18n.login_no_token_error,
               );
 
               return;

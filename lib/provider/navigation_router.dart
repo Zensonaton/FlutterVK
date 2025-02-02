@@ -110,7 +110,7 @@ GoRouter router(RouterRef ref) {
       path: "/library",
       icon: Icons.favorite_outline,
       selectedIcon: Icons.favorite,
-      label: l18n.music_libraryLabel,
+      label: l18n.music_library_label,
       mobileOnly: true,
       body: (_) {
         final ExtendedPlaylist? playlist = ref.read(favoritesPlaylistProvider);
@@ -130,7 +130,7 @@ GoRouter router(RouterRef ref) {
       path: "/profile",
       icon: Icons.person_outline,
       selectedIcon: Icons.person,
-      label: l18n.home_profilePageLabel,
+      label: l18n.profile_label,
       body: (_) => const HomeProfilePage(),
       routes: [
         // Менеджер загрузок.

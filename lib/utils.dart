@@ -283,7 +283,7 @@ int fastHash(String input) {
 String getPlaylistTypeString(AppLocalizations l18n, ExtendedPlaylist playlist) {
   switch (playlist.type) {
     case PlaylistType.favorites:
-      return l18n.music_ownedPlaylistTitle;
+      return l18n.general_owned_playlist;
 
     case PlaylistType.searchResults:
     case PlaylistType.mood:
@@ -291,10 +291,10 @@ String getPlaylistTypeString(AppLocalizations l18n, ExtendedPlaylist playlist) {
     case PlaylistType.recommendations:
     case PlaylistType.simillar:
     case PlaylistType.madeByVK:
-      return l18n.music_recommendationPlaylistTitle;
+      return l18n.general_recommended_playlist;
 
     case PlaylistType.regular:
-      return l18n.music_savedPlaylistTitle;
+      return l18n.general_saved_playlist;
   }
 }
 

@@ -680,7 +680,7 @@ class _FullscreenPlayerRouteState extends ConsumerState<FullscreenPlayerRoute> {
 
                   // Текст.
                   StyledText(
-                    text: l18n.music_fullscreenNoAudio,
+                    text: l18n.fullscreen_no_audio,
                     textAlign: TextAlign.center,
                     tags: {
                       "bold": StyledTextTag(
@@ -707,7 +707,7 @@ class _FullscreenPlayerRouteState extends ConsumerState<FullscreenPlayerRoute> {
                       Icons.fullscreen_exit,
                     ),
                     label: Text(
-                      l18n.music_fullscreenNoAudioButton,
+                      l18n.general_exit,
                     ),
                   ),
                 ],

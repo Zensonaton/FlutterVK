@@ -91,7 +91,7 @@ class TrackInfoEditDialog extends HookConsumerWidget {
         if (e.errorCode == 15) {
           showErrorDialog(
             context,
-            description: l18n.music_editErrorRestricted,
+            description: l18n.track_info_edit_error_restricted,
           );
 
           return;
@@ -99,8 +99,8 @@ class TrackInfoEditDialog extends HookConsumerWidget {
 
         showErrorDialog(
           context,
-          description: l18n.music_editError(
-            e.toString(),
+          description: l18n.track_info_edit_error(
+            error: e.toString(),
           ),
         );
       } catch (error, stackTrace) {
@@ -137,7 +137,7 @@ class TrackInfoEditDialog extends HookConsumerWidget {
               controller: titleController,
               decoration: InputDecoration(
                 label: Text(
-                  l18n.music_trackTitle,
+                  l18n.general_title,
                 ),
                 prefixIcon: const Padding(
                   padding: EdgeInsetsDirectional.only(
@@ -164,7 +164,7 @@ class TrackInfoEditDialog extends HookConsumerWidget {
                   ),
                 ),
                 label: Text(
-                  l18n.music_trackArtist,
+                  l18n.general_artist,
                 ),
               ),
             ),
@@ -173,7 +173,7 @@ class TrackInfoEditDialog extends HookConsumerWidget {
             // Выпадающее меню с жанром.
             DropdownMenu(
               label: Text(
-                l18n.music_trackGenre,
+                l18n.general_genre,
               ),
               initialSelection: trackGenre.value,
               dropdownMenuEntries: [

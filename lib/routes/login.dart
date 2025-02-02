@@ -40,8 +40,8 @@ Future<bool> tryAuthorize(
     if (useAlternateAuth && ref.read(userProvider).id != response.first.id) {
       showErrorDialog(
         context,
-        description: l18n.login_alternativeWrongUserID(
-          ref.read(userProvider).fullName,
+        description: l18n.login_wrong_user_id(
+          name: ref.read(userProvider).fullName,
         ),
       );
 
@@ -62,7 +62,7 @@ Future<bool> tryAuthorize(
     if (useAlternateAuth != musicCatalogAccess) {
       showErrorDialog(
         context,
-        description: l18n.login_noMusicAccessDescription,
+        description: l18n.login_no_music_access_desc,
       );
 
       return false;

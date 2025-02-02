@@ -29,7 +29,7 @@ class ProfileVisualSettingsCategory extends ConsumerWidget {
 
     return ProfileSettingCategory(
       icon: Icons.color_lens,
-      title: l18n.profile_visualTitle,
+      title: l18n.visual_settings,
       centerTitle: mobileLayout,
       padding: EdgeInsets.only(
         top: mobileLayout ? 0 : 8,
@@ -41,7 +41,7 @@ class ProfileVisualSettingsCategory extends ConsumerWidget {
             Icons.color_lens,
           ),
           title: Text(
-            l18n.profile_themeTitle,
+            l18n.app_theme,
           ),
           onTap: () => context.push(
             "/profile/setting_theme_mode",
@@ -54,7 +54,7 @@ class ProfileVisualSettingsCategory extends ConsumerWidget {
             Icons.mode_night,
           ),
           title: Text(
-            l18n.profile_oledThemeTitle,
+            l18n.oled_theme,
           ),
           onTap: () => context.push(
             "/profile/setting_oled",
@@ -67,7 +67,7 @@ class ProfileVisualSettingsCategory extends ConsumerWidget {
             Icons.color_lens,
           ),
           title: Text(
-            l18n.profile_usePlayerColorsAppWideTitle,
+            l18n.use_player_colors_appwide,
           ),
           onTap: () => context.push(
             "/profile/setting_app_wide_colors",
@@ -80,7 +80,7 @@ class ProfileVisualSettingsCategory extends ConsumerWidget {
             Icons.auto_fix_high,
           ),
           title: Text(
-            l18n.profile_playerDynamicColorSchemeTypeTitle,
+            l18n.player_dynamic_color_scheme_type,
           ),
           onTap: () => context.push(
             "/profile/setting_dynamic_scheme_type",
@@ -94,7 +94,7 @@ class ProfileVisualSettingsCategory extends ConsumerWidget {
               Icons.swap_horiz,
             ),
             title: Text(
-              l18n.profile_alternateSliderTitle,
+              l18n.alternate_slider,
             ),
             onTap: () => context.push(
               "/profile/setting_alternative_slider",
@@ -107,7 +107,7 @@ class ProfileVisualSettingsCategory extends ConsumerWidget {
             Icons.photo_filter,
           ),
           title: Text(
-            l18n.profile_useThumbnailAsBackgroundTitle,
+            l18n.use_track_thumb_as_player_background,
           ),
           value: preferences.playerThumbAsBackground,
           onChanged: recommendationsConnected
@@ -127,7 +127,7 @@ class ProfileVisualSettingsCategory extends ConsumerWidget {
               Icons.queue_music,
             ),
             title: Text(
-              l18n.profile_spoilerNextAudioTitle,
+              l18n.spoiler_next_audio,
             ),
             onTap: () => context.push(
               "/profile/setting_spoiler_next_audio",
@@ -140,10 +140,10 @@ class ProfileVisualSettingsCategory extends ConsumerWidget {
             Icons.colorize,
           ),
           title: Text(
-            l18n.profile_crossfadeAudioColorsTitle,
+            l18n.crossfade_audio_colors,
           ),
           subtitle: Text(
-            l18n.profile_crossfadeAudioColorsDescription,
+            l18n.crossfade_audio_colors_desc,
           ),
           value: preferences.crossfadeColors,
           onChanged: (bool? enabled) async {

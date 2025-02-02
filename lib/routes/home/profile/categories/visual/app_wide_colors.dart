@@ -31,15 +31,15 @@ class AppWideColorsSettingPage extends HookConsumerWidget {
     final isAppWideColors = preferences.playerColorsAppWide;
 
     return SettingPageWithAnimationWidget(
-      title: l18n.profile_usePlayerColorsAppWideTitle,
-      description: l18n.profile_usePlayerColorsAppWideDescription,
+      title: l18n.use_player_colors_appwide,
+      description: l18n.use_player_colors_appwide_desc,
       warning: () {
         if (!recommendationsConnected) {
-          return l18n.general_optionNotAvailableWithoutRecommendations;
+          return l18n.option_unavailable_without_recommendations;
         }
 
         if (!player.loaded) {
-          return l18n.general_optionNotAvailableWithoutAudio;
+          return l18n.option_unavailable_without_audio_playing;
         }
       }(),
       headerImage: RiveAnimationBlock(
@@ -58,7 +58,7 @@ class AppWideColorsSettingPage extends HookConsumerWidget {
         SettingsCardWidget(
           child: SwitchListTile.adaptive(
             title: Text(
-              l18n.profile_usePlayerColorsAppWideEnable,
+              l18n.enable_player_colors_appwide,
             ),
             value: isAppWideColors,
             onChanged: recommendationsConnected

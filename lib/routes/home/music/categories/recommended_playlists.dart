@@ -33,7 +33,7 @@ class RecommendedPlaylistsBlock extends HookConsumerWidget {
     ref.watch(playerLoadedStateProvider);
 
     return MusicCategory(
-      title: l18n.music_recommendedPlaylistsChip,
+      title: l18n.recommended_playlists_chip,
       onDismiss: () {
         final preferences = ref.read(preferencesProvider.notifier);
 
@@ -42,8 +42,8 @@ class RecommendedPlaylistsBlock extends HookConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              l18n.music_categoryClosedTitle(
-                l18n.music_recommendedPlaylistsChip,
+              l18n.category_closed(
+                category: l18n.recommended_playlists_chip,
               ),
             ),
             duration: const Duration(

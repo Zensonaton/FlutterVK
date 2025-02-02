@@ -53,14 +53,14 @@ class FlutterVKWindowManager extends WindowListener {
         (behavior == CloseBehavior.minimizeIfPlaying && player.playing)) {
       final LocalNotification notification = LocalNotification(
         title: "Flutter VK",
-        body: l18n.general_appMinimized,
+        body: l18n.app_minimized_message,
         silent: true,
         actions: [
           LocalNotificationAction(
-            text: l18n.general_appMinimizedClose,
+            text: l18n.general_close,
           ),
           LocalNotificationAction(
-            text: l18n.general_appMinimizedRestore,
+            text: l18n.general_restore,
           ),
         ],
       );
@@ -210,20 +210,7 @@ class FlutterVKApp extends HookConsumerWidget {
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
-          localeListResolutionCallback:
-              (List<Locale>? locales, Iterable<Locale> supportedLocales) {
-            for (Locale locale in locales ?? []) {
-              if (!supportedLocales.contains(locale)) continue;
-
-              return locale;
-            }
-
-            logger.w(
-              "No supported locale found in $locales, falling back to ${supportedLocales.first}",
-            );
-
-            return supportedLocales.first;
-          },
+          localeResolutionCallback: localeResolutionCallback,
           supportedLocales: AppLocalizations.supportedLocales,
           shortcuts: {
             // Экран с любимыми треками.

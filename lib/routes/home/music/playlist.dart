@@ -169,13 +169,20 @@ class DeleteCacheDialog extends ConsumerWidget {
         );
     final int sizeMB = sizeBytes ~/ 1024 ~/ 1024;
     final size = sizeMB >= 500
-        ? l18n.trackSizeGB(sizeMB / 500)
-        : l18n.trackSizeMB(sizeMB);
+        ? l18n.general_filesize_gb(
+            value: sizeMB / 500,
+          )
+        : l18n.general_filesize_mb(
+            value: sizeMB,
+          );
 
     return MaterialDialog(
       icon: Icons.file_download_off,
-      title: l18n.music_disableTrackCachingTitle,
-      text: l18n.music_disableTrackCachingDescription(count, size),
+      title: l18n.disable_caching_title,
+      text: l18n.disable_caching_desc(
+        count: count,
+        size: size,
+      ),
       actions: [
         // "Нет".
         TextButton(
@@ -190,7 +197,7 @@ class DeleteCacheDialog extends ConsumerWidget {
         //   TextButton(
         //     onPressed: () => context.pop(false),
         //     child: Text(
-        //       l18n.music_stopTrackCachingButton,
+        //       l18n.stop_caching_button,
         //     ),
         //   ),
 
@@ -198,7 +205,7 @@ class DeleteCacheDialog extends ConsumerWidget {
         FilledButton(
           onPressed: () => Navigator.of(context).pop(true),
           child: Text(
-            l18n.music_disableTrackCachingButton,
+            l18n.delete_cached_button,
           ),
         ),
       ],
@@ -380,7 +387,7 @@ class MobilePlaylistInfoWidget extends ConsumerWidget {
     final safeScheme = scheme ?? Theme.of(context).colorScheme;
 
     final String playlistName =
-        playlist.title ?? l18n.music_fullscreenFavoritePlaylistName;
+        playlist.title ?? l18n.general_favorites_playlist;
 
     return SliverToBoxAdapter(
       child: SizedBox(
@@ -635,7 +642,7 @@ class PlaylistAudiosListWidget extends HookConsumerWidget {
             horizontal: horizontalPadding,
           ),
           child: Text(
-            l18n.music_playlistEmpty,
+            l18n.playlist_is_empty,
             textAlign: TextAlign.center,
           ),
         ),
@@ -650,7 +657,7 @@ class PlaylistAudiosListWidget extends HookConsumerWidget {
             horizontal: horizontalPadding,
           ),
           child: StyledText(
-            text: l18n.music_zeroSearchResults,
+            text: l18n.playlist_search_zero_results,
             textAlign: TextAlign.center,
             tags: {
               "click": StyledTextActionTag(
@@ -877,8 +884,8 @@ class AppBarRealAppBarWidget extends HookConsumerWidget {
               ),
               textAlignVertical: TextAlignVertical.center,
               decoration: InputDecoration(
-                hintText: l18n.music_searchTextInPlaylist(
-                  count,
+                hintText: l18n.search_tracks_in_playlist(
+                  count: count,
                 ),
                 filled: true,
                 contentPadding: const EdgeInsets.all(
@@ -1012,8 +1019,7 @@ class AppBarWidget extends HookConsumerWidget {
 
     final scheme = Theme.of(context).colorScheme;
 
-    final String title =
-        playlist.title ?? l18n.music_fullscreenFavoritePlaylistName;
+    final String title = playlist.title ?? l18n.general_favorites_playlist;
 
     return SliverPersistentHeader(
       pinned: true,
@@ -1248,8 +1254,8 @@ class PlaylistTypeDescriptionWidget extends HookConsumerWidget {
                 child: Skeletonizer(
                   enabled: !areTracksLoaded,
                   child: Text(
-                    l18n.music_playlistInfoCount(
-                      playlist.count ?? 50,
+                    l18n.general_audios_count(
+                      count: playlist.count ?? 50,
                     ),
                     style: TextStyle(
                       color: scheme.onSurface.withValues(alpha: 0.8),
@@ -1332,7 +1338,7 @@ class DesktopAppBarWidget extends HookConsumerWidget {
               milliseconds: 150,
             ),
             child: Text(
-              playlist.title ?? l18n.music_fullscreenFavoritePlaylistName,
+              playlist.title ?? l18n.general_favorites_playlist,
             ),
           ),
           centerTitle: true,
@@ -1364,8 +1370,7 @@ class DesktopAppBarWidget extends HookConsumerWidget {
                           children: [
                             // Название плейлиста.
                             SelectableText(
-                              playlist.title ??
-                                  l18n.music_fullscreenFavoritePlaylistName,
+                              playlist.title ?? l18n.general_favorites_playlist,
                               style: Theme.of(context)
                                   .textTheme
                                   .displayLarge!
@@ -1562,8 +1567,8 @@ class DesktopPlaylistControlsWidget extends HookConsumerWidget {
                           enabled: hasTracksLoaded,
                           onSubmitted: onSearchSubmitted,
                           decoration: InputDecoration(
-                            hintText: l18n.music_searchTextInPlaylist(
-                              playlist.count ?? 0,
+                            hintText: l18n.search_tracks_in_playlist(
+                              count: playlist.count ?? 0,
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(
@@ -1723,8 +1728,7 @@ class PlaylistRoute extends HookConsumerWidget {
     void onCacheTap() async {
       final downloadManager = ref.read(downloadManagerProvider.notifier);
       final playlistsManager = ref.read(playlistsProvider.notifier);
-      final playlistName =
-          playlist.title ?? l18n.music_fullscreenFavoritePlaylistName;
+      final playlistName = playlist.title ?? l18n.general_favorites_playlist;
 
       final bool playlistCached = playlist.cacheTracks ?? false;
 
@@ -1764,7 +1768,9 @@ class PlaylistRoute extends HookConsumerWidget {
             ref: downloadManager.ref,
             id: playlist.mediaKey,
             playlist: newPlaylist.playlist,
-            longTitle: l18n.music_playlistCacheRemovalTitle(playlistName),
+            longTitle: l18n.playlist_cache_removal(
+              title: playlistName,
+            ),
             smallTitle: playlistName,
             tasks: playlist.audios!
                 .map(
@@ -1792,19 +1798,23 @@ class PlaylistRoute extends HookConsumerWidget {
           ((playlist.duration ?? Duration.zero).inMinutes * trackSizePerMin)
               .round();
       final size = approxSize >= 500
-          ? l18n.trackSizeGB(approxSize / 500)
-          : l18n.trackSizeMB(approxSize);
+          ? l18n.general_filesize_gb(
+              value: approxSize / 500,
+            )
+          : l18n.general_filesize_mb(
+              value: approxSize,
+            );
 
       // Спрашиваем, уверен ли он в своих намерениях.
       final result = await showYesNoDialog(
         context,
         icon: Icons.file_download,
-        title: l18n.music_enableTrackCachingTitle,
-        description: l18n.music_enableTrackCachingDescription(
-          playlist.count ?? 0,
-          size,
+        title: l18n.enable_caching_title,
+        description: l18n.enable_caching_desc(
+          count: playlist.count ?? 0,
+          downloadSize: size,
         ),
-        yesText: l18n.music_enableTrackCachingButton,
+        yesText: l18n.general_enable,
       );
 
       // Если пользователь нажал на "нет", то выходим.

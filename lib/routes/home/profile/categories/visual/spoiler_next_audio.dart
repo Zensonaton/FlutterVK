@@ -26,8 +26,8 @@ class SpoilerNextAudioSettingPage extends HookConsumerWidget {
     final spoilerNextAudio = preferences.spoilerNextTrack;
 
     return SettingPageWithAnimationWidget(
-      title: l18n.profile_spoilerNextAudioTitle,
-      description: l18n.profile_spoilerNextAudioDescription,
+      title: l18n.spoiler_next_audio,
+      description: l18n.spoiler_next_audio_desc,
       headerImage: RiveAnimationBlock(
         name: "spoilerNextAudio",
         artboardName: "SpoilerNextAudio",
@@ -42,7 +42,7 @@ class SpoilerNextAudioSettingPage extends HookConsumerWidget {
         SettingsCardWidget(
           child: SwitchListTile.adaptive(
             title: Text(
-              l18n.profile_spoilerNextAudioEnable,
+              l18n.enable_spoiler_next_audio,
             ),
             value: spoilerNextAudio,
             onChanged: (bool? value) {

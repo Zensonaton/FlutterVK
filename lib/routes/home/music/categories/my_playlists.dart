@@ -36,7 +36,7 @@ class MyPlaylistsBlock extends HookConsumerWidget {
     final int? playlistsCount = playlists.value?.playlistsCount;
 
     return MusicCategory(
-      title: l18n.music_myPlaylistsChip,
+      title: l18n.my_playlists_chip,
       count: playlistsCount,
       onDismiss: () {
         final preferences = ref.read(preferencesProvider.notifier);
@@ -46,7 +46,9 @@ class MyPlaylistsBlock extends HookConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              l18n.music_categoryClosedTitle(l18n.music_myPlaylistsChip),
+              l18n.category_closed(
+                category: l18n.my_playlists_chip,
+              ),
             ),
             duration: const Duration(
               seconds: 5,
@@ -79,8 +81,7 @@ class MyPlaylistsBlock extends HookConsumerWidget {
                 if (userPlaylists == null) {
                   return Skeletonizer(
                     child: AudioPlaylistWidget(
-                      name:
-                          fakePlaylistNames[index % fakePlaylistNames.length],
+                      name: fakePlaylistNames[index % fakePlaylistNames.length],
                     ),
                   );
                 }

@@ -52,11 +52,11 @@ Widget buildListTrackWidget(
       showErrorDialog(
         context,
         title: audio.isRestricted
-            ? l18n.music_trackRestrictedTitle
-            : l18n.music_trackUnavailableOfflineTitle,
+            ? l18n.track_restricted_title
+            : l18n.track_unavailable_offline_title,
         description: audio.isRestricted
-            ? l18n.music_trackRestrictedDescription
-            : l18n.music_trackUnavailableOfflineDescription,
+            ? l18n.track_restricted_desc
+            : l18n.track_unavailable_offline_desc,
       );
 
       return;
@@ -95,7 +95,7 @@ Widget buildListTrackWidget(
       if (error.errorCode == 15) {
         showErrorDialog(
           context,
-          description: l18n.music_likeRestoreTooLate,
+          description: l18n.audio_restore_too_late_desc,
         );
 
         return;
@@ -437,16 +437,16 @@ class AudioTrackOtherInfoIcons extends ConsumerWidget {
     ];
     final List<String> tooltips = [
       // Кэширование.
-      if (isCached) l18n.music_iconTooltipCached,
+      if (isCached) l18n.icon_tooltip_cached,
 
       // Локально заменённый трек.
-      if (isReplacedLocally) l18n.music_iconTooltipReplacedLocally,
+      if (isReplacedLocally) l18n.icon_tooltip_replaced_locally,
 
       // Ограниченный трек.
       if (isRestricted)
         (isReplacedLocally || isCached)
-            ? l18n.music_iconTooltipRestrictedButReplacedLocally
-            : l18n.music_iconTooltipRestricted,
+            ? l18n.icon_tooltip_restricted_playable
+            : l18n.icon_tooltip_restricted,
     ];
     final tooltip = tooltips.join(", ");
 

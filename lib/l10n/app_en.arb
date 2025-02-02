@@ -1,7 +1,399 @@
 {
 	"@@locale": "en",
 
-	"welcome_welcomeTitle": "Welcome! 😎",
-	"welcome_welcomeDescription": "<bold>Flutter VK</bold> is an experimental <link>open source</link> «ВКонтакте» (VKontakte) client, built using the Flutter framework, with basic support for messaging functionality, as well as music streaming support.",
-	"welcome_welcomeContinue": "Continue"
+	"general_yes": "Yes",
+	"general_no": "No",
+	"general_save": "Save",
+	"general_reset": "Reset",
+	"general_cancel": "Cancel",
+	"general_close": "Close",
+	"general_loading": "Loading...",
+	"general_restore": "Restore",
+	"general_continue": "Continue",
+	"general_shuffle": "Shuffle",
+	"general_play": "Play",
+	"general_pause": "Pause",
+	"general_resume": "Resume",
+	"general_enable": "Enable",
+	"general_edit": "Edit",
+	"general_logout": "Logout",
+	"general_exit": "Exit",
+	"general_title": "Title",
+	"general_artist": "Artist",
+	"general_genre": "Genre",
+	"general_share": "Share",
+	"general_nothing_found": "Nothing found",
+	"general_copy_to_downloads": "Copy to \"Downloads\"",
+	"general_open_folder": "Open folder",
+	"general_select": "Select",
+	"general_details": "Details",
+	"general_install": "Install",
+	"general_show": "Show",
+	"general_filesize_mb": "{value} MB",
+	"general_filesize_gb": "{value} GB",
+	"general_favorites_playlist": "Favorites",
+	"general_search_playlist": "Search audios",
+	"general_owned_playlist": "Your playlist",
+	"general_saved_playlist": "Saved playlist",
+	"general_recommended_playlist": "Recommended playlist",
+	"general_audios_count": "{count, plural, one{{count} audio} other{{count} audios}}",
+
+	"track_added_to_queue": "Track added to queue.",
+	"app_restart_required": "Restart the application to apply changes.",
+
+	"not_yet_implemented": "Not implemented yet",
+	"not_yet_implemented_desc": "This feature has not been implemented yet.",
+
+	"error_dialog": "An error occurred",
+	"error_dialog_desc": "Something went wrong. And I''m sorry about that. Try again later.",
+
+	"option_unavailable_with_light_theme": "This option is unavailable because app is used in light theme.",
+	"option_unavailable_without_recommendations": "This setting is unavailable you haven''t connected VK recommendations.",
+	"option_unavailable_without_audio_playing": "You will not be able to see changes to this settings, because no audio is playing right now.",
+
+	"app_minimized_message": "Flutter VK minimized.\nUse the tray or reopen the app to restore the window.",
+
+	"tray_show_hide": "Show/Hide",
+
+	"music_readme_contents": "Hey-hey-hey! Stop right there! 🤚\n\nYes, this folder contains tracks cached by the Flutter VK app.\nIf you noticed, these tracks are saved in a very unusual format, and there's a reason for that.\nI, the app developer, don't want users (like you!) to easily access these tracks.\n\nIf you try hard enough, you'll eventually find the track you need. However, I'd prefer you didn't.\nIf it turns out that someone is using the app to download tracks, I'll have to add additional levels of obfuscation or encryption, like AES.\n\nPlease respect the work of the artists who put a lot of time into creating their tracks. Distributing them this way causes them serious harm.\nIf you still decide to distribute the tracks as .mp3 files, at least do it without any profit, only for personal use.\n\nThanks for your attention, fren :)",
+
+	"internet_required_title": "No Connection",
+	"internet_required_desc": "This action can only be performed when connected to the internet. Please connect to a network and try again.",
+
+	"internet_connection_lost_desc": "Connection to the servers lost. Some app functionality will be disabled.",
+
+	"prerelease_app_version_warning": "Beta Version",
+	"prerelease_app_version_warning_desc": "Shhhh! Here be dragons! You''ve stepped into dangerous territory by installing the beta version of Flutter VK. Beta versions are less stable and not recommended for regular users.\n\nBy continuing, you acknowledge the risks of using the beta version of the app.\nThis notification will only be shown once.",
+
+	"welcome_title": "Welcome! 😎",
+	"welcome_desc": "<bold>Flutter VK</bold> is an experimental unofficial VK client built using the Flutter framework with <link>open source code</link> for listening to music without needing a VK BOOM subscription.",
+
+	"login_title": "Authorization",
+	"login_desktop_desc": "To authorize, <link>🔗 follow the link</link> and grant the app access to your VK account.\nAfter clicking allow, copy the website address from the browser''s address bar and paste it into the field below:",
+
+	"login_connect_recommendations_title": "Connect Recommendations",
+	"login_connect_recommendations_desc": "To connect recommendations, <link>🔗 follow the link</link> and grant the app access to your VK account.\nAfter clicking allow, copy the website address from the browser''s address bar and paste it into the field below:",
+
+	"login_authorize": "Authorize",
+
+	"login_mobile_alternate_auth": "Alternate Authorization Method",
+
+	"login_no_token_error": "Access token was not found in the provided link.",
+	"login_no_music_access_desc": "Flutter VK couldn''t access the special music sections needed for the app to function.\nThis error usually occurs if you mistakenly tried to authorize using the Kate Mobile app instead of the VK Admin app.\n\nPlease carefully follow the authorization instructions and try again.",
+	"login_wrong_user_id": "Flutter VK detected that you connected a different VK page than the one currently connected.\nPlease log in as {name} on VK and try again.",
+
+	"login_success_auth": "Authorization successful!",
+
+	"music_label": "Music",
+	"music_label_offline": "Music (offline)",
+
+	"music_library_label": "Library",
+
+	"profile_label": "Profile",
+	"profile_labelOffline": "Profile (offline)",
+
+	"downloads_label": "Downloads",
+	"downloads_label_offline": "Downloads (offline)",
+
+	"music_welcome_title": "Welcome, {name}! 👋",
+
+	"category_closed": "You closed the '{category}' section. You can restore it by clicking the button in 'active sections'.",
+
+	"my_music_chip": "My Music",
+	"my_playlists_chip": "Your Playlists",
+	"realtime_playlists_chip": "In Real Time",
+	"recommended_playlists_chip": "Playlists for You",
+	"simillar_music_chip": "Taste Matches",
+	"by_vk_chip": "Curated by VK",
+	"connect_recommendations_chip": "Connect VK Recommendations",
+
+	"connect_recommendations_title": "Connect Recommendations",
+	"connect_recommendations_desc": "By connecting recommendations, you''ll gain access to music sections like \"Playlists for You\", \"VK Mix\", and you''ll also get access to track covers.\n\nTo connect recommendations, you''ll need to authorize again via VK.",
+
+	"all_tracks": "All Tracks",
+
+	"track_unavailable_offline_title": "Track unavailable offline",
+	"track_unavailable_offline_desc": "You cannot listen to this track offline because you did not cache it earlier.",
+
+	"track_restricted_title": "Audio unavailable",
+	"track_restricted_desc": "VK reported that this audio is unavailable. This decision was likely made by the track artist or label. Since you did not cache this track earlier, playback is impossible.",
+
+	"search_tracks_in_playlist": "Search among {count, plural, one{{count} track} other{{count} tracks}} here",
+	"playlist_is_empty": "This playlist is empty.",
+	"playlist_search_zero_results": "No results found for your query. Try <click>clearing your query</click>.",
+
+	"enable_caching_title": "Enable track caching",
+	"enable_caching_desc": "By enabling caching, Flutter VK will automatically download all tracks in this playlist, making them available for offline listening. If you continue, Flutter VK will download {count, plural, one{{count} track} other{{count} tracks}}, that''ll take ~{downloadSize} of internet traffic.",
+
+	"disable_caching_title": "Remove track cache",
+	"disable_caching_desc": "Clearing the playlist cache will remove {count, plural, one{{count} saved track} other{{count} saved tracks}} taking up {size} on your device. After removal, you will not be able to listen to this playlist offline. Are you sure you want to continue?",
+
+	"stop_caching_button": "Stop",
+	"delete_cached_button": "Delete",
+
+	"playlist_caching": "Caching playlist \"{title}\"",
+
+	"playlist_cache_removal": "Removing tracks from playlist \"{title}\"",
+
+	"search_music_global": "Search VK music",
+
+	"type_to_search": "Enter the song title above to start searching.",
+
+	"audio_restore_too_late_desc": "The track cannot be restored because too much time has passed since its deletion. Use the search to find this track and add it again.",
+
+	"add_track_as_liked": "Mark as liked",
+	"remove_track_as_liked": "Remove from liked",
+	"add_track_to_playlist": "Add to playlist",
+	"play_track_next": "Play next",
+	"go_to_track_album": "Go to album",
+	"go_to_track_album_desc": "Opens the album page \"{title}\"",
+	"search_track_on_genius": "Search on Genius",
+	"search_track_on_genius_desc": "Track lyrics and other information from Genius",
+	"cache_this_track": "Download",
+	"cache_this_track_desc": "Allows you to listen to the track even without an internet connection",
+	"change_track_thumbnail": "Change cover",
+	"change_track_thumbnail_desc": "Sets the cover by searching from Deezer",
+	"reupload_track_from_youtube": "Reupload from YouTube",
+	"reupload_track_from_youtube_desc": "Locally replaces this audio with a version from YouTube",
+	"replace_track_with_local": "Replace with local audio",
+	"replace_track_with_local_desc": "Locally replaces this audio with another one downloaded on your device",
+	"replace_track_with_local_filepicker_title": "Select a track for replacement",
+	"replace_track_with_local_success": "The track was successfully replaced on this device.",
+	"remove_local_track_version": "Remove local track version",
+	"remove_local_track_success": "The track was successfully restored.",
+	"remove_local_track_is_restricted_title": "Track is restricted",
+	"remove_local_track_is_restricted_desc": "This track is unavailable for playback. Continuing will remove this track from your device, and you will no longer be able to listen to it here. Are you sure you want to lose access to this track?",
+	"track_details": "Track details",
+
+	"change_track_thumbnail_search_text": "Deezer query",
+	"change_track_thumbnail_type_to_search": "Enter the track title above to search for covers.",
+
+	"icon_tooltip_cached": "Cached",
+	"icon_tooltip_replaced_locally": "Replaced locally",
+	"icon_tooltip_restricted": "Unavailable",
+	"icon_tooltip_restricted_playable": "Restricted but playable",
+
+	"track_info_edit_error_restricted": "You cannot edit this track because it is an official release.",
+	"track_info_edit_error": "An error occurred while editing the track: {error}",
+
+	"all_blocks_disabled": "Woah! It looks like there is nothing here.",
+	"all_blocks_disabled_desc": "Turn something on by clicking the desired switch above.",
+
+	"simillarity_percent": "match with you",
+
+	"fullscreen_playlist_title": "Playing from playlist",
+	"fullscreen_next_track_title": "Next up",
+
+	"fullscreen_no_audio": "<bold>Sshhhh, don''t wake up the doggo</bold>!\n\nYou have nothing playing right now.\nClick <exit>here</exit> to close the player.",
+
+	"audio_mix_add_error": "Error retrieving tracks for audio mix: {error}",
+
+	"logout_desc": "Are you sure you want to log out of the {name} account in the Flutter VK app?",
+
+	"no_recommendations_warning": "Recommendations are not connected",
+	"no_recommendations_warning_desc": "Connected Recommendations give you access to curated by VK playlists with new tracks, and ability to see audio thumbnails. Click this field to connect Recommendations and fix this.",
+
+
+	"visual_settings": "Visual & cosmetic settings",
+
+	"app_theme": "Theme",
+	"app_theme_desc": "The dark theme makes the UI more pleasant for use, especially at night or dark environments. Additionally, you can enable the OLED theme, which makes the app background as black as possible to save battery on some devices.",
+	"app_theme_system": "System",
+	"app_theme_light": "Light",
+	"app_theme_dark": "Dark",
+
+	"oled_theme": "OLED theme",
+	"oled_theme_desc": "With the OLED theme, a truly black color will be used for the background. This can save battery on some devices.",
+	"enable_oled_theme": "Use OLED theme",
+
+	"use_player_colors_appwide": "Track colors app-wide",
+	"use_player_colors_appwide_desc": "After enabling this setting, colors of the playing track cover will be shown throughout the app.",
+	"enable_player_colors_appwide": "Allow track colors app-wide",
+
+	"player_dynamic_color_scheme_type": "Cover color palette type",
+	"player_dynamic_color_scheme_type_desc": "This setting specifies how bright the color palette will be displayed in the player during music playback.",
+	"player_dynamic_color_scheme_type_tonalSpot": "Default",
+	"player_dynamic_color_scheme_type_neutral": "Neutral",
+	"player_dynamic_color_scheme_type_content": "Bright",
+	"player_dynamic_color_scheme_type_monochrome": "Monochrome",
+
+	"alternate_slider": "Alternate slider",
+	"alternate_slider_desc": "Determines slider position for displaying track playback progress in the bottom player.",
+	"enable_alternate_slider": "Move slider above player",
+
+	"use_track_thumb_as_player_background": "Track image as fullscreen player background",
+
+	"spoiler_next_audio": "Spoiler next track",
+	"spoiler_next_audio_desc": "This setting indicates whether the title of the next track will be displayed before finishing the current one.",
+	"enable_spoiler_next_audio": "Show next track",
+
+	"crossfade_audio_colors": "Player color crossfade",
+	"crossfade_audio_colors_desc": "Makes a smooth transition of player colors before the next track starts.",
+
+
+	"music_player": "Music player",
+
+	"close_action": "Action on window close",
+	"close_action_desc": "Determines whether the app will actually close when the window is closed",
+	"close_action_close": "Close",
+	"close_action_minimize": "Minimize",
+	"close_action_minimize_if_playing": "Minimize if music is playing",
+
+	"android_keep_playing_on_close": "Playback after swiping",
+	"android_keep_playing_on_close_desc": "Determines whether playback will continue after closing the app in the list of open apps on Android",
+
+	"shuffle_on_play": "Shuffle on play",
+	"shuffle_on_play_desc": "Shuffles tracks in the playlist when playback starts",
+
+	"profile_pauseOnMuteTitle": "Pause on silent volume",
+	"profile_pauseOnMuteDescription": "Playback will pause when the volume is set to minimum",
+
+	"stop_on_long_pause": "Stop on inactivity",
+	"stop_on_long_pause_desc": "The player will stop playing after a long pause, potentially saving battery life and device resources",
+
+	"rewind_on_previous": "Rewind on previous track",
+	"rewind_on_previous_desc": "In which cases an attempt to start the previous track will rewind to the beginning instead of starting the previous track.\nA repeated attempt to rewind within a short time will start the previous track regardless of the setting value",
+	"rewind_on_previous_always": "Always",
+	"rewind_on_previous_only_via_ui": "Only via UI",
+	"rewind_on_previous_only_via_notification": "Only via notification/headphones",
+	"rewind_on_previous_only_via_disabled": "Never",
+
+	"check_for_duplicates": "Duplicate prevention",
+	"check_for_duplicates_desc": "You will see a warning that the track is already liked to avoid saving it twice",
+	"track_duplicate_found_title": "Duplicate found",
+	"track_duplicate_found_desc": "It looks like this track is already saved. Saving this track will create another copy of it.\nAre you sure you want to create a duplicate of this track?",
+
+	"discord_rpc": "Discord Rich Presence",
+	"discord_rpc_desc": "Broadcasts the playing track in Discord",
+
+	"player_debug_logging": "Debug player logging",
+	"player_debug_logging_desc": "Enables output of technical data of the music player to the log. This option is intended for debugging purposes and is not recommended for regular use. Usage of this option may lead to performance issues.",
+
+
+	"experimental_options": "Experimental features",
+
+	"deezer_thumbnails": "Deezer covers",
+	"deezer_thumbnails_desc": "Downloads covers for tracks from Deezer if the track does not have one.\nSometimes may provide incorrect/low-quality covers",
+
+	"lrclib_lyrics": "Lyrics via LRCLIB",
+	"lrclib_lyrics_desc": "Downloads lyrics from LRCLIB if the track does not have them or they are not synchronized.\nSometimes may provide incorrect/low-quality lyrics",
+
+	"export_settings": "Export settings",
+	"export_settings_desc": "Saves local track changes and app settings to a file to restore them on another device",
+
+	"import_settings": "Import settings",
+	"import_settings_desc": "Loads a file previously created using \"export settings\"",
+
+	"export_music_list": "Export track list",
+	"export_music_list_desc": "List of {count, plural, one{{count} liked track} other{{count} liked tracks}}:",
+
+	"export_settings_title": "Export settings",
+	"export_settings_tip": "About settings export",
+	"export_settings_tip_desc": "Settings export is a feature that allows you to save app and track settings to a special file for manual transfer to another device.\n\nAfter exporting, you will need to transfer the file to another device and use the <importSettings><importSettingsIcon></importSettingsIcon> Import settings</importSettings> feature to load the changes.",
+
+	"export_settings_modified_settings": "Flutter VK settings",
+	"export_settings_modified_settings_desc": "{count, plural, one{{count} setting} other{{count} settings}} changed",
+
+	"export_settings_modified_thumbnails": "Changed track covers",
+	"export_settings_modified_thumbnails_desc": "{count, plural, one{{count} cover} other{{count} covers}} changed using the <colored><icon></icon> Change cover</colored> option",
+
+	"export_settings_modified_lyrics": "Changed lyrics",
+	"export_settings_modified_lyrics_desc": "{count, plural, one{{count} lyric} other{{count} lyrics}} changed",
+
+	"export_settings_modified_metadata": "Changed track metadata",
+	"export_settings_modified_metadata_desc": "{count, plural, one{{count} track} other{{count} tracks}} changed",
+
+	"export_settings_cached_restricted": "Cached but restricted tracks",
+	"export_settings_cached_restricted_desc": "{count, plural, one{{count} track} other{{count} tracks}} available for listening despite restricted access due to caching",
+
+	"export_settings_locally_replaced": "Locally replaced tracks",
+	"export_settings_locally_replaced_desc": "{count, plural, one{{count} track} other{{count} tracks}} replaced using the <colored><icon></icon> Local track replacement</colored> option",
+
+	"export_settings_export": "Export",
+
+	"export_settings_success": "Export completed",
+	"export_settings_success_desc": "Export completed successfully! Manually transfer the file to another device and use the \"import settings\" option to restore the changes.",
+
+	"copy_to_downloads_success": "The file was successfully copied to the \"Downloads\" folder.",
+
+	"settings_import": "Import settings",
+
+	"settings_import_tip": "About settings import",
+	"settings_import_tip_desc": "Settings import is a feature that synchronizes Flutter VK app settings and track changes made on another device.\n\nNot sure where to start? Refer to the <exportSettings><exportSettingsIcon></exportSettingsIcon> Export settings</exportSettings> feature.",
+
+	"settings_import_select_file": "No file selected for settings import.",
+
+	"settings_import_select_file_dialog_title": "Select a file for settings and tracks import",
+
+	"settings_import_version_missmatch": "Compatibility issue",
+	"settings_import_version_missmatch_desc": "This file was created in a previous version of Flutter VK (v{version}), which may cause issues with the import.\n\nAre you sure you want to continue?",
+
+	"settings_import_import": "Import",
+
+	"settings_import_success": "Settings import successful",
+	"settings_import_success_desc_with_delete": "Settings and tracks import completed successfully.\n\nYou may need to restart the app for some settings to be saved and applied.\n\nAfter import, the export file is no longer needed. Do you want to delete it?",
+	"settings_import_success_desc_no_delete": "Settings and tracks import completed successfully. You may need to restart the app for some settings to be saved and applied.",
+
+
+	"about_flutter_vk": "About Flutter VK",
+
+	"share_logs": "Share log file",
+	"share_logs_desc": "Technical information for debugging errors",
+	"share_logs_desc_no_logs": "Unavailable because the log file is empty",
+
+	"reset_db": "Reset track database",
+	"reset_db_desc": "Clears the local copy of the track database stored on this device",
+	"reset_db_dialog": "Reset track database",
+	"reset_db_dialog_desc": "Continuing will delete the track database stored on this device. Please do not do this unless absolutely necessary.\n\nYour tracks (both liked and cached) will not be deleted, but you will need to restart the caching process on previously cached playlists.",
+
+	"app_updates_policy": "Update display type",
+	"app_updates_policy_desc": "Determines how the app will notify you about new updates",
+	"app_updates_policy_dialog": "Dialog",
+	"app_updates_policy_popup": "Bottom popup",
+	"app_updates_policy_disabled": "Disabled",
+
+	"disable_updates_warning": "Disable app updates",
+	"disable_updates_warning_desc": "It looks like you are trying to disable app updates. This is not recommended as future versions may fix bugs and add new features.\n\nIf you are annoyed by the fullscreen dialog, try changing this setting to \"Bottom popup\": This option will not interfere with your usage.",
+	"disable_updates_warning_disable": "Disable anyway",
+	"updates_are_disabled": "App updates are disabled. You can check for updates manually by clicking the \"About the app\" button on the profile page.",
+
+	"updates_channel": "Update channel",
+	"updates_channel_desc": "The beta channel has more frequent but less stable builds",
+	"updates_channel_releases": "Main (default)",
+	"updates_channel_prereleases": "Beta",
+
+	"download_manager_current_tasks": "Currently downloading",
+	"download_manager_old_tasks": "Previously downloaded",
+
+	"download_manager_all_tasks": "{count, plural, one{{count} task} other{{count} tasks}} total",
+
+	"download_manager_no_tasks": "Empty...",
+
+	"update_available": "Flutter VK update available",
+	"update_available_desc": "v{oldVersion} <arrow></arrow> v{newVersion}, {date}, {time}. {badges}",
+	"update_prerelease_type": "<debug></debug> beta",
+
+	"app_update_download_long_title": "Flutter VK update v{version}",
+
+	"update_available_popup": "Flutter VK update {version} available.",
+
+	"update_check_error": "Error checking for updates: {error}",
+
+	"update_pending": "Update download started. Wait for the download to complete, then follow the instructions.",
+
+	"update_install_error": "Update installation error",
+
+	"no_updates_available": "The latest version of the app is installed.",
+
+	"app_github": "Source code",
+	"app_github_desc": "Click here to visit the Github repository of Flutter VK",
+
+	"show_changelog": "Changelog",
+	"show_changelog_desc": "Shows the changelog for this version",
+
+	"changelog_dialog": "Changelog for {version}",
+
+	"app_version": "About the app",
+	"app_version_desc": "Installed version: {version}.\nClick here to check for new updates",
+	"app_version_prerelease": "beta"
 }

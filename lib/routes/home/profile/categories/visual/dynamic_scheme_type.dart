@@ -38,10 +38,10 @@ class DynamicSchemeTypeSettingPage extends HookConsumerWidget {
     }
 
     return SettingPageWithAnimationWidget(
-      title: l18n.profile_playerDynamicColorSchemeTypeTitle,
-      description: l18n.profile_playerDynamicColorSchemeTypeDescription,
+      title: l18n.player_dynamic_color_scheme_type,
+      description: l18n.player_dynamic_color_scheme_type_desc,
       warning:
-          !player.loaded ? l18n.general_optionNotAvailableWithoutAudio : null,
+          !player.loaded ? l18n.option_unavailable_without_audio_playing : null,
       headerImage: RiveAnimationBlock(
         name: "dynamicSchemeType",
         artboardName: "DynamicSchemeType",
@@ -61,7 +61,7 @@ class DynamicSchemeTypeSettingPage extends HookConsumerWidget {
             children: [
               RadioListTile.adaptive(
                 title: Text(
-                  l18n.profile_playerDynamicColorSchemeTonalSpot,
+                  l18n.player_dynamic_color_scheme_type_tonalSpot,
                 ),
                 value: DynamicSchemeType.tonalSpot,
                 groupValue: preferences.dynamicSchemeType,
@@ -69,7 +69,7 @@ class DynamicSchemeTypeSettingPage extends HookConsumerWidget {
               ),
               RadioListTile.adaptive(
                 title: Text(
-                  l18n.profile_playerDynamicColorSchemeNeutral,
+                  l18n.player_dynamic_color_scheme_type_neutral,
                 ),
                 value: DynamicSchemeType.neutral,
                 groupValue: preferences.dynamicSchemeType,
@@ -77,7 +77,7 @@ class DynamicSchemeTypeSettingPage extends HookConsumerWidget {
               ),
               RadioListTile.adaptive(
                 title: Text(
-                  l18n.profile_playerDynamicColorSchemeContent,
+                  l18n.player_dynamic_color_scheme_type_content,
                 ),
                 value: DynamicSchemeType.content,
                 groupValue: preferences.dynamicSchemeType,
@@ -85,7 +85,7 @@ class DynamicSchemeTypeSettingPage extends HookConsumerWidget {
               ),
               RadioListTile.adaptive(
                 title: Text(
-                  l18n.profile_playerDynamicColorSchemeMonochrome,
+                  l18n.player_dynamic_color_scheme_type_monochrome,
                 ),
                 value: DynamicSchemeType.monochrome,
                 groupValue: preferences.dynamicSchemeType,

@@ -231,7 +231,7 @@ class TrackThumbnailEditDialog extends HookConsumerWidget {
                       focusNode: focusNode,
                       controller: controller,
                       decoration: InputDecoration(
-                        hintText: l18n.music_setThumbnailSearchText,
+                        hintText: l18n.change_track_thumbnail_search_text,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(
                             globalBorderRadius,
@@ -302,7 +302,7 @@ class TrackThumbnailEditDialog extends HookConsumerWidget {
                             horizontal: 6,
                           ),
                           child: Text(
-                            l18n.music_setThumbnailNoQuery,
+                            l18n.change_track_thumbnail_type_to_search,
                             textAlign: TextAlign.center,
                           ),
                         );
@@ -348,7 +348,7 @@ class TrackThumbnailEditDialog extends HookConsumerWidget {
                             horizontal: 6,
                           ),
                           child: StyledText(
-                            text: l18n.music_zeroSearchResults,
+                            text: l18n.playlist_search_zero_results,
                             textAlign: TextAlign.center,
                             tags: {
                               "click": StyledTextActionTag(

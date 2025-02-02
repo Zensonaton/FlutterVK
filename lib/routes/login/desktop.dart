@@ -57,8 +57,8 @@ class DesktopLoginWidget extends HookConsumerWidget {
                   // Текст "Авторизация".
                   Text(
                     useAlternateAuth
-                        ? l18n.login_desktopConnectRecommendationsTitle
-                        : l18n.login_desktopTitle,
+                        ? l18n.login_connect_recommendations_title
+                        : l18n.login_title,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const Gap(12),
@@ -66,8 +66,8 @@ class DesktopLoginWidget extends HookConsumerWidget {
                   // Описание авторизации.
                   StyledText(
                     text: useAlternateAuth
-                        ? l18n.login_desktopConnectRecommendationsDescription
-                        : l18n.login_desktopDescription,
+                        ? l18n.login_connect_recommendations_desc
+                        : l18n.login_desktop_desc,
                     style: Theme.of(context).textTheme.bodyLarge,
                     tags: {
                       "bold": StyledTextTag(
@@ -116,7 +116,7 @@ class DesktopLoginWidget extends HookConsumerWidget {
                         Icons.arrow_forward_ios,
                       ),
                       label: Text(
-                        l18n.login_desktopContinue,
+                        l18n.login_authorize,
                       ),
                       onPressed: extractedToken != null
                           ? () async {

@@ -38,8 +38,7 @@ Future<void> createPlaylistCacheTask(
   final downloadManager = ref.read(downloadManagerProvider.notifier);
   final preferences = ref.read(preferencesProvider);
   final l18n = ref.read(l18nProvider);
-  final playlistName =
-      playlist.title ?? l18n.music_fullscreenFavoritePlaylistName;
+  final playlistName = playlist.title ?? l18n.general_favorites_playlist;
 
   // Создаём задачу по кэшированию треков плейлиста (и удалению старых, при наличии).
   await downloadManager.newTask(
@@ -47,7 +46,9 @@ Future<void> createPlaylistCacheTask(
       ref: downloadManager.ref,
       id: playlist.mediaKey,
       playlist: playlist,
-      longTitle: l18n.music_playlistCachingTitle(playlistName),
+      longTitle: l18n.playlist_caching(
+        title: playlistName,
+      ),
       smallTitle: playlistName,
       tasks: [
         // Удалённые треки.

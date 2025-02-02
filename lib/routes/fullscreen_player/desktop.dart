@@ -75,7 +75,7 @@ class PlaylistTitleWidget extends ConsumerWidget {
           children: [
             // "Воспроизведение музыки".
             Text(
-              l18n.music_fullscreenPlaylistNameTitle,
+              l18n.fullscreen_playlist_title,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurface.withValues(
@@ -86,8 +86,7 @@ class PlaylistTitleWidget extends ConsumerWidget {
 
             // Название плейлиста.
             Text(
-              player.currentPlaylist?.title ??
-                  l18n.music_fullscreenFavoritePlaylistName,
+              player.currentPlaylist?.title ?? l18n.general_favorites_playlist,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 fontWeight: FontWeight.w500,
@@ -158,7 +157,9 @@ class NextTrackInfoWidget extends ConsumerWidget {
                         cacheKey: "${player.smartNextAudio!.mediaKey}small",
                         width: 32,
                         height: 32,
-                        placeholder: (BuildContext context, String string) {return const FallbackAudioAvatar(); },
+                        placeholder: (BuildContext context, String string) {
+                          return const FallbackAudioAvatar();
+                        },
                         cacheManager: CachedAlbumImagesManager.instance,
                       )
                     : const FallbackAudioAvatar(
@@ -176,7 +177,7 @@ class NextTrackInfoWidget extends ConsumerWidget {
                 children: [
                   // "Следующим сыграет".
                   Text(
-                    l18n.music_fullscreenNextTrackTitle,
+                    l18n.fullscreen_next_track_title,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: Theme.of(context)
@@ -311,7 +312,7 @@ class FullscreenMediaControls extends ConsumerWidget {
       if (error.errorCode == 15) {
         showErrorDialog(
           context,
-          description: l18n.music_likeRestoreTooLate,
+          description: l18n.audio_restore_too_late_desc,
         );
 
         return;

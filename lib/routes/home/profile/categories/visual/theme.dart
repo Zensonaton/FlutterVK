@@ -43,7 +43,7 @@ class ThemeSettingPage extends HookConsumerWidget {
     );
 
     return SettingPageWithAnimationWidget(
-      title: l18n.profile_themeTitle,
+      title: l18n.app_theme,
       headerImage: RiveAnimationBlock(
         name: "theme",
         artboardName: "Theme",
@@ -54,7 +54,7 @@ class ThemeSettingPage extends HookConsumerWidget {
           smiToggle.value = boolInput;
         },
       ),
-      description: l18n.profile_themeDescription,
+      description: l18n.app_theme_desc,
       children: [
         SettingsCardWidget(
           isSwitchListTile: false,
@@ -64,21 +64,21 @@ class ThemeSettingPage extends HookConsumerWidget {
             children: [
               GroupSettingCardSelectorWidget(
                 icon: Icons.brightness_5,
-                title: l18n.profile_themeLight,
+                title: l18n.app_theme_light,
                 groupValue: preferences.theme,
                 value: ThemeMode.light,
                 onChanged: onValueChanged,
               ),
               GroupSettingCardSelectorWidget(
                 icon: Icons.brightness_auto,
-                title: l18n.profile_themeSystem,
+                title: l18n.app_theme_system,
                 groupValue: preferences.theme,
                 value: ThemeMode.system,
                 onChanged: onValueChanged,
               ),
               GroupSettingCardSelectorWidget(
                 icon: Icons.brightness_2,
-                title: l18n.profile_themeDark,
+                title: l18n.app_theme_dark,
                 groupValue: preferences.theme,
                 value: ThemeMode.dark,
                 onChanged: onValueChanged,

@@ -57,7 +57,7 @@ class TopFullscreenControls extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                l18n.music_fullscreenPlaylistNameTitle,
+                l18n.fullscreen_playlist_title,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   color: Theme.of(context)
@@ -68,7 +68,7 @@ class TopFullscreenControls extends ConsumerWidget {
               ),
               Text(
                 player.currentPlaylist?.title ??
-                    l18n.music_fullscreenFavoritePlaylistName,
+                    l18n.general_favorites_playlist,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   fontWeight: FontWeight.w500,
@@ -357,7 +357,7 @@ class FullscreenMediaControls extends ConsumerWidget {
         if (error.errorCode == 15) {
           showErrorDialog(
             context,
-            description: l18n.music_likeRestoreTooLate,
+            description: l18n.audio_restore_too_late_desc,
           );
 
           return;

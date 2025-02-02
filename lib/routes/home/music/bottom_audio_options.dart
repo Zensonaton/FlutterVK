@@ -143,7 +143,7 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
         if (error.errorCode == 15) {
           showErrorDialog(
             context,
-            description: l18n.music_likeRestoreTooLate,
+            description: l18n.audio_restore_too_late_desc,
           );
 
           return;
@@ -186,7 +186,7 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            l18n.general_addedToQueue,
+            l18n.track_added_to_queue,
           ),
           duration: const Duration(
             seconds: 3,
@@ -283,10 +283,8 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
         if (isRestricted) {
           final result = await showYesNoDialog(
             context,
-            title:
-                l18n.music_detailsReplaceWithLocalAudioRestoreRestrictedTitle,
-            description: l18n
-                .music_detailsReplaceWithLocalAudioRestoreRestrictedDescription,
+            title: l18n.remove_local_track_is_restricted_title,
+            description: l18n.remove_local_track_is_restricted_desc,
             icon: Icons.music_off,
           );
 
@@ -314,7 +312,7 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
           messenger.showSnackBar(
             SnackBar(
               content: Text(
-                l18n.music_replaceWithLocalRestoreSuccess,
+                l18n.remove_local_track_success,
               ),
             ),
           );
@@ -335,7 +333,7 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
       // Просим пользователя выбрать файл.
       try {
         FilePickerResult? result = await FilePicker.platform.pickFiles(
-          dialogTitle: l18n.music_replaceWithLocalFilepickerDialogTitle,
+          dialogTitle: l18n.replace_track_with_local_filepicker_title,
           type: FileType.custom,
           allowedExtensions: ["mp3"],
           lockParentWindow: true,
@@ -374,7 +372,7 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
         messenger.showSnackBar(
           SnackBar(
             content: Text(
-              l18n.music_replaceWithLocalSuccess,
+              l18n.replace_track_with_local_success,
             ),
           ),
         );
@@ -453,7 +451,7 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
                       Icons.edit,
                     ),
                     title: Text(
-                      l18n.music_detailsEditTitle,
+                      l18n.general_edit,
                     ),
                     onTap: onDetailsEditTap,
                   ),
@@ -470,8 +468,8 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
                     enabled: !isTogglingLikeState.value,
                     title: Text(
                       newAudio.isLiked
-                          ? l18n.music_detailsRemoveFromFavoritesTitle
-                          : l18n.music_detailsAddAsFavoritesTitle,
+                          ? l18n.remove_track_as_liked
+                          : l18n.add_track_as_liked,
                     ),
                     onTap: onAddAsFavoritesTap,
                   ),
@@ -483,7 +481,7 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
                         Icons.playlist_add,
                       ),
                       title: Text(
-                        l18n.music_detailsAddToPlaylistTitle,
+                        l18n.add_track_to_playlist,
                       ),
                       onTap: addToPlaylistTap,
                     ),
@@ -495,7 +493,7 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
                         Icons.queue_music,
                       ),
                       title: Text(
-                        l18n.music_detailsPlayNextTitle,
+                        l18n.play_track_next,
                       ),
                       enabled: newAudio.canPlay,
                       onTap: onAddToQueueTap,
@@ -508,12 +506,12 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
                         Icons.album,
                       ),
                       title: Text(
-                        l18n.music_detailsGoToAlbumTitle,
+                        l18n.go_to_track_album,
                       ),
                       subtitle: newAudio.album != null
                           ? Text(
-                              l18n.music_detailsGoToAlbumDescription(
-                                newAudio.album!.title,
+                              l18n.go_to_track_album_desc(
+                                title: newAudio.album!.title,
                               ),
                             )
                           : null,
@@ -529,10 +527,10 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
                             Icons.lyrics_outlined,
                           ),
                     title: Text(
-                      l18n.music_detailsGeniusSearchTitle,
+                      l18n.search_track_on_genius,
                     ),
                     subtitle: Text(
-                      l18n.music_detailsGeniusSearchDescription,
+                      l18n.search_track_on_genius_desc,
                     ),
                     enabled: hasGeniusInfo.value ?? false,
                     onTap: onGeniusSearchTap,
@@ -544,10 +542,10 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
                       Icons.download,
                     ),
                     title: Text(
-                      l18n.music_detailsCacheTrackTitle,
+                      l18n.cache_this_track,
                     ),
                     subtitle: Text(
-                      l18n.music_detailsCacheTrackDescription,
+                      l18n.cache_this_track_desc,
                     ),
                     enabled: !isRestricted && !isCached,
                     onTap: onCacheTrackTap,
@@ -559,10 +557,10 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
                       Icons.image_search,
                     ),
                     title: Text(
-                      l18n.music_detailsSetThumbnailTitle,
+                      l18n.change_track_thumbnail,
                     ),
                     subtitle: Text(
-                      l18n.music_detailsSetThumbnailDescription,
+                      l18n.change_track_thumbnail_desc,
                     ),
                     onTap: onDeezerThumbsTap,
                   ),
@@ -574,12 +572,12 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
                     ),
                     title: Text(
                       isReplacedLocally
-                          ? l18n.music_detailsReplaceWithLocalAudioRestoreTitle
-                          : l18n.music_detailsReplaceWithLocalAudioTitle,
+                          ? l18n.remove_local_track_version
+                          : l18n.replace_track_with_local,
                     ),
                     subtitle: !isReplacedLocally
                         ? Text(
-                            l18n.music_detailsReplaceWithLocalAudioDescription,
+                            l18n.replace_track_with_local_desc,
                           )
                         : null,
                     onTap: onReplaceWithLocalAudioTap,
@@ -592,10 +590,10 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
                         Icons.rotate_left,
                       ),
                       title: Text(
-                        l18n.music_detailsReuploadFromYoutubeTitle,
+                        l18n.reupload_track_from_youtube,
                       ),
                       subtitle: Text(
-                        l18n.music_detailsReuploadFromYoutubeDescription,
+                        l18n.reupload_track_from_youtube_desc,
                       ),
                       onTap: onReplaceFromYoutubeTap,
                     ),
@@ -607,7 +605,7 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
                         Icons.info,
                       ),
                       title: Text(
-                        l18n.music_detailsTrackDetailsTitle,
+                        l18n.track_details,
                       ),
                       onTap: onTrackDetailsTap,
                     ),

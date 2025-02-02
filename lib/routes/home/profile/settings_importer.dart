@@ -89,7 +89,7 @@ class SettingsImporterRoute extends HookConsumerWidget {
     void onFileSelectTap() async {
       try {
         FilePickerResult? result = await FilePicker.platform.pickFiles(
-          dialogTitle: l18n.profile_settingsImporterSelectFile,
+          dialogTitle: l18n.settings_import_select_file_dialog_title,
           type: Platform.isWindows ? FileType.custom : FileType.any,
           allowedExtensions: Platform.isWindows ? ["fluttervk"] : null,
           lockParentWindow: true,
@@ -109,10 +109,9 @@ class SettingsImporterRoute extends HookConsumerWidget {
         if (loadedSections.exporterVersion < SettingsExporter.exporterVersion) {
           final result = await showYesNoDialog(
             context,
-            title: l18n.profile_settingsImporterVersionMissmatchTitle,
-            description:
-                l18n.profile_settingsImporterVersionMissmatchDescription(
-              loadedSections.appVersion,
+            title: l18n.settings_import_version_missmatch,
+            description: l18n.settings_import_version_missmatch_desc(
+              version: loadedSections.appVersion,
             ),
           );
 
@@ -211,10 +210,10 @@ class SettingsImporterRoute extends HookConsumerWidget {
       final result = await showYesNoDialog(
         context,
         icon: Icons.file_download_outlined,
-        title: l18n.profile_settingsImporterSuccessTitle,
+        title: l18n.settings_import_success,
         description: Platform.isAndroid
-            ? l18n.profile_settingsImporterSuccessDescriptionDelete
-            : l18n.profile_settingsImporterSuccessDescriptionNoDelete,
+            ? l18n.settings_import_success_desc_no_delete
+            : l18n.settings_import_success_desc_with_delete,
       );
 
       // Если мы на OS Android, то удаляем файл несмотря на ответ, поскольку он находится в кэше.
@@ -236,7 +235,7 @@ class SettingsImporterRoute extends HookConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          l18n.profile_settingsImporterTitle,
+          l18n.settings_import,
         ),
         centerTitle: true,
       ),
@@ -251,9 +250,9 @@ class SettingsImporterRoute extends HookConsumerWidget {
               // Подсказка.
               TipWidget(
                 iconOnTop: true,
-                title: l18n.profile_settingsImporterTipTitle,
+                title: l18n.settings_import_tip,
                 descriptionWidget: StyledText(
-                  text: l18n.profile_settingsImporterTipDescription,
+                  text: l18n.settings_import_tip_desc,
                   tags: {
                     "exportSettingsIcon": StyledTextIconTag(
                       Icons.file_upload_outlined,
@@ -277,15 +276,14 @@ class SettingsImporterRoute extends HookConsumerWidget {
                 TipWidget(
                   iconOnTop: true,
                   icon: Icons.file_download_off_outlined,
-                  description:
-                      l18n.profile_settingsImporterFileSelectorDescription,
+                  description: l18n.settings_import_select_file,
                   actions: [
                     FilledButton.icon(
                       icon: const Icon(
                         Icons.file_download_outlined,
                       ),
                       label: Text(
-                        l18n.profile_settingsImporterFileSelectorSelect,
+                        l18n.general_select,
                       ),
                       onPressed: onFileSelectTap,
                     ),
@@ -319,7 +317,7 @@ class SettingsImporterRoute extends HookConsumerWidget {
                             Icons.file_download_outlined,
                           ),
                     label: Text(
-                      l18n.profile_settingsImporterImport,
+                      l18n.settings_import_import,
                     ),
                     onPressed: enabledSections.value.isNotEmpty &&
                             !isImportInProgress.value

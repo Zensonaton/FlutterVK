@@ -146,7 +146,7 @@ class SimillarMusicPlaylistWidget extends HookConsumerWidget {
 
                             // "совпадения".
                             Text(
-                              l18n.music_simillarityPercentTitle,
+                              l18n.simillarity_percent,
                               style: const TextStyle(
                                 fontSize: 14,
                                 color: Colors.white,
@@ -255,7 +255,7 @@ class SimillarMusicBlock extends HookConsumerWidget {
     ref.watch(playerLoadedStateProvider);
 
     return MusicCategory(
-      title: l18n.music_similarMusicChip,
+      title: l18n.simillar_music_chip,
       onDismiss: () {
         final preferences = ref.read(preferencesProvider.notifier);
 
@@ -264,7 +264,9 @@ class SimillarMusicBlock extends HookConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              l18n.music_categoryClosedTitle(l18n.music_similarMusicChip),
+              l18n.category_closed(
+                category: l18n.simillar_music_chip,
+              ),
             ),
             duration: const Duration(
               seconds: 5,

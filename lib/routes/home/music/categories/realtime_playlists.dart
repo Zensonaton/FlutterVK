@@ -433,7 +433,7 @@ class RealtimePlaylistsBlock extends HookConsumerWidget {
     final bool mobileLayout = isMobileLayout(context);
 
     return MusicCategory(
-      title: l18n.music_realtimePlaylistsChip,
+      title: l18n.realtime_playlists_chip,
       onDismiss: () {
         final preferences = ref.read(preferencesProvider.notifier);
 
@@ -442,7 +442,9 @@ class RealtimePlaylistsBlock extends HookConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              l18n.music_categoryClosedTitle(l18n.music_realtimePlaylistsChip),
+              l18n.category_closed(
+                category: l18n.realtime_playlists_chip,
+              ),
             ),
             duration: const Duration(
               seconds: 5,

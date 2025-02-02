@@ -44,11 +44,11 @@ class CloseActionDialog extends ConsumerWidget {
 
     return MaterialDialog(
       icon: Icons.close,
-      title: l18n.profile_closeActionTitle,
+      title: l18n.close_action,
       contents: [
         RadioListTile.adaptive(
           title: Text(
-            l18n.profile_closeActionClose,
+            l18n.close_action_close,
           ),
           value: CloseBehavior.close,
           groupValue: preferences.closeBehavior,
@@ -56,7 +56,7 @@ class CloseActionDialog extends ConsumerWidget {
         ),
         RadioListTile.adaptive(
           title: Text(
-            l18n.profile_closeActionMinimize,
+            l18n.close_action_minimize,
           ),
           value: CloseBehavior.minimize,
           groupValue: preferences.closeBehavior,
@@ -64,7 +64,7 @@ class CloseActionDialog extends ConsumerWidget {
         ),
         RadioListTile.adaptive(
           title: Text(
-            l18n.profile_closeActionMinimizeIfPlaying,
+            l18n.close_action_minimize_if_playing,
           ),
           value: CloseBehavior.minimizeIfPlaying,
           groupValue: preferences.closeBehavior,
@@ -104,11 +104,11 @@ class RewindOnPreviousDialog extends ConsumerWidget {
 
     return MaterialDialog(
       icon: Icons.replay,
-      title: l18n.profile_rewindOnPreviousTitle,
+      title: l18n.rewind_on_previous,
       contents: [
         RadioListTile.adaptive(
           title: Text(
-            l18n.profile_rewindOnPreviousAlways,
+            l18n.rewind_on_previous_always,
           ),
           value: RewindBehavior.always,
           groupValue: preferences.rewindOnPreviousBehavior,
@@ -116,7 +116,7 @@ class RewindOnPreviousDialog extends ConsumerWidget {
         ),
         RadioListTile.adaptive(
           title: Text(
-            l18n.profile_rewindOnPreviousOnlyViaUI,
+            l18n.rewind_on_previous_only_via_ui,
           ),
           value: RewindBehavior.onlyViaUI,
           groupValue: preferences.rewindOnPreviousBehavior,
@@ -124,7 +124,7 @@ class RewindOnPreviousDialog extends ConsumerWidget {
         ),
         RadioListTile.adaptive(
           title: Text(
-            l18n.profile_rewindOnPreviousOnlyViaNotification,
+            l18n.rewind_on_previous_only_via_notification,
           ),
           value: RewindBehavior.onlyViaNotification,
           groupValue: preferences.rewindOnPreviousBehavior,
@@ -132,7 +132,7 @@ class RewindOnPreviousDialog extends ConsumerWidget {
         ),
         RadioListTile.adaptive(
           title: Text(
-            l18n.profile_rewindOnPreviousDisabled,
+            l18n.rewind_on_previous_only_via_disabled,
           ),
           value: RewindBehavior.disabled,
           groupValue: preferences.rewindOnPreviousBehavior,
@@ -160,7 +160,7 @@ class ProfileMusicPlayerSettingsCategory extends ConsumerWidget {
 
     return ProfileSettingCategory(
       icon: Icons.music_note,
-      title: l18n.profile_musicPlayerTitle,
+      title: l18n.music_player,
       centerTitle: mobileLayout,
       padding: EdgeInsets.only(
         top: mobileLayout ? 0 : 8,
@@ -170,14 +170,14 @@ class ProfileMusicPlayerSettingsCategory extends ConsumerWidget {
         if (isDesktop)
           SettingWithDialog(
             icon: Icons.close,
-            title: l18n.profile_closeActionTitle,
-            subtitle: l18n.profile_closeActionDescription,
+            title: l18n.close_action,
+            subtitle: l18n.close_action_desc,
             dialog: const CloseActionDialog(),
             settingText: {
-              CloseBehavior.close: l18n.profile_closeActionClose,
-              CloseBehavior.minimize: l18n.profile_closeActionMinimize,
+              CloseBehavior.close: l18n.close_action_close,
+              CloseBehavior.minimize: l18n.close_action_minimize,
               CloseBehavior.minimizeIfPlaying:
-                  l18n.profile_closeActionMinimizeIfPlaying,
+                  l18n.close_action_minimize_if_playing,
             }[preferences.closeBehavior]!,
           ),
 
@@ -188,10 +188,10 @@ class ProfileMusicPlayerSettingsCategory extends ConsumerWidget {
               Icons.exit_to_app,
             ),
             title: Text(
-              l18n.profile_androidKeepPlayingOnCloseTitle,
+              l18n.android_keep_playing_on_close,
             ),
             subtitle: Text(
-              l18n.profile_androidKeepPlayingOnCloseDescription,
+              l18n.android_keep_playing_on_close_desc,
             ),
             value: preferences.androidKeepPlayingOnClose,
             onChanged: (bool? enabled) async {
@@ -208,10 +208,10 @@ class ProfileMusicPlayerSettingsCategory extends ConsumerWidget {
             Icons.shuffle,
           ),
           title: Text(
-            l18n.profile_shuffleOnPlayTitle,
+            l18n.shuffle_on_play,
           ),
           subtitle: Text(
-            l18n.profile_shuffleOnPlayDescription,
+            l18n.shuffle_on_play_desc,
           ),
           value: preferences.shuffleOnPlay,
           onChanged: (bool? enabled) async {
@@ -250,10 +250,10 @@ class ProfileMusicPlayerSettingsCategory extends ConsumerWidget {
             Icons.timer,
           ),
           title: Text(
-            l18n.profile_stopOnLongPauseTitle,
+            l18n.stop_on_long_pause,
           ),
           subtitle: Text(
-            l18n.profile_stopOnLongPauseDescription,
+            l18n.stop_on_long_pause_desc,
           ),
           value: preferences.stopOnPauseEnabled,
           onChanged: (bool? enabled) async {
@@ -268,15 +268,15 @@ class ProfileMusicPlayerSettingsCategory extends ConsumerWidget {
         // Перемотка при нажатии на предыдущий трек.
         SettingWithDialog(
           icon: Icons.replay_outlined,
-          title: l18n.profile_rewindOnPreviousTitle,
-          subtitle: l18n.profile_rewindOnPreviousDescription,
+          title: l18n.rewind_on_previous,
+          subtitle: l18n.rewind_on_previous_desc,
           dialog: const RewindOnPreviousDialog(),
           settingText: {
-            RewindBehavior.always: l18n.profile_rewindOnPreviousAlways,
-            RewindBehavior.onlyViaUI: l18n.profile_rewindOnPreviousOnlyViaUI,
+            RewindBehavior.always: l18n.rewind_on_previous_always,
+            RewindBehavior.onlyViaUI: l18n.rewind_on_previous_only_via_ui,
             RewindBehavior.onlyViaNotification:
-                l18n.profile_rewindOnPreviousOnlyViaNotification,
-            RewindBehavior.disabled: l18n.profile_rewindOnPreviousDisabled,
+                l18n.rewind_on_previous_only_via_notification,
+            RewindBehavior.disabled: l18n.rewind_on_previous_only_via_disabled,
           }[preferences.rewindOnPreviousBehavior]!,
         ),
 
@@ -286,10 +286,10 @@ class ProfileMusicPlayerSettingsCategory extends ConsumerWidget {
             Icons.copy_all,
           ),
           title: Text(
-            l18n.profile_checkBeforeFavoriteTitle,
+            l18n.check_for_duplicates,
           ),
           subtitle: Text(
-            l18n.profile_checkBeforeFavoriteDescription,
+            l18n.check_for_duplicates_desc,
           ),
           value: preferences.checkBeforeFavorite,
           onChanged: (bool? enabled) async {
@@ -307,10 +307,10 @@ class ProfileMusicPlayerSettingsCategory extends ConsumerWidget {
               Icons.discord,
             ),
             title: Text(
-              l18n.profile_discordRPCTitle,
+              l18n.discord_rpc,
             ),
             subtitle: Text(
-              l18n.profile_discordRPCDescription,
+              l18n.discord_rpc_desc,
             ),
             value: player.discordRPCEnabled,
             onChanged: (bool? enabled) async {
@@ -329,10 +329,10 @@ class ProfileMusicPlayerSettingsCategory extends ConsumerWidget {
               Icons.bug_report,
             ),
             title: Text(
-              l18n.profile_playerDebugLoggingTitle,
+              l18n.player_debug_logging,
             ),
             subtitle: Text(
-              l18n.profile_playerDebugLoggingDescription,
+              l18n.player_debug_logging_desc,
             ),
             value: preferences.debugPlayerLogging,
             onChanged: (bool? enabled) async {
@@ -347,7 +347,7 @@ class ProfileMusicPlayerSettingsCategory extends ConsumerWidget {
                 messenger.showSnackBar(
                   SnackBar(
                     content: Text(
-                      l18n.general_restartApp,
+                      l18n.app_restart_required,
                     ),
                   ),
                 );

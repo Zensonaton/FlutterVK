@@ -146,7 +146,7 @@ Future<void> initSystemTray(AppLocalizations l18n) async {
       [
         // Показ/скрытие окна приложения.
         MenuItemLabel(
-          label: l18n.general_trayShowHide,
+          label: l18n.tray_show_hide,
           onClicked: (MenuItemBase menuItem) async {
             if (await windowManager.isVisible()) {
               await windowManager.hide();
@@ -161,7 +161,7 @@ Future<void> initSystemTray(AppLocalizations l18n) async {
 
         // Закрытие.
         MenuItemLabel(
-          label: l18n.general_appMinimizedClose,
+          label: l18n.general_close,
           onClicked: (MenuItemBase menuItem) => exit(0),
         ),
       ],
@@ -392,7 +392,7 @@ Future main() async {
         recursive: true,
       );
       readmeFile.writeAsStringSync(
-        l18n.general_musicReadmeFileContents,
+        l18n.music_readme_contents,
       );
     }
 

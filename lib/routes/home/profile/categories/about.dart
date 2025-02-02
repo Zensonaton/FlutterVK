@@ -46,9 +46,9 @@ class UpdatesDialogTypeActionDialog extends ConsumerWidget {
         final result = await showYesNoDialog(
           context,
           icon: Icons.update_disabled,
-          title: l18n.profile_disableUpdatesWarningTitle,
-          description: l18n.profile_disableUpdatesWarningDescription,
-          yesText: l18n.profile_disableUpdatesWarningDisable,
+          title: l18n.disable_updates_warning,
+          description: l18n.disable_updates_warning_desc,
+          yesText: l18n.disable_updates_warning_disable,
         );
 
         // Пользователь нажал на "Отключить", тогда мы должны выключить обновления.
@@ -56,7 +56,7 @@ class UpdatesDialogTypeActionDialog extends ConsumerWidget {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                l18n.profile_updatesDisabledText,
+                l18n.updates_are_disabled,
               ),
               duration: const Duration(
                 seconds: 8,
@@ -74,11 +74,11 @@ class UpdatesDialogTypeActionDialog extends ConsumerWidget {
 
     return MaterialDialog(
       icon: Icons.update,
-      title: l18n.profile_updatesPolicyTitle,
+      title: l18n.app_updates_policy,
       contents: [
         RadioListTile.adaptive(
           title: Text(
-            l18n.profile_updatesPolicyDialog,
+            l18n.app_updates_policy_dialog,
           ),
           value: UpdatePolicy.dialog,
           groupValue: preferences.updatePolicy,
@@ -86,7 +86,7 @@ class UpdatesDialogTypeActionDialog extends ConsumerWidget {
         ),
         RadioListTile.adaptive(
           title: Text(
-            l18n.profile_updatesPolicyPopup,
+            l18n.app_updates_policy_popup,
           ),
           value: UpdatePolicy.popup,
           groupValue: preferences.updatePolicy,
@@ -94,7 +94,7 @@ class UpdatesDialogTypeActionDialog extends ConsumerWidget {
         ),
         RadioListTile.adaptive(
           title: Text(
-            l18n.profile_updatesPolicyDisabled,
+            l18n.app_updates_policy_disabled,
           ),
           value: UpdatePolicy.disabled,
           groupValue: preferences.updatePolicy,
@@ -134,11 +134,11 @@ class UpdatesChannelDialog extends ConsumerWidget {
 
     return MaterialDialog(
       icon: Icons.route,
-      title: l18n.profile_updatesBranchTitle,
+      title: l18n.updates_channel,
       contents: [
         RadioListTile.adaptive(
           title: Text(
-            l18n.profile_updatesBranchReleases,
+            l18n.updates_channel_releases,
           ),
           value: UpdateBranch.releasesOnly,
           groupValue: preferences.updateBranch,
@@ -146,7 +146,7 @@ class UpdatesChannelDialog extends ConsumerWidget {
         ),
         RadioListTile.adaptive(
           title: Text(
-            l18n.profile_updatesBranchPrereleases,
+            l18n.updates_channel_prereleases,
           ),
           value: UpdateBranch.preReleases,
           groupValue: preferences.updateBranch,
@@ -179,7 +179,7 @@ class ProfileAboutSettingsCategory extends HookConsumerWidget {
 
     return ProfileSettingCategory(
       icon: Icons.info,
-      title: l18n.profile_aboutTitle,
+      title: l18n.about_flutter_vk,
       centerTitle: mobileLayout,
       padding: EdgeInsets.only(
         top: mobileLayout ? 0 : 8,
@@ -191,13 +191,13 @@ class ProfileAboutSettingsCategory extends HookConsumerWidget {
             Icons.bug_report,
           ),
           title: Text(
-            l18n.profile_shareLogsTitle,
+            l18n.share_logs,
           ),
           enabled: logExists.data ?? false,
           subtitle: Text(
             logExists.data ?? false
-                ? l18n.profile_shareLogsDescription
-                : l18n.profile_shareLogsNoLogsDescription,
+                ? l18n.share_logs_desc
+                : l18n.share_logs_desc_no_logs,
           ),
           onTap: shareLogs,
         ),
@@ -208,10 +208,10 @@ class ProfileAboutSettingsCategory extends HookConsumerWidget {
             Icons.source,
           ),
           title: Text(
-            l18n.profile_githubTitle,
+            l18n.app_github,
           ),
           subtitle: Text(
-            l18n.profile_githubDescription,
+            l18n.app_github_desc,
           ),
           onTap: () => launchUrl(
             Uri.parse(repoURL),
@@ -221,26 +221,26 @@ class ProfileAboutSettingsCategory extends HookConsumerWidget {
         // Политика для обновлений.
         SettingWithDialog(
           icon: Icons.update,
-          title: l18n.profile_updatesPolicyTitle,
-          subtitle: l18n.profile_updatesPolicyDescription,
+          title: l18n.app_updates_policy,
+          subtitle: l18n.app_updates_policy_desc,
           dialog: const UpdatesDialogTypeActionDialog(),
           settingText: {
-            UpdatePolicy.dialog: l18n.profile_updatesPolicyDialog,
-            UpdatePolicy.popup: l18n.profile_updatesPolicyPopup,
-            UpdatePolicy.disabled: l18n.profile_updatesPolicyDisabled,
+            UpdatePolicy.dialog: l18n.app_updates_policy_dialog,
+            UpdatePolicy.popup: l18n.app_updates_policy_popup,
+            UpdatePolicy.disabled: l18n.app_updates_policy_disabled,
           }[preferences.updatePolicy]!,
         ),
 
         // Канал для автообновлений.
         SettingWithDialog(
           icon: Icons.route,
-          title: l18n.profile_updatesBranchTitle,
-          subtitle: l18n.profile_updatesBranchDescription,
+          title: l18n.updates_channel,
+          subtitle: l18n.updates_channel_desc,
           dialog: const UpdatesChannelDialog(),
           enabled: preferences.updatePolicy != UpdatePolicy.disabled,
           settingText: {
-            UpdateBranch.releasesOnly: l18n.profile_updatesBranchReleases,
-            UpdateBranch.preReleases: l18n.profile_updatesBranchPrereleases,
+            UpdateBranch.releasesOnly: l18n.updates_channel_releases,
+            UpdateBranch.preReleases: l18n.updates_channel_prereleases,
           }[preferences.updateBranch]!,
         ),
 
@@ -250,10 +250,10 @@ class ProfileAboutSettingsCategory extends HookConsumerWidget {
             Icons.article,
           ),
           title: Text(
-            l18n.profile_showChangelogTitle,
+            l18n.show_changelog,
           ),
           subtitle: Text(
-            l18n.profile_showChangelogDescription,
+            l18n.show_changelog_desc,
           ),
           onTap: () async {
             if (!networkRequiredDialog(ref, context)) return;
@@ -268,11 +268,12 @@ class ProfileAboutSettingsCategory extends HookConsumerWidget {
             Icons.info,
           ),
           title: Text(
-            l18n.profile_appVersionTitle,
+            l18n.app_version,
           ),
           subtitle: Text(
-            l18n.profile_appVersionDescription(
-              "v$appVersion${kDebugMode ? " (Debug)" : isPrerelease ? " (${l18n.profile_appVersionPreRelease})" : ""}",
+            l18n.app_version_desc(
+              version:
+                  "v$appVersion${kDebugMode ? " (Debug)" : isPrerelease ? " (${l18n.app_version_prerelease})" : ""}",
             ),
           ),
           onTap: () async {

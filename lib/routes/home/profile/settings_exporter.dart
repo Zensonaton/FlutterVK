@@ -88,7 +88,7 @@ class SuccessSettingsExportDialog extends HookConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              l18n.profile_settingsExporterSuccessCopyToDownloadsSuccess,
+              l18n.copy_to_downloads_success,
             ),
           ),
         );
@@ -124,13 +124,13 @@ class SuccessSettingsExportDialog extends HookConsumerWidget {
 
     return MaterialDialog(
       icon: Icons.file_upload_outlined,
-      title: l18n.profile_settingsExporterSuccessTitle,
-      text: l18n.profile_settingsExporterSuccessDescription,
+      title: l18n.export_settings_success,
+      text: l18n.export_settings_success_desc,
       contents: [
         // "Поделиться".
         ListTile(
           title: Text(
-            l18n.profile_settingsExporterSuccessShare,
+            l18n.general_share,
           ),
           leading: const Icon(
             Icons.share,
@@ -141,7 +141,7 @@ class SuccessSettingsExportDialog extends HookConsumerWidget {
         // "Скопировать в загрузки".
         ListTile(
           title: Text(
-            l18n.profile_settingsExporterSuccessCopyToDownloads,
+            l18n.general_copy_to_downloads,
           ),
           leading: () {
             // Выполняется копирование.
@@ -163,7 +163,7 @@ class SuccessSettingsExportDialog extends HookConsumerWidget {
           }(),
           subtitle: copyLoadingState.value == true
               ? Text(
-                  l18n.profile_settingsExporterSuccessCopyToDownloadsSuccess,
+                  l18n.copy_to_downloads_success,
                 )
               : null,
           onTap: copyLoadingState.value == null ? onCopyToDownloadsTap : null,
@@ -173,7 +173,7 @@ class SuccessSettingsExportDialog extends HookConsumerWidget {
         if (Platform.isWindows)
           ListTile(
             title: Text(
-              l18n.profile_settingsExporterSuccessOpenFolder,
+              l18n.general_open_folder,
             ),
             leading: const Icon(
               Icons.folder_open,
@@ -231,7 +231,7 @@ class SettingsExporterSelector extends HookConsumerWidget {
       required String key,
       required IconData icon,
       required String title,
-      String Function(int)? subtitle,
+      String Function({required int count})? subtitle,
     }) {
       final count = exportedInfoMap[key]?.length ?? 0;
 
@@ -247,12 +247,12 @@ class SettingsExporterSelector extends HookConsumerWidget {
 
           if (count == 0) {
             return Text(
-              l18n.profile_settingsExporterNothingFound,
+              l18n.general_nothing_found,
             );
           }
 
           return StyledText(
-            text: subtitle(count),
+            text: subtitle(count: count),
             tags: {
               "colored": StyledTextTag(
                 style: TextStyle(
@@ -298,51 +298,48 @@ class SettingsExporterSelector extends HookConsumerWidget {
             buildSwitchTile(
               key: "settings",
               icon: Icons.settings,
-              title: l18n.profile_settingsExporterSettingsTitle,
-              subtitle: l18n.profile_settingsExporterSettingsDescription,
+              title: l18n.export_settings_modified_settings,
+              subtitle: l18n.export_settings_modified_settings_desc,
             ),
 
             // Изменённые обложки треков.
             buildSwitchTile(
               key: "modifiedThumbnails",
               icon: Icons.image_search,
-              title: l18n.profile_settingsExporterModifiedThumbnailsTitle,
-              subtitle:
-                  l18n.profile_settingsExporterModifiedThumbnailsDescription,
+              title: l18n.export_settings_modified_thumbnails,
+              subtitle: l18n.export_settings_modified_thumbnails_desc,
             ),
 
             // Изменённые тексты песен.
             buildSwitchTile(
               key: "modifiedLyrics",
               icon: Icons.lyrics,
-              title: l18n.profile_settingsExporterModifiedLyricsTitle,
-              subtitle: l18n.profile_settingsExporterModifiedLyricsDescription,
+              title: l18n.export_settings_modified_lyrics,
+              subtitle: l18n.export_settings_modified_lyrics_desc,
             ),
 
             // Изменённые параметры треков.
             buildSwitchTile(
               key: "modifiedLocalMetadata",
               icon: Icons.edit,
-              title: l18n.profile_settingsExporterModifiedLocalMetadataTitle,
-              subtitle:
-                  l18n.profile_settingsExporterModifiedLocalMetadataDescription,
+              title: l18n.export_settings_modified_metadata,
+              subtitle: l18n.export_settings_modified_metadata_desc,
             ),
 
             // Кэшированные ограниченные треки.
             buildSwitchTile(
               key: "cachedRestricted",
               icon: Icons.music_off,
-              title: l18n.profile_settingsExporterCachedRestrictedTitle,
-              subtitle:
-                  l18n.profile_settingsExporterCachedRestrictedDescription,
+              title: l18n.export_settings_cached_restricted,
+              subtitle: l18n.export_settings_cached_restricted_desc,
             ),
 
             // Локально заменённые треки.
             buildSwitchTile(
               key: "locallyReplacedAudios",
               icon: Icons.sd_card,
-              title: l18n.profile_settingsExporterLocallyReplacedTitle,
-              subtitle: l18n.profile_settingsExporterLocallyReplacedDescription,
+              title: l18n.export_settings_locally_replaced,
+              subtitle: l18n.export_settings_locally_replaced_desc,
             ),
           ],
         ),
@@ -520,7 +517,7 @@ class SettingsExporterRoute extends HookConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          l18n.profile_settingsExporterTitle,
+          l18n.export_settings_title,
         ),
         centerTitle: true,
       ),
@@ -535,9 +532,9 @@ class SettingsExporterRoute extends HookConsumerWidget {
               // Подсказка.
               TipWidget(
                 iconOnTop: true,
-                title: l18n.profile_settingsExporterTipTitle,
+                title: l18n.export_settings_tip,
                 descriptionWidget: StyledText(
-                  text: l18n.profile_settingsExporterTipDescription,
+                  text: l18n.export_settings_tip_desc,
                   tags: {
                     "importSettingsIcon": StyledTextIconTag(
                       Icons.file_download_outlined,
@@ -581,7 +578,7 @@ class SettingsExporterRoute extends HookConsumerWidget {
                           Icons.file_upload_outlined,
                         ),
                   label: Text(
-                    l18n.profile_settingsExporterExport,
+                    l18n.export_settings_export,
                   ),
                   onPressed: enabledSections.value.isNotEmpty &&
                           !isExportInProgress.value

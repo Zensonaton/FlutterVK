@@ -42,9 +42,9 @@ class ExportTracksListDialog extends ConsumerWidget {
 
     return MaterialDialog(
       icon: Icons.my_library_music,
-      title: l18n.profile_exportMusicListTitle,
-      text: l18n.profile_exportMusicListDescription(
-        playlist.count!,
+      title: l18n.export_music_list,
+      text: l18n.export_music_list_desc(
+        count: playlist.count!,
       ),
       contents: [
         SelectableText(
@@ -67,7 +67,7 @@ class ExportTracksListDialog extends ConsumerWidget {
             Icons.share,
           ),
           label: Text(
-            l18n.profile_exportMusicListShareTitle,
+            l18n.general_share,
           ),
         ),
       ],
@@ -113,9 +113,9 @@ class ProfileExperimentalSettingsCategory extends ConsumerWidget {
       final result = await showYesNoDialog(
         context,
         icon: Icons.delete,
-        title: l18n.profile_resetDBDialogTitle,
-        description: l18n.profile_resetDBDialogDescription,
-        yesText: l18n.profile_resetDBDialogReset,
+        title: l18n.reset_db_dialog,
+        description: l18n.reset_db_dialog_desc,
+        yesText: l18n.general_reset,
       );
       if (result != true || !context.mounted) return;
 
@@ -124,7 +124,7 @@ class ProfileExperimentalSettingsCategory extends ConsumerWidget {
 
     return ProfileSettingCategory(
       icon: Icons.science,
-      title: l18n.profile_experimentalTitle,
+      title: l18n.experimental_options,
       centerTitle: mobileLayout,
       padding: EdgeInsets.only(
         top: mobileLayout ? 0 : 8,
@@ -136,10 +136,10 @@ class ProfileExperimentalSettingsCategory extends ConsumerWidget {
             Icons.image_search,
           ),
           title: Text(
-            l18n.profile_deezerThumbnailsTitle,
+            l18n.deezer_thumbnails,
           ),
           subtitle: Text(
-            l18n.profile_deezerThumbnailsDescription,
+            l18n.deezer_thumbnails_desc,
           ),
           value: preferences.deezerThumbnails,
           onChanged: recommendationsConnected
@@ -158,10 +158,10 @@ class ProfileExperimentalSettingsCategory extends ConsumerWidget {
             Icons.lyrics_outlined,
           ),
           title: Text(
-            l18n.profile_LRCLibLyricsTitle,
+            l18n.lrclib_lyrics,
           ),
           subtitle: Text(
-            l18n.profile_LRCLibLyricsDescription,
+            l18n.lrclib_lyrics_desc,
           ),
           value: preferences.lrcLibEnabled,
           onChanged: (bool? enabled) async {
@@ -178,10 +178,10 @@ class ProfileExperimentalSettingsCategory extends ConsumerWidget {
             Icons.file_upload_outlined,
           ),
           title: Text(
-            l18n.profile_exportModificationsTitle,
+            l18n.export_settings,
           ),
           subtitle: Text(
-            l18n.profile_exportModificationsDescription,
+            l18n.export_settings_desc,
           ),
           onTap: onSettingsExportTap,
         ),
@@ -192,10 +192,10 @@ class ProfileExperimentalSettingsCategory extends ConsumerWidget {
             Icons.file_download_outlined,
           ),
           title: Text(
-            l18n.profile_importModificationsTitle,
+            l18n.import_settings,
           ),
           subtitle: Text(
-            l18n.profile_importModificationsDescription,
+            l18n.import_settings_desc,
           ),
           onTap: onSettingsImportTap,
         ),
@@ -206,7 +206,7 @@ class ProfileExperimentalSettingsCategory extends ConsumerWidget {
             Icons.my_library_music,
           ),
           title: Text(
-            l18n.profile_exportMusicListTitle,
+            l18n.export_music_list,
           ),
           onTap: onAudiosListExportTap,
         ),
@@ -217,10 +217,10 @@ class ProfileExperimentalSettingsCategory extends ConsumerWidget {
             Icons.delete,
           ),
           title: Text(
-            l18n.profile_resetDBTitle,
+            l18n.reset_db,
           ),
           subtitle: Text(
-            l18n.profile_resetDBDescription,
+            l18n.reset_db_desc,
           ),
           onTap: onDBResetTap,
         ),

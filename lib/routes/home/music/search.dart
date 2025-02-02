@@ -70,7 +70,7 @@ class SearchDisplayDialog extends HookConsumerWidget {
           type: PlaylistType.searchResults,
           audios: audios,
           count: audios.length,
-          title: l18n.music_searchPlaylistTitle,
+          title: l18n.general_search_playlist,
           isLiveData: true,
           areTracksLive: true,
         );
@@ -169,7 +169,7 @@ class SearchDisplayDialog extends HookConsumerWidget {
                         controller: controller,
                         onEditingComplete: onSearch,
                         decoration: InputDecoration(
-                          hintText: l18n.music_searchText,
+                          hintText: l18n.search_music_global,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(
                               globalBorderRadius,
@@ -213,7 +213,7 @@ class SearchDisplayDialog extends HookConsumerWidget {
                   // Пользователь ещё ничего не ввёл.
                   if (snapshot.connectionState == ConnectionState.none) {
                     return Text(
-                      l18n.music_typeToSearchText,
+                      l18n.type_to_search,
                     );
                   }
 
@@ -254,7 +254,7 @@ class SearchDisplayDialog extends HookConsumerWidget {
                         horizontal: 6,
                       ),
                       child: StyledText(
-                        text: l18n.music_zeroSearchResults,
+                        text: l18n.playlist_search_zero_results,
                         tags: {
                           "click": StyledTextActionTag(
                             (_, __) => onSearchClear(),

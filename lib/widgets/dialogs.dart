@@ -223,9 +223,11 @@ Future<bool?> showYesNoDialog(
 ///   description: "Необязательное описание данного функционала.",
 /// );
 /// ```
-class WIPDialog extends StatelessWidget {
+class WIPDialog extends ConsumerWidget {
+  /// Опциональный заголовок данного диалога.
   final String? title;
 
+  /// Опциональное описание данного диалога.
   final String? description;
 
   const WIPDialog({
@@ -235,12 +237,13 @@ class WIPDialog extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l18n = ref.watch(l18nProvider);
+
     return MaterialDialog(
       icon: Icons.web_asset_off_outlined,
-      title: title ?? "Не реализовано",
-      text: description ??
-          "Данный функционал ещё не был реализован. Пожалуйста, ожидайте обновлений приложения в будущем!",
+      title: title ?? l18n.not_yet_implemented,
+      text: description ?? l18n.not_yet_implemented_desc,
     );
   }
 }
@@ -272,7 +275,7 @@ void showWipDialog(
 ///   description: "Текст ошибки.",
 /// );
 /// ```
-class ErrorDialog extends StatelessWidget {
+class ErrorDialog extends ConsumerWidget {
   /// Текст титульника данного диалога.
   final String? title;
 
@@ -286,12 +289,13 @@ class ErrorDialog extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l18n = ref.watch(l18nProvider);
+
     return MaterialDialog(
       icon: Icons.error_outline,
-      title: title ?? "Произошла ошибка",
-      text: description ??
-          "Что-то очень сильно пошло не так. Что-то поломалось. Всё очень плохо.",
+      title: title ?? l18n.error_dialog,
+      text: description ?? l18n.error_dialog_desc,
     );
   }
 }
@@ -321,8 +325,8 @@ void showInternetRequiredDialog(WidgetRef ref, BuildContext context) {
 
   showErrorDialog(
     context,
-    title: l18n.internetConnectionRequiredTitle,
-    description: l18n.internetConnectionRequiredDescription,
+    title: l18n.internet_required_title,
+    description: l18n.internet_required_desc,
   );
 }
 
