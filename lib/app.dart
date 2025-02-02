@@ -210,6 +210,20 @@ class FlutterVKApp extends HookConsumerWidget {
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
+          localeListResolutionCallback:
+              (List<Locale>? locales, Iterable<Locale> supportedLocales) {
+            for (Locale locale in locales ?? []) {
+              if (!supportedLocales.contains(locale)) continue;
+
+              return locale;
+            }
+
+            logger.w(
+              "No supported locale found in $locales, falling back to ${supportedLocales.first}",
+            );
+
+            return supportedLocales.first;
+          },
           supportedLocales: AppLocalizations.supportedLocales,
           shortcuts: {
             // Экран с любимыми треками.
