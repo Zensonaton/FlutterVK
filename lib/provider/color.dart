@@ -22,7 +22,10 @@ class TrackSchemeInfo extends _$TrackSchemeInfo {
   Future<ImageSchemeExtractor> fromImageProvider(ImageProvider provider) async {
     final Stopwatch watch = Stopwatch()..start();
 
-    state = await ImageSchemeExtractor.fromImageProvider(provider);
+    state = await ImageSchemeExtractor.fromImageProvider(
+      provider,
+      resizeImage: true,
+    );
     logger.d(
       "${watch.elapsedMilliseconds}ms to create ColorScheme (quazer: ${state!.quantizeDuration?.inMilliseconds}ms)",
     );

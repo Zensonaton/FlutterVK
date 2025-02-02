@@ -313,7 +313,7 @@ class ImageSchemeExtractor {
   /// Является модифицированной версией метода [ColorScheme.fromImageProvider], которая выполняет некоторые части в отдельном Isolate для улучшенной производительности.
   static Future<ImageSchemeExtractor> fromImageProvider(
     ImageProvider provider, {
-    bool resizeImage = false,
+    bool resizeImage = true,
   }) async {
     // Получаем объект типа [ui.Image], из которого уже можно извлекать цвета.
     final Stopwatch scaleWatch = Stopwatch()..start();
