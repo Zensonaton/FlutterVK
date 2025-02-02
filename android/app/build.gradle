@@ -35,7 +35,7 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace "com.zensonaton.fluttervk"
     compileSdkVersion 34
-    ndkVersion flutter.ndkVersion
+    ndkVersion = "27.2.12479018"
 
     compileOptions {
 		coreLibraryDesugaringEnabled true
@@ -53,7 +53,7 @@ android {
 
     defaultConfig {
         applicationId "com.zensonaton.fluttervk"
-        minSdkVersion 21
+        minSdkVersion 23
         targetSdkVersion 35
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
@@ -72,15 +72,12 @@ android {
     buildTypes {
         release {
             signingConfig signingConfigs.release
-			shrinkResources false
         }
 		profile {
             signingConfig signingConfigs.release
-			shrinkResources false
 		}
 		debug {
             signingConfig signingConfigs.release
-			shrinkResources false
 		}
     }
 }
