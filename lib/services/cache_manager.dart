@@ -84,6 +84,7 @@ class CachedAlbumImagesManager {
         storeInCacheDirectory: false,
       ),
       fileService: HttpFileService(),
+      stalePeriod: const Duration(days: 90),
       maxNrOfCacheObjects: 3000,
     ),
   );
