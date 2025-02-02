@@ -335,7 +335,7 @@ class Updater {
   }
 
   /// Устанавливает обновление приложения. [update] - установочный файл, с которого должно пойти обновление.
-  static Future<void> general_install(File update) async {
+  static Future<void> installUpdate(File update) async {
     logger.d("Installing update");
 
     if (Platform.isWindows) {
@@ -373,14 +373,14 @@ class Updater {
   }
 
   /// Загружает и устанавливает указанный Release во временную папку, возвращая путь к файлу в случае успешной установки.
-  Future<File> downloadAndgeneral_install(Release release) async {
+  Future<File> downloadAndInstallUpdate(Release release) async {
     // На Android, запрашиваем права для установки .apk-файлов.
     if (Platform.isAndroid) {
       await Permission.requestInstallPackages.request();
     }
 
     final File file = await downloadUpdate(release);
-    await general_install(file);
+    await installUpdate(file);
 
     return file;
   }
