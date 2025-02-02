@@ -184,160 +184,162 @@ class FlutterVKApp extends HookConsumerWidget {
             dynamicSchemesFixed?.$2 ??
             fallbackDarkColorScheme;
 
-        return MaterialApp.router(
-          theme: ThemeData(
-            colorScheme: lightScheme,
-          ),
-          darkTheme: ThemeData(
-            colorScheme: darkScheme.copyWith(
-              surface: preferences.oledTheme ? Colors.black : null,
+        return ExcludeSemantics(
+          child: MaterialApp.router(
+            theme: ThemeData(
+              colorScheme: lightScheme,
             ),
-            cardTheme: preferences.oledTheme
-                ? CardTheme(
-                    color: darkScheme.surface,
-                  )
-                : null,
-          ),
-          themeMode: preferences.theme,
-          themeAnimationDuration: const Duration(
-            milliseconds: 500,
-          ),
-          themeAnimationCurve: Curves.easeInOutCubicEmphasized,
-          routerConfig: router,
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          localeResolutionCallback: localeResolutionCallback,
-          supportedLocales: AppLocalizations.supportedLocales,
-          shortcuts: {
-            // Экран с любимыми треками.
-            LogicalKeySet(
-              LogicalKeyboardKey.keyF,
-              LogicalKeyboardKey.control,
-            ): const FavoriteTracksIntent(),
-
-            // Пауза.
-            LogicalKeySet(
-              LogicalKeyboardKey.space,
-            ): const PlayPauseIntent(),
-
-            // Полноэкранный плеер.
-            LogicalKeySet(
-              LogicalKeyboardKey.f11,
-            ): const FullscreenPlayerIntent(),
-
-            // Предыдущий трек.
-            LogicalKeySet(
-              LogicalKeyboardKey.control,
-              LogicalKeyboardKey.arrowLeft,
-            ): const PreviousTrackIntent(),
-
-            // Следующий трек.
-            LogicalKeySet(
-              LogicalKeyboardKey.control,
-              LogicalKeyboardKey.arrowRight,
-            ): const NextTrackIntent(),
-
-            // Перемотка назад.
-            LogicalKeySet(
-              LogicalKeyboardKey.arrowLeft,
-            ): const RewindIntent(),
-
-            // Перемотка вперед.
-            LogicalKeySet(
-              LogicalKeyboardKey.arrowRight,
-            ): const FastForwardIntent(),
-
-            // Увеличение громкости.
-            LogicalKeySet(
-              LogicalKeyboardKey.arrowUp,
-            ): const VolumeUpIntent(),
-
-            // Уменьшение громкости.
-            LogicalKeySet(
-              LogicalKeyboardKey.arrowDown,
-            ): const VolumeDownIntent(),
-
-            // Переключение shuffle.
-            LogicalKeySet(
-              LogicalKeyboardKey.keyS,
-              LogicalKeyboardKey.control,
-            ): const ShuffleIntent(),
-
-            // Переключение повтора.
-            LogicalKeySet(
-              LogicalKeyboardKey.keyL,
-              LogicalKeyboardKey.control,
-            ): const LoopModeIntent(),
-
-            // Закрытие приложения.
-            LogicalKeySet(
-              LogicalKeyboardKey.keyQ,
-              LogicalKeyboardKey.control,
-            ): const CloseAppIntent(),
-          },
-          actions: {
-            FavoriteTracksIntent: CallbackAction(
-              onInvoke: (intent) {
-                final ownerID = ref.read(userProvider).id;
-
-                return router.go(
-                  "/music/playlist/$ownerID/0",
-                );
-              },
+            darkTheme: ThemeData(
+              colorScheme: darkScheme.copyWith(
+                surface: preferences.oledTheme ? Colors.black : null,
+              ),
+              cardTheme: preferences.oledTheme
+                  ? CardTheme(
+                      color: darkScheme.surface,
+                    )
+                  : null,
             ),
-            PlayPauseIntent: CallbackAction(
-              onInvoke: (intent) => player.togglePlay(),
+            themeMode: preferences.theme,
+            themeAnimationDuration: const Duration(
+              milliseconds: 500,
             ),
-            PreviousTrackIntent: CallbackAction(
-              onInvoke: (intent) => player.smartPrevious(),
-            ),
-            NextTrackIntent: CallbackAction(
-              onInvoke: (intent) => player.next(),
-            ),
-            RewindIntent: CallbackAction(
-              onInvoke: (intent) => player.seekBy(
-                const Duration(
-                  seconds: -seekSeconds,
+            themeAnimationCurve: Curves.easeInOutCubicEmphasized,
+            routerConfig: router,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            localeResolutionCallback: localeResolutionCallback,
+            supportedLocales: AppLocalizations.supportedLocales,
+            shortcuts: {
+              // Экран с любимыми треками.
+              LogicalKeySet(
+                LogicalKeyboardKey.keyF,
+                LogicalKeyboardKey.control,
+              ): const FavoriteTracksIntent(),
+
+              // Пауза.
+              LogicalKeySet(
+                LogicalKeyboardKey.space,
+              ): const PlayPauseIntent(),
+
+              // Полноэкранный плеер.
+              LogicalKeySet(
+                LogicalKeyboardKey.f11,
+              ): const FullscreenPlayerIntent(),
+
+              // Предыдущий трек.
+              LogicalKeySet(
+                LogicalKeyboardKey.control,
+                LogicalKeyboardKey.arrowLeft,
+              ): const PreviousTrackIntent(),
+
+              // Следующий трек.
+              LogicalKeySet(
+                LogicalKeyboardKey.control,
+                LogicalKeyboardKey.arrowRight,
+              ): const NextTrackIntent(),
+
+              // Перемотка назад.
+              LogicalKeySet(
+                LogicalKeyboardKey.arrowLeft,
+              ): const RewindIntent(),
+
+              // Перемотка вперед.
+              LogicalKeySet(
+                LogicalKeyboardKey.arrowRight,
+              ): const FastForwardIntent(),
+
+              // Увеличение громкости.
+              LogicalKeySet(
+                LogicalKeyboardKey.arrowUp,
+              ): const VolumeUpIntent(),
+
+              // Уменьшение громкости.
+              LogicalKeySet(
+                LogicalKeyboardKey.arrowDown,
+              ): const VolumeDownIntent(),
+
+              // Переключение shuffle.
+              LogicalKeySet(
+                LogicalKeyboardKey.keyS,
+                LogicalKeyboardKey.control,
+              ): const ShuffleIntent(),
+
+              // Переключение повтора.
+              LogicalKeySet(
+                LogicalKeyboardKey.keyL,
+                LogicalKeyboardKey.control,
+              ): const LoopModeIntent(),
+
+              // Закрытие приложения.
+              LogicalKeySet(
+                LogicalKeyboardKey.keyQ,
+                LogicalKeyboardKey.control,
+              ): const CloseAppIntent(),
+            },
+            actions: {
+              FavoriteTracksIntent: CallbackAction(
+                onInvoke: (intent) {
+                  final ownerID = ref.read(userProvider).id;
+
+                  return router.go(
+                    "/music/playlist/$ownerID/0",
+                  );
+                },
+              ),
+              PlayPauseIntent: CallbackAction(
+                onInvoke: (intent) => player.togglePlay(),
+              ),
+              PreviousTrackIntent: CallbackAction(
+                onInvoke: (intent) => player.smartPrevious(),
+              ),
+              NextTrackIntent: CallbackAction(
+                onInvoke: (intent) => player.next(),
+              ),
+              RewindIntent: CallbackAction(
+                onInvoke: (intent) => player.seekBy(
+                  const Duration(
+                    seconds: -seekSeconds,
+                  ),
                 ),
               ),
-            ),
-            FastForwardIntent: CallbackAction(
-              onInvoke: (intent) => player.seekBy(
-                const Duration(
-                  seconds: seekSeconds,
+              FastForwardIntent: CallbackAction(
+                onInvoke: (intent) => player.seekBy(
+                  const Duration(
+                    seconds: seekSeconds,
+                  ),
                 ),
               ),
-            ),
-            VolumeUpIntent: CallbackAction(
-              onInvoke: (intent) => player.setVolume(
-                (player.volume + 0.1).clamp(0.0, 1.0),
+              VolumeUpIntent: CallbackAction(
+                onInvoke: (intent) => player.setVolume(
+                  (player.volume + 0.1).clamp(0.0, 1.0),
+                ),
               ),
-            ),
-            VolumeDownIntent: CallbackAction(
-              onInvoke: (intent) => player.setVolume(
-                (player.volume - 0.1).clamp(0.0, 1.0),
+              VolumeDownIntent: CallbackAction(
+                onInvoke: (intent) => player.setVolume(
+                  (player.volume - 0.1).clamp(0.0, 1.0),
+                ),
               ),
-            ),
-            ShuffleIntent: CallbackAction(
-              onInvoke: (intent) {
-                if (player.currentPlaylist?.type == PlaylistType.audioMix) {
-                  return null;
-                }
+              ShuffleIntent: CallbackAction(
+                onInvoke: (intent) {
+                  if (player.currentPlaylist?.type == PlaylistType.audioMix) {
+                    return null;
+                  }
 
-                return player.toggleShuffle();
-              },
-            ),
-            LoopModeIntent: CallbackAction(
-              onInvoke: (intent) => player.toggleLoopMode(),
-            ),
-            CloseAppIntent: CallbackAction(
-              onInvoke: (intent) => windowManager.close(),
-            ),
-          },
+                  return player.toggleShuffle();
+                },
+              ),
+              LoopModeIntent: CallbackAction(
+                onInvoke: (intent) => player.toggleLoopMode(),
+              ),
+              CloseAppIntent: CallbackAction(
+                onInvoke: (intent) => windowManager.close(),
+              ),
+            },
+          ),
         );
       },
     );
