@@ -159,7 +159,7 @@ class SimillarMusicPlaylistWidget extends HookConsumerWidget {
                         // Название плейлиста.
                         Flexible(
                           child: Text(
-                            name + name,
+                            name,
                             textAlign: TextAlign.center,
                             overflow: TextOverflow.fade,
                             maxLines: 2,
