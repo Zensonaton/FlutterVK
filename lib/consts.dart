@@ -14,6 +14,9 @@ const String repoName = "FlutterVK";
 /// Ссылка на Github-репозиторий данного приложения.
 String get repoURL => "https://github.com/$repoOwner/$repoName";
 
+/// Ссылка на Telegram-канал данного приложения.
+const String telegramURL = "https://t.me/FlutterVKCI";
+
 /// Обычный User-Agent браузера Firefox.
 const String browserUA =
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0";

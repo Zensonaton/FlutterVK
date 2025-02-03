@@ -587,6 +587,38 @@
 
 	"about_flutter_vk": "О Flutter VK",
 
+	"app_telegram": "Telegram-канал",
+	"app_telegram_desc": "Откроет Telegram-канал с CI-билдами, а так же информацией о разработке приложения",
+
+	"app_github": "Исходный код проекта",
+	"app_github_desc": "Нажав сюда, мы отправим Вас в прекрасный Github-репозиторий приложения Flutter VK",
+
+	"show_changelog": "Список изменений",
+	"show_changelog_desc": "Показывает список изменений в этой версии приложения",
+
+	"changelog_dialog": "Список изменений в {version}",
+	"@changelog_dialog": {
+		"placeholders": {
+			"version": {
+				"type": "String",
+				"description": "Номер версии приложения, для которой отображается список изменений.",
+				"example": "1.2.3"
+			}
+		}
+	},
+
+	"app_version": "О приложении",
+	"app_version_desc": "Установленная версия приложения: {version}.\nНажмите сюда, чтобы проверить на наличие новых обновлений",
+	"@app_version_desc": {
+		"placeholders": {
+			"version": {
+				"description": "Текущая версия приложения.",
+				"example": "v1.2.3"
+			}
+		}
+	},
+	"app_version_prerelease": "бета",
+
 	"download_manager_current_tasks": "Загружаются сейчас",
 	"download_manager_old_tasks": "Загружено ранее",
 
@@ -675,34 +707,5 @@
 
 	"update_install_error": "Ошибка при установке обновления",
 
-	"no_updates_available": "Установлена актуальная версия приложения.",
-
-	"app_github": "Исходный код проекта",
-	"app_github_desc": "Нажав сюда, мы отправим Вас в прекрасный Github-репозиторий приложения Flutter VK",
-
-	"show_changelog": "Список изменений",
-	"show_changelog_desc": "Показывает список изменений в этой версии приложения",
-
-	"changelog_dialog": "Список изменений в {version}",
-	"@changelog_dialog": {
-		"placeholders": {
-			"version": {
-				"type": "String",
-				"description": "Номер версии приложения, для которой отображается список изменений.",
-				"example": "1.2.3"
-			}
-		}
-	},
-
-	"app_version": "О приложении",
-	"app_version_desc": "Установленная версия приложения: {version}.\nНажмите сюда, чтобы проверить на наличие новых обновлений",
-	"@app_version_desc": {
-		"placeholders": {
-			"version": {
-				"description": "Текущая версия приложения.",
-				"example": "v1.2.3"
-			}
-		}
-	},
-	"app_version_prerelease": "бета"
+	"no_updates_available": "Установлена актуальная версия приложения."
 }

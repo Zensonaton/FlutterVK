@@ -36,6 +36,22 @@ class ProfileAboutSettingsCategory extends HookConsumerWidget {
         top: mobileLayout ? 0 : 8,
       ),
       children: [
+        // Telegram.
+        ListTile(
+          leading: const Icon(
+            Icons.telegram,
+          ),
+          title: Text(
+            l18n.app_telegram,
+          ),
+          subtitle: Text(
+            l18n.app_telegram_desc,
+          ),
+          onTap: () => launchUrl(
+            Uri.parse(repoURL),
+          ),
+        ),
+
         // Github.
         ListTile(
           leading: const Icon(

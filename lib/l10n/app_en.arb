@@ -365,6 +365,9 @@
 
 	"about_flutter_vk": "About Flutter VK",
 
+	"app_telegram": "Telegram channel",
+	"app_telegram_desc": "Clicking here will open Telegram channel with CI builds and other information",
+
 	"app_github": "Source code",
 	"app_github_desc": "Click here to visit the Github repository of Flutter VK",
 
