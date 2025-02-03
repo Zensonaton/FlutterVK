@@ -48,7 +48,7 @@ class ProfileAboutSettingsCategory extends HookConsumerWidget {
             l18n.app_telegram_desc,
           ),
           onTap: () => launchUrl(
-            Uri.parse(repoURL),
+            Uri.parse(telegramURL),
           ),
         ),
 
