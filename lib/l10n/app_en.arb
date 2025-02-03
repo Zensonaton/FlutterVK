@@ -179,7 +179,7 @@
 	"all_blocks_disabled": "Woah! It looks like there is nothing here.",
 	"all_blocks_disabled_desc": "Turn something on by clicking the desired switch above.",
 
-	"simillarity_percent": "match with you",
+	"simillarity_percent": "<bold>{simillarity}%</bold> match with you",
 
 	"fullscreen_playlist_title": "Playing from playlist",
 	"fullscreen_next_track_title": "Next up",

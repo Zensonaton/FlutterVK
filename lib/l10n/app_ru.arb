@@ -309,9 +309,15 @@
 	"all_blocks_disabled": "Ой! Похоже, тут ничего нет.",
 	"all_blocks_disabled_desc": "Соскучились по музыке? Включите что-то, нажав на нужный переключатель сверху.",
 
-	"simillarity_percent": "совпадения с Вами",
+	"simillarity_percent": "<bold>{simillarity}%</bold> совпадения с Вами",
 	"@simillarity_percent": {
-		"description": "Используется в строке вида '[плейлист имеет] 95% совпадения с Вами'."
+		"description": "Используется в строке вида '[плейлист имеет] 95% совпадения с Вами'. <bold> ... </bold> делает текст жирным.",
+		"placeholders": {
+			"simillarity": {
+				"type": "int",
+				"description": "Процент совпадения, число от 0 до 100."
+			}
+		}
 	},
 
 	"fullscreen_playlist_title": "Воспроизведение музыки",

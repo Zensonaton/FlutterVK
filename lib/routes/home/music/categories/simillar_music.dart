@@ -4,6 +4,8 @@ import "package:gap/gap.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:skeletonizer/skeletonizer.dart";
+import "package:styled_text/tags/styled_text_tag.dart";
+import "package:styled_text/widgets/styled_text.dart";
 
 import "../../../../consts.dart";
 import "../../../../extensions.dart";
@@ -129,36 +131,35 @@ class SimillarMusicPlaylistWidget extends HookConsumerWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // "80% совпадения".
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            // Процент.
-                            Text(
-                              "${(simillarity * 100).truncate()}%",
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.white,
-                              ),
+                        // Процент совпадения.
+                        SizedBox(
+                          width: double.infinity,
+                          child: StyledText(
+                            text: l18n.simillarity_percent(
+                              simillarity: (simillarity * 100).truncate(),
                             ),
-                            const Gap(4),
-
-                            // "совпадения".
-                            Text(
-                              l18n.simillarity_percent,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.white,
-                              ),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.white,
                             ),
-                          ],
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            tags: {
+                              "bold": StyledTextTag(
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            },
+                          ),
                         ),
 
                         // Название плейлиста.
                         Flexible(
                           child: Text(
-                            name,
+                            name + name,
                             textAlign: TextAlign.center,
                             overflow: TextOverflow.fade,
                             maxLines: 2,
