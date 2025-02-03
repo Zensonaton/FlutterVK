@@ -184,10 +184,21 @@ class FlutterVKApp extends HookConsumerWidget {
             dynamicSchemesFixed?.$2 ??
             fallbackDarkColorScheme;
 
+        final pageTransitions = PageTransitionsTheme(
+          builders: {
+            for (final platform in TargetPlatform.values)
+              platform: const ZoomPageTransitionsBuilder(
+                allowSnapshotting: false,
+                allowEnterRouteSnapshotting: false,
+              ),
+          },
+        );
+
         return ExcludeSemantics(
           child: MaterialApp.router(
             theme: ThemeData(
               colorScheme: lightScheme,
+              pageTransitionsTheme: pageTransitions,
             ),
             darkTheme: ThemeData(
               colorScheme: darkScheme.copyWith(
@@ -198,6 +209,7 @@ class FlutterVKApp extends HookConsumerWidget {
                       color: darkScheme.surface,
                     )
                   : null,
+              pageTransitionsTheme: pageTransitions,
             ),
             themeMode: preferences.theme,
             themeAnimationDuration: const Duration(
