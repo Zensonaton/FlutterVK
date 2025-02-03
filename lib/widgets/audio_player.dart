@@ -1423,13 +1423,13 @@ class MusicPlayerBackgroundWidget extends HookConsumerWidget {
       [brightness, audio?.colorInts, preferences.dynamicSchemeType],
     );
 
-    final backgroundColor = useMemoized(
+    final baseBackgroundColor = useMemoized(
       () {
         Color baseColor = scheme.primaryContainer;
 
         // Затемняем, если трек не воспроизводится.
         if (!isPlaying) {
-          baseColor = baseColor.darken(0.15);
+          baseColor = baseColor.darken(0.3);
         }
 
         // Если вот-вот начнётся воспроизведение следующего трека, то плавно переходим к его цвету.
@@ -1445,6 +1445,38 @@ class MusicPlayerBackgroundWidget extends HookConsumerWidget {
       },
       [isPlaying, clampedProgress, scheme, nextScheme],
     );
+    final backgroundColor = baseBackgroundColor;
+
+    if (mobileLayout) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(
+          globalBorderRadius,
+        ),
+        child: Stack(
+          children: [
+            // Фон оригинального цвета.
+            AnimatedContainer(
+              duration: MusicPlayerWidget.switchAnimationDuration,
+              curve: Curves.easeInOutCubicEmphasized,
+              color: backgroundColor,
+            ),
+
+            // Затемнение фона, начинающееся с конца трека.
+            Align(
+              alignment: Alignment.centerRight,
+              child: FractionallySizedBox(
+                widthFactor: 1.0 - progress,
+                child: Container(
+                  color: Colors.black.withValues(
+                    alpha: 0.25,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     return AnimatedContainer(
       duration: MusicPlayerWidget.switchAnimationDuration,
@@ -1711,8 +1743,7 @@ class _MusicContents extends ConsumerWidget {
         ),
 
         // Прогресс-бар.
-        if (mobileLayout ||
-            (!mobileLayout && preferences.alternateDesktopMiniplayerSlider))
+        if (!mobileLayout && preferences.alternateDesktopMiniplayerSlider)
           Align(
             alignment:
                 mobileLayout ? Alignment.bottomCenter : Alignment.topCenter,
@@ -1730,6 +1761,7 @@ class _MusicContents extends ConsumerWidget {
 /// Виджет разбит на множество частей:
 /// [MusicPlayerWidget]
 /// - [_MusicContents]
+///   - [MusicPlayerBackgroundWidget] (фон)
 ///   - [_MusicLeftSide]
 ///     - [_LeftSideThumbnail]
 ///   - [_MusicMiddleSide]
