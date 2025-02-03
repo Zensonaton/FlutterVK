@@ -266,6 +266,9 @@
 	"discord_rpc": "Discord Rich Presence",
 	"discord_rpc_desc": "Broadcasts the playing track in Discord",
 
+	"export_music_list": "Export track list",
+	"export_music_list_desc": "List of {count, plural, one{{count} liked track} other{{count} liked tracks}}:",
+
 	"player_debug_logging": "Debug player logging",
 	"player_debug_logging_desc": "Enables output of technical data of the music player to the log. This option is intended for debugging purposes and is not recommended for regular use. Usage of this option may lead to performance issues.",
 
@@ -278,14 +281,14 @@
 	"lrclib_lyrics": "Lyrics via LRCLIB",
 	"lrclib_lyrics_desc": "Downloads lyrics from LRCLIB if the track does not have them or they are not synchronized.\nSometimes may provide incorrect/low-quality lyrics",
 
+
+	"app_settings": "App settings",
+
 	"export_settings": "Export settings",
 	"export_settings_desc": "Saves local track changes and app settings to a file to restore them on another device",
 
 	"import_settings": "Import settings",
 	"import_settings_desc": "Loads a file previously created using \"export settings\"",
-
-	"export_music_list": "Export track list",
-	"export_music_list_desc": "List of {count, plural, one{{count} liked track} other{{count} liked tracks}}:",
 
 	"export_settings_title": "Export settings",
 	"export_settings_tip": "About settings export",
@@ -334,19 +337,12 @@
 	"settings_import_success_desc_with_delete": "Settings and tracks import completed successfully.\n\nYou may need to restart the app for some settings to be saved and applied.\n\nAfter import, the export file is no longer needed. Do you want to delete it?",
 	"settings_import_success_desc_no_delete": "Settings and tracks import completed successfully. You may need to restart the app for some settings to be saved and applied.",
 
-
-	"about_flutter_vk": "About Flutter VK",
-
-	"share_logs": "Share log file",
-	"share_logs_desc": "Technical information for debugging errors",
-	"share_logs_desc_no_logs": "Unavailable because the log file is empty",
-
 	"reset_db": "Reset track database",
 	"reset_db_desc": "Clears the local copy of the track database stored on this device",
 	"reset_db_dialog": "Reset track database",
 	"reset_db_dialog_desc": "Continuing will delete the track database stored on this device. Please do not do this unless absolutely necessary.\n\nYour tracks (both liked and cached) will not be deleted, but you will need to restart the caching process on previously cached playlists.",
 
-	"app_updates_policy": "Update display type",
+	"app_updates_policy": "Updates display type",
 	"app_updates_policy_desc": "Determines how the app will notify you about new updates",
 	"app_updates_policy_dialog": "Dialog",
 	"app_updates_policy_popup": "Bottom popup",
@@ -357,10 +353,29 @@
 	"disable_updates_warning_disable": "Disable anyway",
 	"updates_are_disabled": "App updates are disabled. You can check for updates manually by clicking the \"About the app\" button on the profile page.",
 
-	"updates_channel": "Update channel",
+	"updates_channel": "Updates channel",
 	"updates_channel_desc": "The beta channel has more frequent but less stable builds",
 	"updates_channel_releases": "Main (default)",
 	"updates_channel_prereleases": "Beta",
+
+	"share_logs": "Share log file",
+	"share_logs_desc": "Technical information for debugging errors",
+	"share_logs_desc_no_logs": "Unavailable because the log file is empty",
+
+
+	"about_flutter_vk": "About Flutter VK",
+
+	"app_github": "Source code",
+	"app_github_desc": "Click here to visit the Github repository of Flutter VK",
+
+	"show_changelog": "Changelog",
+	"show_changelog_desc": "Shows the changelog for this version",
+
+	"changelog_dialog": "Changelog for {version}",
+
+	"app_version": "About the app",
+	"app_version_desc": "Installed version: {version}.\nClick here to check for new updates",
+	"app_version_prerelease": "beta",
 
 	"download_manager_current_tasks": "Currently downloading",
 	"download_manager_old_tasks": "Previously downloaded",
@@ -383,17 +398,5 @@
 
 	"update_install_error": "Update installation error",
 
-	"no_updates_available": "The latest version of the app is installed.",
-
-	"app_github": "Source code",
-	"app_github_desc": "Click here to visit the Github repository of Flutter VK",
-
-	"show_changelog": "Changelog",
-	"show_changelog_desc": "Shows the changelog for this version",
-
-	"changelog_dialog": "Changelog for {version}",
-
-	"app_version": "About the app",
-	"app_version_desc": "Installed version: {version}.\nClick here to check for new updates",
-	"app_version_prerelease": "beta"
+	"no_updates_available": "The latest version of the app is installed."
 }

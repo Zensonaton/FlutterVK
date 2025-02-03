@@ -3,7 +3,6 @@ import "dart:io";
 import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
 import "package:gap/gap.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
@@ -26,6 +25,7 @@ import "../../widgets/page_route_builders.dart";
 import "../../widgets/tip_widget.dart";
 import "../login.dart";
 import "profile/categories/about.dart";
+import "profile/categories/app.dart";
 import "profile/categories/debug.dart";
 import "profile/categories/experimental.dart";
 import "profile/categories/music_player.dart";
@@ -244,57 +244,7 @@ class HomeProfilePage extends HookConsumerWidget {
     final bool recommendationsConnected =
         ref.watch(secondaryTokenProvider) != null;
 
-    final profileItems = useMemoized(
-      () => [
-        // Блок, предупреждающий пользователя о том, что рекомендации не подключены.
-        if (!recommendationsConnected)
-          TipWidget(
-            icon: Icons.auto_fix_high,
-            title: l18n.no_recommendations_warning,
-            description: l18n.no_recommendations_warning_desc,
-            onTap: () async {
-              final result = await showYesNoDialog(
-                context,
-                icon: Icons.auto_fix_high,
-                title: l18n.connect_recommendations_title,
-                description: l18n.connect_recommendations_desc,
-              );
-              if (result != true || !context.mounted) return;
-
-              Navigator.push(
-                context,
-                Material3PageRoute(
-                  builder: (context) => const LoginRoute(
-                    useAlternateAuth: true,
-                  ),
-                ),
-              );
-            },
-          ),
-
-        // Визуал.
-        const ProfileVisualSettingsCategory(),
-
-        // Музыкальный плеер.
-        const ProfileMusicPlayerSettingsCategory(),
-
-        // Экспериментальные функции.
-        const ProfileExperimentalSettingsCategory(),
-
-        // О Flutter VK.
-        const ProfileAboutSettingsCategory(),
-
-        // Debug-опции.
-        if (kDebugMode || debugOptionsEnabled)
-          const ProfileDebugSettingsCategory(),
-      ],
-      [recommendationsConnected, debugOptionsEnabled],
-    );
-
     final bool mobileLayout = isMobileLayout(context);
-
-    final profileItemsCount = profileItems.length;
-    final showGapOnBottom = player.loaded && mobileLayout;
 
     return Scaffold(
       appBar: mobileLayout
@@ -325,7 +275,7 @@ class HomeProfilePage extends HookConsumerWidget {
               centerTitle: true,
             )
           : null,
-      body: ListView.separated(
+      body: ListView(
         padding: getPadding(
           context,
           useLeft: mobileLayout,
@@ -338,22 +288,68 @@ class HomeProfilePage extends HookConsumerWidget {
         ).add(
           const EdgeInsets.all(12),
         ),
-        itemCount: profileItemsCount + 1 + (showGapOnBottom ? 1 : 0),
-        separatorBuilder: (BuildContext context, int index) {
-          return const Gap(16);
-        },
-        itemBuilder: (BuildContext context, int index) {
-          if (index == 0) {
-            return const ProfileAvatar();
-          }
+        children: [
+          // Аватар.
+          const ProfileAvatar(),
+          const Gap(16),
 
-          if (showGapOnBottom && index == profileItemsCount + 1) {
-            // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
-            return const Gap(MusicPlayerWidget.mobileHeight - 16);
-          }
+          // Блок, предупреждающий пользователя о том, что рекомендации не подключены.
+          if (!recommendationsConnected) ...[
+            TipWidget(
+              icon: Icons.auto_fix_high,
+              title: l18n.no_recommendations_warning,
+              description: l18n.no_recommendations_warning_desc,
+              onTap: () async {
+                final result = await showYesNoDialog(
+                  context,
+                  icon: Icons.auto_fix_high,
+                  title: l18n.connect_recommendations_title,
+                  description: l18n.connect_recommendations_desc,
+                );
+                if (result != true || !context.mounted) return;
 
-          return profileItems[index - 1];
-        },
+                Navigator.push(
+                  context,
+                  Material3PageRoute(
+                    builder: (context) => const LoginRoute(
+                      useAlternateAuth: true,
+                    ),
+                  ),
+                );
+              },
+            ),
+            const Gap(16),
+          ],
+
+          // Визуал.
+          const ProfileVisualSettingsCategory(),
+          const Gap(16),
+
+          // Музыкальный плеер.
+          const ProfileMusicPlayerSettingsCategory(),
+          const Gap(16),
+
+          // Экспериментальные функции.
+          const ProfileExperimentalSettingsCategory(),
+          const Gap(16),
+
+          // Настройки приложения.
+          const ProfileAppSettingsCategory(),
+          const Gap(16),
+
+          // О Flutter VK.
+          const ProfileAboutSettingsCategory(),
+
+          // Debug-опции.
+          if (kDebugMode || debugOptionsEnabled) ...[
+            const Gap(16),
+            const ProfileDebugSettingsCategory(),
+          ],
+
+          // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
+          if (player.loaded && mobileLayout)
+            const Gap(MusicPlayerWidget.mobileHeight),
+        ],
       ),
     );
   }
