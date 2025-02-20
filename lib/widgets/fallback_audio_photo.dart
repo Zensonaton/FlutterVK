@@ -1,6 +1,8 @@
 import "package:flutter/material.dart";
 import "package:skeletonizer/skeletonizer.dart";
 
+import "../extensions.dart";
+
 /// Fallback-виджет, используемый в случае, если у трека нет изображения.
 class FallbackAudioAvatar extends StatelessWidget {
   /// Ширина. По умолчанию используется 50.
@@ -17,8 +19,11 @@ class FallbackAudioAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
     return Container(
-      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+      color: scheme.surfaceContainerHighest,
       width: width,
       height: height,
       child: Center(
@@ -52,32 +57,29 @@ class FallbackAudioPlaylistAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Container(
-      color: favoritesPlaylist
-          ? null
-          : Theme.of(context).colorScheme.surfaceContainerHighest,
       width: size,
       height: size,
-      decoration: favoritesPlaylist
-          ? BoxDecoration(
-              gradient: LinearGradient(
+      decoration: BoxDecoration(
+        gradient: favoritesPlaylist
+            ? LinearGradient(
                 begin: Alignment.bottomCenter,
                 end: Alignment.topCenter,
                 colors: [
-                  Theme.of(context).colorScheme.primaryContainer,
-                  Theme.of(context).colorScheme.secondaryContainer,
+                  scheme.primaryContainer,
+                  scheme.primaryContainer.lighten(0.25),
                 ],
-              ),
-            )
-          : null,
+              )
+            : null,
+        color: favoritesPlaylist ? null : scheme.surfaceContainerHighest,
+      ),
       child: Center(
         child: Skeleton.keep(
           child: Icon(
             favoritesPlaylist ? Icons.favorite : Icons.queue_music,
-            color: Theme.of(context)
-                .colorScheme
-                .onSurfaceVariant
-                .withValues(alpha: 0.5),
+            color: scheme.onSurfaceVariant.withValues(alpha: 0.5),
             size: size > 50 ? 56 : null,
           ),
         ),
