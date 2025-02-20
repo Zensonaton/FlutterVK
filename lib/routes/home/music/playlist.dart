@@ -1183,10 +1183,9 @@ class BackgroundGradientWidget extends HookConsumerWidget {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      scheme!.primary.withValues(alpha: 0.5),
+                      scheme!.primary,
                       Colors.transparent,
                     ],
-                    stops: const [0.5, 1.0],
                   )
                 : null,
           ),
