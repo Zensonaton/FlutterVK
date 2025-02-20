@@ -109,6 +109,8 @@ class MediaKitPlayerBackend extends PlayerBackend {
 
     _subscriptions = [
       player.stream.completed.listen((bool completed) async {
+        if (!completed) return;
+
         await _playNext();
       }),
       player.stream.playing.listen((bool playing) {
