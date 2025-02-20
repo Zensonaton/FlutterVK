@@ -19,8 +19,7 @@ class FallbackAudioAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final scheme = Theme.of(context).colorScheme;
 
     return Container(
       color: scheme.surfaceContainerHighest,
@@ -30,10 +29,7 @@ class FallbackAudioAvatar extends StatelessWidget {
         child: Skeleton.keep(
           child: Icon(
             Icons.music_note,
-            color: Theme.of(context)
-                .colorScheme
-                .onSurfaceVariant
-                .withValues(alpha: 0.5),
+            color: scheme.onSurfaceVariant.withValues(alpha: 0.5),
           ),
         ),
       ),
