@@ -21,7 +21,7 @@ class WelcomeRoute extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          "Flutter VK",
+          appName,
         ),
         centerTitle: true,
       ),

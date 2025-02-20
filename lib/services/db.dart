@@ -1,3 +1,4 @@
+import "package:flutter/foundation.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:isar/isar.dart";
 import "package:path_provider/path_provider.dart";
@@ -7,8 +8,8 @@ import "../enums.dart";
 import "../main.dart" show appStorage;
 import "../provider/preferences.dart";
 import "../provider/user.dart";
-import "audio_player.dart";
 import "logger.dart";
+import "player/server.dart";
 
 /// Класс для работы с базой данных Isar, используемого для хранения persistent-данных пользователя.
 class AppStorage {
@@ -30,10 +31,19 @@ class AppStorage {
 
   /// Возвращает объект базы данных Isar.
   Future<Isar> _getIsar() async {
+    // Для Web, используем БД в памяти.
+    if (kIsWeb) {
+      _isar ??= Isar.openSync(
+        [DBPlaylistSchema],
+        name: isarDBName,
+        directory: "",
+      );
+    }
+
     _isar ??= await Isar.open(
       [DBPlaylistSchema],
-      directory: await getDBDirectoryPath(),
       name: isarDBName,
+      directory: await getDBDirectoryPath(),
     );
 
     return _isar!;
@@ -190,7 +200,7 @@ class IsarDBMigrator {
       // проверяем то, существует ли одна из "старых" папок для хранения кэша треков.
       // Если хотя бы одна из них существует, то начинаем миграцию с версии 0.
       final oldCacheDirs =
-          await CachedStreamAudioSource.getOldTrackStorageDirectories();
+          await PlayerLocalServer.getOldTrackStorageDirectories();
       if (oldCacheDirs.any((dir) => dir.existsSync())) {
         logger.i(
           "Found old tracks cache directory, starting DB migration from version 0",
@@ -291,7 +301,7 @@ class IsarDBMigrator {
 
     // Удаляем старый кэш треков.
     final oldCacheDirs =
-        await CachedStreamAudioSource.getOldTrackStorageDirectories();
+        await PlayerLocalServer.getOldTrackStorageDirectories();
     for (final dir in oldCacheDirs) {
       try {
         if (!dir.existsSync()) continue;

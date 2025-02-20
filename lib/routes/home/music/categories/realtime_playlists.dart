@@ -9,9 +9,8 @@ import "package:lottie/lottie.dart";
 import "package:skeletonizer/skeletonizer.dart";
 
 import "../../../../consts.dart";
-import "../../../../main.dart";
 import "../../../../provider/l18n.dart";
-import "../../../../provider/player_events.dart";
+import "../../../../provider/player.dart";
 import "../../../../provider/playlists.dart";
 import "../../../../provider/preferences.dart";
 import "../../../../provider/user.dart";
@@ -21,9 +20,6 @@ import "../../../../utils.dart";
 import "../../../../widgets/music_category.dart";
 import "../../../../widgets/play_pause_animated_icon.dart";
 import "../playlist.dart";
-
-/// Указывает минимальное треков из аудио микса, которое обязано быть в очереди плеера. Если очередь плейлиста состоит из меньшего количества треков, то очередь будет восполнена этим значением.
-const int minMixAudiosCount = 3;
 
 /// Fallback-виджет, отображаемый вместо аудио миксов по типу VK Mix.
 class FallbackMixPlaylistWidget extends StatelessWidget {
@@ -36,10 +32,15 @@ class FallbackMixPlaylistWidget extends StatelessWidget {
     return Container(
       width: double.infinity,
       height: 250,
-      color: Theme.of(context)
-          .colorScheme
-          .primaryContainer
-          .withValues(alpha: 0.25),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(
+          globalBorderRadius,
+        ),
+        color: Theme.of(context)
+            .colorScheme
+            .primaryContainer
+            .withValues(alpha: 0.25),
+      ),
     );
   }
 }
@@ -427,11 +428,12 @@ class RealtimePlaylistsBlock extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final player = ref.read(playerProvider);
     final mixPlaylists = ref.watch(mixPlaylistsProvider);
     final moodPlaylists = ref.watch(moodPlaylistsProvider);
     final l18n = ref.watch(l18nProvider);
-    ref.watch(playerStateProvider);
-    ref.watch(playerLoadedStateProvider);
+    ref.watch(playerIsPlayingProvider);
+    ref.watch(playerIsLoadedProvider);
 
     final bool mobileLayout = isMobileLayout(context);
 
@@ -483,8 +485,8 @@ class RealtimePlaylistsBlock extends HookConsumerWidget {
               lottieUrl: playlist.backgroundAnimationUrl!,
               lottieCacheKey: "${playlist.mediaKey}animation",
               bigLayout: !isMobile,
-              selected: player.currentPlaylist?.mediaKey == playlist.mediaKey,
-              currentlyPlaying: player.playing,
+              selected: player.playlist?.mediaKey == playlist.mediaKey,
+              currentlyPlaying: player.isPlaying,
               onPlayToggle: () => onMixPlayToggle(ref, playlist),
             ),
           ],
@@ -526,14 +528,13 @@ class RealtimePlaylistsBlock extends HookConsumerWidget {
                     description: playlist.description ?? playlist.subtitle,
                     backgroundUrl: playlist.photo!.photo600,
                     cacheKey: "${playlist.mediaKey}600",
-                    selected:
-                        player.currentPlaylist?.mediaKey == playlist.mediaKey,
-                    currentlyPlaying: player.playing,
+                    selected: player.playlist?.mediaKey == playlist.mediaKey,
+                    currentlyPlaying: player.isPlaying,
                     onPlayToggle: () => onPlaylistPlayToggle(
                       ref,
                       context,
                       playlist,
-                      player.playing,
+                      player.isPlaying,
                     ),
                   );
                 },

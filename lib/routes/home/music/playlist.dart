@@ -26,7 +26,7 @@ import "../../../main.dart";
 import "../../../provider/color.dart";
 import "../../../provider/download_manager.dart";
 import "../../../provider/l18n.dart";
-import "../../../provider/player_events.dart";
+import "../../../provider/player.dart";
 import "../../../provider/playlists.dart";
 import "../../../provider/preferences.dart";
 import "../../../provider/user.dart";
@@ -34,6 +34,7 @@ import "../../../provider/vk_api.dart";
 import "../../../services/cache_manager.dart";
 import "../../../services/download_manager.dart";
 import "../../../services/logger.dart";
+import "../../../services/player/subscribers/audio_mix.dart";
 import "../../../utils.dart";
 import "../../../widgets/audio_player.dart";
 import "../../../widgets/audio_track.dart";
@@ -41,7 +42,6 @@ import "../../../widgets/dialogs.dart";
 import "../../../widgets/fallback_audio_photo.dart";
 import "../../../widgets/loading_button.dart";
 import "../../../widgets/play_pause_animated_icon.dart";
-import "categories/realtime_playlists.dart";
 
 /// Проверяет, подходит ли [Audio] под запрос [query].
 ///
@@ -80,17 +80,26 @@ Future<void> onPlaylistPlayToggle(
   ExtendedPlaylist playlist,
   bool playing,
 ) async {
-  // Если у нас играет этот же плейлист, то тогда мы попросту должны поставить на паузу/убрать паузу.
-  if (player.currentPlaylist?.mediaKey == playlist.mediaKey) {
+  final player = ref.read(playerProvider);
+  final playlists = ref.read(playlistsProvider.notifier);
+  final preferences = ref.read(preferencesProvider);
+
+  // Переключение паузы, если тот же плейлист.
+  if (player.playlist?.mediaKey == playlist.mediaKey) {
     return await player.togglePlay();
   }
 
   // Если информация по плейлисту не загружена, то мы должны её загрузить.
-  final newPlaylist =
-      await ref.read(playlistsProvider.notifier).loadPlaylist(playlist);
+  final newPlaylist = await playlists.loadPlaylist(playlist);
 
   // Всё ок, запускаем воспроизведение.
-  await player.setPlaylist(newPlaylist, randomTrack: true);
+  if (preferences.shuffleOnPlay) {
+    await player.setShuffle(true);
+  }
+  await player.setPlaylist(
+    newPlaylist,
+    randomAudio: true,
+  );
 }
 
 /// Метод, вызываемый при нажатии нажатии по аудио микс-плейлисту (VK Mix).
@@ -100,22 +109,24 @@ Future<void> onMixPlayToggle(
   WidgetRef ref,
   ExtendedPlaylist playlist,
 ) async {
+  final player = ref.read(playerProvider);
+  final api = ref.read(vkAPIProvider);
+  final playlists = ref.read(playlistsProvider.notifier);
+
   if (playlist.type != PlaylistType.audioMix) {
     throw Exception(
       "onMixPlayToggle can only be called for audio mix playlists",
     );
   }
 
-  final api = ref.read(vkAPIProvider);
-  final playlists = ref.read(playlistsProvider.notifier);
-
-  // Если у нас играет этот же плейлист, то тогда мы попросту должны поставить на паузу/убрать паузу.
-  if (player.currentPlaylist?.mediaKey == playlist.mediaKey) {
+  // Переключение паузы, если тот же плейлист.
+  if (player.playlist?.mediaKey == playlist.mediaKey) {
     return player.togglePlay();
   }
 
-  final List<Audio> response =
-      await api.audio.getStreamMixAudiosWithAlbums(count: minMixAudiosCount);
+  final List<Audio> response = await api.audio.getStreamMixAudiosWithAlbums(
+    count: AudioMixPlayerSubscriber.requiredMixAudiosCount,
+  );
 
   final update = await playlists.updatePlaylist(
     playlist.basicCopyWith(
@@ -129,10 +140,8 @@ Future<void> onMixPlayToggle(
   );
 
   // Всё ок, запускаем воспроизведение.
-  await player.setPlaylist(
-    update.playlist,
-    setLoopAll: false,
-  );
+  await player.setShuffle(false);
+  await player.setPlaylist(update.playlist);
 }
 
 /// Диалог, предупреждающий пользователя о том, что при отключении кэширования треков будет полностью удалёно всё содержимое плейлиста с памяти устройства.
@@ -490,8 +499,9 @@ class MobileControlButtonsWidget extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final player = ref.read(playerProvider);
     final preferences = ref.watch(preferencesProvider);
-    ref.watch(playerPlayingStateProvider);
+    ref.watch(playerIsPlayingProvider);
 
     useListenable(scrollController.position);
 
@@ -521,9 +531,8 @@ class MobileControlButtonsWidget extends HookConsumerWidget {
 
     const double realButtonSize = buttonSize - 8 * 2;
 
-    final bool isSelected =
-        player.currentPlaylist?.ownerID == playlist.ownerID &&
-            player.currentPlaylist?.id == playlist.id;
+    final bool isSelected = player.playlist?.ownerID == playlist.ownerID &&
+        player.playlist?.id == playlist.id;
 
     return Positioned(
       top: positionFromTop,
@@ -617,7 +626,9 @@ class PlaylistAudiosListWidget extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l18n = ref.watch(l18nProvider);
-    ref.watch(playerStateProvider);
+    ref.watch(playerIsPlayingProvider);
+    ref.watch(playerIsBufferingProvider);
+    ref.watch(playerIsLoadedProvider);
 
     useValueListenable(searchController);
 
@@ -1473,14 +1484,15 @@ class DesktopPlaylistControlsWidget extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l18n = ref.watch(l18nProvider);
+    final player = ref.read(playerProvider);
     final preferences = ref.watch(preferencesProvider);
-    ref.watch(playerStateProvider);
+    ref.watch(playerIsPlayingProvider);
 
     useListenable(searchController);
 
     final hasTracksLoaded = playlist.audios != null;
-    final isSelected = player.currentPlaylist?.ownerID == playlist.ownerID &&
-        player.currentPlaylist?.id == playlist.id;
+    final isSelected = player.playlist?.ownerID == playlist.ownerID &&
+        player.playlist?.id == playlist.id;
     final safeScheme = scheme ?? Theme.of(context).colorScheme;
 
     void onSearchClear() => searchController?.clear();
@@ -1636,8 +1648,9 @@ class PlaylistRoute extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l18n = ref.watch(l18nProvider);
+    final player = ref.read(playerProvider);
     final playlist = ref.watch(getPlaylistProvider(ownerID, id))!;
-    ref.watch(playerLoadedStateProvider);
+    ref.watch(playerIsLoadedProvider);
 
     // Если поменялось изображение плейлиста, то нужно обновить цветовую схему.
     useEffect(
@@ -1750,7 +1763,7 @@ class PlaylistRoute extends HookConsumerWidget {
 
         // Пользователь разрешил удаление кэша плейлиста.
         // Если у нас запущено воспроизведение этого плейлиста, то останавливаем её.
-        if (player.currentPlaylist?.mediaKey == playlist.mediaKey) {
+        if (player.playlist?.mediaKey == playlist.mediaKey) {
           await player.stop();
         }
 
@@ -1835,26 +1848,27 @@ class PlaylistRoute extends HookConsumerWidget {
     }
 
     void onPlayTapped() async {
-      final preferences = ref.watch(preferencesProvider);
+      final preferences = ref.read(preferencesProvider);
 
       // Если у нас уже запущен этот же плейлист, то переключаем паузу/воспроизведение.
-      if (player.currentPlaylist?.mediaKey == playlist.mediaKey) {
+      if (player.playlist?.mediaKey == playlist.mediaKey) {
         await player.togglePlay();
 
         return;
       }
 
-      await player.setShuffle(
-        preferences.shuffleOnPlay,
-        disableAudioMixCheck: true,
-      );
+      if (preferences.shuffleOnPlay) {
+        await player.setShuffle(true);
+      }
       await player.setPlaylist(
         playlist,
-        randomTrack: preferences.shuffleOnPlay,
+        randomAudio: preferences.shuffleOnPlay,
       );
     }
 
     void onSearchSubmitted(String? value) async {
+      final preferences = ref.read(preferencesProvider);
+
       final String query = cleanString(value ?? "");
       if (query.isEmpty) return;
 
@@ -1867,15 +1881,18 @@ class PlaylistRoute extends HookConsumerWidget {
       searchFocusNode.unfocus();
 
       // Если у нас уже запущен этот же трек, то переключаем паузу/воспроизведение.
-      if (player.currentAudio == foundAudio) {
+      if (player.audio?.mediaKey == foundAudio.mediaKey) {
         await player.togglePlay();
 
         return;
       }
 
+      if (preferences.shuffleOnPlay) {
+        await player.setShuffle(true);
+      }
       await player.setPlaylist(
         playlist,
-        selectedTrack: foundAudio,
+        initialAudio: foundAudio,
       );
     }
 
@@ -1972,7 +1989,7 @@ class PlaylistRoute extends HookConsumerWidget {
         ),
 
         // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
-        if (player.loaded && mobileLayout)
+        if (player.isLoaded && mobileLayout)
           const SliverGap(MusicPlayerWidget.mobileHeightWithPadding),
       ],
       [

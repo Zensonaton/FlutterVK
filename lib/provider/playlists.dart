@@ -618,9 +618,15 @@ class Playlists extends _$Playlists {
       if (index == -1) {
         // logger.d("[$index] [${newAudio.title}]: add (non-present), insertion index: $insertionIndex");
 
-        newAudios.insert(insertionIndex, newAudio);
+        // Для плейлиста с "любимыми" треками мы добавляем треки в начало списка.
+        if (newPlaylist.type == PlaylistType.favorites) {
+          newAudios.insert(insertionIndex, newAudio);
+          insertionIndex += 1;
+        } else {
+          newAudios.add(newAudio);
+        }
+
         playlistChanged = true;
-        insertionIndex += 1;
 
         return;
       }
@@ -875,7 +881,7 @@ class Playlists extends _$Playlists {
       return playlist;
     }
 
-    // logger.d("Loading data for $playlist");
+    logger.d("Loading data for $playlist");
 
     final ExtendedPlaylist? existingPlaylist =
         getPlaylist(playlist.ownerID, playlist.id);

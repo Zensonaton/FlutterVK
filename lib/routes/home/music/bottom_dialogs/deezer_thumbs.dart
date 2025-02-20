@@ -11,9 +11,9 @@ import "package:styled_text/widgets/styled_text.dart";
 import "../../../../api/deezer/search.dart";
 import "../../../../api/deezer/shared.dart";
 import "../../../../consts.dart";
-import "../../../../main.dart";
 import "../../../../provider/color.dart";
 import "../../../../provider/l18n.dart";
+import "../../../../provider/player.dart";
 import "../../../../provider/playlists.dart";
 import "../../../../provider/user.dart";
 import "../../../../services/cache_manager.dart";
@@ -44,6 +44,7 @@ class TrackThumbnailEditDialog extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l18n = ref.watch(l18nProvider);
+    final player = ref.read(playerProvider);
     final playlists = ref.read(playlistsProvider.notifier);
 
     final selectedTrack = useState<DeezerTrack?>(null);
@@ -122,7 +123,7 @@ class TrackThumbnailEditDialog extends HookConsumerWidget {
         );
 
         // Если играет этот же трек, то обновляем цвета по всему приложению.
-        if (player.currentAudio?.id == audio.id) {
+        if (player.audio?.id == audio.id) {
           logger.d("Updating colors for current track");
 
           trackSchemeInfo.fromExtractor(newColors);

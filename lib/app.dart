@@ -19,6 +19,7 @@ import "main.dart";
 import "provider/color.dart";
 import "provider/l18n.dart";
 import "provider/navigation_router.dart";
+import "provider/player.dart";
 import "provider/preferences.dart";
 import "provider/user.dart";
 import "routes/home/profile.dart";
@@ -45,14 +46,15 @@ class FlutterVKWindowManager extends WindowListener {
     }
 
     final AppLocalizations l18n = ref.read(l18nProvider);
+    final player = ref.read(playerProvider);
     final UserPreferences preferences = ref.read(preferencesProvider);
     final CloseBehavior behavior = preferences.closeBehavior;
 
     // В зависимости от настройки "Поведение при закрытии", приложение должно либо закрыться, либо просто минимизироваться.
     if (behavior == CloseBehavior.minimize ||
-        (behavior == CloseBehavior.minimizeIfPlaying && player.playing)) {
+        (behavior == CloseBehavior.minimizeIfPlaying && player.isPlaying)) {
       final LocalNotification notification = LocalNotification(
-        title: "Flutter VK",
+        title: appName,
         body: l18n.app_minimized_message,
         silent: true,
         actions: [
@@ -142,6 +144,7 @@ class FlutterVKApp extends HookConsumerWidget {
       [],
     );
 
+    final player = ref.read(playerProvider);
     final router = ref.watch(routerProvider);
     final preferences = ref.watch(preferencesProvider);
     final schemeInfo = ref.watch(trackSchemeInfoProvider);
@@ -232,15 +235,15 @@ class FlutterVKApp extends HookConsumerWidget {
                 LogicalKeyboardKey.control,
               ): const FavoriteTracksIntent(),
 
-              // Пауза.
-              LogicalKeySet(
-                LogicalKeyboardKey.space,
-              ): const PlayPauseIntent(),
-
               // Полноэкранный плеер.
               LogicalKeySet(
                 LogicalKeyboardKey.f11,
               ): const FullscreenPlayerIntent(),
+
+              // Пауза.
+              LogicalKeySet(
+                LogicalKeyboardKey.space,
+              ): const PlayPauseIntent(),
 
               // Предыдущий трек.
               LogicalKeySet(
@@ -302,6 +305,13 @@ class FlutterVKApp extends HookConsumerWidget {
                   );
                 },
               ),
+              FullscreenPlayerIntent: CallbackAction(
+                onInvoke: (intent) {
+                  // TODO: Открытие полноэкранного плеера.
+
+                  return null;
+                },
+              ),
               PlayPauseIntent: CallbackAction(
                 onInvoke: (intent) => player.togglePlay(),
               ),
@@ -326,18 +336,14 @@ class FlutterVKApp extends HookConsumerWidget {
                 ),
               ),
               VolumeUpIntent: CallbackAction(
-                onInvoke: (intent) => player.setVolume(
-                  (player.volume + 0.1).clamp(0.0, 1.0),
-                ),
+                onInvoke: (intent) => player.setVolumeBy(0.1),
               ),
               VolumeDownIntent: CallbackAction(
-                onInvoke: (intent) => player.setVolume(
-                  (player.volume - 0.1).clamp(0.0, 1.0),
-                ),
+                onInvoke: (intent) => player.setVolumeBy(-0.1),
               ),
               ShuffleIntent: CallbackAction(
                 onInvoke: (intent) {
-                  if (player.currentPlaylist?.type == PlaylistType.audioMix) {
+                  if (player.playlist?.type == PlaylistType.audioMix) {
                     return null;
                   }
 
@@ -345,7 +351,7 @@ class FlutterVKApp extends HookConsumerWidget {
                 },
               ),
               LoopModeIntent: CallbackAction(
-                onInvoke: (intent) => player.toggleLoopMode(),
+                onInvoke: (intent) => player.toggleRepeat(),
               ),
               CloseAppIntent: CallbackAction(
                 onInvoke: (intent) => windowManager.close(),

@@ -4,7 +4,6 @@ import "package:go_router/go_router.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 
 import "../main.dart";
-import "../routes/fullscreen_player.dart";
 import "../routes/home/music.dart";
 import "../routes/home/music/playlist.dart";
 import "../routes/home/profile.dart";
@@ -16,6 +15,7 @@ import "../routes/home/profile/categories/visual/spoiler_next_audio.dart";
 import "../routes/home/profile/categories/visual/theme.dart";
 import "../routes/home/profile/debug/colorscheme.dart";
 import "../routes/home/profile/debug/markdown_viewer.dart";
+import "../routes/home/profile/debug/player.dart";
 import "../routes/home/profile/debug/playlists_viewer.dart";
 import "../routes/home/profile/download_manager.dart";
 import "../routes/home/profile/settings_exporter.dart";
@@ -276,6 +276,18 @@ GoRouter router(RouterRef ref) {
             );
           },
         ),
+
+        // Player debug.
+        GoRoute(
+          path: "player_debug",
+          pageBuilder: (BuildContext context, GoRouterState state) {
+            return buildPageWithDefaultTransition(
+              context: context,
+              state: state,
+              child: const PlayerDebugMenu(),
+            );
+          },
+        ),
       ],
     ),
   ];
@@ -340,14 +352,6 @@ GoRouter router(RouterRef ref) {
                 routes: item.routes,
               ),
         ],
-      ),
-      GoRoute(
-        path: "/fullscreenPlayer",
-        pageBuilder: (BuildContext context, GoRouterState state) {
-          return const MaterialPage(
-            child: FullscreenPlayerRoute(),
-          );
-        },
       ),
     ],
   );

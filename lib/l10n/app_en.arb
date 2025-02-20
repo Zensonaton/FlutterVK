@@ -186,8 +186,6 @@
 
 	"fullscreen_no_audio": "<bold>Sshhhh, don''t wake up the doggo</bold>!\n\nYou have nothing playing right now.\nClick <exit>here</exit> to close the player.",
 
-	"audio_mix_add_error": "Error retrieving tracks for audio mix: {error}",
-
 	"logout_desc": "Are you sure you want to log out of the {name} account in the Flutter VK app?",
 
 	"no_recommendations_warning": "Recommendations are not connected",

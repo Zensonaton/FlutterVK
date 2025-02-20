@@ -319,7 +319,7 @@ class Updater {
     await downloadManager.newTask(
       AppUpdaterDownloadTask(
         id: "update-${asset.name}",
-        smallTitle: "Flutter VK",
+        smallTitle: appName,
         longTitle: l18n.app_update_download_long_title(
           version: release.tagName,
         ),

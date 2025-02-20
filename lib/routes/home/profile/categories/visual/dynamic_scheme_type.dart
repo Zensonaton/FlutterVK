@@ -5,8 +5,8 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:rive/rive.dart";
 
 import "../../../../../enums.dart";
-import "../../../../../main.dart";
 import "../../../../../provider/l18n.dart";
+import "../../../../../provider/player.dart";
 import "../../../../../provider/preferences.dart";
 import "../../../../../widgets/setting_widgets.dart";
 
@@ -21,6 +21,7 @@ class DynamicSchemeTypeSettingPage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l18n = ref.watch(l18nProvider);
+    final player = ref.read(playerProvider);
     final prefsNotifier = ref.read(preferencesProvider.notifier);
     final preferences = ref.watch(preferencesProvider);
 
@@ -40,8 +41,9 @@ class DynamicSchemeTypeSettingPage extends HookConsumerWidget {
     return SettingPageWithAnimationWidget(
       title: l18n.player_dynamic_color_scheme_type,
       description: l18n.player_dynamic_color_scheme_type_desc,
-      warning:
-          !player.loaded ? l18n.option_unavailable_without_audio_playing : null,
+      warning: !player.isLoaded
+          ? l18n.option_unavailable_without_audio_playing
+          : null,
       headerImage: RiveAnimationBlock(
         name: "dynamicSchemeType",
         artboardName: "DynamicSchemeType",

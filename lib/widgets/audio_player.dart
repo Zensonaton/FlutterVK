@@ -9,19 +9,16 @@ import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:just_audio/just_audio.dart";
 
 import "../api/vk/shared.dart";
 import "../consts.dart";
 import "../enums.dart";
 import "../extensions.dart";
-import "../main.dart";
 import "../provider/color.dart";
 import "../provider/l18n.dart";
-import "../provider/player_events.dart";
+import "../provider/player.dart";
 import "../provider/preferences.dart";
 import "../provider/user.dart";
-import "../routes/fullscreen_player.dart";
 import "../routes/home/music.dart";
 import "../services/cache_manager.dart";
 import "../services/image_to_color_scheme.dart";
@@ -192,6 +189,7 @@ class _LeftSideThumbnail extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final mobileLayout = isMobileLayout(context);
 
+    final player = ref.read(playerProvider);
     final schemeInfo = ref.watch(trackSchemeInfoProvider);
 
     final thumbnailUrl = audio?.smallestThumbnail;
@@ -202,8 +200,8 @@ class _LeftSideThumbnail extends HookConsumerWidget {
     final memCacheSize =
         (thumbnailSize * MediaQuery.of(context).devicePixelRatio).toInt();
 
-    final isPlaying = player.playing;
-    final isBuffering = player.buffering;
+    final isPlaying = player.isPlaying;
+    final isBuffering = player.isBuffering;
     final showLoading = useState(false);
     final bufferingTimer = useRef<Timer?>(null);
 
@@ -224,14 +222,18 @@ class _LeftSideThumbnail extends HookConsumerWidget {
 
         return bufferingTimer.value?.cancel;
       },
-      [isBuffering, player.trackIndex],
+      [isBuffering, player.index],
     );
     final double loadingBlurSigma = showLoading.value ? 3 : 0;
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
-        onTap: mobileLayout ? null : () => openFullscreenPlayer(context),
+        onTap: mobileLayout
+            ? null
+            : () {
+                // TODO: Open fullscreen player.
+              },
         child: AnimatedContainer(
           duration: MusicPlayerWidget.switchAnimationDuration,
           curve: Curves.easeInOutCubicEmphasized,
@@ -354,14 +356,16 @@ class _MusicLeftSide extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(playerPlaylistModificationsProvider);
-    ref.watch(playerCurrentIndexProvider);
-    ref.watch(playerPlayingStateProvider);
-    ref.watch(playerStateProvider);
+    final player = ref.read(playerProvider);
+
+    ref.watch(playerPlaylistProvider);
+    ref.watch(playerAudioProvider);
+    ref.watch(playerIsPlayingProvider);
+    ref.watch(playerIsBufferingProvider);
 
     final mobileLayout = isMobileLayout(context);
 
-    final lastAudio = useState<ExtendedAudio?>(player.smartCurrentAudio);
+    final lastAudio = useState<ExtendedAudio?>(player.audio);
     final fromTransition = useState<ExtendedAudio?>(null);
     final toTransition = useState<ExtendedAudio?>(null);
     final switchAnimation = useAnimationController(
@@ -413,10 +417,9 @@ class _MusicLeftSide extends HookConsumerWidget {
     useEffect(
       () {
         // Запускаем анимацию перехода между треками, если предыдущий трек нам известны.
-        if (player.smartCurrentAudio != null &&
-            lastAudio.value?.id != player.smartCurrentAudio?.id) {
+        if (player.audio != null && lastAudio.value?.id != player.audio?.id) {
           seekToPrevAudio.value = lastAudio.value == null ||
-              lastAudio.value?.id == player.smartNextAudio?.id;
+              lastAudio.value?.id == player.nextAudio?.id;
           final firedViaSwipe = switchingViaSwipe.value;
           final progress = firedViaSwipe
               ? switchAnimation.value
@@ -425,10 +428,8 @@ class _MusicLeftSide extends HookConsumerWidget {
                   : -1.0;
 
           final from = lastAudio.value ??
-              (seekToPrevAudio.value
-                  ? player.smartNextAudio
-                  : player.smartPreviousAudio);
-          final to = player.smartCurrentAudio;
+              (seekToPrevAudio.value ? player.nextAudio : player.previousAudio);
+          final to = player.audio;
 
           if (from != null && to != null) {
             audioSwitchTransition(
@@ -440,21 +441,21 @@ class _MusicLeftSide extends HookConsumerWidget {
           }
         }
 
-        if (player.smartCurrentAudio != null) {
-          lastAudio.value = player.smartCurrentAudio;
+        if (player.audio != null) {
+          lastAudio.value = player.audio;
         }
         switchingViaSwipe.value = false;
 
         return null;
       },
-      [player.currentAudio],
+      [player.audio],
     );
 
-    final prevAudio = player.smartPreviousAudio;
+    final prevAudio = player.previousAudio;
     final audio = lastAudio.value;
-    final nextAudio = player.smartNextAudio;
+    final nextAudio = player.nextAudio;
 
-    final playlist = player.currentPlaylist;
+    final playlist = player.playlist;
     final isLiked = audio?.isLiked ?? false;
     final isRecommendation = playlist?.isRecommendationTypePlaylist ?? false;
 
@@ -485,8 +486,11 @@ class _MusicLeftSide extends HookConsumerWidget {
                   : SystemMouseCursors.basic,
               child: GestureDetector(
                 behavior: HitTestBehavior.translucent,
-                onTap:
-                    mobileLayout ? () => openFullscreenPlayer(context) : null,
+                onTap: mobileLayout
+                    ? () => {
+                          // TODO: Open fullscreen player.
+                        }
+                    : null,
                 onHorizontalDragStart: mobileLayout
                     ? (DragStartDetails details) {
                         switchAnimation.stop();
@@ -708,9 +712,10 @@ class PlayPauseAnimatedButton extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(playerPlayingStateProvider);
+    final player = ref.read(playerProvider);
+    ref.watch(playerIsPlayingProvider);
 
-    final isPlaying = player.playing;
+    final isPlaying = player.isPlaying;
     final playPauseAnimation = useAnimationController(
       duration: MusicPlayerWidget.switchAnimationDuration,
       initialValue: isPlaying ? 1.0 : 0.0,
@@ -761,16 +766,17 @@ class _MiddleControls extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final player = ref.read(playerProvider);
     final preferencesNotifier = ref.read(preferencesProvider.notifier);
 
-    ref.watch(playerShuffleModeEnabledProvider);
-    ref.watch(playerLoopModeProvider);
+    ref.watch(playerIsShufflingProvider);
+    ref.watch(playerIsRepeatingProvider);
 
     final scheme = Theme.of(context).colorScheme;
 
-    final isShuffling = player.shuffleModeEnabled;
-    final isLooping = player.loopMode == LoopMode.one;
-    final playlist = player.currentPlaylist;
+    final isShuffling = player.isShuffling;
+    final isLooping = player.isRepeating;
+    final playlist = player.playlist;
     final isAudioMix = playlist?.type == PlaylistType.audioMix;
 
     void onShuffleToggle() async {
@@ -779,14 +785,13 @@ class _MiddleControls extends ConsumerWidget {
       }
 
       await player.toggleShuffle();
-
-      preferencesNotifier.setShuffleEnabled(player.shuffleModeEnabled);
+      preferencesNotifier.setShuffleEnabled(player.isShuffling);
     }
 
     void onRepeatToggle() async {
-      await player.toggleLoopMode();
+      await player.toggleRepeat();
 
-      preferencesNotifier.setLoopModeEnabled(player.loopMode == LoopMode.one);
+      preferencesNotifier.setLoopModeEnabled(player.isRepeating);
     }
 
     return Wrap(
@@ -855,9 +860,10 @@ class NextTrackSpoilerWidget extends HookConsumerWidget {
       throw Exception("This widget is only for Desktop Layout");
     }
 
-    ref.watch(playerShuffleModeEnabledProvider);
-    ref.watch(playerCurrentIndexProvider);
-    ref.watch(playerLoopModeProvider);
+    final player = ref.read(playerProvider);
+    ref.watch(playerIsShufflingProvider);
+    ref.watch(playerAudioProvider);
+    ref.watch(playerIsRepeatingProvider);
     ref.watch(playerPositionProvider);
 
     final animation = useAnimationController(
@@ -868,17 +874,10 @@ class NextTrackSpoilerWidget extends HookConsumerWidget {
     final show = player.progress >= nextPlayingTextProgress;
     useEffect(
       () {
-        if (show) {
-          animation.animateTo(
-            1.0,
-            curve: Curves.easeInOutCubicEmphasized,
-          );
-        } else {
-          animation.animateTo(
-            0.0,
-            curve: Curves.easeInOutCubicEmphasized,
-          );
-        }
+        animation.animateTo(
+          show ? 1.0 : 0.0,
+          curve: Curves.easeInOutCubicEmphasized,
+        );
 
         return null;
       },
@@ -887,19 +886,19 @@ class NextTrackSpoilerWidget extends HookConsumerWidget {
 
     if (animation.value == 0.0) return const SizedBox();
 
-    final audio = useState(player.smartNextAudio);
+    final audio = useState(player.nextAudio);
     final artist = audio.value?.artist;
     final title = audio.value?.title;
     final subtitle = audio.value?.subtitle;
     useEffect(
       () {
-        if (player.smartNextAudio != null && animation.value == 0.0) {
-          audio.value = player.smartNextAudio;
+        if (player.nextAudio != null && animation.value == 0.0) {
+          audio.value = player.nextAudio;
         }
 
         return null;
       },
-      [animation.value, player.smartNextAudio],
+      [animation.value, player.nextAudio],
     );
 
     final position =
@@ -968,9 +967,9 @@ class NextTrackSpoilerWidget extends HookConsumerWidget {
   }
 }
 
-/// Виджет для [_MusicContents], отображающий содержимое части плеера по середине.
+/// Виджет для [_MusicContents], отображающий содержимое части плеера по середине. Отображается только при Desktop Layout'е.
 ///
-/// В такой части отображаются кнопки для управления воспроизведением, а так же прогресс-бар для текущего трека. Отображается только при Desktop Layout'е.
+/// В такой части отображаются кнопки для управления воспроизведением, а так же прогресс-бар для текущего трека.
 class _MusicMiddleSide extends HookConsumerWidget {
   /// Длительность анимации для [Slider] во время переключения треков или перемотки.
   static const Duration sliderAnimationDuration = Durations.long2;
@@ -983,33 +982,21 @@ class _MusicMiddleSide extends HookConsumerWidget {
       throw Exception("This widget is only for Desktop Layout");
     }
 
-    ref.watch(playerPlayingStateProvider);
+    final player = ref.read(playerProvider);
+    final preferences = ref.watch(preferencesProvider);
+    ref.watch(playerIsPlayingProvider);
     ref.watch(playerPositionProvider);
 
-    final preferences = ref.watch(preferencesProvider);
     final alternateSlider = preferences.alternateDesktopMiniplayerSlider;
     final showRemainingTime = preferences.showRemainingTime;
 
     final scheme = Theme.of(context).colorScheme;
 
-    final isPlaying = player.playing;
+    final isPlaying = player.isPlaying;
     final position = player.position.inSeconds;
-    final duration = (player.duration != Duration.zero
-            ? player.duration?.inSeconds
-            : null) ??
-        player.smartCurrentAudio?.duration;
-
-    // final lastDuration = useState<int>(duration ?? 0);
-    // useEffect(
-    //   () {
-    //     if (duration != null && duration > 0) {
-    //       lastDuration.value = duration;
-    //     }
-
-    //     return null;
-    //   },
-    //   [duration],
-    // );
+    final duration =
+        (player.duration != Duration.zero ? player.duration.inSeconds : null) ??
+            player.audio?.duration;
 
     final durationString = useMemoized(
       () => secondsAsString(duration ?? 0),
@@ -1067,12 +1054,12 @@ class _MusicMiddleSide extends HookConsumerWidget {
       () {
         final List<StreamSubscription> subscriptions = [
           // Переключение трека.
-          player.currentIndexStream.listen((_) {
+          player.audioStream.listen((_) {
             runSeekAnimation(progress: 0.0);
           }),
 
           // Перемотка.
-          player.seekStateStream.listen((_) {
+          player.seekStream.listen((_) {
             runSeekAnimation();
           }),
 
@@ -1255,23 +1242,24 @@ class _MusicRightSide extends HookConsumerWidget {
     final scheme = Theme.of(context).colorScheme;
     final mobileLayout = isMobileLayout(context);
 
-    ref.watch(playerPlaylistModificationsProvider);
-    ref.watch(playerCurrentIndexProvider);
-    ref.watch(playerPlayingStateProvider);
+    final player = ref.read(playerProvider);
+    ref.watch(playerPlaylistProvider);
+    ref.watch(playerAudioProvider);
+    ref.watch(playerIsPlayingProvider);
     if (!mobileLayout) {
       ref.watch(playerVolumeProvider);
     }
 
-    final playlist = player.currentPlaylist;
-    final audio = useState<ExtendedAudio?>(player.smartCurrentAudio);
+    final playlist = player.playlist;
+    final audio = useState<ExtendedAudio?>(player.audio);
     useEffect(
       () {
-        if (player.smartCurrentAudio == null) return;
-        audio.value = player.smartCurrentAudio;
+        if (player.audio == null) return;
+        audio.value = player.audio;
 
         return null;
       },
-      [player.currentAudio],
+      [player.audio],
     );
 
     final volume = player.volume;
@@ -1353,7 +1341,9 @@ class _MusicRightSide extends HookConsumerWidget {
           // Кнопка для перехода в мини-плеер.
           if (isDesktop) ...[
             IconButton(
-              onPressed: () => openMiniPlayer(context),
+              onPressed: () {
+                // TODO: Open mini player
+              },
               icon: Icon(
                 Icons.picture_in_picture_alt,
                 color: scheme.onPrimaryContainer,
@@ -1365,7 +1355,9 @@ class _MusicRightSide extends HookConsumerWidget {
           // Кнопка для перехода в полноэкранный режим.
           if (isDesktop)
             IconButton(
-              onPressed: () => openFullscreenPlayer(context),
+              onPressed: () {
+                // TODO: Open fullscreen player.
+              },
               icon: Icon(
                 Icons.fullscreen,
                 color: scheme.onPrimaryContainer,
@@ -1385,17 +1377,18 @@ class MusicPlayerBackgroundWidget extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final player = ref.read(playerProvider);
     final preferences = ref.watch(preferencesProvider);
-    ref.watch(playerCurrentIndexProvider);
-    ref.watch(playerPlayingStateProvider);
+    ref.watch(playerAudioProvider);
+    ref.watch(playerIsPlayingProvider);
     ref.watch(playerPositionProvider);
 
-    final isPlaying = player.playing;
+    final isPlaying = player.isPlaying;
 
     final scheme = Theme.of(context).colorScheme;
     final mobileLayout = isMobileLayout(context);
 
-    final audio = player.smartNextAudio;
+    final audio = player.nextAudio;
     final progress = player.progress;
     final clampedProgress = preferences.crossfadeColors
         ? ((progress - nextPlayingTextProgress) /
@@ -1504,10 +1497,11 @@ class BottomMusicProgressBar extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(playerStateProvider).value;
+    final player = ref.read(playerProvider);
+    ref.watch(playerIsPlayingProvider).value;
     ref.watch(playerPositionProvider);
 
-    final isPlaying = player.playing;
+    final isPlaying = player.isPlaying;
     final playerProgress = player.progress;
 
     final progressAnimation = useAnimationController(
@@ -1523,7 +1517,7 @@ class BottomMusicProgressBar extends HookConsumerWidget {
 
         return null;
       },
-      [player.trackIndex],
+      [player.index],
     );
     useEffect(
       () {
@@ -1589,12 +1583,13 @@ class _MusicContents extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final player = ref.read(playerProvider);
     final preferences = ref.watch(preferencesProvider);
-    ref.watch(playerCurrentPlaylistProvider);
+    ref.watch(playerPlaylistProvider);
 
     final mobileLayout = isMobileLayout(context);
 
-    final playlist = player.currentPlaylist;
+    final playlist = player.playlist;
     final isRecommendation = playlist?.isRecommendationTypePlaylist ?? false;
 
     final height = mobileLayout
@@ -1632,11 +1627,11 @@ class _MusicContents extends ConsumerWidget {
       final l18n = ref.read(l18nProvider);
       final preferences = ref.read(preferencesProvider);
 
-      if (!player.currentAudio!.isLiked && preferences.checkBeforeFavorite) {
+      if (!player.audio!.isLiked && preferences.checkBeforeFavorite) {
         if (!await checkForDuplicates(
           ref,
           context,
-          player.currentAudio!,
+          player.audio!,
         )) {
           return;
         }
@@ -1645,8 +1640,8 @@ class _MusicContents extends ConsumerWidget {
       try {
         await toggleTrackLike(
           player.ref,
-          player.currentAudio!,
-          sourcePlaylist: player.currentPlaylist,
+          player.audio!,
+          sourcePlaylist: player.playlist,
         );
       } on VKAPIException catch (error, stackTrace) {
         if (!context.mounted) return;
@@ -1675,7 +1670,7 @@ class _MusicContents extends ConsumerWidget {
 
       await dislikeTrack(
         player.ref,
-        player.currentAudio!,
+        player.audio!,
       );
 
       await player.next();
@@ -1802,7 +1797,7 @@ class MusicPlayerWidget extends HookConsumerWidget {
         MediaQuery.paddingOf(context).bottom;
   }
 
-  /// Длительность того, сколько [player.isBuffering] должен быть `true`, что бы показать индикатор загрузки.
+  /// Длительность того, сколько [Player.isBuffering] должен быть `true`, что бы показать индикатор загрузки.
   static const Duration bufferingIndicatorDuration =
       Duration(milliseconds: 100);
 
@@ -1816,7 +1811,7 @@ class MusicPlayerWidget extends HookConsumerWidget {
 
     final trackSchemeInfo = ref.watch(trackSchemeInfoProvider);
     final preferences = ref.watch(preferencesProvider);
-    final bool isPlaying = ref.watch(playerPlayingStateProvider).value ?? false;
+    final bool isPlaying = ref.watch(playerIsPlayingProvider).value ?? false;
 
     final brightness = Theme.of(context).brightness;
     final ColorScheme? trackScheme = useMemoized(

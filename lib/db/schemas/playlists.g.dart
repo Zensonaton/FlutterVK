@@ -150,7 +150,7 @@ const DBPlaylistSchema = CollectionSchema(
   getId: _dBPlaylistGetId,
   getLinks: _dBPlaylistGetLinks,
   attach: _dBPlaylistAttach,
-  version: '3.1.0+1',
+  version: '3.1.8',
 );
 
 int _dBPlaylistEstimateSize(

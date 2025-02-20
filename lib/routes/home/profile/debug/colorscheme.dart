@@ -3,9 +3,8 @@ import "package:flutter/material.dart";
 import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
-import "../../../../main.dart";
 import "../../../../provider/color.dart";
-import "../../../../provider/player_events.dart";
+import "../../../../provider/player.dart";
 import "../../../../provider/user.dart";
 import "../../../../services/cache_manager.dart";
 import "../../../../widgets/fallback_audio_photo.dart";
@@ -54,10 +53,11 @@ class ColorSchemeDebugMenu extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final ExtendedAudio? playingAudio = player.currentAudio;
+    final player = ref.read(playerProvider);
+    final ExtendedAudio? playingAudio = player.audio;
     final schemeInfo = ref.watch(trackSchemeInfoProvider);
-    ref.watch(playerLoadedStateProvider);
-    ref.watch(playerCurrentIndexProvider);
+    ref.watch(playerIsLoadedProvider);
+    ref.watch(playerAudioProvider);
 
     if (playingAudio == null) {
       return const Center(
@@ -93,10 +93,10 @@ class ColorSchemeDebugMenu extends ConsumerWidget {
           SizedBox(
             width: 300,
             height: 300,
-            child: player.currentAudio!.maxThumbnail != null
+            child: player.audio!.maxThumbnail != null
                 ? CachedNetworkImage(
-                    imageUrl: player.currentAudio!.maxThumbnail!,
-                    cacheKey: "${player.currentAudio!.mediaKey}max",
+                    imageUrl: player.audio!.maxThumbnail!,
+                    cacheKey: "${player.audio!.mediaKey}max",
                     placeholder: (BuildContext context, String string) {
                       return const FallbackAudioAvatar();
                     },
@@ -143,9 +143,12 @@ class ColorSchemeDebugMenu extends ConsumerWidget {
               count: schemeInfo.frequentColorCount,
             ),
           ),
+          const Gap(20),
 
           // Извлечённые цвета.
-          Text("Extracted colors: ${schemeInfo.colorInts.length}"),
+          Text(
+            "Extracted colors: ${schemeInfo.colorInts.length}",
+          ),
           const Gap(8),
           SelectionArea(
             child: Wrap(

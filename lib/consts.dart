@@ -1,3 +1,6 @@
+/// Название для приложения.
+const String appName = "Flutter VK";
+
 /// Указывает, что запущена pre-release (бета) версия приложения.
 bool isPrerelease = const String.fromEnvironment("PRERELEASE").isNotEmpty;
 
@@ -21,11 +24,6 @@ const String telegramURL = "https://t.me/FlutterVKCI";
 const String browserUA =
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0";
 
-/// ID приложения Discord, используемый для работы Rich Presence.
-///
-/// Олицетворяет приложение "Flutter VK".
-const int discordAppID = 1195224178996027412;
-
 /// Количество секунд, которое используется при перемотке трека при помощи кнопок "вперед" и "назад" на клавиатуре.
 const int seekSeconds = 5;
 
@@ -48,7 +46,7 @@ const String tracksCacheReadmeFileName = "Abc_123_README.txt";
 const List<String> fakeTrackNames = [
   "Track",
   "Track Name",
-  "Flutter VK",
+  appName,
   "Test",
   "Super long track name",
   "Audio",
@@ -72,7 +70,7 @@ const List<String> fakeTrackLyrics = [
   "Blinding lights.",
   "AAAH! Behind you!",
   "Some kind of text",
-  "Flutter VK",
+  appName,
   "Wow",
   "Yeah",
   "STAND UP STRAIGHT NOW,",
@@ -99,3 +97,6 @@ const List<String> fakeTrackLyrics = [
   "VK API sucks",
   "Test lyric",
 ];
+
+/// Символ Explicit.
+const String explicitChar = "🅴";

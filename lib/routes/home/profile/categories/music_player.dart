@@ -4,8 +4,8 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:share_plus/share_plus.dart";
 
 import "../../../../enums.dart";
-import "../../../../main.dart";
 import "../../../../provider/l18n.dart";
+import "../../../../provider/player.dart";
 import "../../../../provider/playlists.dart";
 import "../../../../provider/preferences.dart";
 import "../../../../provider/user.dart";
@@ -97,12 +97,14 @@ class RewindOnPreviousDialog extends ConsumerWidget {
     final prefsNotifier = ref.read(preferencesProvider.notifier);
     final preferences = ref.watch(preferencesProvider);
     final l18n = ref.watch(l18nProvider);
+    final player = ref.read(playerProvider);
 
     void onValueChanged(RewindBehavior? behavior) {
       HapticFeedback.lightImpact();
       if (behavior == null) return;
 
       prefsNotifier.setRewindOnPreviousBehavior(behavior);
+      player.setRewindBehavior(behavior);
     }
 
     return MaterialDialog(
@@ -216,6 +218,7 @@ class ProfileMusicPlayerSettingsCategory extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l18n = ref.watch(l18nProvider);
+    final player = ref.read(playerProvider);
 
     final mobileLayout = isMobileLayout(context);
 
@@ -272,6 +275,7 @@ class ProfileMusicPlayerSettingsCategory extends ConsumerWidget {
               if (enabled == null) return;
 
               prefsNotifier.setAndroidKeepPlayingOnClose(enabled);
+              player.setKeepPlayingOnCloseEnabled(enabled);
             },
           ),
 
@@ -313,7 +317,7 @@ class ProfileMusicPlayerSettingsCategory extends ConsumerWidget {
               if (enabled == null) return;
 
               prefsNotifier.setPauseOnMuteEnabled(enabled);
-              await player.setPauseOnMuteEnabled(enabled);
+              player.setPauseOnMuteEnabled(enabled);
             },
           ),
 
@@ -334,7 +338,7 @@ class ProfileMusicPlayerSettingsCategory extends ConsumerWidget {
             if (enabled == null) return;
 
             prefsNotifier.setStopOnPauseEnabled(enabled);
-            player.setStopOnPauseEnabled(enabled);
+            player.setStopOnLongPauseEnabled(enabled);
           },
         ),
 
@@ -385,13 +389,13 @@ class ProfileMusicPlayerSettingsCategory extends ConsumerWidget {
             subtitle: Text(
               l18n.discord_rpc_desc,
             ),
-            value: player.discordRPCEnabled,
+            value: preferences.discordRPCEnabled,
             onChanged: (bool? enabled) async {
               HapticFeedback.lightImpact();
               if (enabled == null) return;
 
               prefsNotifier.setDiscordRPCEnabled(enabled);
-              await player.setDiscordRPCEnabled(enabled);
+              player.setDiscordRPCEnabled(enabled);
             },
           ),
 
@@ -407,39 +411,39 @@ class ProfileMusicPlayerSettingsCategory extends ConsumerWidget {
         ),
 
         // Debug-логирование плеера.
-        if (isDesktop)
-          SwitchListTile(
-            secondary: const Icon(
-              Icons.bug_report,
-            ),
-            title: Text(
-              l18n.player_debug_logging,
-            ),
-            subtitle: Text(
-              l18n.player_debug_logging_desc,
-            ),
-            value: preferences.debugPlayerLogging,
-            onChanged: (bool? enabled) async {
-              HapticFeedback.lightImpact();
-              if (enabled == null) return;
-
-              prefsNotifier.setDebugPlayerLogging(enabled);
-
-              // Отображаем уведомление о необходимости в перезагрузки приложения.
-              final messenger = ScaffoldMessenger.of(context);
-              if (enabled) {
-                messenger.showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      l18n.app_restart_required,
-                    ),
-                  ),
-                );
-              } else {
-                messenger.hideCurrentSnackBar();
-              }
-            },
+        SwitchListTile(
+          secondary: const Icon(
+            Icons.bug_report,
           ),
+          title: Text(
+            l18n.player_debug_logging,
+          ),
+          subtitle: Text(
+            l18n.player_debug_logging_desc,
+          ),
+          value: preferences.debugPlayerLogging,
+          onChanged: (bool? enabled) async {
+            HapticFeedback.lightImpact();
+            if (enabled == null) return;
+
+            prefsNotifier.setDebugPlayerLogging(enabled);
+            player.setDebugLoggingEnabled(enabled);
+
+            // Отображаем уведомление о необходимости в перезагрузки приложения.
+            final messenger = ScaffoldMessenger.of(context);
+            if (enabled) {
+              messenger.showSnackBar(
+                SnackBar(
+                  content: Text(
+                    l18n.app_restart_required,
+                  ),
+                ),
+              );
+            } else {
+              messenger.hideCurrentSnackBar();
+            }
+          },
+        ),
       ],
     );
   }

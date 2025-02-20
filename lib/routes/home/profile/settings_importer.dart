@@ -11,8 +11,8 @@ import "package:styled_text/tags/styled_text_tag_action.dart";
 import "package:styled_text/tags/styled_text_tag_icon.dart";
 import "package:styled_text/widgets/styled_text.dart";
 
-import "../../../main.dart";
 import "../../../provider/l18n.dart";
+import "../../../provider/player.dart";
 import "../../../provider/playlists.dart";
 import "../../../provider/settings_exporter_importer.dart";
 import "../../../provider/user.dart";
@@ -39,10 +39,10 @@ class SettingsImporterRoute extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l18n = ref.watch(l18nProvider);
+    final player = ref.read(playerProvider);
+    final user = ref.watch(userProvider);
 
     final mobileLayout = isMobileLayout(context);
-
-    final user = ref.watch(userProvider);
 
     final cancellationToken = useMemoized(
       () => CancellationToken(),
@@ -328,7 +328,7 @@ class SettingsImporterRoute extends HookConsumerWidget {
               ],
 
               // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
-              if (player.loaded && mobileLayout)
+              if (player.isLoaded && mobileLayout)
                 const Gap(MusicPlayerWidget.mobileHeightWithPadding),
             ],
           ),

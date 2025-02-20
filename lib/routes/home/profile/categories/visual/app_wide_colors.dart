@@ -4,9 +4,9 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:rive/rive.dart";
 
-import "../../../../../main.dart";
 import "../../../../../provider/auth.dart";
 import "../../../../../provider/l18n.dart";
+import "../../../../../provider/player.dart";
 import "../../../../../provider/preferences.dart";
 import "../../../../../widgets/setting_widgets.dart";
 
@@ -21,6 +21,7 @@ class AppWideColorsSettingPage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l18n = ref.watch(l18nProvider);
+    final player = ref.read(playerProvider);
     final prefsNotifier = ref.read(preferencesProvider.notifier);
     final preferences = ref.watch(preferencesProvider);
 
@@ -38,7 +39,7 @@ class AppWideColorsSettingPage extends HookConsumerWidget {
           return l18n.option_unavailable_without_recommendations;
         }
 
-        if (!player.loaded) {
+        if (!player.isLoaded) {
           return l18n.option_unavailable_without_audio_playing;
         }
       }(),

@@ -142,6 +142,17 @@ class ProfileDebugSettingsCategory extends HookConsumerWidget {
           onTap: () => context.push("/profile/markdown_viewer_debug"),
         ),
 
+        // Debug-меню для отображения информации о плееру.
+        ListTile(
+          leading: const Icon(
+            Icons.music_note,
+          ),
+          title: const Text(
+            "Player debug menu",
+          ),
+          onTap: () => context.push("/profile/player_debug"),
+        ),
+
         // Кнопка для запуска фейковой загрузки.
         ListTile(
           leading: const Icon(

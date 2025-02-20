@@ -9,9 +9,8 @@ import "package:styled_text/widgets/styled_text.dart";
 
 import "../../../../consts.dart";
 import "../../../../extensions.dart";
-import "../../../../main.dart";
 import "../../../../provider/l18n.dart";
-import "../../../../provider/player_events.dart";
+import "../../../../provider/player.dart";
 import "../../../../provider/playlists.dart";
 import "../../../../provider/preferences.dart";
 import "../../../../provider/user.dart";
@@ -73,6 +72,7 @@ class SimillarMusicPlaylistWidget extends HookConsumerWidget {
       );
     }
 
+    final player = ref.read(playerProvider);
     final l18n = ref.watch(l18nProvider);
 
     final isHovered = useState(false);
@@ -228,9 +228,9 @@ class SimillarMusicPlaylistWidget extends HookConsumerWidget {
               ),
               child: AudioTrackTile(
                 audio: audio,
-                isSelected: player.playing && audio == player.currentAudio,
-                isPlaying: player.loaded && player.playing,
-                isLoading: player.buffering && audio == player.currentAudio,
+                isSelected: player.isPlaying && audio.id == player.audio?.id,
+                isPlaying: player.isPlaying,
+                isLoading: player.isBuffering && audio.id == player.audio?.id,
                 showDuration: false,
               ),
             ),
@@ -251,9 +251,10 @@ class SimillarMusicBlock extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final playlists = ref.watch(simillarPlaylistsProvider);
+    final player = ref.read(playerProvider);
     final l18n = ref.watch(l18nProvider);
-    ref.watch(playerStateProvider);
-    ref.watch(playerLoadedStateProvider);
+    ref.watch(playerIsPlayingProvider);
+    ref.watch(playerIsLoadedProvider);
 
     return MusicCategory(
       title: l18n.simillar_music_chip,
@@ -330,9 +331,8 @@ class SimillarMusicBlock extends HookConsumerWidget {
                     playlist.color!,
                   ),
                   tracks: playlist.knownTracks!,
-                  selected:
-                      player.currentPlaylist?.mediaKey == playlist.mediaKey,
-                  currentlyPlaying: player.playing && player.loaded,
+                  selected: player.playlist?.mediaKey == playlist.mediaKey,
+                  currentlyPlaying: player.isPlaying && player.isLoaded,
                   onOpen: () => context.push(
                     "/music/playlist/${playlist.ownerID}/${playlist.id}",
                   ),

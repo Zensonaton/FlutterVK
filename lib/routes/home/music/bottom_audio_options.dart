@@ -14,12 +14,13 @@ import "../../../api/vk/shared.dart";
 import "../../../main.dart";
 import "../../../provider/download_manager.dart";
 import "../../../provider/l18n.dart";
+import "../../../provider/player.dart";
 import "../../../provider/playlists.dart";
 import "../../../provider/preferences.dart";
 import "../../../provider/user.dart";
-import "../../../services/audio_player.dart";
 import "../../../services/download_manager.dart";
 import "../../../services/logger.dart";
+import "../../../services/player/server.dart";
 import "../../../widgets/audio_track.dart";
 import "../../../widgets/dialogs.dart";
 import "../music.dart";
@@ -76,6 +77,7 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
       (element) => element.ownerID == audio.ownerID && element.id == audio.id,
     );
 
+    final player = ref.read(playerProvider);
     final l18n = ref.watch(l18nProvider);
 
     final isCached = newAudio.isCached ?? false;
@@ -179,7 +181,6 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
     }
 
     void onAddToQueueTap() async {
-      // FIXME: Этот метод не работает, если включён shuffle, и это косяк на стороне just_audio.
       await player.addNextToQueue(newAudio);
 
       if (!context.mounted) return;
@@ -294,7 +295,7 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
         try {
           // Удаляем локальную версию трека.
           final cacheFile =
-              await CachedStreamAudioSource.getCachedAudioByKey(audio.mediaKey);
+              await PlayerLocalServer.getCachedAudioByKey(audio.mediaKey);
           await cacheFile.delete();
 
           newAudio = newAudio.copyWith(
@@ -344,8 +345,7 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
         final passedAudio = File(result.files.single.path!);
         final passedAudioLength = await passedAudio.length();
 
-        if (passedAudioLength <=
-            CachedStreamAudioSource.corruptedFileSizeBytes) {
+        if (passedAudioLength <= PlayerLocalServer.corruptedFileSizeBytes) {
           throw Exception(
             "File is too small to be a valid audio file.",
           );
@@ -353,7 +353,7 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
 
         // Вставляем кэшированный файл.
         final cacheFile =
-            await CachedStreamAudioSource.getCachedAudioByKey(audio.mediaKey);
+            await PlayerLocalServer.getCachedAudioByKey(audio.mediaKey);
         await passedAudio.copy(cacheFile.path);
 
         // Помечаем трек как кэшированный.
@@ -486,18 +486,17 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
                       onTap: addToPlaylistTap,
                     ),
 
-                  // TODO: Добавить в очередь.
-                  if (kDebugMode)
-                    ListTile(
-                      leading: const Icon(
-                        Icons.queue_music,
-                      ),
-                      title: Text(
-                        l18n.play_track_next,
-                      ),
-                      enabled: newAudio.canPlay,
-                      onTap: onAddToQueueTap,
+                  // Добавить в очередь.
+                  ListTile(
+                    leading: const Icon(
+                      Icons.queue_music,
                     ),
+                    title: Text(
+                      l18n.play_track_next,
+                    ),
+                    enabled: newAudio.canPlay,
+                    onTap: onAddToQueueTap,
+                  ),
 
                   // TODO: Перейти к альбому.
                   if (kDebugMode)
@@ -645,7 +644,7 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
                           Navigator.of(context).pop();
 
                           final File path =
-                              await CachedStreamAudioSource.getCachedAudioByKey(
+                              await PlayerLocalServer.getCachedAudioByKey(
                             newAudio.mediaKey,
                           );
                           await Process.run(

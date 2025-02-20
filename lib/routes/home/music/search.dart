@@ -13,7 +13,7 @@ import "package:styled_text/widgets/styled_text.dart";
 import "../../../consts.dart";
 import "../../../enums.dart";
 import "../../../provider/l18n.dart";
-import "../../../provider/player_events.dart";
+import "../../../provider/player.dart";
 import "../../../provider/playlists.dart";
 import "../../../provider/user.dart";
 import "../../../provider/vk_api.dart";
@@ -38,8 +38,8 @@ class SearchDisplayDialog extends HookConsumerWidget {
     final l18n = ref.watch(l18nProvider);
     final user = ref.watch(userProvider);
     final api = ref.read(vkAPIProvider);
-    ref.watch(playerStateProvider);
-    ref.watch(playerCurrentIndexProvider);
+    ref.watch(playerIsPlayingProvider);
+    ref.watch(playerAudioProvider);
 
     final controller = useTextEditingController();
     final focusNode = useFocusNode();

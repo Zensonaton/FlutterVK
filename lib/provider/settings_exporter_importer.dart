@@ -13,8 +13,8 @@ import "package:riverpod_annotation/riverpod_annotation.dart";
 
 import "../main.dart";
 import "../provider/user.dart";
-import "../services/audio_player.dart";
 import "../services/logger.dart";
+import "../services/player/server.dart";
 import "../utils.dart";
 import "playlists.dart";
 import "preferences.dart";
@@ -423,7 +423,7 @@ class SettingsExporter {
 
         // Получаем путь к аудио.
         final audioFile =
-            await CachedStreamAudioSource.getCachedAudioByKey(audio.mediaKey);
+            await PlayerLocalServer.getCachedAudioByKey(audio.mediaKey);
         final exists = audioFile.existsSync();
         if (!exists) {
           throw Exception("Audio file not found: ${audio.mediaKey}");
@@ -645,7 +645,7 @@ class SettingsExporter {
 
           // Сохраняем аудио на диск.
           final audioPath =
-              await CachedStreamAudioSource.getCachedAudioByKey(audio.mediaKey);
+              await PlayerLocalServer.getCachedAudioByKey(audio.mediaKey);
           await audioPath.create(recursive: true);
           await audioPath.writeAsBytes(decrypted);
 

@@ -5,9 +5,8 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:skeletonizer/skeletonizer.dart";
 
 import "../../../../consts.dart";
-import "../../../../main.dart";
 import "../../../../provider/l18n.dart";
-import "../../../../provider/player_events.dart";
+import "../../../../provider/player.dart";
 import "../../../../provider/playlists.dart";
 import "../../../../provider/preferences.dart";
 import "../../../../provider/user.dart";
@@ -27,11 +26,12 @@ class MyPlaylistsBlock extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l18n = ref.watch(l18nProvider);
+    final player = ref.read(playerProvider);
     final playlists = ref.watch(playlistsProvider);
     final userPlaylists = ref.watch(userPlaylistsProvider);
-    final l18n = ref.watch(l18nProvider);
-    ref.watch(playerStateProvider);
-    ref.watch(playerLoadedStateProvider);
+    ref.watch(playerIsPlayingProvider);
+    ref.watch(playerIsLoadedProvider);
 
     final int? playlistsCount = playlists.value?.playlistsCount;
 
@@ -94,9 +94,8 @@ class MyPlaylistsBlock extends HookConsumerWidget {
                   cacheKey: "${playlist.mediaKey}600",
                   name: playlist.title!,
                   description: playlist.description,
-                  selected:
-                      player.currentPlaylist?.mediaKey == playlist.mediaKey,
-                  currentlyPlaying: player.playing && player.loaded,
+                  selected: player.playlist?.mediaKey == playlist.mediaKey,
+                  currentlyPlaying: player.isPlaying,
                   onOpen: () => context.push(
                     "/music/playlist/${playlist.ownerID}/${playlist.id}",
                   ),

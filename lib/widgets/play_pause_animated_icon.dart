@@ -2,8 +2,7 @@ import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
-import "../main.dart";
-import "../provider/player_events.dart";
+import "../provider/player.dart";
 import "audio_player.dart";
 
 /// Виджет, отображающий анимированную иконку для кнопки воспроизведения/паузы.
@@ -22,9 +21,10 @@ class PlayPauseAnimatedIcon extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(playerPlayingStateProvider);
+    final player = ref.read(playerProvider);
+    ref.watch(playerIsPlayingProvider);
 
-    final isPlaying = player.playing;
+    final isPlaying = player.isPlaying;
     final playPauseAnimation = useAnimationController(
       duration: MusicPlayerWidget.switchAnimationDuration,
       initialValue: isPlaying ? 1.0 : 0.0,

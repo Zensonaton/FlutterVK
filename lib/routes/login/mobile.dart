@@ -5,6 +5,7 @@ import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
 import "../../api/vk/consts.dart";
+import "../../consts.dart";
 import "../../provider/l18n.dart";
 import "../../utils.dart";
 import "../../widgets/dialogs.dart";
@@ -64,7 +65,7 @@ class MobileLoginWidget extends HookConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          "Flutter VK",
+          appName,
         ),
         centerTitle: true,
         actions: [

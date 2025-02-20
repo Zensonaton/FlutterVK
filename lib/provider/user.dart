@@ -1,4 +1,3 @@
-import "package:audio_service/audio_service.dart";
 import "package:flutter/foundation.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:shared_preferences/shared_preferences.dart";
@@ -689,32 +688,6 @@ class ExtendedAudio {
     }
 
     return true;
-  }
-
-  /// Возвращает данный объект как [MediaItem] для аудио плеера.
-  MediaItem get asMediaItem {
-    final String mediaTitle = subtitle != null ? "$title ($subtitle)" : title;
-    final String mediaArtist = isExplicit ? "🅴 $artist" : artist;
-    final String? mediaAlbum = album?.title;
-    final Uri? mediaArtUri =
-        maxThumbnail != null ? Uri.parse(maxThumbnail!) : null;
-    final Duration mediaDuration = Duration(
-      seconds: duration,
-    );
-    final Map<String, dynamic> mediaExtras = {
-      "albumID": album?.id,
-      "mediaKey": mediaKey,
-    };
-
-    return MediaItem(
-      id: mediaKey,
-      title: mediaTitle,
-      artist: mediaArtist,
-      album: mediaAlbum,
-      artUri: mediaArtUri,
-      duration: mediaDuration,
-      extras: mediaExtras,
-    );
   }
 
   /// Создаёт из передаваемого объекта [Audio] объект данного класа.

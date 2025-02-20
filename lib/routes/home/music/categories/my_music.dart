@@ -5,9 +5,8 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:skeletonizer/skeletonizer.dart";
 
 import "../../../../consts.dart";
-import "../../../../main.dart";
 import "../../../../provider/l18n.dart";
-import "../../../../provider/player_events.dart";
+import "../../../../provider/player.dart";
 import "../../../../provider/playlists.dart";
 import "../../../../provider/preferences.dart";
 import "../../../../provider/user.dart";
@@ -25,34 +24,34 @@ class MyMusicBlock extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final preferences = ref.watch(preferencesProvider);
     final playlist = ref.watch(favoritesPlaylistProvider);
+    final player = ref.read(playerProvider);
     final l18n = ref.watch(l18nProvider);
-    ref.watch(playerStateProvider);
-    ref.watch(playerCurrentIndexProvider);
-    ref.watch(playerLoadedStateProvider);
+    ref.watch(playerIsLoadedProvider);
+    ref.watch(playerIsPlayingProvider);
+    ref.watch(playerAudioProvider);
+    ref.watch(playerIsBufferingProvider);
 
     final bool mobileLayout = isMobileLayout(context);
 
     void onPlayPressed() async {
       // Если данный плейлист уже играет, то просто ставим на паузу/воспроизведение.
-      if (player.currentPlaylist?.mediaKey == playlist?.mediaKey) {
+      if (player.playlist?.mediaKey == playlist?.mediaKey) {
         await player.togglePlay();
 
         return;
       }
 
-      await player.setShuffle(
-        preferences.shuffleOnPlay,
-        disableAudioMixCheck: true,
-      );
+      if (preferences.shuffleOnPlay) {
+        await player.setShuffle(true);
+      }
       await player.setPlaylist(
         playlist!,
-        randomTrack: preferences.shuffleOnPlay,
+        randomAudio: preferences.shuffleOnPlay,
       );
     }
 
-    final bool selected =
-        player.currentPlaylist?.ownerID == playlist?.ownerID &&
-            player.currentPlaylist?.id == playlist?.id;
+    final bool selected = player.playlist?.ownerID == playlist?.ownerID &&
+        player.playlist?.id == playlist?.id;
     final int? musicCount = playlist?.count;
     final int clampedMusicCount = clampInt(
       musicCount ?? 0,
@@ -131,7 +130,7 @@ class MyMusicBlock extends HookConsumerWidget {
             FilledButton.icon(
               icon: Icon(
                 selected
-                    ? player.playing
+                    ? player.isPlaying
                         ? Icons.pause
                         : Icons.play_arrow
                     : preferences.shuffleOnPlay
@@ -140,7 +139,7 @@ class MyMusicBlock extends HookConsumerWidget {
               ),
               label: Text(
                 selected
-                    ? player.playing
+                    ? player.isPlaying
                         ? l18n.general_pause
                         : l18n.general_resume
                     : preferences.shuffleOnPlay

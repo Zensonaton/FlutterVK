@@ -9,9 +9,9 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 
 import "../api/vk/shared.dart";
 import "../consts.dart";
-import "../main.dart";
 import "../provider/color.dart";
 import "../provider/l18n.dart";
+import "../provider/player.dart";
 import "../provider/preferences.dart";
 import "../provider/user.dart";
 import "../routes/home/music.dart";
@@ -42,11 +42,15 @@ Widget buildListTrackWidget(
   bool roundedCorners = true,
 }) {
   final logger = getLogger("buildListTrackWidget");
+
+  final player = ref.read(playerProvider);
   final l18n = ref.watch(l18nProvider);
-  final bool isSelected = audio.ownerID == player.currentAudio?.ownerID &&
-      audio.id == player.currentAudio?.id;
+  final bool isSelected =
+      audio.ownerID == player.audio?.ownerID && audio.id == player.audio?.id;
 
   Future<void> onPlayToggle() async {
+    final preferences = ref.read(preferencesProvider);
+
     // Если мы не можем начать воспроизведение этого трека, то выдаём ошибку.
     if (!audio.canPlay) {
       showErrorDialog(
@@ -73,7 +77,13 @@ Widget buildListTrackWidget(
     }
 
     // Запускаем воспроизведение.
-    await player.setPlaylist(playlist, selectedTrack: audio);
+    if (preferences.shuffleOnPlay) {
+      await player.setShuffle(true);
+    }
+    await player.setPlaylist(
+      playlist,
+      initialAudio: audio,
+    );
   }
 
   Future<void> onLikeTap() async {
@@ -129,9 +139,9 @@ Widget buildListTrackWidget(
   }
 
   return AudioTrackTile(
-    isSelected: isSelected && player.loaded,
-    isPlaying: player.loaded && player.playing,
-    isLoading: isSelected && player.buffering,
+    isSelected: isSelected && player.isLoaded,
+    isPlaying: player.isLoaded && player.isPlaying,
+    isLoading: isSelected && player.isBuffering,
     isAvailable: isAvailable ?? audio.canPlay,
     audio: audio,
     glowIfSelected: true,
@@ -685,11 +695,12 @@ class AudioTrackTile extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isHovered = useState(false);
-
     final schemeInfo = ref.watch(trackSchemeInfoProvider);
     final preferences = ref.watch(preferencesProvider);
+
     final brightness = Theme.of(context).brightness;
+
+    final isHovered = useState(false);
 
     final ColorScheme scheme = useMemoized(
       () {

@@ -4,8 +4,7 @@ import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:rive/rive.dart";
 
-import "../main.dart";
-import "../provider/player_events.dart";
+import "../provider/player.dart";
 import "../services/logger.dart";
 import "../utils.dart";
 import "audio_player.dart";
@@ -292,8 +291,9 @@ class SettingPageWithAnimationWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final player = ref.read(playerProvider);
     if (addPaddingOnMobilePlayer) {
-      ref.watch(playerLoadedStateProvider);
+      ref.watch(playerIsLoadedProvider);
     }
 
     final theme = Theme.of(context);
@@ -393,7 +393,7 @@ class SettingPageWithAnimationWidget extends ConsumerWidget {
         ),
 
         // Дополнительный отступ для мобильного плеера.
-        if (addPaddingOnMobilePlayer && player.loaded)
+        if (addPaddingOnMobilePlayer && player.isLoaded)
           const SliverGap(
             MusicPlayerWidget.mobileHeightWithPadding - 12,
           ),

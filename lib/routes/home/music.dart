@@ -12,7 +12,7 @@ import "../../main.dart";
 import "../../provider/auth.dart";
 import "../../provider/download_manager.dart";
 import "../../provider/l18n.dart";
-import "../../provider/player_events.dart";
+import "../../provider/player.dart";
 import "../../provider/playlists.dart";
 import "../../provider/preferences.dart";
 import "../../provider/user.dart";
@@ -546,7 +546,7 @@ class ChipFilters extends ConsumerWidget {
     final preferences = ref.watch(preferencesProvider);
     final secondaryToken = ref.read(secondaryTokenProvider);
     final l18n = ref.watch(l18nProvider);
-    ref.watch(playerLoadedStateProvider);
+    ref.watch(playerIsLoadedProvider);
 
     final bool hasRecommendations = secondaryToken != null;
     final bool mobileLayout = isMobileLayout(context);
@@ -709,10 +709,11 @@ class HomeMusicPage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l18n = ref.watch(l18nProvider);
+    final player = ref.read(playerProvider);
     final user = ref.watch(userProvider);
     final preferences = ref.watch(preferencesProvider);
     final downloadManager = ref.watch(downloadManagerProvider);
-    ref.watch(playerLoadedStateProvider);
+    ref.watch(playerIsLoadedProvider);
 
     final bool mobileLayout = isMobileLayout(context);
 
@@ -953,7 +954,7 @@ class HomeMusicPage extends HookConsumerWidget {
               ],
 
               // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
-              if (player.loaded && mobileLayout)
+              if (player.isLoaded && mobileLayout)
                 const Gap(MusicPlayerWidget.mobileHeightWithPadding),
             ],
           ),

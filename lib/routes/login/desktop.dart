@@ -6,6 +6,7 @@ import "package:styled_text/styled_text.dart";
 import "package:url_launcher/url_launcher.dart";
 
 import "../../api/vk/consts.dart";
+import "../../consts.dart";
 import "../../provider/l18n.dart";
 import "../../utils.dart";
 import "../../widgets/loading_button.dart";
@@ -40,7 +41,7 @@ class DesktopLoginWidget extends HookConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          "Flutter VK",
+          appName,
         ),
         centerTitle: true,
       ),

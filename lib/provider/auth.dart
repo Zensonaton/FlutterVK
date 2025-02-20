@@ -5,8 +5,9 @@ import "package:shared_preferences/shared_preferences.dart";
 
 import "../api/vk/shared.dart";
 import "../main.dart";
-import "../services/audio_player.dart";
 import "../services/cache_manager.dart";
+import "../services/player/server.dart";
+import "player.dart";
 import "playlists.dart";
 import "shared_prefs.dart";
 
@@ -53,7 +54,7 @@ class CurrentAuthState extends _$CurrentAuthState {
   void logout() async {
     final SharedPreferences prefs = ref.read(sharedPrefsProvider);
 
-    await player.stop();
+    await ref.read(playerProvider).stop();
     prefs.clear();
 
     // Очищаем кэш изображений.
@@ -65,7 +66,7 @@ class CurrentAuthState extends _$CurrentAuthState {
 
     // Удаляем папку с кэшированными треками, если такие вообще есть.
     final Directory tracksDirectory = Directory(
-      await CachedStreamAudioSource.getTrackStorageDirectory(),
+      await PlayerLocalServer.getTrackStorageDirectory(),
     );
 
     if (tracksDirectory.existsSync()) {
@@ -110,7 +111,6 @@ enum AuthState {
       "/music",
       "/library",
       "/profile",
-      "/fullscreenPlayer",
       "/playlist",
     ],
   );

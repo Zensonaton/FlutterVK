@@ -16,9 +16,9 @@ import "../provider/playlists.dart";
 import "../provider/user.dart";
 import "../provider/vk_api.dart";
 import "../utils.dart";
-import "audio_player.dart";
 import "cache_manager.dart";
 import "logger.dart";
+import "player/server.dart";
 
 /// [DownloadTask], загружающий треки из [playlist], делая их доступными для прослушивания в оффлайне.
 ///
@@ -80,8 +80,7 @@ class PlaylistCacheDeleteDownloadItem extends DownloadItem {
 
   @override
   Future<void> download() async {
-    final file =
-        await CachedStreamAudioSource.getCachedAudioByKey(audio.mediaKey);
+    final file = await PlayerLocalServer.getCachedAudioByKey(audio.mediaKey);
 
     // Если файл есть на диске, то удаляем его.
     if (file.existsSync()) {
@@ -188,8 +187,7 @@ class PlaylistCacheDownloadItem extends DownloadItem {
 
   /// Загружает трек, возвращая его размер в байтах, если он был успешно загружен.
   Future<int?> _downloadAudio() async {
-    final file =
-        await CachedStreamAudioSource.getCachedAudioByKey(audio.mediaKey);
+    final file = await PlayerLocalServer.getCachedAudioByKey(audio.mediaKey);
 
     // Если файл уже загружен, то не загружаем его.
     if (!file.existsSync() && audio.url != null) {

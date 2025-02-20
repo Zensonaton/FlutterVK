@@ -1,7 +1,5 @@
 import "dart:async";
 
-import "package:audio_service/audio_service.dart";
-import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
@@ -9,25 +7,14 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
-import "../api/vk/shared.dart";
 import "../consts.dart";
 import "../enums.dart";
-import "../intents.dart";
 import "../main.dart";
-import "../provider/color.dart";
 import "../provider/download_manager.dart";
 import "../provider/l18n.dart";
-import "../provider/player_events.dart";
-import "../provider/playlists.dart";
+import "../provider/player.dart";
 import "../provider/preferences.dart";
 import "../provider/updater.dart";
-import "../provider/user.dart";
-import "../provider/vk_api.dart";
-import "../routes/fullscreen_player.dart";
-import "../routes/home/music/categories/realtime_playlists.dart";
-import "../services/cache_manager.dart";
-import "../services/download_manager.dart";
-import "../services/image_to_color_scheme.dart";
 import "../services/logger.dart";
 import "../utils.dart";
 import "audio_player.dart";
@@ -79,10 +66,11 @@ class DownloadManagerWrapperWidget extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final player = ref.read(playerProvider);
     final downloadManager = ref.watch(downloadManagerProvider);
-    ref.watch(playerLoadedStateProvider);
+    ref.watch(playerIsLoadedProvider);
 
-    final isLoaded = player.loaded;
+    final isLoaded = player.isLoaded;
     final downloadStarted = downloadManager.downloadStarted;
 
     final progressValue = useValueListenable(downloadManager.progress);
@@ -216,100 +204,8 @@ class ShellRouteWrapper extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l18n = ref.watch(l18nProvider);
-    final trackImageInfoNotifier = ref.watch(trackSchemeInfoProvider.notifier);
-    final playlistsNotifier = ref.watch(playlistsProvider.notifier);
 
     final bool mobileLayout = isMobileLayout(context);
-
-    /// Метод, загружающий данные по треку (обложки, цвета, ...) и сохраняющий их в БД.
-    Future<void> loadAudioData(
-      ExtendedAudio audio, {
-      required bool current,
-    }) async {
-      final preferences = ref.read(preferencesProvider);
-      final playlist = player.currentPlaylist!.copyWith();
-
-      Future<ImageSchemeExtractor?> getColorScheme(
-        ExtendedAudio audio, {
-        bool setColorScheme = false,
-      }) async {
-        if (audio.thumbnail == null) return null;
-
-        // Если цвета обложки уже были получены, и они хранятся в БД, то просто возвращаем их.
-        if (audio.colorCount != null) {
-          final extractor = ImageSchemeExtractor(
-            colorInts: audio.colorInts!,
-            scoredColorInts: audio.scoredColorInts!,
-            frequentColorInt: audio.frequentColorInt!,
-            colorCount: audio.colorCount!,
-          );
-          if (setColorScheme) {
-            trackImageInfoNotifier.fromExtractor(extractor);
-          }
-
-          return extractor;
-        }
-
-        // Заставляем плеер извлекать цветовую схему из обложки трека.
-        final extractor = await ImageSchemeExtractor.fromImageProvider(
-          CachedNetworkImageProvider(
-            audio.smallestThumbnail!,
-            cacheKey: "${audio.mediaKey}small",
-            cacheManager: CachedAlbumImagesManager.instance,
-          ),
-        );
-        if (setColorScheme) {
-          trackImageInfoNotifier.fromExtractor(extractor);
-        }
-
-        return extractor;
-      }
-
-      // Пытаемся получить цвета обложки трека.
-      // Здесь мы можем получить null, если обложки у трека нет.
-      ImageSchemeExtractor? extractedColors = await getColorScheme(
-        audio,
-        setColorScheme: current,
-      );
-
-      // Загружаем метаданные трека (его обложки, текст песни, ...)
-      final newAudio = await PlaylistCacheDownloadItem.downloadWithMetadata(
-        playlistsNotifier.ref,
-        playlist,
-        audio,
-        downloadAudio: false,
-        deezerThumbnails: preferences.deezerThumbnails,
-        lrcLibLyricsEnabled: preferences.lrcLibEnabled,
-      );
-      if (newAudio == null) return;
-
-      // Повторно пытаемся получить цвета обложек трека, если они не были загружены ранее.
-      extractedColors ??= await getColorScheme(
-        newAudio,
-        setColorScheme: current,
-      );
-
-      // Сохраняем новую версию трека.
-      await playlistsNotifier.updatePlaylist(
-        playlist.basicCopyWith(
-          audiosToUpdate: [
-            newAudio.basicCopyWith(
-              colorInts: extractedColors?.colorInts,
-              scoredColorInts: extractedColors?.scoredColorInts,
-              frequentColorInt: extractedColors?.frequentColorInt,
-              colorCount: extractedColors?.colorCount,
-
-              // Повторяем следующие поля, поскольку они могли быть загружены в downloadWithMetadata,
-              // а .basicCopyWith проигнорирует их (превратит их в null), поэтому их нужно продублировать.
-              vkLyrics: newAudio.vkLyrics,
-              lrcLibLyrics: newAudio.lrcLibLyrics,
-              deezerThumbs: newAudio.deezerThumbs,
-            ),
-          ],
-        ),
-        saveInDB: true,
-      );
-    }
 
     useEffect(
       () {
@@ -336,144 +232,6 @@ class ShellRouteWrapper extends HookConsumerWidget {
               );
             },
           ),
-
-          // Слушаем события нажатия на медиа-уведомление.
-          AudioService.notificationClicked.listen((tapped) {
-            // AudioService иногда создаёт это событие при запуске плеера. Такой случай мы игнорируем.
-            // Если плеер не загружен, то ничего не делаем.
-            if (!tapped || !player.loaded) return;
-
-            openFullscreenPlayer(context);
-          }),
-
-          // Слушаем события изменения текущего трека в плеере, что бы загружать метадананные трека (обложки, тексты, ...) для текущего, а потом ещё и для следующего трека.
-          player.currentIndexStream.listen((int? index) async {
-            if (index == null || !player.loaded) return;
-
-            // Текущий трек.
-            await loadAudioData(
-              player.currentAudio!,
-              current: true,
-            );
-
-            // Следующий.
-            if (player.smartNextAudio != null) {
-              await loadAudioData(
-                player.smartNextAudio!,
-                current: false,
-              );
-            }
-          }),
-
-          // Слушаем события изменения текущего трека, что бы в случае, если запущен рекомендательный плейлист, мы передавали информацию об этом ВКонтакте.
-          player.currentIndexStream.listen((int? index) async {
-            final api = ref.read(vkAPIProvider);
-
-            if (index == null) return;
-
-            // Если нет доступа к интернету, то ничего не делаем.
-            if (!connectivityManager.hasConnection) return;
-
-            // Если это не рекомендуемый плейлист, то ничего не делаем.
-            if (!(player.currentPlaylist?.isRecommendationTypePlaylist ??
-                false)) {
-              return;
-            }
-
-            // Делаем API-запрос, передавая информацию серверам ВКонтакте.
-            try {
-              await api.audio.sendStartEvent(player.currentAudio!.mediaKey);
-            } catch (error, stackTrace) {
-              logger.w(
-                "Couldn't notify VK about track listening state: ",
-                error: error,
-                stackTrace: stackTrace,
-              );
-            }
-          }),
-
-          // Отдельно слушаем события изменения индекса текущего трека, что бы добавлять треки в реальном времени, если это аудио микс.
-          player.currentIndexStream.listen((int? index) async {
-            final AppLogger logger = getLogger("VK Mix");
-            final api = ref.read(vkAPIProvider);
-
-            if (index == null ||
-                !player.loaded ||
-                player.currentPlaylist?.type != PlaylistType.audioMix) {
-              return;
-            }
-
-            final int playlistItemCount = player.currentPlaylist!.count ?? 0;
-            final int remainingTracks = playlistItemCount - index;
-            final int remainingTracksToAdd = clampInt(
-              minMixAudiosCount - remainingTracks,
-              0,
-              minMixAudiosCount,
-            );
-
-            logger.d(
-              "Mix index: $index/$playlistItemCount, should add $remainingTracksToAdd tracks",
-            );
-
-            // Если у нас достаточно треков в очереди, то ничего не делаем.
-            if (remainingTracksToAdd <= 0) return;
-
-            try {
-              final List<Audio> response =
-                  await api.audio.getStreamMixAudiosWithAlbums(
-                count: remainingTracksToAdd,
-              );
-              if (response.length != remainingTracksToAdd) {
-                throw Exception(
-                  "Invalid response length, expected $remainingTracksToAdd, got ${response.length} instead",
-                );
-              }
-
-              final List<ExtendedAudio> newAudios = response
-                  .map(
-                    (audio) => ExtendedAudio.fromAPIAudio(audio),
-                  )
-                  .toList();
-
-              // Добавляем треки в объект плейлиста.
-              await playlistsNotifier.updatePlaylist(
-                player.currentPlaylist!.copyWith(
-                  audiosToUpdate: newAudios,
-                  count: playlistItemCount + remainingTracksToAdd,
-                ),
-                saveInDB: true,
-              );
-
-              // Добавляем треки в очередь воспроизведения плеера.
-              for (ExtendedAudio audio in newAudios) {
-                await player.addToQueueEnd(audio);
-              }
-            } catch (error, stackTrace) {
-              logger.e(
-                "Couldn't load audio mix tracks: ",
-                error: error,
-                stackTrace: stackTrace,
-              );
-
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      l18n.audio_mix_add_error(
-                        error: error.toString(),
-                      ),
-                    ),
-                  ),
-                );
-              }
-
-              return;
-            }
-
-            logger.d(
-              "Successfully added $remainingTracksToAdd tracks to mix queue (current: ${player.currentPlaylist!.count})",
-            );
-          }),
         ];
 
         return () {
@@ -577,16 +335,7 @@ class ShellRouteWrapper extends HookConsumerWidget {
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      body: Actions(
-        actions: {
-          FullscreenPlayerIntent: CallbackAction(
-            onInvoke: (intent) {
-              return toggleFullscreenPlayer(context);
-            },
-          ),
-        },
-        child: wrappedChild,
-      ),
+      body: wrappedChild,
       bottomNavigationBar: mobileLayout
           ? NavigationBar(
               selectedIndex: currentIndex,
@@ -627,9 +376,10 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(playerLoadedStateProvider);
+    final player = ref.read(playerProvider);
+    ref.watch(playerIsLoadedProvider);
 
-    final bool isLoaded = player.loaded;
+    final bool isLoaded = player.isLoaded;
     final animation = useAnimationController(
       duration: playerAnimationDuration,
       initialValue: isLoaded ? 1.0 : 0.0,

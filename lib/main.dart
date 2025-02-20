@@ -10,9 +10,7 @@ import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "package:flutter_local_notifications/flutter_local_notifications.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:just_audio_media_kit/just_audio_media_kit.dart";
 import "package:local_notifier/local_notifier.dart";
-import "package:media_kit/media_kit.dart";
 import "package:package_info_plus/package_info_plus.dart";
 import "package:path/path.dart" as path;
 import "package:path_provider/path_provider.dart";
@@ -31,10 +29,10 @@ import "provider/observer.dart";
 import "provider/player.dart";
 import "provider/preferences.dart";
 import "provider/shared_prefs.dart";
-import "services/audio_player.dart";
 import "services/connectivity_manager.dart";
 import "services/db.dart";
 import "services/logger.dart";
+import "services/player/server.dart";
 import "services/updater.dart";
 import "utils.dart";
 
@@ -48,9 +46,6 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 /// Объект базы данных приложения.
 late final AppStorage appStorage;
-
-/// Объект аудиоплеера.
-late final VKMusicPlayer player;
 
 /// Менеджер интернет соедининия.
 late final ConnectivityManager connectivityManager;
@@ -136,7 +131,7 @@ Future<void> initSystemTray(AppLocalizations l18n) async {
   final SystemTray systemTray = SystemTray();
 
   await systemTray.initSystemTray(
-    title: "Flutter VK",
+    title: appName,
     iconPath: Platform.isWindows ? "assets/icon.ico" : "assets/icon.png",
   );
 
@@ -307,7 +302,7 @@ Future main() async {
 
     // Инициализируем библиотеку для создания уведомлений на OS Windows.
     if (Platform.isWindows) {
-      await localNotifier.setup(appName: "Flutter VK");
+      await localNotifier.setup(appName: appName);
     } else if (Platform.isAndroid) {
       // Инициализируем уведомления на OS Android.
 
@@ -338,53 +333,27 @@ Future main() async {
     connectivityManager = ConnectivityManager();
     await connectivityManager.initialize();
 
-    // Инициализируем плеер.
-    JustAudioMediaKit.title = "Flutter VK";
-    JustAudioMediaKit.prefetchPlaylist = !kDebugMode;
-    if (preferences.debugPlayerLogging && isDesktop) {
-      logger.i("Media kit debug logger is enabled");
+    // Инициализируем плеер и его backend'ы.
+    final player = container.read(playerProvider);
+    await player.initialize();
 
-      JustAudioMediaKit.mpvLogLevel = MPVLogLevel.debug;
-    }
-    JustAudioMediaKit.ensureInitialized();
-
-    player = container.read(vkMusicPlayerProvider);
-
-    // Восстанавливаем состояние shuffle у плеера.
-    if (preferences.shuffleEnabled) {
-      await player.setShuffle(true);
-    }
-
-    // Восстанавливаем состояние loop mode у плеера.
-    if (preferences.loopModeEnabled) {
-      await player.setLoopModeEnabled(true);
-    }
-
-    // Восстанавливаем громкость у плеера.
+    // Восстанавливаем настройки плеера.
+    player.setShuffle(preferences.shuffleEnabled);
+    player.setRepeat(preferences.loopModeEnabled);
+    player.setDiscordRPCEnabled(preferences.discordRPCEnabled && isDesktop);
+    player.setPauseOnMuteEnabled(preferences.pauseOnMuteEnabled && isDesktop);
+    player.setStopOnLongPauseEnabled(preferences.stopOnPauseEnabled);
+    player.setKeepPlayingOnCloseEnabled(preferences.androidKeepPlayingOnClose);
+    player.setDebugLoggingEnabled(preferences.debugPlayerLogging);
     if (preferences.volume < 1.0 && isDesktop) {
-      await player.setVolume(preferences.volume);
-    }
-
-    // Переключаем состояние Discord Rich Presence.
-    if (preferences.discordRPCEnabled && isDesktop) {
-      await player.setDiscordRPCEnabled(true);
-    }
-
-    // Восстанавливаем значение настройки "пауза при отключении громкости".
-    if (preferences.pauseOnMuteEnabled && isDesktop) {
-      player.setPauseOnMuteEnabled(true);
-    }
-
-    // Восстанавливаем значение настройки "остановка при неактивности".
-    if (preferences.stopOnPauseEnabled) {
-      player.setStopOnPauseEnabled(true);
+      player.setVolume(preferences.volume);
     }
 
     // На Desktop-платформах, создаём README-файл в папке кэша треков.
     if (isDesktop) {
       final File readmeFile = File(
         path.join(
-          await CachedStreamAudioSource.getTrackStorageDirectory(),
+          await PlayerLocalServer.getTrackStorageDirectory(),
           tracksCacheReadmeFileName,
         ),
       );
@@ -406,7 +375,7 @@ Future main() async {
     );
 
     logger.i(
-      "Running Flutter VK v$appVersion ${isPrerelease ? "(pre-release)" : ""}",
+      "Running Flutter VK v$appVersion ${isPrerelease ? "(pre-release)" : ""} on ${Platform.operatingSystem}",
     );
 
     // Запускаем само приложение.
