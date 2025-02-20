@@ -4,9 +4,9 @@ import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:shared_preferences/shared_preferences.dart";
 
 import "../api/vk/shared.dart";
-import "../main.dart";
 import "../services/cache_manager.dart";
 import "../services/player/server.dart";
+import "db.dart";
 import "player.dart";
 import "playlists.dart";
 import "shared_prefs.dart";
@@ -52,28 +52,21 @@ class CurrentAuthState extends _$CurrentAuthState {
 
   /// Деавторизует пользователя, удаляя токен из [SharedPreferences] ([sharedPrefsProvider]), а так же обновляет состояние этого Provider.
   void logout() async {
-    final SharedPreferences prefs = ref.read(sharedPrefsProvider);
+    final prefs = ref.read(sharedPrefsProvider);
+    final appStorage = ref.read(appStorageProvider);
+    final player = ref.read(playerProvider);
 
-    await ref.read(playerProvider).stop();
+    await player.stop();
     prefs.clear();
-
-    // Очищаем кэш изображений.
     CachedNetworkImagesManager.instance.emptyCache();
     CachedAlbumImagesManager.instance.emptyCache();
-
-    // Очищаем локальную базу данных.
     await appStorage.resetDB();
-
-    // Удаляем папку с кэшированными треками, если такие вообще есть.
     final Directory tracksDirectory = Directory(
       await PlayerLocalServer.getTrackStorageDirectory(),
     );
-
     if (tracksDirectory.existsSync()) {
       tracksDirectory.deleteSync(recursive: true);
     }
-
-    // Сбрасываем различные состояния.
     ref
       ..invalidate(dbPlaylistsProvider)
       ..invalidate(playlistsProvider)

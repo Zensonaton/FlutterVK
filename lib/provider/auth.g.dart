@@ -21,6 +21,8 @@ final tokenProvider = AutoDisposeProvider<String?>.internal(
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef TokenRef = AutoDisposeProviderRef<String?>;
 String _$secondaryTokenHash() => r'2f2043e60ee54766ea1bc82aba3896b2643be0d7';
 
@@ -38,8 +40,10 @@ final secondaryTokenProvider = AutoDisposeProvider<String?>.internal(
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef SecondaryTokenRef = AutoDisposeProviderRef<String?>;
-String _$currentAuthStateHash() => r'90d8da8f3a0ab31ca66c4c7288c8e2f3b807bc8e';
+String _$currentAuthStateHash() => r'9e2cc078a14ac16973d2710b241e6ed6c55728f5';
 
 /// [Provider] для хранения состояния авторизации пользователя. Позволяет авторизовывать и деавторизовывать пользователя.
 ///
@@ -63,4 +67,4 @@ final currentAuthStateProvider =
 
 typedef _$CurrentAuthState = AutoDisposeNotifier<AuthState>;
 // ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
+// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

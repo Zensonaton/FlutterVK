@@ -110,20 +110,18 @@ class Updater {
   ///
   /// К примеру, на OS Windows возвращает список из единственного `.exe` файла, который не зависит от архитектуры процессора, а на Android возвращает список из двух `.apk`-файлов: один для конкретной архитектуры текущего устройства, а второй - универсальный.
   static Future<List<String>> getFilenameByPlatform() async {
-    switch (Platform.operatingSystem) {
-      case "android":
-        final List<String> filenames = ["Flutter.VK.Android.apk"];
+    if (Platform.isWindows) {
+      return ["Flutter.VK.installer.exe"];
+    } else if (Platform.isAndroid) {
+      final List<String> filenames = ["Flutter.VK.Android.apk"];
 
-        // Создаём список из .apk-файлов, которые зависят от архитектуры устройства.
-        final List<String> abiFilenames = androidDeviceInfo?.supportedAbis
-                .map((abi) => "Flutter.VK.Android.$abi.apk")
-                .toList() ??
-            [];
+      // Создаём список из .apk-файлов, которые зависят от архитектуры устройства.
+      final List<String> abiFilenames = androidDeviceInfo?.supportedAbis
+              .map((abi) => "Flutter.VK.Android.$abi.apk")
+              .toList() ??
+          [];
 
-        return [...abiFilenames, ...filenames];
-
-      case "windows":
-        return ["Flutter.VK.installer.exe"];
+      return [...abiFilenames, ...filenames];
     }
 
     return [];
@@ -368,7 +366,7 @@ class Updater {
     }
 
     throw Exception(
-      "Unsupported platform: ${Platform.operatingSystem}",
+      "Unsupported platform",
     );
   }
 

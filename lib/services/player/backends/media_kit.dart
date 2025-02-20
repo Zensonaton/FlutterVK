@@ -9,6 +9,8 @@ import "../../logger.dart";
 import "../backend.dart";
 import "../player.dart";
 import "../server.dart";
+import "media_kit/native_player.dart"
+    if (dart.library.js_interop) "media_kit/native_player_stub.dart";
 
 /// Audio Backend для [Player], воспроизводящий музыку при помощи плеера из `media_kit`.
 ///
@@ -66,7 +68,8 @@ class MediaKitPlayerBackend extends PlayerBackend {
   mk.Player get player => _player!;
 
   /// Возвращает [mk.NativePlayer] для установки свойств плеера.
-  mk.NativePlayer get nativePlayer => _player!.platform as mk.NativePlayer;
+  MediaKitNativePlayer get nativePlayer =>
+      MediaKitNativePlayer(player: _player!);
 
   MediaKitPlayerBackend({
     super.name = "media_kit",

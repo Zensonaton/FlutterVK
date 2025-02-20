@@ -21,6 +21,8 @@ final playerProvider = Provider<Player>.internal(
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef PlayerRef = ProviderRef<Player>;
 String _$playerIsLoadedHash() => r'5130c15b136ad81d3107304c416eed1a2e3d9d86';
 
@@ -38,6 +40,8 @@ final playerIsLoadedProvider = AutoDisposeStreamProvider<bool>.internal(
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef PlayerIsLoadedRef = AutoDisposeStreamProviderRef<bool>;
 String _$playerIsPlayingHash() => r'9ab20456869a9f49b91d97f84318b1c769bfceed';
 
@@ -55,6 +59,8 @@ final playerIsPlayingProvider = AutoDisposeStreamProvider<bool>.internal(
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef PlayerIsPlayingRef = AutoDisposeStreamProviderRef<bool>;
 String _$playerAudioHash() => r'e18cb646f94ecf87297f3a1215c1629b5873b700';
 
@@ -71,6 +77,8 @@ final playerAudioProvider = AutoDisposeStreamProvider<ExtendedAudio>.internal(
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef PlayerAudioRef = AutoDisposeStreamProviderRef<ExtendedAudio>;
 String _$playerPositionHash() => r'd5a059e7ee11354236a3436db77a992079b72a82';
 
@@ -88,6 +96,8 @@ final playerPositionProvider = AutoDisposeStreamProvider<Duration>.internal(
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef PlayerPositionRef = AutoDisposeStreamProviderRef<Duration>;
 String _$playerSeekHash() => r'947febc91ba2722f6538acccb7fcb0aac6013468';
 
@@ -104,6 +114,8 @@ final playerSeekProvider = AutoDisposeStreamProvider<Duration>.internal(
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef PlayerSeekRef = AutoDisposeStreamProviderRef<Duration>;
 String _$playerVolumeHash() => r'74f5604486c8a5087f095db71a320d3b62ff9b13';
 
@@ -120,6 +132,8 @@ final playerVolumeProvider = AutoDisposeStreamProvider<double>.internal(
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef PlayerVolumeRef = AutoDisposeStreamProviderRef<double>;
 String _$playerIsBufferingHash() => r'c11304c8c83040104eeaef9c681d4367c03e1ba3';
 
@@ -137,6 +151,8 @@ final playerIsBufferingProvider = AutoDisposeStreamProvider<bool>.internal(
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef PlayerIsBufferingRef = AutoDisposeStreamProviderRef<bool>;
 String _$playerBufferedPositionHash() =>
     r'd6bb1004ed6279964a5d5c502658843b66856bb7';
@@ -156,6 +172,8 @@ final playerBufferedPositionProvider =
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef PlayerBufferedPositionRef = AutoDisposeStreamProviderRef<Duration>;
 String _$playerPlaylistHash() => r'4ca46e75edc3d95e7f8781d16b818995b4bee6e8';
 
@@ -174,6 +192,8 @@ final playerPlaylistProvider =
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef PlayerPlaylistRef = AutoDisposeStreamProviderRef<ExtendedPlaylist>;
 String _$playerQueueHash() => r'73bd41cfa01527af8221eeb00a1b0308be064779';
 
@@ -191,6 +211,8 @@ final playerQueueProvider =
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef PlayerQueueRef = AutoDisposeStreamProviderRef<List<ExtendedAudio>>;
 String _$playerIsShufflingHash() => r'77a2a3124241d4c62d1e3b9075a2470a23d43d1b';
 
@@ -208,6 +230,8 @@ final playerIsShufflingProvider = AutoDisposeStreamProvider<bool>.internal(
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef PlayerIsShufflingRef = AutoDisposeStreamProviderRef<bool>;
 String _$playerIsRepeatingHash() => r'ab514be456bb5de86245938606a22c002abeca27';
 
@@ -225,6 +249,8 @@ final playerIsRepeatingProvider = AutoDisposeStreamProvider<bool>.internal(
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef PlayerIsRepeatingRef = AutoDisposeStreamProviderRef<bool>;
 // ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
+// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

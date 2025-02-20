@@ -4,7 +4,8 @@ import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:shared_preferences/shared_preferences.dart";
 
 import "../enums.dart";
-import "../services/db.dart";
+import "../services/db.dart"
+    if (dart.library.js_interop) "../services/db_stub.dart";
 import "../services/logger.dart";
 import "../utils.dart";
 import "shared_prefs.dart";
@@ -28,7 +29,7 @@ class UserPreferences {
   ];
 
   /// Указывает версию базы данных Isar. Используется для миграции.
-  @JsonKey(name: "DBVersion", defaultValue: IsarDBMigrator.maxDBVersion)
+  @JsonKey(name: "DBVersion", defaultValue: AppStorage.maxDBVersion)
   final int dbVersion;
 
   /// Указывает, что поле "Моя музыка" включено на экране с музыкой.
@@ -259,7 +260,7 @@ class UserPreferences {
       };
 
   UserPreferences({
-    this.dbVersion = IsarDBMigrator.maxDBVersion,
+    this.dbVersion = AppStorage.maxDBVersion,
     this.myMusicChipEnabled = true,
     this.playlistsChipEnabled = true,
     this.realtimePlaylistsChipEnabled = true,

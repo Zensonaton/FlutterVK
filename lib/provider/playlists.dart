@@ -8,13 +8,14 @@ import "package:riverpod_annotation/riverpod_annotation.dart";
 import "../api/vk/catalog/get_audio.dart";
 import "../api/vk/execute/mass_get_audio.dart";
 import "../api/vk/shared.dart";
-import "../db/schemas/playlists.dart";
 import "../enums.dart";
 import "../main.dart";
+import "../services/db.dart"
+    if (dart.library.js_interop) "../services/db_stub.dart";
 import "../services/download_manager.dart";
 import "../services/logger.dart";
-import "../utils.dart";
 import "auth.dart";
+import "db.dart";
 import "download_manager.dart";
 import "l18n.dart";
 import "preferences.dart";
@@ -163,14 +164,8 @@ class PlaylistUpdateResult {
 /// [Provider], загружающий информацию о плейлистах пользователя из локальной БД.
 @Riverpod(keepAlive: true)
 Future<PlaylistsState?> dbPlaylists(DbPlaylistsRef ref) async {
-  // final AppLogger logger = getLogger("DBPlaylistsProvider");
-
-  // logger.d("Loading cached playlists from Isar DB");
-
-  final List<ExtendedPlaylist> playlists = (await appStorage.getPlaylists())
-      .where((DBPlaylist? playlist) => playlist != null)
-      .map((DBPlaylist? dbPlaylist) => dbPlaylist!.asExtendedPlaylist)
-      .toList();
+  final appStorage = ref.read(appStorageProvider);
+  final List<ExtendedPlaylist> playlists = await appStorage.getPlaylists();
 
   // Если плейлистов нету, то ничего не делаем.
   if (playlists.isEmpty) return null;
@@ -410,7 +405,7 @@ class Playlists extends _$Playlists {
       for (AudioMix mix in response.audioStreamMixes) {
         playlists.add(
           ExtendedPlaylist(
-            id: -fastHash(mix.id),
+            id: AppStorage.fastHash(mix.id),
             ownerID: user.id,
             type: PlaylistType.audioMix,
             title: mix.title,
@@ -551,8 +546,11 @@ class Playlists extends _$Playlists {
   /// Сохраняет передаваемый [playlist] в БД.
   ///
   /// Если Вам нужен метод для обновления плейлиста, то воспользуйтесь методом [updatePlaylist]; он так же может сохранить плейлист в БД.
-  Future<void> saveDBPlaylist(ExtendedPlaylist playlist) async =>
-      appStorage.savePlaylist(playlist.asDBPlaylist);
+  Future<void> saveDBPlaylist(ExtendedPlaylist playlist) async {
+    // return await appStorage.savePlaylist(
+    //   DBPlaylist.fromExtendedPlaylist(playlist),
+    // );
+  }
 
   /// Обновляет состояние данного Provider, объединяя новую и старую версию плейлиста, а после чего сохраняет его в БД, если [saveInDB] правдив.
   Future<PlaylistUpdateResult> updatePlaylist(
@@ -803,6 +801,8 @@ class Playlists extends _$Playlists {
     bool saveInDB = false,
     int? playlistsCount,
   }) async {
+    final appStorage = ref.read(appStorageProvider);
+
     final List<PlaylistUpdateResult> changedPlaylists = [];
     for (ExtendedPlaylist playlist in newPlaylists) {
       final PlaylistUpdateResult result = await updatePlaylist(
@@ -820,9 +820,11 @@ class Playlists extends _$Playlists {
     if (changedPlaylists.isNotEmpty) {
       await appStorage.savePlaylists(
         changedPlaylists
-            .where((item) => item.playlist.type != PlaylistType.searchResults)
+            .where(
+              (item) => item.playlist.type != PlaylistType.searchResults,
+            )
             .map(
-              (item) => item.playlist.asDBPlaylist,
+              (item) => item.playlist,
             )
             .toList(),
       );

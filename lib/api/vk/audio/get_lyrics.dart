@@ -2,8 +2,6 @@
 
 import "package:json_annotation/json_annotation.dart";
 
-import "../../../db/schemas/playlists.dart";
-
 import "../../../main.dart";
 import "../../lrclib/shared.dart";
 import "../shared.dart";
@@ -30,19 +28,6 @@ class LyricTimestamp {
   ///
   /// Даже если [begin] не null, данное поле может быть null, и это означает, что данная линия не имеет конечного времени. В таком случае, стоит интерпретировать это как "до конца трека".
   final int? end;
-
-  /// Создаёт из передаваемого объекта [DBLyricTimestamp] объект данного класа.
-  static LyricTimestamp fromDBLyricTimestamp(DBLyricTimestamp timestamp) =>
-      LyricTimestamp(
-        line: timestamp.line,
-        interlude: timestamp.interlude,
-        begin: timestamp.begin,
-        end: timestamp.end,
-      );
-
-  /// Возвращает копию данного класса в виде объекта [DBLyricTimestamp].
-  DBLyricTimestamp get asDBTimestamp =>
-      DBLyricTimestamp.fromLyricTimestamp(this);
 
   @override
   String toString() =>
@@ -123,23 +108,6 @@ class Lyrics {
       timestamps: timestamps,
     );
   }
-
-  /// Создаёт из передаваемого объекта [DBLyrics] объект данного класа.
-  static Lyrics fromDBLyrics(
-    DBLyrics lyrics,
-  ) =>
-      Lyrics(
-        language: lyrics.language,
-        timestamps: lyrics.timestamps
-            ?.map(
-              (timestamp) => timestamp.asLyricTimestamp,
-            )
-            .toList(),
-        text: lyrics.text,
-      );
-
-  /// Возвращает копию данного класса в виде объекта [DBLyrics].
-  DBLyrics get asDBLyrics => DBLyrics.fromLyrics(this);
 
   @override
   String toString() =>

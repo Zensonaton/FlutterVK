@@ -259,26 +259,6 @@ String cleanString(String input) {
   return removeDiacritics(input);
 }
 
-/// 64-битный FNV-1a алгоритм для хэширования [String] в виде [int].
-///
-/// Используется как поле ID в БД Isar.
-///
-/// [Взято из документации Isar](https://isar.dev/recipes/string_ids.html#fast-hash-function).
-int fastHash(String input) {
-  var hash = 0xcbf29ce484222325;
-
-  var i = 0;
-  while (i < input.length) {
-    final codeUnit = input.codeUnitAt(i++);
-    hash ^= codeUnit >> 8;
-    hash *= 0x100000001b3;
-    hash ^= codeUnit & 0xFF;
-    hash *= 0x100000001b3;
-  }
-
-  return hash;
-}
-
 /// Возвращает строку, описывающую тип плейлиста в зависимости от его [ExtendedPlaylist.type].
 String getPlaylistTypeString(AppLocalizations l18n, ExtendedPlaylist playlist) {
   switch (playlist.type) {

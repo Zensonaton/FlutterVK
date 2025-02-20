@@ -6,7 +6,7 @@ part of 'playlists.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$dbPlaylistsHash() => r'63dae5c097c923479c7c821764e469968f0e931d';
+String _$dbPlaylistsHash() => r'9c828d482f9796c52e89dee2621da70f900699ba';
 
 /// [Provider], загружающий информацию о плейлистах пользователя из локальной БД.
 ///
@@ -21,6 +21,8 @@ final dbPlaylistsProvider = FutureProvider<PlaylistsState?>.internal(
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef DbPlaylistsRef = FutureProviderRef<PlaylistsState?>;
 String _$favoritesPlaylistHash() => r'0742712f7d0a208cf6db561d115ec2f2f1a923a9';
 
@@ -39,6 +41,8 @@ final favoritesPlaylistProvider =
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef FavoritesPlaylistRef = AutoDisposeProviderRef<ExtendedPlaylist?>;
 String _$searchResultsPlaylistHash() =>
     r'cf07341f574ae51d838afb845e80a3b3b2f3cc73';
@@ -58,6 +62,8 @@ final searchResultsPlaylistProvider =
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef SearchResultsPlaylistRef = AutoDisposeProviderRef<ExtendedPlaylist?>;
 String _$userPlaylistsHash() => r'dc9239504382be5944942bd4462a6eaac1a6f9eb';
 
@@ -76,6 +82,8 @@ final userPlaylistsProvider =
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef UserPlaylistsRef = AutoDisposeProviderRef<List<ExtendedPlaylist>?>;
 String _$mixPlaylistsHash() => r'b92c6879671d5aeae9794e334afa1a2e6a39f518';
 
@@ -93,6 +101,8 @@ final mixPlaylistsProvider =
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef MixPlaylistsRef = AutoDisposeProviderRef<List<ExtendedPlaylist>?>;
 String _$moodPlaylistsHash() => r'790a815ea5478f6ef4f0c45ccb3bbab87c35211e';
 
@@ -111,6 +121,8 @@ final moodPlaylistsProvider =
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef MoodPlaylistsRef = AutoDisposeProviderRef<List<ExtendedPlaylist>?>;
 String _$recommendedPlaylistsHash() =>
     r'b10ec810b9f0b262f5178c206962d2075036771a';
@@ -130,6 +142,8 @@ final recommendedPlaylistsProvider =
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef RecommendedPlaylistsRef
     = AutoDisposeProviderRef<List<ExtendedPlaylist>?>;
 String _$simillarPlaylistsHash() => r'f634fb7c40a5d628f457a9d189bb4aee078f252c';
@@ -149,6 +163,8 @@ final simillarPlaylistsProvider =
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef SimillarPlaylistsRef = AutoDisposeProviderRef<List<ExtendedPlaylist>?>;
 String _$madeByVKPlaylistsHash() => r'4aa456da0be0e9c7d9caf7e84bef2ca82b3f7849';
 
@@ -167,6 +183,8 @@ final madeByVKPlaylistsProvider =
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef MadeByVKPlaylistsRef = AutoDisposeProviderRef<List<ExtendedPlaylist>?>;
 String _$getPlaylistHash() => r'63afe756e91a2d5e00591af4ac15e8f66f3f93c9';
 
@@ -328,6 +346,8 @@ class GetPlaylistProvider extends AutoDisposeProvider<ExtendedPlaylist?> {
   }
 }
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 mixin GetPlaylistRef on AutoDisposeProviderRef<ExtendedPlaylist?> {
   /// The parameter `ownerID` of this provider.
   int get ownerID;
@@ -346,7 +366,7 @@ class _GetPlaylistProviderElement
   int get id => (origin as GetPlaylistProvider).id;
 }
 
-String _$playlistsHash() => r'cf6b420aa231ea0c81e2475339f4d552da0eff90';
+String _$playlistsHash() => r'20530c5b952dd155342e3cd3e9e3e47cfe00e2f2';
 
 /// [Provider], хранящий в себе информацию о плейлистах пользователя.
 ///
@@ -373,4 +393,4 @@ final playlistsProvider =
 
 typedef _$Playlists = AsyncNotifier<PlaylistsState?>;
 // ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
+// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

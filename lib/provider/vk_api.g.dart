@@ -21,6 +21,8 @@ final vkAPIProvider = AutoDisposeProvider<VKAPI>.internal(
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef VkAPIRef = AutoDisposeProviderRef<VKAPI>;
 String _$vkAPIUsersHash() => r'17697da247c73b124648e0b1aa2a2baa6c09ce0c';
 
@@ -39,6 +41,8 @@ final vkAPIUsersProvider = AutoDisposeProvider<VKAPIUsers>.internal(
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef VkAPIUsersRef = AutoDisposeProviderRef<VKAPIUsers>;
 String _$vkAPIAudioHash() => r'f98e0caae552377f848e323d18b040d39c8be7a5';
 
@@ -57,6 +61,8 @@ final vkAPIAudioProvider = AutoDisposeProvider<VKAPIAudio>.internal(
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef VkAPIAudioRef = AutoDisposeProviderRef<VKAPIAudio>;
 String _$vkAPICatalogHash() => r'505d581c717cb6b82774351ba5803acefe989002';
 
@@ -75,6 +81,8 @@ final vkAPICatalogProvider = AutoDisposeProvider<VKAPICatalog>.internal(
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef VkAPICatalogRef = AutoDisposeProviderRef<VKAPICatalog>;
 String _$vkAPIExecuteHash() => r'4483c3e635d57943658833c4cea11c2fc6003652';
 
@@ -93,6 +101,8 @@ final vkAPIExecuteProvider = AutoDisposeProvider<VKAPIExecute>.internal(
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef VkAPIExecuteRef = AutoDisposeProviderRef<VKAPIExecute>;
 // ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
+// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

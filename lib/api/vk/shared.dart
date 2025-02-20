@@ -1,8 +1,6 @@
 import "package:dio/dio.dart";
 import "package:json_annotation/json_annotation.dart";
 
-import "../../db/schemas/playlists.dart";
-import "../../provider/user.dart";
 import "../../utils.dart";
 
 part "shared.g.dart";
@@ -467,29 +465,6 @@ class Thumbnails {
   @JsonKey(name: "photo_1200")
   final String photo1200;
 
-  /// Создаёт из передаваемого объекта [DBThumbnails] объект данного класа.
-  static Thumbnails fromDBThumbnails(
-    DBThumbnails thumbnails,
-  ) =>
-      Thumbnails(
-        width: thumbnails.width!,
-        height: thumbnails.height!,
-        photo34: thumbnails.photo34!,
-        photo68: thumbnails.photo68!,
-        photo135: thumbnails.photo135!,
-        photo270: thumbnails.photo270!,
-        photo300: thumbnails.photo300!,
-        photo600: thumbnails.photo600!,
-        photo1200: thumbnails.photo1200!,
-      );
-
-  /// Возвращает копию данного класса в виде объекта [DBThumbnails].
-  DBThumbnails get asDBThumbnails => DBThumbnails.fromAPIPhoto(this);
-
-  /// Возвращает копию данного класса в виде объекта [ExtendedThumbnails].
-  ExtendedThumbnails get asExtendedThumbnail =>
-      ExtendedThumbnails.fromThumbnail(this);
-
   @override
   bool operator ==(covariant Thumbnails other) {
     if (identical(this, other)) return true;
@@ -682,17 +657,6 @@ class Album {
 
   @override
   int get hashCode => mediaKey.hashCode;
-
-  /// Создаёт из передаваемого объекта [DBAlbum] объект данного класа.
-  static Album fromDBAlbum(DBAlbum album) => Album(
-        id: album.id!,
-        title: album.title!,
-        ownerID: album.ownerID!,
-        accessKey: album.accessKey!,
-      );
-
-  /// Возвращает копию данного класса в виде объекта [DBAlbum].
-  DBAlbum get asDBAlbum => DBAlbum.fromAudioAlbum(this);
 
   Album({
     required this.id,

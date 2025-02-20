@@ -1,26 +1,74 @@
-import "package:flutter/foundation.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:isar/isar.dart";
 import "package:path_provider/path_provider.dart";
 
-import "../db/schemas/playlists.dart";
-import "../enums.dart";
-import "../main.dart" show appStorage;
+import "../../enums.dart";
+import "../../provider/user.dart";
 import "../provider/preferences.dart";
-import "../provider/user.dart";
+import "../schema/playlists.dart";
 import "logger.dart";
 import "player/server.dart";
+
+/// Тип для перечисления списка плейлистов.
+typedef ListOfPlaylists = List<DBPlaylist>;
+
+/// Тип для метода миграции базы данных Isar.
+typedef MigrationMethod = Future<List<DBPlaylist>> Function(List<DBPlaylist>);
 
 /// Класс для работы с базой данных Isar, используемого для хранения persistent-данных пользователя.
 class AppStorage {
   static final AppLogger logger = getLogger("AppStorage");
 
   /// Название файла базы данных Isar.
-  static String isarDBName = "flutter-vk";
+  static const String isarDBName = "flutter-vk";
+
+  /// Максимальная версия базы данных.
+  static const int maxDBVersion = 1;
 
   String? _dbDirectoryPath;
 
   Isar? _isar;
+
+  final Ref ref;
+
+  AppStorage({required this.ref}) {
+    if (migrationMethods.length != maxDBVersion) {
+      throw Exception(
+        "Not all migration methods are implemented. Expected $maxDBVersion, got ${migrationMethods.length}",
+      );
+    }
+  }
+
+  /// Возвращает список из всех методов, используемых для миграций БД.
+  List<MigrationMethod> get migrationMethods => [
+        _migrateV0,
+      ];
+
+  /// Возвращает список из методов, используемых для миграций БД, начиная с версии [startVersion].
+  List<MigrationMethod> getMigrationMethodsFromVersion(
+    int startVersion,
+  ) =>
+      migrationMethods.sublist(startVersion);
+
+  /// 64-битный FNV-1a алгоритм для хэширования [String] в виде [int].
+  ///
+  /// Используется как поле ID в БД Isar.
+  ///
+  /// [Взято из документации Isar](https://isar.dev/recipes/string_ids.html#fast-hash-function).
+  static int fastHash(String input) {
+    var hash = 0xcbf29ce484222325;
+
+    var i = 0;
+    while (i < input.length) {
+      final codeUnit = input.codeUnitAt(i++);
+      hash ^= codeUnit >> 8;
+      hash *= 0x100000001b3;
+      hash ^= codeUnit & 0xFF;
+      hash *= 0x100000001b3;
+    }
+
+    return hash;
+  }
 
   /// Возвращает путь к папке, в которой будут храниться файлы баз данных Isar.
   Future<String> getDBDirectoryPath() async {
@@ -31,15 +79,6 @@ class AppStorage {
 
   /// Возвращает объект базы данных Isar.
   Future<Isar> _getIsar() async {
-    // Для Web, используем БД в памяти.
-    if (kIsWeb) {
-      _isar ??= Isar.openSync(
-        [DBPlaylistSchema],
-        name: isarDBName,
-        directory: "",
-      );
-    }
-
     _isar ??= await Isar.open(
       [DBPlaylistSchema],
       name: isarDBName,
@@ -49,8 +88,10 @@ class AppStorage {
     return _isar!;
   }
 
-  /// Возвращает список из всех плейлистов пользователя.
-  Future<List<DBPlaylist>> getPlaylists() async {
+  /// Возвращает список всех плейлистов пользователя в формате [DBPlaylist].
+  ///
+  /// Вероятнее всего, вам нужен метод [getPlaylists].
+  Future<List<DBPlaylist>> getDBPlaylists() async {
     final Isar isar = await _getIsar();
 
     return await isar.dBPlaylists
@@ -61,34 +102,64 @@ class AppStorage {
         .findAll();
   }
 
+  /// Возвращает список из всех плейлистов пользователя.
+  Future<List<ExtendedPlaylist>> getPlaylists() async {
+    final List<DBPlaylist> dbPlaylists = await getDBPlaylists();
+
+    return dbPlaylists
+        .map(
+          (DBPlaylist playlist) => DBPlaylist.toExtended(playlist),
+        )
+        .toList();
+  }
+
   /// Сохраняет единственный плейлист пользователя в БД.
   ///
   /// Если Вам нужно сохранить множество плейлистов за раз, то воспользуйтесь методом [savePlaylists].
-  Future<void> savePlaylist(DBPlaylist playlist) async {
+  Future<void> savePlaylist(ExtendedPlaylist playlist) async {
     logger.d("Called savePlaylist for $playlist");
 
     final Isar isar = await _getIsar();
 
     await isar.writeTxn(() async {
-      await isar.dBPlaylists.put(playlist);
+      await isar.dBPlaylists.put(
+        DBPlaylist.fromExtended(playlist),
+      );
     });
   }
 
   /// Сохраняет список из плейлистов пользователя в БД.
   ///
   /// Отличие этого метода от [savePlaylist] в том, что он массово сохраняет сразу много плейлистов, что может быть быстрее, нежели использование `for`-цикла с [savePlaylist].
-  Future<void> savePlaylists(List<DBPlaylist> playlists) async {
+  Future<void> savePlaylists(List<ExtendedPlaylist> playlists) async {
     logger.d("Called savePlaylist for ${playlists.length} playlists");
 
     final Isar isar = await _getIsar();
 
     await isar.writeTxn(() async {
-      await isar.dBPlaylists.putAll(playlists);
+      await isar.dBPlaylists.putAll(
+        playlists
+            .map(
+              (playlist) => DBPlaylist.fromExtended(playlist),
+            )
+            .toList(),
+      );
     });
   }
 
   /// Удаляет все плейлисты пользователя, заменяя их на новые [playlists].
-  Future<void> replaceAllPlaylists(List<DBPlaylist> playlists) async {
+  Future<void> replaceAllPlaylists(List<ExtendedPlaylist> playlists) async {
+    await replaceAllDBPlaylists(
+      playlists
+          .map(
+            (playlist) => DBPlaylist.fromExtended(playlist),
+          )
+          .toList(),
+    );
+  }
+
+  /// Удаляет все плейлисты пользователя, заменяя их на новые [playlists].
+  Future<void> replaceAllDBPlaylists(List<DBPlaylist> playlists) async {
     logger.d("Called replaceAllPlaylists for ${playlists.length} playlists");
 
     final Isar isar = await _getIsar();
@@ -127,54 +198,22 @@ class AppStorage {
       await isar.dBPlaylists.importJson(json);
     });
   }
-}
-
-/// Тип для перечисления списка плейлистов.
-typedef ListOfPlaylists = List<DBPlaylist>;
-
-/// Тип для метода миграции базы данных Isar.
-typedef MigrationMethod = Future<List<DBPlaylist>> Function(List<DBPlaylist>);
-
-/// Класс, прозводящий миграцию базы данных Isar.
-///
-/// Для получения экземпляра класса используйте [dbMigratorProvider].
-class IsarDBMigrator {
-  static final AppLogger logger = getLogger("IsarDBMigrator");
-
-  /// Максимальная версия базы данных.
-  static const int maxDBVersion = 1;
-
-  /// Возвращает список из всех методов, используемых для миграций БД.
-  List<MigrationMethod> get migrationMethods => [
-        _migrateV0,
-      ];
-
-  /// Возвращает список из методов, используемых для миграций БД, начиная с версии [startVersion].
-  List<MigrationMethod> getMigrationMethodsFromVersion(
-    int startVersion,
-  ) =>
-      migrationMethods.sublist(startVersion);
-
-  final Ref _ref;
-
-  IsarDBMigrator({
-    required Ref ref,
-  }) : _ref = ref {
-    if (migrationMethods.length != maxDBVersion) {
-      throw Exception(
-        "Not all migration methods are implemented. Expected $maxDBVersion, got ${migrationMethods.length}",
-      );
-    }
-  }
 
   /// Запускает миграцию базы данных Isar.
   ///
   /// При вызове, проверяет текущую версию БД, и если она не равна максимальной ([maxDBVersion]), то начинает миграцию.
-  Future<void> performMigration() async {
-    logger.d("Called performMigration");
+  Future<void> migrate() async {
+    logger.d("Called migrate");
 
-    final preferences = _ref.read(preferencesProvider);
-    final preferencesNotifier = _ref.read(preferencesProvider.notifier);
+    final preferences = ref.read(preferencesProvider);
+    final preferencesNotifier = ref.read(preferencesProvider.notifier);
+
+    Future<void> resetDB() async {
+      logger.i("Resetting database...");
+
+      await resetDB();
+      preferencesNotifier.setDBVersion(maxDBVersion);
+    }
 
     int currentDBVersion = preferences.dbVersion;
     try {
@@ -186,7 +225,7 @@ class IsarDBMigrator {
           "DB version ($currentDBVersion) is greater than supported version ($maxDBVersion), resetting DB",
         );
 
-        await _resetDB();
+        await resetDB();
         currentDBVersion = maxDBVersion;
       }
 
@@ -230,7 +269,7 @@ class IsarDBMigrator {
       final Stopwatch migrationTimer = Stopwatch()..start();
 
       int curMigratedVersion = currentDBVersion;
-      List<DBPlaylist> curPlaylists = await appStorage.getPlaylists();
+      List<DBPlaylist> curPlaylists = await getDBPlaylists();
       for (final migrationMethod in migrationMethods) {
         logger.d("Migrating from v$curMigratedVersion...");
 
@@ -240,7 +279,7 @@ class IsarDBMigrator {
         // Миграция для текущей версии завершена.
         // Сохраняем плейлисты и увеличиваем версию БД.
         currentDBVersion++;
-        await appStorage.replaceAllPlaylists(curPlaylists);
+        await replaceAllDBPlaylists(curPlaylists);
         preferencesNotifier.setDBVersion(curMigratedVersion + 1);
 
         curMigrationTimer.stop();
@@ -269,23 +308,15 @@ class IsarDBMigrator {
 
       // Сбрасываем БД.
       currentDBVersion = maxDBVersion;
-      await _resetDB();
+      await resetDB();
     }
-  }
-
-  /// Сбрасывает БД, а так же устанавливает версию БД как самую последнюю.
-  Future<void> _resetDB() async {
-    logger.i("Resetting database...");
-
-    await appStorage.resetDB();
-    _ref.read(preferencesProvider.notifier).setDBVersion(maxDBVersion);
   }
 
   /// Миграция базы данных с версии 0.
   ///
   /// Данная миграция удаляет старый кэш треков, ранее хранившийся в папке `tracks` или `audios`.
   Future<ListOfPlaylists> _migrateV0(ListOfPlaylists playlists) async {
-    final int userID = _ref.read(userProvider).id;
+    final int userID = ref.read(userProvider).id;
 
     PlaylistType? getPlaylistType(DBPlaylist playlist) {
       if (playlist.id == 0) {

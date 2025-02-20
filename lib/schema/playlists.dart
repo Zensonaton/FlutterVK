@@ -1,10 +1,11 @@
 import "package:isar/isar.dart";
 
-import "../../api/vk/audio/get_lyrics.dart";
-import "../../api/vk/shared.dart";
-import "../../enums.dart";
-import "../../provider/user.dart";
-import "../../utils.dart";
+import "../api/vk/audio/get_lyrics.dart";
+import "../api/vk/shared.dart";
+import "../enums.dart";
+import "../provider/user.dart";
+import "../services/db.dart"
+    if (dart.library.js_interop) "../services/db_stub.dart";
 
 part "playlists.g.dart";
 
@@ -23,24 +24,25 @@ class DBExtendedThumbnail {
   /// URL на изображение альбома самого большого размера из всех. Именно это изображение имеет самое высокое качество, и поэтому его рекомендуется использовать в полноэкранном плеере.
   final String? photoMax;
 
-  /// Создаёт из передаваемого объекта [ExtendedThumbnails] объект данного класа.
-  static DBExtendedThumbnail fromExtendedThumbnail(
-    ExtendedThumbnails thumbnail,
-  ) =>
-      DBExtendedThumbnail(
-        photoSmall: thumbnail.photoSmall,
-        photoMedium: thumbnail.photoMedium,
-        photoBig: thumbnail.photoBig,
-        photoMax: thumbnail.photoMax,
-      );
+  /// Преобразовывает переданный объект типа [ExtendedThumbnails], преобразовывая его в [DBExtendedThumbnail].
+  static DBExtendedThumbnail fromExtended(ExtendedThumbnails thumbnails) {
+    return DBExtendedThumbnail(
+      photoSmall: thumbnails.photoSmall,
+      photoMedium: thumbnails.photoMedium,
+      photoBig: thumbnails.photoBig,
+      photoMax: thumbnails.photoMax,
+    );
+  }
 
-  /// Возвращает копию данного класса в виде объекта [ExtendedThumbnails].
-  @Ignore()
-  ExtendedThumbnails get asExtendedThumbnails =>
-      ExtendedThumbnails.fromDBExtendedThumbnail(this);
-
-  @override
-  String toString() => "DBExtendedThumbnails";
+  /// Преобразовывает переданный объект типа [DBExtendedThumbnail], преобразовывая его в [ExtendedThumbnails].
+  static ExtendedThumbnails toExtended(DBExtendedThumbnail thumbnails) {
+    return ExtendedThumbnails(
+      photoSmall: thumbnails.photoSmall!,
+      photoMedium: thumbnails.photoMedium!,
+      photoBig: thumbnails.photoBig!,
+      photoMax: thumbnails.photoMax!,
+    );
+  }
 
   DBExtendedThumbnail({
     this.photoSmall,
@@ -80,25 +82,35 @@ class DBThumbnails {
   /// URL на изображение альбома в размере `1200`.
   final String? photo1200;
 
-  /// Создаёт из передаваемого объекта [Thumbnails] объект данного класа.
-  static DBThumbnails fromAPIPhoto(Thumbnails photo) => DBThumbnails(
-        width: photo.width,
-        height: photo.height,
-        photo34: photo.photo34,
-        photo68: photo.photo68,
-        photo135: photo.photo135,
-        photo270: photo.photo270,
-        photo300: photo.photo300,
-        photo600: photo.photo600,
-        photo1200: photo.photo1200,
-      );
+  /// Преобразовывает переданный объект типа [Thumbnails], преобразовывая его в [DBThumbnails].
+  static DBThumbnails fromExtended(Thumbnails thumbnails) {
+    return DBThumbnails(
+      width: thumbnails.width,
+      height: thumbnails.height,
+      photo34: thumbnails.photo34,
+      photo68: thumbnails.photo68,
+      photo135: thumbnails.photo135,
+      photo270: thumbnails.photo270,
+      photo300: thumbnails.photo300,
+      photo600: thumbnails.photo600,
+      photo1200: thumbnails.photo1200,
+    );
+  }
 
-  /// Возвращает копию данного класса в виде объекта [Thumbnails].
-  @Ignore()
-  Thumbnails get asThumbnails => Thumbnails.fromDBThumbnails(this);
-
-  @override
-  String toString() => "DBThumbnails $width*$height";
+  /// Преобразовывает переданный объект типа [DBThumbnails], преобразовывая его в [Thumbnails].
+  static Thumbnails toExtended(DBThumbnails thumbnails) {
+    return Thumbnails(
+      width: thumbnails.width!,
+      height: thumbnails.height!,
+      photo34: thumbnails.photo34!,
+      photo68: thumbnails.photo68!,
+      photo135: thumbnails.photo135!,
+      photo270: thumbnails.photo270!,
+      photo300: thumbnails.photo300!,
+      photo600: thumbnails.photo600!,
+      photo1200: thumbnails.photo1200!,
+    );
+  }
 
   DBThumbnails({
     this.width,
@@ -134,23 +146,25 @@ class DBLyricTimestamp {
   /// Время окончания данной линиий в тексте песни в миллисекундах.
   final int? end;
 
-  /// Создаёт из передаваемого объекта [LyricTimestamp] объект данного класа.
-  static DBLyricTimestamp fromLyricTimestamp(LyricTimestamp timestamp) =>
-      DBLyricTimestamp(
-        line: timestamp.line,
-        interlude: timestamp.interlude,
-        begin: timestamp.begin,
-        end: timestamp.end,
-      );
+  /// Преобразовывает переданный объект типа [LyricTimestamp], преобразовывая его в [DBLyricTimestamp].
+  static DBLyricTimestamp fromExtended(LyricTimestamp timestamp) {
+    return DBLyricTimestamp(
+      line: timestamp.line,
+      interlude: timestamp.interlude,
+      begin: timestamp.begin,
+      end: timestamp.end,
+    );
+  }
 
-  /// Возвращает копию данного класса в виде объекта [LyricTimestamp].
-  @Ignore()
-  LyricTimestamp get asLyricTimestamp =>
-      LyricTimestamp.fromDBLyricTimestamp(this);
-
-  @override
-  String toString() =>
-      "DBLyricTimestamp \"${interlude ? "** interlude **" : line}\"";
+  /// Преобразовывает переданный объект типа [DBLyricTimestamp], преобразовывая его в [LyricTimestamp].
+  static LyricTimestamp toExtended(DBLyricTimestamp timestamp) {
+    return LyricTimestamp(
+      line: timestamp.line,
+      interlude: timestamp.interlude,
+      begin: timestamp.begin,
+      end: timestamp.end,
+    );
+  }
 
   DBLyricTimestamp({
     this.line,
@@ -178,24 +192,31 @@ class DBLyrics {
   /// Список всех линий в тексте песни. Может отсутствовать в пользу [timestamps].
   final List<String>? text;
 
-  /// Создаёт из передаваемого объекта [Lyrics] объект данного класа.
-  static DBLyrics fromLyrics(Lyrics lyrics) => DBLyrics(
-        language: lyrics.language,
-        timestamps: lyrics.timestamps
-            ?.map(
-              (LyricTimestamp timestamp) => timestamp.asDBTimestamp,
-            )
-            .toList(),
-        text: lyrics.text,
-      );
+  /// Преобразовывает переданный объект типа [Lyrics], преобразовывая его в [DBLyrics].
+  static DBLyrics fromExtended(Lyrics lyrics) {
+    return DBLyrics(
+      language: lyrics.language,
+      timestamps: lyrics.timestamps
+          ?.map(
+            (timestamp) => DBLyricTimestamp.fromExtended(timestamp),
+          )
+          .toList(),
+      text: lyrics.text,
+    );
+  }
 
-  /// Возвращает копию данного класса в виде объекта [Lyrics].
-  @Ignore()
-  Lyrics get asLyrics => Lyrics.fromDBLyrics(this);
-
-  @override
-  String toString() =>
-      "DBLyrics $language with ${timestamps != null ? "${timestamps!.length} sync lyrics" : "text lyrics"}";
+  /// Преобразовывает переданный объект типа [DBLyrics], преобразовывая его в [Lyrics].
+  static Lyrics toExtended(DBLyrics lyrics) {
+    return Lyrics(
+      language: lyrics.language,
+      timestamps: lyrics.timestamps
+          ?.map(
+            (timestamp) => DBLyricTimestamp.toExtended(timestamp),
+          )
+          .toList(),
+      text: lyrics.text,
+    );
+  }
 
   DBLyrics({
     this.language,
@@ -221,23 +242,28 @@ class DBAlbum {
   /// Ключ доступа.
   final String? accessKey;
 
-  /// Создаёт из передаваемого объекта [Album] объект данного класа.
-  static DBAlbum fromAudioAlbum(Album album) => DBAlbum(
-        id: album.id,
-        title: album.title,
-        ownerID: album.ownerID,
-        accessKey: album.accessKey,
-      );
+  /// Преобразовывает переданный объект типа [Album], преобразовывая его в [DBAlbum].
+  static DBAlbum fromExtended(Album album) {
+    return DBAlbum(
+      id: album.id,
+      title: album.title,
+      ownerID: album.ownerID,
+      accessKey: album.accessKey,
+    );
+  }
 
-  /// Возвращает копию данного класса в виде объекта [Album].
-  @Ignore()
-  Album get asAudioAlbum => Album.fromDBAlbum(this);
+  /// Преобразовывает переданный объект типа [DBAlbum], преобразовывая его в [Album].
+  static Album toExtended(DBAlbum album) {
+    return Album(
+      id: album.id!,
+      title: album.title!,
+      ownerID: album.ownerID!,
+      accessKey: album.accessKey!,
+    );
+  }
 
   /// Возвращает строку, которая используется как идентификатор пользователя и медиа.
   String get mediaKey => "${ownerID}_$id";
-
-  @override
-  String toString() => "DBAlbum $mediaKey \"$title\"";
 
   @override
   bool operator ==(covariant DBAlbum other) {
@@ -341,38 +367,85 @@ class DBAudio {
   /// {@macro ImageSchemeExtractor.colorCount}
   final int? colorCount;
 
-  /// Создаёт из передаваемого объекта [ExtendedAudio] объект данного класа.
-  static DBAudio fromExtendedAudio(ExtendedAudio audio) => DBAudio(
-        id: audio.id,
-        ownerID: audio.ownerID,
-        artist: audio.artist,
-        title: audio.title,
-        duration: audio.duration,
-        accessKey: audio.accessKey,
-        subtitle: audio.subtitle,
-        isExplicit: audio.isExplicit,
-        isRestricted: audio.isRestricted,
-        date: audio.date,
-        hasLyrics: audio.hasLyrics,
-        vkLyrics: audio.vkLyrics?.asDBLyrics,
-        lrcLibLyrics: audio.lrcLibLyrics?.asDBLyrics,
-        genreID: audio.genreID,
-        album: audio.album?.asDBAlbum,
-        vkThumbs: audio.vkThumbs?.asDBExtendedThumbnail,
-        deezerThumbs: audio.deezerThumbs?.asDBExtendedThumbnail,
-        forceDeezerThumbs: audio.forceDeezerThumbs,
-        isCached: audio.isCached,
-        cachedSize: audio.cachedSize,
-        replacedLocally: audio.replacedLocally,
-        colorInts: audio.colorInts?.keys.toList(),
-        scoredColorInts: audio.scoredColorInts,
-        frequentColorInt: audio.frequentColorInt,
-        colorCount: audio.colorCount,
-      );
+  /// Преобразовывает переданный объект типа [ExtendedAudio], преобразовывая его в [DBAudio].
+  static DBAudio fromExtended(ExtendedAudio audio) {
+    return DBAudio(
+      id: audio.id,
+      ownerID: audio.ownerID,
+      artist: audio.artist,
+      title: audio.title,
+      duration: audio.duration,
+      accessKey: audio.accessKey,
+      subtitle: audio.subtitle,
+      isExplicit: audio.isExplicit,
+      isRestricted: audio.isRestricted,
+      date: audio.date,
+      hasLyrics: audio.hasLyrics,
+      vkLyrics: audio.vkLyrics != null
+          ? DBLyrics.fromExtended(audio.vkLyrics!)
+          : null,
+      lrcLibLyrics: audio.lrcLibLyrics != null
+          ? DBLyrics.fromExtended(audio.lrcLibLyrics!)
+          : null,
+      genreID: audio.genreID,
+      album: audio.album != null ? DBAlbum.fromExtended(audio.album!) : null,
+      vkThumbs: audio.vkThumbs != null
+          ? DBExtendedThumbnail.fromExtended(audio.vkThumbs!)
+          : null,
+      deezerThumbs: audio.deezerThumbs != null
+          ? DBExtendedThumbnail.fromExtended(audio.deezerThumbs!)
+          : null,
+      forceDeezerThumbs: audio.forceDeezerThumbs,
+      isCached: audio.isCached,
+      cachedSize: audio.cachedSize,
+      replacedLocally: audio.replacedLocally,
+      colorInts: audio.colorInts?.keys.toList(),
+      scoredColorInts: audio.scoredColorInts,
+      frequentColorInt: audio.frequentColorInt,
+      colorCount: audio.colorCount,
+    );
+  }
 
-  /// Возвращает копию данного класса в виде объекта [ExtendedAudio].
-  @Ignore()
-  ExtendedAudio get asExtendedAudio => ExtendedAudio.fromDBAudio(this);
+  /// Преобразовывает переданный объект типа [DBAudio], преобразовывая его в [ExtendedAudio].
+  static ExtendedAudio toExtended(DBAudio audio, {bool isLiked = false}) {
+    return ExtendedAudio(
+      id: audio.id!,
+      ownerID: audio.ownerID!,
+      artist: audio.artist!,
+      title: audio.title!,
+      duration: audio.duration!,
+      subtitle: audio.subtitle,
+      accessKey: audio.accessKey,
+      isExplicit: audio.isExplicit!,
+      isRestricted: audio.isRestricted!,
+      date: audio.date,
+      album: audio.album != null ? DBAlbum.toExtended(audio.album!) : null,
+      vkThumbs: audio.vkThumbs != null
+          ? DBExtendedThumbnail.toExtended(audio.vkThumbs!)
+          : null,
+      deezerThumbs: audio.deezerThumbs != null
+          ? DBExtendedThumbnail.toExtended(audio.deezerThumbs!)
+          : null,
+      forceDeezerThumbs: audio.forceDeezerThumbs,
+      hasLyrics: audio.hasLyrics,
+      isLiked: isLiked,
+      genreID: audio.genreID ?? 18,
+      vkLyrics:
+          audio.vkLyrics != null ? DBLyrics.toExtended(audio.vkLyrics!) : null,
+      lrcLibLyrics: audio.lrcLibLyrics != null
+          ? DBLyrics.toExtended(audio.lrcLibLyrics!)
+          : null,
+      isCached: audio.isCached ?? false,
+      cachedSize: audio.cachedSize,
+      replacedLocally: audio.replacedLocally,
+      colorInts: audio.colorInts != null
+          ? Map.fromIterable(audio.colorInts!, key: (item) => item)
+          : null,
+      scoredColorInts: audio.scoredColorInts,
+      frequentColorInt: audio.frequentColorInt,
+      colorCount: audio.colorCount,
+    );
+  }
 
   /// Делает копию этого класа с новыми передаваемыми значениями.
   DBAudio copyWith({
@@ -433,9 +506,6 @@ class DBAudio {
   String get mediaKey => "${ownerID}_$id";
 
   @override
-  String toString() => "DBAudio $mediaKey $artist - $title";
-
-  @override
   bool operator ==(covariant DBAudio other) {
     if (identical(this, other)) return true;
 
@@ -479,7 +549,7 @@ class DBAudio {
 /// Класс, олицетворяющий запись плейлиста в базе данных Isar.
 @Collection()
 class DBPlaylist {
-  Id get isarId => fastHash(mediaKey);
+  Id get isarId => AppStorage.fastHash(mediaKey);
 
   /// ID плейлиста ВКонтакте.
   final int id;
@@ -545,8 +615,8 @@ class DBPlaylist {
   /// {@macro ImageSchemeExtractor.colorCount}
   final int? colorCount;
 
-  /// Создаёт объект [DBPlaylist] из передаваемого объекта [ExtendedPlaylist].
-  static DBPlaylist fromExtendedPlaylist(ExtendedPlaylist playlist) {
+  /// Преобразовывает переданный объект типа [ExtendedPlaylist], преобразовывая его в [DBPlaylist].
+  static DBPlaylist fromExtended(ExtendedPlaylist playlist) {
     List<DBAudio>? audios;
 
     // VK Mix плейлисты не должны содержать треки.
@@ -564,7 +634,7 @@ class DBPlaylist {
             },
           )
           .map(
-            (ExtendedAudio audio) => audio.asDBAudio,
+            (ExtendedAudio audio) => DBAudio.fromExtended(audio),
           )
           .toList();
     }
@@ -579,7 +649,9 @@ class DBPlaylist {
       count: playlist.count,
       accessKey: playlist.accessKey,
       isFollowing: playlist.isFollowing,
-      photo: playlist.photo?.asDBThumbnails,
+      photo: playlist.photo != null
+          ? DBThumbnails.fromExtended(playlist.photo!)
+          : null,
       audios: audios,
       mixID: playlist.mixID,
       backgroundAnimationUrl: playlist.backgroundAnimationUrl,
@@ -587,7 +659,7 @@ class DBPlaylist {
       color: playlist.color,
       knownTracks: playlist.knownTracks
           ?.map(
-            (ExtendedAudio audio) => audio.asDBAudio,
+            (ExtendedAudio audio) => DBAudio.fromExtended(audio),
           )
           .toList(),
       isCachingAllowed: playlist.cacheTracks ?? false,
@@ -598,10 +670,47 @@ class DBPlaylist {
     );
   }
 
-  /// Возвращает копию данного класса в виде объекта [ExtendedPlaylist].
-  @Ignore()
-  ExtendedPlaylist get asExtendedPlaylist =>
-      ExtendedPlaylist.fromDBPlaylist(this);
+  /// Преобразовывает переданный объект типа [DBPlaylist], преобразовывая его в [ExtendedPlaylist].
+  static ExtendedPlaylist toExtended(DBPlaylist playlist) {
+    return ExtendedPlaylist(
+      id: playlist.id,
+      ownerID: playlist.ownerID,
+      type: playlist.type,
+      title: playlist.title,
+      description: playlist.description,
+      count: playlist.count,
+      accessKey: playlist.accessKey,
+      isFollowing: playlist.isFollowing ?? false,
+      subtitle: playlist.subtitle,
+      photo: playlist.photo != null
+          ? DBThumbnails.toExtended(playlist.photo!)
+          : null,
+      audios: playlist.audios
+          ?.map(
+            (DBAudio audio) => DBAudio.toExtended(
+              audio,
+              isLiked: playlist.type == PlaylistType.favorites,
+            ),
+          )
+          .toList(),
+      mixID: playlist.mixID,
+      backgroundAnimationUrl: playlist.backgroundAnimationUrl,
+      simillarity: playlist.simillarity,
+      color: playlist.color,
+      knownTracks: playlist.knownTracks
+          ?.map(
+            (DBAudio audio) => DBAudio.toExtended(audio),
+          )
+          .toList(),
+      cacheTracks: playlist.isCachingAllowed,
+      colorInts: playlist.colorInts != null
+          ? Map.fromIterable(playlist.colorInts!, key: (item) => item)
+          : null,
+      scoredColorInts: playlist.scoredColorInts,
+      frequentColorInt: playlist.frequentColorInt,
+      colorCount: playlist.colorCount,
+    );
+  }
 
   /// Делает копию этого класа с новыми передаваемыми значениями.
   DBPlaylist copyWith({
@@ -655,10 +764,6 @@ class DBPlaylist {
   /// Возвращает строку, которая используется как идентификатор пользователя и медиа.
   @Ignore()
   String get mediaKey => "${ownerID}_$id";
-
-  @override
-  String toString() =>
-      "DBPlaylist $mediaKey with ${audios?.length}/$count tracks";
 
   @override
   bool operator ==(covariant DBPlaylist other) {

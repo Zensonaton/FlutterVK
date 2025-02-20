@@ -30,6 +30,8 @@ final dioProvider = AutoDisposeProvider<Dio>.internal(
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef DioRef = AutoDisposeProviderRef<Dio>;
 String _$vkDioHash() => r'3ef9b06017e7b53c19f1d5683271b3cc267b6ca8';
 
@@ -56,6 +58,8 @@ final vkDioProvider = AutoDisposeProvider<Dio>.internal(
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef VkDioRef = AutoDisposeProviderRef<Dio>;
 String _$lrcLibDioHash() => r'5d33d88ef32cac02fdffb48452a666af33e86213';
 
@@ -81,6 +85,8 @@ final lrcLibDioProvider = AutoDisposeProvider<Dio>.internal(
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef LrcLibDioRef = AutoDisposeProviderRef<Dio>;
 // ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
+// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

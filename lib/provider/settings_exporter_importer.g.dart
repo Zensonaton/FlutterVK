@@ -39,27 +39,19 @@ ExportedAudio _$ExportedAudioFromJson(Map<String, dynamic> json) =>
       debugComment: json['debugComment'] as String?,
     );
 
-Map<String, dynamic> _$ExportedAudioToJson(ExportedAudio instance) {
-  final val = <String, dynamic>{
-    'id': instance.id,
-    'ownerID': instance.ownerID,
-    'playlistOwnerID': instance.playlistOwnerID,
-    'playlistID': instance.playlistID,
-  };
-
-  void writeNotNull(String key, dynamic value) {
-    if (value != null) {
-      val[key] = value;
-    }
-  }
-
-  writeNotNull('isExported', instance.isExported);
-  writeNotNull('forceDeezerThumbs', instance.forceDeezerThumbs);
-  writeNotNull('deezerThumbs', instance.deezerThumbs);
-  writeNotNull('isCached', instance.isCached);
-  writeNotNull('replacedLocally', instance.replacedLocally);
-  return val;
-}
+Map<String, dynamic> _$ExportedAudioToJson(ExportedAudio instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'ownerID': instance.ownerID,
+      'playlistOwnerID': instance.playlistOwnerID,
+      'playlistID': instance.playlistID,
+      if (instance.isExported case final value?) 'isExported': value,
+      if (instance.forceDeezerThumbs case final value?)
+        'forceDeezerThumbs': value,
+      if (instance.deezerThumbs case final value?) 'deezerThumbs': value,
+      if (instance.isCached case final value?) 'isCached': value,
+      if (instance.replacedLocally case final value?) 'replacedLocally': value,
+    };
 
 ExportedSections _$ExportedSectionsFromJson(Map<String, dynamic> json) =>
     ExportedSections(
@@ -81,23 +73,19 @@ ExportedSections _$ExportedSectionsFromJson(Map<String, dynamic> json) =>
           .toList(),
     );
 
-Map<String, dynamic> _$ExportedSectionsToJson(ExportedSections instance) {
-  final val = <String, dynamic>{};
-
-  void writeNotNull(String key, dynamic value) {
-    if (value != null) {
-      val[key] = value;
-    }
-  }
-
-  writeNotNull('settings', instance.settings);
-  writeNotNull('modifiedThumbnails', instance.modifiedThumbnails);
-  writeNotNull('modifiedLyrics', instance.modifiedLyrics);
-  writeNotNull('modifiedLocalMetadata', instance.modifiedLocalMetadata);
-  writeNotNull('cachedRestricted', instance.cachedRestricted);
-  writeNotNull('locallyReplacedAudios', instance.locallyReplacedAudios);
-  return val;
-}
+Map<String, dynamic> _$ExportedSectionsToJson(ExportedSections instance) =>
+    <String, dynamic>{
+      if (instance.settings case final value?) 'settings': value,
+      if (instance.modifiedThumbnails case final value?)
+        'modifiedThumbnails': value,
+      if (instance.modifiedLyrics case final value?) 'modifiedLyrics': value,
+      if (instance.modifiedLocalMetadata case final value?)
+        'modifiedLocalMetadata': value,
+      if (instance.cachedRestricted case final value?)
+        'cachedRestricted': value,
+      if (instance.locallyReplacedAudios case final value?)
+        'locallyReplacedAudios': value,
+    };
 
 ExportedAudiosInfoMetadata _$ExportedAudiosInfoMetadataFromJson(
         Map<String, dynamic> json) =>
@@ -142,6 +130,8 @@ final settingsExporterProvider = AutoDisposeProvider<SettingsExporter>.internal(
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef SettingsExporterRef = AutoDisposeProviderRef<SettingsExporter>;
 // ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
+// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

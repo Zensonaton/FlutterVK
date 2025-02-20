@@ -7,7 +7,7 @@ import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:share_plus/share_plus.dart";
 
-import "../../../../main.dart";
+import "../../../../provider/db.dart";
 import "../../../../provider/playlists.dart";
 import "../../../../provider/user.dart";
 import "../../../../widgets/dialogs.dart";
@@ -24,6 +24,7 @@ class PlaylistsViewerDebugMenu extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final playlists = ref.watch(playlistsProvider);
+    final appStorage = ref.read(appStorageProvider);
 
     if (!playlists.hasValue) {
       return const Text(
@@ -128,9 +129,7 @@ class PlaylistsViewerDebugMenu extends ConsumerWidget {
               }
 
               final List<ExtendedPlaylist> playlists =
-                  (await appStorage.getPlaylists())
-                      .map((item) => item.asExtendedPlaylist)
-                      .toList();
+                  await appStorage.getPlaylists();
 
               ref.read(playlistsProvider.notifier).setPlaylists(
                     playlists,

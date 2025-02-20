@@ -22,7 +22,7 @@ import "package:window_manager/window_manager.dart";
 import "app.dart";
 import "consts.dart";
 import "firebase_options.dart";
-import "provider/db_migrator.dart";
+import "provider/db.dart";
 import "provider/dio.dart";
 import "provider/l18n.dart";
 import "provider/observer.dart";
@@ -30,7 +30,6 @@ import "provider/player.dart";
 import "provider/preferences.dart";
 import "provider/shared_prefs.dart";
 import "services/connectivity_manager.dart";
-import "services/db.dart";
 import "services/logger.dart";
 import "services/player/server.dart";
 import "services/updater.dart";
@@ -43,9 +42,6 @@ import "utils.dart";
 /// navigatorKey.currentContext?.go("/music");
 /// ```
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-
-/// Объект базы данных приложения.
-late final AppStorage appStorage;
 
 /// Менеджер интернет соедининия.
 late final ConnectivityManager connectivityManager;
@@ -201,7 +197,7 @@ Future main() async {
     );
     final preferences = container.read(preferencesProvider);
     final l18n = container.read(l18nProvider);
-    final dbMigrator = container.read(dbMigratorProvider);
+    final appStorage = container.read(appStorageProvider);
 
     // Инициализируем Firebase (Analytics, Crashlytics), в release-режиме.
     // TODO: Реализовать логирование ошибок, даже если Firebase не используется (т.е., повторить функционал catcher_2).
@@ -294,11 +290,8 @@ Future main() async {
       }
     }
 
-    // Загружаем базу данных Isar.
-    appStorage = AppStorage();
-
-    // Запускаем миграцию базы данных.
-    await dbMigrator.performMigration();
+    // Загружаем базу данных Isar, а так же запускаем миграцию.
+    await appStorage.migrate();
 
     // Инициализируем библиотеку для создания уведомлений на OS Windows.
     if (Platform.isWindows) {
@@ -375,7 +368,7 @@ Future main() async {
     );
 
     logger.i(
-      "Running Flutter VK v$appVersion ${isPrerelease ? "(pre-release)" : ""} on ${Platform.operatingSystem}",
+      "Running Flutter VK v$appVersion ${isPrerelease ? "(pre-release)" : ""}",
     );
 
     // Запускаем само приложение.

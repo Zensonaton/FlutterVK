@@ -5,7 +5,6 @@ import "package:shared_preferences/shared_preferences.dart";
 import "../api/deezer/shared.dart";
 import "../api/vk/audio/get_lyrics.dart";
 import "../api/vk/shared.dart";
-import "../db/schemas/playlists.dart";
 import "../enums.dart";
 import "../main.dart";
 import "../utils.dart";
@@ -188,53 +187,6 @@ class ExtendedPlaylist {
         isLiveData: isLiveData,
         areTracksLive: areTracksLive,
       );
-
-  /// Создаёт из передаваемого объекта [DBPlaylist] объект данного класа.
-  static ExtendedPlaylist fromDBPlaylist(
-    DBPlaylist playlist,
-  ) =>
-      ExtendedPlaylist(
-        id: playlist.id,
-        ownerID: playlist.ownerID,
-        type: playlist.type,
-        title: playlist.title,
-        description: playlist.description,
-        count: playlist.count,
-        accessKey: playlist.accessKey,
-        isFollowing: playlist.isFollowing ?? false,
-        subtitle: playlist.subtitle,
-        photo: playlist.photo?.asThumbnails,
-        audios: playlist.audios
-            ?.map(
-              (DBAudio audio) => ExtendedAudio.fromDBAudio(
-                audio,
-                isLiked: playlist.id == 0,
-              ),
-            )
-            .toList(),
-        mixID: playlist.mixID,
-        backgroundAnimationUrl: playlist.backgroundAnimationUrl,
-        simillarity: playlist.simillarity,
-        color: playlist.color,
-        knownTracks: playlist.knownTracks
-            ?.map(
-              (DBAudio audio) => ExtendedAudio.fromDBAudio(
-                audio,
-                isLiked: playlist.id == 0,
-              ),
-            )
-            .toList(),
-        cacheTracks: playlist.isCachingAllowed,
-        colorInts: playlist.colorInts != null
-            ? Map.fromIterable(playlist.colorInts!, key: (item) => item)
-            : null,
-        scoredColorInts: playlist.scoredColorInts,
-        frequentColorInt: playlist.frequentColorInt,
-        colorCount: playlist.colorCount,
-      );
-
-  /// Возвращает копию данного класса в виде объекта [DBPlaylist].
-  DBPlaylist get asDBPlaylist => DBPlaylist.fromExtendedPlaylist(this);
 
   /// Делает копию этого класа с новыми передаваемыми значениями.
   ///
@@ -429,20 +381,20 @@ class ExtendedThumbnails {
   /// - Deezer: `1000x1000`.
   final String photoMax;
 
-  /// Создаёт из передаваемого объекта [DBExtendedThumbnail] объект данного класа.
-  static ExtendedThumbnails fromDBExtendedThumbnail(
-    DBExtendedThumbnail thumbnail,
-  ) =>
-      ExtendedThumbnails(
-        photoSmall: thumbnail.photoSmall!,
-        photoMedium: thumbnail.photoMedium!,
-        photoBig: thumbnail.photoBig!,
-        photoMax: thumbnail.photoMax!,
-      );
+  // /// Создаёт из передаваемого объекта [DBExtendedThumbnail] объект данного класа.
+  // static ExtendedThumbnails fromDBExtendedThumbnail(
+  //   DBExtendedThumbnail thumbnail,
+  // ) =>
+  //     ExtendedThumbnails(
+  //       photoSmall: thumbnail.photoSmall!,
+  //       photoMedium: thumbnail.photoMedium!,
+  //       photoBig: thumbnail.photoBig!,
+  //       photoMax: thumbnail.photoMax!,
+  //     );
 
-  /// Возвращает копию данного класса в виде объекта [DBExtendedThumbnail].
-  DBExtendedThumbnail get asDBExtendedThumbnail =>
-      DBExtendedThumbnail.fromExtendedThumbnail(this);
+  // /// Возвращает копию данного класса в виде объекта [DBExtendedThumbnail].
+  // DBExtendedThumbnail get asDBExtendedThumbnail =>
+  //     DBExtendedThumbnail.fromExtendedThumbnail(this);
 
   /// Создаёт из передаваемого объекта [Thumbnails] объект данного класа.
   static ExtendedThumbnails fromThumbnail(Thumbnails thumbnails) =>
@@ -709,47 +661,13 @@ class ExtendedAudio {
         url: audio.url,
         date: audio.date,
         album: audio.album,
-        vkThumbs: audio.album?.thumbnails?.asExtendedThumbnail,
+        vkThumbs: audio.album?.thumbnails != null
+            ? ExtendedThumbnails.fromThumbnail(audio.album!.thumbnails!)
+            : null,
         hasLyrics: audio.hasLyrics,
         genreID: audio.genreID,
         vkLyrics: lyrics,
         isLiked: isLiked ?? false,
-      );
-
-  /// Создаёт из передаваемого объекта [DBAudio] объект данного класа.
-  static ExtendedAudio fromDBAudio(
-    DBAudio audio, {
-    bool isLiked = false,
-  }) =>
-      ExtendedAudio(
-        id: audio.id!,
-        ownerID: audio.ownerID!,
-        artist: audio.artist!,
-        title: audio.title!,
-        duration: audio.duration!,
-        subtitle: audio.subtitle,
-        accessKey: audio.accessKey,
-        isExplicit: audio.isExplicit!,
-        isRestricted: audio.isRestricted!,
-        date: audio.date,
-        album: audio.album?.asAudioAlbum,
-        vkThumbs: audio.vkThumbs?.asExtendedThumbnails,
-        deezerThumbs: audio.deezerThumbs?.asExtendedThumbnails,
-        forceDeezerThumbs: audio.forceDeezerThumbs,
-        hasLyrics: audio.hasLyrics,
-        genreID: audio.genreID ?? 18,
-        vkLyrics: audio.vkLyrics?.asLyrics,
-        lrcLibLyrics: audio.lrcLibLyrics?.asLyrics,
-        isLiked: isLiked,
-        isCached: audio.isCached ?? false,
-        cachedSize: audio.cachedSize,
-        replacedLocally: audio.replacedLocally,
-        colorInts: audio.colorInts != null
-            ? Map.fromIterable(audio.colorInts!, key: (item) => item)
-            : null,
-        scoredColorInts: audio.scoredColorInts,
-        frequentColorInt: audio.frequentColorInt,
-        colorCount: audio.colorCount,
       );
 
   /// Делает копию этого класа с новыми передаваемыми значениями.
@@ -893,9 +811,6 @@ class ExtendedAudio {
         frequentColorInt: frequentColorInt ?? this.frequentColorInt,
         colorCount: colorCount ?? this.colorCount,
       );
-
-  /// Возвращает копию данного класса в виде объекта [DBAudio].
-  DBAudio get asDBAudio => DBAudio.fromExtendedAudio(this);
 
   /// Возвращает строку, которая используется как идентификатор пользователя и медиа.
   String get mediaKey => "${ownerID}_$id";
