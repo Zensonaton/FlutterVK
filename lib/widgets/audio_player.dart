@@ -767,7 +767,6 @@ class _MiddleControls extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final player = ref.read(playerProvider);
-    final preferencesNotifier = ref.read(preferencesProvider.notifier);
 
     ref.watch(playerIsShufflingProvider);
     ref.watch(playerIsRepeatingProvider);
@@ -785,13 +784,10 @@ class _MiddleControls extends ConsumerWidget {
       }
 
       await player.toggleShuffle();
-      preferencesNotifier.setShuffleEnabled(player.isShuffling);
     }
 
     void onRepeatToggle() async {
       await player.toggleRepeat();
-
-      preferencesNotifier.setLoopModeEnabled(player.isRepeating);
     }
 
     return Wrap(
