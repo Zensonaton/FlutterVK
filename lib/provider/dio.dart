@@ -15,6 +15,7 @@ import "../api/vk/consts.dart";
 import "../api/vk/shared.dart";
 import "../consts.dart";
 import "../services/logger.dart";
+import "../utils.dart";
 import "auth.dart";
 
 part "dio.g.dart";
@@ -30,6 +31,10 @@ List<int> gzipEncoder(
   String request,
   RequestOptions options,
 ) {
+  if (isWeb) {
+    return utf8.encode(request);
+  }
+
   return gzip.encode(utf8.encode(request));
 }
 
@@ -44,8 +49,10 @@ void initDioInterceptors(
   final AppLogger logger = getLogger(loggerName);
 
   // Игнорируем плохие SSL-сертификаты.
-  (dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient =
-      () => httpClient;
+  if (!isWeb) {
+    (dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient =
+        () => httpClient;
+  }
 
   dio.interceptors.addAll([
     // Обработчик для добавления версии API и access_token для VK API.

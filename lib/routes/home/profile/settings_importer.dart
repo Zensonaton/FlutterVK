@@ -90,8 +90,8 @@ class SettingsImporterRoute extends HookConsumerWidget {
       try {
         FilePickerResult? result = await FilePicker.platform.pickFiles(
           dialogTitle: l18n.settings_import_select_file_dialog_title,
-          type: Platform.isWindows ? FileType.custom : FileType.any,
-          allowedExtensions: Platform.isWindows ? ["fluttervk"] : null,
+          type: isWindows ? FileType.custom : FileType.any,
+          allowedExtensions: isWindows ? ["fluttervk"] : null,
           lockParentWindow: true,
         );
         if (result == null) return;
@@ -211,13 +211,13 @@ class SettingsImporterRoute extends HookConsumerWidget {
         context,
         icon: Icons.file_download_outlined,
         title: l18n.settings_import_success,
-        description: Platform.isAndroid
+        description: isAndroid
             ? l18n.settings_import_success_desc_no_delete
             : l18n.settings_import_success_desc_with_delete,
       );
 
       // Если мы на OS Android, то удаляем файл несмотря на ответ, поскольку он находится в кэше.
-      if (Platform.isAndroid || result == true) {
+      if (isAndroid || result == true) {
         try {
           if (exportedFile.existsSync()) {
             await exportedFile.delete();

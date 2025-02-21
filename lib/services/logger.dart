@@ -6,6 +6,8 @@ import "package:logger/logger.dart";
 import "package:path/path.dart" as path;
 import "package:path_provider/path_provider.dart";
 
+import "../utils.dart";
+
 /// Возвращает объект логгера для передаваемого [owner].
 AppLogger getLogger<T>(T owner) {
   String ownerStr = owner is String ? owner : owner.toString();
@@ -19,6 +21,10 @@ AppLogger getLogger<T>(T owner) {
 ///
 /// Если вам нужно, что бы файл с логом существовал, то вместо этого метода воспользуйтесь методом [createLogFile].
 Future<File> logFilePath() async {
+  if (isWeb) {
+    throw UnsupportedError("Web is not supported");
+  }
+
   final String dir = (await getApplicationSupportDirectory()).path;
 
   return File(path.join(dir, "Flutter VK logs.txt"));
@@ -51,7 +57,6 @@ class _AppLogOutput extends LogOutput {
   @override
   void output(OutputEvent event) async {
     final List<String> output = [];
-    _logFile ??= await createLogFile();
 
     // Содержимое лога.
     output.addAll(event.lines);
@@ -64,10 +69,14 @@ class _AppLogOutput extends LogOutput {
     if (event.level.value <= Level.debug.value) return;
 
     // Сохраняем в файл, удаляя ANSI-символы.
-    _logFile!.writeAsStringSync(
-      _AppLogPrinter.removeAnsiColors("${output.join("\n")}\n"),
-      mode: FileMode.writeOnlyAppend,
-    );
+    if (!isWeb) {
+      _logFile ??= await createLogFile();
+
+      _logFile!.writeAsStringSync(
+        _AppLogPrinter.removeAnsiColors("${output.join("\n")}\n"),
+        mode: FileMode.writeOnlyAppend,
+      );
+    }
   }
 }
 

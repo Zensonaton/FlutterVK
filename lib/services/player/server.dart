@@ -318,7 +318,15 @@ class PlayerLocalServer {
   }
 
   /// Запускает локальный HTTP-сервер.
+  ///
+  /// Данный метод не делает ничего если приложение запущено в Web.
   Future<void> start() async {
+    if (isWeb) {
+      logger.d("Local HTTP server is not supported on Web");
+
+      return;
+    }
+
     logger.d("Starting local HTTP server...");
 
     final stopWatch = Stopwatch()..start();

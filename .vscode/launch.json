@@ -8,9 +8,10 @@
 			"name": "Запустить в debug-режиме",
 			"request": "launch",
 			"type": "dart",
-			"args":[
+			"args": [
 				"--dart-define", "PRERELEASE=1"
-			]
+			],
+
 		},
 		{
 			"name": "Запустить в profile-режиме",
@@ -26,7 +27,7 @@
 			"request": "launch",
 			"type": "dart",
 			"flutterMode": "release",
-			"args":[
+			"args": [
 				"--dart-define", "PRERELEASE=1"
 			]
 		},

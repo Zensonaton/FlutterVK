@@ -36,7 +36,7 @@ void shareLogs() async {
   final File path = await logFilePath();
 
   // Если пользователь на OS Windows, то просто открываем папку с файлом.
-  if (Platform.isWindows) {
+  if (isWindows) {
     await Process.run(
       "explorer.exe",
       ["/select,", path.path],

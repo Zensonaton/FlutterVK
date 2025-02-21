@@ -21,6 +21,7 @@ import "../../../provider/user.dart";
 import "../../../services/download_manager.dart";
 import "../../../services/logger.dart";
 import "../../../services/player/server.dart";
+import "../../../utils.dart";
 import "../../../widgets/audio_track.dart";
 import "../../../widgets/dialogs.dart";
 import "../music.dart";
@@ -631,7 +632,7 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
                     ),
 
                     // Открыть папку с треком.
-                    if (Platform.isWindows)
+                    if (isWindows)
                       ListTile(
                         leading: const Icon(
                           Icons.folder_open,

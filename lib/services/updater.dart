@@ -16,6 +16,7 @@ import "../main.dart";
 import "../provider/download_manager.dart";
 import "../provider/l18n.dart";
 import "../provider/updater.dart";
+import "../utils.dart";
 import "../widgets/dialogs.dart";
 import "../widgets/update_dialog.dart";
 import "download_manager.dart";
@@ -110,9 +111,9 @@ class Updater {
   ///
   /// К примеру, на OS Windows возвращает список из единственного `.exe` файла, который не зависит от архитектуры процессора, а на Android возвращает список из двух `.apk`-файлов: один для конкретной архитектуры текущего устройства, а второй - универсальный.
   static Future<List<String>> getFilenameByPlatform() async {
-    if (Platform.isWindows) {
+    if (isWindows) {
       return ["Flutter.VK.installer.exe"];
-    } else if (Platform.isAndroid) {
+    } else if (isAndroid) {
       final List<String> filenames = ["Flutter.VK.Android.apk"];
 
       // Создаём список из .apk-файлов, которые зависят от архитектуры устройства.
@@ -336,7 +337,7 @@ class Updater {
   static Future<void> installUpdate(File update) async {
     logger.d("Installing update");
 
-    if (Platform.isWindows) {
+    if (isWindows) {
       // Запускаем процесс обновления через командную строку.
       final ProcessResult result = await Process.run(update.path, []);
 
@@ -346,7 +347,7 @@ class Updater {
       );
 
       return;
-    } else if (Platform.isAndroid) {
+    } else if (isAndroid) {
       // Запрашиваем разрешение на установку.
       // TODO: Отображать ошибку пользователю, если он не дал разрешение.
       if (!(await Permission.requestInstallPackages.request()).isGranted) {
@@ -373,7 +374,7 @@ class Updater {
   /// Загружает и устанавливает указанный Release во временную папку, возвращая путь к файлу в случае успешной установки.
   Future<File> downloadAndInstallUpdate(Release release) async {
     // На Android, запрашиваем права для установки .apk-файлов.
-    if (Platform.isAndroid) {
+    if (isAndroid) {
       await Permission.requestInstallPackages.request();
     }
 

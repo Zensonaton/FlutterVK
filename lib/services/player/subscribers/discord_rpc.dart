@@ -1,5 +1,4 @@
 import "dart:async";
-import "dart:io";
 
 import "package:discord_rpc/discord_rpc.dart";
 
@@ -24,7 +23,7 @@ class DiscordRPCPlayerSubscriber extends PlayerSubscriber {
 
   @override
   Future<void> initialize() async {
-    if (!(Platform.isWindows || Platform.isLinux)) {
+    if (!(isWindows || isLinux)) {
       throw UnsupportedError(
         "Discord RPC is only supported on Windows and Linux.",
       );

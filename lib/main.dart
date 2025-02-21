@@ -128,7 +128,7 @@ Future<void> initSystemTray(AppLocalizations l18n) async {
 
   await systemTray.initSystemTray(
     title: appName,
-    iconPath: Platform.isWindows ? "assets/icon.ico" : "assets/icon.png",
+    iconPath: isWindows ? "assets/icon.ico" : "assets/icon.png",
   );
 
   // Создаём контекстное меню.
@@ -165,13 +165,9 @@ Future<void> initSystemTray(AppLocalizations l18n) async {
   systemTray.registerSystemTrayEventHandler(
     (String eventName) {
       if (eventName == kSystemTrayEventClick) {
-        Platform.isWindows
-            ? windowManager.show()
-            : systemTray.popUpContextMenu();
+        isWindows ? windowManager.show() : systemTray.popUpContextMenu();
       } else if (eventName == kSystemTrayEventRightClick) {
-        Platform.isWindows
-            ? systemTray.popUpContextMenu()
-            : windowManager.show();
+        isWindows ? systemTray.popUpContextMenu() : windowManager.show();
       }
     },
   );
@@ -219,102 +215,101 @@ Future main() async {
       };
     }
 
-    // Инициализируем WindowManager на Desktop-платформах.
-    if (isDesktop) {
-      await windowManager.ensureInitialized();
-
-      // Делаем так, что бы пользователь не смог закрыть приложение.
-      // Обработка закрытия приложения находится в ином месте: [_MainAppState.onWindowClose].
-      await windowManager.setPreventClose(true);
-
-      // Устанавливаем размеры окна.
-      windowManager.waitUntilReadyToShow(
-        const WindowOptions(
-          size: Size(
-            1280,
-            720,
-          ),
-          minimumSize: Size(
-            400,
-            500,
-          ),
-          center: true,
-        ),
-        () async {
-          await windowManager.show();
-
-          // Делаем фокус окна не в debug-режиме.
-          if (!kDebugMode) {
-            await windowManager.focus();
-          }
-
-          // Инициализируем иконку в трее.
-          await initSystemTray(l18n);
-
-          // Делаем название окна в debug-режиме.
-          if (kDebugMode) {
-            await windowManager.setTitle("Flutter VK (DEBUG)");
-          }
-        },
-      );
-    }
-
     // Узнаём версию приложения.
     appVersion = (await PackageInfo.fromPlatform()).version;
 
-    // Узнаём информацию об устройстве.
-    androidDeviceInfo =
-        Platform.isAndroid ? await deviceInfoPlugin.androidInfo : null;
-    logger.d("Supported ABIs: ${androidDeviceInfo?.supportedAbis}");
+    if (!isWeb) {
+      // Инициализируем WindowManager на Desktop-платформах.
+      if (isDesktop) {
+        await windowManager.ensureInitialized();
+        await windowManager.setPreventClose(true);
 
-    // Удаляем файл обновления, если таковой существует.
-    final supportDirectory = (await getApplicationSupportDirectory()).path;
-    for (String filename in await Updater.getFilenameByPlatform()) {
-      final File updaterInstaller = File(
-        path.join(
-          supportDirectory,
-          filename,
-        ),
-      );
+        // Узнаём информацию об устройстве.
+        androidDeviceInfo =
+            isAndroid ? await deviceInfoPlugin.androidInfo : null;
+        logger.d("Supported ABIs: ${androidDeviceInfo?.supportedAbis}");
 
-      try {
-        if (!updaterInstaller.existsSync()) continue;
+        // Устанавливаем размеры окна.
+        windowManager.waitUntilReadyToShow(
+          const WindowOptions(
+            size: Size(
+              1280,
+              720,
+            ),
+            minimumSize: Size(
+              400,
+              500,
+            ),
+            center: true,
+          ),
+          () async {
+            await windowManager.show();
 
-        await updaterInstaller.delete();
-      } catch (error, stackTrace) {
-        logger.w(
-          "Error while deleting updater on path ${updaterInstaller.path}: ",
-          error: error,
-          stackTrace: stackTrace,
+            // Делаем фокус окна не в debug-режиме.
+            if (!kDebugMode) {
+              await windowManager.focus();
+            }
+
+            // Инициализируем иконку в трее.
+            await initSystemTray(l18n);
+
+            // Делаем название окна в debug-режиме.
+            if (kDebugMode) {
+              await windowManager.setTitle("Flutter VK (DEBUG)");
+            }
+          },
         );
       }
-    }
 
-    // Загружаем базу данных Isar, а так же запускаем миграцию.
-    await appStorage.migrate();
-
-    // Инициализируем библиотеку для создания уведомлений на OS Windows.
-    if (Platform.isWindows) {
-      await localNotifier.setup(appName: appName);
-    } else if (Platform.isAndroid) {
-      // Инициализируем уведомления на OS Android.
-
-      notificationsPlugin = FlutterLocalNotificationsPlugin();
-      await notificationsPlugin.initialize(
-        onDidReceiveNotificationResponse: notificationTap,
-        onDidReceiveBackgroundNotificationResponse: notificationTap,
-        const InitializationSettings(
-          android: AndroidInitializationSettings(
-            "drawable/ic_music_note",
+      // Удаляем файл обновления, если таковой существует.
+      final supportDirectory = (await getApplicationSupportDirectory()).path;
+      for (String filename in await Updater.getFilenameByPlatform()) {
+        final File updaterInstaller = File(
+          path.join(
+            supportDirectory,
+            filename,
           ),
-        ),
-      );
-      androidNotificationsPlugin =
-          notificationsPlugin.resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>();
+        );
 
-      // Запрашиваем разрешения на отправку уведомлений.
-      androidNotificationsPlugin?.requestNotificationsPermission();
+        try {
+          if (!updaterInstaller.existsSync()) continue;
+
+          await updaterInstaller.delete();
+        } catch (error, stackTrace) {
+          logger.w(
+            "Error while deleting updater on path ${updaterInstaller.path}: ",
+            error: error,
+            stackTrace: stackTrace,
+          );
+        }
+      }
+
+      // Загружаем базу данных Isar, а так же запускаем миграцию.
+      await appStorage.migrate();
+
+      // Инициализируем библиотеку для создания уведомлений на OS Windows.
+      if (isWindows) {
+        await localNotifier.setup(appName: appName);
+      } else if (isAndroid) {
+        // Инициализируем уведомления на OS Android.
+
+        notificationsPlugin = FlutterLocalNotificationsPlugin();
+        await notificationsPlugin.initialize(
+          onDidReceiveNotificationResponse: notificationTap,
+          onDidReceiveBackgroundNotificationResponse: notificationTap,
+          const InitializationSettings(
+            android: AndroidInitializationSettings(
+              "drawable/ic_music_note",
+            ),
+          ),
+        );
+        androidNotificationsPlugin =
+            notificationsPlugin.resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin>();
+
+        // Запрашиваем разрешения на отправку уведомлений.
+        androidNotificationsPlugin?.requestNotificationsPermission();
+      }
     }
 
     // Создаём объекты Dio.

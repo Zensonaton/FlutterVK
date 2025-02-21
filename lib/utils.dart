@@ -166,20 +166,38 @@ class AlwaysScrollableScrollBehavior extends MaterialScrollBehavior {
   }
 }
 
+/// Указывает, что приложение запущено на Web.
+bool get isWeb => kIsWeb;
+
+/// Указывает, что приложение запущено на Windows.
+bool get isWindows => !isWeb && Platform.isWindows;
+
+/// Указывает, что приложение запущено на Linux.
+bool get isLinux => !isWeb && Platform.isWindows;
+
+/// Указывает, что приложение запущено на macOS.
+bool get isMacOS => !isWeb && Platform.isMacOS;
+
+/// Указывает, что приложение запущено на Android.
+bool get isAndroid => !isWeb && Platform.isAndroid;
+
+/// Указывает, что приложение запущено на iOS
+bool get isiOS => !isWeb && Platform.isIOS;
+
 /// Указывает, что приложение запущено на Desktop-платформе.
 ///
 /// ```dart
 /// Platform.isWindows || Platform.isLinux || Platform.isMacOS
 /// ```
 bool get isDesktop =>
-    Platform.isWindows || Platform.isLinux || Platform.isMacOS;
+    !isWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
 
 /// Указывает, что приложение запущено на мобильной платформе.
 ///
 /// ```dart
 /// Platform.isAndroid || Platform.isIOS
 /// ```
-bool get isMobile => Platform.isAndroid || Platform.isIOS;
+bool get isMobile => !isWeb && (Platform.isAndroid || Platform.isIOS);
 
 /// Указывает, что используется Mobile Layout.
 bool isMobileLayout(BuildContext context) =>

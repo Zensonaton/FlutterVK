@@ -1,14 +1,13 @@
 import "dart:async";
-import "dart:io";
 
 import "package:audio_service/audio_service.dart";
-import "package:flutter/foundation.dart";
 
 import "../../../consts.dart";
 import "../../../enums.dart";
 import "../../../main.dart";
 import "../../../provider/user.dart";
 import "../../../routes/home/music.dart";
+import "../../../utils.dart";
 import "../../cache_manager.dart";
 import "../../logger.dart";
 import "../player.dart";
@@ -25,7 +24,7 @@ class AudioServicePlayerSubscriber extends PlayerSubscriber {
 
   @override
   Future<void> initialize() async {
-    if (!(kIsWeb || Platform.isAndroid || Platform.isIOS || Platform.isMacOS)) {
+    if (isAndroid || isiOS || isMacOS) {
       throw UnsupportedError(
         "Audio service is only supported on Web, Android, iOS and macOS.",
       );

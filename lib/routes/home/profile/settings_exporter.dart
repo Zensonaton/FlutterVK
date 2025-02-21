@@ -109,7 +109,7 @@ class SuccessSettingsExportDialog extends HookConsumerWidget {
     }
 
     void onOpenFolderTap() async {
-      if (!Platform.isWindows) {
+      if (!isWindows) {
         throw UnsupportedError(
           "Opening folder is only supported on Windows OS.",
         );
@@ -169,7 +169,7 @@ class SuccessSettingsExportDialog extends HookConsumerWidget {
         ),
 
         // Открыть папку с экспортированным файлом на OS Windows.
-        if (Platform.isWindows)
+        if (isWindows)
           ListTile(
             title: Text(
               l18n.general_open_folder,

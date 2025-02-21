@@ -1,5 +1,3 @@
-import "dart:io";
-
 import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:flutter_local_notifications/flutter_local_notifications.dart";
@@ -9,6 +7,7 @@ import "package:riverpod_annotation/riverpod_annotation.dart";
 import "../main.dart";
 import "../services/download_manager.dart";
 import "../services/logger.dart";
+import "../utils.dart";
 
 part "download_manager.g.dart";
 
@@ -89,7 +88,7 @@ class DownloadManager extends _$DownloadManager {
       "Progress should be on range of 0.0 to 1.0, but got $progress instead",
     );
 
-    if (!Platform.isAndroid) return;
+    if (!isAndroid) return;
 
     // Если прошло менее 1 секунды с момента последнего обновления, то ничего не делаем.
     final int curEpoch = DateTime.now().millisecondsSinceEpoch;
@@ -187,7 +186,7 @@ class DownloadManager extends _$DownloadManager {
         );
 
         // Если мы на OS Android, то убираем FGS-уведомление.
-        if (Platform.isAndroid) {
+        if (isAndroid) {
           androidNotificationsPlugin?.stopForegroundService();
         }
       });

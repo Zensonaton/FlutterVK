@@ -135,7 +135,7 @@ class FlutterVKApp extends HookConsumerWidget {
       () {
         // Обработчик событий окна приложения.
         final manager = FlutterVKWindowManager(ref: ref);
-        if (Platform.isWindows) {
+        if (isWindows) {
           windowManager.addListener(manager);
         }
 

@@ -1,8 +1,8 @@
 import "dart:async";
-import "dart:io";
 
 import "package:audio_session/audio_session.dart";
 
+import "../../../utils.dart";
 import "../../logger.dart";
 import "../player.dart";
 import "../subscriber.dart";
@@ -18,7 +18,7 @@ class AudioSessionPlayerSubscriber extends PlayerSubscriber {
 
   @override
   Future<void> initialize() async {
-    if (!Platform.isAndroid) {
+    if (!isAndroid) {
       throw UnsupportedError("AudioSession is not supported on this platform");
     }
 

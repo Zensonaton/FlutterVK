@@ -1,7 +1,5 @@
 import "dart:async";
-import "dart:io";
 
-import "package:flutter/foundation.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
 import "../../enums.dart";
@@ -112,18 +110,17 @@ class Player {
       PlaylistModificationsPlayerSubscriber(this),
 
       // SMTC (Windows).
-      if (Platform.isWindows) SMTCPlayerSubscriber(this),
+      if (isWindows) SMTCPlayerSubscriber(this),
 
       // Discord RPC (Windows, Linux).
-      if (Platform.isWindows || Platform.isLinux)
-        DiscordRPCPlayerSubscriber(this),
+      if (isWindows || isLinux) DiscordRPCPlayerSubscriber(this),
 
       // Audio service (Web, Android, iOS, macOS).
-      if (kIsWeb || Platform.isAndroid || Platform.isIOS || Platform.isMacOS)
+      if (isWeb || isAndroid || isiOS || isMacOS)
         AudioServicePlayerSubscriber(this),
 
       // Audio session (Android).
-      if (Platform.isAndroid) AudioSessionPlayerSubscriber(this),
+      if (isAndroid) AudioSessionPlayerSubscriber(this),
 
       // Pause on mute (Desktop).
       if (isDesktop) PauseOnMutePlayerSubscriber(this),
