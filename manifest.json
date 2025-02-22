@@ -1,0 +1,35 @@
+{
+    "name": "Flutter VK",
+    "short_name": "Flutter VK",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#0078FF",
+    "theme_color": "#44CFFB",
+    "description": "Экспериментальный, неофициальный клиент ВКонтакте, с открытым исходным кодом, построенный при помощи фреймворка Flutter, с поддержкой прослушивания музыки без необходимости приобретать подписку VK BOOM.",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/Icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}
