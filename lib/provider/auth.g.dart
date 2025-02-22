@@ -43,7 +43,25 @@ final secondaryTokenProvider = AutoDisposeProvider<String?>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef SecondaryTokenRef = AutoDisposeProviderRef<String?>;
-String _$currentAuthStateHash() => r'9e2cc078a14ac16973d2710b241e6ed6c55728f5';
+String _$isDemoHash() => r'b27afefc2ba0ffdf74bece30bfafa47a9db4e7e0';
+
+/// Возвращает true, если включён демо-режим.
+///
+/// Copied from [isDemo].
+@ProviderFor(isDemo)
+final isDemoProvider = AutoDisposeProvider<bool>.internal(
+  isDemo,
+  name: r'isDemoProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$isDemoHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef IsDemoRef = AutoDisposeProviderRef<bool>;
+String _$currentAuthStateHash() => r'160a1ab679d72e5e389a7a0c6ae85642f759e3cd';
 
 /// [Provider] для хранения состояния авторизации пользователя. Позволяет авторизовывать и деавторизовывать пользователя.
 ///

@@ -724,6 +724,14 @@ class PlayerLocalServer {
     ExtendedAudio audio,
     ExtendedPlaylist playlist,
   ) {
+    if (isWeb) {
+      if (audio.url == null) {
+        throw UnsupportedError("No audio url is present");
+      }
+
+      return audio.url!;
+    }
+
     // Пытаемся найти данный трек в кэше.
     ServedAudio? servedAudio = _servedAudios.getByAudio(audio, playlist);
     if (servedAudio == null) {

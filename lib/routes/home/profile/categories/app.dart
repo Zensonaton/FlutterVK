@@ -5,6 +5,7 @@ import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
 import "../../../../enums.dart";
+import "../../../../provider/auth.dart";
 import "../../../../provider/l18n.dart";
 import "../../../../provider/preferences.dart";
 import "../../../../services/logger.dart";
@@ -162,22 +163,30 @@ class ProfileAppSettingsCategory extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l18n = ref.watch(l18nProvider);
+    final preferences = ref.watch(preferencesProvider);
+    final isDemo = ref.watch(isDemoProvider);
 
     final mobileLayout = isMobileLayout(context);
 
-    final preferences = ref.watch(preferencesProvider);
-
     final logExists = useFuture(
       useMemoized(
-        () async => (await logFilePath()).existsSync(),
+        () async {
+          if (isWeb) return false;
+
+          return (await logFilePath()).existsSync();
+        },
       ),
     );
 
     void onSettingsExportTap() {
+      if (!demoModeDialog(ref, context)) return;
+
       context.go("/profile/settings_exporter");
     }
 
     void onSettingsImportTap() {
+      if (!demoModeDialog(ref, context)) return;
+
       context.go("/profile/settings_importer");
     }
 
@@ -231,18 +240,19 @@ class ProfileAppSettingsCategory extends HookConsumerWidget {
         ),
 
         // Сбросить базу данных.
-        ListTile(
-          leading: const Icon(
-            Icons.delete,
+        if (!isWeb)
+          ListTile(
+            leading: const Icon(
+              Icons.delete,
+            ),
+            title: Text(
+              l18n.reset_db,
+            ),
+            subtitle: Text(
+              l18n.reset_db_desc,
+            ),
+            onTap: onDBResetTap,
           ),
-          title: Text(
-            l18n.reset_db,
-          ),
-          subtitle: Text(
-            l18n.reset_db_desc,
-          ),
-          onTap: onDBResetTap,
-        ),
 
         // Политика для обновлений.
         SettingWithDialog(
@@ -250,6 +260,7 @@ class ProfileAppSettingsCategory extends HookConsumerWidget {
           title: l18n.app_updates_policy,
           subtitle: l18n.app_updates_policy_desc,
           dialog: const UpdatesDialogTypeActionDialog(),
+          enabled: !isDemo,
           settingText: {
             UpdatePolicy.dialog: l18n.app_updates_policy_dialog,
             UpdatePolicy.popup: l18n.app_updates_policy_popup,
@@ -263,7 +274,7 @@ class ProfileAppSettingsCategory extends HookConsumerWidget {
           title: l18n.updates_channel,
           subtitle: l18n.updates_channel_desc,
           dialog: const UpdatesChannelDialog(),
-          enabled: preferences.updatePolicy != UpdatePolicy.disabled,
+          enabled: !isDemo && preferences.updatePolicy != UpdatePolicy.disabled,
           settingText: {
             UpdateBranch.releasesOnly: l18n.updates_channel_releases,
             UpdateBranch.preReleases: l18n.updates_channel_prereleases,
@@ -271,21 +282,22 @@ class ProfileAppSettingsCategory extends HookConsumerWidget {
         ),
 
         // Поделиться логами.
-        ListTile(
-          leading: const Icon(
-            Icons.bug_report,
+        if (!isWeb)
+          ListTile(
+            leading: const Icon(
+              Icons.bug_report,
+            ),
+            title: Text(
+              l18n.share_logs,
+            ),
+            enabled: logExists.data ?? false,
+            subtitle: Text(
+              logExists.data ?? false
+                  ? l18n.share_logs_desc
+                  : l18n.share_logs_desc_no_logs,
+            ),
+            onTap: shareLogs,
           ),
-          title: Text(
-            l18n.share_logs,
-          ),
-          enabled: logExists.data ?? false,
-          subtitle: Text(
-            logExists.data ?? false
-                ? l18n.share_logs_desc
-                : l18n.share_logs_desc_no_logs,
-          ),
-          onTap: shareLogs,
-        ),
 
         // TODO: Проверить на наличие обновлений.
       ],

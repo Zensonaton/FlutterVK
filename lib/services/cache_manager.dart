@@ -4,6 +4,7 @@ import "package:file/src/backends/local/local_file_system.dart";
 import "package:file/src/interface/file.dart";
 import "package:flutter_cache_manager/flutter_cache_manager.dart";
 import "package:flutter_cache_manager/src/storage/file_system/file_system_io.dart";
+import "package:flutter_cache_manager/src/storage/file_system/file_system_web.dart";
 import "package:path/path.dart";
 import "package:path_provider/path_provider.dart";
 
@@ -24,6 +25,10 @@ class IOCacheManagerExtended extends IOFileSystem {
 
   @override
   Future<File> createFile(String name) async {
+    if (isWeb) {
+      throw UnsupportedError("Web is not supported");
+    }
+
     final baseDir = storeInCacheDirectory
         ? await getApplicationCacheDirectory()
         : await getApplicationSupportDirectory();
@@ -52,13 +57,17 @@ class CachedNetworkImagesManager {
   static CacheManager instance = CacheManager(
     Config(
       key,
-      repo: JsonCacheInfoRepository(
-        databaseName: key,
-      ),
-      fileSystem: IOCacheManagerExtended(
-        key,
-        storeInCacheDirectory: isMobile,
-      ),
+      repo: isWeb
+          ? NonStoringObjectProvider()
+          : JsonCacheInfoRepository(
+              databaseName: key,
+            ),
+      fileSystem: isWeb
+          ? MemoryCacheSystem()
+          : IOCacheManagerExtended(
+              key,
+              storeInCacheDirectory: isMobile,
+            ),
       fileService: HttpFileService(),
       maxNrOfCacheObjects: 100,
     ),
@@ -76,13 +85,17 @@ class CachedAlbumImagesManager {
   static CacheManager instance = CacheManager(
     Config(
       key,
-      repo: JsonCacheInfoRepository(
-        databaseName: key,
-      ),
-      fileSystem: IOCacheManagerExtended(
-        key,
-        storeInCacheDirectory: false,
-      ),
+      repo: isWeb
+          ? NonStoringObjectProvider()
+          : JsonCacheInfoRepository(
+              databaseName: key,
+            ),
+      fileSystem: isWeb
+          ? MemoryCacheSystem()
+          : IOCacheManagerExtended(
+              key,
+              storeInCacheDirectory: false,
+            ),
       fileService: HttpFileService(),
       stalePeriod: const Duration(days: 90),
       maxNrOfCacheObjects: 3000,
@@ -97,13 +110,17 @@ class CachedLottieAnimationsManager {
   static CacheManager instance = CacheManager(
     Config(
       key,
-      repo: JsonCacheInfoRepository(
-        databaseName: key,
-      ),
-      fileSystem: IOCacheManagerExtended(
-        key,
-        storeInCacheDirectory: isMobile,
-      ),
+      repo: isWeb
+          ? NonStoringObjectProvider()
+          : JsonCacheInfoRepository(
+              databaseName: key,
+            ),
+      fileSystem: isWeb
+          ? MemoryCacheSystem()
+          : IOCacheManagerExtended(
+              key,
+              storeInCacheDirectory: isMobile,
+            ),
       fileService: HttpFileService(),
       maxNrOfCacheObjects: 3,
     ),

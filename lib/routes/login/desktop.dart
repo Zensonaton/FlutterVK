@@ -14,6 +14,9 @@ import "../login.dart";
 
 /// Часть Route'а [LoginRoute], показываемая при запуске на desktop-платформах.
 class DesktopLoginWidget extends HookConsumerWidget {
+  /// Текст, который нужно ввести в поле для ввода токена, чтобы войти в демо-режим.
+  static const String demoText = "DEMO";
+
   /// Указывает, что вместо авторизации с Kate Mobile (главный токен) будет проводиться вторичная авторизация от имени VK Admin.
   ///
   /// Используется при подключении рекомендаций ВКонтакте.
@@ -35,8 +38,28 @@ class DesktopLoginWidget extends HookConsumerWidget {
       () => extractAccessToken(controller.text),
       [controller.text],
     );
+    final bool isDemo = useMemoized(
+      () => controller.text == demoText,
+      [controller.text],
+    );
 
     final isLoading = useState(false);
+
+    Future<void> onAuthPressed() async {
+      isLoading.value = true;
+
+      await tryAuthorize(
+        ref,
+        context,
+        extractedToken!,
+        useAlternateAuth,
+      );
+      isLoading.value = false;
+    }
+
+    void onDemoPressed() {
+      tryDemoAuth(ref);
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -110,28 +133,36 @@ class DesktopLoginWidget extends HookConsumerWidget {
                   const Gap(36),
 
                   // Кнопки для продолжения авторизации.
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: LoadingIconButton(
-                      icon: const Icon(
-                        Icons.arrow_forward_ios,
-                      ),
-                      label: Text(
-                        l18n.login_authorize,
-                      ),
-                      onPressed: extractedToken != null
-                          ? () async {
-                              isLoading.value = true;
+                  SizedBox(
+                    width: double.infinity,
+                    child: Wrap(
+                      spacing: 8,
+                      alignment: WrapAlignment.end,
+                      children: [
+                        // Кнопка для входа в демо-режим.
+                        if (isDemo)
+                          FilledButton.icon(
+                            icon: const Icon(
+                              Icons.play_arrow,
+                            ),
+                            label: const Text(
+                              "DEMO",
+                            ),
+                            onPressed: onDemoPressed,
+                          ),
 
-                              await tryAuthorize(
-                                ref,
-                                context,
-                                extractedToken,
-                                useAlternateAuth,
-                              );
-                              isLoading.value = false;
-                            }
-                          : null,
+                        // Кнопка "авторизоваться".
+                        LoadingIconButton(
+                          icon: const Icon(
+                            Icons.arrow_forward_ios,
+                          ),
+                          label: Text(
+                            l18n.login_authorize,
+                          ),
+                          onPressed:
+                              extractedToken != null ? onAuthPressed : null,
+                        ),
+                      ],
                     ),
                   ),
                 ],

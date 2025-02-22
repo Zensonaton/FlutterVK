@@ -1,10 +1,10 @@
 {
     "name": "Flutter VK",
-    "short_name": "fluttervk",
+    "short_name": "Flutter VK",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
+    "background_color": "#0078FF",
+    "theme_color": "#44CFFB",
     "description": "Экспериментальный, неофициальный клиент ВКонтакте, с открытым исходным кодом, построенный при помощи фреймворка Flutter, с поддержкой прослушивания музыки без необходимости приобретать подписку VK BOOM.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,

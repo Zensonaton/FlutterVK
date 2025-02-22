@@ -62,8 +62,14 @@
 
 	"internet_connection_lost_desc": "Connection to the servers lost. Some app functionality will be disabled.",
 
+	"demo_mode_enabled_title": "Unavailable in demo mode",
+	"demo_mode_enabled_desc": "This feature is not available in demo mode of Flutter VK.\nHead to the \"profile\" to download full version on your device.",
+
 	"prerelease_app_version_warning": "Beta Version",
 	"prerelease_app_version_warning_desc": "Shhhh! Here be dragons! You''ve stepped into dangerous territory by installing the beta version of Flutter VK. Beta versions are less stable and not recommended for regular users.\n\nBy continuing, you acknowledge the risks of using the beta version of the app.\nThis notification will only be shown once.",
+
+	"demo_mode_welcome_warning": "Demo mode",
+	"demo_mode_welcome_warning_desc": "Welcome to demo mode of Flutter VK!\nThis app version is limited and there are performance and stability issues.\nHead to the \"profile\" to download full version on your device.",
 
 	"welcome_title": "Welcome! 😎",
 	"welcome_desc": "<bold>Flutter VK</bold> is an experimental unofficial VK client built using the Flutter framework with <link>open source code</link> for listening to music without needing a VK BOOM subscription.",
@@ -189,8 +195,10 @@
 	"logout_desc": "Are you sure you want to log out of the {name} account in the Flutter VK app?",
 
 	"no_recommendations_warning": "Recommendations are not connected",
-	"no_recommendations_warning_desc": "Connected Recommendations give you access to curated by VK playlists with new tracks, and ability to see audio thumbnails. Click this field to connect Recommendations and fix this.",
+	"no_recommendations_warning_desc": "Connected Recommendations give you access to curated by VK playlists with new tracks, and ability to see audio thumbnails. Tap here to connect Recommendations and fix this.",
 
+	"demo_mode_warning": "You are running in demo mode",
+	"demo_mode_warning_desc": "Because of this, some features may be disabled or not work correctly.\n\nTap here to install full version of Flutter VK on your device.",
 
 	"visual_settings": "Visual & cosmetic settings",
 

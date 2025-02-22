@@ -4,10 +4,35 @@ import "package:json_annotation/json_annotation.dart";
 
 import "../../../main.dart";
 import "../../../utils.dart";
-
+import "../fake.dart";
 import "../shared.dart";
 
 part "mass_get_audio.g.dart";
+
+/// Возвращает фейковые данные для этого метода.
+Map<String, dynamic> _getFakeData(int? albumID) {
+  List<Audio> audios = switch (albumID) {
+    null => fakeMyMusicAudio,
+    1 => fakeClancyTourAudio,
+    2 => fakeCunksFavoritesAudio,
+    _ => fakePlaylistAudios,
+  };
+
+  return {
+    "audioCount": audios.length,
+    "audios": audios
+        .map(
+          (audio) => audio.toJson(),
+        )
+        .toList(),
+    "playlistsCount": fakeYourPlaylists.length,
+    "playlists": fakeYourPlaylists
+        .map(
+          (playlist) => playlist.toJson(),
+        )
+        .toList(),
+  };
+}
 
 /// Ответ для метода [execute_mass_get_audio].
 @JsonSerializable()
@@ -73,6 +98,9 @@ return {'audioCount': audioCount, 'audios': audios, 'playlistsCount': playlistsR
     "execute",
     data: {
       "code": minimizeJS(codeToExecute),
+
+      // Demo response
+      "_demo_": _getFakeData(albumID),
     },
   );
 

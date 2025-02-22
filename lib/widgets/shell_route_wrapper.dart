@@ -10,6 +10,7 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "../consts.dart";
 import "../enums.dart";
 import "../main.dart";
+import "../provider/auth.dart";
 import "../provider/download_manager.dart";
 import "../provider/l18n.dart";
 import "../provider/player.dart";
@@ -18,8 +19,8 @@ import "../provider/updater.dart";
 import "../services/logger.dart";
 import "../utils.dart";
 import "audio_player.dart";
+import "dialogs.dart";
 import "download_manager_icon.dart";
-import "update_dialog.dart";
 
 /// Класс для отображения Route'ов в [BottomNavigationBar], вместе с их названиями, а так же иконками.
 class NavigationItem {
@@ -166,6 +167,7 @@ class ShellRouteWrapper extends HookConsumerWidget {
 
   /// Проверяет на наличие обновлений, и дальше предлагает пользователю обновиться, если есть новое обновление.
   void checkForUpdates(WidgetRef ref, BuildContext context) async {
+    final l18n = ref.watch(l18nProvider);
     final preferences = ref.read(preferencesProvider);
     final preferencesNotifier = ref.read(preferencesProvider.notifier);
     UpdateBranch updateBranch = preferences.updateBranch;
@@ -174,9 +176,10 @@ class ShellRouteWrapper extends HookConsumerWidget {
     if (isPrerelease && !preferences.preReleaseWarningShown) {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         preferencesNotifier.setPreReleaseWarningShown(true);
-        await showDialog(
-          context: context,
-          builder: (context) => const PreReleaseInstalledDialog(),
+        showErrorDialog(
+          context,
+          title: l18n.prerelease_app_version_warning,
+          description: l18n.prerelease_app_version_warning_desc,
         );
 
         // Обновляем настройки.
@@ -201,16 +204,33 @@ class ShellRouteWrapper extends HookConsumerWidget {
     }
   }
 
+  /// Отображает диалог о том, что запущена демо-версия приложения.
+  void showDemoModeWarning(WidgetRef ref, BuildContext context) async {
+    final l18n = ref.watch(l18nProvider);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      showErrorDialog(
+        context,
+        title: l18n.demo_mode_welcome_warning,
+        description: l18n.demo_mode_welcome_warning_desc,
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l18n = ref.watch(l18nProvider);
+    final isDemo = ref.read(isDemoProvider);
 
     final bool mobileLayout = isMobileLayout(context);
 
     useEffect(
       () {
         // Проверяем на наличие обновлений, если мы не в debug-режиме.
-        if (!kDebugMode) checkForUpdates(ref, context);
+        if (!isDemo && !kDebugMode) checkForUpdates(ref, context);
+
+        // Делаем уведомление о демо-версии.
+        if (isDemo && !kDebugMode) showDemoModeWarning(ref, context);
 
         final List<StreamSubscription> subscriptions = [
           // Обрабатываем события изменения состояния интернет-соединения.

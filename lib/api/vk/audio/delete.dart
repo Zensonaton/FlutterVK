@@ -16,6 +16,9 @@ Future<bool> audio_delete(int id, int ownerID) async {
     data: {
       "audio_id": id,
       "owner_id": ownerID,
+
+      // Demo response
+      "_demo_": 1,
     },
   );
 

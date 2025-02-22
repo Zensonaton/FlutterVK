@@ -6,6 +6,7 @@ import "package:url_launcher/url_launcher.dart";
 import "../../../../consts.dart";
 import "../../../../enums.dart";
 import "../../../../main.dart";
+import "../../../../provider/auth.dart";
 import "../../../../provider/l18n.dart";
 import "../../../../provider/preferences.dart";
 import "../../../../provider/updater.dart";
@@ -23,10 +24,10 @@ class ProfileAboutSettingsCategory extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l18n = ref.watch(l18nProvider);
+    final preferences = ref.watch(preferencesProvider);
+    final isDemo = ref.watch(isDemoProvider);
 
     final mobileLayout = isMobileLayout(context);
-
-    final preferences = ref.watch(preferencesProvider);
 
     return ProfileSettingCategory(
       icon: Icons.info,
@@ -69,22 +70,23 @@ class ProfileAboutSettingsCategory extends HookConsumerWidget {
         ),
 
         // Список изменений этой версии.
-        ListTile(
-          leading: const Icon(
-            Icons.history,
-          ),
-          title: Text(
-            l18n.show_changelog,
-          ),
-          subtitle: Text(
-            l18n.show_changelog_desc,
-          ),
-          onTap: () async {
-            if (!networkRequiredDialog(ref, context)) return;
+        if (!isDemo)
+          ListTile(
+            leading: const Icon(
+              Icons.history,
+            ),
+            title: Text(
+              l18n.show_changelog,
+            ),
+            subtitle: Text(
+              l18n.show_changelog_desc,
+            ),
+            onTap: () async {
+              if (!networkRequiredDialog(ref, context)) return;
 
-            await ref.read(updaterProvider).showChangelog(context);
-          },
-        ),
+              await ref.read(updaterProvider).showChangelog(context);
+            },
+          ),
 
         // Версия приложения (и проверка текущей версии).
         ListTile(
@@ -101,6 +103,7 @@ class ProfileAboutSettingsCategory extends HookConsumerWidget {
             ),
           ),
           onTap: () async {
+            if (!demoModeDialog(ref, context)) return;
             if (!networkRequiredDialog(ref, context)) return;
 
             await ref.read(updaterProvider).checkForUpdates(

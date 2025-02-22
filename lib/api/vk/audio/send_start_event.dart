@@ -15,6 +15,9 @@ Future<dynamic> audio_send_start_event(String mediaKey) async {
     data: {
       "uuid": "abcdef:abcdef", // Понятия не имею что это за параша.
       "audio_id": mediaKey,
+
+      // Demo response
+      "_demo_": 1,
     },
   );
 

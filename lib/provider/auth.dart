@@ -6,6 +6,7 @@ import "package:shared_preferences/shared_preferences.dart";
 import "../api/vk/shared.dart";
 import "../services/cache_manager.dart";
 import "../services/player/server.dart";
+import "../utils.dart";
 import "db.dart";
 import "player.dart";
 import "playlists.dart";
@@ -32,7 +33,7 @@ class CurrentAuthState extends _$CurrentAuthState {
   /// Сохраняет основной токен (Kate Mobile) ВКонтакте в [SharedPreferences] ([sharedPrefsProvider]), а так же обновляет состояние этого Provider.
   ///
   /// Для выхода из аккаунта используйте метод [logout].
-  Future<void> login(String token, APIUser info) async {
+  Future<void> login(String token, APIUser info, {bool isDemo = false}) async {
     final SharedPreferences prefs = ref.read(sharedPrefsProvider);
 
     // Сохраняем токен.
@@ -44,6 +45,10 @@ class CurrentAuthState extends _$CurrentAuthState {
     if (info.domain != null) prefs.setString("Domain", info.domain!);
     if (info.photo50 != null) prefs.setString("Photo50", info.photo50!);
     if (info.photoMax != null) prefs.setString("PhotoMax", info.photoMax!);
+    if (isDemo) {
+      prefs.setBool("IsDemoMode", true);
+      prefs.setString("RecommendationsToken", token);
+    }
 
     // Обновляем состояние авторизации.
     ref.invalidateSelf();
@@ -60,18 +65,22 @@ class CurrentAuthState extends _$CurrentAuthState {
     prefs.clear();
     CachedNetworkImagesManager.instance.emptyCache();
     CachedAlbumImagesManager.instance.emptyCache();
-    await appStorage.resetDB();
-    final Directory tracksDirectory = Directory(
-      await PlayerLocalServer.getTrackStorageDirectory(),
-    );
-    if (tracksDirectory.existsSync()) {
-      tracksDirectory.deleteSync(recursive: true);
+
+    if (!isWeb) {
+      await appStorage.resetDB();
+      final Directory tracksDirectory = Directory(
+        await PlayerLocalServer.getTrackStorageDirectory(),
+      );
+      if (tracksDirectory.existsSync()) {
+        tracksDirectory.deleteSync(recursive: true);
+      }
     }
     ref
       ..invalidate(dbPlaylistsProvider)
       ..invalidate(playlistsProvider)
       ..invalidate(tokenProvider)
       ..invalidate(secondaryTokenProvider)
+      ..invalidate(isDemoProvider)
       ..invalidateSelf();
   }
 }
@@ -134,4 +143,12 @@ String? secondaryToken(SecondaryTokenRef ref) {
   final SharedPreferences prefs = ref.read(sharedPrefsProvider);
 
   return prefs.getString("RecommendationsToken");
+}
+
+/// Возвращает true, если включён демо-режим.
+@riverpod
+bool isDemo(IsDemoRef ref) {
+  final SharedPreferences prefs = ref.read(sharedPrefsProvider);
+
+  return prefs.getBool("IsDemoMode") ?? false;
 }

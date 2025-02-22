@@ -242,7 +242,7 @@ class ProfileMusicPlayerSettingsCategory extends ConsumerWidget {
         top: mobileLayout ? 0 : 8,
       ),
       children: [
-        // Действие при закрытии (OS Windows).
+        // Действие при закрытии (Desktop).
         if (isDesktop)
           SettingWithDialog(
             icon: Icons.close,
@@ -257,7 +257,7 @@ class ProfileMusicPlayerSettingsCategory extends ConsumerWidget {
             }[preferences.closeBehavior]!,
           ),
 
-        // Воспроизведение после закрытия приложения (OS Android).
+        // Воспроизведение после закрытия приложения (Mobile).
         if (isMobile)
           SwitchListTile(
             secondary: const Icon(
@@ -370,6 +370,8 @@ class ProfileMusicPlayerSettingsCategory extends ConsumerWidget {
           ),
           value: preferences.checkBeforeFavorite,
           onChanged: (bool? enabled) async {
+            if (!demoModeDialog(ref, context)) return;
+
             HapticFeedback.lightImpact();
             if (enabled == null) return;
 
@@ -377,7 +379,7 @@ class ProfileMusicPlayerSettingsCategory extends ConsumerWidget {
           },
         ),
 
-        // Discord Rich Presence.
+        // Discord Rich Presence (Desktop).
         if (isDesktop)
           SwitchListTile(
             secondary: const Icon(

@@ -4,6 +4,18 @@ import "../../../main.dart";
 import "../consts.dart";
 import "../shared.dart";
 
+/// Возвращает фейковые данные для этого метода.
+List<Map<String, dynamic>> _getFakeData() {
+  return [
+    {
+      "id": 1,
+      "domain": "ivanov",
+      "first_name": "Иван",
+      "last_name": "Иванов",
+    }
+  ];
+}
+
 /// {@template VKAPI.users.get}
 /// Получает публичную информацию о пользователях с передаваемым ID, либо же о владельце текущей страницы, если ID не передаётся.
 /// {@endtemplate}
@@ -20,6 +32,9 @@ Future<List<APIUser>> users_get({
       "user_ids": ids,
       "fields": fields,
       if (token != null) "access_token": token,
+
+      // Demo response
+      "_demo_": _getFakeData(),
     },
   );
 

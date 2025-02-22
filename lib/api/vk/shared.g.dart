@@ -11,8 +11,8 @@ APIUser _$APIUserFromJson(Map<String, dynamic> json) => APIUser(
       firstName: json['first_name'] as String,
       lastName: json['last_name'] as String,
       deactivated: json['deactivated'] as String?,
-      isClosed: json['is_closed'] as bool,
-      canAccessClosed: json['can_access_closed'] as bool,
+      isClosed: json['is_closed'] as bool? ?? false,
+      canAccessClosed: json['can_access_closed'] as bool? ?? false,
       about: json['about'] as String?,
       activities: json['activities'] as String?,
       bdate: json['bdate'] as String?,
@@ -259,7 +259,7 @@ Map<String, dynamic> _$PlaylistToJson(Playlist instance) => <String, dynamic>{
       'update_time': instance.updateTime,
       'genres': instance.genres,
       'is_following': instance.isFollowing,
-      'photo': instance.photo,
+      'photo': instance.photo?.toJson(),
       'permissions': instance.permissions,
       'subtitle_badge': instance.subtitleBadge,
       'play_button': instance.playButton,
@@ -271,8 +271,8 @@ Map<String, dynamic> _$PlaylistToJson(Playlist instance) => <String, dynamic>{
 Album _$AlbumFromJson(Map<String, dynamic> json) => Album(
       id: (json['id'] as num).toInt(),
       title: json['title'] as String,
-      ownerID: (json['owner_id'] as num).toInt(),
-      accessKey: json['access_key'] as String,
+      ownerID: (json['owner_id'] as num?)?.toInt(),
+      accessKey: json['access_key'] as String?,
       thumbnails: json['thumb'] == null
           ? null
           : Thumbnails.fromJson(json['thumb'] as Map<String, dynamic>),
@@ -280,10 +280,10 @@ Album _$AlbumFromJson(Map<String, dynamic> json) => Album(
 
 Map<String, dynamic> _$AlbumToJson(Album instance) => <String, dynamic>{
       'id': instance.id,
-      'title': instance.title,
       'owner_id': instance.ownerID,
+      'title': instance.title,
       'access_key': instance.accessKey,
-      'thumb': instance.thumbnails,
+      'thumb': instance.thumbnails?.toJson(),
     };
 
 Audio _$AudioFromJson(Map<String, dynamic> json) => Audio(
@@ -293,7 +293,7 @@ Audio _$AudioFromJson(Map<String, dynamic> json) => Audio(
       title: json['title'] as String,
       duration: (json['duration'] as num).toInt(),
       subtitle: json['subtitle'] as String?,
-      accessKey: json['access_key'] as String,
+      accessKey: json['access_key'] as String?,
       ads: json['ads'],
       isExplicit: json['is_explicit'] as bool? ?? false,
       isFocusTrack: json['is_focus_track'] as bool?,
@@ -306,7 +306,7 @@ Audio _$AudioFromJson(Map<String, dynamic> json) => Audio(
       storiesCoverAllowed: json['stories_cover_allowed'] as bool?,
       trackCode: json['track_code'] as String?,
       url: emptyStringAsNull(json['url'] as String?),
-      date: (json['date'] as num).toInt(),
+      date: (json['date'] as num?)?.toInt(),
       album: json['album'] == null
           ? null
           : Album.fromJson(json['album'] as Map<String, dynamic>),
@@ -334,7 +334,7 @@ Map<String, dynamic> _$AudioToJson(Audio instance) => <String, dynamic>{
       'track_code': instance.trackCode,
       'url': instance.url,
       'date': instance.date,
-      'album': instance.album,
+      'album': instance.album?.toJson(),
       'has_lyrics': instance.hasLyrics,
       'album_id': instance.albumID,
       'genre_id': instance.genreID,

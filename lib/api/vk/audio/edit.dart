@@ -22,6 +22,9 @@ Future<int> audio_edit(
       "audio_id": id,
       "owner_id": ownerID,
       "genre_id": genreID,
+
+      // Demo response
+      "_demo_": 1,
     },
   );
 

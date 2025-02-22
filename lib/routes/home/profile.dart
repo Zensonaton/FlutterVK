@@ -7,7 +7,9 @@ import "package:gap/gap.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:share_plus/share_plus.dart";
+import "package:url_launcher/url_launcher.dart";
 
+import "../../consts.dart";
 import "../../main.dart";
 import "../../provider/auth.dart";
 import "../../provider/download_manager.dart";
@@ -244,6 +246,7 @@ class HomeProfilePage extends HookConsumerWidget {
     );
     final bool recommendationsConnected =
         ref.watch(secondaryTokenProvider) != null;
+    final bool isDemo = ref.watch(isDemoProvider);
 
     final bool mobileLayout = isMobileLayout(context);
 
@@ -318,6 +321,19 @@ class HomeProfilePage extends HookConsumerWidget {
                   ),
                 );
               },
+            ),
+            const Gap(16),
+          ],
+
+          // Блок, предупреждающий пользователя о том, что включена демо-версия.
+          if (isDemo) ...[
+            TipWidget(
+              icon: Icons.warning,
+              title: l18n.demo_mode_warning,
+              description: l18n.demo_mode_warning_desc,
+              onTap: () => launchUrl(
+                Uri.parse(telegramURL),
+              ),
             ),
             const Gap(16),
           ],

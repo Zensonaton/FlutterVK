@@ -36,6 +36,13 @@ Future<APIAudioGetResponse> audio_get(int userID) async {
     "audio.get",
     data: {
       "owner_id": userID,
+
+      // Demo response
+      "_demo_": {
+        // TODO
+        "count": 0,
+        "items": [],
+      },
     },
   );
 

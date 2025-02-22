@@ -6,7 +6,7 @@ import "../../utils.dart";
 part "shared.g.dart";
 
 /// Объект, олицетворяющий пользователя ВКонтакте.
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class APIUser {
   /// ID пользователя.
   final int id;
@@ -23,11 +23,11 @@ class APIUser {
   final String? deactivated;
 
   /// Указывает, что профиль пользователя закрыт настройками приватности.
-  @JsonKey(name: "is_closed")
+  @JsonKey(name: "is_closed", defaultValue: false)
   final bool isClosed;
 
   /// Указывает, что владелец текущей страницы может видеть профиль даже если [isClosed] = true.
-  @JsonKey(name: "can_access_closed")
+  @JsonKey(name: "can_access_closed", defaultValue: false)
   final bool canAccessClosed;
 
   /// Содержимое поля «О себе» из профиля.
@@ -429,7 +429,7 @@ class APIUser {
 }
 
 /// Объект, олицетворяющий изображения плейлиста или альбома аудиозаписи ВКонтакте.
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class Thumbnails {
   /// Ширина изображения альбома.
   final int width;
@@ -499,7 +499,7 @@ class Thumbnails {
 }
 
 /// Объект, олицетворяющий плейлист ВКонтакте.
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class Playlist {
   /// ID плейлиста.
   final int id;
@@ -620,21 +620,21 @@ class Playlist {
 }
 
 /// Объект, олицетворяющий альбом аудиозаписи ВКонтакте.
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class Album {
   /// ID альбома.
   final int id;
 
+  /// ID владельца альбома.
+  @JsonKey(name: "owner_id")
+  final int? ownerID;
+
   /// Название альбома.
   final String title;
 
-  /// ID владельца альбома.
-  @JsonKey(name: "owner_id")
-  final int ownerID;
-
   /// Ключ доступа.
   @JsonKey(name: "access_key")
-  final String accessKey;
+  final String? accessKey;
 
   /// Изображения альбома.
   @JsonKey(name: "thumb")
@@ -661,8 +661,8 @@ class Album {
   Album({
     required this.id,
     required this.title,
-    required this.ownerID,
-    required this.accessKey,
+    this.ownerID,
+    this.accessKey,
     this.thumbnails,
   });
 
@@ -671,20 +671,20 @@ class Album {
 }
 
 /// Объект, олицетворяющий аудиозапись ВКонтакте.
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class Audio {
   /// ID аудиозаписи.
-  int id;
+  final int id;
 
   /// ID владельца аудиозаписи.
   @JsonKey(name: "owner_id")
-  int ownerID;
+  final int ownerID;
 
   /// Имя исполнителя.
-  String artist;
+  final String artist;
 
   /// Название аудиозаписи.
-  String title;
+  final String title;
 
   /// Длительность аудиозаписи в секундах.
   final int duration;
@@ -694,7 +694,7 @@ class Audio {
 
   /// Ключ доступа.
   @JsonKey(name: "access_key")
-  String accessKey;
+  final String? accessKey;
 
   /// Объект с информацией по рекламе.
   final dynamic ads;
@@ -741,7 +741,7 @@ class Audio {
   final String? url;
 
   /// Timestamp добавления аудиозаписи.
-  final int date;
+  final int? date;
 
   /// Информация об альбоме данной аудиозаписи.
   Album? album;
@@ -783,7 +783,7 @@ class Audio {
     required this.title,
     required this.duration,
     this.subtitle,
-    required this.accessKey,
+    this.accessKey,
     this.ads,
     this.isExplicit = false,
     this.isFocusTrack,
@@ -793,8 +793,8 @@ class Audio {
     this.storiesAllowed,
     this.storiesCoverAllowed,
     this.trackCode,
-    required this.url,
-    required this.date,
+    this.url,
+    this.date,
     this.album,
     this.hasLyrics = false,
     this.albumID,

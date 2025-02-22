@@ -57,7 +57,7 @@ Map<String, dynamic> _$BlockActionToJson(BlockAction instance) =>
     };
 
 SectionBlock _$SectionBlockFromJson(Map<String, dynamic> json) => SectionBlock(
-      id: json['id'] as String,
+      id: json['id'] as String?,
       title: json['title'] as String?,
       dataType: json['data_type'] as String? ?? "none",
       layout: json['layout'],
@@ -78,15 +78,15 @@ Map<String, dynamic> _$SectionBlockToJson(SectionBlock instance) =>
       'title': instance.title,
       'data_type': instance.dataType,
       'layout': instance.layout,
-      'actions': instance.actions,
+      'actions': instance.actions?.map((e) => e.toJson()).toList(),
       'audios_ids': instance.audioIDs,
       'playlists_ids': instance.playlistIDs,
     };
 
 Section _$SectionFromJson(Map<String, dynamic> json) => Section(
-      id: json['id'] as String,
-      title: json['title'] as String,
-      url: json['url'] as String,
+      id: json['id'] as String?,
+      title: json['title'] as String?,
+      url: json['url'] as String?,
       blocks: (json['blocks'] as List<dynamic>?)
           ?.map((e) => SectionBlock.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -97,12 +97,12 @@ Map<String, dynamic> _$SectionToJson(Section instance) => <String, dynamic>{
       'id': instance.id,
       'title': instance.title,
       'url': instance.url,
-      'blocks': instance.blocks,
+      'blocks': instance.blocks?.map((e) => e.toJson()).toList(),
       'actions': instance.actions,
     };
 
 Catalog _$CatalogFromJson(Map<String, dynamic> json) => Catalog(
-      defaultSection: json['default_section'] as String,
+      defaultSection: json['default_section'] as String?,
       sections: (json['sections'] as List<dynamic>)
           .map((e) => Section.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -113,7 +113,7 @@ Catalog _$CatalogFromJson(Map<String, dynamic> json) => Catalog(
 
 Map<String, dynamic> _$CatalogToJson(Catalog instance) => <String, dynamic>{
       'default_section': instance.defaultSection,
-      'sections': instance.sections,
+      'sections': instance.sections.map((e) => e.toJson()).toList(),
       'header': instance.header,
       'buttons': instance.buttons,
       'pinned_section': instance.pinnedSection,
@@ -141,9 +141,11 @@ APICatalogGetAudioResponse _$APICatalogGetAudioResponseFromJson(
 Map<String, dynamic> _$APICatalogGetAudioResponseToJson(
         APICatalogGetAudioResponse instance) =>
     <String, dynamic>{
-      'audios': instance.audios,
-      'playlists': instance.playlists,
-      'catalog': instance.catalog,
-      'recommended_playlists': instance.recommendedPlaylists,
-      'audio_stream_mixes': instance.audioStreamMixes,
+      'audios': instance.audios.map((e) => e.toJson()).toList(),
+      'playlists': instance.playlists.map((e) => e.toJson()).toList(),
+      'catalog': instance.catalog.toJson(),
+      'recommended_playlists':
+          instance.recommendedPlaylists.map((e) => e.toJson()).toList(),
+      'audio_stream_mixes':
+          instance.audioStreamMixes.map((e) => e.toJson()).toList(),
     };

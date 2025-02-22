@@ -24,7 +24,7 @@ class AudioServicePlayerSubscriber extends PlayerSubscriber {
 
   @override
   Future<void> initialize() async {
-    if (isAndroid || isiOS || isMacOS) {
+    if (!(isWeb || isAndroid || isiOS || isMacOS)) {
       throw UnsupportedError(
         "Audio service is only supported on Web, Android, iOS and macOS.",
       );

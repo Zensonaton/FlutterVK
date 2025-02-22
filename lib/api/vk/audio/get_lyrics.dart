@@ -155,6 +155,9 @@ Future<APIAudioGetLyricsResponse> audio_get_lyrics(String mediaKey) async {
     "audio.getLyrics",
     data: {
       "audio_id": mediaKey,
+
+      // Demo response
+      "_demo_": null,
     },
   );
 

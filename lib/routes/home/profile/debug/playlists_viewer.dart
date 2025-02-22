@@ -11,7 +11,7 @@ import "../../../../provider/db.dart";
 import "../../../../provider/playlists.dart";
 import "../../../../provider/user.dart";
 import "../../../../widgets/dialogs.dart";
-import "../../music.dart";
+import "../../../../widgets/playlist.dart";
 
 /// Route для debug-меню, отображающее техническую информацию о всех плейлистах, которые хранятся в памяти.
 ///
@@ -145,7 +145,7 @@ class PlaylistsViewerDebugMenu extends ConsumerWidget {
             runSpacing: 20,
             children: [
               for (ExtendedPlaylist playlist in playlistsInfo.playlists)
-                AudioPlaylistWidget(
+                PlaylistWidget(
                   name: playlist.title ?? "<no name>",
                   backgroundUrl: playlist.photo?.photo600,
                   cacheKey: "${playlist.mediaKey}600",

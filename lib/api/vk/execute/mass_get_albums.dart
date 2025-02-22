@@ -6,7 +6,26 @@ import "package:dio/dio.dart";
 
 import "../../../main.dart";
 import "../../../utils.dart";
+import "../fake.dart";
 import "../shared.dart";
+
+/// Возвращает фейковые данные для этого метода.
+List<Map<String, dynamic>> _getFakeData(List<String> mediaKeys) {
+  final audioIDs = mediaKeys
+      .map(
+        (mediaKey) => int.parse(mediaKey.split("_").last),
+      )
+      .toList();
+
+  return fakeAudios
+      .where(
+        (audio) => audioIDs.contains(audio.id),
+      )
+      .map(
+        (audio) => audio.toJson(),
+      )
+      .toList();
+}
 
 /// {@template VKAPI.execute.massGetAlbums}
 /// Массово извлекает информацию по альбомам (и, соответственно, изображениям) треков.
@@ -44,6 +63,9 @@ return audioAlbums;""";
     "execute",
     data: {
       "code": minimizeJS(codeToExecute),
+
+      // Demo response
+      "_demo_": _getFakeData(mediaKeys),
     },
     options: Options(
       extra: {

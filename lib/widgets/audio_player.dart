@@ -1314,7 +1314,7 @@ class _MusicRightSide extends HookConsumerWidget {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           // Slider для управления громкостью.
-          if (isDesktop) ...[
+          if (isWeb || isDesktop) ...[
             Flexible(
               child: SizedBox(
                 width: 150,
@@ -1349,7 +1349,7 @@ class _MusicRightSide extends HookConsumerWidget {
           ],
 
           // Кнопка для перехода в полноэкранный режим.
-          if (isDesktop)
+          if (isWeb || isDesktop)
             IconButton(
               onPressed: () {
                 // TODO: Open fullscreen player.

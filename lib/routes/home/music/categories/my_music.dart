@@ -52,16 +52,12 @@ class MyMusicBlock extends HookConsumerWidget {
 
     final bool selected = player.playlist?.ownerID == playlist?.ownerID &&
         player.playlist?.id == playlist?.id;
-    final int? musicCount = playlist?.count;
-    final int clampedMusicCount = clampInt(
-      musicCount ?? 0,
-      0,
-      10,
-    );
+    final int musicCount = playlist?.audios?.length ?? 0;
+    final int clampedMusicCount = clampInt(musicCount, 0, 10);
 
     return MusicCategory(
       title: l18n.my_music_chip,
-      count: playlist?.count,
+      count: musicCount,
       onDismiss: () {
         final preferences = ref.read(preferencesProvider.notifier);
 

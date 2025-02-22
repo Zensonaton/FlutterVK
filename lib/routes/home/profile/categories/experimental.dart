@@ -6,6 +6,7 @@ import "../../../../provider/auth.dart";
 import "../../../../provider/l18n.dart";
 import "../../../../provider/preferences.dart";
 import "../../../../utils.dart";
+import "../../../../widgets/dialogs.dart";
 import "../../../../widgets/profile_category.dart";
 import "../../profile.dart";
 
@@ -48,6 +49,8 @@ class ProfileExperimentalSettingsCategory extends ConsumerWidget {
           value: preferences.deezerThumbnails,
           onChanged: recommendationsConnected
               ? (bool? enabled) async {
+                  if (!demoModeDialog(ref, context)) return;
+
                   HapticFeedback.lightImpact();
                   if (enabled == null) return;
 
@@ -69,6 +72,8 @@ class ProfileExperimentalSettingsCategory extends ConsumerWidget {
           ),
           value: preferences.lrcLibEnabled,
           onChanged: (bool? enabled) async {
+            if (!demoModeDialog(ref, context)) return;
+
             HapticFeedback.lightImpact();
             if (enabled == null) return;
 

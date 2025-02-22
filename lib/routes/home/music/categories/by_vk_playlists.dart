@@ -13,7 +13,7 @@ import "../../../../provider/user.dart";
 import "../../../../services/logger.dart";
 import "../../../../utils.dart";
 import "../../../../widgets/music_category.dart";
-import "../../music.dart";
+import "../../../../widgets/playlist.dart";
 import "../playlist.dart";
 
 /// Виджет, показывающий раздел "Собрано редакцией".
@@ -75,7 +75,7 @@ class ByVKPlaylistsBlock extends HookConsumerWidget {
                 // Skeleton loader.
                 if (playlists == null) {
                   return Skeletonizer(
-                    child: AudioPlaylistWidget(
+                    child: PlaylistWidget(
                       name: fakePlaylistNames[index % fakePlaylistNames.length],
                     ),
                   );
@@ -84,7 +84,7 @@ class ByVKPlaylistsBlock extends HookConsumerWidget {
                 // Настоящие данные.
                 final ExtendedPlaylist playlist = playlists[index];
 
-                return AudioPlaylistWidget(
+                return PlaylistWidget(
                   backgroundUrl: playlist.photo!.photo600,
                   cacheKey: "${playlist.mediaKey}600",
                   name: playlist.title!,

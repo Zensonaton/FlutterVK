@@ -9,7 +9,9 @@
 			"request": "launch",
 			"type": "dart",
 			"args": [
-				"--dart-define", "PRERELEASE=1"
+				"--dart-define", "PRERELEASE=1",
+                "--web-port=5000",
+                "--web-enable-expression-evaluation"
 			],
 
 		},

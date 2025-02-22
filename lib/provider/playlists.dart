@@ -372,7 +372,7 @@ class Playlists extends _$Playlists {
       SectionBlock? moodPlaylistsBlock = mainSection.blocks!.firstWhereOrNull(
         (SectionBlock block) =>
             block.dataType == "music_playlists" &&
-            block.layout["style"] == "unopenable",
+            block.layout?["style"] == "unopenable",
       );
 
       if (moodPlaylistsBlock == null) return null;
@@ -547,9 +547,9 @@ class Playlists extends _$Playlists {
   ///
   /// Если Вам нужен метод для обновления плейлиста, то воспользуйтесь методом [updatePlaylist]; он так же может сохранить плейлист в БД.
   Future<void> saveDBPlaylist(ExtendedPlaylist playlist) async {
-    // return await appStorage.savePlaylist(
-    //   DBPlaylist.fromExtendedPlaylist(playlist),
-    // );
+    final appStorage = ref.read(appStorageProvider);
+
+    return await appStorage.savePlaylist(playlist);
   }
 
   /// Обновляет состояние данного Provider, объединяя новую и старую версию плейлиста, а после чего сохраняет его в БД, если [saveInDB] правдив.

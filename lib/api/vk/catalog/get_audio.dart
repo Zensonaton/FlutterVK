@@ -4,12 +4,76 @@ import "package:dio/dio.dart";
 import "package:json_annotation/json_annotation.dart";
 
 import "../../../main.dart";
+import "../fake.dart";
 import "../shared.dart";
 
 part "get_audio.g.dart";
 
+/// Возвращает фейковые данные для этого метода.
+Map<String, dynamic> _getFakeData() {
+  return APICatalogGetAudioResponse(
+    audios: fakeAudios,
+    playlists: fakePlaylists,
+    recommendedPlaylists: fakeForYouPlaylists
+        .map(
+          (playlist) => SimillarPlaylist(
+            id: playlist.id,
+            ownerID: 1,
+            percentage: 0.1,
+            audios: fakeAudios
+                .take(3)
+                .map(
+                  (audio) => audio.mediaKey,
+                )
+                .toList(),
+            color: "#000000",
+          ),
+        )
+        .toList(),
+    audioStreamMixes: [
+      AudioMix(
+        id: "common",
+        backgroundAnimationUrl:
+            "https://sun9-28.userapi.com/6919RMU5vNxhH2nHZvyZHyYWV0DUf4oWt3lyKA/JVSvpTzAWyE.json",
+        title: "Слушать VK Микс",
+        description: "Музыкальные рекомендации для вас",
+      ),
+    ],
+    catalog: Catalog(
+      sections: [
+        Section(
+          blocks: [
+            // Плейлисты для Вас.
+            SectionBlock(
+              dataType: "music_playlists",
+              playlistIDs: fakeForYouPlaylists
+                  .map(
+                    (playlist) => playlist.mediaKey,
+                  )
+                  .toList(),
+              layout: {
+                "name": "recomms_slider",
+              },
+            ),
+
+            // Собрано редакцией.
+            SectionBlock(
+              dataType: "music_playlists",
+              playlistIDs: fakeForYouPlaylists
+                  .map(
+                    (playlist) => playlist.mediaKey,
+                  )
+                  .toList(),
+            ),
+          ],
+        ),
+      ],
+    ),
+  ).toJson();
+}
+
 /// Класс отдельного аудиомикса по типу "VK Mix".
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class AudioMix {
   /// ID данного микса.
   final String id;
@@ -37,7 +101,7 @@ class AudioMix {
 }
 
 /// Класс отдельного рекомендуемого плейлиста из раздела "совпадения по вкусам".
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class SimillarPlaylist {
   /// ID плейлиста.
   final int id;
@@ -72,7 +136,7 @@ class SimillarPlaylist {
 }
 
 /// Класс действия у блока секции в аудиозаписях.
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class BlockAction {
   /// ID данной секции.
   @JsonKey(name: "section_id")
@@ -106,10 +170,10 @@ class BlockAction {
 }
 
 /// Класс блока секции каталога в аудиозаписях.
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class SectionBlock {
   /// ID блока секции.
-  final String id;
+  final String? id;
 
   /// Название данного блока.
   final String? title;
@@ -137,7 +201,7 @@ class SectionBlock {
   final List<String>? playlistIDs;
 
   SectionBlock({
-    required this.id,
+    this.id,
     this.title,
     this.dataType = "none",
     this.layout,
@@ -152,16 +216,16 @@ class SectionBlock {
 }
 
 /// Класс секции каталога в аудиозаписях.
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class Section {
   /// ID данной секции.
-  final String id;
+  final String? id;
 
   /// Название данной секции.
-  final String title;
+  final String? title;
 
   /// URL к указанной секции.
-  final String url;
+  final String? url;
 
   /// Список блоков.
   final List<SectionBlock>? blocks;
@@ -170,9 +234,9 @@ class Section {
   final List<dynamic>? actions;
 
   Section({
-    required this.id,
-    required this.title,
-    required this.url,
+    this.id,
+    this.title,
+    this.url,
     this.blocks,
     this.actions,
   });
@@ -183,10 +247,10 @@ class Section {
 }
 
 /// Каталог в аудиозаписи.
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class Catalog {
   @JsonKey(name: "default_section")
-  final String defaultSection;
+  final String? defaultSection;
 
   /// Секции.
   final List<Section> sections;
@@ -199,7 +263,7 @@ class Catalog {
   final String? pinnedSection;
 
   Catalog({
-    required this.defaultSection,
+    this.defaultSection,
     required this.sections,
     this.header,
     this.buttons,
@@ -212,7 +276,7 @@ class Catalog {
 }
 
 /// Ответ для метода [catalog_get_audio].
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class APICatalogGetAudioResponse {
   /// Информация о треках.
   final List<Audio> audios;
@@ -257,6 +321,9 @@ Future<APICatalogGetAudioResponse> catalog_get_audio({
     data: {
       "need_blocks": "1",
       if (token != null) "access_token": token,
+
+      // Demo response
+      "_demo_": _getFakeData(),
     },
     options: Options(
       extra: {

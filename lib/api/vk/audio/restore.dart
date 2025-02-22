@@ -1,7 +1,17 @@
 // ignore_for_file: non_constant_identifier_names
 
 import "../../../main.dart";
+import "../fake.dart";
 import "../shared.dart";
+
+/// Возвращает фейковые данные для этого метода.
+Map<String, dynamic> _getFakeData(int id, int ownerID) {
+  return fakeAudios
+      .firstWhere(
+        (audio) => audio.id == id,
+      )
+      .toJson();
+}
 
 /// {@template VKAPI.audio.restore}
 /// Восстанавливает трек по его ID после удаления методом `delete`.
@@ -16,6 +26,9 @@ Future<Audio> audio_restore(int id, int ownerID) async {
     data: {
       "audio_id": id,
       "owner_id": ownerID,
+
+      // Demo response
+      "_demo_": _getFakeData(id, ownerID),
     },
   );
 

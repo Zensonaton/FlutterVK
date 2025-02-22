@@ -55,6 +55,11 @@ void initDioInterceptors(
   }
 
   dio.interceptors.addAll([
+    // Обработчик для демо-запросов.
+    DemoInterceptor(
+      ref: ref,
+    ),
+
     // Обработчик для добавления версии API и access_token для VK API.
     if (isVK)
       VKAPIInterceptor(
@@ -103,6 +108,39 @@ void initDioInterceptors(
         },
       ),
   ]);
+}
+
+/// [Interceptor] для [Dio], заменяющий запрос на демо-ответ.
+class DemoInterceptor extends Interceptor {
+  final Ref _ref;
+
+  DemoInterceptor({
+    required Ref ref,
+  }) : _ref = ref;
+
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    if (options.data is Map<String, dynamic>) {
+      final data = options.data as Map<String, dynamic>;
+      final demo = data.remove("_demo_");
+      final allowDemoResponse =
+          _ref.read(isDemoProvider) || data["access_token"] == "DEMO";
+
+      if (demo != null && allowDemoResponse) {
+        handler.resolve(
+          Response(
+            requestOptions: options,
+            data: demo,
+            statusCode: 200,
+          ),
+        );
+
+        return;
+      }
+    }
+
+    super.onRequest(options, handler);
+  }
 }
 
 /// [Interceptor] для [Dio], добавляющий версию API и access_token для VK API, а так же возвращающий объект `response` из ответа, если он правильный.

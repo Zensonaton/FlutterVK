@@ -37,6 +37,13 @@ Future<APIAudioGetPlaylistsResponse> audio_get_playlists(int userID) async {
     data: {
       "owner_id": userID,
       "count": 100,
+
+      // Demo response
+      "_demo_": {
+        // TODO
+        "count": 0,
+        "items": [],
+      },
     },
   );
 

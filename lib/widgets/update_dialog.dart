@@ -311,29 +311,3 @@ class ChangelogDialog extends ConsumerWidget {
     );
   }
 }
-
-/// Диалог, отображающий информацию о том, что пользователь впервые установил бета-версию приложения.
-///
-/// Пример использования:
-/// ```dart
-/// showDialog(
-/// 	context: context,
-/// 	builder: (context) => const PreReleaseInstalledDialog()
-/// );
-/// ```
-class PreReleaseInstalledDialog extends ConsumerWidget {
-  const PreReleaseInstalledDialog({
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l18n = ref.watch(l18nProvider);
-
-    return MaterialDialog(
-      icon: Icons.bug_report,
-      title: l18n.prerelease_app_version_warning,
-      text: l18n.prerelease_app_version_warning_desc,
-    );
-  }
-}

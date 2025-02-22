@@ -15,6 +15,9 @@ Future<bool> audio_add_dislike(List<String> mediaKeys) async {
     "audio.addDislike",
     data: {
       "audio_ids": mediaKeys.join(","),
+
+      // Demo response
+      "_demo_": 1,
     },
   );
 

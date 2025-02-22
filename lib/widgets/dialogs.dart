@@ -3,6 +3,7 @@ import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
 import "../main.dart";
+import "../provider/auth.dart";
 import "../provider/l18n.dart";
 import "../services/logger.dart";
 
@@ -344,6 +345,30 @@ bool networkRequiredDialog(WidgetRef ref, BuildContext context) {
   }
 
   showInternetRequiredDialog(ref, context);
+
+  return false;
+}
+
+/// Показывает диалог, показывающий информацию о том, что действие невозможно выполнить, поскольку приложение запущено в демо-режиме.
+///
+/// В качестве параметров принимает [context] - контекст.
+void showDemoModeDialog(WidgetRef ref, BuildContext context) {
+  final l18n = ref.watch(l18nProvider);
+
+  showErrorDialog(
+    context,
+    title: l18n.demo_mode_enabled_title,
+    description: l18n.demo_mode_enabled_desc,
+  );
+}
+
+/// В случае, если запущена демо-версия приложения, возвращает false, а так же вызывает [showDemoModeDialog], показывая сообщение об ошибке.
+bool demoModeDialog(WidgetRef ref, BuildContext context) {
+  if (!ref.read(isDemoProvider)) {
+    return true;
+  }
+
+  showDemoModeDialog(ref, context);
 
   return false;
 }

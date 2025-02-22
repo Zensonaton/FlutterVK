@@ -24,8 +24,11 @@ Future<bool> tryAuthorize(
   String token, [
   bool useAlternateAuth = false,
 ]) async {
-  final AppLogger logger = getLogger("tryAuthorize");
+  final logger = getLogger("tryAuthorize");
   final l18n = ref.watch(l18nProvider);
+  final user = ref.read(userProvider);
+  final userNotifier = ref.read(userProvider.notifier);
+  final authNotifier = ref.read(currentAuthStateProvider.notifier);
 
   logger.d("Trying to authorize with token");
 
@@ -33,11 +36,10 @@ Future<bool> tryAuthorize(
 
   try {
     final List<APIUser> response = await users_get(token: token);
-
     if (!context.mounted) return false;
 
     // Проверка, одинаковый ли ID юзера при основной и не основной авторизации.
-    if (useAlternateAuth && ref.read(userProvider).id != response.first.id) {
+    if (useAlternateAuth && user.id != response.first.id) {
       showErrorDialog(
         context,
         description: l18n.login_wrong_user_id(
@@ -71,7 +73,7 @@ Future<bool> tryAuthorize(
     // Если мы проводим альтернативную авторизацию, то мы должны сохранить вторичный токен,
     // а так же насильно обновить список из треков.
     if (useAlternateAuth) {
-      ref.read(userProvider.notifier).loginSecondary(token);
+      userNotifier.loginSecondary(token);
       ref.invalidate(playlistsProvider);
 
       if (context.mounted) {
@@ -82,7 +84,7 @@ Future<bool> tryAuthorize(
     }
 
     // При основной авторизации мы сохраняем основной токен.
-    ref.read(currentAuthStateProvider.notifier).login(token, response.first);
+    authNotifier.login(token, response.first);
   } catch (error, stackTrace) {
     showLogErrorDialog(
       "Authorization error: ",
@@ -97,6 +99,18 @@ Future<bool> tryAuthorize(
   }
 
   return true;
+}
+
+/// Производит демо-авторизацию.
+Future<void> tryDemoAuth(WidgetRef ref) async {
+  final authNotifier = ref.read(currentAuthStateProvider.notifier);
+
+  final List<APIUser> response = await users_get(token: "DEMO");
+  authNotifier.login(
+    "DEMO",
+    response.first,
+    isDemo: true,
+  );
 }
 
 /// Route для авторизации на свою страницу ВКонтакте.

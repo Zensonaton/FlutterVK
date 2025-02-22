@@ -19,9 +19,12 @@ import "package:shared_preferences/shared_preferences.dart";
 import "package:system_tray/system_tray.dart";
 import "package:window_manager/window_manager.dart";
 
+import "api/vk/shared.dart";
+import "api/vk/users/get.dart";
 import "app.dart";
 import "consts.dart";
 import "firebase_options.dart";
+import "provider/auth.dart";
 import "provider/db.dart";
 import "provider/dio.dart";
 import "provider/l18n.dart";
@@ -197,7 +200,7 @@ Future main() async {
 
     // Инициализируем Firebase (Analytics, Crashlytics), в release-режиме.
     // TODO: Реализовать логирование ошибок, даже если Firebase не используется (т.е., повторить функционал catcher_2).
-    if (kReleaseMode) {
+    if (kReleaseMode && !isWeb) {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
@@ -219,15 +222,14 @@ Future main() async {
     appVersion = (await PackageInfo.fromPlatform()).version;
 
     if (!isWeb) {
+      // Узнаём информацию об устройстве.
+      androidDeviceInfo = isAndroid ? await deviceInfoPlugin.androidInfo : null;
+      logger.d("Supported ABIs: ${androidDeviceInfo?.supportedAbis}");
+
       // Инициализируем WindowManager на Desktop-платформах.
       if (isDesktop) {
         await windowManager.ensureInitialized();
         await windowManager.setPreventClose(true);
-
-        // Узнаём информацию об устройстве.
-        androidDeviceInfo =
-            isAndroid ? await deviceInfoPlugin.androidInfo : null;
-        logger.d("Supported ABIs: ${androidDeviceInfo?.supportedAbis}");
 
         // Устанавливаем размеры окна.
         windowManager.waitUntilReadyToShow(
@@ -312,6 +314,9 @@ Future main() async {
       }
     }
 
+    // Объект авторизации.
+    final auth = container.read(currentAuthStateProvider.notifier);
+
     // Создаём объекты Dio.
     dio = container.read(dioProvider);
     vkDio = container.read(vkDioProvider);
@@ -365,6 +370,18 @@ Future main() async {
     logger.i(
       "Running Flutter VK v$appVersion ${isPrerelease ? "(pre-release)" : ""}",
     );
+
+    // Если запущена Web-версия, то включаем демо-режим.
+    if (isWeb) {
+      logger.w("Running in demo mode");
+
+      final List<APIUser> response = await users_get(token: "DEMO");
+      auth.login(
+        "DEMO",
+        response.first,
+        isDemo: true,
+      );
+    }
 
     // Запускаем само приложение.
     runApp(

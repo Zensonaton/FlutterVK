@@ -8,7 +8,7 @@ class AppStorage {
 
   AppStorage({required dynamic ref});
 
-  static int fastHash(String input) => 0;
+  static int fastHash(String input) => 10000;
 
   Future<List<ExtendedPlaylist>> getPlaylists() async => [];
 
