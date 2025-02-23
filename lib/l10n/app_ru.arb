@@ -69,6 +69,25 @@
 	"error_dialog": "Произошла ошибка",
 	"error_dialog_desc": "Что-то очень сильно пошло не так. Что-то поломалось. Всё очень плохо.",
 
+	"player_playback_error": "Ошибка воспроизведения: {error}",
+	"@player_playback_error": {
+		"placeholders": {
+			"error": {
+				"type": "String",
+				"description": "Текст ошибки воспроизведения трека."
+			}
+		}
+	},
+	"player_playback_error_stopped": "Воспроизведение остановлено ввиду большого количества ошибок: {error}",
+	"@player_playback_error_stopped": {
+		"placeholders": {
+			"error": {
+				"type": "String",
+				"description": "Текст ошибки воспроизведения трека."
+			}
+		}
+	},
+
 	"track_added_to_queue": "Трек добавлен в очередь.",
 	"app_restart_required": "Пожалуйста, перезагрузите приложение.",
 

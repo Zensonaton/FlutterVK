@@ -47,6 +47,9 @@
 	"error_dialog": "An error occurred",
 	"error_dialog_desc": "Something went wrong. And I''m sorry about that. Try again later.",
 
+	"player_playback_error": "Playback error: {error}",
+	"player_playback_error_stopped": "Playback stopped due to excessive errors: {error}",
+
 	"option_unavailable_with_light_theme": "This option is unavailable because app is used in light theme.",
 	"option_unavailable_without_recommendations": "This setting is unavailable you haven''t connected VK recommendations.",
 	"option_unavailable_without_audio_playing": "You will not be able to see changes to this settings, because no audio is playing right now.",
