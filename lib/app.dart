@@ -107,6 +107,7 @@ class FlutterVKApp extends HookConsumerWidget {
       () {
         if (appLifecycleState != AppLifecycleState.resumed) return;
 
+        // Меняем цвета статус-бара в зависимости от темы.
         // Понятия не имею почему, но без Future.microtask() это не работает.
         Future.microtask(
           () async {
@@ -125,6 +126,9 @@ class FlutterVKApp extends HookConsumerWidget {
             );
           },
         );
+
+        // Проверяем состояние интернет-соединения.
+        connectivityManager.checkConnection();
 
         return null;
       },
