@@ -63,8 +63,6 @@
 	"internet_required_title": "No Connection",
 	"internet_required_desc": "This action can only be performed when connected to the internet. Please connect to a network and try again.",
 
-	"internet_connection_lost_desc": "Connection to the servers lost. Some app functionality will be disabled.",
-
 	"demo_mode_enabled_title": "Unavailable in demo mode",
 	"demo_mode_enabled_desc": "This feature is not available in demo mode of Flutter VK.\nHead to the \"profile\" to download full version on your device.",
 

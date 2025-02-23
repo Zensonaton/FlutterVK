@@ -219,7 +219,6 @@ class ShellRouteWrapper extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l18n = ref.watch(l18nProvider);
     final isDemo = ref.read(isDemoProvider);
 
     final bool mobileLayout = isMobileLayout(context);
@@ -232,33 +231,7 @@ class ShellRouteWrapper extends HookConsumerWidget {
         // Делаем уведомление о демо-версии.
         if (isDemo && !kDebugMode) showDemoModeWarning(ref, context);
 
-        final List<StreamSubscription> subscriptions = [
-          // Обрабатываем события изменения состояния интернет-соединения.
-          connectivityManager.connectionChange.listen(
-            (bool isConnected) {
-              logger.d("Network connectivity state: $isConnected");
-
-              if (isConnected || !context.mounted) return;
-
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  duration: Duration(
-                    seconds: isConnected ? 2 : 6,
-                  ),
-                  content: Text(
-                    l18n.internet_connection_lost_desc,
-                  ),
-                ),
-              );
-            },
-          ),
-        ];
-
-        return () {
-          for (StreamSubscription subscription in subscriptions) {
-            subscription.cancel();
-          }
-        };
+        return null;
       },
       [],
     );
