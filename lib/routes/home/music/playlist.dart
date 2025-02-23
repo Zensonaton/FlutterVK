@@ -1744,6 +1744,9 @@ class PlaylistRoute extends HookConsumerWidget {
 
       final bool playlistCached = playlist.cacheTracks ?? false;
 
+      // Не даём что либо делать с кэшированием в демо-версии.
+      if (!demoModeDialog(ref, context)) return;
+
       // Если плейлист уже кэширован, то значит, что нам нужно его удалить.
       // Сначала нужно спросить у пользователя то, хочет ли он удалить кэш.
       if (playlistCached) {

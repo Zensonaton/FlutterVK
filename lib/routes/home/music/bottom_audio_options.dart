@@ -12,6 +12,7 @@ import "package:url_launcher/url_launcher_string.dart";
 
 import "../../../api/vk/shared.dart";
 import "../../../main.dart";
+import "../../../provider/auth.dart";
 import "../../../provider/download_manager.dart";
 import "../../../provider/l18n.dart";
 import "../../../provider/player.dart";
@@ -101,6 +102,13 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
     useEffect(
       () {
         if (!connectivityManager.hasConnection) return;
+
+        // Выключаем в демо-режиме.
+        if (ref.read(isDemoProvider)) {
+          hasGeniusInfo.value = false;
+
+          return;
+        }
 
         dio.head(geniusUrl).then(
           (response) {
@@ -213,6 +221,7 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
       if (hasGeniusInfo.value == null) {
         throw Exception("Genius info isn't loaded yet");
       }
+      if (!demoModeDialog(ref, context)) return;
 
       Navigator.of(context).pop();
 
@@ -220,6 +229,7 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
     }
 
     void onCacheTrackTap() async {
+      if (!demoModeDialog(ref, context)) return;
       if (!networkRequiredDialog(ref, context)) return;
 
       final preferences = ref.read(preferencesProvider);
@@ -259,6 +269,7 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
     }
 
     void onDeezerThumbsTap() {
+      if (!demoModeDialog(ref, context)) return;
       if (!networkRequiredDialog(ref, context)) return;
 
       Navigator.of(context).pop();
@@ -275,6 +286,8 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
     }
 
     void onReplaceWithLocalAudioTap() async {
+      if (!demoModeDialog(ref, context)) return;
+
       final messenger = ScaffoldMessenger.of(context);
       final playlists = ref.read(playlistsProvider.notifier);
       Navigator.of(context).pop();
@@ -390,6 +403,7 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
     }
 
     void onReplaceFromYoutubeTap() {
+      if (!demoModeDialog(ref, context)) return;
       if (!networkRequiredDialog(ref, context)) return;
 
       showWipDialog(context);
