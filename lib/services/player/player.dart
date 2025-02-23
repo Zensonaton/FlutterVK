@@ -26,6 +26,7 @@ import "subscribers/smtc.dart"
     if (dart.library.js_interop) "subscribers/smtc_stub.dart";
 import "subscribers/stop_on_long_pause.dart";
 import "subscribers/track_info.dart";
+import "subscribers/windows_taskbar.dart";
 
 /// Уровень лога плеера.
 enum PlayerLogLevel {
@@ -111,6 +112,9 @@ class Player {
 
       // SMTC (Windows).
       if (isWindows) SMTCPlayerSubscriber(this),
+
+      // Taskbar (Windows).
+      if (isWindows) WindowsTaskbarPlayerSubscriber(this),
 
       // Discord RPC (Windows, Linux).
       if (isWindows || isLinux) DiscordRPCPlayerSubscriber(this),

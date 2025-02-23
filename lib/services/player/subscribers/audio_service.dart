@@ -5,6 +5,7 @@ import "package:audio_service/audio_service.dart";
 import "../../../consts.dart";
 import "../../../enums.dart";
 import "../../../main.dart";
+import "../../../provider/l18n.dart";
 import "../../../provider/user.dart";
 import "../../../routes/home/music.dart";
 import "../../../utils.dart";
@@ -148,6 +149,8 @@ class AudioServicePlayerSubscriber extends PlayerSubscriber {
 
   /// Обновляет состояние воспроизведения.
   void updatePlaybackState() {
+    final l18n = player.ref.read(l18nProvider);
+
     final audio = player.audio;
     final isLoaded = player.isLoaded;
     final playing = player.isPlaying;
@@ -193,7 +196,9 @@ class AudioServicePlayerSubscriber extends PlayerSubscriber {
               androidIcon: isShuffling
                   ? "drawable/ic_shuffle_enabled"
                   : "drawable/ic_shuffle",
-              label: "Shuffle",
+              label: isShuffling
+                  ? l18n.disable_shuffle_action
+                  : l18n.enable_shuffle_action,
               name: MediaNotificationAction.shuffle.name,
             ),
 
@@ -201,7 +206,7 @@ class AudioServicePlayerSubscriber extends PlayerSubscriber {
           if (isRecommended)
             MediaControl.custom(
               androidIcon: "drawable/ic_dislike",
-              label: "Dislike",
+              label: l18n.dislike_track_action,
               name: MediaNotificationAction.dislike.name,
             ),
 
@@ -210,7 +215,9 @@ class AudioServicePlayerSubscriber extends PlayerSubscriber {
             androidIcon: isLiked
                 ? "drawable/ic_favorite"
                 : "drawable/ic_favorite_outline",
-            label: "Favorite",
+            label: isLiked
+                ? l18n.remove_favorite_track_action
+                : l18n.add_track_as_liked,
             name: MediaNotificationAction.favorite.name,
           ),
         ],
@@ -331,7 +338,11 @@ class PlayerAudioService extends BaseAudioHandler with SeekHandler {
       case (MediaNotificationAction.favorite):
         if (!connectivityManager.hasConnection) return;
 
-        await toggleTrackLike(player.ref, player.audio!);
+        await toggleTrackLike(
+          player.ref,
+          player.audio!,
+          sourcePlaylist: player.playlist!,
+        );
 
         break;
 

@@ -91,6 +91,7 @@ dependencies:
   visibility_detector: ^0.4.0+2
   wakelock_plus: ^1.1.4
   window_manager: ^0.4.0
+  windows_taskbar: ^1.1.2
 
 dev_dependencies:
   build_runner: ^2.4.11
@@ -110,6 +111,7 @@ flutter:
     - assets/icon.ico
     - assets/icon.png
     - assets/images/
+    - assets/taskbar/
     - assets/audios/
     - assets/animations/
 

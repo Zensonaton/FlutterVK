@@ -63,6 +63,18 @@
 		}
 	},
 
+	"dislike_track_action": "Не нравится",
+	"enable_shuffle_action": "Включить перемешку",
+	"disable_shuffle_action": "Выключить перемешку",
+	"previous_track_action": "Предыдущий",
+	"play_track_action": "Воспроизвести",
+	"pause_track_action": "Пауза",
+	"next_track_action": "Следующий",
+	"enable_repeat_action": "Включить повтор",
+	"disable_repeat_action": "Выключить повтор",
+	"favorite_track_action": "Нравится",
+	"remove_favorite_track_action": "Не нравится",
+
 	"not_yet_implemented": "Не реализовано",
 	"not_yet_implemented_desc": "Данный функционал ещё не был реализован. Пожалуйста, ожидайте обновлений приложения в будущем!",
 
