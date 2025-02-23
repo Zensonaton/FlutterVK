@@ -573,6 +573,7 @@ class PlayerLocalServer {
             audiosToUpdate: [
               audio.basicCopyWith(
                 isCached: false,
+                replacedLocally: false,
               ),
             ],
           ),
@@ -636,6 +637,7 @@ class PlayerLocalServer {
               audiosToUpdate: [
                 audio.basicCopyWith(
                   isCached: false,
+                  replacedLocally: false,
                 ),
               ],
             ),
