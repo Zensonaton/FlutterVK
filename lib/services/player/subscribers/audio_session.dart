@@ -42,13 +42,24 @@ class AudioSessionPlayerSubscriber extends PlayerSubscriber {
   /// Указывает, что плеер был приостановлен этим subscriber'ом ввиду события системы.
   bool _pausedDueInterrupt = false;
 
+  /// События запуска плеера.
+  void onIsLoaded(bool isLoaded) async {
+    if (isLoaded) return;
+
+    await _audioSession.setActive(false);
+  }
+
   /// События паузы/воспроизведения музыки.
   void onIsPlaying(bool isPlaying) async {
     if (isPlaying) {
       _pausedDueInterrupt = false;
     }
 
-    await _audioSession.setActive(isPlaying);
+    if (!_pausedDueInterrupt) {
+      logger.d("Audio session active: $isPlaying");
+
+      await _audioSession.setActive(isPlaying);
+    }
   }
 
   /// События отключения наушников.
