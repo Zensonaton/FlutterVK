@@ -26,7 +26,6 @@ Future<bool> tryAuthorize(
 ]) async {
   final logger = getLogger("tryAuthorize");
   final l18n = ref.watch(l18nProvider);
-  final user = ref.read(userProvider);
   final userNotifier = ref.read(userProvider.notifier);
   final authNotifier = ref.read(currentAuthStateProvider.notifier);
 
@@ -39,7 +38,7 @@ Future<bool> tryAuthorize(
     if (!context.mounted) return false;
 
     // Проверка, одинаковый ли ID юзера при основной и не основной авторизации.
-    if (useAlternateAuth && user.id != response.first.id) {
+    if (useAlternateAuth && ref.read(userProvider).id != response.first.id) {
       showErrorDialog(
         context,
         description: l18n.login_wrong_user_id(
