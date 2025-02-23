@@ -700,56 +700,64 @@ final List<Playlist> fakePlaylists = [
     fakePlaylistAudios.length,
     "Плейлист дня 5",
     description: "Вы слушали: Barns Courtney",
-    photo: "https://sun9-58.userapi.com/impg/2-JGMQwC7BiNpoTpx55qAbdPUP34WYfWPwhDkg/4crRGYPW35I.jpg?size=594x594&quality=95&sign=8d9fa5c85ceec6bca1fe8257c8e059ac",
+    photo:
+        "https://sun9-58.userapi.com/impg/2-JGMQwC7BiNpoTpx55qAbdPUP34WYfWPwhDkg/4crRGYPW35I.jpg?size=594x594&quality=95&sign=8d9fa5c85ceec6bca1fe8257c8e059ac",
   ),
   _generatePlaylist(
     4,
     fakePlaylistAudios.length,
     "Плейлист дня 4",
     description: "Вы слушали: PVRIS",
-    photo: "https://sun9-8.userapi.com/impg/nmUhJ9lBuKZMeFQjNKwxljS9DCeqVJ6Ucv52nw/PMpsT2aabpM.jpg?size=594x594&quality=95&sign=9af143e60bcb63afe1cfde03fcd1eca3",
+    photo:
+        "https://sun9-8.userapi.com/impg/nmUhJ9lBuKZMeFQjNKwxljS9DCeqVJ6Ucv52nw/PMpsT2aabpM.jpg?size=594x594&quality=95&sign=9af143e60bcb63afe1cfde03fcd1eca3",
   ),
   _generatePlaylist(
     5,
     fakePlaylistAudios.length,
     "Плейлист дня 3",
     description: "Вы слушали: Halsey",
-    photo: "https://sun9-55.userapi.com/impg/-JTza8mHnok1Bsmq3rIMAWIddKAuqd36L-UuWQ/6eYONHdgMcA.jpg?size=594x594&quality=95&sign=d17e1f8d46a2110941b1dd53449714d7",
+    photo:
+        "https://sun9-55.userapi.com/impg/-JTza8mHnok1Bsmq3rIMAWIddKAuqd36L-UuWQ/6eYONHdgMcA.jpg?size=594x594&quality=95&sign=d17e1f8d46a2110941b1dd53449714d7",
   ),
   _generatePlaylist(
     6,
     fakePlaylistAudios.length,
     "Плейлист дня 2",
     description: "Вы слушали: K.Flay",
-    photo: "https://sun9-80.userapi.com/impg/9-DgMdFLPwrzPQjWn8GZMiQuFjW9tHfsduz76Q/1MPkrrd1_0o.jpg?size=594x594&quality=95&sign=b48a0471067b9ddfabd5adf5882e43c4",
+    photo:
+        "https://sun9-80.userapi.com/impg/9-DgMdFLPwrzPQjWn8GZMiQuFjW9tHfsduz76Q/1MPkrrd1_0o.jpg?size=594x594&quality=95&sign=b48a0471067b9ddfabd5adf5882e43c4",
   ),
   _generatePlaylist(
     7,
     fakePlaylistAudios.length,
     "Плейлист дня 1",
     description: "Вы слушали: Barns Courtney",
-    photo: "https://sun9-58.userapi.com/impg/En9RJve4G4LfmhXmxhXfH8brff5vtigGshPS0g/Qq8hxKZ0rdo.jpg?size=594x594&quality=95&sign=b8ddb197b06319d1c7093d77bb78d4b7",
+    photo:
+        "https://sun9-58.userapi.com/impg/En9RJve4G4LfmhXmxhXfH8brff5vtigGshPS0g/Qq8hxKZ0rdo.jpg?size=594x594&quality=95&sign=b8ddb197b06319d1c7093d77bb78d4b7",
   ),
   _generatePlaylist(
     8,
     fakePlaylistAudios.length,
     "Открытия",
     description: "Новое для вас",
-    photo: "https://sun9-42.userapi.com/impg/fq_Sxi2t6ktoLYt0dWMvfYXEMGFwYjxGo7np6g/IZzoFJLlB9A.jpg?size=594x594&quality=95&sign=8d2709c4a02a3a6612727a462dc2b1fd",
+    photo:
+        "https://sun9-42.userapi.com/impg/fq_Sxi2t6ktoLYt0dWMvfYXEMGFwYjxGo7np6g/IZzoFJLlB9A.jpg?size=594x594&quality=95&sign=8d2709c4a02a3a6612727a462dc2b1fd",
   ),
   _generatePlaylist(
     9,
     fakePlaylistAudios.length,
     "Новинки",
     description: "обновлён в субботу",
-    photo: "https://sun9-78.userapi.com/impg/QW179rl3Z27NE2xC08HEIPcE5_d_3WRdfzZ-WA/OJv0uSWaJj4.jpg?size=594x594&quality=95&sign=e834719f3012eba67c4440a5d7a35fa1",
+    photo:
+        "https://sun9-78.userapi.com/impg/QW179rl3Z27NE2xC08HEIPcE5_d_3WRdfzZ-WA/OJv0uSWaJj4.jpg?size=594x594&quality=95&sign=e834719f3012eba67c4440a5d7a35fa1",
   ),
   _generatePlaylist(
     10,
     fakePlaylistAudios.length,
     "Плейлист недели",
     description: "Barns Courtney и другие",
-    photo: "https://sun9-80.userapi.com/impg/k0wOemKsoftjpBhlXfi-6k_OQnEnyPHu6utwZA/Hzw_TbFr4M8.jpg?size=594x594&quality=95&sign=83a8731d840e713da33e9c049a34c5e5",
+    photo:
+        "https://sun9-80.userapi.com/impg/k0wOemKsoftjpBhlXfi-6k_OQnEnyPHu6utwZA/Hzw_TbFr4M8.jpg?size=594x594&quality=95&sign=83a8731d840e713da33e9c049a34c5e5",
   ),
 ];
 
