@@ -1,5 +1,6 @@
 import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 
 import "../services/cache_manager.dart";
@@ -60,7 +61,7 @@ class TrackSchemeInfo extends _$TrackSchemeInfo {
 /// Если таковые цвета уже есть, то вместо извлечения новых, возвращаются старые.
 @riverpod
 Future<ImageSchemeExtractor?> colorInfoFromPlaylist(
-  ColorInfoFromPlaylistRef ref,
+  Ref ref,
   int ownerID,
   int id,
 ) async {

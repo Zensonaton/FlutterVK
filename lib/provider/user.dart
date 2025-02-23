@@ -5,6 +5,7 @@ import "package:shared_preferences/shared_preferences.dart";
 import "../api/deezer/shared.dart";
 import "../api/vk/audio/get_lyrics.dart";
 import "../api/vk/shared.dart";
+import "../consts.dart";
 import "../enums.dart";
 import "../main.dart";
 import "../utils.dart";
@@ -381,21 +382,6 @@ class ExtendedThumbnails {
   /// - Deezer: `1000x1000`.
   final String photoMax;
 
-  // /// Создаёт из передаваемого объекта [DBExtendedThumbnail] объект данного класа.
-  // static ExtendedThumbnails fromDBExtendedThumbnail(
-  //   DBExtendedThumbnail thumbnail,
-  // ) =>
-  //     ExtendedThumbnails(
-  //       photoSmall: thumbnail.photoSmall!,
-  //       photoMedium: thumbnail.photoMedium!,
-  //       photoBig: thumbnail.photoBig!,
-  //       photoMax: thumbnail.photoMax!,
-  //     );
-
-  // /// Возвращает копию данного класса в виде объекта [DBExtendedThumbnail].
-  // DBExtendedThumbnail get asDBExtendedThumbnail =>
-  //     DBExtendedThumbnail.fromExtendedThumbnail(this);
-
   /// Создаёт из передаваемого объекта [Thumbnails] объект данного класа.
   static ExtendedThumbnails fromThumbnail(Thumbnails thumbnails) =>
       ExtendedThumbnails(
@@ -640,6 +626,40 @@ class ExtendedAudio {
     }
 
     return true;
+  }
+
+  /// Возвращает название трека, с учётом [subtitle], а так же [isExplicit].
+  String fullTitle({
+    bool subtitle = true,
+    bool explicit = true,
+  }) {
+    String title = this.title;
+    if (explicit && isExplicit) {
+      title += " $explicitChar";
+    }
+    if (subtitle && this.subtitle != null) {
+      title += " (${this.subtitle})";
+    }
+
+    return title;
+  }
+
+  /// Возвращает полное название трека в формате [artist] - [title].
+  String fullArtistTitle({
+    bool subtitle = true,
+    bool explicit = true,
+    String divider = "-",
+    bool artistFirst = true,
+  }) {
+    String title = fullTitle(
+      subtitle: subtitle,
+      explicit: explicit,
+    );
+    if (artistFirst) {
+      return "$artist $divider $title";
+    }
+
+    return "$title $divider $artist";
   }
 
   /// Создаёт из передаваемого объекта [Audio] объект данного класа.

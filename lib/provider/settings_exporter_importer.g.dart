@@ -114,7 +114,7 @@ Map<String, dynamic> _$ExportedAudiosInfoMetadataToJson(
 // RiverpodGenerator
 // **************************************************************************
 
-String _$settingsExporterHash() => r'75c5fb83b798940fc91c80434c763f8b5f1c1d92';
+String _$settingsExporterHash() => r'145eb1de25d26b7a0c06ea376473a27f1896f317';
 
 /// [Provider] для получения объекта [SettingsExporter].
 ///

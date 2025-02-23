@@ -1,6 +1,7 @@
 import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:flutter_local_notifications/flutter_local_notifications.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:queue/queue.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 
@@ -215,7 +216,7 @@ class DownloadManager extends _$DownloadManager {
 
 /// Возвращает [DownloadTask] по его [id].
 @riverpod
-DownloadTask? downloadTaskByID(DownloadTaskByIDRef ref, String id) {
+DownloadTask? downloadTaskByID(Ref ref, String id) {
   return ref.watch(downloadManagerProvider).tasks.firstWhereOrNull(
         (item) => item.id == id,
       );

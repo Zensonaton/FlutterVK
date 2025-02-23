@@ -6,7 +6,7 @@ part of 'updater.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$updaterHash() => r'c8d15d9ff084193a23bf99b1a7d35e56505de705';
+String _$updaterHash() => r'e9b01c7c496523d4eed541bb2059f5aa41eba952';
 
 /// [Provider] для получения объекта [Updater].
 ///

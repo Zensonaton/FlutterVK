@@ -163,7 +163,7 @@ class PlaylistUpdateResult {
 
 /// [Provider], загружающий информацию о плейлистах пользователя из локальной БД.
 @Riverpod(keepAlive: true)
-Future<PlaylistsState?> dbPlaylists(DbPlaylistsRef ref) async {
+Future<PlaylistsState?> dbPlaylists(Ref ref) async {
   final appStorage = ref.read(appStorageProvider);
   final List<ExtendedPlaylist> playlists = await appStorage.getPlaylists();
 
@@ -941,7 +941,7 @@ class Playlists extends _$Playlists {
 
 /// [Provider], возвращающий [ExtendedPlaylist], характеризующий фейковый плейлист "Любимая музыка".
 @riverpod
-ExtendedPlaylist? favoritesPlaylist(FavoritesPlaylistRef ref) {
+ExtendedPlaylist? favoritesPlaylist(Ref ref) {
   // TODO: Если плейлист не найден, то создать фейковый.
   // FIXME: Этот Provider не должен возвращать null даже если такого плейлиста нет.
 
@@ -956,7 +956,7 @@ ExtendedPlaylist? favoritesPlaylist(FavoritesPlaylistRef ref) {
 
 /// [Provider], возвращающий [ExtendedPlaylist], характеризующий фейковый плейлист "Музыка из результатов поиска".
 @riverpod
-ExtendedPlaylist? searchResultsPlaylist(SearchResultsPlaylistRef ref) {
+ExtendedPlaylist? searchResultsPlaylist(Ref ref) {
   final PlaylistsState? state =
       ref.watch(playlistsProvider).unwrapPrevious().valueOrNull;
   if (state == null) return null;
@@ -968,7 +968,7 @@ ExtendedPlaylist? searchResultsPlaylist(SearchResultsPlaylistRef ref) {
 
 /// [Provider], возвращающий список плейлистов ([ExtendedPlaylist]) пользователя.
 @riverpod
-List<ExtendedPlaylist>? userPlaylists(UserPlaylistsRef ref) {
+List<ExtendedPlaylist>? userPlaylists(Ref ref) {
   final PlaylistsState? state =
       ref.watch(playlistsProvider).unwrapPrevious().valueOrNull;
   if (state == null) return null;
@@ -985,7 +985,7 @@ List<ExtendedPlaylist>? userPlaylists(UserPlaylistsRef ref) {
 
 /// [Provider], возвращающий список рекомендуемых плейлистов ([ExtendedPlaylist]) пользователя типа "VK Mix".
 @riverpod
-List<ExtendedPlaylist>? mixPlaylists(MixPlaylistsRef ref) {
+List<ExtendedPlaylist>? mixPlaylists(Ref ref) {
   final PlaylistsState? state =
       ref.watch(playlistsProvider).unwrapPrevious().valueOrNull;
   if (state == null) return null;
@@ -1002,7 +1002,7 @@ List<ExtendedPlaylist>? mixPlaylists(MixPlaylistsRef ref) {
 
 /// [Provider], возвращающий список рекомендуемых плейлистов ([ExtendedPlaylist]) пользователя по настроению.
 @riverpod
-List<ExtendedPlaylist>? moodPlaylists(MoodPlaylistsRef ref) {
+List<ExtendedPlaylist>? moodPlaylists(Ref ref) {
   final PlaylistsState? state =
       ref.watch(playlistsProvider).unwrapPrevious().valueOrNull;
   if (state == null) return null;
@@ -1019,7 +1019,7 @@ List<ExtendedPlaylist>? moodPlaylists(MoodPlaylistsRef ref) {
 
 /// [Provider], возвращающий список рекомендуемых плейлистов ([ExtendedPlaylist]) пользователя типа "Плейлист дня 1" и подобные.
 @riverpod
-List<ExtendedPlaylist>? recommendedPlaylists(RecommendedPlaylistsRef ref) {
+List<ExtendedPlaylist>? recommendedPlaylists(Ref ref) {
   final PlaylistsState? state =
       ref.watch(playlistsProvider).unwrapPrevious().valueOrNull;
   if (state == null) return null;
@@ -1038,7 +1038,7 @@ List<ExtendedPlaylist>? recommendedPlaylists(RecommendedPlaylistsRef ref) {
 
 /// [Provider], возвращающий список рекомендуемых плейлистов ([ExtendedPlaylist]) пользователя, которые имеют схожести с другими плейлистами пользователя ВКонтакте.
 @riverpod
-List<ExtendedPlaylist>? simillarPlaylists(SimillarPlaylistsRef ref) {
+List<ExtendedPlaylist>? simillarPlaylists(Ref ref) {
   final PlaylistsState? state =
       ref.watch(playlistsProvider).unwrapPrevious().valueOrNull;
   if (state == null) return null;
@@ -1056,7 +1056,7 @@ List<ExtendedPlaylist>? simillarPlaylists(SimillarPlaylistsRef ref) {
 
 /// [Provider], возвращающий список рекомендуемых плейлистов ([ExtendedPlaylist]) от ВКонтакте.
 @riverpod
-List<ExtendedPlaylist>? madeByVKPlaylists(MadeByVKPlaylistsRef ref) {
+List<ExtendedPlaylist>? madeByVKPlaylists(Ref ref) {
   final PlaylistsState? state =
       ref.watch(playlistsProvider).unwrapPrevious().valueOrNull;
   if (state == null) return null;
@@ -1073,7 +1073,7 @@ List<ExtendedPlaylist>? madeByVKPlaylists(MadeByVKPlaylistsRef ref) {
 
 /// [Provider], возвращающий [ExtendedPlaylist] по передаваемому [ownerID] и [id] плейлиста.
 @riverpod
-ExtendedPlaylist? getPlaylist(GetPlaylistRef ref, int ownerID, int id) {
+ExtendedPlaylist? getPlaylist(Ref ref, int ownerID, int id) {
   ref.watch(playlistsProvider);
 
   return ref.read(playlistsProvider.notifier).getPlaylist(ownerID, id);

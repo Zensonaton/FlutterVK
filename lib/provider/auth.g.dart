@@ -6,7 +6,7 @@ part of 'auth.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$tokenHash() => r'1ce76c440f04284d8e03515767ed37ff2d7251e8';
+String _$tokenHash() => r'e8598fad45762707770d6793373f56b007472145';
 
 /// Возвращает основной токен (Kate Mobile) для ВКонтакте.
 ///
@@ -24,7 +24,7 @@ final tokenProvider = AutoDisposeProvider<String?>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef TokenRef = AutoDisposeProviderRef<String?>;
-String _$secondaryTokenHash() => r'2f2043e60ee54766ea1bc82aba3896b2643be0d7';
+String _$secondaryTokenHash() => r'39980276bb0b9238c616d67f10f01a0ce7b94112';
 
 /// Возвращает вторичный токен (VK Admin) для ВКонтакте.
 ///
@@ -43,7 +43,7 @@ final secondaryTokenProvider = AutoDisposeProvider<String?>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef SecondaryTokenRef = AutoDisposeProviderRef<String?>;
-String _$isDemoHash() => r'b27afefc2ba0ffdf74bece30bfafa47a9db4e7e0';
+String _$isDemoHash() => r'4764f89171661087ca756fc5d166787d0943d150';
 
 /// Возвращает true, если включён демо-режим.
 ///

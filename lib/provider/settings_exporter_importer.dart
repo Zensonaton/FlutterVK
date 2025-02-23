@@ -753,5 +753,4 @@ class SettingsExporter {
 
 /// [Provider] для получения объекта [SettingsExporter].
 @riverpod
-SettingsExporter settingsExporter(SettingsExporterRef ref) =>
-    SettingsExporter(ref: ref);
+SettingsExporter settingsExporter(Ref ref) => SettingsExporter(ref: ref);

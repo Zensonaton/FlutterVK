@@ -107,21 +107,9 @@ class DiscordRPCPlayerSubscriber extends PlayerSubscriber {
       return;
     }
 
-    String? audioTitle;
-    String? audioFullTitle;
-    String? audioArtist;
-    if (audio != null) {
-      audioTitle = audio.title;
-      audioArtist = audio.artist;
-      if (audio.subtitle != null) {
-        audioTitle += " (${audio.subtitle})";
-      }
-      if (audio.isExplicit) {
-        audioTitle += " $explicitChar";
-      }
-      audioFullTitle = "$audioTitle • $audioArtist";
-    }
-
+    final title = audio?.fullTitle();
+    final artist = audio?.artist;
+    final titleArtist = "$artist • $title";
     int? startTimestamp;
     if (playing) {
       startTimestamp = getUnixTimestamp() - position.inSeconds;
@@ -129,12 +117,12 @@ class DiscordRPCPlayerSubscriber extends PlayerSubscriber {
 
     _rpc.updatePresence(
       DiscordPresence(
-        state: audioTitle,
-        details: audioArtist,
+        state: title,
+        details: artist,
         largeImageKey: "flutter-vk-logo",
         largeImageText: appName,
         smallImageKey: "playing",
-        smallImageText: audioFullTitle,
+        smallImageText: titleArtist,
         startTimeStamp: startTimestamp,
       ),
     );

@@ -63,9 +63,7 @@ class AudioServicePlayerSubscriber extends PlayerSubscriber {
   /// Преобразовывает переданный [audio] типа [ExtendedAudio] в [MediaItem].
   static MediaItem audioToMediaItem(ExtendedAudio audio) {
     final id = audio.mediaKey;
-    String title = audio.title;
-    if (audio.subtitle != null) title += " (${audio.subtitle})";
-    if (audio.isExplicit) title += " $explicitChar";
+    final title = audio.fullTitle();
     final artist = audio.artist;
     final album = audio.album?.title;
     final mediaArtUri =

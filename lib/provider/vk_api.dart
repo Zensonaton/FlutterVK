@@ -25,7 +25,7 @@ part "vk_api.g.dart";
 
 /// Возвращает класс [VKAPI], предоставляющий доступ к методам API ВКонтакте.
 @riverpod
-VKAPI vkAPI(VkAPIRef ref) => VKAPI(ref: ref);
+VKAPI vkAPI(Ref ref) => VKAPI(ref: ref);
 
 /// Класс, предоставляющий простой доступ к различным категориям API ВКонтакте.
 ///
@@ -48,7 +48,7 @@ class VKAPI {
   final VKAPIExecute execute;
 
   VKAPI({
-    required VkAPIRef ref,
+    required Ref ref,
   })  : users = VKAPIUsers(ref: ref),
         audio = VKAPIAudio(ref: ref),
         catalog = VKAPICatalog(ref: ref),
@@ -331,22 +331,22 @@ class VKAPIExecute extends VKAPICategory {
 ///
 /// Вместо данного метода рекомендуется использовать [vkAPIProvider].
 @riverpod
-VKAPIUsers vkAPIUsers(VkAPIUsersRef ref) => VKAPIUsers(ref: ref);
+VKAPIUsers vkAPIUsers(Ref ref) => VKAPIUsers(ref: ref);
 
 /// Возвращает категорию API ВКонтакте типа [VKAPIAudio].
 ///
 /// Вместо данного метода рекомендуется использовать [vkAPIProvider].
 @riverpod
-VKAPIAudio vkAPIAudio(VkAPIAudioRef ref) => VKAPIAudio(ref: ref);
+VKAPIAudio vkAPIAudio(Ref ref) => VKAPIAudio(ref: ref);
 
 /// Возвращает категорию API ВКонтакте типа [VKAPICatalog].
 ///
 /// Вместо данного метода рекомендуется использовать [vkAPIProvider].
 @riverpod
-VKAPICatalog vkAPICatalog(VkAPICatalogRef ref) => VKAPICatalog(ref: ref);
+VKAPICatalog vkAPICatalog(Ref ref) => VKAPICatalog(ref: ref);
 
 /// Возвращает категорию API ВКонтакте типа [VKAPIExecute].
 ///
 /// Вместо данного метода рекомендуется использовать [vkAPIProvider].
 @riverpod
-VKAPIExecute vkAPIExecute(VkAPIExecuteRef ref) => VKAPIExecute(ref: ref);
+VKAPIExecute vkAPIExecute(Ref ref) => VKAPIExecute(ref: ref);

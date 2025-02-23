@@ -171,7 +171,9 @@ class ExportTracksListDialog extends ConsumerWidget {
     }
 
     final String exportContents = playlist!.audios!
-        .map((ExtendedAudio audio) => "${audio.artist} • ${audio.title}")
+        .map(
+          (ExtendedAudio audio) => audio.fullArtistTitle(divider: "•"),
+        )
         .join("\n\n");
 
     return MaterialDialog(

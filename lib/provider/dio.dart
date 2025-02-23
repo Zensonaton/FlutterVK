@@ -234,7 +234,7 @@ class LRCLIBInterceptor extends Interceptor {
 /// await dio.get("https://example.com/")
 /// ```
 @riverpod
-Dio dio(DioRef ref) {
+Dio dio(Ref ref) {
   final Dio dio = Dio(
     BaseOptions(
       requestEncoder: gzipEncoder,
@@ -267,7 +267,7 @@ Dio dio(DioRef ref) {
 /// await dio.post("users.get")
 /// ```
 @riverpod
-Dio vkDio(VkDioRef ref) {
+Dio vkDio(Ref ref) {
   final Dio dio = Dio(
     BaseOptions(
       baseUrl: vkAPIBaseURL,
@@ -277,10 +277,6 @@ Dio vkDio(VkDioRef ref) {
         "User-Agent": vkAPIKateMobileUA,
         "Accept-Encoding": "gzip",
         "Content-Encoding": "gzip",
-
-        // TODO: QUIC/msgpack/zstd support.
-        // "x-quic": "1",
-        // "X-Response-Format": "msgpack",
       },
     ),
   );
@@ -306,7 +302,7 @@ Dio vkDio(VkDioRef ref) {
 /// await dio.get("search?q=Never Gonna Give You Up")
 /// ```
 @riverpod
-Dio lrcLibDio(LrcLibDioRef ref) {
+Dio lrcLibDio(Ref ref) {
   final Dio dio = Dio(
     BaseOptions(
       baseUrl: lrcLibBaseURL,

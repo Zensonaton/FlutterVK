@@ -6,7 +6,7 @@ part of 'shared_prefs.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$sharedPrefsHash() => r'394954be62ac9fcd757598b97278fd4215bc6410';
+String _$sharedPrefsHash() => r'1fdd0079e02fc97b3f57735c5d6f007185909d5b';
 
 /// [Provider] для [SharedPreferences], позволяющий получить доступ к хранилищу настроек.
 ///

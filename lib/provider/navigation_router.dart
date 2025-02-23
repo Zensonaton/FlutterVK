@@ -1,6 +1,7 @@
 import "package:animations/animations.dart";
 import "package:flutter/material.dart";
 import "package:go_router/go_router.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 
 import "../main.dart";
@@ -60,7 +61,7 @@ CustomTransitionPage buildPageWithDefaultTransition<T>({
 ///
 /// Если Вам нужно изменить redirect'ы, то обратитесь к [currentAuthStateProvider].
 @riverpod
-GoRouter router(RouterRef ref) {
+GoRouter router(Ref ref) {
   // ignore: avoid_manual_providers_as_generated_provider_dependency
   final l18n = ref.watch(l18nProvider);
 

@@ -6,7 +6,7 @@ part of 'playlists.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$dbPlaylistsHash() => r'9c828d482f9796c52e89dee2621da70f900699ba';
+String _$dbPlaylistsHash() => r'a48b3bc960a3ea6a0f8d9ee6cefe21e1a365908d';
 
 /// [Provider], загружающий информацию о плейлистах пользователя из локальной БД.
 ///
@@ -24,7 +24,7 @@ final dbPlaylistsProvider = FutureProvider<PlaylistsState?>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef DbPlaylistsRef = FutureProviderRef<PlaylistsState?>;
-String _$favoritesPlaylistHash() => r'0742712f7d0a208cf6db561d115ec2f2f1a923a9';
+String _$favoritesPlaylistHash() => r'7f8eb78aaca460a97d34745e7c92462e4aaa30d6';
 
 /// [Provider], возвращающий [ExtendedPlaylist], характеризующий фейковый плейлист "Любимая музыка".
 ///
@@ -45,7 +45,7 @@ final favoritesPlaylistProvider =
 // ignore: unused_element
 typedef FavoritesPlaylistRef = AutoDisposeProviderRef<ExtendedPlaylist?>;
 String _$searchResultsPlaylistHash() =>
-    r'cf07341f574ae51d838afb845e80a3b3b2f3cc73';
+    r'85bc22d8d272b22b0a66339fdb7906fd7afd474d';
 
 /// [Provider], возвращающий [ExtendedPlaylist], характеризующий фейковый плейлист "Музыка из результатов поиска".
 ///
@@ -65,7 +65,7 @@ final searchResultsPlaylistProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef SearchResultsPlaylistRef = AutoDisposeProviderRef<ExtendedPlaylist?>;
-String _$userPlaylistsHash() => r'dc9239504382be5944942bd4462a6eaac1a6f9eb';
+String _$userPlaylistsHash() => r'db3194d97744dbbbd96f50c2dba14b6a9f73aad7';
 
 /// [Provider], возвращающий список плейлистов ([ExtendedPlaylist]) пользователя.
 ///
@@ -85,7 +85,7 @@ final userPlaylistsProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef UserPlaylistsRef = AutoDisposeProviderRef<List<ExtendedPlaylist>?>;
-String _$mixPlaylistsHash() => r'b92c6879671d5aeae9794e334afa1a2e6a39f518';
+String _$mixPlaylistsHash() => r'a6a9d455b79f890f4f6b74becbe5dfa4972abe55';
 
 /// [Provider], возвращающий список рекомендуемых плейлистов ([ExtendedPlaylist]) пользователя типа "VK Mix".
 ///
@@ -104,7 +104,7 @@ final mixPlaylistsProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef MixPlaylistsRef = AutoDisposeProviderRef<List<ExtendedPlaylist>?>;
-String _$moodPlaylistsHash() => r'790a815ea5478f6ef4f0c45ccb3bbab87c35211e';
+String _$moodPlaylistsHash() => r'b6c78c578e82f00055616e3a447fe75117ddea0f';
 
 /// [Provider], возвращающий список рекомендуемых плейлистов ([ExtendedPlaylist]) пользователя по настроению.
 ///
@@ -125,7 +125,7 @@ final moodPlaylistsProvider =
 // ignore: unused_element
 typedef MoodPlaylistsRef = AutoDisposeProviderRef<List<ExtendedPlaylist>?>;
 String _$recommendedPlaylistsHash() =>
-    r'b10ec810b9f0b262f5178c206962d2075036771a';
+    r'876f62d4eb9f7f4cd3189397b32807450ecfff54';
 
 /// [Provider], возвращающий список рекомендуемых плейлистов ([ExtendedPlaylist]) пользователя типа "Плейлист дня 1" и подобные.
 ///
@@ -146,7 +146,7 @@ final recommendedPlaylistsProvider =
 // ignore: unused_element
 typedef RecommendedPlaylistsRef
     = AutoDisposeProviderRef<List<ExtendedPlaylist>?>;
-String _$simillarPlaylistsHash() => r'f634fb7c40a5d628f457a9d189bb4aee078f252c';
+String _$simillarPlaylistsHash() => r'427d1d67edf5ee846503a9b3220047c7a26ef2ee';
 
 /// [Provider], возвращающий список рекомендуемых плейлистов ([ExtendedPlaylist]) пользователя, которые имеют схожести с другими плейлистами пользователя ВКонтакте.
 ///
@@ -166,7 +166,7 @@ final simillarPlaylistsProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef SimillarPlaylistsRef = AutoDisposeProviderRef<List<ExtendedPlaylist>?>;
-String _$madeByVKPlaylistsHash() => r'4aa456da0be0e9c7d9caf7e84bef2ca82b3f7849';
+String _$madeByVKPlaylistsHash() => r'02235febbcc6ba11e620ddb583f6bac3d3d856b7';
 
 /// [Provider], возвращающий список рекомендуемых плейлистов ([ExtendedPlaylist]) от ВКонтакте.
 ///
@@ -186,7 +186,7 @@ final madeByVKPlaylistsProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef MadeByVKPlaylistsRef = AutoDisposeProviderRef<List<ExtendedPlaylist>?>;
-String _$getPlaylistHash() => r'63afe756e91a2d5e00591af4ac15e8f66f3f93c9';
+String _$getPlaylistHash() => r'd286b4872aebdd61fc3d2d552f8d8a46703868cb';
 
 /// Copied from Dart SDK
 class _SystemHash {

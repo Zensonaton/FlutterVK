@@ -6,7 +6,7 @@ part of 'dio.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$dioHash() => r'7f0e3fc3a57c48d786037504e1cd16e6615aa3f8';
+String _$dioHash() => r'e86d29b48f8cba82c13d86c9be1f2317363bb0d7';
 
 /// [Provider], возвращающий объект [Dio] с зарегистрированными [Interceptor]'ами, используемый для создания обычных запросов.
 ///
@@ -33,7 +33,7 @@ final dioProvider = AutoDisposeProvider<Dio>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef DioRef = AutoDisposeProviderRef<Dio>;
-String _$vkDioHash() => r'3ef9b06017e7b53c19f1d5683271b3cc267b6ca8';
+String _$vkDioHash() => r'd8dcd47af9ba9829b4da50dc12da08a994a249a9';
 
 /// [Provider], возвращающий объект [Dio] с зарегистрированными [Interceptor]'ами, настроенный конкретно под работу с API ВКонтакте.
 ///
@@ -61,7 +61,7 @@ final vkDioProvider = AutoDisposeProvider<Dio>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef VkDioRef = AutoDisposeProviderRef<Dio>;
-String _$lrcLibDioHash() => r'5d33d88ef32cac02fdffb48452a666af33e86213';
+String _$lrcLibDioHash() => r'2d243cd93fff5f7622b90bf42fbe863bd0748d82';
 
 /// [Provider], возвращающий объект [Dio] с зарегистрированными [Interceptor]'ами, настроенный для создания API-запросов к сервису LRCLIB.
 ///

@@ -6,7 +6,7 @@ part of 'player.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$playerHash() => r'c2b3c51844b2d7f701cb80094810e44bb12633ba';
+String _$playerHash() => r'd3c0c2994623387f4d80a5d8983cdde0517a8d6b';
 
 /// [Provider] для получения объекта [Player] для воспроизведения музыки.
 ///
@@ -24,7 +24,7 @@ final playerProvider = Provider<Player>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef PlayerRef = ProviderRef<Player>;
-String _$playerIsLoadedHash() => r'5130c15b136ad81d3107304c416eed1a2e3d9d86';
+String _$playerIsLoadedHash() => r'370507fedd08dd88e8ddcf32c1e26616a223bf3c';
 
 /// {@macro Player.isLoadedStream}
 ///
@@ -43,7 +43,7 @@ final playerIsLoadedProvider = AutoDisposeStreamProvider<bool>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef PlayerIsLoadedRef = AutoDisposeStreamProviderRef<bool>;
-String _$playerIsPlayingHash() => r'9ab20456869a9f49b91d97f84318b1c769bfceed';
+String _$playerIsPlayingHash() => r'2ea578990e0d625e86cd8e3b9493ef93284c6e4c';
 
 /// {@macro Player.isPlayingStream}
 ///
@@ -62,7 +62,7 @@ final playerIsPlayingProvider = AutoDisposeStreamProvider<bool>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef PlayerIsPlayingRef = AutoDisposeStreamProviderRef<bool>;
-String _$playerAudioHash() => r'e18cb646f94ecf87297f3a1215c1629b5873b700';
+String _$playerAudioHash() => r'7fb47ba28aae7830ceb68ef4044d56d3c6c670cf';
 
 /// {@macro Player.audioStream}
 ///
@@ -80,7 +80,7 @@ final playerAudioProvider = AutoDisposeStreamProvider<ExtendedAudio>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef PlayerAudioRef = AutoDisposeStreamProviderRef<ExtendedAudio>;
-String _$playerPositionHash() => r'd5a059e7ee11354236a3436db77a992079b72a82';
+String _$playerPositionHash() => r'4080fd36037354ee82dc5ba8831279ae003fc549';
 
 /// {@macro Player.positionStream}
 ///
@@ -99,7 +99,7 @@ final playerPositionProvider = AutoDisposeStreamProvider<Duration>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef PlayerPositionRef = AutoDisposeStreamProviderRef<Duration>;
-String _$playerSeekHash() => r'947febc91ba2722f6538acccb7fcb0aac6013468';
+String _$playerSeekHash() => r'4d1e713bbf38c70aecf1dbd1b88a1f574cf6255c';
 
 /// {@macro Player.seekStream}
 ///
@@ -117,7 +117,7 @@ final playerSeekProvider = AutoDisposeStreamProvider<Duration>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef PlayerSeekRef = AutoDisposeStreamProviderRef<Duration>;
-String _$playerVolumeHash() => r'74f5604486c8a5087f095db71a320d3b62ff9b13';
+String _$playerVolumeHash() => r'87c61bb2b8cff485f50e424f9df4ddb12e960d30';
 
 /// {@macro Player.volumeStream}
 ///
@@ -135,7 +135,7 @@ final playerVolumeProvider = AutoDisposeStreamProvider<double>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef PlayerVolumeRef = AutoDisposeStreamProviderRef<double>;
-String _$playerIsBufferingHash() => r'c11304c8c83040104eeaef9c681d4367c03e1ba3';
+String _$playerIsBufferingHash() => r'00be868a33ba3ee60b4d66f73d1f77704b4ad236';
 
 /// {@macro Player.isBufferingStream}
 ///
@@ -155,7 +155,7 @@ final playerIsBufferingProvider = AutoDisposeStreamProvider<bool>.internal(
 // ignore: unused_element
 typedef PlayerIsBufferingRef = AutoDisposeStreamProviderRef<bool>;
 String _$playerBufferedPositionHash() =>
-    r'd6bb1004ed6279964a5d5c502658843b66856bb7';
+    r'5f6036d130d14e54e94bb6c8efd07938ebcaa1ef';
 
 /// {@macro Player.bufferedPositionStream}
 ///
@@ -175,7 +175,7 @@ final playerBufferedPositionProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef PlayerBufferedPositionRef = AutoDisposeStreamProviderRef<Duration>;
-String _$playerPlaylistHash() => r'4ca46e75edc3d95e7f8781d16b818995b4bee6e8';
+String _$playerPlaylistHash() => r'ad4f3e58b2ef97e0020dc24951f84dea031e4be4';
 
 /// {@macro Player.playlistStream}
 ///
@@ -195,7 +195,7 @@ final playerPlaylistProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef PlayerPlaylistRef = AutoDisposeStreamProviderRef<ExtendedPlaylist>;
-String _$playerQueueHash() => r'73bd41cfa01527af8221eeb00a1b0308be064779';
+String _$playerQueueHash() => r'75bfb4aae92dc17ceeee9a36f8cf00265a09c9fa';
 
 /// {@macro Player.queueStream}
 ///
@@ -214,7 +214,7 @@ final playerQueueProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef PlayerQueueRef = AutoDisposeStreamProviderRef<List<ExtendedAudio>>;
-String _$playerIsShufflingHash() => r'77a2a3124241d4c62d1e3b9075a2470a23d43d1b';
+String _$playerIsShufflingHash() => r'198cf8cba9bedf3108a043539e9ab16c9840bf86';
 
 /// {@macro Player.isShufflingStream}
 ///
@@ -233,7 +233,7 @@ final playerIsShufflingProvider = AutoDisposeStreamProvider<bool>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef PlayerIsShufflingRef = AutoDisposeStreamProviderRef<bool>;
-String _$playerIsRepeatingHash() => r'ab514be456bb5de86245938606a22c002abeca27';
+String _$playerIsRepeatingHash() => r'f246537a7a7106d6dc5d301d9e40aed476f1194f';
 
 /// {@macro Player.isRepeatingStream}
 ///

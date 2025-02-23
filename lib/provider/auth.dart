@@ -1,5 +1,6 @@
 import "dart:io";
 
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:shared_preferences/shared_preferences.dart";
 
@@ -131,7 +132,7 @@ enum AuthState {
 
 /// Возвращает основной токен (Kate Mobile) для ВКонтакте.
 @riverpod
-String? token(TokenRef ref) {
+String? token(Ref ref) {
   final SharedPreferences prefs = ref.read(sharedPrefsProvider);
 
   return prefs.getString("Token");
@@ -139,7 +140,7 @@ String? token(TokenRef ref) {
 
 /// Возвращает вторичный токен (VK Admin) для ВКонтакте.
 @riverpod
-String? secondaryToken(SecondaryTokenRef ref) {
+String? secondaryToken(Ref ref) {
   final SharedPreferences prefs = ref.read(sharedPrefsProvider);
 
   return prefs.getString("RecommendationsToken");
@@ -147,7 +148,7 @@ String? secondaryToken(SecondaryTokenRef ref) {
 
 /// Возвращает true, если включён демо-режим.
 @riverpod
-bool isDemo(IsDemoRef ref) {
+bool isDemo(Ref ref) {
   final SharedPreferences prefs = ref.read(sharedPrefsProvider);
 
   return prefs.getBool("IsDemoMode") ?? false;

@@ -6,7 +6,7 @@ part of 'vk_api.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$vkAPIHash() => r'ba00cd4ba97a6d416f1a0d6cf6f9449b48a9a818';
+String _$vkAPIHash() => r'bec829fbc0f2e28af25a159b2e7459f3b70b728c';
 
 /// Возвращает класс [VKAPI], предоставляющий доступ к методам API ВКонтакте.
 ///
@@ -24,7 +24,7 @@ final vkAPIProvider = AutoDisposeProvider<VKAPI>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef VkAPIRef = AutoDisposeProviderRef<VKAPI>;
-String _$vkAPIUsersHash() => r'17697da247c73b124648e0b1aa2a2baa6c09ce0c';
+String _$vkAPIUsersHash() => r'df6d0e110a4a9cdcd2ed0ec89dbf39104988928f';
 
 /// Возвращает категорию API ВКонтакте типа [VKAPIUsers].
 ///
@@ -44,7 +44,7 @@ final vkAPIUsersProvider = AutoDisposeProvider<VKAPIUsers>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef VkAPIUsersRef = AutoDisposeProviderRef<VKAPIUsers>;
-String _$vkAPIAudioHash() => r'f98e0caae552377f848e323d18b040d39c8be7a5';
+String _$vkAPIAudioHash() => r'ab1f1c878efb3a8eb7836f00a1826a97f7137087';
 
 /// Возвращает категорию API ВКонтакте типа [VKAPIAudio].
 ///
@@ -64,7 +64,7 @@ final vkAPIAudioProvider = AutoDisposeProvider<VKAPIAudio>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef VkAPIAudioRef = AutoDisposeProviderRef<VKAPIAudio>;
-String _$vkAPICatalogHash() => r'505d581c717cb6b82774351ba5803acefe989002';
+String _$vkAPICatalogHash() => r'4a89efde99b963f53b7a9bf86383301327189aa6';
 
 /// Возвращает категорию API ВКонтакте типа [VKAPICatalog].
 ///
@@ -84,7 +84,7 @@ final vkAPICatalogProvider = AutoDisposeProvider<VKAPICatalog>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef VkAPICatalogRef = AutoDisposeProviderRef<VKAPICatalog>;
-String _$vkAPIExecuteHash() => r'4483c3e635d57943658833c4cea11c2fc6003652';
+String _$vkAPIExecuteHash() => r'5f940ddcd7b6837b410534359bcc9a958fc63533';
 
 /// Возвращает категорию API ВКонтакте типа [VKAPIExecute].
 ///

@@ -3,6 +3,7 @@ import "dart:io";
 import "package:collection/collection.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:install_plugin/install_plugin.dart";
 import "package:path/path.dart" as path;
 import "package:path_provider/path_provider.dart";
@@ -28,7 +29,7 @@ import "logger.dart";
 class Updater {
   static final AppLogger logger = getLogger("Updater");
 
-  final UpdaterRef ref;
+  final Ref ref;
 
   Updater({
     required this.ref,

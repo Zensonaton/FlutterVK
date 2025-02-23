@@ -2,7 +2,6 @@ import "dart:async";
 
 import "package:smtc_windows/smtc_windows.dart";
 
-import "../../../consts.dart";
 import "../../../provider/user.dart";
 import "../../logger.dart";
 import "../player.dart";
@@ -110,14 +109,9 @@ class SMTCPlayerSubscriber extends PlayerSubscriber {
 
   /// События изменения трека, играющий в данный момент.
   void onAudio(ExtendedAudio audio) async {
-    String title = audio.title;
-    if (audio.isExplicit) {
-      title += " $explicitChar";
-    }
-
     await _smtc.updateMetadata(
       MusicMetadata(
-        title: title,
+        title: audio.fullTitle(),
         artist: audio.artist,
         albumArtist: audio.artist,
         album: audio.album?.title,
