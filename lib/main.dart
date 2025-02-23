@@ -246,19 +246,9 @@ Future main() async {
           ),
           () async {
             await windowManager.show();
-
-            // Делаем фокус окна не в debug-режиме.
-            if (!kDebugMode) {
-              await windowManager.focus();
-            }
-
-            // Инициализируем иконку в трее.
+            if (!kDebugMode) await windowManager.focus();
             await initSystemTray(l18n);
-
-            // Делаем название окна в debug-режиме.
-            if (kDebugMode) {
-              await windowManager.setTitle("Flutter VK (DEBUG)");
-            }
+            await setWindowTitle();
           },
         );
       }
@@ -338,6 +328,7 @@ Future main() async {
     player.setStopOnLongPauseEnabled(preferences.stopOnPauseEnabled);
     player.setKeepPlayingOnCloseEnabled(preferences.androidKeepPlayingOnClose);
     player.setDebugLoggingEnabled(preferences.debugPlayerLogging);
+    player.setTrackTitleInWindowBarEnabled(preferences.trackTitleInWindowBar);
     if (preferences.volume < 1.0 && isDesktop) {
       player.setVolume(preferences.volume);
     }

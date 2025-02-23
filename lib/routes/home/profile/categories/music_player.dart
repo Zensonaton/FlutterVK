@@ -242,6 +242,25 @@ class ProfileMusicPlayerSettingsCategory extends ConsumerWidget {
         top: mobileLayout ? 0 : 8,
       ),
       children: [
+        // Название трека в заголовке окна (Desktop).
+        if (isDesktop)
+          SwitchListTile(
+            secondary: const Icon(
+              Icons.web_asset,
+            ),
+            title: Text(
+              l18n.track_title_in_window_bar,
+            ),
+            value: preferences.trackTitleInWindowBar,
+            onChanged: (bool? enabled) async {
+              HapticFeedback.lightImpact();
+              if (enabled == null) return;
+
+              prefsNotifier.setTrackTitleInWindowBar(enabled);
+              player.setTrackTitleInWindowBarEnabled(enabled);
+            },
+          ),
+
         // Действие при закрытии (Desktop).
         if (isDesktop)
           SettingWithDialog(

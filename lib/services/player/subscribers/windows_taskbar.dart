@@ -10,7 +10,7 @@ import "../../logger.dart";
 import "../player.dart";
 import "../subscriber.dart";
 
-/// Класс подписчика на события [Player] для обработки SMTC.
+/// Класс подписчика на события [Player] для отображения кнопок управления в Windows Taskbar.
 class WindowsTaskbarPlayerSubscriber extends PlayerSubscriber {
   static final AppLogger logger = getLogger("WindowsTaskbarPlayerSubscriber");
 

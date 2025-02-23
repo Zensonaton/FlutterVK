@@ -12,7 +12,9 @@ import "package:flutter/services.dart";
 import "package:flutter_gen/gen_l10n/app_localizations.dart"
     show AppLocalizations;
 import "package:responsive_builder/responsive_builder.dart";
+import "package:window_manager/window_manager.dart";
 
+import "consts.dart";
 import "enums.dart";
 import "provider/user.dart";
 
@@ -423,4 +425,23 @@ EdgeInsets getPadding(
     top: useTop ? padding.top : 0,
     bottom: useBottom ? padding.bottom : 0,
   );
+}
+
+/// Устанавливает название для окна приложения на Desktop-платформах.
+Future<void> setWindowTitle({String? title}) async {
+  if (!isDesktop) {
+    throw UnsupportedError(
+      "This method is only supported on Desktop platforms.",
+    );
+  }
+
+  if (title == null) {
+    await windowManager.setTitle(
+      kDebugMode ? "$appName (DEBUG)" : appName,
+    );
+
+    return;
+  }
+
+  await windowManager.setTitle(title);
 }

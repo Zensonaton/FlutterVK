@@ -251,6 +251,8 @@
 
 	"music_player": "Music player",
 
+	"track_title_in_window_bar": "Track title in window bar",
+
 	"close_action": "Action on window close",
 	"close_action_desc": "Determines whether the app will actually close when the window is closed",
 	"close_action_close": "Close",

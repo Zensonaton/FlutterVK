@@ -218,6 +218,10 @@ class UserPreferences {
   @JsonKey(name: "CrossfadeColors", defaultValue: true)
   final bool crossfadeColors;
 
+  /// Указывает, что название трека, который играет в данный момент, будет отображаться в заголовке окна.
+  @JsonKey(name: "TrackTitleInWindowBar", defaultValue: true)
+  final bool trackTitleInWindowBar;
+
   /// Возвращает [Map] из всех ключей этого класса, где value - тип ключа.
   static Map<String, Type> getKeyTypes() => {
         "DBVersion": int,
@@ -257,6 +261,7 @@ class UserPreferences {
         "ShuffleOnPlay": bool,
         "ExportedSections": List<String>,
         "CrossfadeColors": bool,
+        "TrackTitleInWindowBar": bool,
       };
 
   UserPreferences({
@@ -297,6 +302,7 @@ class UserPreferences {
     this.shuffleOnPlay = true,
     this.exportedSections = const [],
     this.crossfadeColors = true,
+    this.trackTitleInWindowBar = true,
   });
 
   /// Делает копию этого класа с новыми передаваемыми значениями.
@@ -338,6 +344,7 @@ class UserPreferences {
     bool? shuffleOnPlay,
     List<String>? exportedSections,
     bool? crossfadeColors,
+    bool? trackTitleInWindowBar,
   }) =>
       UserPreferences(
         dbVersion: dbVersion ?? this.dbVersion,
@@ -386,6 +393,8 @@ class UserPreferences {
         shuffleOnPlay: shuffleOnPlay ?? this.shuffleOnPlay,
         exportedSections: exportedSections ?? this.exportedSections,
         crossfadeColors: crossfadeColors ?? this.crossfadeColors,
+        trackTitleInWindowBar:
+            trackTitleInWindowBar ?? this.trackTitleInWindowBar,
       );
 
   factory UserPreferences.fromJson(Map<String, dynamic> json) =>
@@ -621,4 +630,7 @@ class Preferences extends _$Preferences {
 
   void setCrossfadeColors(bool enabled) =>
       state = state.copyWith(crossfadeColors: enabled);
+
+  void setTrackTitleInWindowBar(bool enabled) =>
+      state = state.copyWith(trackTitleInWindowBar: enabled);
 }

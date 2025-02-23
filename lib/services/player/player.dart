@@ -26,6 +26,7 @@ import "subscribers/smtc.dart"
     if (dart.library.js_interop) "subscribers/smtc_stub.dart";
 import "subscribers/stop_on_long_pause.dart";
 import "subscribers/track_info.dart";
+import "subscribers/window_bar_title.dart";
 import "subscribers/windows_taskbar.dart";
 
 /// Уровень лога плеера.
@@ -90,6 +91,7 @@ class Player {
   RewindBehavior _rewindBehavior = RewindBehavior.always;
   bool _keepPlayingOnCloseEnabled = false;
   bool _isDebugLoggingEnabled = false;
+  bool _trackTitleInWindowBarEnabled = false;
 
   /// Инициализирует данный [Player].
   ///
@@ -109,6 +111,9 @@ class Player {
       DebugLoggerPlayerSubscriber(this),
       ErrorsHandlerPlayerSubscriber(this),
       PlaylistModificationsPlayerSubscriber(this),
+
+      // Window Bar Title (Desktop).
+      if (isDesktop) WindowBarTitlePlayerSubscriber(this),
 
       // SMTC (Windows).
       if (isWindows) SMTCPlayerSubscriber(this),
@@ -422,6 +427,14 @@ class Player {
     return _isDebugLoggingEnabledController.stream.asBroadcastStream();
   }
 
+  final StreamController<bool> _trackTitleInWindowBarEnabledController =
+      StreamController.broadcast();
+
+  /// Stream, указывающий то, включено ли отображение название трека в названии окна. Возвращает значение поля [trackTitleInWindowBarEnabled].
+  Stream<bool> get trackTitleInWindowBarEnabledStream {
+    return _trackTitleInWindowBarEnabledController.stream.asBroadcastStream();
+  }
+
   /// {@template Player.isPlaying}
   /// Возвращает true, если плеер воспроизводит музыку.
   ///
@@ -530,6 +543,9 @@ class Player {
   /// Возвращает true, если включено debug-логирование плеера. Для переключения данной настройки можно воспользоваться методом [Player.setDebugLoggingEnabled].
   bool get isDebugLoggingEnabled => _isDebugLoggingEnabled;
 
+  /// Возвращает true, если включена настройка "название трека в заголовке окна". Для переключения данной настройки можно воспользоваться методом [Player.setTrackTitleInWindowBarEnabled].
+  bool get trackTitleInWindowBarEnabled => _trackTitleInWindowBarEnabled;
+
   /// Управляет состоянием работы Discord RPC.
   void setDiscordRPCEnabled(bool enabled) {
     if (enabled == _discordRPCEnabled) return;
@@ -576,6 +592,14 @@ class Player {
 
     _isDebugLoggingEnabled = enabled;
     _isDebugLoggingEnabledController.add(enabled);
+  }
+
+  /// Устанавливает значение настройки "название трека в заголовке окна".
+  void setTrackTitleInWindowBarEnabled(bool enabled) {
+    if (enabled == _trackTitleInWindowBarEnabled) return;
+
+    _trackTitleInWindowBarEnabled = enabled;
+    _trackTitleInWindowBarEnabledController.add(enabled);
   }
 
   /// {@template Player.play}
