@@ -634,11 +634,11 @@ class ExtendedAudio {
     bool explicit = true,
   }) {
     String title = this.title;
-    if (explicit && isExplicit) {
-      title += " $explicitChar";
-    }
     if (subtitle && this.subtitle != null) {
       title += " (${this.subtitle})";
+    }
+    if (explicit && isExplicit) {
+      title += " $explicitChar";
     }
 
     return title;
