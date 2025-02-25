@@ -1353,7 +1353,7 @@ class MusicPlayerBackgroundWidget extends HookConsumerWidget {
 
         // Затемняем, если трек не воспроизводится.
         if (!isPlaying) {
-          baseColor = baseColor.darken(0.3);
+          baseColor = baseColor.darken(0.15);
         }
 
         // Если вот-вот начнётся воспроизведение следующего трека, то плавно переходим к его цвету.
