@@ -1,16 +1,18 @@
 // ignore_for_file: non_constant_identifier_names
 
+import "package:collection/collection.dart";
+
 import "../../../main.dart";
 import "../fake.dart";
 import "../shared.dart";
 
 /// Возвращает фейковые данные для этого метода.
-Map<String, dynamic> _getFakeData(int id, int ownerID) {
+Map<String, dynamic>? _getFakeData(int id, int ownerID) {
   return fakeAudios
-      .firstWhere(
+      .firstWhereOrNull(
         (audio) => audio.id == id,
       )
-      .toJson();
+      ?.toJson();
 }
 
 /// {@template VKAPI.audio.restore}
