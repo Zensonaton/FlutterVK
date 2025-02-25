@@ -52,7 +52,7 @@ class AudioServicePlayerSubscriber extends PlayerSubscriber {
       player.isPlayingStream.listen(onIsPlaying),
       player.isBufferingStream.listen(onIsBuffering),
       player.audioStream.listen(onAudio),
-      player.playlistStream.listen(onPlaylist),
+      player.queueStream.listen(onQueue),
       player.seekStream.listen(onSeek),
 
       // События AudioService.
@@ -120,12 +120,10 @@ class AudioServicePlayerSubscriber extends PlayerSubscriber {
     updateAudio();
   }
 
-  /// События изменения плейлиста.
-  void onPlaylist(ExtendedPlaylist playlist) async {
-    // TODO: Использовать очередь из треков, нежели playlist.audios.
-
+  /// События изменения очереди.
+  void onQueue(List<ExtendedAudio> queue) async {
     _audioService.queue.add(
-      playlist.audios!
+      queue
           .map(
             (audio) => audioToMediaItem(audio),
           )
