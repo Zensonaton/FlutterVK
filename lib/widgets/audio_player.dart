@@ -28,7 +28,7 @@ import "audio_track.dart";
 import "dialogs.dart";
 import "fallback_audio_photo.dart";
 import "loading_button.dart";
-import "play_pause_animated_icon.dart";
+import "play_pause_animated.dart";
 import "responsive_slider.dart";
 import "scrollable_slider.dart";
 import "wavy_slider.dart";
@@ -357,7 +357,6 @@ class _MusicLeftSide extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final player = ref.read(playerProvider);
-
     ref.watch(playerPlaylistProvider);
     ref.watch(playerAudioProvider);
     ref.watch(playerIsPlayingProvider);
@@ -461,83 +460,83 @@ class _MusicLeftSide extends HookConsumerWidget {
 
     final scheme = Theme.of(context).colorScheme;
 
+    void onTap() {
+      // TODO: Open fullscreen player.
+    }
+
+    void onVolumeScroll(double diff) async {
+      if (!mobileLayout || isMobile) return null;
+
+      return player.setVolume(
+        clampDouble(
+          player.volume + diff / 10,
+          0.0,
+          1.0,
+        ),
+      );
+    }
+
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints consts) {
         final gapSize = mobileLayout ? gapSizeMobile : gapSizeDesktop;
         final draggableSize = consts.maxWidth - mobileThumbnailSize - gapSize;
 
+        void onHorizontalStart(DragStartDetails details) {
+          switchAnimation.stop();
+          didVibration.value = false;
+          switchingViaSwipe.value = true;
+        }
+
+        void onHorizontalUpdate(DragUpdateDetails details) {
+          switchAnimation.value = clampDouble(
+            switchAnimation.value + details.primaryDelta! / draggableSize,
+            -1.0,
+            1.0,
+          );
+
+          if (!didVibration.value && switchAnimation.value.abs() >= 0.5) {
+            didVibration.value = true;
+            HapticFeedback.heavyImpact();
+          } else if (didVibration.value && switchAnimation.value.abs() <= 0.5) {
+            didVibration.value = false;
+          }
+        }
+
+        void onHorizontalEnd(DragEndDetails details) async {
+          final value = (switchAnimation.value +
+                  details.primaryVelocity! / draggableSize / 10)
+              .clamp(-1.0, 1.0);
+
+          // Если пользователь проскроллил слишком мало, то не считаем это как переключение трека.
+          if (value.abs() < 0.5) {
+            switchAnimation.animateTo(0.0);
+
+            return;
+          }
+
+          final isNext = value < 0.0;
+          if (isNext) {
+            player.next();
+          } else {
+            player.previous();
+          }
+        }
+
         return SizedBox(
           height: double.infinity,
           child: ScrollableWidget(
-            onChanged: (double diff) {
-              if (!mobileLayout || isMobile) return null;
-
-              return player.setVolume(
-                clampDouble(
-                  player.volume + diff / 10,
-                  0.0,
-                  1.0,
-                ),
-              );
-            },
+            onChanged: onVolumeScroll,
             child: MouseRegion(
               cursor: mobileLayout
                   ? SystemMouseCursors.click
                   : SystemMouseCursors.basic,
               child: GestureDetector(
                 behavior: HitTestBehavior.translucent,
-                onTap: mobileLayout
-                    ? () => {
-                          // TODO: Open fullscreen player.
-                        }
-                    : null,
-                onHorizontalDragStart: mobileLayout
-                    ? (DragStartDetails details) {
-                        switchAnimation.stop();
-                        didVibration.value = false;
-                        switchingViaSwipe.value = true;
-                      }
-                    : null,
-                onHorizontalDragUpdate: mobileLayout
-                    ? (DragUpdateDetails details) {
-                        switchAnimation.value = clampDouble(
-                          switchAnimation.value +
-                              details.primaryDelta! / draggableSize,
-                          -1.0,
-                          1.0,
-                        );
-
-                        if (!didVibration.value &&
-                            switchAnimation.value.abs() >= 0.5) {
-                          didVibration.value = true;
-                          HapticFeedback.heavyImpact();
-                        } else if (didVibration.value &&
-                            switchAnimation.value.abs() <= 0.5) {
-                          didVibration.value = false;
-                        }
-                      }
-                    : null,
-                onHorizontalDragEnd: mobileLayout
-                    ? (DragEndDetails details) async {
-                        final value = (switchAnimation.value +
-                                details.primaryVelocity! / draggableSize / 10)
-                            .clamp(-1.0, 1.0);
-
-                        // Если пользователь проскроллил слишком мало, то не считаем это как переключение трека.
-                        if (value.abs() < 0.5) {
-                          switchAnimation.animateTo(0.0);
-
-                          return;
-                        }
-
-                        final isNext = value < 0.0;
-                        if (isNext) {
-                          player.next();
-                        } else {
-                          player.previous();
-                        }
-                      }
-                    : null,
+                onTap: mobileLayout ? onTap : null,
+                onHorizontalDragStart: mobileLayout ? onHorizontalStart : null,
+                onHorizontalDragUpdate:
+                    mobileLayout ? onHorizontalUpdate : null,
+                onHorizontalDragEnd: mobileLayout ? onHorizontalEnd : null,
                 child: Row(
                   children: [
                     // Изображение трека.
@@ -692,70 +691,6 @@ class _MusicLeftSide extends HookConsumerWidget {
           ),
         );
       },
-    );
-  }
-}
-
-/// Кнопка, которая меняет форму в зависимости от того, поставлен ли плеер на паузу или нет.
-class PlayPauseAnimatedButton extends HookConsumerWidget {
-  /// Callback-метод, вызываемый при нажатии на эту кнопку.
-  final VoidCallback onPressed;
-
-  /// Callback-метод, вызываемый при длительном нажатии на эту кнопку.
-  final VoidCallback? onLongPress;
-
-  const PlayPauseAnimatedButton({
-    super.key,
-    required this.onPressed,
-    this.onLongPress,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final player = ref.read(playerProvider);
-    ref.watch(playerIsPlayingProvider);
-
-    final isPlaying = player.isPlaying;
-    final playPauseAnimation = useAnimationController(
-      duration: MusicPlayerWidget.switchAnimationDuration,
-      initialValue: isPlaying ? 1.0 : 0.0,
-    );
-    useEffect(
-      () {
-        if (isPlaying) {
-          playPauseAnimation.forward();
-        } else {
-          playPauseAnimation.reverse();
-        }
-
-        return null;
-      },
-      [isPlaying],
-    );
-    useValueListenable(playPauseAnimation);
-
-    final BorderRadius borderRadius =
-        BorderRadius.circular(20 - 6 * playPauseAnimation.value);
-
-    final scheme = Theme.of(context).colorScheme;
-
-    return InkWell(
-      onTap: onPressed,
-      onLongPress: onLongPress,
-      borderRadius: borderRadius,
-      child: Material(
-        color: Colors.transparent,
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: borderRadius,
-            color: scheme.onPrimaryContainer,
-          ),
-          padding: const EdgeInsets.all(8),
-          child: PlayPauseAnimatedIcon(
-            color: scheme.primaryContainer,
-          ),
-        ),
-      ),
     );
   }
 }
@@ -1573,7 +1508,7 @@ class _MusicContents extends ConsumerWidget {
   static const double gapSizeDesktop = 8;
 
   /// Debug-опция, чтобы отобразить различные разделы плеера в разных цветах для отладки.
-  static bool debugSections = false;
+  static bool debugSections = kDebugMode && false;
 
   const _MusicContents();
 
@@ -1704,7 +1639,7 @@ class _MusicContents extends ConsumerWidget {
                   ),
                 ),
 
-                // Правая (при Desktop Layout).
+                // Центральная (при Desktop Layout).
                 if (!mobileLayout)
                   Container(
                     width: middleBlockSize!,
@@ -1796,6 +1731,9 @@ class MusicPlayerWidget extends HookConsumerWidget {
   /// Длительность того, сколько [Player.isBuffering] должен быть `true`, что бы показать индикатор загрузки.
   static const Duration bufferingIndicatorDuration =
       Duration(milliseconds: 100);
+
+  /// Длительность открытия полноэкранного плеера.
+  static const Duration fullscreenOpenDuration = Duration(milliseconds: 500);
 
   const MusicPlayerWidget({
     super.key,

@@ -18,7 +18,7 @@ import "../../../services/cache_manager.dart";
 import "../../../services/logger.dart";
 import "../../../utils.dart";
 import "../../../widgets/music_category.dart";
-import "../../../widgets/play_pause_animated_icon.dart";
+import "../../../widgets/play_pause_animated.dart";
 import "../playlist.dart";
 
 /// Fallback-виджет, отображаемый вместо аудио миксов по типу VK Mix.
