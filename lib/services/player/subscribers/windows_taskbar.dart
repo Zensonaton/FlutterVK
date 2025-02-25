@@ -5,7 +5,7 @@ import "package:windows_taskbar/windows_taskbar.dart";
 import "../../../enums.dart";
 import "../../../provider/l18n.dart";
 import "../../../provider/user.dart";
-import "../../../routes/home/music.dart";
+import "../../../routes/music.dart";
 import "../../logger.dart";
 import "../player.dart";
 import "../subscriber.dart";

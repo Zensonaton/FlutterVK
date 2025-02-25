@@ -7,7 +7,7 @@ import "../../../enums.dart";
 import "../../../main.dart";
 import "../../../provider/l18n.dart";
 import "../../../provider/user.dart";
-import "../../../routes/home/music.dart";
+import "../../../routes/music.dart";
 import "../../../utils.dart";
 import "../../cache_manager.dart";
 import "../../logger.dart";

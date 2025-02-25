@@ -22,7 +22,7 @@ import "provider/navigation_router.dart";
 import "provider/player.dart";
 import "provider/preferences.dart";
 import "provider/user.dart";
-import "routes/home/profile.dart";
+import "routes/profile.dart";
 import "services/logger.dart";
 import "utils.dart";
 

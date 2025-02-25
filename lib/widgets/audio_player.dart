@@ -19,7 +19,7 @@ import "../provider/l18n.dart";
 import "../provider/player.dart";
 import "../provider/preferences.dart";
 import "../provider/user.dart";
-import "../routes/home/music.dart";
+import "../routes/music.dart";
 import "../services/cache_manager.dart";
 import "../services/image_to_color_scheme.dart";
 import "../services/logger.dart";
