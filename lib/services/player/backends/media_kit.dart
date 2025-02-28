@@ -1,6 +1,7 @@
 import "dart:async";
 import "dart:math";
 
+import "package:flutter/foundation.dart";
 import "package:media_kit/media_kit.dart" as mk;
 
 import "../../../consts.dart";
@@ -27,7 +28,7 @@ class MediaKitPlayerBackend extends PlayerBackend {
   static const int bufferSize = 50 * 1024 * 1024;
 
   /// Количество треков для prefetching'а.
-  static const int prefetchMaxCount = 3;
+  static const int prefetchMaxCount = kDebugMode ? 1 : 3;
 
   mk.Player? _player;
   PlayerLocalServer? _server;
@@ -485,7 +486,7 @@ class MediaKitPlayerBackend extends PlayerBackend {
         _queue![index] = audio;
         _modifiedQueue![mqIndex] = audio;
 
-        if (audio.id == currentAudio!.id && !audio.isEquals(currentAudio)) {
+        if (audio.id == currentAudio!.id && !currentAudio.isEquals(audio)) {
           modifiedCurrentAudio = true;
         }
       }

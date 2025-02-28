@@ -91,43 +91,13 @@ enum AuthState {
   /// [AuthState], отображающий неизвестное состояние авторизации пользователя.
   ///
   /// Чаще всего существует лишь некоторое время, пока не будет получено состояние авторизации пользователя, после чего оно сменяется на [unauthenticated] или [authenticated].
-  unknown(
-    redirectPath: "/welcome",
-    allowedPaths: [
-      "/welcome",
-    ],
-  ),
+  unknown,
 
   /// [AuthState], отображающий состояние авторизации пользователя, когда он не авторизован.
-  unauthenticated(
-    redirectPath: "/welcome",
-    allowedPaths: [
-      "/welcome",
-      "/login",
-    ],
-  ),
+  unauthenticated,
 
   /// [AuthState], отображающий состояние авторизации пользователя, когда он авторизован.
-  authenticated(
-    redirectPath: "/music",
-    allowedPaths: [
-      "/music",
-      "/library",
-      "/profile",
-      "/playlist",
-    ],
-  );
-
-  /// Путь к route, который будет использован для редиректа, в случае, если пользователь окажется в том route, которого нет в [allowedPaths].
-  final String redirectPath;
-
-  /// Список из разрешённых путей, в которые пользователь может попасть. Если пользователь окажется в пути, которого нет в данном списке, то его перенаправит на [redirectPath].
-  final List<String> allowedPaths;
-
-  const AuthState({
-    required this.redirectPath,
-    required this.allowedPaths,
-  });
+  authenticated
 }
 
 /// Возвращает основной токен (Kate Mobile) для ВКонтакте.

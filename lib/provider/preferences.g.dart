@@ -70,6 +70,8 @@ UserPreferences _$UserPreferencesFromJson(Map<String, dynamic> json) =>
           [],
       crossfadeColors: json['CrossfadeColors'] as bool? ?? true,
       trackTitleInWindowBar: json['TrackTitleInWindowBar'] as bool? ?? true,
+      appleMusicAnimatedCovers:
+          json['AppleMusicAnimatedCovers'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$UserPreferencesToJson(UserPreferences instance) =>
@@ -115,13 +117,14 @@ Map<String, dynamic> _$UserPreferencesToJson(UserPreferences instance) =>
       'ExportedSections': instance.exportedSections,
       'CrossfadeColors': instance.crossfadeColors,
       'TrackTitleInWindowBar': instance.trackTitleInWindowBar,
+      'AppleMusicAnimatedCovers': instance.appleMusicAnimatedCovers,
     };
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$preferencesHash() => r'dd57047993f2d468dcf5a3c91ce37c410459cd64';
+String _$preferencesHash() => r'b3bf0270aef6c43002c07fa37f491fc0e4a11946';
 
 /// [Provider] для хранения настроек пользователя.
 ///

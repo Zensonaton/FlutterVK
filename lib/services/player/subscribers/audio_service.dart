@@ -4,10 +4,10 @@ import "package:audio_service/audio_service.dart";
 
 import "../../../consts.dart";
 import "../../../enums.dart";
+import "../../../extensions.dart";
 import "../../../main.dart";
 import "../../../provider/l18n.dart";
 import "../../../provider/user.dart";
-import "../../../routes/music.dart";
 import "../../../utils.dart";
 import "../../cache_manager.dart";
 import "../../logger.dart";
@@ -334,18 +334,15 @@ class PlayerAudioService extends BaseAudioHandler with SeekHandler {
       case (MediaNotificationAction.favorite):
         if (!connectivityManager.hasConnection) return;
 
-        await toggleTrackLike(
-          player.ref,
-          player.audio!,
-          sourcePlaylist: player.playlist!,
-        );
+        await player.audio!
+            .likeDislikeRestore(player.ref, sourcePlaylist: player.playlist!);
 
         break;
 
       case (MediaNotificationAction.dislike):
         if (!connectivityManager.hasConnection) return;
 
-        await dislikeTrack(player.ref, player.audio!);
+        await player.audio!.dislike(player.ref);
 
         break;
     }

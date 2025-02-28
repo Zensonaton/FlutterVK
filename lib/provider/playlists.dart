@@ -662,6 +662,7 @@ class Playlists extends _$Playlists {
         colorInts: newAudio.colorInts,
         scoredColorInts: newAudio.scoredColorInts,
         frequentColorInt: newAudio.frequentColorInt,
+        appleMusicThumbs: newAudio.appleMusicThumbs,
       );
 
       playlistChanged = true;

@@ -222,6 +222,10 @@ class UserPreferences {
   @JsonKey(name: "TrackTitleInWindowBar", defaultValue: true)
   final bool trackTitleInWindowBar;
 
+  /// Указывает, что приложение будет отображать анимированные обложки с Apple Music.
+  @JsonKey(name: "AppleMusicAnimatedCovers", defaultValue: false)
+  final bool appleMusicAnimatedCovers;
+
   /// Возвращает [Map] из всех ключей этого класса, где value - тип ключа.
   static Map<String, Type> getKeyTypes() => {
         "DBVersion": int,
@@ -262,6 +266,7 @@ class UserPreferences {
         "ExportedSections": List<String>,
         "CrossfadeColors": bool,
         "TrackTitleInWindowBar": bool,
+        "AppleMusicAnimatedCovers": bool,
       };
 
   UserPreferences({
@@ -303,6 +308,7 @@ class UserPreferences {
     this.exportedSections = const [],
     this.crossfadeColors = true,
     this.trackTitleInWindowBar = true,
+    this.appleMusicAnimatedCovers = false,
   });
 
   /// Делает копию этого класа с новыми передаваемыми значениями.
@@ -345,6 +351,7 @@ class UserPreferences {
     List<String>? exportedSections,
     bool? crossfadeColors,
     bool? trackTitleInWindowBar,
+    bool? appleMusicAnimatedCovers,
   }) =>
       UserPreferences(
         dbVersion: dbVersion ?? this.dbVersion,
@@ -395,6 +402,8 @@ class UserPreferences {
         crossfadeColors: crossfadeColors ?? this.crossfadeColors,
         trackTitleInWindowBar:
             trackTitleInWindowBar ?? this.trackTitleInWindowBar,
+        appleMusicAnimatedCovers:
+            appleMusicAnimatedCovers ?? this.appleMusicAnimatedCovers,
       );
 
   factory UserPreferences.fromJson(Map<String, dynamic> json) =>
@@ -633,4 +642,7 @@ class Preferences extends _$Preferences {
 
   void setTrackTitleInWindowBar(bool enabled) =>
       state = state.copyWith(trackTitleInWindowBar: enabled);
+
+  void setAppleMusicAnimatedCovers(bool enabled) =>
+      state = state.copyWith(appleMusicAnimatedCovers: enabled);
 }

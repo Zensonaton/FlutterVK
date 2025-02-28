@@ -5,8 +5,10 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 
 import "../main.dart";
+import "../routes/login.dart";
 import "../routes/music.dart";
 import "../routes/music/playlist.dart";
+import "../routes/player.dart";
 import "../routes/profile.dart";
 import "../routes/profile/categories/visual/alternative_slider.dart";
 import "../routes/profile/categories/visual/app_wide_colors.dart";
@@ -21,7 +23,6 @@ import "../routes/profile/debug/playlists_viewer.dart";
 import "../routes/profile/download_manager.dart";
 import "../routes/profile/settings_exporter.dart";
 import "../routes/profile/settings_importer.dart";
-import "../routes/login.dart";
 import "../routes/welcome.dart";
 import "../widgets/shell_route_wrapper.dart";
 import "auth.dart";
@@ -73,7 +74,6 @@ GoRouter router(Ref ref) {
     });
 
   final List<NavigationItem> navigationItems = [
-    // Музыка.
     NavigationItem(
       path: "/music",
       icon: Icons.music_note_outlined,
@@ -125,8 +125,6 @@ GoRouter router(Ref ref) {
         );
       },
     ),
-
-    // Профиль.
     NavigationItem(
       path: "/profile",
       icon: Icons.person_outline,
@@ -134,7 +132,6 @@ GoRouter router(Ref ref) {
       label: l18n.profile_label,
       body: (_) => const HomeProfilePage(),
       routes: [
-        // Менеджер загрузок.
         GoRoute(
           path: "download_manager",
           pageBuilder: (BuildContext context, GoRouterState state) {
@@ -145,8 +142,6 @@ GoRouter router(Ref ref) {
             );
           },
         ),
-
-        // Экспорт настроек.
         GoRoute(
           path: "settings_exporter",
           pageBuilder: (BuildContext context, GoRouterState state) {
@@ -157,8 +152,6 @@ GoRouter router(Ref ref) {
             );
           },
         ),
-
-        // Импорт настроек.
         GoRoute(
           path: "settings_importer",
           pageBuilder: (BuildContext context, GoRouterState state) {
@@ -169,8 +162,6 @@ GoRouter router(Ref ref) {
             );
           },
         ),
-
-        // Настройка "Тема".
         GoRoute(
           path: "setting_theme_mode",
           pageBuilder: (BuildContext context, GoRouterState state) {
@@ -181,8 +172,6 @@ GoRouter router(Ref ref) {
             );
           },
         ),
-
-        // Настройка "OLED".
         GoRoute(
           path: "setting_oled",
           pageBuilder: (BuildContext context, GoRouterState state) {
@@ -193,8 +182,6 @@ GoRouter router(Ref ref) {
             );
           },
         ),
-
-        // Настройка "Цвета трека по всему приложению".
         GoRoute(
           path: "setting_app_wide_colors",
           pageBuilder: (BuildContext context, GoRouterState state) {
@@ -205,8 +192,6 @@ GoRouter router(Ref ref) {
             );
           },
         ),
-
-        // Настройка "Тип палитры цветов обложки".
         GoRoute(
           path: "setting_dynamic_scheme_type",
           pageBuilder: (BuildContext context, GoRouterState state) {
@@ -217,8 +202,6 @@ GoRouter router(Ref ref) {
             );
           },
         ),
-
-        // Настройка "Альтернативный слайдер".
         GoRoute(
           path: "setting_alternative_slider",
           pageBuilder: (BuildContext context, GoRouterState state) {
@@ -229,8 +212,6 @@ GoRouter router(Ref ref) {
             );
           },
         ),
-
-        // Настройка "Спойлер следующего трека".
         GoRoute(
           path: "setting_spoiler_next_audio",
           pageBuilder: (BuildContext context, GoRouterState state) {
@@ -241,8 +222,6 @@ GoRouter router(Ref ref) {
             );
           },
         ),
-
-        // Color Scheme Debug.
         GoRoute(
           path: "color_scheme_debug",
           pageBuilder: (BuildContext context, GoRouterState state) {
@@ -253,8 +232,6 @@ GoRouter router(Ref ref) {
             );
           },
         ),
-
-        // Playlists Viewer.
         GoRoute(
           path: "playlists_viewer_debug",
           pageBuilder: (BuildContext context, GoRouterState state) {
@@ -265,8 +242,6 @@ GoRouter router(Ref ref) {
             );
           },
         ),
-
-        // Markdown Viewer.
         GoRoute(
           path: "markdown_viewer_debug",
           pageBuilder: (BuildContext context, GoRouterState state) {
@@ -277,8 +252,6 @@ GoRouter router(Ref ref) {
             );
           },
         ),
-
-        // Player debug.
         GoRoute(
           path: "player_debug",
           pageBuilder: (BuildContext context, GoRouterState state) {
@@ -299,16 +272,14 @@ GoRouter router(Ref ref) {
     initialLocation: "/music",
     navigatorKey: navigatorKey,
     redirect: (_, GoRouterState state) {
-      final AuthState authState = ref.read(currentAuthStateProvider);
+      final authState = ref.read(currentAuthStateProvider);
+      if (authState == AuthState.authenticated) return null;
 
-      // Проверяем, может ли пользователь попасть в этот route.
-      // Если нет, то насильно пересылаем (редиректим) его в другое место.
-      if (!authState.allowedPaths
-          .any((path) => state.fullPath!.startsWith(path))) {
-        return authState.redirectPath;
+      final nonAuthorizedPaths = ["welcome", "login"];
+      if (!nonAuthorizedPaths.contains(state.path)) {
+        return "/welcome";
       }
 
-      // Всё отлично, редиректы не нужны.
       return null;
     },
     routes: [
@@ -353,6 +324,16 @@ GoRouter router(Ref ref) {
                 routes: item.routes,
               ),
         ],
+      ),
+      GoRoute(
+        path: "/player",
+        pageBuilder: (BuildContext context, GoRouterState state) {
+          return buildPageWithDefaultTransition(
+            context: context,
+            state: state,
+            child: const PlayerRoute(),
+          );
+        },
       ),
     ],
   );

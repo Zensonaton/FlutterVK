@@ -10,7 +10,7 @@ import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:url_launcher/url_launcher_string.dart";
 
-import "../../api/vk/shared.dart";
+import "../../extensions.dart";
 import "../../main.dart";
 import "../../provider/auth.dart";
 import "../../provider/download_manager.dart";
@@ -25,7 +25,6 @@ import "../../services/player/server.dart";
 import "../../utils.dart";
 import "../../widgets/audio_track.dart";
 import "../../widgets/dialogs.dart";
-import "../music.dart";
 import "deezer_thumbs.dart";
 import "info_edit.dart";
 
@@ -143,41 +142,7 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
       if (!networkRequiredDialog(ref, context)) return;
 
       isTogglingLikeState.value = true;
-      try {
-        await toggleTrackLike(
-          player.ref,
-          newAudio,
-        );
-      } on VKAPIException catch (error, stackTrace) {
-        if (!context.mounted) return;
-
-        if (error.errorCode == 15) {
-          showErrorDialog(
-            context,
-            description: l18n.audio_restore_too_late_desc,
-          );
-
-          return;
-        }
-
-        showLogErrorDialog(
-          "Error while restoring audio:",
-          error,
-          stackTrace,
-          logger,
-          context,
-        );
-      } catch (error, stackTrace) {
-        showLogErrorDialog(
-          "Error while toggling like state:",
-          error,
-          stackTrace,
-          logger,
-          // ignore: use_build_context_synchronously
-          context,
-        );
-      } finally {}
-
+      await newAudio.likeDislikeRestoreSafe(context, player.ref);
       if (!context.mounted) return;
 
       isTogglingLikeState.value = false;
@@ -243,6 +208,7 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
               newAudio,
               deezerThumbnails: preferences.deezerThumbnails,
               lrcLibLyricsEnabled: preferences.lrcLibEnabled,
+              appleMusicThumbs: preferences.appleMusicAnimatedCovers,
             ) ??
             newAudio;
 

@@ -68,7 +68,8 @@ dependencies:
   lottie: ^3.1.0
   material_color_utilities: any
   media_kit: ^1.1.11
-  media_kit_libs_audio: ^1.0.5
+  media_kit_libs_video: ^1.0.5
+  media_kit_video: ^1.2.5
   msgpack_dart: ^1.0.1
   package_info_plus: ^8.0.0
   palette_generator: ^0.3.3+3

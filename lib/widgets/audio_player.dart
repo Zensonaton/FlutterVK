@@ -8,18 +8,16 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:gap/gap.dart";
+import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
-import "../api/vk/shared.dart";
 import "../consts.dart";
 import "../enums.dart";
 import "../extensions.dart";
 import "../provider/color.dart";
-import "../provider/l18n.dart";
 import "../provider/player.dart";
 import "../provider/preferences.dart";
 import "../provider/user.dart";
-import "../routes/music.dart";
 import "../services/cache_manager.dart";
 import "../services/image_to_color_scheme.dart";
 import "../services/logger.dart";
@@ -32,93 +30,6 @@ import "play_pause_animated.dart";
 import "responsive_slider.dart";
 import "scrollable_slider.dart";
 import "wavy_slider.dart";
-
-/// Виджет, являющийся частью [MusicPlayerWidget] и [AudioTrackTile], который отображает название трека ([title]) и подпись ([subtitle]), если таковая имеется.
-class TrackTitleWithSubtitle extends StatelessWidget {
-  /// Название трека.
-  final String title;
-
-  /// Подпись трека. Может отсутствовать.
-  final String? subtitle;
-
-  /// Цвет текста для [title] и [subtitle].
-  final Color textColor;
-
-  /// Указывает, что это Explicit-трек.
-  final bool isExplicit;
-
-  /// Если [isExplicit] правдив, то указывает цвет для иконки Explicit.
-  final Color? explicitColor;
-
-  /// Управляет возможностью выделить и скопировать название трека.
-  final bool allowTextSelection;
-
-  const TrackTitleWithSubtitle({
-    super.key,
-    required this.title,
-    this.subtitle,
-    required this.textColor,
-    this.isExplicit = false,
-    this.explicitColor,
-    this.allowTextSelection = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final TextStyle titleStyle = TextStyle(
-      fontWeight: FontWeight.w500,
-      color: textColor,
-    );
-
-    return Text.rich(
-      TextSpan(
-        style: titleStyle,
-        children: [
-          // Название трека.
-          TextSpan(
-            text: title,
-            style: titleStyle.copyWith(
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-
-          // Подпись трека, если таковая имеется.
-          if (subtitle != null)
-            TextSpan(
-              text: " ($subtitle)",
-              style: TextStyle(
-                fontWeight: FontWeight.w300,
-                color: textColor.withValues(alpha: 0.75),
-              ),
-            ),
-
-          // Explicit.
-          if (isExplicit)
-            WidgetSpan(
-              alignment: PlaceholderAlignment.middle,
-              child: Padding(
-                padding: const EdgeInsets.only(
-                  left: 4,
-                ),
-                child: Icon(
-                  Icons.explicit,
-                  color: explicitColor,
-                  size: 18,
-                ),
-              ),
-            ),
-
-          // Дополнительный пробел, что бы при выделении текста был пробел.
-          if (allowTextSelection)
-            const TextSpan(
-              text: " ",
-            ),
-        ],
-      ),
-      overflow: TextOverflow.ellipsis,
-    );
-  }
-}
 
 /// Виджет, отображающий информацию по названию трека, а так же его исполнителю.
 class TrackTitleAndArtist extends StatelessWidget {
@@ -229,11 +140,7 @@ class _LeftSideThumbnail extends HookConsumerWidget {
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
-        onTap: mobileLayout
-            ? null
-            : () {
-                // TODO: Open fullscreen player.
-              },
+        onTap: mobileLayout ? null : () => context.push("/player"),
         child: AnimatedContainer(
           duration: MusicPlayerWidget.switchAnimationDuration,
           curve: Curves.easeInOutCubicEmphasized,
@@ -461,7 +368,7 @@ class _MusicLeftSide extends HookConsumerWidget {
     final scheme = Theme.of(context).colorScheme;
 
     void onTap() {
-      // TODO: Open fullscreen player.
+      context.push("/player");
     }
 
     void onVolumeScroll(double diff) async {
@@ -696,13 +603,14 @@ class _MusicLeftSide extends HookConsumerWidget {
 }
 
 /// Виджет для [_MusicMiddleSide], отображающий ряд из кнопок для управления воспроизведением.
-class _MiddleControls extends ConsumerWidget {
-  const _MiddleControls();
+class PlayerControlsWidget extends ConsumerWidget {
+  const PlayerControlsWidget({
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final player = ref.read(playerProvider);
-
     ref.watch(playerIsShufflingProvider);
     ref.watch(playerIsRepeatingProvider);
 
@@ -725,11 +633,10 @@ class _MiddleControls extends ConsumerWidget {
       await player.toggleRepeat();
     }
 
-    return Wrap(
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       spacing: 8,
-      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        // Shuffle.
         IconButton(
           onPressed: isAudioMix ? null : onShuffleToggle,
           icon: Icon(
@@ -741,8 +648,6 @@ class _MiddleControls extends ConsumerWidget {
             color: isAudioMix ? null : scheme.onPrimaryContainer,
           ),
         ),
-
-        // Кнопка предыдущего трека.
         IconButton(
           onPressed: () => player.smartPrevious(),
           icon: Icon(
@@ -750,14 +655,12 @@ class _MiddleControls extends ConsumerWidget {
             color: scheme.onPrimaryContainer,
           ),
         ),
-
-        // Кнопка воспроизведения/паузы.
         PlayPauseAnimatedButton(
           onPressed: player.togglePlay,
           onLongPress: player.stop,
+          backgroundColor: scheme.primary,
+          color: scheme.onPrimary,
         ),
-
-        // Кнопка следующего трека.
         IconButton(
           onPressed: () => player.next(),
           icon: Icon(
@@ -765,8 +668,6 @@ class _MiddleControls extends ConsumerWidget {
             color: scheme.onPrimaryContainer,
           ),
         ),
-
-        // Повтор текущего трека.
         IconButton(
           onPressed: onRepeatToggle,
           icon: Icon(
@@ -902,9 +803,6 @@ class NextTrackSpoilerWidget extends HookConsumerWidget {
 ///
 /// В такой части отображаются кнопки для управления воспроизведением, а так же прогресс-бар для текущего трека.
 class _MusicMiddleSide extends HookConsumerWidget {
-  /// Длительность анимации для [Slider] во время переключения треков или перемотки.
-  static const Duration sliderAnimationDuration = Durations.long2;
-
   const _MusicMiddleSide();
 
   @override
@@ -941,6 +839,7 @@ class _MusicMiddleSide extends HookConsumerWidget {
     useValueListenable(sliderWaveAnimation);
     useEffect(
       () {
+        if (!context.mounted) return;
         sliderWaveAnimation.animateTo(
           isPlaying ? 1.0 : 0.0,
           curve: Curves.easeInOutCubicEmphasized,
@@ -957,6 +856,7 @@ class _MusicMiddleSide extends HookConsumerWidget {
     useValueListenable(sliderWaveOffsetAnimation);
     useEffect(
       () {
+        if (!context.mounted) return;
         if (isPlaying) {
           sliderWaveOffsetAnimation.repeat();
         } else {
@@ -969,7 +869,7 @@ class _MusicMiddleSide extends HookConsumerWidget {
     );
 
     final positionAnimation = useAnimationController(
-      duration: sliderAnimationDuration,
+      duration: MusicPlayerWidget.sliderAnimationDuration,
       initialValue: player.progress,
     );
     void runSeekAnimation({double? progress}) {
@@ -996,6 +896,8 @@ class _MusicMiddleSide extends HookConsumerWidget {
 
           // Позиция трека.
           player.positionStream.listen((_) async {
+            if (!context.mounted) return;
+
             // Эта задержка нужна, что бы событие изменения позиции обрабатывалось слегка позже,
             // чем обработчики события currentIndexStream или seekStateStream.
             await Future.delayed(
@@ -1124,7 +1026,7 @@ class _MusicMiddleSide extends HookConsumerWidget {
               if (alternateSlider) const Gap(16),
 
               // Кнопки управления воспроизведением.
-              const _MiddleControls(),
+              const PlayerControlsWidget(),
               if (alternateSlider) const Gap(16),
 
               // Полная длительность трека.
@@ -1253,16 +1155,21 @@ class _MusicRightSide extends HookConsumerWidget {
             Flexible(
               child: SizedBox(
                 width: 150,
-                child: ScrollableSlider(
-                  value: volume,
-                  activeColor: scheme.onPrimaryContainer,
-                  inactiveColor:
-                      scheme.onPrimaryContainer.withValues(alpha: 0.5),
-                  onChanged: (double newVolume) {
-                    if (isMobile) return;
+                child: SliderTheme(
+                  data: SliderThemeData(
+                    thumbShape: MaterialYouThumbShape(),
+                  ),
+                  child: ScrollableSlider(
+                    value: volume,
+                    activeColor: scheme.onPrimaryContainer,
+                    inactiveColor:
+                        scheme.onPrimaryContainer.withValues(alpha: 0.5),
+                    onChanged: (double newVolume) {
+                      if (isMobile) return;
 
-                    player.setVolume(newVolume);
-                  },
+                      player.setVolume(newVolume);
+                    },
+                  ),
                 ),
               ),
             ),
@@ -1272,13 +1179,13 @@ class _MusicRightSide extends HookConsumerWidget {
           // Кнопка для перехода в мини-плеер.
           if (isDesktop) ...[
             IconButton(
-              onPressed: () {
-                // TODO: Open mini player
-              },
               icon: Icon(
                 Icons.picture_in_picture_alt,
                 color: scheme.onPrimaryContainer,
               ),
+              onPressed: () {
+                // TODO: Open mini player
+              },
             ),
             const Gap(2),
           ],
@@ -1286,13 +1193,11 @@ class _MusicRightSide extends HookConsumerWidget {
           // Кнопка для перехода в полноэкранный режим.
           if (isWeb || isDesktop)
             IconButton(
-              onPressed: () {
-                // TODO: Open fullscreen player.
-              },
               icon: Icon(
                 Icons.fullscreen,
                 color: scheme.onPrimaryContainer,
               ),
+              onPressed: () => context.push("/player"),
             ),
         ],
       ),
@@ -1490,12 +1395,10 @@ class BottomMusicProgressBar extends HookConsumerWidget {
 
 /// Виджет для [MusicPlayerWidget], отображающий содержимое плеера.
 class _MusicContents extends ConsumerWidget {
-  static final AppLogger logger = getLogger("MusicPlayerContentsWidget");
-
-  /// Минимальный размер центрального блока ([_MiddleControls]) при Desktop Layout.
+  /// Минимальный размер центрального блока ([PlayerControlsWidget]) при Desktop Layout.
   static const double minMiddleBlockSize = 100;
 
-  /// Максимальный размер центрального блока ([_MiddleControls]) при Desktop Layout.
+  /// Максимальный размер центрального блока ([PlayerControlsWidget]) при Desktop Layout.
   static const double maxMiddleBlockSize = 650;
 
   /// Внутренний padding для содержимого плеера при Mobile Layout.
@@ -1504,7 +1407,7 @@ class _MusicContents extends ConsumerWidget {
   /// Внутренний padding для содержимого плеера при Desktop Layout.
   static const double desktopPadding = 14;
 
-  /// Padding для [_MiddleControls] (центральный блок), что бы он не прижимался к левой и правой части плеера, отображаемый в Desktop Layout.
+  /// Padding для [PlayerControlsWidget] (центральный блок), что бы он не прижимался к левой и правой части плеера, отображаемый в Desktop Layout.
   static const double gapSizeDesktop = 8;
 
   /// Debug-опция, чтобы отобразить различные разделы плеера в разных цветах для отладки.
@@ -1555,54 +1458,24 @@ class _MusicContents extends ConsumerWidget {
     Future<void> onLikeTap() async {
       if (!networkRequiredDialog(ref, context)) return;
 
-      final l18n = ref.read(l18nProvider);
       final preferences = ref.read(preferencesProvider);
 
       if (!player.audio!.isLiked && preferences.checkBeforeFavorite) {
-        if (!await checkForDuplicates(
-          ref,
-          context,
-          player.audio!,
-        )) {
-          return;
-        }
+        if (!await player.audio!.checkForDuplicates(ref, context)) return;
       }
+      if (!context.mounted) return;
 
-      try {
-        await toggleTrackLike(
-          player.ref,
-          player.audio!,
-          sourcePlaylist: player.playlist,
-        );
-      } on VKAPIException catch (error, stackTrace) {
-        if (!context.mounted) return;
-
-        if (error.errorCode == 15) {
-          showErrorDialog(
-            context,
-            description: l18n.audio_restore_too_late_desc,
-          );
-
-          return;
-        }
-
-        showLogErrorDialog(
-          "Error while restoring audio:",
-          error,
-          stackTrace,
-          logger,
-          context,
-        );
-      }
+      await player.audio!.likeDislikeRestoreSafe(
+        context,
+        player.ref,
+        sourcePlaylist: player.playlist,
+      );
     }
 
     Future<void> onDislikeTap() async {
       if (!networkRequiredDialog(ref, context)) return;
 
-      await dislikeTrack(
-        player.ref,
-        player.audio!,
-      );
+      await player.audio!.dislike(player.ref);
 
       await player.next();
     }
@@ -1691,7 +1564,7 @@ class _MusicContents extends ConsumerWidget {
 ///   - [_MusicLeftSide]
 ///     - [_LeftSideThumbnail]
 ///   - [_MusicMiddleSide]
-///     - [_MiddleControls]
+///     - [PlayerControlsWidget]
 ///   - [_MusicRightSide]
 class MusicPlayerWidget extends HookConsumerWidget {
   static final AppLogger logger = getLogger("MusicPlayer");
@@ -1721,6 +1594,9 @@ class MusicPlayerWidget extends HookConsumerWidget {
   /// Длительность анимации "движения" волны для [Slider], который отображает прогресс воспроизведения.
   static const Duration sliderWaveOffsetAnimationDuration =
       Duration(milliseconds: 3500);
+
+  /// Длительность анимации для [Slider] во время переключения треков или перемотки.
+  static const Duration sliderAnimationDuration = Durations.long2;
 
   /// Возвращает высоту мини-плеера для Desktop Layout с учётом [MediaQuery.paddingOf].
   static double desktopMiniPlayerHeightWithSafeArea(BuildContext context) {

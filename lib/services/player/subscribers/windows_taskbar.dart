@@ -3,9 +3,9 @@ import "dart:async";
 import "package:windows_taskbar/windows_taskbar.dart";
 
 import "../../../enums.dart";
+import "../../../extensions.dart";
 import "../../../provider/l18n.dart";
 import "../../../provider/user.dart";
-import "../../../routes/music.dart";
 import "../../logger.dart";
 import "../player.dart";
 import "../subscriber.dart";
@@ -99,7 +99,7 @@ class WindowsTaskbarPlayerSubscriber extends PlayerSubscriber {
         ThumbnailToolbarButton(
           _getTaskbarIcon("dislike"),
           l18n.dislike_track_action,
-          () => dislikeTrack(player.ref, audio!),
+          () => audio!.dislike(player.ref),
           mode: _getButtonMode(isRecommended),
         ),
 
@@ -145,11 +145,8 @@ class WindowsTaskbarPlayerSubscriber extends PlayerSubscriber {
         ThumbnailToolbarButton(
           _getTaskbarIcon("favorite_${isLiked ? "on" : "off"}"),
           isLiked ? l18n.remove_favorite_track_action : l18n.add_track_as_liked,
-          () => toggleTrackLike(
-            player.ref,
-            audio!,
-            sourcePlaylist: playlist!,
-          ),
+          () =>
+              audio!.likeDislikeRestore(player.ref, sourcePlaylist: playlist!),
         ),
       ],
     );

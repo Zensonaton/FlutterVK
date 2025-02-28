@@ -304,17 +304,11 @@ class FlutterVKApp extends HookConsumerWidget {
                 onInvoke: (intent) {
                   final ownerID = ref.read(userProvider).id;
 
-                  return router.go(
-                    "/music/playlist/$ownerID/0",
-                  );
+                  return router.go("/music/playlist/$ownerID/0");
                 },
               ),
               FullscreenPlayerIntent: CallbackAction(
-                onInvoke: (intent) {
-                  // TODO: Открытие полноэкранного плеера.
-
-                  return null;
-                },
+                onInvoke: (intent) => router.push("/player"),
               ),
               PlayPauseIntent: CallbackAction(
                 onInvoke: (intent) => player.togglePlay(),

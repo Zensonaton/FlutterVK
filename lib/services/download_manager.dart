@@ -6,6 +6,9 @@ import "package:flutter/foundation.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:queue/queue.dart";
 
+import "../api/apple_music/catalog_album.dart";
+import "../api/apple_music/search_catalog.dart";
+import "../api/apple_music/utils.dart";
 import "../api/deezer/search.dart";
 import "../api/lrclib/get.dart";
 import "../api/lrclib/search.dart";
@@ -169,8 +172,11 @@ class PlaylistCacheDownloadItem extends DownloadItem {
   /// Определяет, будет ли загружаться обложки трека с Deezer.
   final bool deezerThumbnails;
 
-  /// Определяет, будет ли загружаться текст песни трека с LRCLIB.
+  /// Определяет, будет ли загружаться текст песни трека с LRCLib.
   final bool lrcLibLyricsEnabled;
+
+  /// Определяет, будет ли загружаться информация по анимированным обложкам с Apple Music.
+  final bool appleMusicThumbs;
 
   PlaylistCacheDownloadItem({
     required super.ref,
@@ -183,6 +189,7 @@ class PlaylistCacheDownloadItem extends DownloadItem {
     this.downloadLyrics = true,
     this.deezerThumbnails = false,
     this.lrcLibLyricsEnabled = false,
+    this.appleMusicThumbs = false,
   });
 
   /// Загружает трек, возвращая его размер в байтах, если он был успешно загружен.
@@ -299,7 +306,7 @@ class PlaylistCacheDownloadItem extends DownloadItem {
 
   /// Загружает текст песни с ВКонтакте, и возвращает объект [Lyrics] с текстом песни.
   Future<Lyrics?> _downloadLyrics() async {
-    if (!(audio.hasLyrics ?? false) || audio.vkLyrics != null) return null;
+    if (audio.hasLyrics == false || audio.vkLyrics != null) return null;
 
     final APIAudioGetLyricsResponse response =
         await ref.read(vkAPIProvider).audio.getLyrics(audio.mediaKey);
@@ -308,11 +315,10 @@ class PlaylistCacheDownloadItem extends DownloadItem {
   }
 
   /// Ищет тексты песен с сервиса LRCLIB, и загружает их, если они есть, возвращая объект [Lyrics].
-  Future<Lyrics?> _downloadLRCLIBLyrics() async {
+  Future<Lyrics?> _downloadLRCLibLyrics() async {
     if (audio.lrcLibLyrics != null) return null;
 
     try {
-      // Пытаемся получить текст песни с LRCLib, передавая длительность трека и его альбом (при наличии).
       final response = await lrcLib_get(
         audio.title,
         audio.artist,
@@ -359,6 +365,64 @@ class PlaylistCacheDownloadItem extends DownloadItem {
     return null;
   }
 
+  /// Ищет анимированную обложку с Apple Music.
+  Future<List<ExtendedAnimatedThumbnail>?>
+      _getAppleMusicAnimatedThumbnails() async {
+    if (audio.appleMusicThumbs != null) return null;
+
+    // Узнаём ID альбома.
+    int? albumID;
+    try {
+      albumID = await am_search_catalog(
+        audio.fullArtistTitle(
+          divider: " ",
+          explicit: false,
+          subtitle: false,
+        ),
+      );
+    } catch (error, stackTrace) {
+      logger.w(
+        "[catalog] Apple Music error:",
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+    if (albumID == null) return null;
+
+    // Получаем ссылку на .m3u8-файл.
+    String? m3u8URL;
+    try {
+      m3u8URL = await am_catalog_album(albumID);
+    } catch (error, stackTrace) {
+      logger.w(
+        "[album] m3u8 get error:",
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+    if (m3u8URL == null) return null;
+
+    // Загружаем содержимое .m3u8-файла.
+    try {
+      final contents = await dio.get(
+        m3u8URL,
+        options: Options(
+          responseType: ResponseType.plain,
+        ),
+      );
+
+      return parseM3U8Contents(contents.data);
+    } catch (error, stackTrace) {
+      logger.w(
+        "[m3u8] download/parse error:",
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return null;
+  }
+
   /// Загружает сам трек, его обложки, текст песни и прочую информацию для передаваемого [audio].
   ///
   /// Возвращает изменённую версию [audio] типа [ExtendedAudio], если хотя бы один из элементов был загружен, иначе null.
@@ -372,6 +436,7 @@ class PlaylistCacheDownloadItem extends DownloadItem {
     bool downloadLyrics = true,
     bool deezerThumbnails = false,
     bool lrcLibLyricsEnabled = false,
+    bool appleMusicThumbs = false,
   }) async {
     final item = downloadItem ??
         PlaylistCacheDownloadItem(
@@ -402,7 +467,10 @@ class PlaylistCacheDownloadItem extends DownloadItem {
         if (downloadLyrics) item._downloadLyrics() else null,
 
         // [3]: Текст песни с LRCLIB.
-        if (lrcLibLyricsEnabled) item._downloadLRCLIBLyrics() else null,
+        if (lrcLibLyricsEnabled) item._downloadLRCLibLyrics() else null,
+
+        // [4]: Анимированные обложки с Apple Music.
+        if (appleMusicThumbs) item._getAppleMusicAnimatedThumbnails() else null,
       ].map((element) async {
         final future = element ?? Future.value();
 
@@ -429,6 +497,8 @@ class PlaylistCacheDownloadItem extends DownloadItem {
     final audiosWithThumbs = result[1] as ExtendedAudio?;
     final lyricsDownloaded = result[2] as Lyrics?;
     final lrcLibLyrics = result[3] as Lyrics?;
+    final appleMusicAnimatedThumbs =
+        result[4] as List<ExtendedAnimatedThumbnail>?;
 
     return audio.basicCopyWith(
       isCached: downloadAudio ? true : null,
@@ -436,6 +506,7 @@ class PlaylistCacheDownloadItem extends DownloadItem {
       vkLyrics: lyricsDownloaded,
       deezerThumbs: audiosWithThumbs?.deezerThumbs,
       lrcLibLyrics: lrcLibLyrics,
+      appleMusicThumbs: appleMusicAnimatedThumbs,
     );
   }
 
@@ -453,6 +524,7 @@ class PlaylistCacheDownloadItem extends DownloadItem {
       downloadLyrics: downloadLyrics,
       deezerThumbnails: deezerThumbnails,
       lrcLibLyricsEnabled: lrcLibLyricsEnabled,
+      appleMusicThumbs: appleMusicThumbs,
     );
 
     // Если ничего не поменялось, то ничего не делаем.

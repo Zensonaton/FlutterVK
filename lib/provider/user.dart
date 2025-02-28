@@ -576,6 +576,9 @@ class ExtendedAudio {
   /// {@macro ImageSchemeExtractor.colorCount}
   final int? colorCount;
 
+  /// Информация по анимированным обложкам, полученных с Apple Music.
+  final List<ExtendedAnimatedThumbnail>? appleMusicThumbs;
+
   /// Указывает, что данный [ExtendedAudio] полностью равен значениям другого передаваемого трека [other].
   ///
   /// По сравнению с [==], данный метод сравнивает больше полей, что активно используется для [updatePlaylist].
@@ -589,8 +592,8 @@ class ExtendedAudio {
       return false;
     }
 
-    // Альбомы.
-    if (other.album != null && album != other.album) {
+    // Ограничение воспроизведения.
+    if (isRestricted != other.isRestricted) {
       return false;
     }
 
@@ -605,10 +608,8 @@ class ExtendedAudio {
       return false;
     }
 
-    // Тексты.
-    if ((other.hasLyrics != null && hasLyrics != other.hasLyrics) ||
-        (other.vkLyrics != null && vkLyrics != other.vkLyrics) ||
-        (other.lrcLibLyrics != null && lrcLibLyrics != other.lrcLibLyrics)) {
+    // Альбомы.
+    if (other.album != null && album != other.album) {
       return false;
     }
 
@@ -620,8 +621,16 @@ class ExtendedAudio {
       return false;
     }
 
-    // Ограничение воспроизведения.
-    if (isRestricted != other.isRestricted) {
+    // Анимированные обложки.
+    if (other.appleMusicThumbs != null &&
+        appleMusicThumbs != other.appleMusicThumbs) {
+      return false;
+    }
+
+    // Тексты.
+    if ((other.hasLyrics != null && hasLyrics != other.hasLyrics) ||
+        (other.vkLyrics != null && vkLyrics != other.vkLyrics) ||
+        (other.lrcLibLyrics != null && lrcLibLyrics != other.lrcLibLyrics)) {
       return false;
     }
 
@@ -724,6 +733,7 @@ class ExtendedAudio {
     List<int>? scoredColorInts,
     int? frequentColorInt,
     int? colorCount,
+    List<ExtendedAnimatedThumbnail>? appleMusicThumbs,
   }) =>
       ExtendedAudio(
         id: id,
@@ -758,6 +768,7 @@ class ExtendedAudio {
         scoredColorInts: scoredColorInts,
         frequentColorInt: frequentColorInt,
         colorCount: colorCount,
+        appleMusicThumbs: appleMusicThumbs,
       );
 
   /// Возвращает копию данного объекта с новыми передаваемыми значениями.
@@ -796,6 +807,7 @@ class ExtendedAudio {
     List<int>? scoredColorInts,
     int? frequentColorInt,
     int? colorCount,
+    List<ExtendedAnimatedThumbnail>? appleMusicThumbs,
   }) =>
       ExtendedAudio(
         id: id ?? this.id,
@@ -830,6 +842,7 @@ class ExtendedAudio {
         scoredColorInts: scoredColorInts ?? this.scoredColorInts,
         frequentColorInt: frequentColorInt ?? this.frequentColorInt,
         colorCount: colorCount ?? this.colorCount,
+        appleMusicThumbs: appleMusicThumbs ?? this.appleMusicThumbs,
       );
 
   /// Возвращает строку, которая используется как идентификатор пользователя и медиа.
@@ -850,6 +863,7 @@ class ExtendedAudio {
         other.artist == artist &&
         other.isLiked == isLiked &&
         other.isCached == isCached &&
+        other.replacedLocally == replacedLocally &&
         other.smallestThumbnail == smallestThumbnail &&
         other.forceDeezerThumbs == forceDeezerThumbs;
   }
@@ -890,7 +904,37 @@ class ExtendedAudio {
     this.scoredColorInts,
     this.frequentColorInt,
     this.colorCount,
+    this.appleMusicThumbs,
   });
+}
+
+/// Информация по анимированным обложкам трека, полученных с Apple Music.
+class ExtendedAnimatedThumbnail {
+  /// URL к анимированной обложке трека.
+  final String url;
+
+  /// Размер одной из сторон анимированной обложки трека. `${resolution}x${resolution}`.
+  final int resolution;
+
+  ExtendedAnimatedThumbnail({
+    required this.url,
+    required this.resolution,
+  });
+
+  @override
+  String toString() => "ExtendedAnimatedThumbnail ${resolution}x$resolution";
+
+  @override
+  bool operator ==(covariant ExtendedAnimatedThumbnail other) {
+    if (identical(this, other)) return true;
+
+    return other.runtimeType == ExtendedAnimatedThumbnail &&
+        other.url == url &&
+        other.resolution == resolution;
+  }
+
+  @override
+  int get hashCode => url.hashCode;
 }
 
 /// Класс для хранения данных о пользователе ВКонтакте, авторизованного в приложении.

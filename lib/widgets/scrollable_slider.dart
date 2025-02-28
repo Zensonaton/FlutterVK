@@ -74,7 +74,7 @@ class ScrollableSlider extends StatelessWidget {
         clampDouble(value + diff / 10, 0.0, 1.0),
       ),
       child: SliderTheme(
-        data: SliderThemeData(
+        data: SliderTheme.of(context).copyWith(
           overlayShape: SliderComponentShape.noThumb,
         ),
         child: Slider(

@@ -9,6 +9,7 @@ import "package:flutter/foundation.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 
+import "../api/apple_music/consts.dart";
 import "../api/lrclib/consts.dart";
 import "../api/lrclib/shared.dart";
 import "../api/vk/consts.dart";
@@ -19,6 +20,14 @@ import "../utils.dart";
 import "auth.dart";
 
 part "dio.g.dart";
+
+/// Тип API для Dio.
+enum DioType {
+  dio,
+  vk,
+  lrcLib,
+  appleMusic,
+}
 
 /// [HttpClient], в котором отключена SSL-проверка.
 ///
@@ -39,14 +48,8 @@ List<int> gzipEncoder(
 }
 
 /// Возвращает объект [Dio] с зарегистрированными [Interceptor]'ами.
-void initDioInterceptors(
-  Ref ref,
-  Dio dio, {
-  String loggerName = "Dio",
-  bool isVK = false,
-  bool isLRCLib = false,
-}) {
-  final AppLogger logger = getLogger(loggerName);
+void initDioInterceptors(Ref ref, Dio dio, DioType type) {
+  final AppLogger logger = getLogger(type.name);
 
   // Игнорируем плохие SSL-сертификаты.
   if (!isWeb) {
@@ -54,22 +57,18 @@ void initDioInterceptors(
         () => httpClient;
   }
 
+  final isVK = type == DioType.vk;
+  final isLRCLib = type == DioType.lrcLib;
+
   dio.interceptors.addAll([
-    // Обработчик для демо-запросов.
     DemoInterceptor(
       ref: ref,
     ),
-
-    // Обработчик для добавления версии API и access_token для VK API.
     if (isVK)
       VKAPIInterceptor(
         ref: ref,
       ),
-
-    // Обработчик для ошибок API LRCLib.
     if (isLRCLib) LRCLIBInterceptor(),
-
-    // Обработчик для повтора HTTP-запросов в случае ошибок сети.
     RetryInterceptor(
       dio: dio,
       logPrint: (String log) => logger.d(log),
@@ -83,13 +82,11 @@ void initDioInterceptors(
       },
       retryDelays: [
         Duration(
-          seconds: isLRCLib ? 2 : 1,
+          seconds: type == DioType.lrcLib ? 2 : 1,
         ),
       ],
-      retries: isLRCLib ? 1 : 3,
+      retries: type == DioType.lrcLib ? 1 : 3,
     ),
-
-    // Обработчик для логирования HTTP-запросов и их ответов в debug-режиме.
     if (kDebugMode && false)
       // ignore: dead_code
       AwesomeDioInterceptor(
@@ -247,10 +244,7 @@ Dio dio(Ref ref) {
     ),
   );
 
-  initDioInterceptors(
-    ref,
-    dio,
-  );
+  initDioInterceptors(ref, dio, DioType.dio);
 
   return dio;
 }
@@ -281,12 +275,7 @@ Dio vkDio(Ref ref) {
     ),
   );
 
-  initDioInterceptors(
-    ref,
-    dio,
-    loggerName: "VK",
-    isVK: true,
-  );
+  initDioInterceptors(ref, dio, DioType.vk);
 
   return dio;
 }
@@ -316,12 +305,31 @@ Dio lrcLibDio(Ref ref) {
     ),
   );
 
-  initDioInterceptors(
-    ref,
-    dio,
-    loggerName: "LRCLib",
-    isLRCLib: true,
+  initDioInterceptors(ref, dio, DioType.lrcLib);
+
+  return dio;
+}
+
+/// [Provider], возвращающий объект [Dio] с зарегистрированными [Interceptor]'ами, настроенный для создания API-запросов к Apple Music.
+///
+/// Данный объект содержит в себе interceptor'ы, позволяющие:
+/// - Повторять запрос в случае ошибки сети.
+/// - Логировать запросы и их ответы.
+@riverpod
+Dio appleMusicDio(Ref ref) {
+  final Dio dio = Dio(
+    BaseOptions(
+      baseUrl: appleMusicBaseURL,
+      requestEncoder: gzipEncoder,
+      validateStatus: (_) => true,
+      headers: {
+        "Origin": "https://music.apple.com",
+        "Authorization": "Bearer $appleMusicApiKey",
+      },
+    ),
   );
+
+  initDioInterceptors(ref, dio, DioType.appleMusic);
 
   return dio;
 }

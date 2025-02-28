@@ -7,17 +7,15 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
-import "../api/vk/shared.dart";
 import "../consts.dart";
+import "../extensions.dart";
 import "../provider/color.dart";
 import "../provider/l18n.dart";
 import "../provider/player.dart";
 import "../provider/preferences.dart";
 import "../provider/user.dart";
-import "../routes/music.dart";
 import "../routes/music/bottom_audio_options.dart";
 import "../services/cache_manager.dart";
-import "../services/logger.dart";
 import "../utils.dart";
 import "audio_player.dart";
 import "dialogs.dart";
@@ -41,12 +39,13 @@ Widget buildListTrackWidget(
   EdgeInsets? padding,
   bool roundedCorners = true,
 }) {
-  final logger = getLogger("buildListTrackWidget");
-
   final player = ref.read(playerProvider);
   final l18n = ref.watch(l18nProvider);
-  final bool isSelected =
-      audio.ownerID == player.audio?.ownerID && audio.id == player.audio?.id;
+
+  final isPlaying = player.isPlaying;
+  final isBuffering = player.isBuffering;
+  final canPlay = audio.canPlay;
+  final isSelected = audio.id == player.audio?.id;
 
   Future<void> onPlayToggle() async {
     final preferences = ref.read(preferencesProvider);
@@ -90,35 +89,15 @@ Widget buildListTrackWidget(
     if (!networkRequiredDialog(ref, context)) return;
 
     if (!audio.isLiked && ref.read(preferencesProvider).checkBeforeFavorite) {
-      if (!await checkForDuplicates(ref, context, audio)) return;
+      if (!await audio.checkForDuplicates(ref, context)) return;
     }
+    if (!context.mounted) return;
 
-    try {
-      await toggleTrackLike(
-        player.ref,
-        audio,
-        sourcePlaylist: playlist,
-      );
-    } on VKAPIException catch (error, stackTrace) {
-      if (!context.mounted) return;
-
-      if (error.errorCode == 15) {
-        showErrorDialog(
-          context,
-          description: l18n.audio_restore_too_late_desc,
-        );
-
-        return;
-      }
-
-      showLogErrorDialog(
-        "Error while restoring audio:",
-        error,
-        stackTrace,
-        logger,
-        context,
-      );
-    }
+    await audio.likeDislikeRestoreSafe(
+      context,
+      player.ref,
+      sourcePlaylist: playlist,
+    );
   }
 
   void showMore() {
@@ -139,11 +118,11 @@ Widget buildListTrackWidget(
   }
 
   return AudioTrackTile(
-    isSelected: isSelected && player.isLoaded,
-    isPlaying: player.isLoaded && player.isPlaying,
-    isLoading: isSelected && player.isBuffering,
-    isAvailable: isAvailable ?? audio.canPlay,
     audio: audio,
+    isSelected: isSelected,
+    isPlaying: isPlaying,
+    isLoading: isSelected && isBuffering,
+    isAvailable: isAvailable ?? canPlay,
     glowIfSelected: true,
     showStatusIcons: showStatusIcons,
     showDuration: showDuration,
@@ -156,6 +135,93 @@ Widget buildListTrackWidget(
     onSecondaryAction: showMore,
     onMoreTap: replaceLikeWithMore ? showMore : null,
   );
+}
+
+/// Виджет, являющийся частью [MusicPlayerWidget] и [AudioTrackTile], который отображает название трека ([title]) и подпись ([subtitle]), если таковая имеется.
+class TrackTitleWithSubtitle extends StatelessWidget {
+  /// Название трека.
+  final String title;
+
+  /// Подпись трека. Может отсутствовать.
+  final String? subtitle;
+
+  /// Цвет текста для [title] и [subtitle].
+  final Color textColor;
+
+  /// Указывает, что это Explicit-трек.
+  final bool isExplicit;
+
+  /// Если [isExplicit] правдив, то указывает цвет для иконки Explicit.
+  final Color? explicitColor;
+
+  /// Управляет возможностью выделить и скопировать название трека.
+  final bool allowTextSelection;
+
+  const TrackTitleWithSubtitle({
+    super.key,
+    required this.title,
+    this.subtitle,
+    required this.textColor,
+    this.isExplicit = false,
+    this.explicitColor,
+    this.allowTextSelection = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final TextStyle titleStyle = TextStyle(
+      fontWeight: FontWeight.w500,
+      color: textColor,
+    );
+
+    return Text.rich(
+      TextSpan(
+        style: titleStyle,
+        children: [
+          // Название трека.
+          TextSpan(
+            text: title,
+            style: titleStyle.copyWith(
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+
+          // Подпись трека, если таковая имеется.
+          if (subtitle != null)
+            TextSpan(
+              text: " ($subtitle)",
+              style: TextStyle(
+                fontWeight: FontWeight.w300,
+                color: textColor.withValues(alpha: 0.75),
+              ),
+            ),
+
+          // Explicit.
+          if (isExplicit)
+            WidgetSpan(
+              alignment: PlaceholderAlignment.middle,
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  left: 4,
+                ),
+                child: Icon(
+                  Icons.explicit,
+                  color: explicitColor,
+                  size: 18,
+                ),
+              ),
+            ),
+
+          // Дополнительный пробел, что бы при выделении текста был пробел.
+          if (allowTextSelection)
+            const TextSpan(
+              text: " ",
+            ),
+        ],
+      ),
+      overflow: TextOverflow.ellipsis,
+    );
+  }
 }
 
 /// Часть [AudioTrackTile], используемая для отображения изображения трека, при его наличии.
@@ -762,8 +828,8 @@ class AudioTrackTile extends HookConsumerWidget {
                 ),
               ),
               child: Row(
+                spacing: 12,
                 children: [
-                  // Изображение трека. (слева)
                   AudioTrackImage(
                     imageUrl: audio.smallestThumbnail,
                     cacheKey: allowImageCache ? "${audio.mediaKey}small" : null,
@@ -773,9 +839,6 @@ class AudioTrackTile extends HookConsumerWidget {
                     isLoading: isLoading,
                     isHovered: isHovered.value,
                   ),
-                  const Gap(12),
-
-                  // Название, и прочая информация по треку. (правее от изображения/центр)
                   Expanded(
                     child: AudioTrackTitle(
                       title: audio.title,
@@ -788,10 +851,6 @@ class AudioTrackTile extends HookConsumerWidget {
                       allowTextSelection: allowTextSelection,
                     ),
                   ),
-                  const Gap(12),
-
-                  // Прочая информация по треку. (справа)
-                  // Данный блок можно не отображать, если ничего не было передано.
                   if (showDuration || onLikeTap != null || onMoreTap != null)
                     AudioTrackOtherInfo(
                       duration: showDuration ? durationString : null,

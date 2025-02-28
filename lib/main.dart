@@ -92,6 +92,13 @@ late final Dio vkDio;
 /// ```
 late final Dio lrcLibDio;
 
+/// Объект [Dio], позволяющий создавать HTTP-запросы, настроенный конкретно под работу с API Apple Music.
+///
+/// Данный объект содержит в себе interceptor'ы, позволяющие:
+/// - Повторять запрос в случае ошибки сети.
+/// - Логировать запросы и их ответы.
+late final Dio appleMusicDio;
+
 /// [ColorScheme] яркости [Brightness.light], которая используется в случае, если по какой-то причине приложение не смогло получить цвета акцента, либо цвета музыкального плеера.
 final fallbackLightColorScheme = ColorScheme.fromSeed(
   seedColor: Colors.blueAccent,
@@ -311,6 +318,7 @@ Future main() async {
     dio = container.read(dioProvider);
     vkDio = container.read(vkDioProvider);
     lrcLibDio = container.read(lrcLibDioProvider);
+    appleMusicDio = container.read(appleMusicDioProvider);
 
     // Создаём менеджер интернет соединения.
     connectivityManager = ConnectivityManager();

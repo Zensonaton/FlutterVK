@@ -80,6 +80,28 @@ class ProfileExperimentalSettingsCategory extends ConsumerWidget {
             prefsNotifier.setLRCLIBEnabled(enabled);
           },
         ),
+
+        // Анимированные обложки Apple Music
+        SwitchListTile(
+          secondary: const Icon(
+            Icons.slow_motion_video,
+          ),
+          title: Text(
+            l18n.apple_music_animated_covers,
+          ),
+          subtitle: Text(
+            l18n.apple_music_animated_covers_desc,
+          ),
+          value: preferences.appleMusicAnimatedCovers,
+          onChanged: (bool? enabled) async {
+            if (!demoModeDialog(ref, context)) return;
+
+            HapticFeedback.lightImpact();
+            if (enabled == null) return;
+
+            prefsNotifier.setAppleMusicAnimatedCovers(enabled);
+          },
+        ),
       ],
     );
   }

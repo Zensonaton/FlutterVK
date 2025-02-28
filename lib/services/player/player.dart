@@ -758,9 +758,19 @@ class Player {
   }
 
   /// {@template Player.jump}
-  /// Переключает воспроизведение на указанный трек в плейлисте.
+  /// Переключает воспроизведение на индекс указанного трека в очереди воспроизведения [Player.queue].
   /// {@endtemplate}
   Future<void> jump(int index) async => await backend.jump(index);
+
+  /// Переключает воспроизведение на указанный трек в очереди воспроизведения [Player.queue].
+  ///
+  /// Если такого трека нет, то ничего не произойдёт.
+  Future<void> jumpToAudio(ExtendedAudio audio) async {
+    final index = queue?.indexOf(audio);
+    if (index == null || index == -1) return;
+
+    return await jump(index);
+  }
 
   /// {@template Player.audioAtIndex}
   /// Возвращает [ExtendedAudio] по индексу [index] в плейлисте. [wrapIndex] показывает, будет ли этот индекс циклироваться вокруг плейлиста, если он выходит за его пределы.

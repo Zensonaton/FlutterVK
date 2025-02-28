@@ -75,6 +75,7 @@ class TrackInfoPlayerSubscriber extends PlayerSubscriber {
 
   /// Метод, загружающий данные по [audio] (обложки, цвета, ...) и сохраняющий их в БД.
   Future<void> loadAudioData(ExtendedAudio audio) async {
+    final playlistsNotifier = player.ref.read(playlistsProvider.notifier);
     final preferences = player.ref.read(preferencesProvider);
     final playlist = player.playlist!.copyWith();
 
@@ -93,6 +94,7 @@ class TrackInfoPlayerSubscriber extends PlayerSubscriber {
       downloadAudio: false,
       deezerThumbnails: preferences.deezerThumbnails,
       lrcLibLyricsEnabled: preferences.lrcLibEnabled,
+      appleMusicThumbs: preferences.appleMusicAnimatedCovers,
     );
     if (newAudio == null) return;
 
@@ -100,19 +102,23 @@ class TrackInfoPlayerSubscriber extends PlayerSubscriber {
     extractedColors ??= await getColorScheme(newAudio, isCurrent());
 
     // Сохраняем новую версию трека.
-    await player.ref.read(playlistsProvider.notifier).updatePlaylist(
-          playlist.basicCopyWith(
-            audiosToUpdate: [
-              newAudio.basicCopyWith(
-                colorInts: extractedColors?.colorInts,
-                scoredColorInts: extractedColors?.scoredColorInts,
-                frequentColorInt: extractedColors?.frequentColorInt,
-                colorCount: extractedColors?.colorCount,
-              ),
-            ],
+    await playlistsNotifier.updatePlaylist(
+      playlist.basicCopyWith(
+        audiosToUpdate: [
+          newAudio.basicCopyWith(
+            vkLyrics: newAudio.lyrics,
+            lrcLibLyrics: newAudio.lyrics,
+            deezerThumbs: newAudio.deezerThumbs,
+            appleMusicThumbs: newAudio.appleMusicThumbs,
+            colorInts: extractedColors?.colorInts,
+            scoredColorInts: extractedColors?.scoredColorInts,
+            frequentColorInt: extractedColors?.frequentColorInt,
+            colorCount: extractedColors?.colorCount,
           ),
-          saveInDB: true,
-        );
+        ],
+      ),
+      saveInDB: true,
+    );
   }
 
   /// События изменения трека, играющий в данный момент.

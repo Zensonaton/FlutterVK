@@ -59,10 +59,18 @@ class PlayPauseAnimatedButton extends HookConsumerWidget {
   /// Callback-метод, вызываемый при длительном нажатии на эту кнопку.
   final VoidCallback? onLongPress;
 
+  /// Цвет для фона кнопка.
+  final Color? backgroundColor;
+
+  /// Цвет для иконки.
+  final Color? color;
+
   const PlayPauseAnimatedButton({
     super.key,
     required this.onPressed,
     this.onLongPress,
+    this.backgroundColor,
+    this.color,
   });
 
   @override
@@ -92,8 +100,6 @@ class PlayPauseAnimatedButton extends HookConsumerWidget {
     final BorderRadius borderRadius =
         BorderRadius.circular(20 - 6 * playPauseAnimation.value);
 
-    final scheme = Theme.of(context).colorScheme;
-
     return InkWell(
       onTap: onPressed,
       onLongPress: onLongPress,
@@ -103,11 +109,11 @@ class PlayPauseAnimatedButton extends HookConsumerWidget {
         child: Container(
           decoration: BoxDecoration(
             borderRadius: borderRadius,
-            color: scheme.onPrimaryContainer,
+            color: backgroundColor,
           ),
           padding: const EdgeInsets.all(8),
           child: PlayPauseAnimatedIcon(
-            color: scheme.primaryContainer,
+            color: color,
           ),
         ),
       ),

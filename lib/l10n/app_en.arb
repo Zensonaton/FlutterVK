@@ -37,6 +37,7 @@
 	"general_saved_playlist": "Saved playlist",
 	"general_recommended_playlist": "Recommended playlist",
 	"general_audios_count": "{count, plural, one{{count} audio} other{{count} audios}}",
+
 	"dislike_track_action": "Dislike",
 	"enable_shuffle_action": "Enable shuffle",
 	"disable_shuffle_action": "Disable shuffle",
@@ -199,10 +200,9 @@
 
 	"simillarity_percent": "<bold>{simillarity}%</bold> match with you",
 
-	"fullscreen_playlist_title": "Playing from playlist",
-	"fullscreen_next_track_title": "Next up",
-
 	"fullscreen_no_audio": "<bold>Sshhhh, don''t wake up the doggo</bold>!\n\nYou have nothing playing right now.\nClick <exit>here</exit> to close the player.",
+
+
 
 	"logout_desc": "Are you sure you want to log out of the {name} account in the Flutter VK app?",
 
@@ -211,6 +211,12 @@
 
 	"demo_mode_warning": "You are running in demo mode",
 	"demo_mode_warning_desc": "Because of this, some features may be disabled or not work correctly.\n\nTap here to install full version of Flutter VK on your device.",
+
+	"player_queue_header": "Playing music from",
+	"player_lyrics_header": "Lyrics source",
+	"lyrics_vk_source": "VK",
+	"lyrics_lrclib_source": "LRCLib",
+
 
 	"visual_settings": "Visual & cosmetic settings",
 
@@ -300,6 +306,9 @@
 
 	"lrclib_lyrics": "Lyrics via LRCLIB",
 	"lrclib_lyrics_desc": "Downloads lyrics from LRCLIB if the track does not have them or they are not synchronized.\nSometimes may provide incorrect/low-quality lyrics",
+
+	"apple_music_animated_covers": "Animated covers from Apple Music",
+	"apple_music_animated_covers_desc": "Downloads animated covers for tracks from Apple Music if the track does not have one.\nSometimes may provide incorrect/low-quality covers",
 
 
 	"app_settings": "App settings",
