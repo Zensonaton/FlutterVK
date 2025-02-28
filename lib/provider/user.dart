@@ -452,8 +452,6 @@ class ExtendedAudio {
   final bool isRestricted;
 
   /// URL на `mp3` данной аудиозаписи.
-  ///
-  /// Очень часто он отсутствует, выдавая пустую строку.
   final String? url;
 
   /// Timestamp добавления аудиозаписи.

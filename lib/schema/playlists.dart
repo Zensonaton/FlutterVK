@@ -317,6 +317,9 @@ class DBAudio {
   /// Указывает, что данный трек ограничен.
   final bool? isRestricted;
 
+  /// URL на `mp3` данной аудиозаписи.
+  final String? url;
+
   /// Timestamp добавления аудиозаписи.
   final int? date;
 
@@ -379,6 +382,7 @@ class DBAudio {
       subtitle: audio.subtitle,
       isExplicit: audio.isExplicit,
       isRestricted: audio.isRestricted,
+      url: audio.url,
       date: audio.date,
       hasLyrics: audio.hasLyrics,
       vkLyrics: audio.vkLyrics != null
@@ -420,6 +424,7 @@ class DBAudio {
       accessKey: audio.accessKey,
       isExplicit: audio.isExplicit!,
       isRestricted: audio.isRestricted!,
+      url: audio.url,
       date: audio.date,
       album: audio.album != null ? DBAlbum.toExtended(audio.album!) : null,
       vkThumbs: audio.vkThumbs != null
@@ -462,6 +467,7 @@ class DBAudio {
     String? accessKey,
     bool? isExplicit,
     bool? isRestricted,
+    String? url,
     int? date,
     DBAlbum? album,
     DBExtendedThumbnail? vkThumbs,
@@ -488,6 +494,7 @@ class DBAudio {
         accessKey: accessKey ?? this.accessKey,
         isExplicit: isExplicit ?? this.isExplicit,
         isRestricted: isRestricted ?? this.isRestricted,
+        url: url ?? this.url,
         date: date ?? this.date,
         album: album ?? this.album,
         vkThumbs: vkThumbs ?? this.vkThumbs,
@@ -531,6 +538,7 @@ class DBAudio {
     this.subtitle,
     this.isExplicit,
     this.isRestricted,
+    this.url,
     this.date,
     this.album,
     this.vkThumbs,
