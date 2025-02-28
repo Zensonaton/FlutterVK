@@ -1,6 +1,7 @@
 import "dart:async";
 
 import "package:audio_service/audio_service.dart";
+import "package:go_router/go_router.dart";
 
 import "../../../consts.dart";
 import "../../../enums.dart";
@@ -140,7 +141,7 @@ class AudioServicePlayerSubscriber extends PlayerSubscriber {
   void onNotificationClicked(tapped) {
     if (!tapped) return;
 
-    // TODO: Открытие полноэкранного плеера.
+    navigatorKey.currentContext?.push("/player");
   }
 
   /// Обновляет состояние воспроизведения.

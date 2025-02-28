@@ -200,8 +200,8 @@ class Player {
 
           logger.d("Backend '${backend.name}' is loaded: $isLoaded");
 
-          _isLoadedController.add(isLoaded);
           _isLoaded = isLoaded;
+          _isLoadedController.add(isLoaded);
         }),
         backend.isPlayingStream.listen(_isPlayingController.add),
         backend.audioStream.listen(_audioController.add),
