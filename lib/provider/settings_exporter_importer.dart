@@ -638,7 +638,9 @@ class SettingsExporter {
         final int encryptedSize = encryptedBytes.length;
 
         // Расшифровываем трек, потом копируем его, и помечаем как кэшированный, если это не было сделано ранее.
-        if (encryptedSize != playlistAudio.cachedSize) {
+        if ((playlistAudio.isCached != true &&
+                playlistAudio.replacedLocally != true) ||
+            encryptedSize != playlistAudio.cachedSize) {
           // Расшифровываем трек из архива.
           final decrypted = await xorCryptIsolate(encryptedBytes, key);
           updateProgress(i * 2 + 1, totalAudios * 2);
