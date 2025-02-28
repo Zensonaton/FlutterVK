@@ -93,14 +93,16 @@ class ProfileExperimentalSettingsCategory extends ConsumerWidget {
             l18n.apple_music_animated_covers_desc,
           ),
           value: preferences.appleMusicAnimatedCovers,
-          onChanged: (bool? enabled) async {
-            if (!demoModeDialog(ref, context)) return;
+          onChanged: recommendationsConnected
+              ? (bool? enabled) async {
+                  if (!demoModeDialog(ref, context)) return;
 
-            HapticFeedback.lightImpact();
-            if (enabled == null) return;
+                  HapticFeedback.lightImpact();
+                  if (enabled == null) return;
 
-            prefsNotifier.setAppleMusicAnimatedCovers(enabled);
-          },
+                  prefsNotifier.setAppleMusicAnimatedCovers(enabled);
+                }
+              : null,
         ),
       ],
     );
