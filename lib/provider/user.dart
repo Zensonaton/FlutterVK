@@ -533,7 +533,7 @@ class ExtendedAudio {
 
   /// Указывает размер кэша трека в байтах.
   ///
-  /// null если трек не кэширован ([isCached]).
+  /// null если трек не кэширован ([isCached] либо [replacedLocally]).
   final int? cachedSize;
 
   /// Указывает, что этот трек был заменён локально.

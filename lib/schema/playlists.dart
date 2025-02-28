@@ -397,7 +397,9 @@ class DBAudio {
           : null,
       forceDeezerThumbs: audio.forceDeezerThumbs,
       isCached: audio.isCached,
-      cachedSize: audio.cachedSize,
+      cachedSize: (audio.isCached == true || audio.replacedLocally == true)
+          ? audio.cachedSize
+          : null,
       replacedLocally: audio.replacedLocally,
       colorInts: audio.colorInts?.keys.toList(),
       scoredColorInts: audio.scoredColorInts,
@@ -436,7 +438,9 @@ class DBAudio {
           ? DBLyrics.toExtended(audio.lrcLibLyrics!)
           : null,
       isCached: audio.isCached ?? false,
-      cachedSize: audio.cachedSize,
+      cachedSize: (audio.isCached == true || audio.replacedLocally == true)
+          ? audio.cachedSize
+          : null,
       replacedLocally: audio.replacedLocally,
       colorInts: audio.colorInts != null
           ? Map.fromIterable(audio.colorInts!, key: (item) => item)
