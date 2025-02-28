@@ -47,7 +47,7 @@ class WindowBarTitlePlayerSubscriber extends PlayerSubscriber {
   /// Обновляет отображаемый статус воспроизведения музыки.
   void updatePlaybackStatus() async {
     final audio = player.audio;
-    final enabled = player.trackTitleInWindowBarEnabled;
+    final enabled = player.isPlaying && player.trackTitleInWindowBarEnabled;
     if (audio == null || !enabled) {
       await setWindowTitle();
 
