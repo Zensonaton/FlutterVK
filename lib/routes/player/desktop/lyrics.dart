@@ -9,6 +9,7 @@ import "package:scroll_to_index/scroll_to_index.dart";
 import "../../../consts.dart";
 import "../../../provider/l18n.dart";
 import "../../../provider/player.dart";
+import "../../../utils.dart";
 import "../../../widgets/fading_list_view.dart";
 import "../shared.dart";
 
@@ -155,9 +156,7 @@ class _Items extends HookConsumerWidget {
 
       lyricIndex.value = index;
 
-      if (WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
-        return;
-      }
+      if (!isLifecycleActive()) return;
       controller.scrollToIndex(
         index ?? 0,
         preferPosition: AutoScrollPosition.middle,

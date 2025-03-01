@@ -2,7 +2,6 @@ import "dart:ui";
 
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
-import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
 import "../../../consts.dart";
@@ -14,11 +13,6 @@ import "../shared.dart";
 
 /// Отображает список из треков, находящихся в очереди.
 class _Items extends HookConsumerWidget {
-  // /// Максимальное количество треков, отображаемых в очереди.
-  // ///
-  // /// Желательно, чтобы это число было не кратным, чтобы текущий трек был по середине.
-  // static const int maxTracksCount = 31;
-
   /// Длительность анимации скроллинга до текущего трека.
   static const Duration scrollDuration = Duration(seconds: 1);
 
@@ -35,20 +29,6 @@ class _Items extends HookConsumerWidget {
     ref.watch(playerIsPlayingProvider);
     ref.watch(playerIsBufferingProvider);
 
-    // final queue = useMemoized(
-    //   () {
-    //     return List.generate(
-    //       maxTracksCount,
-    //       (int index) {
-    //         final relativeIndex = index - (maxTracksCount ~/ 2);
-
-    //         return player.audioAtRelativeIndex(relativeIndex);
-    //       },
-    //     ).whereType<ExtendedAudio>().toList();
-    //   },
-    //   [player.index, player.queue],
-    // );
-    // TODO
     final queue = player.queue;
 
     final controller = useScrollController();
@@ -114,35 +94,38 @@ class _Items extends HookConsumerWidget {
           PointerDeviceKind.mouse,
         },
       ),
-      child: ListView.separated(
+      child: ListView.builder(
         controller: controller,
         itemCount: queue!.length,
-        separatorBuilder: (BuildContext context, int index) {
-          return const Gap(trackTileSpacing);
-        },
+        itemExtent: 50 + trackTileSpacing,
         itemBuilder: (BuildContext context, int index) {
           final audio = queue[index];
           final isPlaying = player.isPlaying;
           final isBuffering = player.isBuffering;
           final isSelected = audio.id == player.audio?.id;
 
-          return AudioTrackTile(
-            audio: audio,
-            isSelected: isSelected,
-            isPlaying: isPlaying,
-            isLoading: isSelected && isBuffering,
-            glowIfSelected: true,
-            showDuration: false,
-            showStatusIcons: false,
-            onPlayToggle: () {
-              if (isSelected) {
-                player.togglePlay();
+          return Padding(
+            padding: const EdgeInsets.only(
+              bottom: trackTileSpacing,
+            ),
+            child: AudioTrackTile(
+              audio: audio,
+              isSelected: isSelected,
+              isPlaying: isPlaying,
+              isLoading: isSelected && isBuffering,
+              glowIfSelected: true,
+              showDuration: false,
+              showStatusIcons: false,
+              onPlayToggle: () {
+                if (isSelected) {
+                  player.togglePlay();
 
-                return;
-              }
+                  return;
+                }
 
-              player.jumpToAudio(audio);
-            },
+                player.jumpToAudio(audio);
+              },
+            ),
           );
         },
       ),
@@ -163,7 +146,7 @@ class _Label extends ConsumerWidget {
     final playlist = player.playlist;
 
     return CategoryTextWidget(
-      header: "Воспроизведение плейлиста", // TODO: INTL
+      header: l18n.player_queue_header,
       text: playlist!.title ?? l18n.general_favorites_playlist,
       icon: Icons.queue_music,
       isLeft: true,

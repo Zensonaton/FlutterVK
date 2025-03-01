@@ -445,3 +445,9 @@ Future<void> setWindowTitle({String? title}) async {
 
   await windowManager.setTitle(title);
 }
+
+/// Указывает, что текущий [AppLifecycleState] является активным, т.е., приложение не свёрнуто.
+bool isLifecycleActive() => [
+      AppLifecycleState.resumed,
+      AppLifecycleState.inactive,
+    ].contains(WidgetsBinding.instance.lifecycleState);
