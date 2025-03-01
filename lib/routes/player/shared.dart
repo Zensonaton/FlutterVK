@@ -2,6 +2,112 @@ import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
+import "../../consts.dart";
+
+/// Отображает отдельную строчку в тексте песни.
+class LyricWidget extends StatelessWidget {
+  /// Длительность перехода между строчками.
+  static const Duration transitionDuration = Duration(milliseconds: 250);
+
+  /// Curve для перехода между строчками.
+  static const Curve transitionCurve = Curves.ease;
+
+  /// Возвращает значение прозрачности (alpha) для строчки с указанным расстоянием.
+  static double getDistanceAlpha(int distance) {
+    const maxDistance = 5;
+    const minAlpha = 0.1;
+    const maxAlpha = 1.0;
+
+    final normalizedDistance = (distance.abs() / maxDistance).clamp(0.0, 1.0);
+    return maxAlpha - (normalizedDistance * (maxAlpha - minAlpha));
+  }
+
+  /// Текст строчки.
+  ///
+  /// Если не указан, то будет использоваться иконка ноты.
+  final String? line;
+
+  /// Указывает, что эта строчка воспроизводится в данный момент.
+  ///
+  /// У такой строчки текст будет увеличен.
+  final bool isActive;
+
+  /// Расстояние от активной строчки (т.е., той, которая воспроизводится в данный момент) от этой строчки.
+  ///
+  /// Если число отрицательное, то считается, что это старая строчка, если положительное - то строчка ещё не была воспроизведена.
+  final int distance;
+
+  /// Действие, вызываемое при нажатии на эту строчку.
+  ///
+  /// Если не указано, то нажатие будет проигнорировано, а так же текст не будет располагаться по центру.
+  final void Function()? onTap;
+
+  const LyricWidget({
+    super.key,
+    this.line,
+    this.isActive = false,
+    this.distance = 0,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    final isSynchronized = onTap != null;
+    final isInterlide = line == null;
+    final alignment = isSynchronized ? Alignment.center : Alignment.centerLeft;
+    final textAlign = isSynchronized ? TextAlign.center : TextAlign.start;
+    final fontWeight = isSynchronized ? FontWeight.w500 : FontWeight.w400;
+    final color = scheme.primary.withValues(
+      alpha: getDistanceAlpha(distance),
+    );
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(
+          globalBorderRadius,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 50,
+          ),
+          child: AnimatedScale(
+            duration: transitionDuration,
+            curve: transitionCurve,
+            scale: isActive ? 1.2 : 1,
+            child: isInterlide
+                ? Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 2,
+                    ),
+                    child: Align(
+                      alignment: alignment,
+                      child: Icon(
+                        Icons.music_note,
+                        size: 20,
+                        color: color,
+                      ),
+                    ),
+                  )
+                : Text(
+                    line!,
+                    textAlign: textAlign,
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: color,
+                      fontWeight: fontWeight,
+                    ),
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Виджет, отображаемый для блоков "воспроизведение плейлиста" и "источник текста песни", который отображает нужную иконку, а при наведении заменяет её крестиком.
 class CategoryIconWidget extends HookConsumerWidget {
   /// Длительность анимации смены иконки.

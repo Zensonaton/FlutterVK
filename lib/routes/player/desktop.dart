@@ -6,6 +6,9 @@ import "desktop/queue.dart";
 
 /// Часть [PlayerRoute], отображающая полнооконный плеер для Desktop Layout'а.
 class DesktopPlayerWidget extends StatelessWidget {
+  /// Длительность для всех переходов между треками.
+  static const Duration transitionDuration = Duration(milliseconds: 500);
+
   /// Размер Padding'а.
   static const EdgeInsets paddingSize = EdgeInsets.all(50);
 

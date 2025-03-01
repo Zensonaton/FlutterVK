@@ -2,6 +2,7 @@ import "dart:async";
 import "dart:math";
 import "dart:ui";
 
+import "package:animations/animations.dart";
 import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
@@ -23,6 +24,7 @@ import "../../../widgets/fallback_audio_photo.dart";
 import "../../../widgets/loading_button.dart";
 import "../../../widgets/responsive_slider.dart";
 import "../../../widgets/wavy_slider.dart";
+import "../desktop.dart";
 
 /// Отображает информацию по длительности трека.
 class _ProgressSlider extends HookConsumerWidget {
@@ -288,24 +290,43 @@ class _Info extends ConsumerWidget {
           onPressed: onLikeTap,
         ),
         Expanded(
-          child: Column(
-            children: [
-              TrackTitleWithSubtitle(
-                title: audio?.title ?? "Unknown",
-                subtitle: audio?.subtitle,
-                textColor: scheme.onPrimaryContainer,
-                isExplicit: audio?.isExplicit ?? false,
-                explicitColor:
-                    scheme.onPrimaryContainer.withValues(alpha: 0.75),
+          child: PageTransitionSwitcher(
+            duration: DesktopPlayerWidget.transitionDuration,
+            transitionBuilder: (
+              Widget child,
+              Animation<double> animation,
+              Animation<double> secondaryAnimation,
+            ) {
+              return SharedAxisTransition(
+                animation: animation,
+                secondaryAnimation: secondaryAnimation,
+                transitionType: SharedAxisTransitionType.horizontal,
+                fillColor: Colors.transparent,
+                child: child,
+              );
+            },
+            child: Column(
+              key: ValueKey(
+                audio?.id,
               ),
-              Text(
-                audio?.artist ?? "Unknown",
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: scheme.onPrimaryContainer.withValues(alpha: 0.9),
+              children: [
+                TrackTitleWithSubtitle(
+                  title: audio?.title ?? "Unknown",
+                  subtitle: audio?.subtitle,
+                  textColor: scheme.onPrimaryContainer,
+                  isExplicit: audio?.isExplicit ?? false,
+                  explicitColor:
+                      scheme.onPrimaryContainer.withValues(alpha: 0.75),
                 ),
-              ),
-            ],
+                Text(
+                  audio?.artist ?? "Unknown",
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: scheme.onPrimaryContainer.withValues(alpha: 0.9),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         LoadingIconButton(

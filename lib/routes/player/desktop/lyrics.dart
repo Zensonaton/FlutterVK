@@ -1,3 +1,4 @@
+import "dart:async";
 import "dart:ui";
 
 import "package:flutter/material.dart";
@@ -6,130 +7,59 @@ import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:scroll_to_index/scroll_to_index.dart";
 
-import "../../../consts.dart";
+import "../../../api/vk/audio/get_lyrics.dart";
 import "../../../provider/l18n.dart";
 import "../../../provider/player.dart";
 import "../../../utils.dart";
 import "../../../widgets/fading_list_view.dart";
+import "../desktop.dart";
 import "../shared.dart";
-
-/// Отображает отдельную строчку в тексте песни.
-class LyricWidget extends StatelessWidget {
-  /// Длительность перехода между строчками.
-  static const Duration transitionDuration = Duration(milliseconds: 250);
-
-  /// Curve для перехода между строчками.
-  static const Curve transitionCurve = Curves.ease;
-
-  /// Возвращает значение прозрачности (alpha) для строчки с указанным расстоянием.
-  static double getDistanceAlpha(int distance) {
-    const maxDistance = 5;
-    const minAlpha = 0.1;
-    const maxAlpha = 1.0;
-
-    final normalizedDistance = (distance.abs() / maxDistance).clamp(0.0, 1.0);
-    return maxAlpha - (normalizedDistance * (maxAlpha - minAlpha));
-  }
-
-  /// Текст строчки.
-  ///
-  /// Если не указан, то будет использоваться иконка ноты.
-  final String? line;
-
-  /// Указывает, что эта строчка воспроизводится в данный момент.
-  ///
-  /// У такой строчки текст будет увеличен.
-  final bool isActive;
-
-  /// Расстояние от активной строчки (т.е., той, которая воспроизводится в данный момент) от этой строчки.
-  ///
-  /// Если число отрицательное, то считается, что это старая строчка, если положительное - то строчка ещё не была воспроизведена.
-  final int distance;
-
-  /// Действие, вызываемое при нажатии на эту строчку.
-  ///
-  /// Если не указано, то нажатие будет проигнорировано, а так же текст не будет располагаться по центру.
-  final void Function()? onTap;
-
-  const LyricWidget({
-    super.key,
-    this.line,
-    this.isActive = false,
-    this.distance = 0,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    final textAlign = onTap == null ? TextAlign.start : TextAlign.center;
-    final color = scheme.primary.withValues(
-      alpha: getDistanceAlpha(distance),
-    );
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(
-          globalBorderRadius,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 50,
-          ),
-          child: AnimatedScale(
-            duration: transitionDuration,
-            curve: transitionCurve,
-            scale: isActive ? 1.2 : 1,
-            child: line != null
-                ? Text(
-                    line!,
-                    textAlign: textAlign,
-                    style: TextStyle(
-                      fontSize: 20,
-                      color: color,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  )
-                : Padding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 2,
-                    ),
-                    child: Icon(
-                      Icons.music_note,
-                      size: 20,
-                      color: color,
-                    ),
-                  ),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 /// Отображает текст песни.
 class _Items extends HookConsumerWidget {
+  /// Время, через которое после ручного скроллинга пользователем, автоскролл будет включен.
+  static const Duration autoScrollDelay = Duration(seconds: 3);
+
   /// Расстояние между строчками.
   static const double lineSpacing = 12;
 
-  const _Items();
+  /// Объект [Lyrics], содержащий в себе текст песни.
+  final Lyrics lyrics;
+
+  const _Items({
+    super.key,
+    required this.lyrics,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final player = ref.read(playerProvider);
-    ref.watch(playerAudioProvider);
 
-    final audio = player.audio;
-    if (audio?.lyrics == null) {
-      return const SizedBox.shrink();
-    }
+    final controller = useMemoized(
+      () => AutoScrollController(),
+    );
 
-    final controller = useMemoized(() => AutoScrollController());
+    final autoScrollStopped = useState(false);
+    final autoScrollStopTimer = useRef<Timer?>(null);
 
-    final timestamps = audio!.lyrics!.timestamps!;
+    final texts = lyrics.text;
+    final timestamps = lyrics.timestamps;
+    final isSynchronized = timestamps != null;
+    final textOrTimestamps = useMemoized(
+      () {
+        if (timestamps != null) return timestamps;
+        if (texts == null) return null;
+
+        return texts
+            .map(
+              (line) => LyricTimestamp(
+                line: line.isNotEmpty ? line : null,
+              ),
+            )
+            .toList();
+      },
+      [texts, lyrics],
+    );
     final lyricIndex = useState<int?>(null);
 
     int? getCurrentIndex() {
@@ -150,17 +80,24 @@ class _Items extends HookConsumerWidget {
       return null;
     }
 
+    void scrollToCurrent() {
+      controller.scrollToIndex(
+        lyricIndex.value ?? 0,
+        preferPosition: AutoScrollPosition.middle,
+      );
+    }
+
     void onPositionUpdate(_) {
       final index = getCurrentIndex();
       if (index == lyricIndex.value) return;
 
       lyricIndex.value = index;
 
-      if (!isLifecycleActive()) return;
-      controller.scrollToIndex(
-        index ?? 0,
-        preferPosition: AutoScrollPosition.middle,
-      );
+      if (!isSynchronized || autoScrollStopped.value || !isLifecycleActive()) {
+        return;
+      }
+
+      scrollToCurrent();
     }
 
     useEffect(
@@ -181,43 +118,98 @@ class _Items extends HookConsumerWidget {
       [],
     );
 
-    return ScrollConfiguration(
-      behavior: ScrollConfiguration.of(context).copyWith(
-        scrollbars: false,
-        overscroll: false,
-        dragDevices: {
-          PointerDeviceKind.touch,
-          PointerDeviceKind.mouse,
-        },
-      ),
-      child: ListView.separated(
-        controller: controller,
-        itemCount: timestamps.length,
-        separatorBuilder: (BuildContext context, int index) {
-          return const Gap(lineSpacing);
-        },
-        itemBuilder: (BuildContext context, int index) {
-          final timestamp = timestamps[index];
+    return NotificationListener(
+      onNotification: (Notification notification) {
+        if (controller.isAutoScrolling) return false;
 
-          return AutoScrollTag(
-            key: ValueKey(index),
-            controller: controller,
-            index: index,
-            child: LyricWidget(
-              line: timestamp.line,
-              isActive: index == lyricIndex.value,
-              distance:
-                  lyricIndex.value != null ? index - lyricIndex.value! : 0,
-              onTap: () => player.seek(
-                Duration(
-                  milliseconds: timestamp.begin!,
-                ),
-                play: true,
-              ),
-            ),
+        if (notification is ScrollStartNotification) {
+          autoScrollStopTimer.value?.cancel();
+
+          autoScrollStopped.value = true;
+        } else if (notification is ScrollEndNotification) {
+          autoScrollStopTimer.value = Timer(
+            autoScrollDelay,
+            () {
+              if (!context.mounted) return;
+
+              autoScrollStopped.value = false;
+            },
           );
-        },
+        }
+
+        return false;
+      },
+      child: ScrollConfiguration(
+        behavior: ScrollConfiguration.of(context).copyWith(
+          scrollbars: false,
+          overscroll: false,
+          dragDevices: {
+            PointerDeviceKind.touch,
+            PointerDeviceKind.mouse,
+          },
+        ),
+        child: ListView.separated(
+          controller: controller,
+          itemCount: textOrTimestamps!.length,
+          separatorBuilder: (BuildContext context, int index) {
+            return const Gap(lineSpacing);
+          },
+          itemBuilder: (BuildContext context, int index) {
+            final timestamp = textOrTimestamps[index];
+
+            return AutoScrollTag(
+              key: ValueKey(
+                index,
+              ),
+              controller: controller,
+              index: index,
+              child: LyricWidget(
+                line: timestamp.line,
+                isActive: isSynchronized && index == lyricIndex.value,
+                distance: (!autoScrollStopped.value && lyricIndex.value != null)
+                    ? index - lyricIndex.value!
+                    : 0,
+                onTap: isSynchronized
+                    ? () => player.seek(
+                          Duration(
+                            milliseconds: timestamp.begin!,
+                          ),
+                          play: true,
+                        )
+                    : null,
+              ),
+            );
+          },
+        ),
       ),
+    );
+  }
+}
+
+/// Обёртка для [_Items] для реализации анимации перехода между текстами песни.
+class _ItemsAnimated extends ConsumerWidget {
+  const _ItemsAnimated();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final player = ref.read(playerProvider);
+    ref.watch(playerAudioProvider);
+
+    final audio = player.audio;
+    final lyrics = audio?.lyrics;
+
+    return AnimatedSwitcher(
+      duration: DesktopPlayerWidget.transitionDuration,
+      child: lyrics != null
+          ? _Items(
+              key: ValueKey(
+                audio!.id,
+              ),
+              lyrics: audio.lyrics!,
+            )
+          : const SizedBox.shrink(
+              key: ValueKey(null),
+            ),
     );
   }
 }
@@ -282,7 +274,7 @@ class LyricsInfoBlock extends StatelessWidget {
           Expanded(
             child: FadingListView(
               strength: 0.05,
-              child: _Items(),
+              child: _ItemsAnimated(),
             ),
           ),
         ],
