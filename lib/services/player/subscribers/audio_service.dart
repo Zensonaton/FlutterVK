@@ -52,6 +52,7 @@ class AudioServicePlayerSubscriber extends PlayerSubscriber {
       player.isLoadedStream.listen(onIsLoaded),
       player.isPlayingStream.listen(onIsPlaying),
       player.isBufferingStream.listen(onIsBuffering),
+      player.isShufflingStream.listen(onIsShuffling),
       player.audioStream.listen(onAudio),
       player.queueStream.listen(onQueue),
       player.seekStream.listen(onSeek),
