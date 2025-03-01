@@ -301,60 +301,69 @@ class _MusicLeftSide extends HookConsumerWidget {
       }
 
       switchAnimation.stop();
-      fromTransition.value = to;
-      toTransition.value = from;
 
-      final maxDurationMs =
-          MusicPlayerWidget.switchAnimationDuration.inMilliseconds;
-      final left = forceFullDuration ? 1.0 : 1.0 - progress.abs();
-      final leftReversed = -progress.sign * left;
-      final durMs =
-          (left * maxDurationMs).abs().clamp(0, maxDurationMs).toInt();
+      // Запускаем анимацию лишь в том случае, если приложение активно.
+      if ([AppLifecycleState.resumed, AppLifecycleState.inactive]
+          .contains(WidgetsBinding.instance.lifecycleState)) {
+        fromTransition.value = to;
+        toTransition.value = from;
 
-      switchAnimation.value = leftReversed;
-      await switchAnimation.animateTo(
-        0.0,
-        duration: Duration(milliseconds: durMs),
-      );
+        final maxDurationMs =
+            MusicPlayerWidget.switchAnimationDuration.inMilliseconds;
+        final left = forceFullDuration ? 1.0 : 1.0 - progress.abs();
+        final leftReversed = -progress.sign * left;
+        final durMs =
+            (left * maxDurationMs).abs().clamp(0, maxDurationMs).toInt();
+
+        switchAnimation.value = leftReversed;
+        await switchAnimation.animateTo(
+          0.0,
+          duration: Duration(milliseconds: durMs),
+        );
+      }
       fromTransition.value = null;
       toTransition.value = null;
     }
 
     useEffect(
       () {
-        // Запускаем анимацию перехода между треками, если предыдущий трек нам известны.
-        if (player.audio != null && lastAudio.value?.id != player.audio?.id) {
-          seekToPrevAudio.value = lastAudio.value == null ||
-              lastAudio.value?.id == player.nextAudio?.id;
-          final firedViaSwipe = switchingViaSwipe.value;
-          final progress = firedViaSwipe
-              ? switchAnimation.value
-              : seekToPrevAudio.value
-                  ? 1.0
-                  : -1.0;
+        final subscription = player.audioStream.listen((_) {
+          // Запускаем анимацию перехода между треками, если предыдущий трек нам известны.
+          if (player.audio != null && lastAudio.value?.id != player.audio?.id) {
+            seekToPrevAudio.value = lastAudio.value == null ||
+                lastAudio.value?.id == player.nextAudio?.id;
+            final firedViaSwipe = switchingViaSwipe.value;
+            final progress = firedViaSwipe
+                ? switchAnimation.value
+                : seekToPrevAudio.value
+                    ? 1.0
+                    : -1.0;
 
-          final from = lastAudio.value ??
-              (seekToPrevAudio.value ? player.nextAudio : player.previousAudio);
-          final to = player.audio;
+            final from = lastAudio.value ??
+                (seekToPrevAudio.value
+                    ? player.nextAudio
+                    : player.previousAudio);
+            final to = player.audio;
 
-          if (from != null && to != null) {
-            audioSwitchTransition(
-              from,
-              to,
-              progress: progress,
-              forceFullDuration: !firedViaSwipe,
-            );
+            if (from != null && to != null) {
+              audioSwitchTransition(
+                from,
+                to,
+                progress: progress,
+                forceFullDuration: !firedViaSwipe,
+              );
+            }
           }
-        }
 
-        if (player.audio != null) {
-          lastAudio.value = player.audio;
-        }
-        switchingViaSwipe.value = false;
+          if (player.audio != null) {
+            lastAudio.value = player.audio;
+          }
+          switchingViaSwipe.value = false;
+        });
 
-        return null;
+        return subscription.cancel;
       },
-      [player.audio],
+      [],
     );
 
     final prevAudio = player.previousAudio;
