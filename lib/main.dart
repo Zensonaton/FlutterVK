@@ -337,6 +337,8 @@ Future main() async {
     player.setKeepPlayingOnCloseEnabled(preferences.androidKeepPlayingOnClose);
     player.setDebugLoggingEnabled(preferences.debugPlayerLogging);
     player.setTrackTitleInWindowBarEnabled(preferences.trackTitleInWindowBar);
+    player.setVolumeNormalization(preferences.volumeNormalization);
+    player.setSilenceRemovalEnabled(preferences.silenceRemoval);
     if (preferences.volume < 1.0 && isDesktop) {
       player.setVolume(preferences.volume);
     }

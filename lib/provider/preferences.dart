@@ -226,6 +226,21 @@ class UserPreferences {
   @JsonKey(name: "AppleMusicAnimatedCovers", defaultValue: false)
   final bool appleMusicAnimatedCovers;
 
+  /// Указывает значение для нормализации громкости.
+  @JsonKey(
+    name: "MKVolumeNormalization",
+    toJson: intFromEnum,
+    fromJson: _volumeNormalizationFromJson,
+    defaultValue: VolumeNormalization.disabled,
+  )
+  final VolumeNormalization volumeNormalization;
+  static _volumeNormalizationFromJson(int value) =>
+      VolumeNormalization.values[value];
+
+  /// Указывает, что приложение будет пропускать тишину в начале и конце трека.
+  @JsonKey(name: "MKSilenceRemoval", defaultValue: false)
+  final bool silenceRemoval;
+
   /// Возвращает [Map] из всех ключей этого класса, где value - тип ключа.
   static Map<String, Type> getKeyTypes() => {
         "DBVersion": int,
@@ -267,6 +282,8 @@ class UserPreferences {
         "CrossfadeColors": bool,
         "TrackTitleInWindowBar": bool,
         "AppleMusicAnimatedCovers": bool,
+        "MKVolumeNormalization": VolumeNormalization,
+        "MKSilenceRemoval": bool,
       };
 
   UserPreferences({
@@ -309,6 +326,8 @@ class UserPreferences {
     this.crossfadeColors = true,
     this.trackTitleInWindowBar = true,
     this.appleMusicAnimatedCovers = false,
+    this.volumeNormalization = VolumeNormalization.disabled,
+    this.silenceRemoval = false,
   });
 
   /// Делает копию этого класа с новыми передаваемыми значениями.
@@ -352,6 +371,8 @@ class UserPreferences {
     bool? crossfadeColors,
     bool? trackTitleInWindowBar,
     bool? appleMusicAnimatedCovers,
+    VolumeNormalization? volumeNormalization,
+    bool? silenceRemoval,
   }) =>
       UserPreferences(
         dbVersion: dbVersion ?? this.dbVersion,
@@ -404,6 +425,8 @@ class UserPreferences {
             trackTitleInWindowBar ?? this.trackTitleInWindowBar,
         appleMusicAnimatedCovers:
             appleMusicAnimatedCovers ?? this.appleMusicAnimatedCovers,
+        volumeNormalization: volumeNormalization ?? this.volumeNormalization,
+        silenceRemoval: silenceRemoval ?? this.silenceRemoval,
       );
 
   factory UserPreferences.fromJson(Map<String, dynamic> json) =>
@@ -645,4 +668,10 @@ class Preferences extends _$Preferences {
 
   void setAppleMusicAnimatedCovers(bool enabled) =>
       state = state.copyWith(appleMusicAnimatedCovers: enabled);
+
+  void setVolumeNormalization(VolumeNormalization normalization) =>
+      state = state.copyWith(volumeNormalization: normalization);
+
+  void setSilenceRemoval(bool enabled) =>
+      state = state.copyWith(silenceRemoval: enabled);
 }

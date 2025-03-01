@@ -310,6 +310,17 @@
 	"apple_music_animated_covers": "Animated covers from Apple Music",
 	"apple_music_animated_covers_desc": "Downloads animated covers for tracks from Apple Music if the track does not have one.\nSometimes may provide incorrect/low-quality covers",
 
+	"volume_normalization": "Volume normalization",
+	"volume_normalization_desc": "Automatically adjusts the volume of tracks to a consistent level",
+	"volume_normalization_dialog_desc": "\"Normal\" and \"loud\" setting values may cause distortion in some tracks.",
+	"volume_normalization_disabled": "Disabled",
+	"volume_normalization_quiet": "Quiet",
+	"volume_normalization_normal": "Normal",
+	"volume_normalization_loud": "Loud",
+
+	"silence_removal": "Silence removal",
+	"silence_removal_desc": "Removes silence from beginning and end of audio tracks",
+
 
 	"app_settings": "App settings",
 

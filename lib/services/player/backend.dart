@@ -1,5 +1,6 @@
 import "dart:async";
 
+import "../../enums.dart";
 import "../../provider/user.dart";
 import "player.dart";
 import "server.dart";
@@ -83,6 +84,12 @@ class PlayerBackend {
   /// {@macro Player.errorStream}
   Stream<String> get errorStream => _throw();
 
+  /// {@macro Player.volumeNormalizationStream}
+  Stream<VolumeNormalization> get volumeNormalizationStream => _throw();
+
+  /// {@macro Player.silenceRemovalEnabledStream}
+  Stream<bool> get silenceRemovalEnabledStream => _throw();
+
   /// Указывает, инициализирован ли данный backend при помощи метода [PlayerBackend.initialize].
   ///
   /// Если backend не инициализирован, то нельзя использовать методы, связанные с воспроизведением музыки.
@@ -120,6 +127,21 @@ class PlayerBackend {
 
   /// {@macro Player.isRepeating}
   bool get isRepeating => _throw();
+
+  /// {@macro Player.volumeNormalization}
+  VolumeNormalization get volumeNormalization => _throw();
+
+  /// {@macro Player.silenceRemovalEnabled}
+  bool get silenceRemovalEnabled => _throw();
+
+  /// {@macro Player.setVolumeNormalization}
+  Future<void> setVolumeNormalization(
+    VolumeNormalization normalization,
+  ) async =>
+      _throw();
+
+  /// {@macro Player.setSilenceRemovalEnabled}
+  Future<void> setSilenceRemovalEnabled(bool enabled) async => _throw();
 
   /// {@macro Player.play}
   Future<void> play() async => _throw();

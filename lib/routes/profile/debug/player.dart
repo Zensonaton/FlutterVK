@@ -53,6 +53,8 @@ class PlayerInfoCard extends ConsumerWidget {
     ref.watch(playerIsRepeatingProvider);
     ref.watch(playerPositionProvider);
     ref.watch(playerVolumeProvider);
+    ref.watch(playerVolumeNormalizationProvider);
+    ref.watch(playerSilenceRemovalEnabledProvider);
 
     final backend = player.backend;
     final isPlaying = player.isPlaying;
@@ -61,6 +63,8 @@ class PlayerInfoCard extends ConsumerWidget {
     final position = player.position;
     final duration = player.duration;
     final volume = player.volume;
+    final volumeNormalization = player.volumeNormalization;
+    final silenceRemovalEnabled = player.silenceRemovalEnabled;
 
     return Card(
       child: Padding(
@@ -93,6 +97,13 @@ class PlayerInfoCard extends ConsumerWidget {
             ),
             Text(
               "Volume: $volume",
+            ),
+            Text(
+              "Volume normalization: ${volumeNormalization.name}",
+            ),
+            TrueFalseWidget(
+              value: silenceRemovalEnabled,
+              text: "Is removing silence",
             ),
           ],
         ),

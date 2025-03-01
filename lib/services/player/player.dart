@@ -216,6 +216,10 @@ class Player {
         backend.isRepeatingStream.listen(_isRepeatingController.add),
         backend.logStream.listen(_logController.add),
         backend.errorStream.listen(_errorController.add),
+        backend.volumeNormalizationStream
+            .listen(_volumeNormalizationController.add),
+        backend.silenceRemovalEnabledStream
+            .listen(_silenceRemovalEnabledController.add),
       ],
     );
   }
@@ -435,6 +439,26 @@ class Player {
     return _trackTitleInWindowBarEnabledController.stream.asBroadcastStream();
   }
 
+  final StreamController<VolumeNormalization> _volumeNormalizationController =
+      StreamController.broadcast();
+
+  /// {@template Player.volumeNormalizationStream}
+  /// Stream, указывающий значение настройки "нормализация громкости". Возвращает значение поля [volumeNormalization].
+  /// {@endtemplate}
+  Stream<VolumeNormalization> get volumeNormalizationStream {
+    return _volumeNormalizationController.stream.asBroadcastStream();
+  }
+
+  final StreamController<bool> _silenceRemovalEnabledController =
+      StreamController.broadcast();
+
+  /// {@template Player.silenceRemovalEnabledStream}
+  /// Stream, указывающий то, включено ли устранение тишины. Возвращает значение поля [silenceRemovalEnabled].
+  /// {@endtemplate}
+  Stream<bool> get silenceRemovalEnabledStream {
+    return _silenceRemovalEnabledController.stream.asBroadcastStream();
+  }
+
   /// {@template Player.isPlaying}
   /// Возвращает true, если плеер воспроизводит музыку.
   ///
@@ -546,6 +570,22 @@ class Player {
   /// Возвращает true, если включена настройка "название трека в заголовке окна". Для переключения данной настройки можно воспользоваться методом [Player.setTrackTitleInWindowBarEnabled].
   bool get trackTitleInWindowBarEnabled => _trackTitleInWindowBarEnabled;
 
+  /// {@template Player.volumeNormalization}
+  /// Возвращает значение настройки "нормализация громкости". Для переключения данной настройки можно воспользоваться методом [Player.setVolumeNormalization].
+  ///
+  /// Вы так же можете проверить, включена ли нормализация громкости, при помощи [Player.isVolumeNormalizationEnabled].
+  /// {@endtemplate}
+  VolumeNormalization get volumeNormalization => backend.volumeNormalization;
+
+  /// Указывает, включена ли нормализация громкости или нет. Если вам нужно узнать уровень нормализации, то воспользуйтесь [Player.volumeNormalization].
+  bool get isVolumeNormalizationEnabled =>
+      volumeNormalization != VolumeNormalization.disabled;
+
+  /// {@template Player.silenceRemovalEnabled}
+  /// Возвращает true, если включено удаление тишины. Для переключения данной настройки можно воспользоваться методом [Player.setSilenceRemovalEnabled].
+  /// {@endtemplate}
+  bool get silenceRemovalEnabled => backend.silenceRemovalEnabled;
+
   /// Управляет состоянием работы Discord RPC.
   void setDiscordRPCEnabled(bool enabled) {
     if (enabled == _discordRPCEnabled) return;
@@ -600,6 +640,20 @@ class Player {
 
     _trackTitleInWindowBarEnabled = enabled;
     _trackTitleInWindowBarEnabledController.add(enabled);
+  }
+
+  /// {@template Player.setVolumeNormalization}
+  /// Устанавливает значение настройки "нормализация громкости".
+  /// {@endtemplate}
+  Future<void> setVolumeNormalization(VolumeNormalization normalization) async {
+    await backend.setVolumeNormalization(normalization);
+  }
+
+  /// {@template Player.setSilenceRemovalEnabled}
+  /// Устанавливает значение настройки "удаление тишины".
+  /// {@endtemplate}
+  Future<void> setSilenceRemovalEnabled(bool enabled) async {
+    await backend.setSilenceRemovalEnabled(enabled);
   }
 
   /// {@template Player.play}

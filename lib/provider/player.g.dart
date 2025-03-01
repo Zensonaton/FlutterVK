@@ -24,7 +24,7 @@ final playerProvider = Provider<Player>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef PlayerRef = ProviderRef<Player>;
-String _$playerIsLoadedHash() => r'370507fedd08dd88e8ddcf32c1e26616a223bf3c';
+String _$playerIsLoadedHash() => r'74922788b2b4c8a75a240ce7f71cc7b094814014';
 
 /// {@macro Player.isLoadedStream}
 ///
@@ -43,7 +43,7 @@ final playerIsLoadedProvider = AutoDisposeStreamProvider<bool>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef PlayerIsLoadedRef = AutoDisposeStreamProviderRef<bool>;
-String _$playerIsPlayingHash() => r'2ea578990e0d625e86cd8e3b9493ef93284c6e4c';
+String _$playerIsPlayingHash() => r'9a6d6bbca3ee532400f89aea22a2040c04688216';
 
 /// {@macro Player.isPlayingStream}
 ///
@@ -62,7 +62,7 @@ final playerIsPlayingProvider = AutoDisposeStreamProvider<bool>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef PlayerIsPlayingRef = AutoDisposeStreamProviderRef<bool>;
-String _$playerAudioHash() => r'7fb47ba28aae7830ceb68ef4044d56d3c6c670cf';
+String _$playerAudioHash() => r'95b4a18c59575b74d75ee91ab0b6c5bfd799879a';
 
 /// {@macro Player.audioStream}
 ///
@@ -80,7 +80,7 @@ final playerAudioProvider = AutoDisposeStreamProvider<ExtendedAudio>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef PlayerAudioRef = AutoDisposeStreamProviderRef<ExtendedAudio>;
-String _$playerPositionHash() => r'4080fd36037354ee82dc5ba8831279ae003fc549';
+String _$playerPositionHash() => r'403362a4d4abc647884790ddf4d1ab6c8bcfe455';
 
 /// {@macro Player.positionStream}
 ///
@@ -99,7 +99,7 @@ final playerPositionProvider = AutoDisposeStreamProvider<Duration>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef PlayerPositionRef = AutoDisposeStreamProviderRef<Duration>;
-String _$playerSeekHash() => r'4d1e713bbf38c70aecf1dbd1b88a1f574cf6255c';
+String _$playerSeekHash() => r'09a18ec976abe63239b21b0d619f009b730c0324';
 
 /// {@macro Player.seekStream}
 ///
@@ -117,7 +117,7 @@ final playerSeekProvider = AutoDisposeStreamProvider<Duration>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef PlayerSeekRef = AutoDisposeStreamProviderRef<Duration>;
-String _$playerVolumeHash() => r'87c61bb2b8cff485f50e424f9df4ddb12e960d30';
+String _$playerVolumeHash() => r'21f2649028f2ce1e4b4521bd57dc52414b5b8c26';
 
 /// {@macro Player.volumeStream}
 ///
@@ -135,7 +135,7 @@ final playerVolumeProvider = AutoDisposeStreamProvider<double>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef PlayerVolumeRef = AutoDisposeStreamProviderRef<double>;
-String _$playerIsBufferingHash() => r'00be868a33ba3ee60b4d66f73d1f77704b4ad236';
+String _$playerIsBufferingHash() => r'552c23ad34e36b3ab6e5273c5184e0ecb5a1a0bc';
 
 /// {@macro Player.isBufferingStream}
 ///
@@ -155,7 +155,7 @@ final playerIsBufferingProvider = AutoDisposeStreamProvider<bool>.internal(
 // ignore: unused_element
 typedef PlayerIsBufferingRef = AutoDisposeStreamProviderRef<bool>;
 String _$playerBufferedPositionHash() =>
-    r'5f6036d130d14e54e94bb6c8efd07938ebcaa1ef';
+    r'c7ea9b82bac4b236b8090e309e64a367532483e0';
 
 /// {@macro Player.bufferedPositionStream}
 ///
@@ -175,7 +175,7 @@ final playerBufferedPositionProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef PlayerBufferedPositionRef = AutoDisposeStreamProviderRef<Duration>;
-String _$playerPlaylistHash() => r'ad4f3e58b2ef97e0020dc24951f84dea031e4be4';
+String _$playerPlaylistHash() => r'71fca4174b95b566fbc9166cb9b4faebabf5ba7c';
 
 /// {@macro Player.playlistStream}
 ///
@@ -195,7 +195,7 @@ final playerPlaylistProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef PlayerPlaylistRef = AutoDisposeStreamProviderRef<ExtendedPlaylist>;
-String _$playerQueueHash() => r'75bfb4aae92dc17ceeee9a36f8cf00265a09c9fa';
+String _$playerQueueHash() => r'64824e9dcfe236d9c4d610e62baa8552c1e473c9';
 
 /// {@macro Player.queueStream}
 ///
@@ -214,7 +214,7 @@ final playerQueueProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef PlayerQueueRef = AutoDisposeStreamProviderRef<List<ExtendedAudio>>;
-String _$playerIsShufflingHash() => r'198cf8cba9bedf3108a043539e9ab16c9840bf86';
+String _$playerIsShufflingHash() => r'e65e69da76ad6dda8fbb92bb03dc7293964af05e';
 
 /// {@macro Player.isShufflingStream}
 ///
@@ -233,7 +233,7 @@ final playerIsShufflingProvider = AutoDisposeStreamProvider<bool>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef PlayerIsShufflingRef = AutoDisposeStreamProviderRef<bool>;
-String _$playerIsRepeatingHash() => r'f246537a7a7106d6dc5d301d9e40aed476f1194f';
+String _$playerIsRepeatingHash() => r'5897420b76557fae203170c02d5f6ed7cd08c8ad';
 
 /// {@macro Player.isRepeatingStream}
 ///
@@ -252,5 +252,84 @@ final playerIsRepeatingProvider = AutoDisposeStreamProvider<bool>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef PlayerIsRepeatingRef = AutoDisposeStreamProviderRef<bool>;
+String _$playerLogHash() => r'126187afebd56ea68997776383e510f1c484661f';
+
+/// {@macro Player.logStream}
+///
+/// Copied from [playerLog].
+@ProviderFor(playerLog)
+final playerLogProvider = AutoDisposeStreamProvider<PlayerLog>.internal(
+  playerLog,
+  name: r'playerLogProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$playerLogHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef PlayerLogRef = AutoDisposeStreamProviderRef<PlayerLog>;
+String _$playerErrorHash() => r'd059d7614761995694540f37b20674af38b82a85';
+
+/// {@macro Player.errorStream}
+///
+/// Copied from [playerError].
+@ProviderFor(playerError)
+final playerErrorProvider = AutoDisposeStreamProvider<String>.internal(
+  playerError,
+  name: r'playerErrorProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$playerErrorHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef PlayerErrorRef = AutoDisposeStreamProviderRef<String>;
+String _$playerVolumeNormalizationHash() =>
+    r'a46caebad08333308e47a41beacba067bf0902d4';
+
+/// {@macro Player.volumeNormalizationStream}
+///
+/// Copied from [playerVolumeNormalization].
+@ProviderFor(playerVolumeNormalization)
+final playerVolumeNormalizationProvider =
+    AutoDisposeStreamProvider<VolumeNormalization>.internal(
+  playerVolumeNormalization,
+  name: r'playerVolumeNormalizationProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$playerVolumeNormalizationHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef PlayerVolumeNormalizationRef
+    = AutoDisposeStreamProviderRef<VolumeNormalization>;
+String _$playerSilenceRemovalEnabledHash() =>
+    r'dc5beaece4e6ec8fe5ead40962a060ade624f9ff';
+
+/// {@macro Player.silenceRemovalEnabledStream}
+///
+/// Copied from [playerSilenceRemovalEnabled].
+@ProviderFor(playerSilenceRemovalEnabled)
+final playerSilenceRemovalEnabledProvider =
+    AutoDisposeStreamProvider<bool>.internal(
+  playerSilenceRemovalEnabled,
+  name: r'playerSilenceRemovalEnabledProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$playerSilenceRemovalEnabledHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef PlayerSilenceRemovalEnabledRef = AutoDisposeStreamProviderRef<bool>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

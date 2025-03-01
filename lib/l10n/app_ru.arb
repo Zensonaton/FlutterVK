@@ -473,6 +473,17 @@
 	"apple_music_animated_covers": "Анимированные обложки Apple Music",
 	"apple_music_animated_covers_desc": "Включает возможность получения анимированных обложек из Apple Music, отображаемых в полноэкранном плеере. Работает у небольшого количества треков.\nИногда может выдавать неправильные обложки",
 
+	"volume_normalization": "Нормализация громкости",
+	"volume_normalization_desc": "Автоматически изменяет громкость треков, чтобы их уровень громкости был схож друг с другом",
+	"volume_normalization_dialog_desc": "При значениях «средне» или «громко» может происходить искажение звука.",
+	"volume_normalization_disabled": "Выключено",
+	"volume_normalization_quiet": "Тихо",
+	"volume_normalization_normal": "Средне",
+	"volume_normalization_loud": "Громко",
+
+	"silence_removal": "Устранение тишины",
+	"silence_removal_desc": "Избавляется от тишины в начале и конце трека",
+
 
 	"app_settings": "Настройки приложения",
 

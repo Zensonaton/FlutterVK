@@ -5,7 +5,9 @@ import "package:flutter/foundation.dart";
 import "package:media_kit/media_kit.dart" as mk;
 
 import "../../../consts.dart";
+import "../../../enums.dart";
 import "../../../provider/user.dart";
+import "../../../utils.dart";
 import "../../logger.dart";
 import "../backend.dart";
 import "../player.dart";
@@ -64,6 +66,10 @@ class MediaKitPlayerBackend extends PlayerBackend {
       StreamController.broadcast();
   final StreamController<String> _errorController =
       StreamController.broadcast();
+  final StreamController<VolumeNormalization> _volumeNormalizationController =
+      StreamController.broadcast();
+  final StreamController<bool> _silenceRemovalEnabledController =
+      StreamController.broadcast();
 
   /// Возвращает плеер, используемый для воспроизведения музыки.
   mk.Player get player => _player!;
@@ -90,6 +96,8 @@ class MediaKitPlayerBackend extends PlayerBackend {
   int? _index;
   bool _isShuffling = false;
   bool _isRepeating = false;
+  VolumeNormalization _volumeNormalization = VolumeNormalization.disabled;
+  bool _silenceRemovalEnabled = false;
 
   @override
   Future<void> initialize({PlayerLocalServer? server}) async {
@@ -214,6 +222,14 @@ class MediaKitPlayerBackend extends PlayerBackend {
   Stream<String> get errorStream => _errorController.stream;
 
   @override
+  Stream<VolumeNormalization> get volumeNormalizationStream =>
+      _volumeNormalizationController.stream;
+
+  @override
+  Stream<bool> get silenceRemovalEnabledStream =>
+      _silenceRemovalEnabledController.stream;
+
+  @override
   bool get isInitialized => _player != null;
 
   @override
@@ -248,6 +264,12 @@ class MediaKitPlayerBackend extends PlayerBackend {
 
   @override
   bool get isRepeating => _isRepeating;
+
+  @override
+  VolumeNormalization get volumeNormalization => _volumeNormalization;
+
+  @override
+  bool get silenceRemovalEnabled => _silenceRemovalEnabled;
 
   /// Возвращает копию переданного [index], но делает так, чтобы он не выходил за пределы допустимых значений.
   int _getValidIndex(int index) {
@@ -309,6 +331,65 @@ class MediaKitPlayerBackend extends PlayerBackend {
     }
 
     await _sendAudios();
+  }
+
+  /// Обновляет аудиофильтры (аргумент `af`) для `media_kit`.
+  Future<void> _updateAudioFilters() async {
+    if (isWeb) {
+      throw UnimplementedError("Audio filters are not supported on the web");
+    }
+
+    final List<String> afOptions = [];
+
+    // Нормализация громкости.
+    if (_volumeNormalization != VolumeNormalization.disabled) {
+      final i = {
+        VolumeNormalization.quiet: -19,
+        VolumeNormalization.normal: -14,
+        VolumeNormalization.loud: -11,
+      }[_volumeNormalization]!;
+      final lra = {
+        VolumeNormalization.quiet: 11,
+        VolumeNormalization.normal: 11,
+        VolumeNormalization.loud: 8,
+      }[_volumeNormalization]!;
+      const tp = -2;
+
+      afOptions.add("loudnorm=I=$i:TP=$tp:LRA=$lra");
+    }
+
+    // Удаление тишины.
+    if (_silenceRemovalEnabled) {
+      afOptions.add("silenceremove=start_periods=1:start_threshold=-50dB");
+    }
+
+    if (afOptions.isEmpty) {
+      await nativePlayer.setProperty("af", "");
+
+      return;
+    }
+
+    final lavfi = "lavfi=[${afOptions.join(",")}]";
+    logger.d("New options: `--af $lavfi`");
+    await nativePlayer.setProperty("af", lavfi);
+  }
+
+  @override
+  Future<void> setVolumeNormalization(VolumeNormalization normalization) async {
+    if (_volumeNormalization == normalization) return;
+
+    _volumeNormalization = normalization;
+    _volumeNormalizationController.add(normalization);
+    await _updateAudioFilters();
+  }
+
+  @override
+  Future<void> setSilenceRemovalEnabled(bool enabled) async {
+    if (_silenceRemovalEnabled == enabled) return;
+
+    _silenceRemovalEnabled = enabled;
+    _silenceRemovalEnabledController.add(enabled);
+    return _updateAudioFilters();
   }
 
   @override
