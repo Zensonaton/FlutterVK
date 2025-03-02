@@ -262,68 +262,51 @@ class ShellRouteWrapper extends HookConsumerWidget {
 
     final Widget wrappedChild = useMemoized(
       () {
-        if (mobileLayout) {
-          return Stack(
-            children: [
-              // Содержимое страницы, которое может меняться.
-              child,
-
-              // Плеер.
-              const BottomMusicPlayerWrapper(),
-            ],
-          );
-        }
-
         return Stack(
           children: [
             Column(
               children: [
-                // Содержимое страницы, вместе с [NavigationRail].
                 Expanded(
                   child: Row(
                     children: [
-                      RepaintBoundary(
-                        child: NavigationRail(
-                          selectedIndex: currentIndex,
-                          onDestinationSelected: onDestinationSelected,
-                          labelType: NavigationRailLabelType.all,
-                          destinations: [
-                            for (final item in navigationItems)
-                              NavigationRailDestination(
-                                icon: Icon(
-                                  item.icon,
+                      if (!mobileLayout)
+                        RepaintBoundary(
+                          child: NavigationRail(
+                            selectedIndex: currentIndex,
+                            onDestinationSelected: onDestinationSelected,
+                            labelType: NavigationRailLabelType.all,
+                            destinations: [
+                              for (final item in navigationItems)
+                                NavigationRailDestination(
+                                  icon: Icon(
+                                    item.icon,
+                                  ),
+                                  selectedIcon: Icon(
+                                    item.selectedIcon ?? item.icon,
+                                  ),
+                                  label: Text(
+                                    item.label,
+                                  ),
+                                  disabled: item.body == null,
                                 ),
-                                selectedIcon: Icon(
-                                  item.selectedIcon ?? item.icon,
-                                ),
-                                label: Text(
-                                  item.label,
-                                ),
-                                disabled: item.body == null,
-                              ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-
-                      // Само содержимое страницы.
                       Expanded(
                         child: child,
                       ),
                     ],
                   ),
                 ),
-
-                // Плеер.
-                const BottomMusicPlayerWrapper(),
+                if (!mobileLayout) const BottomMusicPlayerWrapper(),
               ],
             ),
-
-            // Иконка загрузки.
-            const DownloadManagerWrapperWidget(),
+            if (mobileLayout) const BottomMusicPlayerWrapper(),
+            if (!mobileLayout) const DownloadManagerWrapperWidget(),
           ],
         );
       },
-      [mobileLayout, currentIndex, child],
+      [currentIndex, mobileLayout, child],
     );
 
     return Scaffold(
@@ -371,6 +354,7 @@ class BottomMusicPlayerWrapper extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final player = ref.read(playerProvider);
     ref.watch(playerIsLoadedProvider);
+    ref.watch(playerPositionProvider);
 
     final bool isLoaded = player.isLoaded;
     final animation = useAnimationController(
