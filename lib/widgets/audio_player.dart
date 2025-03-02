@@ -630,16 +630,38 @@ class PlayerControlsWidget extends ConsumerWidget {
     final playlist = player.playlist;
     final isAudioMix = playlist?.type == PlaylistType.audioMix;
 
-    void onShuffleToggle() async {
+    void onShuffleToggle() {
+      HapticFeedback.lightImpact();
       if (isAudioMix) {
         throw Exception("Attempted to enable shuffle for audio mix");
       }
 
-      await player.toggleShuffle();
+      player.toggleShuffle();
     }
 
-    void onRepeatToggle() async {
-      await player.toggleRepeat();
+    void onPrevious() {
+      HapticFeedback.lightImpact();
+      player.smartPrevious();
+    }
+
+    void onPlayPause() {
+      HapticFeedback.lightImpact();
+      player.togglePlay();
+    }
+
+    void onStop() {
+      HapticFeedback.mediumImpact();
+      player.stop();
+    }
+
+    void onNext() {
+      HapticFeedback.lightImpact();
+      player.next();
+    }
+
+    void onRepeatToggle() {
+      HapticFeedback.lightImpact();
+      player.toggleRepeat();
     }
 
     return Row(
@@ -658,20 +680,20 @@ class PlayerControlsWidget extends ConsumerWidget {
           ),
         ),
         IconButton(
-          onPressed: () => player.smartPrevious(),
+          onPressed: onPrevious,
           icon: Icon(
             Icons.skip_previous,
             color: scheme.onPrimaryContainer,
           ),
         ),
         PlayPauseAnimatedButton(
-          onPressed: player.togglePlay,
-          onLongPress: player.stop,
+          onPressed: onPlayPause,
+          onLongPress: onStop,
           backgroundColor: scheme.primary,
           color: scheme.onPrimary,
         ),
         IconButton(
-          onPressed: () => player.next(),
+          onPressed: onNext,
           icon: Icon(
             Icons.skip_next,
             color: scheme.onPrimaryContainer,
@@ -1109,6 +1131,16 @@ class _MusicRightSide extends HookConsumerWidget {
     final isLiked = audio.value?.isLiked ?? false;
     final isRecommendation = playlist?.isRecommendationTypePlaylist ?? false;
 
+    void onPlayPause() {
+      HapticFeedback.lightImpact();
+      player.togglePlay();
+    }
+
+    void onStop() {
+      HapticFeedback.mediumImpact();
+      player.stop();
+    }
+
     // Кнопки дизлайка, лайка и паузы/воспроизведения для Mobile Layout.
     if (mobileLayout) {
       return SizedBox(
@@ -1139,9 +1171,9 @@ class _MusicRightSide extends HookConsumerWidget {
 
             // Пауза/воспроизведение.
             GestureDetector(
-              onLongPress: () => player.stop(),
+              onLongPress: onStop,
               child: IconButton(
-                onPressed: () => player.togglePlay(),
+                onPressed: onPlayPause,
                 constraints: buttonConstraints,
                 icon: PlayPauseAnimatedIcon(
                   color: scheme.onPrimaryContainer,
@@ -1465,6 +1497,7 @@ class _MusicContents extends ConsumerWidget {
     }
 
     Future<void> onLikeTap() async {
+      HapticFeedback.lightImpact();
       if (!networkRequiredDialog(ref, context)) return;
 
       final preferences = ref.read(preferencesProvider);
@@ -1482,6 +1515,7 @@ class _MusicContents extends ConsumerWidget {
     }
 
     Future<void> onDislikeTap() async {
+      HapticFeedback.lightImpact();
       if (!networkRequiredDialog(ref, context)) return;
 
       await player.audio!.dislike(player.ref);
