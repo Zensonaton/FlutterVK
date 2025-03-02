@@ -927,15 +927,15 @@ class _MusicMiddleSide extends HookConsumerWidget {
 
           // Позиция трека.
           player.positionStream.listen((_) async {
-            if (!context.mounted) return;
-
             // Эта задержка нужна, что бы событие изменения позиции обрабатывалось слегка позже,
-            // чем обработчики события currentIndexStream или seekStateStream.
+            // чем обработчики события audioStream или seekStream.
             await Future.delayed(
               const Duration(
                 milliseconds: 1,
               ),
             );
+
+            if (!context.mounted) return;
 
             // Если анимация Slider'а переключения идёт, то ничего не меняем.
             // Единственное, когда нам разрешено менять значение, это когда
