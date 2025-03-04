@@ -45,6 +45,7 @@ app.*.map.json
 
 # Other Android build-related files
 android/app/.cxx/
+android/.kotlin
 
 # Firebase
 /firebase/
