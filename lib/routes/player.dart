@@ -1,5 +1,4 @@
 import "package:flutter/material.dart";
-import "package:go_router/go_router.dart";
 
 import "../utils.dart";
 import "player/background.dart";
@@ -22,9 +21,6 @@ class PlayerRoute extends StatelessWidget {
       body: Stack(
         children: [
           const BackgroundImage(),
-          BackButton(
-            onPressed: () => context.pop(),
-          ),
           if (mobileLayout)
             const MobilePlayerWidget()
           else

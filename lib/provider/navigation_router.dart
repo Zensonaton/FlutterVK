@@ -275,8 +275,8 @@ GoRouter router(Ref ref) {
       final authState = ref.read(currentAuthStateProvider);
       if (authState == AuthState.authenticated) return null;
 
-      final nonAuthorizedPaths = ["welcome", "login"];
-      if (!nonAuthorizedPaths.contains(state.path)) {
+      final nonAuthorizedPaths = ["/welcome", "/login"];
+      if (!nonAuthorizedPaths.contains(state.fullPath)) {
         return "/welcome";
       }
 

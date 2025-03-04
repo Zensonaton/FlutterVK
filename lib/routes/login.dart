@@ -26,7 +26,6 @@ Future<bool> tryAuthorize(
 ]) async {
   final logger = getLogger("tryAuthorize");
   final l18n = ref.watch(l18nProvider);
-  final userNotifier = ref.read(userProvider.notifier);
   final authNotifier = ref.read(currentAuthStateProvider.notifier);
 
   logger.d("Trying to authorize with token");
@@ -72,7 +71,7 @@ Future<bool> tryAuthorize(
     // Если мы проводим альтернативную авторизацию, то мы должны сохранить вторичный токен,
     // а так же насильно обновить список из треков.
     if (useAlternateAuth) {
-      userNotifier.loginSecondary(token);
+      ref.read(userProvider.notifier).loginSecondary(token);
       ref.invalidate(playlistsProvider);
 
       if (context.mounted) {
