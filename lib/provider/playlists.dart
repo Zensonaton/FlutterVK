@@ -47,7 +47,7 @@ Future<void> createPlaylistCacheTask(
       ref: downloadManager.ref,
       id: playlist.mediaKey,
       playlist: playlist,
-      longTitle: l18n.playlist_caching(
+      longTitle: l18n.playlist_downloading(
         title: playlistName,
       ),
       smallTitle: playlistName,
@@ -77,10 +77,10 @@ Future<void> createPlaylistCacheTask(
               deezerThumbnails: preferences.deezerThumbnails,
             ),
 
-        // Некэшированные треки.
+        // Незагруженные треки.
         //
-        // Мы кэшируем те, которые:
-        // - Не кэшированы, но есть ссылка на скачивание (трек доступен).
+        // Мы загружаем те, которые:
+        // - Не были загружены ранее, но есть ссылка на скачивание (трек доступен).
         // - Имеют текст песни, но текст не загружен.
         if (playlist.cacheTracks ?? false)
           ...playlist.audios!

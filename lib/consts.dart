@@ -39,8 +39,8 @@ const double nextPlayingTextProgress = 0.85;
 /// Магическая константа, характеризующая размер в мегабайтах у одной минуты `mp3`-трека.
 const double trackSizePerMin = 1.5;
 
-/// Название README-файла в папке с кэшом треков.
-const String tracksCacheReadmeFileName = "Abc_123_README.txt";
+/// Название README-файла в папке с загруженными треками.
+const String downloadedTracksReadmeFilename = "Abc_123_README.txt";
 
 /// Случайные названия треков, используемые в Skeleton Loader'ах.
 const List<String> fakeTrackNames = [

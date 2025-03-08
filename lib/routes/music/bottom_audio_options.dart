@@ -522,10 +522,10 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
                       Icons.download,
                     ),
                     title: Text(
-                      l18n.cache_this_track,
+                      l18n.download_this_track,
                     ),
                     subtitle: Text(
-                      l18n.cache_this_track_desc,
+                      l18n.download_this_track_desc,
                     ),
                     enabled: !isRestricted && !isCached,
                     onTap: onCacheTrackTap,

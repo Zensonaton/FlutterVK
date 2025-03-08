@@ -187,8 +187,8 @@ class DeleteCacheDialog extends ConsumerWidget {
 
     return MaterialDialog(
       icon: Icons.file_download_off,
-      title: l18n.disable_caching_title,
-      text: l18n.disable_caching_desc(
+      title: l18n.disable_download_title,
+      text: l18n.disable_download_desc(
         count: count,
         size: size,
       ),
@@ -206,7 +206,7 @@ class DeleteCacheDialog extends ConsumerWidget {
         //   TextButton(
         //     onPressed: () => context.pop(false),
         //     child: Text(
-        //       l18n.stop_caching_button,
+        //       l18n.stop_downloading_button,
         //     ),
         //   ),
 
@@ -214,7 +214,7 @@ class DeleteCacheDialog extends ConsumerWidget {
         FilledButton(
           onPressed: () => Navigator.of(context).pop(true),
           child: Text(
-            l18n.delete_cached_button,
+            l18n.delete_downloaded_button,
           ),
         ),
       ],
@@ -1783,7 +1783,7 @@ class PlaylistRoute extends HookConsumerWidget {
             ref: downloadManager.ref,
             id: playlist.mediaKey,
             playlist: newPlaylist.playlist,
-            longTitle: l18n.playlist_cache_removal(
+            longTitle: l18n.playlist_download_removal(
               title: playlistName,
             ),
             smallTitle: playlistName,
@@ -1824,8 +1824,8 @@ class PlaylistRoute extends HookConsumerWidget {
       final result = await showYesNoDialog(
         context,
         icon: Icons.file_download,
-        title: l18n.enable_caching_title,
-        description: l18n.enable_caching_desc(
+        title: l18n.enable_download_title,
+        description: l18n.enable_download_desc(
           count: playlist.count ?? 0,
           downloadSize: size,
         ),

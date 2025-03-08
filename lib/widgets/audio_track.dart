@@ -525,7 +525,7 @@ class AudioTrackOtherInfoIcons extends ConsumerWidget {
     ];
     final List<String> tooltips = [
       // Кэширование.
-      if (isCached) l18n.icon_tooltip_cached,
+      if (isCached) l18n.icon_tooltip_downloaded,
 
       // Локально заменённый трек.
       if (isReplacedLocally) l18n.icon_tooltip_replaced_locally,

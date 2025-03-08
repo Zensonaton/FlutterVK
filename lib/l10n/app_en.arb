@@ -70,7 +70,7 @@
 
 	"tray_show_hide": "Show/Hide",
 
-	"music_readme_contents": "Hey-hey-hey! Stop right there! 🤚\n\nYes, this folder contains tracks cached by the Flutter VK app.\nIf you noticed, these tracks are saved in a very unusual format, and there's a reason for that.\nI, the app developer, don't want users (like you!) to easily access these tracks.\n\nIf you try hard enough, you'll eventually find the track you need. However, I'd prefer you didn't.\nIf it turns out that someone is using the app to download tracks, I'll have to add additional levels of obfuscation or encryption, like AES.\n\nPlease respect the work of the artists who put a lot of time into creating their tracks. Distributing them this way causes them serious harm.\nIf you still decide to distribute the tracks as .mp3 files, at least do it without any profit, only for personal use.\n\nThanks for your attention, fren :)",
+	"music_readme_contents": "Hey-hey-hey! Stop right there! 🤚\n\nYes, this folder contains tracks downloaded by the Flutter VK app.\nIf you noticed, these tracks are saved in a very unusual format, and there's a reason for that.\nI, the app developer, don't want users (like you!) to easily access these tracks.\n\nIf you try hard enough, you'll eventually find the track you need. However, I'd prefer you didn't.\nIf it turns out that someone is using the app to download tracks, I'll have to add additional levels of obfuscation or encryption, like AES.\n\nPlease respect the work of the artists who put a lot of time into creating their tracks. Distributing them this way causes them serious harm.\nIf you still decide to distribute the tracks as .mp3 files, at least do it without any profit, only for personal use.\n\nThanks for your attention, fren :)",
 
 	"internet_required_title": "No Connection",
 	"internet_required_desc": "This action can only be performed when connected to the internet. Please connect to a network and try again.",
@@ -132,27 +132,27 @@
 	"all_tracks": "All Tracks",
 
 	"track_unavailable_offline_title": "Track unavailable offline",
-	"track_unavailable_offline_desc": "You cannot listen to this track offline because you did not cache it earlier.",
+	"track_unavailable_offline_desc": "You cannot listen to this track offline because you did not downloaded it earlier.",
 
 	"track_restricted_title": "Audio unavailable",
-	"track_restricted_desc": "VK reported that this audio is unavailable. This decision was likely made by the track artist or label. Since you did not cache this track earlier, playback is impossible.",
+	"track_restricted_desc": "VK reported that this audio is unavailable. This decision was likely made by the track artist or label. Since you haven''t downloaded this track earlier, playback is impossible.",
 
 	"search_tracks_in_playlist": "Search among {count, plural, one{{count} track} other{{count} tracks}} here",
 	"playlist_is_empty": "This playlist is empty.",
 	"playlist_search_zero_results": "No results found for your query. Try <click>clearing your query</click>.",
 
-	"enable_caching_title": "Enable track caching",
-	"enable_caching_desc": "By enabling caching, Flutter VK will automatically download all tracks in this playlist, making them available for offline listening. If you continue, Flutter VK will download {count, plural, one{{count} track} other{{count} tracks}}, that''ll take ~{downloadSize} of internet traffic.",
+	"enable_download_title": "Enable track downloading",
+	"enable_download_desc": "By enabling this feature, Flutter VK will automatically download all tracks in this playlist, making them available for offline listening. If you continue, Flutter VK will download {count, plural, one{{count} track} other{{count} tracks}}, that''ll take ~{downloadSize} of internet traffic.",
 
-	"disable_caching_title": "Remove track cache",
-	"disable_caching_desc": "Clearing the playlist cache will remove {count, plural, one{{count} saved track} other{{count} saved tracks}} taking up {size} on your device. After removal, you will not be able to listen to this playlist offline. Are you sure you want to continue?",
+	"disable_download_title": "Delete downloaded tracks",
+	"disable_download_desc": "You will remove {count, plural, one{{count} saved track} other{{count} saved tracks}} which are taking up {size} on your device. After removal, you will not be able to listen to this playlist offline. Are you sure you want to continue?",
 
-	"stop_caching_button": "Stop",
-	"delete_cached_button": "Delete",
+	"stop_downloading_button": "Stop",
+	"delete_downloaded_button": "Delete",
 
-	"playlist_caching": "Caching playlist \"{title}\"",
+	"playlist_downloading": "Downloading playlist \"{title}\"",
 
-	"playlist_cache_removal": "Removing tracks from playlist \"{title}\"",
+	"playlist_download_removal": "Removing tracks from playlist \"{title}\"",
 
 	"search_music_global": "Search VK music",
 
@@ -168,8 +168,8 @@
 	"go_to_track_album_desc": "Opens the album page \"{title}\"",
 	"search_track_on_genius": "Search on Genius",
 	"search_track_on_genius_desc": "Track lyrics and other information from Genius",
-	"cache_this_track": "Download",
-	"cache_this_track_desc": "Allows you to listen to the track even without an internet connection",
+	"download_this_track": "Download",
+	"download_this_track_desc": "Allows you to listen to the track even without an internet connection",
 	"change_track_thumbnail": "Change cover",
 	"change_track_thumbnail_desc": "Sets the cover by searching from Deezer",
 	"reupload_track_from_youtube": "Reupload from YouTube",
@@ -187,7 +187,7 @@
 	"change_track_thumbnail_search_text": "Deezer query",
 	"change_track_thumbnail_type_to_search": "Enter the track title above to search for covers.",
 
-	"icon_tooltip_cached": "Cached",
+	"icon_tooltip_downloaded": "Downloaded",
 	"icon_tooltip_replaced_locally": "Replaced locally",
 	"icon_tooltip_restricted": "Unavailable",
 	"icon_tooltip_restricted_playable": "Restricted but playable",
@@ -346,8 +346,8 @@
 	"export_settings_modified_metadata": "Changed track metadata",
 	"export_settings_modified_metadata_desc": "{count, plural, one{{count} track} other{{count} tracks}} changed",
 
-	"export_settings_cached_restricted": "Cached but restricted tracks",
-	"export_settings_cached_restricted_desc": "{count, plural, one{{count} track} other{{count} tracks}} available for listening despite restricted access due to caching",
+	"export_settings_downloaded_restricted": "Downloaded but restricted tracks",
+	"export_settings_downloaded_restricted_desc": "{count, plural, one{{count} track} other{{count} tracks}} available for listening despite restricted access due to caching",
 
 	"export_settings_locally_replaced": "Locally replaced tracks",
 	"export_settings_locally_replaced_desc": "{count, plural, one{{count} track} other{{count} tracks}} replaced using the <colored><icon></icon> Local track replacement</colored> option",
@@ -380,7 +380,7 @@
 	"reset_db": "Reset track database",
 	"reset_db_desc": "Clears the local copy of the track database stored on this device",
 	"reset_db_dialog": "Reset track database",
-	"reset_db_dialog_desc": "Continuing will delete the track database stored on this device. Please do not do this unless absolutely necessary.\n\nYour tracks (both liked and cached) will not be deleted, but you will need to restart the caching process on previously cached playlists.",
+	"reset_db_dialog_desc": "Continuing will delete the track database stored on this device. Please do not do this unless absolutely necessary.\n\nYour tracks (both liked and downloaded) will not be deleted, but you will need to restart the caching process on previously downloaded playlists.",
 
 	"app_updates_policy": "Updates display type",
 	"app_updates_policy_desc": "Determines how the app will notify you about new updates",

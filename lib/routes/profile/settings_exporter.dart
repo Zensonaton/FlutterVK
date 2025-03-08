@@ -329,8 +329,8 @@ class SettingsExporterSelector extends HookConsumerWidget {
             buildSwitchTile(
               key: "cachedRestricted",
               icon: Icons.music_off,
-              title: l18n.export_settings_cached_restricted,
-              subtitle: l18n.export_settings_cached_restricted_desc,
+              title: l18n.export_settings_downloaded_restricted,
+              subtitle: l18n.export_settings_downloaded_restricted_desc,
             ),
 
             // Локально заменённые треки.

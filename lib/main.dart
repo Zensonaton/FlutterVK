@@ -343,12 +343,12 @@ Future main() async {
       player.setVolume(preferences.volume);
     }
 
-    // На Desktop-платформах, создаём README-файл в папке кэша треков.
+    // На Desktop-платформах, создаём README-файл в папке загруженных треков.
     if (isDesktop) {
       final File readmeFile = File(
         path.join(
           await PlayerLocalServer.getTrackStorageDirectory(),
-          tracksCacheReadmeFileName,
+          downloadedTracksReadmeFilename,
         ),
       );
       readmeFile.createSync(
