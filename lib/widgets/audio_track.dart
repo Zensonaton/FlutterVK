@@ -3,6 +3,7 @@ import "dart:ui";
 import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
@@ -65,17 +66,15 @@ Widget buildListTrackWidget(
       return;
     }
 
-    // Убираем фокус с поля ввода, если оно есть.
     FocusScope.of(context).unfocus();
+    HapticFeedback.selectionClick();
 
-    // Если этот трек уже играет, то просто делаем toggle воспроизведения.
     if (isSelected) {
       await player.togglePlay();
 
       return;
     }
 
-    // Запускаем воспроизведение.
     if (preferences.shuffleOnPlay) {
       await player.setShuffle(true);
     }
@@ -93,6 +92,8 @@ Widget buildListTrackWidget(
     }
     if (!context.mounted) return;
 
+    HapticFeedback.lightImpact();
+
     await audio.likeDislikeRestoreSafe(
       context,
       player.ref,
@@ -100,8 +101,14 @@ Widget buildListTrackWidget(
     );
   }
 
-  void showMore() {
+  void showMore(bool viaLongPress) {
     FocusScope.of(context).unfocus();
+
+    if (viaLongPress) {
+      HapticFeedback.lightImpact();
+    } else {
+      HapticFeedback.selectionClick();
+    }
 
     showModalBottomSheet(
       context: context,
@@ -132,8 +139,8 @@ Widget buildListTrackWidget(
     roundedCorners: roundedCorners,
     onPlayToggle: onPlayToggle,
     onLikeTap: !replaceLikeWithMore ? onLikeTap : null,
-    onSecondaryAction: showMore,
-    onMoreTap: replaceLikeWithMore ? showMore : null,
+    onSecondaryAction: () => showMore(true),
+    onMoreTap: replaceLikeWithMore ? () => showMore(true) : null,
   );
 }
 
