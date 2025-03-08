@@ -6,17 +6,16 @@ import "../subscriber.dart";
 
 /// Класс подписчика на события [Player] для debug-логирования событий плеера, если пользователь включил для этого подходящую настройку.
 class DebugLoggerPlayerSubscriber extends PlayerSubscriber {
-  /// Список из возможных [AppLogger]'ов, в зависимости от уровня логирования.
-  static final Map<PlayerLogLevel, AppLogger> loggers = {
-    PlayerLogLevel.verbose: getLogger("PlayerL/v"),
-    PlayerLogLevel.debug: getLogger("PlayerL/d"),
-    PlayerLogLevel.info: getLogger("PlayerL/i"),
-    PlayerLogLevel.warning: getLogger("PlayerL/w"),
-    PlayerLogLevel.error: getLogger("PlayerL/e"),
-  };
-  // TODO: Использование AppLogger'овского вместо уровня лога.
-
   DebugLoggerPlayerSubscriber(Player player) : super("Debug logger", player);
+
+  /// Возвращает объект [AppLogger] для указанного [sender].
+  AppLogger _getLogger(String? sender) {
+    if (sender == null) {
+      return getLogger("Player");
+    }
+
+    return getLogger("Player/$sender");
+  }
 
   @override
   List<StreamSubscription> subscribe(Player player) {
@@ -25,17 +24,27 @@ class DebugLoggerPlayerSubscriber extends PlayerSubscriber {
     ];
   }
 
+  /// События логирования плеера.
   void onLog(PlayerLog log) {
     if (!player.isDebugLoggingEnabled) return;
 
-    final AppLogger logger = loggers[log.level]!;
+    final AppLogger logger = _getLogger(log.sender);
 
-    if (log.sender != null) {
-      logger.i("${log.sender}: ${log.text}");
+    switch (log.level) {
+      case PlayerLogLevel.verbose:
+      case PlayerLogLevel.debug:
+      case PlayerLogLevel.info:
+        logger.i(log.text);
 
-      return;
+        break;
+      case PlayerLogLevel.warning:
+        logger.w(log.text);
+
+        break;
+      case PlayerLogLevel.error:
+        logger.e(log.text);
+
+        break;
     }
-
-    logger.i(log.text);
   }
 }
