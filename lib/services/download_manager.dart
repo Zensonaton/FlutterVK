@@ -306,7 +306,7 @@ class PlaylistCacheDownloadItem extends DownloadItem {
 
   /// Загружает текст песни с ВКонтакте, и возвращает объект [Lyrics] с текстом песни.
   Future<Lyrics?> _downloadLyrics() async {
-    if (audio.hasLyrics == false || audio.vkLyrics != null) return null;
+    if (audio.hasLyrics != true || audio.vkLyrics != null) return null;
 
     final APIAudioGetLyricsResponse response =
         await ref.read(vkAPIProvider).audio.getLyrics(audio.mediaKey);
