@@ -68,8 +68,8 @@ class ErrorsHandlerPlayerSubscriber extends PlayerSubscriber {
     logger.d("Errors count: $_errorsCount/$maxErrorsCount");
 
     final snackBarContent = _errorsCount >= maxErrorsCount
-        ? l18n.player_playback_error(error: message)
-        : l18n.player_playback_error_stopped(error: message);
+        ? l18n.player_playback_error_stopped(error: message)
+        : l18n.player_playback_error(error: message);
 
     if (_errorsCount >= maxErrorsCount) {
       player.stop();
