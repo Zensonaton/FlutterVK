@@ -1,8 +1,10 @@
 import "package:flutter/material.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:styled_text/tags/styled_text_tag.dart";
 import "package:styled_text/tags/styled_text_tag_action.dart";
 import "package:styled_text/widgets/styled_text.dart";
+import "package:wakelock_plus/wakelock_plus.dart";
 
 import "../provider/l18n.dart";
 import "../provider/player.dart";
@@ -82,7 +84,7 @@ class _InactivePlayerWidget extends ConsumerWidget {
 /// Route, отображаемый плеер на всё окно приложения.
 ///
 /// go_route: `/player`.
-class PlayerRoute extends ConsumerWidget {
+class PlayerRoute extends HookConsumerWidget {
   /// Длительность перехода между состоянием работающего плеера, и неактивного.
   static const Duration transitionDuration = Duration(milliseconds: 500);
 
@@ -94,10 +96,23 @@ class PlayerRoute extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final player = ref.read(playerProvider);
     ref.watch(playerIsLoadedProvider);
+    ref.watch(playerIsPlayingProvider);
 
     final isLoaded = player.isLoaded;
+    final isPlaying = player.isPlaying;
 
     final mobileLayout = isMobileLayout(context);
+
+    useEffect(
+      () {
+        WakelockPlus.toggle(enable: isPlaying);
+
+        return () {
+          WakelockPlus.disable();
+        };
+      },
+      [isPlaying],
+    );
 
     return AnimatedSwitcher(
       duration: transitionDuration,
@@ -105,7 +120,9 @@ class PlayerRoute extends ConsumerWidget {
           ? Scaffold(
               body: Stack(
                 children: [
-                  const BackgroundImage(),
+                  const RepaintBoundary(
+                    child: BackgroundImage(),
+                  ),
                   if (mobileLayout)
                     const MobilePlayerWidget()
                   else

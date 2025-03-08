@@ -148,6 +148,9 @@ class TrackTitleWithSubtitle extends StatelessWidget {
   /// Цвет текста для [title] и [subtitle].
   final Color textColor;
 
+  /// Размер шрифта.
+  final double? fontSize;
+
   /// Указывает, что это Explicit-трек.
   final bool isExplicit;
 
@@ -162,6 +165,7 @@ class TrackTitleWithSubtitle extends StatelessWidget {
     required this.title,
     this.subtitle,
     required this.textColor,
+    this.fontSize,
     this.isExplicit = false,
     this.explicitColor,
     this.allowTextSelection = false,
@@ -172,6 +176,7 @@ class TrackTitleWithSubtitle extends StatelessWidget {
     final TextStyle titleStyle = TextStyle(
       fontWeight: FontWeight.w500,
       color: textColor,
+      fontSize: fontSize,
     );
 
     return Text.rich(

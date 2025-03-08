@@ -76,10 +76,6 @@ class UserPreferences {
   @JsonKey(name: "PlayerThumbAsBackground", defaultValue: true)
   final bool playerThumbAsBackground;
 
-  /// Указывает, что включён показ текста трека в полноэкранном плеере.
-  @JsonKey(name: "TrackLyricsEnabled", defaultValue: true)
-  final bool trackLyricsEnabled;
-
   /// Указывает, что цвета плеера распространяются на всё приложение.
   @JsonKey(name: "PlayerColorsAppWide", defaultValue: true)
   final bool playerColorsAppWide;
@@ -146,10 +142,6 @@ class UserPreferences {
   final DynamicSchemeType dynamicSchemeType;
   static _dynamicSchemeTypeFromJson(int value) =>
       DynamicSchemeType.values[value];
-
-  /// Указывает, что полноэкранный плеер будет использовать изображение большого размера при Desktop Layout'е.
-  @JsonKey(name: "FullscreenBigThumbnail", defaultValue: false)
-  final bool fullscreenBigThumbnail;
 
   /// Указывает, что включено debug-логирование media_kit плеера.
   @JsonKey(name: "DebugPlayerLogging", defaultValue: false)
@@ -241,6 +233,14 @@ class UserPreferences {
   @JsonKey(name: "MKSilenceRemoval", defaultValue: false)
   final bool silenceRemoval;
 
+  /// Указывает, что в полнооконном плеере будет отображаться блок с очередью из треков (Desktop Layout).
+  @JsonKey(name: "PlayerQueueBlockEnabled", defaultValue: false)
+  final bool playerQueueBlock;
+
+  /// Указывает, что в полнооконном плеере будет отображаться блок с текстом трека (Desktop Layout).
+  @JsonKey(name: "PlayerLyricsBlockEnabled", defaultValue: false)
+  final bool playerLyricsBlock;
+
   /// Возвращает [Map] из всех ключей этого класса, где value - тип ключа.
   static Map<String, Type> getKeyTypes() => {
         "DBVersion": int,
@@ -255,7 +255,6 @@ class UserPreferences {
         "PauseOnMuteEnabled": bool,
         "StopOnPauseEnabled": bool,
         "PlayerThumbAsBackground": bool,
-        "TrackLyricsEnabled": bool,
         "PlayerColorsAppWide": bool,
         "Theme": ThemeMode,
         "OLEDTheme": bool,
@@ -265,7 +264,6 @@ class UserPreferences {
         "UpdateBranch": UpdateBranch,
         "DeezerThumbnails": bool,
         "DynamicSchemeType": DynamicSchemeType,
-        "FullscreenBigThumbnail": bool,
         "DebugPlayerLogging": bool,
         "PreReleaseWarningShown": bool,
         "LRCLIBEnabled": bool,
@@ -284,6 +282,8 @@ class UserPreferences {
         "AppleMusicAnimatedCovers": bool,
         "MKVolumeNormalization": VolumeNormalization,
         "MKSilenceRemoval": bool,
+        "PlayerQueueBlockEnabled": bool,
+        "PlayerLyricsBlockEnabled": bool,
       };
 
   UserPreferences({
@@ -299,7 +299,6 @@ class UserPreferences {
     this.pauseOnMuteEnabled = false,
     this.stopOnPauseEnabled = true,
     this.playerThumbAsBackground = true,
-    this.trackLyricsEnabled = true,
     this.playerColorsAppWide = true,
     this.theme = ThemeMode.system,
     this.oledTheme = false,
@@ -309,7 +308,6 @@ class UserPreferences {
     this.updateBranch = UpdateBranch.releasesOnly,
     this.deezerThumbnails = false,
     this.dynamicSchemeType = DynamicSchemeType.tonalSpot,
-    this.fullscreenBigThumbnail = false,
     this.debugPlayerLogging = false,
     this.preReleaseWarningShown = false,
     this.lrcLibEnabled = false,
@@ -328,6 +326,8 @@ class UserPreferences {
     this.appleMusicAnimatedCovers = false,
     this.volumeNormalization = VolumeNormalization.disabled,
     this.silenceRemoval = false,
+    this.playerQueueBlock = false,
+    this.playerLyricsBlock = false,
   });
 
   /// Делает копию этого класа с новыми передаваемыми значениями.
@@ -344,7 +344,6 @@ class UserPreferences {
     bool? pauseOnMuteEnabled,
     bool? stopOnPauseEnabled,
     bool? playerThumbAsBackground,
-    bool? trackLyricsEnabled,
     bool? playerColorsAppWide,
     ThemeMode? theme,
     bool? oledTheme,
@@ -354,7 +353,6 @@ class UserPreferences {
     UpdateBranch? updateBranch,
     bool? deezerThumbnails,
     DynamicSchemeType? dynamicSchemeType,
-    bool? fullscreenBigThumbnail,
     bool? debugPlayerLogging,
     bool? preReleaseWarningShown,
     bool? lrcLibEnabled,
@@ -373,6 +371,8 @@ class UserPreferences {
     bool? appleMusicAnimatedCovers,
     VolumeNormalization? volumeNormalization,
     bool? silenceRemoval,
+    bool? playerQueueBlock,
+    bool? playerLyricsBlock,
   }) =>
       UserPreferences(
         dbVersion: dbVersion ?? this.dbVersion,
@@ -391,7 +391,6 @@ class UserPreferences {
         stopOnPauseEnabled: stopOnPauseEnabled ?? this.stopOnPauseEnabled,
         playerThumbAsBackground:
             playerThumbAsBackground ?? this.playerThumbAsBackground,
-        trackLyricsEnabled: trackLyricsEnabled ?? this.trackLyricsEnabled,
         playerColorsAppWide: playerColorsAppWide ?? this.playerColorsAppWide,
         theme: theme ?? this.theme,
         oledTheme: oledTheme ?? this.oledTheme,
@@ -401,8 +400,6 @@ class UserPreferences {
         updateBranch: updateBranch ?? this.updateBranch,
         deezerThumbnails: deezerThumbnails ?? this.deezerThumbnails,
         dynamicSchemeType: dynamicSchemeType ?? this.dynamicSchemeType,
-        fullscreenBigThumbnail:
-            fullscreenBigThumbnail ?? this.fullscreenBigThumbnail,
         debugPlayerLogging: debugPlayerLogging ?? this.debugPlayerLogging,
         preReleaseWarningShown:
             preReleaseWarningShown ?? this.preReleaseWarningShown,
@@ -427,6 +424,8 @@ class UserPreferences {
             appleMusicAnimatedCovers ?? this.appleMusicAnimatedCovers,
         volumeNormalization: volumeNormalization ?? this.volumeNormalization,
         silenceRemoval: silenceRemoval ?? this.silenceRemoval,
+        playerQueueBlock: playerQueueBlock ?? this.playerQueueBlock,
+        playerLyricsBlock: playerLyricsBlock ?? this.playerLyricsBlock,
       );
 
   factory UserPreferences.fromJson(Map<String, dynamic> json) =>
@@ -590,9 +589,6 @@ class Preferences extends _$Preferences {
   void setPlayerThumbAsBackground(bool enabled) =>
       state = state.copyWith(playerThumbAsBackground: enabled);
 
-  void setTrackLyricsEnabled(bool enabled) =>
-      state = state.copyWith(trackLyricsEnabled: enabled);
-
   void setPlayerColorsAppWide(bool enabled) =>
       state = state.copyWith(playerColorsAppWide: enabled);
 
@@ -618,9 +614,6 @@ class Preferences extends _$Preferences {
 
   void setDynamicSchemeType(DynamicSchemeType dynamicScheme) =>
       state = state.copyWith(dynamicSchemeType: dynamicScheme);
-
-  void setFullscreenBigThumbnailEnabled(bool enabled) =>
-      state = state.copyWith(fullscreenBigThumbnail: enabled);
 
   void setDebugPlayerLogging(bool enabled) =>
       state = state.copyWith(debugPlayerLogging: enabled);
@@ -674,4 +667,10 @@ class Preferences extends _$Preferences {
 
   void setSilenceRemoval(bool enabled) =>
       state = state.copyWith(silenceRemoval: enabled);
+
+  void setPlayerQueueBlockEnabled(bool enabled) =>
+      state = state.copyWith(playerQueueBlock: enabled);
+
+  void setPlayerLyricsBlockEnabled(bool enabled) =>
+      state = state.copyWith(playerLyricsBlock: enabled);
 }

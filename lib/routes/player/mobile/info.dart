@@ -13,9 +13,14 @@ import "../../../widgets/loading_button.dart";
 import "../mobile.dart";
 import "../shared.dart";
 
-/// Часть для [TrackInfoWidget], отображающая информацию о треке, с кнопками для лайка и дизлайка.
+/// Часть для [InfoControlsWidget], отображающая информацию о треке, с кнопками для лайка и дизлайка.
 class _Info extends ConsumerWidget {
-  const _Info();
+  /// Указывает, что будет использоваться более сжатый layout.
+  final bool smallLayout;
+
+  const _Info({
+    this.smallLayout = false,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -43,6 +48,7 @@ class _Info extends ConsumerWidget {
       },
       layoutBuilder: (List<Widget> children) {
         return Stack(
+          alignment: Alignment.centerLeft,
           children: children,
         );
       },
@@ -56,6 +62,7 @@ class _Info extends ConsumerWidget {
           TrackTitleWithSubtitle(
             title: audio?.title ?? "Unknown",
             subtitle: audio?.subtitle,
+            fontSize: smallLayout ? null : 24,
             textColor: scheme.onPrimaryContainer,
             isExplicit: audio?.isExplicit ?? false,
             explicitColor: scheme.onPrimaryContainer.withValues(alpha: 0.75),
@@ -65,6 +72,7 @@ class _Info extends ConsumerWidget {
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: scheme.onPrimaryContainer.withValues(alpha: 0.9),
+              fontSize: smallLayout ? null : 18,
             ),
           ),
         ],
@@ -74,9 +82,13 @@ class _Info extends ConsumerWidget {
 }
 
 /// Виджет, отображающий информацию о треке, а так же кнопки лайка и дизлайка.
-class TrackInfoWidget extends ConsumerWidget {
-  const TrackInfoWidget({
+class InfoControlsWidget extends ConsumerWidget {
+  /// Указывает, что будет использоваться более сжатый layout.
+  final bool smallLayout;
+
+  const InfoControlsWidget({
     super.key,
+    this.smallLayout = false,
   });
 
   @override
@@ -89,6 +101,7 @@ class TrackInfoWidget extends ConsumerWidget {
 
     final audio = player.audio;
     final playlist = player.playlist;
+    final isRecommendation = playlist?.isRecommendationTypePlaylist == true;
 
     Future<void> onLikeTap() async {
       HapticFeedback.lightImpact();
@@ -119,23 +132,26 @@ class TrackInfoWidget extends ConsumerWidget {
 
     return Column(
       mainAxisSize: MainAxisSize.min,
-      spacing: 16,
+      spacing: smallLayout ? 8 : 16,
       children: [
         Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Expanded(
-              child: _Info(),
-            ),
-            LoadingIconButton(
-              icon: Icon(
-                Icons.thumb_down_outlined,
-                color: scheme.onPrimaryContainer,
+            Expanded(
+              child: _Info(
+                smallLayout: smallLayout,
               ),
-              color: scheme.onPrimaryContainer,
-              onPressed: onDislikeTap,
             ),
+            if (isRecommendation)
+              LoadingIconButton(
+                icon: Icon(
+                  Icons.thumb_down_outlined,
+                  color: scheme.onPrimaryContainer,
+                ),
+                color: scheme.onPrimaryContainer,
+                iconSize: smallLayout ? null : 28,
+                onPressed: onDislikeTap,
+              ),
             LoadingIconButton(
               icon: Icon(
                 audio?.isLiked == true
@@ -144,12 +160,20 @@ class TrackInfoWidget extends ConsumerWidget {
                 color: scheme.onPrimaryContainer,
               ),
               color: scheme.onPrimaryContainer,
+              iconSize: smallLayout ? null : 28,
               onPressed: onLikeTap,
             ),
           ],
         ),
-        const SliderWithProgressWidget(),
-        const PlayerControlsWidget(),
+        const SliderWithProgressWidget(
+          showTime: false,
+        ),
+        SizedBox(
+          width: double.infinity,
+          child: PlayerControlsWidget(
+            large: !smallLayout,
+          ),
+        ),
       ],
     );
   }

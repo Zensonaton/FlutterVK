@@ -53,7 +53,7 @@ class BottomBarWidget extends ConsumerWidget {
     );
 
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         IconButton(
           icon: Icon(

@@ -613,8 +613,32 @@ class _MusicLeftSide extends HookConsumerWidget {
 
 /// Виджет для [_MusicMiddleSide], отображающий ряд из кнопок для управления воспроизведением.
 class PlayerControlsWidget extends ConsumerWidget {
+  /// Указывает, что будет использоваться увеличенный размер кнопок.
+  final bool large;
+
+  /// Указывает, что будет использоваться уменьшенное расстояние между кнопками.
+  final bool dense;
+
+  /// Указывает, будет ли показана кнопка для переключения случайной перемешки.
+  final bool showShuffle;
+
+  /// Указывает, будет ли показана кнопка для включения предыдущего трека.
+  final bool showPrevious;
+
+  /// Указывает, будет ли показана кнопка для включения следующего трека.
+  final bool showNext;
+
+  /// Указывает, будет ли показана кнопка для переключения повтора трека.
+  final bool showRepeat;
+
   const PlayerControlsWidget({
     super.key,
+    this.large = false,
+    this.dense = false,
+    this.showShuffle = true,
+    this.showPrevious = true,
+    this.showNext = true,
+    this.showRepeat = true,
   });
 
   @override
@@ -629,6 +653,11 @@ class PlayerControlsWidget extends ConsumerWidget {
     final isLooping = player.isRepeating;
     final playlist = player.playlist;
     final isAudioMix = playlist?.type == PlaylistType.audioMix;
+
+    final size = large ? 30.0 : null;
+    final alignment =
+        large ? MainAxisAlignment.spaceBetween : MainAxisAlignment.center;
+    final spacing = (dense || large) ? 0.0 : 8.0;
 
     void onShuffleToggle() {
       HapticFeedback.lightImpact();
@@ -665,47 +694,57 @@ class PlayerControlsWidget extends ConsumerWidget {
     }
 
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      spacing: 8,
+      mainAxisAlignment: alignment,
+      spacing: spacing,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        IconButton(
-          onPressed: isAudioMix ? null : onShuffleToggle,
-          icon: Icon(
-            isAudioMix
-                ? Icons.close
-                : isShuffling
-                    ? Icons.shuffle_on_outlined
-                    : Icons.shuffle,
-            color: isAudioMix ? null : scheme.onPrimaryContainer,
+        if (showShuffle)
+          IconButton(
+            onPressed: isAudioMix ? null : onShuffleToggle,
+            iconSize: size,
+            icon: Icon(
+              isAudioMix
+                  ? Icons.close
+                  : isShuffling
+                      ? Icons.shuffle_on_outlined
+                      : Icons.shuffle,
+              color: isAudioMix ? null : scheme.onPrimaryContainer,
+            ),
           ),
-        ),
-        IconButton(
-          onPressed: onPrevious,
-          icon: Icon(
-            Icons.skip_previous,
-            color: scheme.onPrimaryContainer,
+        if (showPrevious)
+          IconButton(
+            onPressed: onPrevious,
+            iconSize: size,
+            icon: Icon(
+              Icons.skip_previous,
+              color: scheme.onPrimaryContainer,
+            ),
           ),
-        ),
         PlayPauseAnimatedButton(
           onPressed: onPlayPause,
           onLongPress: onStop,
           backgroundColor: scheme.primary,
           color: scheme.onPrimary,
+          iconSize: size,
         ),
-        IconButton(
-          onPressed: onNext,
-          icon: Icon(
-            Icons.skip_next,
-            color: scheme.onPrimaryContainer,
+        if (showNext)
+          IconButton(
+            onPressed: onNext,
+            iconSize: size,
+            icon: Icon(
+              Icons.skip_next,
+              color: scheme.onPrimaryContainer,
+            ),
           ),
-        ),
-        IconButton(
-          onPressed: onRepeatToggle,
-          icon: Icon(
-            isLooping ? Icons.repeat_on_outlined : Icons.repeat,
-            color: scheme.onPrimaryContainer,
+        if (showRepeat)
+          IconButton(
+            onPressed: onRepeatToggle,
+            iconSize: size,
+            icon: Icon(
+              isLooping ? Icons.repeat_on_outlined : Icons.repeat,
+              color: scheme.onPrimaryContainer,
+            ),
           ),
-        ),
       ],
     );
   }

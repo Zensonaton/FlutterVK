@@ -22,7 +22,6 @@ UserPreferences _$UserPreferencesFromJson(Map<String, dynamic> json) =>
       pauseOnMuteEnabled: json['PauseOnMuteEnabled'] as bool? ?? false,
       stopOnPauseEnabled: json['StopOnPauseEnabled'] as bool? ?? true,
       playerThumbAsBackground: json['PlayerThumbAsBackground'] as bool? ?? true,
-      trackLyricsEnabled: json['TrackLyricsEnabled'] as bool? ?? true,
       playerColorsAppWide: json['PlayerColorsAppWide'] as bool? ?? true,
       theme: json['Theme'] == null
           ? ThemeMode.system
@@ -46,7 +45,6 @@ UserPreferences _$UserPreferencesFromJson(Map<String, dynamic> json) =>
           ? DynamicSchemeType.tonalSpot
           : UserPreferences._dynamicSchemeTypeFromJson(
               (json['DynamicSchemeType'] as num).toInt()),
-      fullscreenBigThumbnail: json['FullscreenBigThumbnail'] as bool? ?? false,
       debugPlayerLogging: json['DebugPlayerLogging'] as bool? ?? false,
       preReleaseWarningShown: json['PreReleaseWarningShown'] as bool? ?? false,
       lrcLibEnabled: json['LRCLIBEnabled'] as bool? ?? false,
@@ -77,6 +75,8 @@ UserPreferences _$UserPreferencesFromJson(Map<String, dynamic> json) =>
           : UserPreferences._volumeNormalizationFromJson(
               (json['MKVolumeNormalization'] as num).toInt()),
       silenceRemoval: json['MKSilenceRemoval'] as bool? ?? false,
+      playerQueueBlock: json['PlayerQueueBlockEnabled'] as bool? ?? false,
+      playerLyricsBlock: json['PlayerLyricsBlockEnabled'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$UserPreferencesToJson(UserPreferences instance) =>
@@ -94,7 +94,6 @@ Map<String, dynamic> _$UserPreferencesToJson(UserPreferences instance) =>
       'PauseOnMuteEnabled': instance.pauseOnMuteEnabled,
       'StopOnPauseEnabled': instance.stopOnPauseEnabled,
       'PlayerThumbAsBackground': instance.playerThumbAsBackground,
-      'TrackLyricsEnabled': instance.trackLyricsEnabled,
       'PlayerColorsAppWide': instance.playerColorsAppWide,
       'Theme': intFromEnum(instance.theme),
       'OLEDTheme': instance.oledTheme,
@@ -104,7 +103,6 @@ Map<String, dynamic> _$UserPreferencesToJson(UserPreferences instance) =>
       'UpdateBranch': intFromEnum(instance.updateBranch),
       'DeezerThumbnails': instance.deezerThumbnails,
       'DynamicSchemeType': intFromEnum(instance.dynamicSchemeType),
-      'FullscreenBigThumbnail': instance.fullscreenBigThumbnail,
       'DebugPlayerLogging': instance.debugPlayerLogging,
       'PreReleaseWarningShown': instance.preReleaseWarningShown,
       'LRCLIBEnabled': instance.lrcLibEnabled,
@@ -125,13 +123,15 @@ Map<String, dynamic> _$UserPreferencesToJson(UserPreferences instance) =>
       'AppleMusicAnimatedCovers': instance.appleMusicAnimatedCovers,
       'MKVolumeNormalization': intFromEnum(instance.volumeNormalization),
       'MKSilenceRemoval': instance.silenceRemoval,
+      'PlayerQueueBlockEnabled': instance.playerQueueBlock,
+      'PlayerLyricsBlockEnabled': instance.playerLyricsBlock,
     };
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$preferencesHash() => r'73bf87d2320163af6ef42c828efd8a09c465466f';
+String _$preferencesHash() => r'c35c5db2c016a45373dc759f16fc41984a36d436';
 
 /// [Provider] для хранения настроек пользователя.
 ///

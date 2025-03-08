@@ -3,10 +3,10 @@ import "package:flutter/material.dart";
 /// Расширение для [RoundedRectSliderTrackShape], которое рисует волну для [Slider].
 class WavyTrackShape extends RoundedRectSliderTrackShape {
   /// Длина одной части волны (подъем/спуск).
-  static const double waveWidth = 13;
+  final double waveWidth;
 
   /// Высота одной части волны (подъем/спуск).
-  static const double waveHeight = 5;
+  final double waveHeight;
 
   /// Значение процента высоты волны, где `1.0` - это 100% высоты от волны.
   ///
@@ -19,6 +19,8 @@ class WavyTrackShape extends RoundedRectSliderTrackShape {
   final double waveOffsetPercent;
 
   const WavyTrackShape({
+    this.waveWidth = 13,
+    this.waveHeight = 5,
     this.waveHeightPercent = 1.0,
     this.waveOffsetPercent = 0.0,
   });

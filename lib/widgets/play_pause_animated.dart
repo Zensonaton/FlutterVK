@@ -53,6 +53,9 @@ class PlayPauseAnimatedIcon extends HookConsumerWidget {
 
 /// Кнопка, которая меняет форму в зависимости от того, поставлен ли плеер на паузу или нет.
 class PlayPauseAnimatedButton extends HookConsumerWidget {
+  /// Размер внутреннего padding'а.
+  static const double padding = 8;
+
   /// Callback-метод, вызываемый при нажатии на эту кнопку.
   final VoidCallback onPressed;
 
@@ -65,12 +68,16 @@ class PlayPauseAnimatedButton extends HookConsumerWidget {
   /// Цвет для иконки.
   final Color? color;
 
+  /// Размер иконки.
+  final double? iconSize;
+
   const PlayPauseAnimatedButton({
     super.key,
     required this.onPressed,
     this.onLongPress,
     this.backgroundColor,
     this.color,
+    this.iconSize,
   });
 
   @override
@@ -97,8 +104,9 @@ class PlayPauseAnimatedButton extends HookConsumerWidget {
     );
     useValueListenable(playPauseAnimation);
 
-    final BorderRadius borderRadius =
-        BorderRadius.circular(20 - 6 * playPauseAnimation.value);
+    final sideSize = 2 * padding + (iconSize ?? 24);
+    final borderRadius =
+        BorderRadius.circular(sideSize / 2 - 6 * playPauseAnimation.value);
 
     return InkWell(
       onTap: onPressed,
@@ -111,9 +119,12 @@ class PlayPauseAnimatedButton extends HookConsumerWidget {
             borderRadius: borderRadius,
             color: backgroundColor,
           ),
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(
+            padding,
+          ),
           child: PlayPauseAnimatedIcon(
             color: color,
+            size: iconSize,
           ),
         ),
       ),

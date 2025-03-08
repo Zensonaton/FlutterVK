@@ -5,10 +5,13 @@ import "dart:ui";
 import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
+import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:media_kit/media_kit.dart" as mk;
 import "package:media_kit_video/media_kit_video.dart";
+import "package:scroll_to_index/scroll_to_index.dart";
 
+import "../../api/vk/audio/get_lyrics.dart";
 import "../../consts.dart";
 import "../../provider/player.dart";
 import "../../provider/preferences.dart";
@@ -17,6 +20,7 @@ import "../../services/cache_manager.dart";
 import "../../services/logger.dart";
 import "../../utils.dart";
 import "../../widgets/audio_player.dart";
+import "../../widgets/audio_track.dart";
 import "../../widgets/fallback_audio_photo.dart";
 import "../../widgets/responsive_slider.dart";
 import "../../widgets/wavy_slider.dart";
@@ -133,9 +137,15 @@ class CategoryIconWidget extends HookConsumerWidget {
   /// Иконка.
   final IconData icon;
 
+  /// Действие, вызваемое при нажатии на кнопку закрытия этого блока.
+  ///
+  /// Если не указано, то кнопка закрытия не будет отображена.
+  final VoidCallback? onClose;
+
   const CategoryIconWidget({
     super.key,
     required this.icon,
+    this.onClose,
   });
 
   @override
@@ -144,24 +154,29 @@ class CategoryIconWidget extends HookConsumerWidget {
 
     final scheme = Theme.of(context).colorScheme;
 
+    final showCloseIcon = onClose != null && isHovered.value;
+
     return MouseRegion(
       onEnter: (_) => isHovered.value = true,
       onExit: (_) => isHovered.value = false,
-      child: AnimatedSwitcher(
-        duration: animationDuration,
-        transitionBuilder: (Widget child, Animation<double> animation) {
-          return FadeTransition(
-            opacity: animation,
-            child: child,
-          );
-        },
-        child: Icon(
-          key: ValueKey(
-            isHovered.value,
+      child: InkWell(
+        onTap: onClose,
+        child: AnimatedSwitcher(
+          duration: animationDuration,
+          transitionBuilder: (Widget child, Animation<double> animation) {
+            return FadeTransition(
+              opacity: animation,
+              child: child,
+            );
+          },
+          child: Icon(
+            key: ValueKey(
+              showCloseIcon,
+            ),
+            showCloseIcon ? Icons.close : icon,
+            color: showCloseIcon ? scheme.error : scheme.onPrimaryContainer,
+            size: 50,
           ),
-          isHovered.value ? Icons.close : icon,
-          color: isHovered.value ? scheme.error : scheme.onPrimaryContainer,
-          size: 50,
         ),
       ),
     );
@@ -182,17 +197,26 @@ class CategoryTextWidget extends StatelessWidget {
   /// Указывает, что данный блок расположен слева.
   final bool isLeft;
 
+  /// Действие, вызваемое при нажатии на кнопку закрытия этого блока.
+  ///
+  /// Если не указано, то кнопка закрытия не будет отображена.
+  final VoidCallback? onClose;
+
   const CategoryTextWidget({
     super.key,
     required this.icon,
     required this.header,
     required this.text,
     required this.isLeft,
+    this.onClose,
   });
 
   @override
   Widget build(BuildContext context) {
-    final categoryIcon = CategoryIconWidget(icon: icon);
+    final categoryIcon = CategoryIconWidget(
+      icon: icon,
+      onClose: onClose,
+    );
     final align = isLeft ? CrossAxisAlignment.start : CrossAxisAlignment.end;
     final textAlign = isLeft ? TextAlign.start : TextAlign.end;
 
@@ -201,31 +225,33 @@ class CategoryTextWidget extends StatelessWidget {
       spacing: 12,
       children: [
         if (isLeft) categoryIcon,
-        Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: align,
-          children: [
-            Text(
-              header,
-              textAlign: textAlign,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+        Expanded(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: align,
+            children: [
+              Text(
+                header,
+                textAlign: textAlign,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            Text(
-              text,
-              textAlign: textAlign,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-              style: const TextStyle(
-                fontSize: 20,
-                color: Colors.grey,
+              Text(
+                text,
+                textAlign: textAlign,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+                style: const TextStyle(
+                  fontSize: 20,
+                  color: Colors.grey,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         if (!isLeft) categoryIcon,
       ],
@@ -279,7 +305,7 @@ class BackgroundGlowImageWidget extends StatelessWidget {
 
 /// Виджет, отображающий большое изображение трека.
 ///
-/// Возвращает [SizedBox.shrink], если обложка не была найдена.
+/// Возвращает [FallbackAudioAvatar], если обложка не была найдена.
 class AudioImageWidget extends StatelessWidget {
   /// Трек, изображение которого будет использовано.
   final ExtendedAudio? audio;
@@ -300,8 +326,11 @@ class AudioImageWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (audio == null || audio!.maxThumbnail == null) {
-      return const SizedBox.shrink(
-        key: ValueKey(null),
+      return FallbackAudioAvatar(
+        key: const ValueKey(null),
+        borderRadius: borderRadius,
+        width: size,
+        height: size,
       );
     }
 
@@ -464,8 +493,12 @@ class AudioAnimatedImageWidget extends HookConsumerWidget {
 
 /// Виджет, отображающий анимированный [Slider], а так же [Text]'ы, отображающие прогресс воспроизведения, а так же длительность трека.
 class SliderWithProgressWidget extends HookConsumerWidget {
+  /// Указывает, будут ли отображены [Text]'ы для показа оставшегося времени.
+  final bool showTime;
+
   const SliderWithProgressWidget({
     super.key,
+    this.showTime = true,
   });
 
   @override
@@ -620,27 +653,28 @@ class SliderWithProgressWidget extends HookConsumerWidget {
       spacing: 8,
       mainAxisSize: MainAxisSize.min,
       children: [
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: onPositionTextTap,
-              borderRadius: BorderRadius.circular(
-                globalBorderRadius,
-              ),
-              child: Text(
-                positionString,
-                style: TextStyle(
-                  color: scheme.onPrimaryContainer,
+        if (showTime)
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onPositionTextTap,
+                borderRadius: BorderRadius.circular(
+                  globalBorderRadius,
+                ),
+                child: Text(
+                  positionString,
+                  style: TextStyle(
+                    color: scheme.onPrimaryContainer,
+                  ),
                 ),
               ),
             ),
           ),
-        ),
         Expanded(
           child: SizedBox(
-            height: 10,
+            height: 30,
             child: SliderTheme(
               data: SliderThemeData(
                 trackShape: WavyTrackShape(
@@ -667,16 +701,312 @@ class SliderWithProgressWidget extends HookConsumerWidget {
             ),
           ),
         ),
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text(
-            durationString,
-            style: TextStyle(
-              color: scheme.onPrimaryContainer,
+        if (showTime)
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              durationString,
+              style: TextStyle(
+                color: scheme.onPrimaryContainer,
+              ),
             ),
           ),
-        ),
       ],
+    );
+  }
+}
+
+/// Виджет, отображающий в себе [ListView], который автоматически скроллит до текущего момента в тексте песни.
+class AudioLyricsListView extends HookConsumerWidget {
+  /// Время, через которое после ручного скроллинга пользователем, автоскролл будет включен.
+  static const Duration autoScrollDelay = Duration(seconds: 3);
+
+  /// Расстояние между строчками.
+  static const double lineSpacing = 12;
+
+  /// Объект [Lyrics], содержащий в себе текст песни.
+  final Lyrics lyrics;
+
+  const AudioLyricsListView({
+    super.key,
+    required this.lyrics,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final player = ref.read(playerProvider);
+
+    final controller = useMemoized(
+      () => AutoScrollController(),
+    );
+
+    final autoScrollStopped = useState(false);
+    final autoScrollStopTimer = useRef<Timer?>(null);
+
+    final texts = lyrics.text;
+    final timestamps = lyrics.timestamps;
+    final isSynchronized = timestamps != null;
+    final textOrTimestamps = useMemoized(
+      () {
+        if (timestamps != null) return timestamps;
+        if (texts == null) return null;
+
+        return texts
+            .map(
+              (line) => LyricTimestamp(
+                line: line.isNotEmpty ? line : null,
+              ),
+            )
+            .toList();
+      },
+      [texts, lyrics],
+    );
+    final lyricIndex = useState<int?>(null);
+
+    int? getCurrentIndex() {
+      final audio = player.audio;
+      if (audio == null || audio.lyrics?.timestamps == null) return null;
+
+      final position = player.position.inMilliseconds;
+      final timestamps = audio.lyrics!.timestamps!;
+
+      for (int i = timestamps.length - 1; i >= 0; i--) {
+        final timestamp = timestamps[i];
+
+        if (timestamp.begin! <= position) {
+          return i;
+        }
+      }
+
+      return null;
+    }
+
+    void scrollToCurrent() {
+      controller.scrollToIndex(
+        lyricIndex.value ?? 0,
+        preferPosition: AutoScrollPosition.middle,
+      );
+    }
+
+    void onPositionUpdate(_) {
+      final index = getCurrentIndex();
+      if (index == lyricIndex.value) return;
+
+      lyricIndex.value = index;
+
+      if (!isSynchronized || autoScrollStopped.value || !isLifecycleActive()) {
+        return;
+      }
+
+      scrollToCurrent();
+    }
+
+    useEffect(
+      () {
+        onPositionUpdate(null);
+
+        final subscriptions = [
+          player.positionStream.listen(onPositionUpdate),
+          player.seekStream.listen(onPositionUpdate),
+        ];
+
+        return () {
+          for (final subscription in subscriptions) {
+            subscription.cancel();
+          }
+        };
+      },
+      [],
+    );
+
+    return NotificationListener(
+      onNotification: (Notification notification) {
+        if (controller.isAutoScrolling) return false;
+
+        if (notification is ScrollStartNotification) {
+          autoScrollStopTimer.value?.cancel();
+
+          autoScrollStopped.value = true;
+        } else if (notification is ScrollEndNotification) {
+          autoScrollStopTimer.value = Timer(
+            autoScrollDelay,
+            () {
+              if (!context.mounted) return;
+
+              autoScrollStopped.value = false;
+            },
+          );
+        }
+
+        return false;
+      },
+      child: ScrollConfiguration(
+        behavior: ScrollConfiguration.of(context).copyWith(
+          scrollbars: false,
+          overscroll: false,
+          dragDevices: {
+            PointerDeviceKind.touch,
+            PointerDeviceKind.mouse,
+          },
+        ),
+        child: ListView.separated(
+          controller: controller,
+          itemCount: textOrTimestamps!.length,
+          separatorBuilder: (BuildContext context, int index) {
+            return const Gap(lineSpacing);
+          },
+          itemBuilder: (BuildContext context, int index) {
+            final timestamp = textOrTimestamps[index];
+
+            return AutoScrollTag(
+              key: ValueKey(
+                index,
+              ),
+              controller: controller,
+              index: index,
+              child: LyricWidget(
+                line: timestamp.line,
+                isActive: isSynchronized && index == lyricIndex.value,
+                distance: (!autoScrollStopped.value && lyricIndex.value != null)
+                    ? index - lyricIndex.value!
+                    : 0,
+                onTap: isSynchronized
+                    ? () => player.seek(
+                          Duration(
+                            milliseconds: timestamp.begin!,
+                          ),
+                          play: true,
+                        )
+                    : null,
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+/// Виджет, отображающий в себе [ListView], показывающий очередь из воспроизведения, который автоматически скроллит до текущего трека в очереди.
+class PlayerQueueListView extends HookConsumerWidget {
+  /// Длительность анимации скроллинга до текущего трека.
+  static const Duration scrollDuration = Duration(seconds: 1);
+
+  /// Curve для анимации скроллинга до текущего трека.
+  static const Curve scrollCurve = Curves.ease;
+
+  const PlayerQueueListView({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final player = ref.read(playerProvider);
+    ref.watch(playerQueueProvider);
+    ref.watch(playerAudioProvider);
+    ref.watch(playerIsPlayingProvider);
+    ref.watch(playerIsBufferingProvider);
+
+    final queue = player.queue;
+
+    final controller = useScrollController();
+
+    double currentTrackScrollPosition() {
+      final int index = queue!.indexWhere(
+        (audio) => audio.id == player.audio?.id,
+      );
+      if (index == -1) return 0;
+
+      const itemHeight = 50 + trackTileSpacing;
+
+      return index * itemHeight -
+          (controller.position.viewportDimension / 2) +
+          (itemHeight / 2);
+    }
+
+    void scrollToCurrent(bool jump) {
+      final offset = currentTrackScrollPosition();
+
+      if (jump) {
+        controller.jumpTo(offset);
+
+        return;
+      }
+
+      controller.animateTo(
+        duration: scrollDuration,
+        curve: scrollCurve,
+        offset,
+      );
+    }
+
+    final lastAudioIndex = useRef<int?>(null);
+    useEffect(
+      () {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!controller.hasClients) return;
+
+          // Изменение трека.
+          if (lastAudioIndex.value != player.index) {
+            scrollToCurrent(lastAudioIndex.value == null);
+            lastAudioIndex.value = player.index;
+
+            return;
+          }
+
+          // Изменение размера экрана.
+          scrollToCurrent(true);
+        });
+
+        return null;
+      },
+      [player.index, MediaQuery.sizeOf(context).height],
+    );
+
+    return ScrollConfiguration(
+      behavior: ScrollConfiguration.of(context).copyWith(
+        scrollbars: false,
+        overscroll: false,
+        dragDevices: {
+          PointerDeviceKind.touch,
+          PointerDeviceKind.mouse,
+        },
+      ),
+      child: ListView.builder(
+        controller: controller,
+        itemCount: queue!.length,
+        itemExtent: 50 + trackTileSpacing,
+        itemBuilder: (BuildContext context, int index) {
+          final audio = queue[index];
+          final isPlaying = player.isPlaying;
+          final isBuffering = player.isBuffering;
+          final isSelected = audio.id == player.audio?.id;
+
+          return Padding(
+            padding: const EdgeInsets.only(
+              bottom: trackTileSpacing,
+            ),
+            child: AudioTrackTile(
+              audio: audio,
+              isSelected: isSelected,
+              isPlaying: isPlaying,
+              isLoading: isSelected && isBuffering,
+              glowIfSelected: true,
+              showDuration: false,
+              showStatusIcons: false,
+              onPlayToggle: () {
+                if (isSelected) {
+                  player.togglePlay();
+
+                  return;
+                }
+
+                player.jumpToAudio(audio);
+              },
+            ),
+          );
+        },
+      ),
     );
   }
 }

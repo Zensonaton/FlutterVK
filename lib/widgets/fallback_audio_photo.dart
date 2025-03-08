@@ -11,10 +11,14 @@ class FallbackAudioAvatar extends StatelessWidget {
   /// Высота. По умолчанию используется 50.
   final double height;
 
+  /// Радиус скругления.
+  final double? borderRadius;
+
   const FallbackAudioAvatar({
     super.key,
     this.width = 50,
     this.height = 50,
+    this.borderRadius,
   });
 
   @override
@@ -22,9 +26,13 @@ class FallbackAudioAvatar extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     return Container(
-      color: scheme.surfaceContainerHighest,
       width: width,
       height: height,
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest,
+        borderRadius:
+            borderRadius != null ? BorderRadius.circular(borderRadius!) : null,
+      ),
       child: Center(
         child: Skeleton.keep(
           child: Icon(
