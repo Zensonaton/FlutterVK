@@ -358,18 +358,6 @@ class DBAudio {
   /// Указывает, что этот трек был заменён локально.
   final bool? replacedLocally;
 
-  /// {@macro ImageSchemeExtractor.colorInts}
-  final List<int>? colorInts;
-
-  /// {@macro ImageSchemeExtractor.scoredColorInts}
-  final List<int>? scoredColorInts;
-
-  /// {@macro ImageSchemeExtractor.frequentColorInt}
-  final int? frequentColorInt;
-
-  /// {@macro ImageSchemeExtractor.colorCount}
-  final int? colorCount;
-
   /// Преобразовывает переданный объект типа [ExtendedAudio], преобразовывая его в [DBAudio].
   static DBAudio fromExtended(ExtendedAudio audio) {
     return DBAudio(
@@ -405,10 +393,6 @@ class DBAudio {
           ? audio.cachedSize
           : null,
       replacedLocally: audio.replacedLocally,
-      colorInts: audio.colorInts?.keys.toList(),
-      scoredColorInts: audio.scoredColorInts,
-      frequentColorInt: audio.frequentColorInt,
-      colorCount: audio.colorCount,
     );
   }
 
@@ -447,12 +431,6 @@ class DBAudio {
           ? audio.cachedSize
           : null,
       replacedLocally: audio.replacedLocally,
-      colorInts: audio.colorInts != null
-          ? Map.fromIterable(audio.colorInts!, key: (item) => item)
-          : null,
-      scoredColorInts: audio.scoredColorInts,
-      frequentColorInt: audio.frequentColorInt,
-      colorCount: audio.colorCount,
     );
   }
 
@@ -506,10 +484,6 @@ class DBAudio {
         isCached: isCached ?? this.isCached,
         cachedSize: cachedSize ?? this.cachedSize,
         replacedLocally: replacedLocally ?? this.replacedLocally,
-        colorInts: colorInts ?? this.colorInts,
-        scoredColorInts: scoredColorInts ?? this.scoredColorInts,
-        frequentColorInt: frequentColorInt ?? this.frequentColorInt,
-        colorCount: colorCount ?? this.colorCount,
       );
 
   /// Возвращает строку, которая используется как идентификатор пользователя и медиа.
@@ -551,10 +525,6 @@ class DBAudio {
     this.isCached,
     this.cachedSize,
     this.replacedLocally,
-    this.colorInts,
-    this.scoredColorInts,
-    this.frequentColorInt,
-    this.colorCount,
   });
 }
 
