@@ -12,12 +12,9 @@
 
 ## Демонстрация
 
+![Полноэкранный плеер](https://github.com/user-attachments/assets/7c063f00-18e6-4827-82df-54d24bf588fe)
+
 <table>
-  <tr>
-    <td>
-      <img src="https://github.com/user-attachments/assets/7c063f00-18e6-4827-82df-54d24bf588fe" alt="Полнооконный плеер">
-    </td>
-  </tr>
   <tr>
     <td>
       <img src="assets/readme/Mobile%20home.png" alt="Главный экран на мобильных устройствах">
