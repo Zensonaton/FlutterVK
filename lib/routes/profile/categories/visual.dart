@@ -153,6 +153,19 @@ class ProfileVisualSettingsCategory extends ConsumerWidget {
             prefsNotifier.setCrossfadeColors(enabled);
           },
         ),
+
+        // Отображение обложек.
+        ListTile(
+          leading: const Icon(
+            Icons.image,
+          ),
+          title: Text(
+            l18n.show_audio_thumbs,
+          ),
+          onTap: () => context.push(
+            "/profile/setting_show_audio_thumbs",
+          ),
+        ),
       ],
     );
   }

@@ -14,6 +14,7 @@ import "../routes/profile/categories/visual/alternative_slider.dart";
 import "../routes/profile/categories/visual/app_wide_colors.dart";
 import "../routes/profile/categories/visual/dynamic_scheme_type.dart";
 import "../routes/profile/categories/visual/oled.dart";
+import "../routes/profile/categories/visual/show_audio_thumbs.dart";
 import "../routes/profile/categories/visual/spoiler_next_audio.dart";
 import "../routes/profile/categories/visual/theme.dart";
 import "../routes/profile/debug/color_scheme.dart";
@@ -219,6 +220,16 @@ GoRouter router(Ref ref) {
               context: context,
               state: state,
               child: const SpoilerNextAudioSettingPage(),
+            );
+          },
+        ),
+        GoRoute(
+          path: "setting_show_audio_thumbs",
+          pageBuilder: (BuildContext context, GoRouterState state) {
+            return buildPageWithDefaultTransition(
+              context: context,
+              state: state,
+              child: const ShowAudioThumbsSettingPage(),
             );
           },
         ),

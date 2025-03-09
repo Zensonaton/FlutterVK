@@ -241,6 +241,10 @@ class UserPreferences {
   @JsonKey(name: "PlayerLyricsBlockEnabled", defaultValue: false)
   final bool playerLyricsBlock;
 
+  /// Указывает, включено ли отображение обложек треков в интерфейсе.
+  @JsonKey(name: "ShowTrackThumbnails", defaultValue: true)
+  final bool showTrackThumbnails;
+
   /// Возвращает [Map] из всех ключей этого класса, где value - тип ключа.
   static Map<String, Type> getKeyTypes() => {
         "DBVersion": int,
@@ -284,6 +288,7 @@ class UserPreferences {
         "MKSilenceRemoval": bool,
         "PlayerQueueBlockEnabled": bool,
         "PlayerLyricsBlockEnabled": bool,
+        "ShowTrackThumbnails": bool,
       };
 
   UserPreferences({
@@ -328,6 +333,7 @@ class UserPreferences {
     this.silenceRemoval = false,
     this.playerQueueBlock = false,
     this.playerLyricsBlock = false,
+    this.showTrackThumbnails = true,
   });
 
   /// Делает копию этого класа с новыми передаваемыми значениями.
@@ -373,6 +379,7 @@ class UserPreferences {
     bool? silenceRemoval,
     bool? playerQueueBlock,
     bool? playerLyricsBlock,
+    bool? showTrackThumbnails,
   }) =>
       UserPreferences(
         dbVersion: dbVersion ?? this.dbVersion,
@@ -426,6 +433,7 @@ class UserPreferences {
         silenceRemoval: silenceRemoval ?? this.silenceRemoval,
         playerQueueBlock: playerQueueBlock ?? this.playerQueueBlock,
         playerLyricsBlock: playerLyricsBlock ?? this.playerLyricsBlock,
+        showTrackThumbnails: showTrackThumbnails ?? this.showTrackThumbnails,
       );
 
   factory UserPreferences.fromJson(Map<String, dynamic> json) =>
@@ -673,4 +681,7 @@ class Preferences extends _$Preferences {
 
   void setPlayerLyricsBlockEnabled(bool enabled) =>
       state = state.copyWith(playerLyricsBlock: enabled);
+
+  void setShowTrackThumbnails(bool enabled) =>
+      state = state.copyWith(showTrackThumbnails: enabled);
 }

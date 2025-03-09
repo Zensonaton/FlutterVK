@@ -65,6 +65,7 @@
 	"option_unavailable_with_light_theme": "This option is unavailable because app is used in light theme.",
 	"option_unavailable_without_recommendations": "This setting is unavailable you haven''t connected VK recommendations.",
 	"option_unavailable_without_audio_playing": "You will not be able to see changes to this settings, because no audio is playing right now.",
+	"thumbnails_unavailable_without_recommendations": "Thumbnails aren''t shown because you haven''t connected VK recommendations.",
 
 	"app_minimized_message": "Flutter VK minimized.\nUse the tray or reopen the app to restore the window.",
 
@@ -253,6 +254,10 @@
 
 	"crossfade_audio_colors": "Player color crossfade",
 	"crossfade_audio_colors_desc": "Makes a smooth transition of player colors before the next track starts.",
+
+	"show_audio_thumbs": "Show covers",
+	"show_audio_thumbs_desc": "This setting indicates whether music thumbnails will be shown.\n\nChanges to this setting won''t affect the player.",
+	"enable_show_audio_thumbs": "Show track covers",
 
 
 	"music_player": "Music player",

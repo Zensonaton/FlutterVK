@@ -77,6 +77,7 @@ UserPreferences _$UserPreferencesFromJson(Map<String, dynamic> json) =>
       silenceRemoval: json['MKSilenceRemoval'] as bool? ?? false,
       playerQueueBlock: json['PlayerQueueBlockEnabled'] as bool? ?? false,
       playerLyricsBlock: json['PlayerLyricsBlockEnabled'] as bool? ?? false,
+      showTrackThumbnails: json['ShowTrackThumbnails'] as bool? ?? true,
     );
 
 Map<String, dynamic> _$UserPreferencesToJson(UserPreferences instance) =>
@@ -125,13 +126,14 @@ Map<String, dynamic> _$UserPreferencesToJson(UserPreferences instance) =>
       'MKSilenceRemoval': instance.silenceRemoval,
       'PlayerQueueBlockEnabled': instance.playerQueueBlock,
       'PlayerLyricsBlockEnabled': instance.playerLyricsBlock,
+      'ShowTrackThumbnails': instance.showTrackThumbnails,
     };
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$preferencesHash() => r'c35c5db2c016a45373dc759f16fc41984a36d436';
+String _$preferencesHash() => r'2cc0ae519e0035798d394d587caa0a1db73fae4b';
 
 /// [Provider] для хранения настроек пользователя.
 ///
