@@ -15,7 +15,7 @@
 <table>
   <tr>
     <td>
-      <img src="assets/readme/Fullscreen.mp4" alt="Полнооконный плеер">
+      <img src="https://github.com/user-attachments/assets/7c063f00-18e6-4827-82df-54d24bf588fe" alt="Полнооконный плеер">
     </td>
   </tr>
   <tr>
