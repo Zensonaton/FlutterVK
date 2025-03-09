@@ -15,6 +15,7 @@ import "../../services/cache_manager.dart";
 import "../../services/download_manager.dart";
 import "../../utils.dart";
 import "../../widgets/audio_player.dart";
+import "../../widgets/audio_track.dart";
 import "../../widgets/fallback_audio_photo.dart";
 
 /// Виджет, отображаемый отдельный загружающийся элемент, например, плейлист.
@@ -192,7 +193,8 @@ class DownloadItemIconWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final int memCacheSize =
-        (50 * MediaQuery.devicePixelRatioOf(context)).round();
+        (AudioTrackTile.height * MediaQuery.devicePixelRatioOf(context))
+            .round();
 
     if (task is PlaylistCacheDownloadTask) {
       final playlistTask = task as PlaylistCacheDownloadTask;
@@ -206,8 +208,8 @@ class DownloadItemIconWidget extends StatelessWidget {
             ? CachedNetworkImage(
                 imageUrl: playlist.photo!.photo600,
                 cacheKey: "${playlist.mediaKey}600",
-                width: 50,
-                height: 50,
+                width: AudioTrackTile.height,
+                height: AudioTrackTile.height,
                 memCacheHeight: memCacheSize,
                 memCacheWidth: memCacheSize,
                 placeholder: (BuildContext context, String string) {
@@ -217,7 +219,7 @@ class DownloadItemIconWidget extends StatelessWidget {
               )
             : FallbackAudioPlaylistAvatar(
                 favoritesPlaylist: playlist.type == PlaylistType.favorites,
-                size: 50,
+                size: AudioTrackTile.height,
               ),
       );
     } else if (task is AppUpdaterDownloadTask) {

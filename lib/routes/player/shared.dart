@@ -329,8 +329,7 @@ class AudioImageWidget extends StatelessWidget {
       return FallbackAudioAvatar(
         key: const ValueKey(null),
         borderRadius: borderRadius,
-        width: size,
-        height: size,
+        size: size,
       );
     }
 
@@ -917,7 +916,7 @@ class PlayerQueueListView extends HookConsumerWidget {
       );
       if (index == -1) return 0;
 
-      const itemHeight = 50 + trackTileSpacing;
+      const itemHeight = AudioTrackTile.height + trackTileSpacing;
 
       return index * itemHeight -
           (controller.position.viewportDimension / 2) +
@@ -975,7 +974,7 @@ class PlayerQueueListView extends HookConsumerWidget {
       child: ListView.builder(
         controller: controller,
         itemCount: queue!.length,
-        itemExtent: 50 + trackTileSpacing,
+        itemExtent: AudioTrackTile.height + trackTileSpacing,
         itemBuilder: (BuildContext context, int index) {
           final audio = queue[index];
           final isPlaying = player.isPlaying;

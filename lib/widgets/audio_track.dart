@@ -273,7 +273,7 @@ class AudioTrackImage extends HookWidget {
     super.key,
     this.imageUrl,
     this.cacheKey,
-    this.imageSize = 50,
+    this.imageSize = AudioTrackTile.height,
     this.isAvailable = true,
     this.isSelected = false,
     this.isLoading = false,
@@ -283,10 +283,7 @@ class AudioTrackImage extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget placeholder = FallbackAudioAvatar(
-      height: imageSize,
-      width: imageSize,
-    );
+    Widget placeholder = FallbackAudioAvatar(size: imageSize);
     final memorySize =
         (MediaQuery.of(context).devicePixelRatio * imageSize).toInt();
     final selectedAndPlaying = isSelected && isPlaying;
@@ -541,7 +538,7 @@ class AudioTrackOtherInfoIcons extends ConsumerWidget {
       message: tooltip,
       child: ConstrainedBox(
         constraints: const BoxConstraints(
-          maxHeight: 50,
+          maxHeight: AudioTrackTile.height,
         ),
         child: Theme(
           data: Theme.of(context).copyWith(

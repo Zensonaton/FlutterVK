@@ -2,22 +2,19 @@ import "package:flutter/material.dart";
 import "package:skeletonizer/skeletonizer.dart";
 
 import "../extensions.dart";
+import "audio_track.dart";
 
 /// Fallback-виджет, используемый в случае, если у трека нет изображения.
 class FallbackAudioAvatar extends StatelessWidget {
-  /// Ширина. По умолчанию используется 50.
-  final double width;
-
-  /// Высота. По умолчанию используется 50.
-  final double height;
+  /// Высота. По умолчанию, используется [AudioTrackTile.height].
+  final double size;
 
   /// Радиус скругления.
   final double? borderRadius;
 
   const FallbackAudioAvatar({
     super.key,
-    this.width = 50,
-    this.height = 50,
+    this.size = AudioTrackTile.height,
     this.borderRadius,
   });
 
@@ -26,8 +23,8 @@ class FallbackAudioAvatar extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     return Container(
-      width: width,
-      height: height,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest,
         borderRadius:

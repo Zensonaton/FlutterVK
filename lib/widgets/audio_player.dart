@@ -192,8 +192,7 @@ class _LeftSideThumbnail extends HookConsumerWidget {
                             cacheManager: CachedAlbumImagesManager.instance,
                             placeholder: (BuildContext context, String string) {
                               return FallbackAudioAvatar(
-                                width: thumbnailSize,
-                                height: thumbnailSize,
+                                size: thumbnailSize,
                               );
                             },
                           )
@@ -201,8 +200,7 @@ class _LeftSideThumbnail extends HookConsumerWidget {
                             key: const ValueKey(
                               null,
                             ),
-                            width: thumbnailSize,
-                            height: thumbnailSize,
+                            size: thumbnailSize,
                           ),
                   ),
                 ),
