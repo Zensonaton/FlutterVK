@@ -99,7 +99,11 @@ class WindowsTaskbarPlayerSubscriber extends PlayerSubscriber {
         ThumbnailToolbarButton(
           _getTaskbarIcon("dislike"),
           l18n.dislike_track_action,
-          () => audio!.dislike(player.ref),
+          () async {
+            await audio!.dislike(player.ref);
+
+            await player.next();
+          },
           mode: _getButtonMode(isRecommended),
         ),
 
@@ -145,8 +149,9 @@ class WindowsTaskbarPlayerSubscriber extends PlayerSubscriber {
         ThumbnailToolbarButton(
           _getTaskbarIcon("favorite_${isLiked ? "on" : "off"}"),
           isLiked ? l18n.remove_favorite_track_action : l18n.add_track_as_liked,
-          () =>
-              audio!.likeDislikeRestore(player.ref, sourcePlaylist: playlist!),
+          () {
+            audio!.likeDislikeRestore(player.ref, sourcePlaylist: playlist!);
+          },
         ),
       ],
     );

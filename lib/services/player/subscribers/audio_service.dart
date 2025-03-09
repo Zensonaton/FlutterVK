@@ -345,6 +345,7 @@ class PlayerAudioService extends BaseAudioHandler with SeekHandler {
         if (!connectivityManager.hasConnection) return;
 
         await player.audio!.dislike(player.ref);
+        await player.next();
 
         break;
     }
