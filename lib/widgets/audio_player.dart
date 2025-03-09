@@ -1254,8 +1254,8 @@ class _MusicRightSide extends HookConsumerWidget {
             const Gap(10),
           ],
 
-          // Кнопка для перехода в мини-плеер.
-          if (isDesktop) ...[
+          // TODO: Кнопка для перехода в мини-плеер.
+          if (isDesktop && kDebugMode) ...[
             IconButton(
               icon: Icon(
                 Icons.picture_in_picture_alt,
