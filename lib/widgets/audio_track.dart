@@ -824,67 +824,66 @@ class AudioTrackTile extends HookConsumerWidget {
                   globalBorderRadius,
                 )
               : null,
-          child: SizedBox(
-            height: height,
-            child: Padding(
-              padding: padding ?? EdgeInsets.zero,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: isSelected && glowIfSelected
-                      ? LinearGradient(
-                          colors: [
-                            scheme.primary.withValues(
-                              alpha: 0.1,
-                            ),
-                            Colors.transparent,
-                          ],
-                        )
-                      : null,
-                  borderRadius: BorderRadius.circular(
-                    globalBorderRadius,
-                  ),
+          child: Padding(
+            padding: padding ?? EdgeInsets.zero,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: isSelected && glowIfSelected
+                    ? LinearGradient(
+                        colors: [
+                          scheme.primary.withValues(
+                            alpha: 0.1,
+                          ),
+                          Colors.transparent,
+                        ],
+                      )
+                    : null,
+                borderRadius: BorderRadius.circular(
+                  globalBorderRadius,
                 ),
-                child: Row(
-                  spacing: 12,
-                  children: [
-                    if (showTrackImage)
-                      AudioTrackImage(
-                        imageUrl: audio.smallestThumbnail,
-                        cacheKey:
-                            allowImageCache ? "${audio.mediaKey}small" : null,
-                        isAvailable: isAvailable,
-                        isSelected: isSelected,
-                        isPlaying: isPlaying,
-                        isLoading: isLoading,
-                        isHovered: isHovered.value,
-                      ),
-                    Expanded(
-                      child: AudioTrackTitle(
-                        title: audio.title,
-                        artist: audio.artist,
-                        subtitle: audio.subtitle,
-                        album: showAlbumName ? audio.album?.title : null,
-                        isAvailable: isAvailable,
-                        isExplicit: isExplicit,
-                        isSelected: isSelected,
-                        allowTextSelection: allowTextSelection,
-                      ),
+              ),
+              child: Row(
+                spacing: 12,
+                children: [
+                  if (showTrackImage)
+                    AudioTrackImage(
+                      imageUrl: audio.smallestThumbnail,
+                      cacheKey:
+                          allowImageCache ? "${audio.mediaKey}small" : null,
+                      isAvailable: isAvailable,
+                      isSelected: isSelected,
+                      isPlaying: isPlaying,
+                      isLoading: isLoading,
+                      isHovered: isHovered.value,
+                    )
+                  else
+                    const SizedBox(height: height),
+                  Expanded(
+                    child: AudioTrackTitle(
+                      title: audio.title,
+                      artist: audio.artist,
+                      subtitle: audio.subtitle,
+                      album: showAlbumName ? audio.album?.title : null,
+                      isAvailable: isAvailable,
+                      isExplicit: isExplicit,
+                      isSelected: isSelected,
+                      allowTextSelection: allowTextSelection,
                     ),
-                    if (showDuration || onLikeTap != null || onMoreTap != null)
-                      AudioTrackOtherInfo(
-                        duration: showDuration ? durationString : null,
-                        isFavorite: audio.isLiked,
-                        isSelected: isSelected,
-                        showStatusIcons: showStatusIcons,
-                        isCached: isCached,
-                        isReplacedLocally: isReplacedLocally,
-                        isRestricted: audio.isRestricted,
-                        dense: dense,
-                        onLikeTap: onLikeTap,
-                        onMoreTap: onMoreTap,
-                      ),
-                  ],
-                ),
+                  ),
+                  if (showDuration || onLikeTap != null || onMoreTap != null)
+                    AudioTrackOtherInfo(
+                      duration: showDuration ? durationString : null,
+                      isFavorite: audio.isLiked,
+                      isSelected: isSelected,
+                      showStatusIcons: showStatusIcons,
+                      isCached: isCached,
+                      isReplacedLocally: isReplacedLocally,
+                      isRestricted: audio.isRestricted,
+                      dense: dense,
+                      onLikeTap: onLikeTap,
+                      onMoreTap: onMoreTap,
+                    ),
+                ],
               ),
             ),
           ),
