@@ -254,6 +254,7 @@
 
 	"crossfade_audio_colors": "Player color crossfade",
 	"crossfade_audio_colors_desc": "Makes a smooth transition of player colors before the next track starts.",
+	"enable_crossfade_audio_colors": "Enable color crossfade",
 
 	"show_audio_thumbs": "Show covers",
 	"show_audio_thumbs_desc": "This setting indicates whether music thumbnails will be shown.\n\nChanges to this setting won''t affect the player.",
