@@ -12,6 +12,7 @@ import "../routes/player.dart";
 import "../routes/profile.dart";
 import "../routes/profile/categories/visual/alternative_slider.dart";
 import "../routes/profile/categories/visual/app_wide_colors.dart";
+import "../routes/profile/categories/visual/crossfade_audio_colors.dart";
 import "../routes/profile/categories/visual/dynamic_scheme_type.dart";
 import "../routes/profile/categories/visual/oled.dart";
 import "../routes/profile/categories/visual/show_audio_thumbs.dart";
@@ -230,6 +231,16 @@ GoRouter router(Ref ref) {
               context: context,
               state: state,
               child: const ShowAudioThumbsSettingPage(),
+            );
+          },
+        ),
+        GoRoute(
+          path: "setting_crossfade_audio_colors",
+          pageBuilder: (BuildContext context, GoRouterState state) {
+            return buildPageWithDefaultTransition(
+              context: context,
+              state: state,
+              child: const CrossfadeAudioColorsSettingPage(),
             );
           },
         ),

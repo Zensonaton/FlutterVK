@@ -9,11 +9,11 @@ import "../../../../provider/l18n.dart";
 import "../../../../provider/preferences.dart";
 import "../../../../widgets/setting_widgets.dart";
 
-/// Route для настроек, отображающий параметры настройки "Отображение обложек треков".
+/// Route для настроек, отображающий параметры настройки "Кроссфейд цветов плеера".
 ///
-/// go_route: `/profile/setting_show_audio_thumbs`.
-class ShowAudioThumbsSettingPage extends HookConsumerWidget {
-  const ShowAudioThumbsSettingPage({
+/// go_route: `/profile/setting_crossfade_audio_colors`.
+class CrossfadeAudioColorsSettingPage extends HookConsumerWidget {
+  const CrossfadeAudioColorsSettingPage({
     super.key,
   });
 
@@ -26,21 +26,22 @@ class ShowAudioThumbsSettingPage extends HookConsumerWidget {
     final recommendationsConnected = ref.watch(secondaryTokenProvider) != null;
 
     final smiToggle = useState<SMIBool?>(null);
-    final isShowingAudioThumbs = preferences.showTrackThumbnails;
+    final isCrossfadeEnabled = preferences.crossfadeColors;
 
     return SettingPageWithAnimationWidget(
-      title: l18n.show_audio_thumbs,
-      description: l18n.show_audio_thumbs_desc,
+      title: l18n.crossfade_audio_colors,
+      description: l18n.crossfade_audio_colors_desc,
       warning: !recommendationsConnected
-          ? l18n.thumbnails_unavailable_without_recommendations
+          ? l18n.option_unavailable_without_recommendations
           : null,
       headerImage: RiveAnimationBlock(
-        name: "showAudioThumbs",
-        artboardName: "ShowAudioThumbs",
+        name: "crossfadeAudioColors",
+        artboardName: "CrossfadeAudioColors",
         onStateMachineController: (StateMachineController controller) {
-          final boolInput = controller.getBoolInput("ShowAudioThumbsEnabled");
+          final boolInput =
+              controller.getBoolInput("CrossfadeAudioColorsEnabled");
 
-          boolInput!.value = isShowingAudioThumbs;
+          boolInput!.value = isCrossfadeEnabled;
           smiToggle.value = boolInput;
         },
       ),
@@ -48,16 +49,18 @@ class ShowAudioThumbsSettingPage extends HookConsumerWidget {
         SettingsCardWidget(
           child: SwitchListTile.adaptive(
             title: Text(
-              l18n.enable_show_audio_thumbs,
+              l18n.enable_crossfade_audio_colors,
             ),
-            value: isShowingAudioThumbs,
-            onChanged: (bool? value) {
-              HapticFeedback.lightImpact();
-              if (value == null) return;
+            value: isCrossfadeEnabled,
+            onChanged: recommendationsConnected
+                ? (bool? value) {
+                    HapticFeedback.lightImpact();
+                    if (value == null) return;
 
-              prefsNotifier.setShowTrackThumbnails(value);
-              smiToggle.value?.value = value;
-            },
+                    prefsNotifier.setCrossfadeColors(value);
+                    smiToggle.value?.value = value;
+                  }
+                : null,
           ),
         ),
       ],

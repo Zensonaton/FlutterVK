@@ -135,23 +135,16 @@ class ProfileVisualSettingsCategory extends ConsumerWidget {
           ),
 
         // Кроссфейд цветов плеера.
-        SwitchListTile(
-          secondary: const Icon(
+        ListTile(
+          leading: const Icon(
             Icons.colorize,
           ),
           title: Text(
             l18n.crossfade_audio_colors,
           ),
-          subtitle: Text(
-            l18n.crossfade_audio_colors_desc,
+          onTap: () => context.push(
+            "/profile/setting_crossfade_audio_colors",
           ),
-          value: preferences.crossfadeColors,
-          onChanged: (bool? enabled) async {
-            HapticFeedback.lightImpact();
-            if (enabled == null) return;
-
-            prefsNotifier.setCrossfadeColors(enabled);
-          },
         ),
 
         // Отображение обложек.
