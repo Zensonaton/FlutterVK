@@ -61,7 +61,7 @@ class ProfileVisualSettingsCategory extends ConsumerWidget {
           ),
         ),
 
-        // Использование цветов плеера по всему приложению.
+        // Цвета трека по всему приложению.
         ListTile(
           leading: const Icon(
             Icons.color_lens,
@@ -101,7 +101,7 @@ class ProfileVisualSettingsCategory extends ConsumerWidget {
             ),
           ),
 
-        // Использование изображения трека для фона в полноэкранном плеере.
+        // Изображения трека как фон полноэкранного плеера.
         SwitchListTile(
           secondary: const Icon(
             Icons.photo_filter,
@@ -120,7 +120,7 @@ class ProfileVisualSettingsCategory extends ConsumerWidget {
               : null,
         ),
 
-        // Спойлер следующего трека перед окончанием текущего.
+        // Спойлер следующего трека.
         if (!mobileLayout)
           ListTile(
             leading: const Icon(
