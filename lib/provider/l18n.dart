@@ -1,9 +1,9 @@
 import "dart:ui" as ui;
 
 import "package:flutter/material.dart";
-import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 
+import "../l10n/app_localizations.dart";
 import "../services/logger.dart";
 
 final AppLogger _logger = getLogger("l18n");

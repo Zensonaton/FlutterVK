@@ -9,13 +9,12 @@ import "package:dynamic_color/dynamic_color.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
-import "package:flutter_gen/gen_l10n/app_localizations.dart"
-    show AppLocalizations;
 import "package:responsive_builder/responsive_builder.dart";
 import "package:window_manager/window_manager.dart";
 
 import "consts.dart";
 import "enums.dart";
+import "l10n/app_localizations.dart";
 import "provider/user.dart";
 
 /// Класс для отображения Route'ов в [BottomNavigationBar], вместе с их названиями, а так же иконками.

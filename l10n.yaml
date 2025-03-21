@@ -4,3 +4,4 @@ output-localization-file: app_localizations.dart
 use-escaping: true
 required-resource-attributes: false
 use-named-parameters: true
+synthetic-package: false

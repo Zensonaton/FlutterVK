@@ -3,7 +3,6 @@ import "dart:io";
 import "package:dynamic_color/dynamic_color.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
-import "package:flutter_gen/gen_l10n/app_localizations.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:flutter_localizations/flutter_localizations.dart";
 import "package:gap/gap.dart";
@@ -15,6 +14,7 @@ import "package:window_manager/window_manager.dart";
 import "consts.dart";
 import "enums.dart";
 import "intents.dart";
+import "l10n/app_localizations.dart";
 import "main.dart";
 import "provider/color.dart";
 import "provider/l18n.dart";
@@ -45,10 +45,10 @@ class FlutterVKWindowManager extends WindowListener {
       throw Exception("onWindowClose() called on non-desktop platform");
     }
 
-    final AppLocalizations l18n = ref.read(l18nProvider);
+    final l18n = ref.read(l18nProvider);
     final player = ref.read(playerProvider);
-    final UserPreferences preferences = ref.read(preferencesProvider);
-    final CloseBehavior behavior = preferences.closeBehavior;
+    final preferences = ref.read(preferencesProvider);
+    final behavior = preferences.closeBehavior;
 
     // В зависимости от настройки "Поведение при закрытии", приложение должно либо закрыться, либо просто минимизироваться.
     if (behavior == CloseBehavior.minimize ||
