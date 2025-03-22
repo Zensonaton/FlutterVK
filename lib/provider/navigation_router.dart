@@ -295,11 +295,20 @@ GoRouter router(Ref ref) {
     navigatorKey: navigatorKey,
     redirect: (_, GoRouterState state) {
       final authState = ref.read(currentAuthStateProvider);
-      if (authState == AuthState.authenticated) return null;
-
       final nonAuthorizedPaths = ["/welcome", "/login"];
-      if (!nonAuthorizedPaths.contains(state.fullPath)) {
-        return "/welcome";
+
+      switch (authState) {
+        case AuthState.unknown:
+        case AuthState.unauthenticated:
+          if (nonAuthorizedPaths.contains(state.fullPath)) break;
+
+          return nonAuthorizedPaths.first;
+        case AuthState.authenticated:
+          if (nonAuthorizedPaths.contains(state.fullPath)) {
+            return "/music";
+          }
+
+          break;
       }
 
       return null;

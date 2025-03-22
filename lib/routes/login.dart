@@ -81,7 +81,6 @@ Future<bool> tryAuthorize(
       return true;
     }
 
-    // При основной авторизации мы сохраняем основной токен.
     authNotifier.login(token, response.first);
   } catch (error, stackTrace) {
     showLogErrorDialog(
@@ -95,6 +94,8 @@ Future<bool> tryAuthorize(
 
     return false;
   }
+
+  // Больше ничего делать не нужно. Пользователя перекинет на главную страницу благодаря redirect'ам.
 
   return true;
 }
