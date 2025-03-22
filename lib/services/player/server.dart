@@ -1,5 +1,6 @@
 import "dart:async";
 import "dart:io";
+import "dart:typed_data";
 
 import "package:collection/collection.dart";
 import "package:dio/dio.dart";
@@ -472,11 +473,11 @@ class PlayerLocalServer {
       return;
     }
 
-    List<int> bytes = [];
+    final BytesBuilder bytesBuilder = BytesBuilder();
     bytesStream.listen(
-      (data) {
+      (Uint8List data) {
         request.response.add(data);
-        bytes.addAll(data);
+        bytesBuilder.add(data);
       },
       onDone: () async {
         await request.response.close();
@@ -485,7 +486,7 @@ class PlayerLocalServer {
         if ([ServedSource.network, ServedSource.cache].contains(source)) {
           _servedAudios.add(
             servAudio.copyWith(
-              bytes: Uint8List.fromList(bytes),
+              bytes: Uint8List.fromList(bytesBuilder.toBytes()),
               source: source,
               lastAccessed: DateTime.now(),
             ),
