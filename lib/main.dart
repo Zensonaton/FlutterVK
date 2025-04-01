@@ -205,25 +205,42 @@ Future main() async {
     final l18n = container.read(l18nProvider);
     final appStorage = container.read(appStorageProvider);
 
-    // Инициализируем Firebase (Analytics, Crashlytics), в release-режиме.
-    // TODO: Реализовать логирование ошибок, даже если Firebase не используется (т.е., повторить функционал catcher_2).
+    // Инициализируем Firebase (Analytics, Crashlytics) в release-режиме.
     if (kReleaseMode && !isWeb) {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
-      FlutterError.onError =
-          FirebaseCrashlytics.instance.recordFlutterFatalError;
+    }
 
-      PlatformDispatcher.instance.onError = (error, stack) {
+    // Обработчики ошибок.
+    FlutterError.onError = (FlutterErrorDetails details) {
+      logger.f(
+        "Flutter error: ${details.exception}",
+        error: details.exception,
+        stackTrace: details.stack,
+      );
+
+      if (kReleaseMode && isAndroid) {
+        FirebaseCrashlytics.instance.recordFlutterError(details);
+      }
+    };
+
+    PlatformDispatcher.instance.onError = (error, stack) {
+      logger.f(
+        "Platform error: $error",
+        error: error,
+        stackTrace: stack,
+      );
+      if (kReleaseMode && isAndroid) {
         FirebaseCrashlytics.instance.recordError(
           error,
           stack,
           fatal: true,
         );
+      }
 
-        return true;
-      };
-    }
+      return true;
+    };
 
     // Узнаём версию приложения.
     appVersion = (await PackageInfo.fromPlatform()).version;
