@@ -33,6 +33,7 @@ import "provider/player.dart";
 import "provider/preferences.dart";
 import "provider/shared_prefs.dart";
 import "services/connectivity_manager.dart";
+import "services/http_overrides.dart";
 import "services/logger.dart";
 import "services/player/server.dart";
 import "services/updater.dart";
@@ -204,6 +205,9 @@ Future main() async {
     final preferences = container.read(preferencesProvider);
     final l18n = container.read(l18nProvider);
     final appStorage = container.read(appStorageProvider);
+
+    // Игнорируем SSL-сертификаты.
+    HttpOverrides.global = HTTPOverrides();
 
     // Инициализируем Firebase (Analytics, Crashlytics) в release-режиме.
     if (kReleaseMode && !isWeb) {

@@ -3,7 +3,6 @@ import "dart:io";
 
 import "package:awesome_dio_interceptor/awesome_dio_interceptor.dart";
 import "package:dio/dio.dart";
-import "package:dio/io.dart";
 import "package:dio_smart_retry/dio_smart_retry.dart";
 import "package:flutter/foundation.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
@@ -29,12 +28,6 @@ enum DioType {
   appleMusic,
 }
 
-/// [HttpClient], в котором отключена SSL-проверка.
-///
-/// Вместо этого, рекомендуется использовать [dio].
-final HttpClient httpClient = HttpClient()
-  ..badCertificateCallback = (cert, host, port) => true;
-
 /// Request Encoder для [Dio], реализовывающий поддержку GZip.
 List<int> gzipEncoder(
   String request,
@@ -50,12 +43,6 @@ List<int> gzipEncoder(
 /// Возвращает объект [Dio] с зарегистрированными [Interceptor]'ами.
 void initDioInterceptors(Ref ref, Dio dio, DioType type) {
   final AppLogger logger = getLogger(type.name);
-
-  // Игнорируем плохие SSL-сертификаты.
-  if (!isWeb) {
-    (dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient =
-        () => httpClient;
-  }
 
   final isVK = type == DioType.vk;
   final isLRCLib = type == DioType.lrcLib;
