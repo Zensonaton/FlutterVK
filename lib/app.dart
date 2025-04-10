@@ -283,7 +283,20 @@ class FlutterVKApp extends HookConsumerWidget {
                 },
               ),
               FullscreenPlayerIntent: CallbackAction(
-                onInvoke: (intent) => router.push("/player"),
+                onInvoke: (intent) {
+                  final path = router.state.fullPath;
+                  if (path == "/player") {
+                    router.pop();
+
+                    return;
+                  }
+
+                  if (!player.isLoaded) return;
+
+                  router.push("/player");
+
+                  return null;
+                },
               ),
               PlayPauseIntent: CallbackAction(
                 onInvoke: (intent) => player.togglePlay(),

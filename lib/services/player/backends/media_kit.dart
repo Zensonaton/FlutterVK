@@ -393,10 +393,18 @@ class MediaKitPlayerBackend extends PlayerBackend {
   }
 
   @override
-  Future<void> play() async => await player.play();
+  Future<void> play() async {
+    if (_playlist == null) return;
+
+    await player.play();
+  }
 
   @override
-  Future<void> pause() async => await player.pause();
+  Future<void> pause() async {
+    if (_playlist == null) return;
+
+    await player.pause();
+  }
 
   @override
   Future<void> stop() async {

@@ -8,7 +8,6 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:gap/gap.dart";
-import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
 import "../consts.dart";
@@ -140,7 +139,7 @@ class _LeftSideThumbnail extends HookConsumerWidget {
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
-        onTap: mobileLayout ? null : () => context.push("/player"),
+        onTap: mobileLayout ? null : () => openPlayerRouteIfNotOpened(context),
         child: AnimatedContainer(
           duration: MusicPlayerWidget.switchAnimationDuration,
           curve: Curves.easeInOutCubicEmphasized,
@@ -375,7 +374,7 @@ class _MusicLeftSide extends HookConsumerWidget {
     final scheme = Theme.of(context).colorScheme;
 
     void onTap() {
-      context.push("/player");
+      openPlayerRouteIfNotOpened(context);
     }
 
     void onVolumeScroll(double diff) async {
@@ -1275,7 +1274,7 @@ class _MusicRightSide extends HookConsumerWidget {
                 Icons.fullscreen,
                 color: scheme.onPrimaryContainer,
               ),
-              onPressed: () => context.push("/player"),
+              onPressed: () => openPlayerRouteIfNotOpened(context),
             ),
         ],
       ),

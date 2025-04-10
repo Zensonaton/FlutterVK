@@ -9,6 +9,7 @@ import "package:dynamic_color/dynamic_color.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
+import "package:go_router/go_router.dart";
 import "package:responsive_builder/responsive_builder.dart";
 import "package:window_manager/window_manager.dart";
 
@@ -450,3 +451,11 @@ bool isLifecycleActive() => [
       AppLifecycleState.resumed,
       AppLifecycleState.inactive,
     ].contains(WidgetsBinding.instance.lifecycleState);
+
+/// Перекидывает на route полноэкранного плеера (`/player`), если он не открыт.
+void openPlayerRouteIfNotOpened(BuildContext context) {
+  final path = GoRouter.of(context).state.fullPath;
+  if (path == "/player") return;
+
+  context.push("/player");
+}

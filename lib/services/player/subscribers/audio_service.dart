@@ -1,7 +1,6 @@
 import "dart:async";
 
 import "package:audio_service/audio_service.dart";
-import "package:go_router/go_router.dart";
 
 import "../../../consts.dart";
 import "../../../enums.dart";
@@ -141,8 +140,9 @@ class AudioServicePlayerSubscriber extends PlayerSubscriber {
   /// Обработчик нажатия на уведомление.
   void onNotificationClicked(tapped) {
     if (!tapped) return;
+    if (!player.isLoaded) return;
 
-    navigatorKey.currentContext?.push("/player");
+    openPlayerRouteIfNotOpened(navigatorKey.currentContext!);
   }
 
   /// Обновляет состояние воспроизведения.
