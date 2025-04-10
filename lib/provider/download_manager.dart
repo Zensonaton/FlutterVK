@@ -1,3 +1,5 @@
+import "dart:async";
+
 import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:flutter_local_notifications/flutter_local_notifications.dart";
@@ -63,6 +65,12 @@ class DownloadManagerState {
 class DownloadManager extends _$DownloadManager {
   static final AppLogger logger = getLogger("DownloadManagerProvider");
 
+  /// Минимальный интервал обновления (в миллисекундах) для FGS-уведомления на OS Android.
+  static const int minNotificationUpdateInterval = 250;
+
+  /// Время, через которое FGS-уведомление будет убрано после завершения кэширования.
+  static const Duration fgsNotificationRemovalDelay = Duration(seconds: 3);
+
   /// Очередь из задач по загрузке.
   Queue? _queue;
 
@@ -70,6 +78,9 @@ class DownloadManager extends _$DownloadManager {
   ///
   /// Хранимое здесь число - [DateTime.millisecondsSinceEpoch].
   int? _lastNotificationUpdate;
+
+  /// [Timer], который убирает FGS-уведомление на OS Android после завершения кэширования.
+  Timer? _fgsRemovalTimer;
 
   @override
   DownloadManagerState build() {
@@ -91,10 +102,12 @@ class DownloadManager extends _$DownloadManager {
 
     if (!isAndroid) return;
 
-    // Если прошло менее 1 секунды с момента последнего обновления, то ничего не делаем.
+    _fgsRemovalTimer?.cancel();
+    _fgsRemovalTimer = null;
+
     final int curEpoch = DateTime.now().millisecondsSinceEpoch;
     if (_lastNotificationUpdate != null &&
-        curEpoch - _lastNotificationUpdate! < 1000) {
+        curEpoch - _lastNotificationUpdate! < minNotificationUpdateInterval) {
       return;
     }
 
@@ -188,7 +201,14 @@ class DownloadManager extends _$DownloadManager {
 
         // Если мы на OS Android, то убираем FGS-уведомление.
         if (isAndroid) {
-          androidNotificationsPlugin?.stopForegroundService();
+          _fgsRemovalTimer?.cancel();
+          _fgsRemovalTimer = Timer(fgsNotificationRemovalDelay, () {
+            logger.d("Removing FGS notification");
+
+            _fgsRemovalTimer = null;
+            _lastNotificationUpdate = null;
+            androidNotificationsPlugin?.stopForegroundService();
+          });
         }
       });
     }
