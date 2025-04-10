@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
 import "../../../provider/l18n.dart";
@@ -22,37 +23,22 @@ class TopBarWidget extends ConsumerWidget {
     final color = scheme.onSurface;
 
     return Row(
-      mainAxisSize: MainAxisSize.min,
       spacing: 8,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         BackButton(
           color: color,
         ),
-        Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l18n.player_queue_header,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: color.withValues(
-                  alpha: 0.9,
-                ),
-              ),
-            ),
-            Text(
-              playlist!.title ?? l18n.general_favorites_playlist,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: color,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
+        Text(
+          playlist!.title ?? l18n.general_favorites_playlist,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: color,
+            fontWeight: FontWeight.w500,
+          ),
         ),
+        const Gap(40),
       ],
     );
   }
