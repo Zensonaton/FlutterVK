@@ -148,9 +148,7 @@ class MyMusicBlock extends HookConsumerWidget {
             // "Все треки".
             FilledButton.tonalIcon(
               onPressed: playlist?.audios != null
-                  ? () => context.push(
-                        "/music/playlist/${playlist!.ownerID}/${playlist.id}",
-                      )
+                  ? () => context.push("/library")
                   : null,
               icon: const Icon(
                 Icons.queue_music,

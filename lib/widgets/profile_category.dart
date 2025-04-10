@@ -91,36 +91,32 @@ class ProfileSettingCategory extends StatelessWidget {
         ],
 
         // Внутреннее содержимое.
-        ClipRRect(
-          borderRadius: BorderRadius.circular(
-            globalBorderRadius,
+        Card(
+          margin: EdgeInsets.zero,
+          clipBehavior: Clip.hardEdge,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(
+              globalBorderRadius,
+            ),
           ),
-          child: Card(
-            margin: EdgeInsets.zero,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(
-                globalBorderRadius,
-              ),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Иконка и название, располагаемые внутри Card.
-                if (!centerTitle) ...[
-                  const Gap(14),
-                  titleWidget,
-                ],
-
-                // Содержимое.
-                Padding(
-                  padding: padding,
-                  child: Column(
-                    children: children,
-                  ),
-                ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Иконка и название, располагаемые внутри Card.
+              if (!centerTitle) ...[
+                const Gap(14),
+                titleWidget,
               ],
-            ),
+
+              // Содержимое.
+              Padding(
+                padding: padding,
+                child: Column(
+                  children: children,
+                ),
+              ),
+            ],
           ),
         ),
       ],

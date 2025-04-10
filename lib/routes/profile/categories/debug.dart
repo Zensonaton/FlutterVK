@@ -17,7 +17,7 @@ import "../../../widgets/dialogs.dart";
 import "../../../widgets/profile_category.dart";
 import "../../profile.dart";
 
-/// Раздел настроек для страницы профиля ([HomeProfilePage]), отвечающий за debug-опции.
+/// Раздел настроек для страницы профиля ([ProfileRoute]), отвечающий за debug-опции.
 class ProfileDebugSettingsCategory extends HookConsumerWidget {
   static final AppLogger logger = getLogger("ProfileDebugSettingsCategory");
 

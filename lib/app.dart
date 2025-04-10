@@ -233,70 +233,45 @@ class FlutterVKApp extends HookConsumerWidget {
             localeResolutionCallback: localeResolutionCallback,
             supportedLocales: AppLocalizations.supportedLocales,
             shortcuts: {
-              // Экран с любимыми треками.
-              LogicalKeySet(
+              const SingleActivator(
                 LogicalKeyboardKey.keyF,
-                LogicalKeyboardKey.control,
+                control: true,
               ): const FavoriteTracksIntent(),
-
-              // Полноэкранный плеер.
-              LogicalKeySet(
+              const SingleActivator(
                 LogicalKeyboardKey.f11,
               ): const FullscreenPlayerIntent(),
-
-              // Пауза.
-              LogicalKeySet(
+              const SingleActivator(
                 LogicalKeyboardKey.space,
               ): const PlayPauseIntent(),
-
-              // Предыдущий трек.
-              LogicalKeySet(
-                LogicalKeyboardKey.control,
+              const SingleActivator(
                 LogicalKeyboardKey.arrowLeft,
+                control: true,
               ): const PreviousTrackIntent(),
-
-              // Следующий трек.
-              LogicalKeySet(
-                LogicalKeyboardKey.control,
+              const SingleActivator(
                 LogicalKeyboardKey.arrowRight,
+                control: true,
               ): const NextTrackIntent(),
-
-              // Перемотка назад.
-              LogicalKeySet(
+              const SingleActivator(
                 LogicalKeyboardKey.arrowLeft,
               ): const RewindIntent(),
-
-              // Перемотка вперед.
-              LogicalKeySet(
+              const SingleActivator(
                 LogicalKeyboardKey.arrowRight,
               ): const FastForwardIntent(),
-
-              // Увеличение громкости.
-              LogicalKeySet(
+              const SingleActivator(
                 LogicalKeyboardKey.arrowUp,
               ): const VolumeUpIntent(),
-
-              // Уменьшение громкости.
-              LogicalKeySet(
+              const SingleActivator(
                 LogicalKeyboardKey.arrowDown,
               ): const VolumeDownIntent(),
-
-              // Переключение shuffle.
-              LogicalKeySet(
+              const SingleActivator(
                 LogicalKeyboardKey.keyS,
-                LogicalKeyboardKey.control,
               ): const ShuffleIntent(),
-
-              // Переключение повтора.
-              LogicalKeySet(
+              const SingleActivator(
                 LogicalKeyboardKey.keyL,
-                LogicalKeyboardKey.control,
               ): const LoopModeIntent(),
-
-              // Закрытие приложения.
-              LogicalKeySet(
+              const SingleActivator(
                 LogicalKeyboardKey.keyQ,
-                LogicalKeyboardKey.control,
+                control: true,
               ): const CloseAppIntent(),
             },
             actions: {

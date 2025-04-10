@@ -15,7 +15,7 @@ import "../../../widgets/dialogs.dart";
 import "../../../widgets/profile_category.dart";
 import "../../profile.dart";
 
-/// Раздел настроек для страницы профиля ([HomeProfilePage]), отвечающий за раздел "О Flutter VK".
+/// Раздел настроек для страницы профиля ([ProfileRoute]), отвечающий за раздел "О Flutter VK".
 class ProfileAboutSettingsCategory extends HookConsumerWidget {
   const ProfileAboutSettingsCategory({
     super.key,

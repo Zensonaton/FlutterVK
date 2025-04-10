@@ -154,7 +154,7 @@ class UpdatesChannelDialog extends ConsumerWidget {
   }
 }
 
-/// Раздел настроек для страницы профиля ([HomeProfilePage]), отвечающий за настройки приложения Flutter VK.
+/// Раздел настроек для страницы профиля ([ProfileRoute]), отвечающий за настройки приложения Flutter VK.
 class ProfileAppSettingsCategory extends HookConsumerWidget {
   const ProfileAppSettingsCategory({
     super.key,

@@ -21,6 +21,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get general_reset => 'Reset';
 
   @override
+  String get general_clear => 'Clear';
+
+  @override
   String get general_cancel => 'Cancel';
 
   @override
@@ -283,6 +286,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get music_label_offline => 'Music (offline)';
+
+  @override
+  String get search_label => 'Search';
+
+  @override
+  String get search_label_offline => 'Search (offline)';
 
   @override
   String get music_library_label => 'Library';
@@ -560,6 +569,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lyrics_lrclib_source => 'LRCLib';
+
+  @override
+  String get global_search_query => 'What are you looking for?';
+
+  @override
+  String get search_history => 'Search history';
 
   @override
   String get visual_settings => 'Visual & cosmetic settings';

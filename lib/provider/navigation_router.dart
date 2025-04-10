@@ -1,4 +1,5 @@
 import "package:animations/animations.dart";
+import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
@@ -25,6 +26,7 @@ import "../routes/profile/debug/playlists_viewer.dart";
 import "../routes/profile/download_manager.dart";
 import "../routes/profile/settings_exporter.dart";
 import "../routes/profile/settings_importer.dart";
+import "../routes/search/search.dart";
 import "../routes/welcome.dart";
 import "../widgets/shell_route_wrapper.dart";
 import "auth.dart";
@@ -81,7 +83,7 @@ GoRouter router(Ref ref) {
       icon: Icons.music_note_outlined,
       selectedIcon: Icons.music_note,
       label: l18n.music_label,
-      body: (_) => const HomeMusicPage(),
+      body: (_) => const MusicRoute(),
       routes: [
         GoRoute(
           path: "playlist/:owner_id/:id",
@@ -107,14 +109,20 @@ GoRouter router(Ref ref) {
         ),
       ],
     ),
-
-    // Библиотека.
+    // TODO: Убрать проверку на kDebugMode, когда будет готов поиск.
+    if (kDebugMode)
+      NavigationItem(
+        path: "/search",
+        icon: Icons.search_outlined,
+        selectedIcon: Icons.search,
+        label: l18n.search_label,
+        body: (_) => const SearchRoute(),
+      ),
     NavigationItem(
       path: "/library",
       icon: Icons.favorite_outline,
       selectedIcon: Icons.favorite,
       label: l18n.music_library_label,
-      mobileOnly: true,
       body: (_) {
         final ExtendedPlaylist? playlist = ref.read(favoritesPlaylistProvider);
         if (playlist == null) {
@@ -132,7 +140,7 @@ GoRouter router(Ref ref) {
       icon: Icons.person_outline,
       selectedIcon: Icons.person,
       label: l18n.profile_label,
-      body: (_) => const HomeProfilePage(),
+      body: (_) => const ProfileRoute(),
       routes: [
         GoRoute(
           path: "download_manager",

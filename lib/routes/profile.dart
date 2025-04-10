@@ -124,7 +124,7 @@ class SettingWithDialog extends StatelessWidget {
   }
 }
 
-/// Виджет для [HomeProfilePage], отображающий аватар пользователя, а так же кнопку для выхода из аккаунта.
+/// Виджет для [ProfileRoute], отображающий аватар пользователя, а так же кнопку для выхода из аккаунта.
 class ProfileAvatar extends ConsumerWidget {
   const ProfileAvatar({
     super.key,
@@ -224,10 +224,10 @@ class ProfileAvatar extends ConsumerWidget {
 /// Route, отображающий информацию по профилю текущего пользователя, где пользователь может поменять настройки.
 ///
 /// go_route: `/profile`.
-class HomeProfilePage extends HookConsumerWidget {
+class ProfileRoute extends HookConsumerWidget {
   static final AppLogger logger = getLogger("HomeProfilePage");
 
-  const HomeProfilePage({
+  const ProfileRoute({
     super.key,
   });
 

@@ -14,6 +14,7 @@ import "../api/vk/audio/restore.dart";
 import "../api/vk/audio/search.dart";
 import "../api/vk/audio/send_start_event.dart";
 import "../api/vk/catalog/get_audio.dart";
+import "../api/vk/catalog/get_audio_search.dart";
 import "../api/vk/execute/mass_get_albums.dart";
 import "../api/vk/execute/mass_get_audio.dart";
 import "../api/vk/shared.dart";
@@ -302,6 +303,10 @@ class VKAPICatalog extends VKAPICategory {
 
   /// {@macro VKAPI.catalog.getAudio}
   Future<APICatalogGetAudioResponse> getAudio() => catalog_get_audio();
+
+  /// {@macro VKAPI.catalog.getAudioSearch}
+  Future<APICatalogGetAudioSearchResponse> getAudioSearch() =>
+      catalog_get_audio_search();
 }
 
 /// Класс, предоставляющий доступ к helper-методам для API ВКонтакте, предоставляющие удобный доступ к `execute`-скриптам.

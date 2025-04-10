@@ -89,7 +89,7 @@ class VolumeNormalizationDialog extends ConsumerWidget {
   }
 }
 
-/// Раздел настроек для страницы профиля ([HomeProfilePage]), отвечающий за экспериментальные настройки.
+/// Раздел настроек для страницы профиля ([ProfileRoute]), отвечающий за экспериментальные настройки.
 class ProfileExperimentalSettingsCategory extends ConsumerWidget {
   const ProfileExperimentalSettingsCategory({
     super.key,

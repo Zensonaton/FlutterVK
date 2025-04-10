@@ -13,6 +13,7 @@ import "../../services/logger.dart";
 import "../../widgets/audio_track.dart";
 import "../../widgets/dialogs.dart";
 import "../../widgets/loading_button.dart";
+import "../../widgets/shortcuts_propagator.dart";
 
 /// Диалог, который позволяет пользователю отредактировать данные о треке.
 ///
@@ -123,28 +124,27 @@ class TrackInfoEditDialog extends HookConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Открытый трек.
             AudioTrackTile(
               audio: newAudio,
             ),
             const Gap(8),
-
-            // Разделитель.
             const Divider(),
 
             // Текстовое поле для изменения названия.
-            TextField(
-              controller: titleController,
-              decoration: InputDecoration(
-                label: Text(
-                  l18n.general_title,
-                ),
-                prefixIcon: const Padding(
-                  padding: EdgeInsetsDirectional.only(
-                    end: 12,
+            ShortcutsPropagator(
+              child: TextField(
+                controller: titleController,
+                decoration: InputDecoration(
+                  label: Text(
+                    l18n.general_title,
                   ),
-                  child: Icon(
-                    Icons.music_note,
+                  prefixIcon: const Padding(
+                    padding: EdgeInsetsDirectional.only(
+                      end: 12,
+                    ),
+                    child: Icon(
+                      Icons.music_note,
+                    ),
                   ),
                 ),
               ),
@@ -152,19 +152,21 @@ class TrackInfoEditDialog extends HookConsumerWidget {
             const Gap(8),
 
             // Текстовое поле для изменения исполнителя.
-            TextField(
-              controller: artistController,
-              decoration: InputDecoration(
-                prefixIcon: const Padding(
-                  padding: EdgeInsetsDirectional.only(
-                    end: 12,
+            ShortcutsPropagator(
+              child: TextField(
+                controller: artistController,
+                decoration: InputDecoration(
+                  prefixIcon: const Padding(
+                    padding: EdgeInsetsDirectional.only(
+                      end: 12,
+                    ),
+                    child: Icon(
+                      Icons.album,
+                    ),
                   ),
-                  child: Icon(
-                    Icons.album,
+                  label: Text(
+                    l18n.general_artist,
                   ),
-                ),
-                label: Text(
-                  l18n.general_artist,
                 ),
               ),
             ),

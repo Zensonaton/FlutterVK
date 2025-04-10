@@ -10,7 +10,7 @@ import "../../../utils.dart";
 import "../../../widgets/profile_category.dart";
 import "../../profile.dart";
 
-/// Раздел настроек для страницы профиля ([HomeProfilePage]), отвечающий за визуальные настройки.
+/// Раздел настроек для страницы профиля ([ProfileRoute]), отвечающий за визуальные настройки.
 class ProfileVisualSettingsCategory extends ConsumerWidget {
   const ProfileVisualSettingsCategory({
     super.key,

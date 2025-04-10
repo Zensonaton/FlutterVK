@@ -5,6 +5,7 @@
 	"general_no": "Нет",
 	"general_save": "Сохранить",
 	"general_reset": "Сбросить",
+	"general_clear": "Очистить",
 	"general_cancel": "Отменить",
 	"general_close": "Закрыть",
 	"general_loading": "Загрузка...",
@@ -167,6 +168,9 @@
 
 	"music_label": "Музыка",
 	"music_label_offline": "Музыка (оффлайн)",
+
+	"search_label": "Поиск",
+	"search_label_offline": "Поиск (оффлайн)",
 
 	"music_library_label": "Библиотека",
 
@@ -382,6 +386,10 @@
 	"player_lyrics_header": "Источник текста песни",
 	"lyrics_vk_source": "ВКонтакте",
 	"lyrics_lrclib_source": "LRCLib",
+
+	"global_search_query": "Что ты хочешь найти?",
+
+	"search_history": "История поиска",
 
 
 

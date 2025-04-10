@@ -21,7 +21,6 @@ import "../../api/vk/shared.dart";
 import "../../consts.dart";
 import "../../enums.dart";
 import "../../extensions.dart";
-import "../../intents.dart";
 import "../../main.dart";
 import "../../provider/color.dart";
 import "../../provider/download_manager.dart";
@@ -42,6 +41,7 @@ import "../../widgets/dialogs.dart";
 import "../../widgets/fallback_audio_photo.dart";
 import "../../widgets/loading_button.dart";
 import "../../widgets/play_pause_animated.dart";
+import "../../widgets/shortcuts_propagator.dart";
 
 /// Проверяет, подходит ли [Audio] под запрос [query].
 ///
@@ -885,37 +885,39 @@ class AppBarRealAppBarWidget extends HookConsumerWidget {
 
     return AppBar(
       title: isSearchOpen
-          ? TextField(
-              controller: controller,
-              focusNode: focusNode,
-              onChanged: onSearchInput,
-              onSubmitted: onSearchSubmitted,
-              style: const TextStyle(
-                color: Colors.white,
-              ),
-              textAlignVertical: TextAlignVertical.center,
-              decoration: InputDecoration(
-                hintText: l18n.search_tracks_in_playlist(
-                  count: count,
+          ? ShortcutsPropagator(
+              child: TextField(
+                controller: controller,
+                focusNode: focusNode,
+                onChanged: onSearchInput,
+                onSubmitted: onSearchSubmitted,
+                style: const TextStyle(
+                  color: Colors.white,
                 ),
-                filled: true,
-                contentPadding: const EdgeInsets.all(
-                  16,
-                ),
-                suffixIcon: controller != null && controller!.text.isNotEmpty
-                    ? Padding(
-                        padding: const EdgeInsetsDirectional.only(
-                          end: 12,
-                        ),
-                        child: IconButton(
-                          icon: const Icon(
-                            Icons.close,
-                            color: Colors.white,
+                textAlignVertical: TextAlignVertical.center,
+                decoration: InputDecoration(
+                  hintText: l18n.search_tracks_in_playlist(
+                    count: count,
+                  ),
+                  filled: true,
+                  contentPadding: const EdgeInsets.all(
+                    16,
+                  ),
+                  suffixIcon: controller != null && controller!.text.isNotEmpty
+                      ? Padding(
+                          padding: const EdgeInsetsDirectional.only(
+                            end: 12,
                           ),
-                          onPressed: onSearchClear,
-                        ),
-                      )
-                    : null,
+                          child: IconButton(
+                            icon: const Icon(
+                              Icons.close,
+                              color: Colors.white,
+                            ),
+                            onPressed: onSearchClear,
+                          ),
+                        )
+                      : null,
+                ),
               ),
             )
           : AnimatedOpacity(
@@ -1572,43 +1574,45 @@ class DesktopPlaylistControlsWidget extends HookConsumerWidget {
                             LogicalKeyboardKey.escape,
                           ): onSearchClear,
                         },
-                        child: TextField(
-                          controller: searchController,
-                          focusNode: searchFocusNode,
-                          enabled: hasTracksLoaded,
-                          onSubmitted: onSearchSubmitted,
-                          decoration: InputDecoration(
-                            hintText: l18n.search_tracks_in_playlist(
-                              count: playlist.count ?? 0,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(
-                                globalBorderRadius,
+                        child: ShortcutsPropagator(
+                          child: TextField(
+                            controller: searchController,
+                            focusNode: searchFocusNode,
+                            enabled: hasTracksLoaded,
+                            onSubmitted: onSearchSubmitted,
+                            decoration: InputDecoration(
+                              hintText: l18n.search_tracks_in_playlist(
+                                count: playlist.count ?? 0,
                               ),
-                            ),
-                            prefixIconColor: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(
-                                  alpha: hasTracksLoaded ? 1.0 : 0.5,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(
+                                  globalBorderRadius,
                                 ),
-                            prefixIcon: const Icon(
-                              Icons.search,
-                            ),
-                            suffixIcon: searchController != null &&
-                                    searchController!.text.isNotEmpty
-                                ? Padding(
-                                    padding: const EdgeInsetsDirectional.only(
-                                      end: 12,
-                                    ),
-                                    child: IconButton(
-                                      icon: const Icon(
-                                        Icons.close,
+                              ),
+                              prefixIconColor: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(
+                                    alpha: hasTracksLoaded ? 1.0 : 0.5,
+                                  ),
+                              prefixIcon: const Icon(
+                                Icons.search,
+                              ),
+                              suffixIcon: searchController != null &&
+                                      searchController!.text.isNotEmpty
+                                  ? Padding(
+                                      padding: const EdgeInsetsDirectional.only(
+                                        end: 12,
                                       ),
-                                      onPressed: onSearchClear,
-                                    ),
-                                  )
-                                : null,
+                                      child: IconButton(
+                                        icon: const Icon(
+                                          Icons.close,
+                                        ),
+                                        onPressed: onSearchClear,
+                                      ),
+                                    )
+                                  : null,
+                            ),
                           ),
                         ),
                       ),
@@ -2004,97 +2008,48 @@ class PlaylistRoute extends HookConsumerWidget {
       ],
     );
 
-    return PopScope(
-      canPop: !isSearchOpen.value,
-      onPopInvokedWithResult: (bool didPop, _) async {
-        logger.d("Pop scope, didPop: $didPop");
+    return Scaffold(
+      resizeToAvoidBottomInset: false,
+      body: Theme(
+        data: ThemeData(
+          colorScheme: scheme ?? oldScheme,
+        ),
+        child: Stack(
+          alignment: Alignment.topCenter,
+          children: [
+            // Градиент на фоне, который будет меняться в зависимости от прокрутки.
+            BackgroundGradientWidget(
+              scheme: scheme,
+              scrollController: scrollController,
+              maxHeight: maxAppBarHeight + infoBoxHeight,
+            ),
 
-        if (didPop) return;
-
-        // Если у нас открыт поиск, то сначала закрыаем его.
-        if (isSearchOpen.value) {
-          searchController.clear();
-          isSearchOpen.value = false;
-
-          return;
-        }
-      },
-      child: BackButtonListener(
-        onBackButtonPressed: () async {
-          logger.d("Back button");
-
-          // Если у нас открыт поиск, то сначала закрыаем его.
-          if (isSearchOpen.value) {
-            searchController.clear();
-            isSearchOpen.value = false;
-
-            return true;
-          }
-
-          return false;
-        },
-        child: Focus(
-          autofocus: true,
-          canRequestFocus: true,
-          child: Scaffold(
-            resizeToAvoidBottomInset: false,
-            body: Theme(
-              data: ThemeData(
-                colorScheme: scheme ?? oldScheme,
+            // Содержимое.
+            ScrollConfiguration(
+              behavior: AlwaysScrollableScrollBehavior().copyWith(
+                overscroll: !isSearchOpen.value,
               ),
-              child: CallbackShortcuts(
-                bindings: {
-                  const SingleActivator(
-                    LogicalKeyboardKey.escape,
-                  ): () => Navigator.of(context).maybePop(),
-                },
-                child: Actions(
-                  actions: {
-                    FavoriteTracksIntent: CallbackAction(
-                      onInvoke: (intent) => searchFocusNode.requestFocus(),
-                    ),
-                  },
-                  child: Stack(
-                    alignment: Alignment.topCenter,
-                    children: [
-                      // Градиент на фоне, который будет меняться в зависимости от прокрутки.
-                      BackgroundGradientWidget(
-                        scheme: scheme,
-                        scrollController: scrollController,
-                        maxHeight: maxAppBarHeight + infoBoxHeight,
-                      ),
-
-                      // Содержимое.
-                      ScrollConfiguration(
-                        behavior: AlwaysScrollableScrollBehavior().copyWith(
-                          overscroll: !isSearchOpen.value,
-                        ),
-                        child: CustomScrollView(
-                          controller: scrollController,
-                          slivers: customScrollViewSlivers,
-                        ),
-                      ),
-
-                      // Ряд из кнопок управления плейлистом: кнопка лайка/дизлайка, воспроизведения/паузы, кэширования.
-                      if (mobileLayout && !isSearchOpen.value)
-                        MobileControlButtonsWidget(
-                          playlist: playlist,
-                          scrollController: scrollController,
-                          maxAppBarHeight: maxAppBarHeight,
-                          minAppBarHeight: minAppBarHeight,
-                          infoBoxHeight: infoBoxHeight,
-                          onLikePressed: playlist.type == PlaylistType.favorites
-                              ? null
-                              : () async => showWipDialog(context),
-                          onPlayPausePressed: onPlayTapped,
-                          onCachePressed: onCacheTap,
-                        ),
-                    ],
-                  ),
-                ),
+              child: CustomScrollView(
+                controller: scrollController,
+                slivers: customScrollViewSlivers,
               ),
             ),
-          ),
+
+            // Ряд из кнопок управления плейлистом: кнопка лайка/дизлайка, воспроизведения/паузы, кэширования.
+            if (mobileLayout && !isSearchOpen.value)
+              MobileControlButtonsWidget(
+                playlist: playlist,
+                scrollController: scrollController,
+                maxAppBarHeight: maxAppBarHeight,
+                minAppBarHeight: minAppBarHeight,
+                infoBoxHeight: infoBoxHeight,
+                onLikePressed: playlist.type == PlaylistType.favorites
+                    ? null
+                    : () async => showWipDialog(context),
+                onPlayPausePressed: onPlayTapped,
+                onCachePressed: onCacheTap,
+              ),
+          ],
         ),
       ),
     );

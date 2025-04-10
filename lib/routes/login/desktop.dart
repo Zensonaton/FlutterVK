@@ -10,6 +10,7 @@ import "../../consts.dart";
 import "../../provider/l18n.dart";
 import "../../utils.dart";
 import "../../widgets/loading_button.dart";
+import "../../widgets/shortcuts_propagator.dart";
 import "../login.dart";
 
 /// Часть Route'а [LoginRoute], показываемая при запуске на desktop-платформах.
@@ -118,16 +119,18 @@ class DesktopLoginWidget extends HookConsumerWidget {
                   const Gap(8),
 
                   // Поле для ввода токена.
-                  TextField(
-                    controller: controller,
-                    enabled: !isLoading.value,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(
-                        Icons.key,
+                  ShortcutsPropagator(
+                    child: TextField(
+                      controller: controller,
+                      enabled: !isLoading.value,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(
+                          Icons.key,
+                        ),
+                        hintText:
+                            "https://oauth.vk.com/blank.html#access_token=vk1...",
                       ),
-                      hintText:
-                          "https://oauth.vk.com/blank.html#access_token=vk1...",
                     ),
                   ),
                   const Gap(36),

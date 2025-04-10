@@ -21,6 +21,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get general_reset => 'Сбросить';
 
   @override
+  String get general_clear => 'Очистить';
+
+  @override
   String get general_cancel => 'Отменить';
 
   @override
@@ -284,6 +287,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get music_label_offline => 'Музыка (оффлайн)';
+
+  @override
+  String get search_label => 'Поиск';
+
+  @override
+  String get search_label_offline => 'Поиск (оффлайн)';
 
   @override
   String get music_library_label => 'Библиотека';
@@ -563,6 +572,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get lyrics_lrclib_source => 'LRCLib';
+
+  @override
+  String get global_search_query => 'Что ты хочешь найти?';
+
+  @override
+  String get search_history => 'История поиска';
 
   @override
   String get visual_settings => 'Визуал, косметические настройки';

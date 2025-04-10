@@ -12,7 +12,6 @@ import "package:path_provider/path_provider.dart";
 import "package:share_plus/share_plus.dart";
 import "package:styled_text/styled_text.dart";
 
-import "../../consts.dart";
 import "../../provider/l18n.dart";
 import "../../provider/player.dart";
 import "../../provider/playlists.dart";
@@ -285,63 +284,59 @@ class SettingsExporterSelector extends HookConsumerWidget {
       );
     }
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(
-        globalBorderRadius,
-      ),
-      child: Card(
-        margin: EdgeInsets.zero,
-        child: Column(
-          children: [
-            // Настройки Flutter VK.
-            buildSwitchTile(
-              key: "settings",
-              icon: Icons.settings,
-              title: l18n.export_settings_modified_settings,
-              subtitle: l18n.export_settings_modified_settings_desc,
-            ),
+    return Card(
+      margin: EdgeInsets.zero,
+      clipBehavior: Clip.hardEdge,
+      child: Column(
+        children: [
+          // Настройки Flutter VK.
+          buildSwitchTile(
+            key: "settings",
+            icon: Icons.settings,
+            title: l18n.export_settings_modified_settings,
+            subtitle: l18n.export_settings_modified_settings_desc,
+          ),
 
-            // Изменённые обложки треков.
-            buildSwitchTile(
-              key: "modifiedThumbnails",
-              icon: Icons.image_search,
-              title: l18n.export_settings_modified_thumbnails,
-              subtitle: l18n.export_settings_modified_thumbnails_desc,
-            ),
+          // Изменённые обложки треков.
+          buildSwitchTile(
+            key: "modifiedThumbnails",
+            icon: Icons.image_search,
+            title: l18n.export_settings_modified_thumbnails,
+            subtitle: l18n.export_settings_modified_thumbnails_desc,
+          ),
 
-            // Изменённые тексты песен.
-            buildSwitchTile(
-              key: "modifiedLyrics",
-              icon: Icons.lyrics,
-              title: l18n.export_settings_modified_lyrics,
-              subtitle: l18n.export_settings_modified_lyrics_desc,
-            ),
+          // Изменённые тексты песен.
+          buildSwitchTile(
+            key: "modifiedLyrics",
+            icon: Icons.lyrics,
+            title: l18n.export_settings_modified_lyrics,
+            subtitle: l18n.export_settings_modified_lyrics_desc,
+          ),
 
-            // Изменённые параметры треков.
-            buildSwitchTile(
-              key: "modifiedLocalMetadata",
-              icon: Icons.edit,
-              title: l18n.export_settings_modified_metadata,
-              subtitle: l18n.export_settings_modified_metadata_desc,
-            ),
+          // Изменённые параметры треков.
+          buildSwitchTile(
+            key: "modifiedLocalMetadata",
+            icon: Icons.edit,
+            title: l18n.export_settings_modified_metadata,
+            subtitle: l18n.export_settings_modified_metadata_desc,
+          ),
 
-            // Кэшированные ограниченные треки.
-            buildSwitchTile(
-              key: "cachedRestricted",
-              icon: Icons.music_off,
-              title: l18n.export_settings_downloaded_restricted,
-              subtitle: l18n.export_settings_downloaded_restricted_desc,
-            ),
+          // Кэшированные ограниченные треки.
+          buildSwitchTile(
+            key: "cachedRestricted",
+            icon: Icons.music_off,
+            title: l18n.export_settings_downloaded_restricted,
+            subtitle: l18n.export_settings_downloaded_restricted_desc,
+          ),
 
-            // Локально заменённые треки.
-            buildSwitchTile(
-              key: "locallyReplacedAudios",
-              icon: Icons.sd_card,
-              title: l18n.export_settings_locally_replaced,
-              subtitle: l18n.export_settings_locally_replaced_desc,
-            ),
-          ],
-        ),
+          // Локально заменённые треки.
+          buildSwitchTile(
+            key: "locallyReplacedAudios",
+            icon: Icons.sd_card,
+            title: l18n.export_settings_locally_replaced,
+            subtitle: l18n.export_settings_locally_replaced_desc,
+          ),
+        ],
       ),
     );
   }

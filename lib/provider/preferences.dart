@@ -245,6 +245,10 @@ class UserPreferences {
   @JsonKey(name: "ShowTrackThumbnails", defaultValue: true)
   final bool showTrackThumbnails;
 
+  /// Указывает историю поиска.
+  @JsonKey(name: "SearchHistory", defaultValue: [])
+  final List<String> searchHistory;
+
   /// Возвращает [Map] из всех ключей этого класса, где value - тип ключа.
   static Map<String, Type> getKeyTypes() => {
         "DBVersion": int,
@@ -289,6 +293,7 @@ class UserPreferences {
         "PlayerQueueBlockEnabled": bool,
         "PlayerLyricsBlockEnabled": bool,
         "ShowTrackThumbnails": bool,
+        "SearchHistory": List<String>,
       };
 
   UserPreferences({
@@ -334,6 +339,7 @@ class UserPreferences {
     this.playerQueueBlock = false,
     this.playerLyricsBlock = false,
     this.showTrackThumbnails = true,
+    this.searchHistory = const [],
   });
 
   /// Делает копию этого класа с новыми передаваемыми значениями.
@@ -380,6 +386,7 @@ class UserPreferences {
     bool? playerQueueBlock,
     bool? playerLyricsBlock,
     bool? showTrackThumbnails,
+    List<String>? searchHistory,
   }) =>
       UserPreferences(
         dbVersion: dbVersion ?? this.dbVersion,
@@ -434,6 +441,7 @@ class UserPreferences {
         playerQueueBlock: playerQueueBlock ?? this.playerQueueBlock,
         playerLyricsBlock: playerLyricsBlock ?? this.playerLyricsBlock,
         showTrackThumbnails: showTrackThumbnails ?? this.showTrackThumbnails,
+        searchHistory: searchHistory ?? this.searchHistory,
       );
 
   factory UserPreferences.fromJson(Map<String, dynamic> json) =>
@@ -684,4 +692,7 @@ class Preferences extends _$Preferences {
 
   void setShowTrackThumbnails(bool enabled) =>
       state = state.copyWith(showTrackThumbnails: enabled);
+
+  void setSearchHistory(List<String> history) =>
+      state = state.copyWith(searchHistory: history);
 }

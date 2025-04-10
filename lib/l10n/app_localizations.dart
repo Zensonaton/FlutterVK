@@ -119,6 +119,12 @@ abstract class AppLocalizations {
   /// **'Сбросить'**
   String get general_reset;
 
+  /// No description provided for @general_clear.
+  ///
+  /// In ru, this message translates to:
+  /// **'Очистить'**
+  String get general_clear;
+
   /// No description provided for @general_cancel.
   ///
   /// In ru, this message translates to:
@@ -599,6 +605,18 @@ abstract class AppLocalizations {
   /// **'Музыка (оффлайн)'**
   String get music_label_offline;
 
+  /// No description provided for @search_label.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поиск'**
+  String get search_label;
+
+  /// No description provided for @search_label_offline.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поиск (оффлайн)'**
+  String get search_label_offline;
+
   /// No description provided for @music_library_label.
   ///
   /// In ru, this message translates to:
@@ -1072,6 +1090,18 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'LRCLib'**
   String get lyrics_lrclib_source;
+
+  /// No description provided for @global_search_query.
+  ///
+  /// In ru, this message translates to:
+  /// **'Что ты хочешь найти?'**
+  String get global_search_query;
+
+  /// No description provided for @search_history.
+  ///
+  /// In ru, this message translates to:
+  /// **'История поиска'**
+  String get search_history;
 
   /// No description provided for @visual_settings.
   ///

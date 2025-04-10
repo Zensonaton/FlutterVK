@@ -4,6 +4,8 @@ import "package:flutter_markdown/flutter_markdown.dart";
 import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
+import "../../../widgets/shortcuts_propagator.dart";
+
 /// Route для Debug-меню отображающее текстовое поле для ввода Markdown-разметки, которое будет отображено в виде Markdown-виджета.
 ///
 /// go_route: `/profile/markdown_viewer_debug`.
@@ -28,10 +30,12 @@ class MarkdownViewerDebugMenu extends HookConsumerWidget {
         children: [
           // Текстовое поле.
           Expanded(
-            child: TextField(
-              controller: controller,
-              keyboardType: TextInputType.multiline,
-              maxLines: null,
+            child: ShortcutsPropagator(
+              child: TextField(
+                controller: controller,
+                keyboardType: TextInputType.multiline,
+                maxLines: null,
+              ),
             ),
           ),
           const Gap(20),

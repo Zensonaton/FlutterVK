@@ -5,6 +5,7 @@
 	"general_no": "No",
 	"general_save": "Save",
 	"general_reset": "Reset",
+	"general_clear": "Clear",
 	"general_cancel": "Cancel",
 	"general_close": "Close",
 	"general_loading": "Loading...",
@@ -106,6 +107,9 @@
 
 	"music_label": "Music",
 	"music_label_offline": "Music (offline)",
+
+	"search_label": "Search",
+	"search_label_offline": "Search (offline)",
 
 	"music_library_label": "Library",
 
@@ -217,6 +221,11 @@
 	"player_lyrics_header": "Lyrics source",
 	"lyrics_vk_source": "VK",
 	"lyrics_lrclib_source": "LRCLib",
+
+	"global_search_query": "What are you looking for?",
+
+	"search_history": "Search history",
+
 
 
 	"visual_settings": "Visual & cosmetic settings",

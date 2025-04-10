@@ -211,7 +211,7 @@ class ExportTracksListDialog extends ConsumerWidget {
   }
 }
 
-/// Раздел настроек для страницы профиля ([HomeProfilePage]), отвечающий за настройки музыкального плеера.
+/// Раздел настроек для страницы профиля ([ProfileRoute]), отвечающий за настройки музыкального плеера.
 class ProfileMusicPlayerSettingsCategory extends ConsumerWidget {
   const ProfileMusicPlayerSettingsCategory({
     super.key,

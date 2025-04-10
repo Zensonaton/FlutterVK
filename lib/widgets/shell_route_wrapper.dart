@@ -39,9 +39,6 @@ class NavigationItem {
   /// Текст, используемый в [BottomNavigationBar].
   final String label;
 
-  /// Указывает, что данная запись будет видна только в Mobile Layout'е.
-  final bool mobileOnly;
-
   /// Опциональный список из путей, которые могут быть использованы в [GoRouter].
   final List<RouteBase> routes;
 
@@ -51,7 +48,6 @@ class NavigationItem {
     required this.icon,
     this.selectedIcon,
     required this.label,
-    this.mobileOnly = false,
     this.routes = const [],
   });
 }
@@ -236,14 +232,6 @@ class ShellRouteWrapper extends HookConsumerWidget {
       [],
     );
 
-    final List<NavigationItem> navigationItems = useMemoized(
-      () => this.navigationItems.where(
-        (item) {
-          return !item.mobileOnly || (item.mobileOnly && mobileLayout);
-        },
-      ).toList(),
-      [mobileLayout],
-    );
     int currentIndex = clampInt(
       navigationItems.indexWhere(
         (item) => currentPath.startsWith(item.path),

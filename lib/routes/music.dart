@@ -198,8 +198,8 @@ class EverythingIsDisabledBlock extends ConsumerWidget {
 /// Route, отображающий главную страницу с треками пользователя, различными плейлистами и прочей информацией.
 ///
 /// go_route: `/music`.
-class HomeMusicPage extends HookConsumerWidget {
-  const HomeMusicPage({
+class MusicRoute extends HookConsumerWidget {
+  const MusicRoute({
     super.key,
   });
 

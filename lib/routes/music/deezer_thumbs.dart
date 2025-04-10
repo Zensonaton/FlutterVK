@@ -24,6 +24,7 @@ import "../../utils.dart";
 import "../../widgets/adaptive_dialog.dart";
 import "../../widgets/audio_track.dart";
 import "../../widgets/dialogs.dart";
+import "../../widgets/shortcuts_propagator.dart";
 
 /// Диалог, помогающий пользователю отредактировать обложку у передаваемого трека.
 class TrackThumbnailEditDialog extends HookConsumerWidget {
@@ -227,32 +228,34 @@ class TrackThumbnailEditDialog extends HookConsumerWidget {
                         LogicalKeyboardKey.escape,
                       ): () => controller.clear(),
                     },
-                    child: TextField(
-                      focusNode: focusNode,
-                      controller: controller,
-                      decoration: InputDecoration(
-                        hintText: l18n.change_track_thumbnail_search_text,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(
-                            globalBorderRadius,
+                    child: ShortcutsPropagator(
+                      child: TextField(
+                        focusNode: focusNode,
+                        controller: controller,
+                        decoration: InputDecoration(
+                          hintText: l18n.change_track_thumbnail_search_text,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(
+                              globalBorderRadius,
+                            ),
                           ),
-                        ),
-                        prefixIcon: const Icon(
-                          Icons.search,
-                        ),
-                        suffixIcon: controller.text.isNotEmpty
-                            ? Padding(
-                                padding: const EdgeInsetsDirectional.only(
-                                  end: 12,
-                                ),
-                                child: IconButton(
-                                  icon: const Icon(
-                                    Icons.close,
+                          prefixIcon: const Icon(
+                            Icons.search,
+                          ),
+                          suffixIcon: controller.text.isNotEmpty
+                              ? Padding(
+                                  padding: const EdgeInsetsDirectional.only(
+                                    end: 12,
                                   ),
-                                  onPressed: onSearchClear,
-                                ),
-                              )
-                            : null,
+                                  child: IconButton(
+                                    icon: const Icon(
+                                      Icons.close,
+                                    ),
+                                    onPressed: onSearchClear,
+                                  ),
+                                )
+                              : null,
+                        ),
                       ),
                     ),
                   ),

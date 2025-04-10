@@ -51,7 +51,9 @@ const List<String> fakeTrackNames = [
   "Super long track name",
   "Audio",
   "Test track",
+  "Nico and the Niners",
   "Blood In The Water",
+  "Title here",
 ];
 
 /// Случайные названия плейлистов, используемые в Skeleton Loader'ах.
