@@ -107,11 +107,14 @@ class PlayerRoute extends HookConsumerWidget {
       () {
         WakelockPlus.toggle(enable: isPlaying);
 
-        return () {
-          WakelockPlus.disable();
-        };
+        return null;
       },
       [isPlaying],
+    );
+
+    useEffect(
+      () => WakelockPlus.disable,
+      [],
     );
 
     return AnimatedSwitcher(
