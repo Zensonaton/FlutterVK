@@ -800,6 +800,20 @@ class AudioLyricsListView extends HookConsumerWidget {
       scrollToCurrent();
     }
 
+    void onLyricTap(LyricTimestamp timestamp) {
+      if (!isSynchronized) return;
+
+      autoScrollStopped.value = false;
+      autoScrollStopTimer.value?.cancel();
+
+      player.seek(
+        Duration(
+          milliseconds: timestamp.begin!,
+        ),
+        play: true,
+      );
+    }
+
     useEffect(
       () {
         onPositionUpdate(null);
@@ -869,14 +883,7 @@ class AudioLyricsListView extends HookConsumerWidget {
                 distance: (!autoScrollStopped.value && lyricIndex.value != null)
                     ? index - lyricIndex.value!
                     : 0,
-                onTap: isSynchronized
-                    ? () => player.seek(
-                          Duration(
-                            milliseconds: timestamp.begin!,
-                          ),
-                          play: true,
-                        )
-                    : null,
+                onTap: isSynchronized ? () => onLyricTap(timestamp) : null,
               ),
             );
           },
