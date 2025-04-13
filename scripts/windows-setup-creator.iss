@@ -31,6 +31,7 @@ Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
 CloseApplications=no
+UninstallDisplayIcon={app}\{#MyAppExeName}
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -51,6 +52,13 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: de
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+
+[UninstallRun]
+Filename: "taskkill"; Parameters: "/IM {#MyAppExeName} /F"; Flags: runhidden
+
+[UninstallDelete]
+Type: filesandordirs; Name: "{app}"
+Type: filesandordirs; Name: "{userappdata}\com.zensonaton\Flutter VK"
 
 [Code]
 procedure TaskKill(fileName: String);
