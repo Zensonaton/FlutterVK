@@ -440,6 +440,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get remove_track_as_liked => 'Удалить из «любимых» треков';
 
   @override
+  String get open_track_playlist => 'Открыть плейлист';
+
+  @override
   String get add_track_to_playlist => 'Добавить в плейлист';
 
   @override

@@ -437,6 +437,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get remove_track_as_liked => 'Remove from liked';
 
   @override
+  String get open_track_playlist => 'Open playlist';
+
+  @override
   String get add_track_to_playlist => 'Add to playlist';
 
   @override

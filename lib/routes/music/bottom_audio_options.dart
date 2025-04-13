@@ -10,6 +10,7 @@ import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:url_launcher/url_launcher_string.dart";
 
+import "../../enums.dart";
 import "../../extensions.dart";
 import "../../main.dart";
 import "../../provider/auth.dart";
@@ -146,6 +147,16 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
       if (!context.mounted) return;
 
       isTogglingLikeState.value = false;
+    }
+
+    void openPlaylistTap() {
+      Navigator.of(context).pop();
+
+      context.go(
+        "/music/playlist/${playlist.ownerID}/${playlist.id}",
+      );
+
+      // TODO: Доскроллить до этого трека.
     }
 
     void addToPlaylistTap() {
@@ -407,9 +418,8 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
                 children: [
                   // Изображение трека.
                   Padding(
-                    padding: const EdgeInsets.only(
-                      left: 24,
-                      right: 24,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
                     ),
                     child: AudioTrackTile(
                       audio: newAudio,
@@ -453,6 +463,19 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
                           : l18n.add_track_as_liked,
                     ),
                     onTap: onAddAsFavoritesTap,
+                  ),
+
+                  // Открыть плейлист.
+                  ListTile(
+                    leading: const Icon(
+                      Icons.playlist_play,
+                    ),
+                    title: Text(
+                      l18n.open_track_playlist,
+                    ),
+                    onTap: newPlaylist.type != PlaylistType.audioMix
+                        ? openPlaylistTap
+                        : null,
                   ),
 
                   // TODO: Добавить в плейлист.

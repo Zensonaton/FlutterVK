@@ -167,6 +167,7 @@
 
 	"add_track_as_liked": "Mark as liked",
 	"remove_track_as_liked": "Remove from liked",
+	"open_track_playlist": "Open playlist",
 	"add_track_to_playlist": "Add to playlist",
 	"play_track_next": "Play next",
 	"go_to_track_album": "Go to album",

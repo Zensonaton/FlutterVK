@@ -839,6 +839,12 @@ abstract class AppLocalizations {
   /// **'Удалить из «любимых» треков'**
   String get remove_track_as_liked;
 
+  /// No description provided for @open_track_playlist.
+  ///
+  /// In ru, this message translates to:
+  /// **'Открыть плейлист'**
+  String get open_track_playlist;
+
   /// No description provided for @add_track_to_playlist.
   ///
   /// In ru, this message translates to:

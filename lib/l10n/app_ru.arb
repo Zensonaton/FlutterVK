@@ -297,6 +297,7 @@
 
 	"add_track_as_liked": "Добавить как «любимый» трек",
 	"remove_track_as_liked": "Удалить из «любимых» треков",
+	"open_track_playlist": "Открыть плейлист",
 	"add_track_to_playlist": "Добавить в плейлист",
 	"play_track_next": "Сыграть следующим",
 	"go_to_track_album": "Перейти к альбому",

@@ -112,10 +112,7 @@ class PlayerRoute extends HookConsumerWidget {
       [isPlaying],
     );
 
-    useEffect(
-      () => WakelockPlus.disable,
-      [],
-    );
+    useEffect(() => WakelockPlus.disable, []);
 
     return AnimatedSwitcher(
       duration: transitionDuration,
