@@ -17,6 +17,7 @@ import "../provider/color.dart";
 import "../provider/player.dart";
 import "../provider/preferences.dart";
 import "../provider/user.dart";
+import "../routes/music/bottom_audio_options.dart";
 import "../services/cache_manager.dart";
 import "../services/image_to_color_scheme.dart";
 import "../services/logger.dart";
@@ -377,6 +378,23 @@ class _MusicLeftSide extends HookConsumerWidget {
       openPlayerRouteIfNotOpened(context);
     }
 
+    void onLongTap() {
+      HapticFeedback.mediumImpact();
+
+      showModalBottomSheet(
+        context: context,
+        useRootNavigator: true,
+        isScrollControlled: true,
+        useSafeArea: true,
+        builder: (BuildContext context) {
+          return BottomAudioOptionsDialog(
+            audio: audio!,
+            playlist: playlist!,
+          );
+        },
+      );
+    }
+
     void onVolumeScroll(double diff) async {
       if (!mobileLayout || isMobile) return null;
 
@@ -446,6 +464,7 @@ class _MusicLeftSide extends HookConsumerWidget {
               child: GestureDetector(
                 behavior: HitTestBehavior.translucent,
                 onTap: mobileLayout ? onTap : null,
+                onLongPress: mobileLayout ? onLongTap : null,
                 onHorizontalDragStart: mobileLayout ? onHorizontalStart : null,
                 onHorizontalDragUpdate:
                     mobileLayout ? onHorizontalUpdate : null,
