@@ -1,7 +1,4 @@
 {
-	// Use IntelliSense to learn about possible attributes.
-	// Hover to view descriptions of existing attributes.
-	// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
 	"version": "0.2.0",
 	"configurations": [
 		{
@@ -12,8 +9,7 @@
 				"--dart-define", "PRERELEASE=1",
                 "--web-port=5000",
                 "--web-enable-expression-evaluation"
-			],
-
+			]
 		},
 		{
 			"name": "Запустить в profile-режиме",
@@ -32,11 +28,6 @@
 			"args": [
 				"--dart-define", "PRERELEASE=1"
 			]
-		},
-		{
-			"name": "Подключиться к устройству",
-			"type": "dart",
-			"request": "attach"
 		}
 	]
 }
