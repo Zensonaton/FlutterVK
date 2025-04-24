@@ -27,7 +27,6 @@ class DeezerAPISearchResponse {
 
   factory DeezerAPISearchResponse.fromJson(Map<String, dynamic> json) =>
       _$DeezerAPISearchResponseFromJson(json);
-  Map<String, dynamic> toJson() => _$DeezerAPISearchResponseToJson(this);
 }
 
 /// Используя API Deezer, делает поиск по передаваемому [query].

@@ -53,11 +53,10 @@ class ExportedThumbnail {
 
   factory ExportedThumbnail.fromJson(Map<String, dynamic> json) =>
       _$ExportedThumbnailFromJson(json);
-  Map<String, dynamic> toJson() => _$ExportedThumbnailToJson(this);
 }
 
 /// Класс, олицетворяющий экспортированное аудио.
-@JsonSerializable(includeIfNull: false)
+@JsonSerializable(includeIfNull: false, createToJson: true)
 class ExportedAudio {
   /// ID аудиозаписи.
   final int id;
@@ -147,11 +146,10 @@ class ExportedAudio {
 
   factory ExportedAudio.fromJson(Map<String, dynamic> json) =>
       _$ExportedAudioFromJson(json);
-  Map<String, dynamic> toJson() => _$ExportedAudioToJson(this);
 }
 
 /// Класс, олицетворяющий секции экспортированных данных.
-@JsonSerializable(includeIfNull: false)
+@JsonSerializable(includeIfNull: false, createToJson: true)
 class ExportedSections {
   /// Экспортированные настройки.
   final Map<String, dynamic>? settings;
@@ -182,11 +180,12 @@ class ExportedSections {
 
   factory ExportedSections.fromJson(Map<String, dynamic> json) =>
       _$ExportedSectionsFromJson(json);
+
   Map<String, dynamic> toJson() => _$ExportedSectionsToJson(this);
 }
 
 /// JSON-содержимое файла [SettingsExporter.exportedFilename], который хранит информацию об экспорте.
-@JsonSerializable()
+@JsonSerializable(createToJson: true)
 class ExportedAudiosInfoMetadata {
   /// Версия экспортера, который использовался для создания файла.
   ///
@@ -223,6 +222,7 @@ class ExportedAudiosInfoMetadata {
 
   factory ExportedAudiosInfoMetadata.fromJson(Map<String, dynamic> json) =>
       _$ExportedAudiosInfoMetadataFromJson(json);
+
   Map<String, dynamic> toJson() => _$ExportedAudiosInfoMetadataToJson(this);
 }
 
@@ -231,6 +231,8 @@ class ExportedAudiosInfoMetadata {
 /// Используйте [settingsExporterProvider] для получения instance этого класса.
 class SettingsExporter {
   static final AppLogger logger = getLogger("SettingsExporter");
+
+  /// Объект [JsonEncoder], который используется для сериализации данных в JSON.
   static const JsonEncoder jsonEncoder =
       JsonEncoder.withIndent(kDebugMode ? "\t" : null);
 

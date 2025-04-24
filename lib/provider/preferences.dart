@@ -15,7 +15,7 @@ part "preferences.g.dart";
 /// Класс с настройками пользователя.
 ///
 /// Не стоит путать с [Preferences] или [preferencesProvider].
-@JsonSerializable()
+@JsonSerializable(createToJson: true)
 class UserPreferences {
   /// Список из JSON-ключей, которые обязаны находиться в SharedPreferences, даже если их значение равно стандартному.
   static final List<String> ignoreDefaultKeys = [

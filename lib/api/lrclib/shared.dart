@@ -55,7 +55,6 @@ class LRCLIBTrack {
 
   factory LRCLIBTrack.fromJson(Map<String, dynamic> json) =>
       _$LRCLIBTrackFromJson(json);
-  Map<String, dynamic> toJson() => _$LRCLIBTrackToJson(this);
 }
 
 /// Класс, расширяющий [DioException], олицетворяющий ошибку API LRCLib.

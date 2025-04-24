@@ -58,7 +58,6 @@ class APIMassAudioGetResponse {
 
   factory APIMassAudioGetResponse.fromJson(Map<String, dynamic> json) =>
       _$APIMassAudioGetResponseFromJson(json);
-  Map<String, dynamic> toJson() => _$APIMassAudioGetResponseToJson(this);
 }
 
 /// {@template VKAPI.execute.massGetAudio}

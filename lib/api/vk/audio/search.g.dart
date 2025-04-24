@@ -14,10 +14,3 @@ APIAudioSearchResponse _$APIAudioSearchResponseFromJson(
           .map((e) => Audio.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
-
-Map<String, dynamic> _$APIAudioSearchResponseToJson(
-        APIAudioSearchResponse instance) =>
-    <String, dynamic>{
-      'count': instance.count,
-      'items': instance.items,
-    };

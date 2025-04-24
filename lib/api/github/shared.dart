@@ -38,7 +38,6 @@ class ReleaseAsset {
 
   factory ReleaseAsset.fromJson(Map<String, dynamic> json) =>
       _$ReleaseAssetFromJson(json);
-  Map<String, dynamic> toJson() => _$ReleaseAssetToJson(this);
 }
 
 /// Класс, олицетворяющий Github Release.
@@ -88,5 +87,4 @@ class Release {
 
   factory Release.fromJson(Map<String, dynamic> json) =>
       _$ReleaseFromJson(json);
-  Map<String, dynamic> toJson() => _$ReleaseToJson(this);
 }

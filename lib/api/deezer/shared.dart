@@ -23,7 +23,6 @@ class DeezerArtist {
 
   factory DeezerArtist.fromJson(Map<String, dynamic> json) =>
       _$DeezerArtistFromJson(json);
-  Map<String, dynamic> toJson() => _$DeezerArtistToJson(this);
 }
 
 /// Класс, олицетворяющий альбом трека в Deezer.
@@ -69,11 +68,10 @@ class DeezerAlbum {
 
   factory DeezerAlbum.fromJson(Map<String, dynamic> json) =>
       _$DeezerAlbumFromJson(json);
-  Map<String, dynamic> toJson() => _$DeezerAlbumToJson(this);
 }
 
 /// Класс, олицетворяющий трек, возвращённый API Deezer.
-@JsonSerializable()
+@JsonSerializable(createToJson: true)
 class DeezerTrack {
   /// ID трека.
   final int id;
@@ -108,5 +106,6 @@ class DeezerTrack {
 
   factory DeezerTrack.fromJson(Map<String, dynamic> json) =>
       _$DeezerTrackFromJson(json);
+
   Map<String, dynamic> toJson() => _$DeezerTrackToJson(this);
 }

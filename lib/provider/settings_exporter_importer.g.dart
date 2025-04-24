@@ -14,14 +14,6 @@ ExportedThumbnail _$ExportedThumbnailFromJson(Map<String, dynamic> json) =>
       photoMax: json['photoMax'] as String,
     );
 
-Map<String, dynamic> _$ExportedThumbnailToJson(ExportedThumbnail instance) =>
-    <String, dynamic>{
-      'photoSmall': instance.photoSmall,
-      'photoMedium': instance.photoMedium,
-      'photoBig': instance.photoBig,
-      'photoMax': instance.photoMax,
-    };
-
 ExportedAudio _$ExportedAudioFromJson(Map<String, dynamic> json) =>
     ExportedAudio(
       id: (json['id'] as num).toInt(),

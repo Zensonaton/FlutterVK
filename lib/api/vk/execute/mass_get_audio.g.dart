@@ -18,12 +18,3 @@ APIMassAudioGetResponse _$APIMassAudioGetResponseFromJson(
           .map((e) => Playlist.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
-
-Map<String, dynamic> _$APIMassAudioGetResponseToJson(
-        APIMassAudioGetResponse instance) =>
-    <String, dynamic>{
-      'audioCount': instance.audioCount,
-      'audios': instance.audios,
-      'playlistsCount': instance.playlistsCount,
-      'playlists': instance.playlists,
-    };

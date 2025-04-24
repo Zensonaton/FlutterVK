@@ -14,10 +14,3 @@ DeezerAPISearchResponse _$DeezerAPISearchResponseFromJson(
           .toList(),
       total: (json['total'] as num).toInt(),
     );
-
-Map<String, dynamic> _$DeezerAPISearchResponseToJson(
-        DeezerAPISearchResponse instance) =>
-    <String, dynamic>{
-      'data': instance.data,
-      'total': instance.total,
-    };

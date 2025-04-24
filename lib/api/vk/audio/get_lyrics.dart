@@ -42,7 +42,6 @@ class LyricTimestamp {
 
   factory LyricTimestamp.fromJson(Map<String, dynamic> json) =>
       _$LyricTimestampFromJson(json);
-  Map<String, dynamic> toJson() => _$LyricTimestampToJson(this);
 }
 
 /// Класс, олицетворяющий информацию по тексту песни из API ВКонтакте.
@@ -120,7 +119,6 @@ class Lyrics {
   });
 
   factory Lyrics.fromJson(Map<String, dynamic> json) => _$LyricsFromJson(json);
-  Map<String, dynamic> toJson() => _$LyricsToJson(this);
 }
 
 /// Ответ на запрос [audio_get_lyrics].
@@ -142,7 +140,6 @@ class APIAudioGetLyricsResponse {
 
   factory APIAudioGetLyricsResponse.fromJson(Map<String, dynamic> json) =>
       _$APIAudioGetLyricsResponseFromJson(json);
-  Map<String, dynamic> toJson() => _$APIAudioGetLyricsResponseToJson(this);
 }
 
 /// {@template VKAPI.audio.getLyrics}

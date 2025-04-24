@@ -36,8 +36,6 @@ class SongData {
 
   factory SongData.fromJson(Map<String, dynamic> json) =>
       _$SongDataFromJson(json);
-
-  Map<String, dynamic> toJson() => _$SongDataToJson(this);
 }
 
 @JsonSerializable()
@@ -93,8 +91,6 @@ class SongAttributes {
 
   factory SongAttributes.fromJson(Map<String, dynamic> json) =>
       _$SongAttributesFromJson(json);
-
-  Map<String, dynamic> toJson() => _$SongAttributesToJson(this);
 }
 
 @JsonSerializable()
@@ -116,8 +112,6 @@ class Artwork {
 
   factory Artwork.fromJson(Map<String, dynamic> json) =>
       _$ArtworkFromJson(json);
-
-  Map<String, dynamic> toJson() => _$ArtworkToJson(this);
 }
 
 @JsonSerializable()
@@ -145,8 +139,6 @@ class AlbumData {
 
   factory AlbumData.fromJson(Map<String, dynamic> json) =>
       _$AlbumDataFromJson(json);
-
-  Map<String, dynamic> toJson() => _$AlbumDataToJson(this);
 }
 
 @JsonSerializable()
@@ -168,8 +160,6 @@ class EditorialVideo {
 
   factory EditorialVideo.fromJson(Map<String, dynamic> json) =>
       _$EditorialVideoFromJson(json);
-
-  Map<String, dynamic> toJson() => _$EditorialVideoToJson(this);
 }
 
 @JsonSerializable()
@@ -187,8 +177,6 @@ class MotionVideo {
 
   factory MotionVideo.fromJson(Map<String, dynamic> json) =>
       _$MotionVideoFromJson(json);
-
-  Map<String, dynamic> toJson() => _$MotionVideoToJson(this);
 }
 
 @JsonSerializable()
@@ -210,8 +198,6 @@ class PreviewFrame {
 
   factory PreviewFrame.fromJson(Map<String, dynamic> json) =>
       _$PreviewFrameFromJson(json);
-
-  Map<String, dynamic> toJson() => _$PreviewFrameToJson(this);
 }
 
 /// Возвращает информацию по треку из Apple Music по переданному названию [title].

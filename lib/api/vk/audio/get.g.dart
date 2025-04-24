@@ -13,10 +13,3 @@ APIAudioGetResponse _$APIAudioGetResponseFromJson(Map<String, dynamic> json) =>
           .map((e) => Audio.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
-
-Map<String, dynamic> _$APIAudioGetResponseToJson(
-        APIAudioGetResponse instance) =>
-    <String, dynamic>{
-      'count': instance.count,
-      'items': instance.items,
-    };

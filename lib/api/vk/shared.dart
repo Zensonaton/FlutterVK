@@ -6,7 +6,7 @@ import "../../utils.dart";
 part "shared.g.dart";
 
 /// Объект, олицетворяющий пользователя ВКонтакте.
-@JsonSerializable(explicitToJson: true)
+@JsonSerializable()
 class APIUser {
   /// ID пользователя.
   final int id;
@@ -425,11 +425,10 @@ class APIUser {
 
   factory APIUser.fromJson(Map<String, dynamic> json) =>
       _$APIUserFromJson(json);
-  Map<String, dynamic> toJson() => _$APIUserToJson(this);
 }
 
 /// Объект, олицетворяющий изображения плейлиста или альбома аудиозаписи ВКонтакте.
-@JsonSerializable(explicitToJson: true)
+@JsonSerializable(createToJson: true)
 class Thumbnails {
   /// Ширина изображения альбома.
   final int width;
@@ -495,11 +494,10 @@ class Thumbnails {
 
   factory Thumbnails.fromJson(Map<String, dynamic> json) =>
       _$ThumbnailsFromJson(json);
-  Map<String, dynamic> toJson() => _$ThumbnailsToJson(this);
 }
 
 /// Объект, олицетворяющий плейлист ВКонтакте.
-@JsonSerializable(explicitToJson: true)
+@JsonSerializable(createToJson: true)
 class Playlist {
   /// ID плейлиста.
   final int id;
@@ -616,11 +614,12 @@ class Playlist {
 
   factory Playlist.fromJson(Map<String, dynamic> json) =>
       _$PlaylistFromJson(json);
+
   Map<String, dynamic> toJson() => _$PlaylistToJson(this);
 }
 
 /// Объект, олицетворяющий альбом аудиозаписи ВКонтакте.
-@JsonSerializable(explicitToJson: true)
+@JsonSerializable(createToJson: true)
 class Album {
   /// ID альбома.
   final int id;
@@ -667,11 +666,10 @@ class Album {
   });
 
   factory Album.fromJson(Map<String, dynamic> json) => _$AlbumFromJson(json);
-  Map<String, dynamic> toJson() => _$AlbumToJson(this);
 }
 
 /// Объект, олицетворяющий аудиозапись ВКонтакте.
-@JsonSerializable(explicitToJson: true)
+@JsonSerializable(createToJson: true)
 class Audio {
   /// ID аудиозаписи.
   final int id;
@@ -802,6 +800,7 @@ class Audio {
   });
 
   factory Audio.fromJson(Map<String, dynamic> json) => _$AudioFromJson(json);
+
   Map<String, dynamic> toJson() => _$AudioToJson(this);
 }
 

@@ -16,15 +16,3 @@ LRCLIBTrack _$LRCLIBTrackFromJson(Map<String, dynamic> json) => LRCLIBTrack(
       plainLyrics: json['plainLyrics'] as String?,
       syncedLyrics: json['syncedLyrics'] as String?,
     );
-
-Map<String, dynamic> _$LRCLIBTrackToJson(LRCLIBTrack instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'trackName': instance.title,
-      'artistName': instance.artist,
-      'albumName': instance.album,
-      'duration': instance.duration,
-      'instrumental': instance.instrumental,
-      'plainLyrics': instance.plainLyrics,
-      'syncedLyrics': instance.syncedLyrics,
-    };

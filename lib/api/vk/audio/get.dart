@@ -23,7 +23,6 @@ class APIAudioGetResponse {
 
   factory APIAudioGetResponse.fromJson(Map<String, dynamic> json) =>
       _$APIAudioGetResponseFromJson(json);
-  Map<String, dynamic> toJson() => _$APIAudioGetResponseToJson(this);
 }
 
 /// {@template VKAPI.audio.get}

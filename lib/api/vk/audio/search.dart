@@ -45,7 +45,6 @@ class APIAudioSearchResponse {
 
   factory APIAudioSearchResponse.fromJson(Map<String, dynamic> json) =>
       _$APIAudioSearchResponseFromJson(json);
-  Map<String, dynamic> toJson() => _$APIAudioSearchResponseToJson(this);
 }
 
 /// {@template VKAPI.audio.search}

@@ -11,12 +11,6 @@ DeezerArtist _$DeezerArtistFromJson(Map<String, dynamic> json) => DeezerArtist(
       name: json['name'] as String,
     );
 
-Map<String, dynamic> _$DeezerArtistToJson(DeezerArtist instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'name': instance.name,
-    };
-
 DeezerAlbum _$DeezerAlbumFromJson(Map<String, dynamic> json) => DeezerAlbum(
       id: (json['id'] as num).toInt(),
       title: json['title'] as String,
@@ -26,17 +20,6 @@ DeezerAlbum _$DeezerAlbumFromJson(Map<String, dynamic> json) => DeezerAlbum(
       coverBig: json['cover_big'] as String?,
       coverXL: json['cover_xl'] as String?,
     );
-
-Map<String, dynamic> _$DeezerAlbumToJson(DeezerAlbum instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'title': instance.title,
-      'cover_small': instance.coverSmall,
-      'cover': instance.cover,
-      'cover_medium': instance.coverMedium,
-      'cover_big': instance.coverBig,
-      'cover_xl': instance.coverXL,
-    };
 
 DeezerTrack _$DeezerTrackFromJson(Map<String, dynamic> json) => DeezerTrack(
       id: (json['id'] as num).toInt(),

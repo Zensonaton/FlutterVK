@@ -73,7 +73,7 @@ Map<String, dynamic> _getFakeData() {
 }
 
 /// Класс отдельного аудиомикса по типу "VK Mix".
-@JsonSerializable(explicitToJson: true)
+@JsonSerializable()
 class AudioMix {
   /// ID данного микса.
   final String id;
@@ -97,11 +97,10 @@ class AudioMix {
 
   factory AudioMix.fromJson(Map<String, dynamic> json) =>
       _$AudioMixFromJson(json);
-  Map<String, dynamic> toJson() => _$AudioMixToJson(this);
 }
 
 /// Класс отдельного рекомендуемого плейлиста из раздела "совпадения по вкусам".
-@JsonSerializable(explicitToJson: true)
+@JsonSerializable()
 class SimillarPlaylist {
   /// ID плейлиста.
   final int id;
@@ -132,11 +131,10 @@ class SimillarPlaylist {
 
   factory SimillarPlaylist.fromJson(Map<String, dynamic> json) =>
       _$SimillarPlaylistFromJson(json);
-  Map<String, dynamic> toJson() => _$SimillarPlaylistToJson(this);
 }
 
 /// Класс действия у блока секции в аудиозаписях.
-@JsonSerializable(explicitToJson: true)
+@JsonSerializable()
 class BlockAction {
   /// ID данной секции.
   @JsonKey(name: "section_id")
@@ -166,11 +164,10 @@ class BlockAction {
 
   factory BlockAction.fromJson(Map<String, dynamic> json) =>
       _$BlockActionFromJson(json);
-  Map<String, dynamic> toJson() => _$BlockActionToJson(this);
 }
 
 /// Класс блока секции каталога в аудиозаписях.
-@JsonSerializable(explicitToJson: true)
+@JsonSerializable()
 class SectionBlock {
   /// ID блока секции.
   final String? id;
@@ -212,11 +209,10 @@ class SectionBlock {
 
   factory SectionBlock.fromJson(Map<String, dynamic> json) =>
       _$SectionBlockFromJson(json);
-  Map<String, dynamic> toJson() => _$SectionBlockToJson(this);
 }
 
 /// Класс секции каталога в аудиозаписях.
-@JsonSerializable(explicitToJson: true)
+@JsonSerializable()
 class Section {
   /// ID данной секции.
   final String? id;
@@ -243,11 +239,10 @@ class Section {
 
   factory Section.fromJson(Map<String, dynamic> json) =>
       _$SectionFromJson(json);
-  Map<String, dynamic> toJson() => _$SectionToJson(this);
 }
 
 /// Каталог в аудиозаписи.
-@JsonSerializable(explicitToJson: true)
+@JsonSerializable()
 class Catalog {
   @JsonKey(name: "default_section")
   final String? defaultSection;
@@ -272,11 +267,10 @@ class Catalog {
 
   factory Catalog.fromJson(Map<String, dynamic> json) =>
       _$CatalogFromJson(json);
-  Map<String, dynamic> toJson() => _$CatalogToJson(this);
 }
 
 /// Ответ для метода [catalog_get_audio].
-@JsonSerializable(explicitToJson: true)
+@JsonSerializable(createToJson: true)
 class APICatalogGetAudioResponse {
   /// Информация о треках.
   final List<Audio> audios;
@@ -305,6 +299,7 @@ class APICatalogGetAudioResponse {
 
   factory APICatalogGetAudioResponse.fromJson(Map<String, dynamic> json) =>
       _$APICatalogGetAudioResponseFromJson(json);
+
   Map<String, dynamic> toJson() => _$APICatalogGetAudioResponseToJson(this);
 }
 
