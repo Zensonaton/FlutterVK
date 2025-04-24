@@ -757,6 +757,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get discord_rpc_desc => 'Транслирует играющий трек в Discord';
 
   @override
+  String get status_broadcast => 'Трансляция в статус';
+
+  @override
+  String get status_broadcast_desc => 'Отображает играющий трек в статусе ВКонтакте';
+
+  @override
   String get player_debug_logging => 'Debug-логирование плеера';
 
   @override

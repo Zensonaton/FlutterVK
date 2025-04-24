@@ -249,6 +249,10 @@ class UserPreferences {
   @JsonKey(name: "SearchHistory", defaultValue: [])
   final List<String> searchHistory;
 
+  /// Указывает, что настройка "трансляция в статус" включена.
+  @JsonKey(name: "StatusBroadcastEnabled", defaultValue: false)
+  final bool statusBroadcastEnabled;
+
   /// Возвращает [Map] из всех ключей этого класса, где value - тип ключа.
   static Map<String, Type> getKeyTypes() => {
         "DBVersion": int,
@@ -294,6 +298,7 @@ class UserPreferences {
         "PlayerLyricsBlockEnabled": bool,
         "ShowTrackThumbnails": bool,
         "SearchHistory": List<String>,
+        "StatusBroadcastEnabled": bool,
       };
 
   UserPreferences({
@@ -340,6 +345,7 @@ class UserPreferences {
     this.playerLyricsBlock = false,
     this.showTrackThumbnails = true,
     this.searchHistory = const [],
+    this.statusBroadcastEnabled = false,
   });
 
   /// Делает копию этого класа с новыми передаваемыми значениями.
@@ -387,6 +393,7 @@ class UserPreferences {
     bool? playerLyricsBlock,
     bool? showTrackThumbnails,
     List<String>? searchHistory,
+    bool? statusBroadcastEnabled,
   }) =>
       UserPreferences(
         dbVersion: dbVersion ?? this.dbVersion,
@@ -442,6 +449,8 @@ class UserPreferences {
         playerLyricsBlock: playerLyricsBlock ?? this.playerLyricsBlock,
         showTrackThumbnails: showTrackThumbnails ?? this.showTrackThumbnails,
         searchHistory: searchHistory ?? this.searchHistory,
+        statusBroadcastEnabled:
+            statusBroadcastEnabled ?? this.statusBroadcastEnabled,
       );
 
   factory UserPreferences.fromJson(Map<String, dynamic> json) =>
@@ -695,4 +704,7 @@ class Preferences extends _$Preferences {
 
   void setSearchHistory(List<String> history) =>
       state = state.copyWith(searchHistory: history);
+
+  void setStatusBroadcastEnabled(bool enabled) =>
+      state = state.copyWith(statusBroadcastEnabled: enabled);
 }

@@ -24,6 +24,7 @@ import "subscribers/playlist_modifications.dart";
 import "subscribers/recomms_notifier.dart";
 import "subscribers/smtc.dart"
     if (dart.library.js_interop) "subscribers/smtc_stub.dart";
+import "subscribers/status_broadcast.dart";
 import "subscribers/stop_on_long_pause.dart";
 import "subscribers/track_info.dart";
 import "subscribers/window_bar_title.dart";
@@ -91,6 +92,7 @@ class Player {
   bool _keepPlayingOnCloseEnabled = false;
   bool _isDebugLoggingEnabled = false;
   bool _trackTitleInWindowBarEnabled = false;
+  bool _isStatusBroadcastEnabled = false;
 
   /// Инициализирует данный [Player].
   ///
@@ -110,6 +112,7 @@ class Player {
       DebugLoggerPlayerSubscriber(this),
       ErrorsHandlerPlayerSubscriber(this),
       PlaylistModificationsPlayerSubscriber(this),
+      StatusBroadcastPlayerSubscriber(this),
 
       // Window Bar Title (Desktop).
       if (isDesktop) WindowBarTitlePlayerSubscriber(this),
@@ -455,6 +458,14 @@ class Player {
     return _silenceRemovalEnabledController.stream.asBroadcastStream();
   }
 
+  final StreamController<bool> _isStatusBroadcastEnabledController =
+      StreamController.broadcast();
+
+  /// Stream, указывающий то, включена ли трансляция в статус. Возвращает значение поля [isStatusBroadcastEnabled].
+  Stream<bool> get isStatusBroadcastEnabledStream {
+    return _isStatusBroadcastEnabledController.stream.asBroadcastStream();
+  }
+
   /// {@template Player.isPlaying}
   /// Возвращает true, если плеер воспроизводит музыку.
   ///
@@ -582,6 +593,9 @@ class Player {
   /// {@endtemplate}
   bool get silenceRemovalEnabled => backend.silenceRemovalEnabled;
 
+  /// Возвращает true, если включена трансляция в статус. Для переключения данной настройки можно воспользоваться методом [Player.setStatusBroadcastEnabled].
+  bool get isStatusBroadcastEnabled => _isStatusBroadcastEnabled;
+
   /// Управляет состоянием работы Discord RPC.
   void setDiscordRPCEnabled(bool enabled) {
     if (enabled == _discordRPCEnabled) return;
@@ -650,6 +664,14 @@ class Player {
   /// {@endtemplate}
   Future<void> setSilenceRemovalEnabled(bool enabled) async {
     await backend.setSilenceRemovalEnabled(enabled);
+  }
+
+  /// Устанавливает значение настройки "трансляция в статус".
+  void setStatusBroadcastEnabled(bool enabled) {
+    if (enabled == _isStatusBroadcastEnabled) return;
+
+    _isStatusBroadcastEnabled = enabled;
+    _isStatusBroadcastEnabledController.add(enabled);
   }
 
   /// {@template Player.play}

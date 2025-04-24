@@ -308,6 +308,9 @@
 	"discord_rpc": "Discord Rich Presence",
 	"discord_rpc_desc": "Broadcasts the playing track in Discord",
 
+	"status_broadcast": "Broadcast in status",
+	"status_broadcast_desc": "Displays track that is currently playing as VK status",
+
 	"export_music_list": "Export track list",
 	"export_music_list_desc": "List of {count, plural, one{{count} liked track} other{{count} liked tracks}}:",
 

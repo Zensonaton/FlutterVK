@@ -473,6 +473,9 @@
 	"discord_rpc": "Discord Rich Presence",
 	"discord_rpc_desc": "Транслирует играющий трек в Discord",
 
+	"status_broadcast": "Трансляция в статус",
+	"status_broadcast_desc": "Отображает играющий трек в статусе ВКонтакте",
+
 	"player_debug_logging": "Debug-логирование плеера",
 	"player_debug_logging_desc": "Включает вывод технических данных музыкального плеера в лог. Включение настройки приведёт к понижению производительности приложения",
 

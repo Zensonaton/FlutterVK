@@ -13,6 +13,7 @@ import "../api/vk/audio/get_stream_mix_audios.dart";
 import "../api/vk/audio/restore.dart";
 import "../api/vk/audio/search.dart";
 import "../api/vk/audio/send_start_event.dart";
+import "../api/vk/audio/set_broadcast.dart";
 import "../api/vk/catalog/get_audio.dart";
 import "../api/vk/catalog/get_audio_search.dart";
 import "../api/vk/execute/mass_get_albums.dart";
@@ -293,6 +294,9 @@ class VKAPIAudio extends VKAPICategory {
   /// {@macro VKAPI.audio.sendStartEvent}
   Future<dynamic> sendStartEvent(String mediaKey) =>
       audio_send_start_event(mediaKey);
+
+  /// {@macro VKAPI.audio.setBroadcast}
+  Future<void> setBroadcast(String? mediaKey) => audio_set_broadcast(mediaKey);
 }
 
 /// Класс, предоставляющий доступ к методам API ВКонтакте, связанным с каталогом аудиозаписей (`catalog`).

@@ -1457,6 +1457,18 @@ abstract class AppLocalizations {
   /// **'Транслирует играющий трек в Discord'**
   String get discord_rpc_desc;
 
+  /// No description provided for @status_broadcast.
+  ///
+  /// In ru, this message translates to:
+  /// **'Трансляция в статус'**
+  String get status_broadcast;
+
+  /// No description provided for @status_broadcast_desc.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отображает играющий трек в статусе ВКонтакте'**
+  String get status_broadcast_desc;
+
   /// No description provided for @player_debug_logging.
   ///
   /// In ru, this message translates to:

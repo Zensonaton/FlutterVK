@@ -82,6 +82,7 @@ UserPreferences _$UserPreferencesFromJson(Map<String, dynamic> json) =>
               ?.map((e) => e as String)
               .toList() ??
           [],
+      statusBroadcastEnabled: json['StatusBroadcastEnabled'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$UserPreferencesToJson(UserPreferences instance) =>
@@ -132,13 +133,14 @@ Map<String, dynamic> _$UserPreferencesToJson(UserPreferences instance) =>
       'PlayerLyricsBlockEnabled': instance.playerLyricsBlock,
       'ShowTrackThumbnails': instance.showTrackThumbnails,
       'SearchHistory': instance.searchHistory,
+      'StatusBroadcastEnabled': instance.statusBroadcastEnabled,
     };
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$preferencesHash() => r'c6ae19c8c6c9dbd37dc6ec7b3398a9f16f003d58';
+String _$preferencesHash() => r'49ce56198df382803293780690a6031227240311';
 
 /// [Provider] для хранения настроек пользователя.
 ///

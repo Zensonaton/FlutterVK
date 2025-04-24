@@ -754,6 +754,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get discord_rpc_desc => 'Broadcasts the playing track in Discord';
 
   @override
+  String get status_broadcast => 'Broadcast in status';
+
+  @override
+  String get status_broadcast_desc => 'Displays track that is currently playing as VK status';
+
+  @override
   String get player_debug_logging => 'Debug player logging';
 
   @override

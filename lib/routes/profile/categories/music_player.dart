@@ -422,6 +422,27 @@ class ProfileMusicPlayerSettingsCategory extends ConsumerWidget {
             },
           ),
 
+        // Трансляция в статус.
+        SwitchListTile(
+          secondary: const Icon(
+            Icons.podcasts,
+          ),
+          title: Text(
+            l18n.status_broadcast,
+          ),
+          subtitle: Text(
+            l18n.status_broadcast_desc,
+          ),
+          value: preferences.statusBroadcastEnabled,
+          onChanged: (bool? enabled) async {
+            HapticFeedback.lightImpact();
+            if (enabled == null) return;
+
+            prefsNotifier.setStatusBroadcastEnabled(enabled);
+            player.setStatusBroadcastEnabled(enabled);
+          },
+        ),
+
         // Экспорт списка треков.
         ListTile(
           leading: const Icon(
