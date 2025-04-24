@@ -360,6 +360,7 @@ Future main() async {
     player.setTrackTitleInWindowBarEnabled(preferences.trackTitleInWindowBar);
     player.setVolumeNormalization(preferences.volumeNormalization);
     player.setSilenceRemovalEnabled(preferences.silenceRemoval);
+    player.setStatusBroadcastEnabled(preferences.statusBroadcastEnabled);
     if (preferences.volume < 1.0 && isDesktop) {
       player.setVolume(preferences.volume);
     }
