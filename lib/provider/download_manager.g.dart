@@ -169,7 +169,7 @@ class _DownloadTaskByIDProviderElement
   String get id => (origin as DownloadTaskByIDProvider).id;
 }
 
-String _$downloadManagerHash() => r'df8caf75e68aec97695e7f91e6c0930249d02a70';
+String _$downloadManagerHash() => r'4ae9e9b4ccee39f610cf816ca265f62e70c456b1';
 
 /// [Provider], предоставляющий доступ к менеджеру загрузок.
 ///

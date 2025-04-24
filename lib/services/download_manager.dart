@@ -6,7 +6,6 @@ import "package:flutter/foundation.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:queue/queue.dart";
 
-import "../api/apple_music/catalog_album.dart";
 import "../api/apple_music/search_catalog.dart";
 import "../api/apple_music/utils.dart";
 import "../api/deezer/search.dart";
@@ -370,36 +369,25 @@ class PlaylistCacheDownloadItem extends DownloadItem {
       _getAppleMusicAnimatedThumbnails() async {
     if (audio.appleMusicThumbs != null) return null;
 
-    // Узнаём ID альбома.
-    int? albumID;
-    try {
-      albumID = await am_search_catalog(
-        audio.fullArtistTitle(
-          divider: " ",
-          explicit: false,
-          subtitle: false,
-        ),
-      );
-    } catch (error, stackTrace) {
-      logger.w(
-        "[catalog] Apple Music error:",
-        error: error,
-        stackTrace: stackTrace,
-      );
-    }
-    if (albumID == null) return null;
+    final title = audio.fullArtistTitle(explicit: false);
 
-    // Получаем ссылку на .m3u8-файл.
-    String? m3u8URL;
+    // Получаем информацию по треку из его названия.
+    SongData? response;
     try {
-      m3u8URL = await am_catalog_album(albumID);
+      response = await am_search_catalog(title);
     } catch (error, stackTrace) {
       logger.w(
-        "[album] m3u8 get error:",
+        "Apple Music error (for $title):",
         error: error,
         stackTrace: stackTrace,
       );
     }
+
+    final video = response?.albums.firstOrNull?.editorialVideo;
+    if (video == null) return null;
+
+    final m3u8URL =
+        (video.motionSquareVideo1x1 ?? video.motionDetailSquare)?.video;
     if (m3u8URL == null) return null;
 
     // Загружаем содержимое .m3u8-файла.

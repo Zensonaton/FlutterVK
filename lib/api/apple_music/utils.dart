@@ -32,7 +32,17 @@ List<ExtendedAnimatedThumbnail> parseM3U8Contents(String contents) {
 
     if (codec == "avc1") continue;
 
-    final realMP4Url = url.replaceFirst(".m3u8", "-.mp4");
+    String realMP4Url = url.replaceFirst(".m3u8", "-.mp4");
+
+    // В редких случаях, Apple Music возвращает URL вида
+    //   WxH_-.m3u8
+    // вместо
+    //   WxH.m3u8
+    // И из-за этого, ввиду замены, получается неправильный URL.
+    // Здесь мы это и исправляем.
+    if (realMP4Url.contains("--.mp4")) {
+      realMP4Url = realMP4Url.replaceFirst("--.mp4", "-.mp4");
+    }
 
     thumbnails[resolution] = ExtendedAnimatedThumbnail(
       resolution: resolution,

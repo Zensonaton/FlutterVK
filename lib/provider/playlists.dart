@@ -86,8 +86,8 @@ Future<void> createPlaylistCacheTask(
           ...playlist.audios!
               .where(
                 (audio) =>
-                    (!(audio.isCached ?? false) && audio.url != null) ||
-                    ((audio.hasLyrics ?? false) && audio.vkLyrics == null),
+                    (audio.isCached != true && audio.url != null) ||
+                    (audio.hasLyrics == true && audio.vkLyrics == null),
               )
               .map(
                 (audio) => PlaylistCacheDownloadItem(
