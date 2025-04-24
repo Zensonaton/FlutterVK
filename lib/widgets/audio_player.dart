@@ -1544,7 +1544,7 @@ class _MusicContents extends ConsumerWidget {
     } else {
       middleBlockPadding = gapSizeDesktop * 2;
       middleBlockSize = clampDouble(
-        freeSpace / 2 + middleBlockPadding,
+        freeSpace / 2.2 + middleBlockPadding,
         minMiddleBlockSize,
         maxMiddleBlockSize,
       );
