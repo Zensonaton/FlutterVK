@@ -677,6 +677,7 @@ class PlayerControlsWidget extends ConsumerWidget {
 
     void onShuffleToggle() {
       HapticFeedback.lightImpact();
+
       if (isAudioMix) {
         throw Exception("Attempted to enable shuffle for audio mix");
       }
@@ -686,26 +687,31 @@ class PlayerControlsWidget extends ConsumerWidget {
 
     void onPrevious() {
       HapticFeedback.lightImpact();
+
       player.smartPrevious();
     }
 
     void onPlayPause() {
-      HapticFeedback.lightImpact();
+      HapticFeedback.mediumImpact();
+
       player.togglePlay();
     }
 
     void onStop() {
-      HapticFeedback.mediumImpact();
+      HapticFeedback.heavyImpact();
+
       player.stop();
     }
 
     void onNext() {
       HapticFeedback.lightImpact();
+
       player.next();
     }
 
     void onRepeatToggle() {
       HapticFeedback.lightImpact();
+
       player.toggleRepeat();
     }
 
@@ -1187,12 +1193,14 @@ class _MusicRightSide extends HookConsumerWidget {
     final isRecommendation = playlist?.isRecommendationTypePlaylist ?? false;
 
     void onPlayPause() {
-      HapticFeedback.lightImpact();
+      HapticFeedback.mediumImpact();
+
       player.togglePlay();
     }
 
     void onStop() {
-      HapticFeedback.mediumImpact();
+      HapticFeedback.heavyImpact();
+
       player.stop();
     }
 

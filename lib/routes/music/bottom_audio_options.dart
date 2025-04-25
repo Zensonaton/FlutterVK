@@ -126,9 +126,10 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
     final isTogglingLikeState = useState(false);
 
     void onDetailsEditTap() {
-      if (!networkRequiredDialog(ref, context)) return;
-
+      HapticFeedback.lightImpact();
       Navigator.of(context).pop();
+
+      if (!networkRequiredDialog(ref, context)) return;
 
       showDialog(
         context: context,
@@ -140,6 +141,8 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
     }
 
     void onAddAsFavoritesTap() async {
+      HapticFeedback.lightImpact();
+
       if (!networkRequiredDialog(ref, context)) return;
 
       isTogglingLikeState.value = true;
@@ -150,6 +153,7 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
     }
 
     void openPlaylistTap() {
+      HapticFeedback.lightImpact();
       Navigator.of(context).pop();
 
       context.go(
@@ -160,12 +164,17 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
     }
 
     void addToPlaylistTap() {
+      HapticFeedback.lightImpact();
+      Navigator.of(context).pop();
+
       if (!networkRequiredDialog(ref, context)) return;
 
       showWipDialog(context);
     }
 
     void onAddToQueueTap() async {
+      HapticFeedback.lightImpact();
+
       await player.addNextToQueue(newAudio);
 
       if (!context.mounted) return;
@@ -187,6 +196,7 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
       if (newAudio.album == null) {
         throw Exception("This audio doesn't have an album");
       }
+      HapticFeedback.lightImpact();
 
       if (!networkRequiredDialog(ref, context)) return;
 
@@ -197,20 +207,24 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
       if (hasGeniusInfo.value == null) {
         throw Exception("Genius info isn't loaded yet");
       }
-      if (!demoModeDialog(ref, context)) return;
 
+      HapticFeedback.lightImpact();
       Navigator.of(context).pop();
+
+      if (!demoModeDialog(ref, context)) return;
 
       await launchUrlString(geniusUrl);
     }
 
     void onCacheTrackTap() async {
+      HapticFeedback.lightImpact();
+      Navigator.of(context).pop();
+
       if (!demoModeDialog(ref, context)) return;
       if (!networkRequiredDialog(ref, context)) return;
 
       final preferences = ref.read(preferencesProvider);
       final playlists = ref.read(playlistsProvider.notifier);
-      Navigator.of(context).pop();
 
       try {
         newAudio = await PlaylistCacheDownloadItem.downloadWithMetadata(
@@ -246,10 +260,11 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
     }
 
     void onDeezerThumbsTap() {
+      HapticFeedback.lightImpact();
+      Navigator.of(context).pop();
+
       if (!demoModeDialog(ref, context)) return;
       if (!networkRequiredDialog(ref, context)) return;
-
-      Navigator.of(context).pop();
 
       showDialog(
         context: context,
@@ -263,11 +278,13 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
     }
 
     void onReplaceWithLocalAudioTap() async {
+      HapticFeedback.lightImpact();
+      Navigator.of(context).pop();
+
       if (!demoModeDialog(ref, context)) return;
 
       final messenger = ScaffoldMessenger.of(context);
       final playlists = ref.read(playlistsProvider.notifier);
-      Navigator.of(context).pop();
 
       // Если трек уже заменён локально, то предлагаем удалить его.
       if (isReplacedLocally) {
@@ -380,6 +397,8 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
     }
 
     void onReplaceFromYoutubeTap() {
+      HapticFeedback.lightImpact();
+
       if (!demoModeDialog(ref, context)) return;
       if (!networkRequiredDialog(ref, context)) return;
 
@@ -387,6 +406,8 @@ class BottomAudioOptionsDialog extends HookConsumerWidget {
     }
 
     void onTrackDetailsTap() {
+      HapticFeedback.lightImpact();
+
       if (!networkRequiredDialog(ref, context)) return;
 
       showWipDialog(context);

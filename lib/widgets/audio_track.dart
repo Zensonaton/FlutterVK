@@ -99,12 +99,10 @@ Widget buildListTrackWidget(
     );
   }
 
-  void showMore(bool viaLongPress) {
+  void showMore([bool viaLongPress = false]) {
     FocusScope.of(context).unfocus();
 
-    if (viaLongPress) {
-      HapticFeedback.lightImpact();
-    } else {
+    if (!viaLongPress) {
       HapticFeedback.selectionClick();
     }
 
@@ -139,7 +137,7 @@ Widget buildListTrackWidget(
     onPlayToggle: onPlayToggle,
     onLikeTap: !replaceLikeWithMore ? onLikeTap : null,
     onSecondaryAction: () => showMore(true),
-    onMoreTap: replaceLikeWithMore ? () => showMore(true) : null,
+    onMoreTap: replaceLikeWithMore ? showMore : null,
   );
 }
 

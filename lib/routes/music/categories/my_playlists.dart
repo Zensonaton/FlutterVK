@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:gap/gap.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
@@ -41,6 +42,7 @@ class MyPlaylistsBlock extends HookConsumerWidget {
       onDismiss: () {
         final preferences = ref.read(preferencesProvider.notifier);
 
+        HapticFeedback.selectionClick();
         preferences.setPlaylistsChipEnabled(false);
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -96,15 +98,23 @@ class MyPlaylistsBlock extends HookConsumerWidget {
                   description: playlist.description,
                   selected: player.playlist?.mediaKey == playlist.mediaKey,
                   currentlyPlaying: player.isPlaying,
-                  onOpen: () => context.push(
-                    "/music/playlist/${playlist.ownerID}/${playlist.id}",
-                  ),
-                  onPlayToggle: (bool playing) => onPlaylistPlayToggle(
-                    ref,
-                    context,
-                    playlist,
-                    playing,
-                  ),
+                  onOpen: () {
+                    HapticFeedback.lightImpact();
+
+                    context.push(
+                      "/music/playlist/${playlist.ownerID}/${playlist.id}",
+                    );
+                  },
+                  onPlayToggle: (bool playing) {
+                    HapticFeedback.mediumImpact();
+
+                    return onPlaylistPlayToggle(
+                      ref,
+                      context,
+                      playlist,
+                      playing,
+                    );
+                  },
                 );
               },
             ),

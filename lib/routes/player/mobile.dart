@@ -146,13 +146,13 @@ class MobilePlayerWidget extends HookWidget {
     final isQueueEnabled = useState(false);
 
     void onLyricsSelected() {
-      HapticFeedback.lightImpact();
+      HapticFeedback.selectionClick();
       isLyricsEnabled.value = !isLyricsEnabled.value;
       isQueueEnabled.value = false;
     }
 
     void onQueuePressed() {
-      HapticFeedback.lightImpact();
+      HapticFeedback.selectionClick();
       isQueueEnabled.value = !isQueueEnabled.value;
       isLyricsEnabled.value = false;
     }

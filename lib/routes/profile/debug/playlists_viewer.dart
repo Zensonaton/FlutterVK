@@ -152,9 +152,13 @@ class PlaylistsViewerDebugMenu extends ConsumerWidget {
                   description:
                       "live: ${playlist.isLiveData}, tracksLive: ${playlist.areTracksLive}, cache: ${playlist.cacheTracks ?? false}",
                   useTextOnImageLayout: true,
-                  onOpen: () => context.push(
-                    "/music/playlist/${playlist.ownerID}/${playlist.id}",
-                  ),
+                  onOpen: () {
+                    HapticFeedback.lightImpact();
+
+                    context.push(
+                      "/music/playlist/${playlist.ownerID}/${playlist.id}",
+                    );
+                  },
                 ),
             ],
           ),

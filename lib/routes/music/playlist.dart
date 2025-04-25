@@ -1741,12 +1741,19 @@ class PlaylistRoute extends HookConsumerWidget {
     final double minAppBarHeight = 70 + statusBarHeight;
     final double horizontalPadding = mobileLayout ? 12 : 18;
 
+    Future<void> onLikePlaylistTap() async {
+      HapticFeedback.lightImpact();
+
+      showWipDialog(context);
+    }
+
     void onCacheTap() async {
       final downloadManager = ref.read(downloadManagerProvider.notifier);
       final playlistsManager = ref.read(playlistsProvider.notifier);
       final playlistName = playlist.title ?? l18n.general_favorites_playlist;
+      final playlistCached = playlist.cacheTracks ?? false;
 
-      final bool playlistCached = playlist.cacheTracks ?? false;
+      HapticFeedback.lightImpact();
 
       // Не даём что либо делать с кэшированием в демо-версии.
       if (!demoModeDialog(ref, context)) return;
@@ -1856,6 +1863,8 @@ class PlaylistRoute extends HookConsumerWidget {
     void onPlayTapped() async {
       final preferences = ref.read(preferencesProvider);
 
+      HapticFeedback.mediumImpact();
+
       // Если у нас уже запущен этот же плейлист, то переключаем паузу/воспроизведение.
       if (player.playlist?.mediaKey == playlist.mediaKey) {
         await player.togglePlay();
@@ -1883,8 +1892,8 @@ class PlaylistRoute extends HookConsumerWidget {
       );
       if (foundAudio == null || !foundAudio.canPlay) return;
 
-      // Убираем фокус с поля поиска.
       searchFocusNode.unfocus();
+      HapticFeedback.mediumImpact();
 
       // Если у нас уже запущен этот же трек, то переключаем паузу/воспроизведение.
       if (player.audio?.mediaKey == foundAudio.mediaKey) {
@@ -2045,7 +2054,7 @@ class PlaylistRoute extends HookConsumerWidget {
                 infoBoxHeight: infoBoxHeight,
                 onLikePressed: playlist.type == PlaylistType.favorites
                     ? null
-                    : () async => showWipDialog(context),
+                    : onLikePlaylistTap,
                 onPlayPausePressed: onPlayTapped,
                 onCachePressed: onCacheTap,
               ),

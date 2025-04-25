@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:gap/gap.dart";
 import "package:go_router/go_router.dart";
@@ -261,6 +262,7 @@ class SimillarMusicBlock extends HookConsumerWidget {
       onDismiss: () {
         final preferences = ref.read(preferencesProvider.notifier);
 
+        HapticFeedback.selectionClick();
         preferences.setSimilarMusicChipEnabled(false);
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -333,15 +335,23 @@ class SimillarMusicBlock extends HookConsumerWidget {
                   tracks: playlist.knownTracks!,
                   selected: player.playlist?.mediaKey == playlist.mediaKey,
                   currentlyPlaying: player.isPlaying && player.isLoaded,
-                  onOpen: () => context.push(
-                    "/music/playlist/${playlist.ownerID}/${playlist.id}",
-                  ),
-                  onPlayToggle: (bool playing) => onPlaylistPlayToggle(
-                    ref,
-                    context,
-                    playlist,
-                    playing,
-                  ),
+                  onOpen: () {
+                    HapticFeedback.lightImpact();
+
+                    context.push(
+                      "/music/playlist/${playlist.ownerID}/${playlist.id}",
+                    );
+                  },
+                  onPlayToggle: (bool playing) {
+                    HapticFeedback.mediumImpact();
+
+                    return onPlaylistPlayToggle(
+                      ref,
+                      context,
+                      playlist,
+                      playing,
+                    );
+                  },
                 );
               },
             ),

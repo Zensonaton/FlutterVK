@@ -1,5 +1,6 @@
 import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:gap/gap.dart";
 import "package:go_router/go_router.dart";
@@ -81,8 +82,11 @@ class ChipFilters extends ConsumerWidget {
       // "Моя музыка".
       if (!mobileLayout)
         FilterChip(
-          onSelected: (bool value) =>
-              prefsNotifier.setMyMusicChipEnabled(value),
+          onSelected: (bool value) {
+            HapticFeedback.selectionClick();
+
+            prefsNotifier.setMyMusicChipEnabled(value);
+          },
           selected: preferences.myMusicChipEnabled,
           label: Text(
             l18n.my_music_chip,
@@ -91,8 +95,11 @@ class ChipFilters extends ConsumerWidget {
 
       // "Ваши плейлисты".
       FilterChip(
-        onSelected: (bool value) =>
-            prefsNotifier.setPlaylistsChipEnabled(value),
+        onSelected: (bool value) {
+          HapticFeedback.selectionClick();
+
+          prefsNotifier.setPlaylistsChipEnabled(value);
+        },
         selected: preferences.playlistsChipEnabled,
         label: Text(
           l18n.my_playlists_chip,
@@ -102,8 +109,11 @@ class ChipFilters extends ConsumerWidget {
       // "В реальном времени".
       if (hasRecommendations)
         FilterChip(
-          onSelected: (bool value) =>
-              prefsNotifier.setRealtimePlaylistsChipEnabled(value),
+          onSelected: (bool value) {
+            HapticFeedback.selectionClick();
+
+            prefsNotifier.setRealtimePlaylistsChipEnabled(value);
+          },
           selected: preferences.realtimePlaylistsChipEnabled,
           label: Text(
             l18n.realtime_playlists_chip,
@@ -113,8 +123,11 @@ class ChipFilters extends ConsumerWidget {
       // "Плейлисты для Вас".
       if (hasRecommendations)
         FilterChip(
-          onSelected: (bool value) =>
-              prefsNotifier.setRecommendedPlaylistsChipEnabled(value),
+          onSelected: (bool value) {
+            HapticFeedback.selectionClick();
+
+            prefsNotifier.setRecommendedPlaylistsChipEnabled(value);
+          },
           selected: preferences.recommendedPlaylistsChipEnabled,
           label: Text(
             l18n.recommended_playlists_chip,
@@ -124,8 +137,11 @@ class ChipFilters extends ConsumerWidget {
       // "Совпадения по вкусам".
       if (hasRecommendations)
         FilterChip(
-          onSelected: (bool value) =>
-              prefsNotifier.setSimilarMusicChipEnabled(value),
+          onSelected: (bool value) {
+            HapticFeedback.selectionClick();
+
+            prefsNotifier.setSimilarMusicChipEnabled(value);
+          },
           selected: preferences.similarMusicChipEnabled,
           label: Text(
             l18n.simillar_music_chip,
@@ -135,7 +151,11 @@ class ChipFilters extends ConsumerWidget {
       // "Собрано редакцией".
       if (hasRecommendations)
         FilterChip(
-          onSelected: (bool value) => prefsNotifier.setByVKChipEnabled(value),
+          onSelected: (bool value) {
+            HapticFeedback.selectionClick();
+
+            prefsNotifier.setByVKChipEnabled(value);
+          },
           selected: preferences.byVKChipEnabled,
           label: Text(
             l18n.by_vk_chip,

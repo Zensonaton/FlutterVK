@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:gap/gap.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
@@ -61,6 +62,7 @@ class MyMusicBlock extends HookConsumerWidget {
       onDismiss: () {
         final preferences = ref.read(preferencesProvider.notifier);
 
+        HapticFeedback.selectionClick();
         preferences.setMyMusicChipEnabled(false);
 
         ScaffoldMessenger.of(context).showSnackBar(
