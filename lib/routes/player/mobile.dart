@@ -9,6 +9,7 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 
 import "../../provider/player.dart";
 import "../../widgets/fading_list_view.dart";
+import "../music/bottom_audio_options.dart";
 import "mobile/bottom.dart";
 import "mobile/image.dart";
 import "mobile/info.dart";
@@ -100,7 +101,7 @@ class _QueueBlock extends StatelessWidget {
 }
 
 /// Часть [PlayerRoute], отображающая полнооконный плеер для Mobile Layout'а.
-class MobilePlayerWidget extends HookWidget {
+class MobilePlayerWidget extends HookConsumerWidget {
   /// Длительность для всех переходов между треками.
   static const Duration transitionDuration = Duration(milliseconds: 500);
 
@@ -121,7 +122,7 @@ class MobilePlayerWidget extends HookWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final mqSize = MediaQuery.sizeOf(context);
     final mqPadding = MediaQuery.paddingOf(context);
 
@@ -147,14 +148,35 @@ class MobilePlayerWidget extends HookWidget {
 
     void onLyricsSelected() {
       HapticFeedback.selectionClick();
+
       isLyricsEnabled.value = !isLyricsEnabled.value;
       isQueueEnabled.value = false;
     }
 
     void onQueuePressed() {
       HapticFeedback.selectionClick();
+
       isQueueEnabled.value = !isQueueEnabled.value;
       isLyricsEnabled.value = false;
+    }
+
+    void onMorePressed() {
+      HapticFeedback.selectionClick();
+
+      final player = ref.read(playerProvider);
+
+      showModalBottomSheet(
+        context: context,
+        useRootNavigator: true,
+        isScrollControlled: true,
+        useSafeArea: true,
+        builder: (BuildContext context) {
+          return BottomAudioOptionsDialog(
+            audio: player.audio!,
+            playlist: player.playlist!,
+          );
+        },
+      );
     }
 
     return SafeArea(
@@ -216,6 +238,7 @@ class MobilePlayerWidget extends HookWidget {
                   onLyricsPressed: onLyricsSelected,
                   isQueueSelected: isQueueEnabled.value,
                   onQueuePressed: onQueuePressed,
+                  onMorePressed: onMorePressed,
                 ),
               ),
             ],
