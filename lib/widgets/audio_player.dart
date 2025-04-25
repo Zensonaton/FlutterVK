@@ -1210,17 +1210,6 @@ class _MusicRightSide extends HookConsumerWidget {
         height: double.infinity,
         child: Row(
           children: [
-            // Лайк.
-            LoadingIconButton(
-              onPressed: onLike,
-              constraints: buttonConstraints,
-              iconSize: 24,
-              icon: Icon(
-                isLiked ? Icons.favorite : Icons.favorite_outline,
-                color: scheme.onPrimaryContainer,
-              ),
-            ),
-
             // Дизлайк.
             if (isRecommendation)
               LoadingIconButton(
@@ -1231,6 +1220,17 @@ class _MusicRightSide extends HookConsumerWidget {
                   color: scheme.onPrimaryContainer,
                 ),
               ),
+
+            // Лайк.
+            LoadingIconButton(
+              onPressed: onLike,
+              constraints: buttonConstraints,
+              iconSize: 24,
+              icon: Icon(
+                isLiked ? Icons.favorite : Icons.favorite_outline,
+                color: scheme.onPrimaryContainer,
+              ),
+            ),
 
             // Пауза/воспроизведение.
             GestureDetector(
