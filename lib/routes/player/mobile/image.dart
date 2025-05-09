@@ -46,9 +46,8 @@ class TrackImageWidget extends HookConsumerWidget {
       duration: switchAnimationDuration,
       lowerBound: -1.0,
     );
-    final switchingViaSwipe = useState(false);
-    final didVibration = useState(false);
-    final seekToPrevAudio = useState(false);
+    final switchingViaSwipe = useRef(false);
+    final seekToPrevAudio = useRef(false);
     useValueListenable(switchAnimation);
 
     Future<void> audioSwitchTransition(
@@ -155,7 +154,6 @@ class TrackImageWidget extends HookConsumerWidget {
 
     void onHorizontalStart(DragStartDetails details) {
       switchAnimation.stop();
-      didVibration.value = false;
       switchingViaSwipe.value = true;
     }
 
@@ -165,13 +163,6 @@ class TrackImageWidget extends HookConsumerWidget {
         -1.0,
         1.0,
       );
-
-      if (!didVibration.value && switchAnimation.value.abs() >= 0.5) {
-        didVibration.value = true;
-        HapticFeedback.heavyImpact();
-      } else if (didVibration.value && switchAnimation.value.abs() <= 0.5) {
-        didVibration.value = false;
-      }
     }
 
     void onHorizontalEnd(DragEndDetails details) async {
