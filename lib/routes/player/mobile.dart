@@ -8,6 +8,7 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
 import "../../provider/player.dart";
+import "../../provider/user.dart";
 import "../../widgets/fading_list_view.dart";
 import "../music/bottom_audio_options.dart";
 import "mobile/bottom.dart";
@@ -146,6 +147,9 @@ class MobilePlayerWidget extends HookConsumerWidget {
     final isLyricsEnabled = useState(false);
     final isQueueEnabled = useState(false);
 
+    final detailsAudio = useRef<ExtendedAudio?>(null);
+    final detailPlaylist = useRef<ExtendedPlaylist?>(null);
+
     void onLyricsSelected() {
       HapticFeedback.selectionClick();
 
@@ -164,6 +168,8 @@ class MobilePlayerWidget extends HookConsumerWidget {
       HapticFeedback.selectionClick();
 
       final player = ref.read(playerProvider);
+      detailsAudio.value = player.audio;
+      detailPlaylist.value = player.playlist;
 
       showModalBottomSheet(
         context: context,
@@ -172,8 +178,8 @@ class MobilePlayerWidget extends HookConsumerWidget {
         useSafeArea: true,
         builder: (BuildContext context) {
           return BottomAudioOptionsDialog(
-            audio: player.audio!,
-            playlist: player.playlist!,
+            audio: detailsAudio.value!,
+            playlist: detailPlaylist.value!,
           );
         },
       );

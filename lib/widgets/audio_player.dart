@@ -254,9 +254,13 @@ class _MusicLeftSide extends HookConsumerWidget {
   /// Callback-метод, вызываемый при нажатии на кнопку дизлайка.
   final AsyncCallback onDislike;
 
+  /// Callback-метод, вызываемый при нажатии на кнопку "дополнительно", либо долгом нажатии на изображение трека.
+  final VoidCallback onMoreTap;
+
   const _MusicLeftSide({
     required this.onLike,
     required this.onDislike,
+    required this.onMoreTap,
   });
 
   @override
@@ -378,23 +382,6 @@ class _MusicLeftSide extends HookConsumerWidget {
       openPlayerRouteIfNotOpened(context);
     }
 
-    void onLongTap() {
-      HapticFeedback.mediumImpact();
-
-      showModalBottomSheet(
-        context: context,
-        useRootNavigator: true,
-        isScrollControlled: true,
-        useSafeArea: true,
-        builder: (BuildContext context) {
-          return BottomAudioOptionsDialog(
-            audio: audio!,
-            playlist: playlist!,
-          );
-        },
-      );
-    }
-
     void onVolumeScroll(double diff) async {
       if (!mobileLayout || isMobile) return null;
 
@@ -464,7 +451,8 @@ class _MusicLeftSide extends HookConsumerWidget {
               child: GestureDetector(
                 behavior: HitTestBehavior.translucent,
                 onTap: mobileLayout ? onTap : null,
-                onLongPress: mobileLayout ? onLongTap : null,
+                onSecondaryTap: onMoreTap,
+                onLongPress: mobileLayout ? onMoreTap : null,
                 onHorizontalDragStart: mobileLayout ? onHorizontalStart : null,
                 onHorizontalDragUpdate:
                     mobileLayout ? onHorizontalUpdate : null,
@@ -604,7 +592,6 @@ class _MusicLeftSide extends HookConsumerWidget {
 
                             // Кнопка дизлайка, если это рекомендованный плейлист.
                             if (isRecommendation) ...[
-                              const Gap(4),
                               LoadingIconButton(
                                 onPressed: onDislike,
                                 icon: Icon(
@@ -613,6 +600,15 @@ class _MusicLeftSide extends HookConsumerWidget {
                                 ),
                               ),
                             ],
+
+                            // Кнопка "дополнительно".
+                            IconButton(
+                              onPressed: onMoreTap,
+                              icon: Icon(
+                                Icons.adaptive.more,
+                                color: scheme.onPrimaryContainer,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -1146,11 +1142,6 @@ class _MusicMiddleSide extends HookConsumerWidget {
 ///
 /// В такой части отображаются дополнительные кнопки для управления воспроизведением в Desktop Layout, либо ряд из некоторых простых кнопок (лайк, пауза) для Mobile Layout.
 class _MusicRightSide extends HookConsumerWidget {
-  static const BoxConstraints buttonConstraints = BoxConstraints(
-    minWidth: kMinInteractiveDimension,
-    minHeight: kMinInteractiveDimension,
-  );
-
   /// Callback-метод, вызываемый при нажатии на кнопку лайка.
   final AsyncCallback onLike;
 
@@ -1214,7 +1205,7 @@ class _MusicRightSide extends HookConsumerWidget {
             if (isRecommendation)
               LoadingIconButton(
                 onPressed: onDislike,
-                constraints: buttonConstraints,
+                constraints: _MusicContents.buttonConstraints,
                 icon: Icon(
                   Icons.thumb_down_outlined,
                   color: scheme.onPrimaryContainer,
@@ -1224,8 +1215,7 @@ class _MusicRightSide extends HookConsumerWidget {
             // Лайк.
             LoadingIconButton(
               onPressed: onLike,
-              constraints: buttonConstraints,
-              iconSize: 24,
+              constraints: _MusicContents.buttonConstraints,
               icon: Icon(
                 isLiked ? Icons.favorite : Icons.favorite_outline,
                 color: scheme.onPrimaryContainer,
@@ -1237,7 +1227,7 @@ class _MusicRightSide extends HookConsumerWidget {
               onLongPress: onStop,
               child: IconButton(
                 onPressed: onPlayPause,
-                constraints: buttonConstraints,
+                constraints: _MusicContents.buttonConstraints,
                 icon: PlayPauseAnimatedIcon(
                   color: scheme.onPrimaryContainer,
                 ),
@@ -1498,7 +1488,13 @@ class BottomMusicProgressBar extends HookConsumerWidget {
 }
 
 /// Виджет для [MusicPlayerWidget], отображающий содержимое плеера.
-class _MusicContents extends ConsumerWidget {
+class _MusicContents extends HookConsumerWidget {
+  /// Минимальный размер кнопок управления воспроизведением.
+  static const BoxConstraints buttonConstraints = BoxConstraints(
+    minWidth: kMinInteractiveDimension,
+    minHeight: kMinInteractiveDimension,
+  );
+
   /// Минимальный размер центрального блока ([PlayerControlsWidget]) при Desktop Layout.
   static const double minMiddleBlockSize = 100;
 
@@ -1527,6 +1523,7 @@ class _MusicContents extends ConsumerWidget {
 
     final mobileLayout = isMobileLayout(context);
 
+    final audio = player.audio;
     final playlist = player.playlist;
     final isRecommendation = playlist?.isRecommendationTypePlaylist ?? false;
 
@@ -1534,7 +1531,7 @@ class _MusicContents extends ConsumerWidget {
         ? MusicPlayerWidget.mobileHeight
         : MusicPlayerWidget.desktopMiniPlayerHeight;
     final padding = (mobileLayout) ? mobilePadding : desktopPadding;
-    final freeSpace = MediaQuery.of(context).size.width -
+    final freeSpace = MediaQuery.sizeOf(context).width -
         (mobileLayout ? MusicPlayerWidget.mobilePadding * 2 : 0) -
         padding * 2;
     // TODO: Реализовать "сжатую" версию плеера при Desktop Layout.
@@ -1557,6 +1554,28 @@ class _MusicContents extends ConsumerWidget {
         maxMiddleBlockSize,
       );
       leftBlockSize = rightBlockSize = (freeSpace - middleBlockSize) / 2;
+    }
+
+    final detailsAudio = useRef<ExtendedAudio?>(null);
+    final detailPlaylist = useRef<ExtendedPlaylist?>(null);
+
+    void onDetailsTap() {
+      HapticFeedback.mediumImpact();
+      detailsAudio.value = audio;
+      detailPlaylist.value = playlist;
+
+      showModalBottomSheet(
+        context: context,
+        useRootNavigator: true,
+        isScrollControlled: true,
+        useSafeArea: true,
+        builder: (BuildContext context) {
+          return BottomAudioOptionsDialog(
+            audio: detailsAudio.value!,
+            playlist: detailPlaylist.value!,
+          );
+        },
+      );
     }
 
     Future<void> onLikeTap() async {
@@ -1614,6 +1633,7 @@ class _MusicContents extends ConsumerWidget {
                     child: _MusicLeftSide(
                       onLike: onLikeTap,
                       onDislike: onDislikeTap,
+                      onMoreTap: onDetailsTap,
                     ),
                   ),
                 ),
@@ -1753,11 +1773,8 @@ class MusicPlayerWidget extends HookConsumerWidget {
             milliseconds: 500,
           ),
           decoration: BoxDecoration(
-            borderRadius: mobileLayout
-                ? BorderRadius.circular(
-                    globalBorderRadius,
-                  )
-                : null,
+            borderRadius:
+                mobileLayout ? BorderRadius.circular(globalBorderRadius) : null,
             boxShadow: [
               if (isPlaying)
                 BoxShadow(
