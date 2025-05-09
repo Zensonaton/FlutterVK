@@ -940,25 +940,25 @@ class ExtendedAnimatedThumbnail {
 /// Для получения данных воспользуйтесь [Provider]'ом [userProvider].
 class UserData {
   /// ID пользователя.
-  int id;
+  final int id;
 
   /// Имя пользователя.
-  String firstName;
+  final String firstName;
 
   /// Фамилия пользователя.
-  String lastName;
+  final String lastName;
 
   /// Возвращает имя и фамилию пользователя в формате `Имя Фамилия`.
   String get fullName => "$firstName $lastName";
 
   /// @domain пользователя.
-  String? domain;
+  final String? domain;
 
   /// URL к квадратной фотографии с шириной в 50 пикселей.
-  String? photo50Url;
+  final String? photo50Url;
 
   /// URL к квадратной фотографии с максимальным размером.
-  String? photoMaxUrl;
+  final String? photoMaxUrl;
 
   UserData({
     required this.id,
