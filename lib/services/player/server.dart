@@ -587,18 +587,11 @@ class PlayerLocalServer {
 
     // Здесь мы можем быть почти полностью уверены, что трек и вправду
     // существует на диске, и мы можем его прочитать.
-    List<int> bytes = [];
     file.openRead().listen(
       (data) {
-        bytes.addAll(data);
         bytesController.add(Uint8List.fromList(data));
       },
       onDone: () async {
-        assert(
-          fileSize == bytes.length,
-          "File size mismatch! Expected $fileSize, but got ${bytes.length} instead",
-        );
-
         await bytesController.close();
 
         // Проверки странных случаев:
