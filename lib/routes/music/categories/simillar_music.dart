@@ -306,17 +306,7 @@ class SimillarMusicBlock extends HookConsumerWidget {
                       simillarity: 0.9,
                       tracks: List.generate(
                         3,
-                        (int index) => ExtendedAudio(
-                          id: -1,
-                          ownerID: -1,
-                          title: fakeTrackNames[index % fakeTrackNames.length],
-                          artist: fakeTrackNames[
-                              (index + 1) % fakeTrackNames.length],
-                          duration: const Duration(minutes: 3),
-                          accessKey: "",
-                          url: "",
-                          date: 0,
-                        ),
+                        (int index) => ExtendedAudio.fake(index),
                       ),
                     ),
                   );

@@ -232,18 +232,7 @@ class SearchDisplayDialog extends HookConsumerWidget {
                       itemBuilder: (BuildContext context, int index) {
                         return Skeletonizer(
                           child: AudioTrackTile(
-                            audio: ExtendedAudio(
-                              id: -1,
-                              ownerID: -1,
-                              title:
-                                  fakeTrackNames[index % fakeTrackNames.length],
-                              artist: fakeTrackNames[
-                                  (index + 1) % fakeTrackNames.length],
-                              duration: const Duration(minutes: 3),
-                              accessKey: "",
-                              url: "",
-                              date: 0,
-                            ),
+                            audio: ExtendedAudio.fake(index),
                           ),
                         );
                       },

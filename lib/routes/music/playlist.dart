@@ -691,7 +691,7 @@ class PlaylistAudiosListWidget extends HookConsumerWidget {
         itemCount: hasTracksList ? filteredAudios.length : playlist.count,
         itemExtent: 50 + tracksSpacing,
         itemBuilder: (BuildContext context, int index) {
-          // Если ничего не загружено, то отображаем Skeleton Loader вместо реального трека.
+          // Skeleton loader.
           if (!hasTracksList) {
             return Padding(
               padding: EdgeInsets.only(
@@ -701,19 +701,11 @@ class PlaylistAudiosListWidget extends HookConsumerWidget {
               ),
               child: Skeletonizer(
                 child: AudioTrackTile(
-                  audio: ExtendedAudio(
-                    id: -1,
-                    ownerID: -1,
-                    title: fakeTrackNames[index % fakeTrackNames.length],
-                    artist: fakeTrackNames[(index + 1) % fakeTrackNames.length],
-                    duration: const Duration(minutes: 3),
-                  ),
+                  audio: ExtendedAudio.fake(index),
                   dense: mobileLayout,
                   roundedCorners: !mobileLayout,
                   padding: mobileLayout
-                      ? EdgeInsets.symmetric(
-                          horizontal: horizontalPadding,
-                        )
+                      ? EdgeInsets.symmetric(horizontal: horizontalPadding)
                       : null,
                 ),
               ),

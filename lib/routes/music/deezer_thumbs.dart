@@ -315,15 +315,7 @@ class TrackThumbnailEditDialog extends HookConsumerWidget {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return Skeletonizer(
                           child: AudioTrackTile(
-                            audio: ExtendedAudio(
-                              id: -1,
-                              ownerID: -1,
-                              title:
-                                  fakeTrackNames[index % fakeTrackNames.length],
-                              artist: fakeTrackNames[
-                                  (index + 1) % fakeTrackNames.length],
-                              duration: const Duration(minutes: 3),
-                            ),
+                            audio: ExtendedAudio.fake(index),
                           ),
                         );
                       }

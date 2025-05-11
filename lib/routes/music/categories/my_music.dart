@@ -105,15 +105,7 @@ class MyMusicBlock extends HookConsumerWidget {
               index++) ...[
             Skeletonizer(
               child: AudioTrackTile(
-                audio: ExtendedAudio(
-                  id: -1,
-                  ownerID: -1,
-                  title: fakeTrackNames[index % fakeTrackNames.length],
-                  artist: fakeTrackNames[(index + 1) % fakeTrackNames.length],
-                  duration: const Duration(minutes: 3),
-                  accessKey: "",
-                  date: 0,
-                ),
+                audio: ExtendedAudio.fake(index),
               ),
             ),
             const Gap(trackTileSpacing),

@@ -899,6 +899,17 @@ class ExtendedAudio {
     this.colorCount,
     this.appleMusicThumbs,
   });
+
+  /// Возвращает объект [ExtendedAudio] с фейковыми значениями, используемый для skeleton-элементов.
+  ///
+  /// [index] используется для получения случайных названий треков/исполнителей.
+  static ExtendedAudio fake([int index = 0]) => ExtendedAudio(
+        id: -1,
+        ownerID: -1,
+        artist: fakeTrackNames[index % fakeTrackNames.length],
+        title: fakeTrackNames[(index + 1) % fakeTrackNames.length],
+        duration: const Duration(minutes: 3),
+      );
 }
 
 /// Информация по анимированным обложкам трека, полученных с Apple Music.
