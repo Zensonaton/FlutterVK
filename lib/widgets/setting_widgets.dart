@@ -170,7 +170,7 @@ class SettingCardSelectorWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = ColorScheme.of(context);
 
     final backgroundColor = isSelected ? scheme.primary : scheme.inversePrimary;
     final color =

@@ -285,7 +285,7 @@ class AudioTrackImage extends HookWidget {
     final memorySize =
         (MediaQuery.of(context).devicePixelRatio * imageSize).toInt();
     final selectedAndPlaying = isSelected && isPlaying;
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = ColorScheme.of(context);
 
     Widget getImageWidget() {
       // Возвращаем fallbackAvatar, если изображения трека нету.
@@ -424,7 +424,7 @@ class AudioTrackTitle extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final ColorScheme scheme = Theme.of(context).colorScheme;
+    final ColorScheme scheme = ColorScheme.of(context);
     final Color primaryTextColor =
         isSelected ? scheme.primary : scheme.onSurface;
     final Color primaryIconColor = primaryTextColor.withValues(alpha: 0.75);
@@ -618,7 +618,7 @@ class AudioTrackOtherInfo extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final ColorScheme scheme = Theme.of(context).colorScheme;
+    final ColorScheme scheme = ColorScheme.of(context);
     final Color color = isSelected ? scheme.primary : scheme.onSurface;
 
     return Row(
@@ -784,7 +784,7 @@ class AudioTrackTile extends HookConsumerWidget {
     final ColorScheme scheme = useMemoized(
       () {
         if (!isSelected || schemeInfo == null) {
-          return Theme.of(context).colorScheme;
+          return ColorScheme.of(context);
         }
 
         return schemeInfo.createScheme(
@@ -797,7 +797,7 @@ class AudioTrackTile extends HookConsumerWidget {
         preferences.dynamicSchemeType,
         brightness,
         schemeInfo,
-        Theme.of(context).colorScheme,
+        ColorScheme.of(context),
       ],
     );
 

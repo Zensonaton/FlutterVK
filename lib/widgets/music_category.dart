@@ -88,7 +88,7 @@ class MusicCategory extends HookWidget {
                       text: title,
                       style: titleStyle.copyWith(
                         fontWeight: FontWeight.w500,
-                        color: Theme.of(context).colorScheme.primary,
+                        color: ColorScheme.of(context).primary,
                       ),
                     ),
 
@@ -132,7 +132,7 @@ class MusicCategory extends HookWidget {
                     child: IconButton.filled(
                       icon: Icon(
                         Icons.close,
-                        color: Theme.of(context).colorScheme.surface,
+                        color: ColorScheme.of(context).surface,
                       ),
                       onPressed: onDismiss,
                       constraints: const BoxConstraints(),

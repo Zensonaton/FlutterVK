@@ -31,8 +31,7 @@ class _Info extends ConsumerWidget {
     final player = ref.read(playerProvider);
     ref.watch(playerAudioProvider);
 
-    final scheme =
-        Theme.of(context).colorScheme; // TODO: Использовать тему трека.
+    final scheme = ColorScheme.of(context); // TODO: Использовать тему трека.
 
     final audio = player.audio;
     final playlist = player.playlist;
@@ -201,7 +200,7 @@ class _LeftControls extends ConsumerWidget {
     final lyricsEnabled =
         ref.watch(preferencesProvider.select((val) => val.playerLyricsBlock));
 
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = ColorScheme.of(context);
 
     void onQueueToggle() {
       prefsNotifier.setPlayerQueueBlockEnabled(!queueEnabled);
@@ -260,7 +259,7 @@ class _RightControls extends HookConsumerWidget {
 
     final volume = player.volume;
 
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = ColorScheme.of(context);
 
     void onFullscreenClose() {
       Navigator.of(context).pop();

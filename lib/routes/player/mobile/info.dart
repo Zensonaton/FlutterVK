@@ -27,7 +27,7 @@ class _Info extends ConsumerWidget {
     final player = ref.read(playerProvider);
     ref.watch(playerAudioProvider);
 
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = ColorScheme.of(context);
 
     final audio = player.audio;
 
@@ -97,7 +97,7 @@ class InfoControlsWidget extends ConsumerWidget {
     ref.watch(playerAudioProvider);
     ref.watch(playerPlaylistProvider);
 
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = ColorScheme.of(context);
 
     final audio = player.audio;
     final playlist = player.playlist;

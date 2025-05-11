@@ -385,7 +385,7 @@ class ErroredApp extends StatelessWidget {
                   // Иконка.
                   Icon(
                     Icons.warning,
-                    color: Theme.of(context).colorScheme.error,
+                    color: ColorScheme.of(context).error,
                     size: 36,
                   ),
                   const Gap(12),

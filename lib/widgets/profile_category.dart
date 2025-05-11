@@ -52,7 +52,7 @@ class ProfileSettingCategory extends StatelessWidget {
         if (!centerTitle) const Gap(16),
         Icon(
           icon,
-          color: Theme.of(context).colorScheme.primary,
+          color: ColorScheme.of(context).primary,
         ),
         const Gap(12),
 
@@ -63,7 +63,7 @@ class ProfileSettingCategory extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
             style: TextStyle(
-              color: Theme.of(context).colorScheme.primary,
+              color: ColorScheme.of(context).primary,
               fontWeight: FontWeight.w500,
             ),
           ),

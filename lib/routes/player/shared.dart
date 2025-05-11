@@ -73,7 +73,7 @@ class LyricWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = ColorScheme.of(context);
 
     final isSynchronized = onTap != null;
     final isInterlide = line == null;
@@ -152,7 +152,7 @@ class CategoryIconWidget extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isHovered = useState(false);
 
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = ColorScheme.of(context);
 
     final showCloseIcon = onClose != null && isHovered.value;
 
@@ -646,7 +646,7 @@ class SliderWithProgressWidget extends HookConsumerWidget {
         .read(preferencesProvider.notifier)
         .setShowRemainingTime(!showRemainingTime);
 
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = ColorScheme.of(context);
 
     return Row(
       spacing: 8,

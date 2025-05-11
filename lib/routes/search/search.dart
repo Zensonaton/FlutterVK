@@ -45,7 +45,7 @@ class _SearchSuggestions extends HookConsumerWidget {
     final suggestionsLoaded = suggestions.value != null;
     final suggestionsOrFake = suggestions.value ?? fakeTrackNames;
 
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = ColorScheme.of(context);
 
     return ScrollConfiguration(
       behavior: ScrollConfiguration.of(context).copyWith(
@@ -104,7 +104,7 @@ class _SearchHistory extends ConsumerWidget {
       preferencesProvider.select((prefs) => prefs.searchHistory),
     );
 
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = ColorScheme.of(context);
 
     final mobileLayout = isMobileLayout(context);
 

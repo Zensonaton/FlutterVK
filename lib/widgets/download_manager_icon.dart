@@ -26,7 +26,7 @@ class ProgressIndicatorIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = ColorScheme.of(context);
 
     final isStarted = progress > 0.0;
     final isCompleted = progress >= 1.0;
@@ -159,7 +159,7 @@ class DownloadManagerIconWidget extends HookConsumerWidget {
     });
     useValueListenable(valueAnimController);
 
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = ColorScheme.of(context);
     const double availableSpace =
         downloadManagerExpandedWidth - downloadManagerMinimizedSize - 8;
 

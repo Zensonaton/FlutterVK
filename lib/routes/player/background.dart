@@ -17,7 +17,7 @@ class BackgroundFallbackImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = ColorScheme.of(context);
 
     return Container(
       decoration: BoxDecoration(

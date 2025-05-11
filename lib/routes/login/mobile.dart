@@ -46,7 +46,7 @@ class MobileLoginWidget extends HookConsumerWidget {
             // Иконка.
             Icon(
               Icons.check_circle,
-              color: Theme.of(context).colorScheme.primary,
+              color: ColorScheme.of(context).primary,
             ),
             const Gap(12),
 
@@ -54,7 +54,7 @@ class MobileLoginWidget extends HookConsumerWidget {
             Text(
               l18n.login_success_auth,
               style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
+                    color: ColorScheme.of(context).primary,
                   ),
             ),
           ],

@@ -55,7 +55,7 @@ class TrackTitleAndArtist extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = ColorScheme.of(context);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -375,7 +375,7 @@ class _MusicLeftSide extends HookConsumerWidget {
     final isLiked = audio?.isLiked ?? false;
     final isRecommendation = playlist?.isRecommendationTypePlaylist ?? false;
 
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = ColorScheme.of(context);
 
     void onTap() {
       openPlayerRouteIfNotOpened(context);
@@ -650,7 +650,7 @@ class PlayerControlsWidget extends ConsumerWidget {
     ref.watch(playerIsShufflingProvider);
     ref.watch(playerIsRepeatingProvider);
 
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = ColorScheme.of(context);
 
     final isShuffling = player.isShuffling;
     final isLooping = player.isRepeating;
@@ -818,7 +818,7 @@ class NextTrackSpoilerWidget extends HookConsumerWidget {
             animation.value * 15;
     final opacity = animation.value;
 
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = ColorScheme.of(context);
 
     return Positioned(
       bottom: position,
@@ -898,7 +898,7 @@ class _MusicMiddleSide extends HookConsumerWidget {
     final alternateSlider = preferences.alternateDesktopMiniplayerSlider;
     final showRemainingTime = preferences.showRemainingTime;
 
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = ColorScheme.of(context);
 
     final isPlaying = player.isPlaying;
     final position = player.position.inSeconds;
@@ -1146,7 +1146,7 @@ class _MusicRightSide extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = ColorScheme.of(context);
     final mobileLayout = isMobileLayout(context);
 
     final player = ref.read(playerProvider);
@@ -1306,7 +1306,7 @@ class MusicPlayerBackgroundWidget extends HookConsumerWidget {
 
     final isPlaying = player.isPlaying;
 
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = ColorScheme.of(context);
     final mobileLayout = isMobileLayout(context);
 
     final audio = player.nextAudio;
@@ -1451,7 +1451,7 @@ class BottomMusicProgressBar extends HookConsumerWidget {
     );
     final animatedProgress = useValueListenable(progressAnimation);
 
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = ColorScheme.of(context);
     final color = scheme.onPrimaryContainer.withValues(
       alpha: isPlaying ? 1 : 0.5,
     );
@@ -1749,7 +1749,7 @@ class MusicPlayerWidget extends HookConsumerWidget {
       [brightness, trackSchemeInfo, preferences.dynamicSchemeType],
     );
 
-    final scheme = trackScheme ?? Theme.of(context).colorScheme;
+    final scheme = trackScheme ?? ColorScheme.of(context);
 
     return Padding(
       padding: EdgeInsets.all(

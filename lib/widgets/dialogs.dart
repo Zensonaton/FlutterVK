@@ -68,7 +68,7 @@ class MaterialDialog extends ConsumerWidget {
               Center(
                 child: Icon(
                   icon,
-                  color: iconColor ?? Theme.of(context).colorScheme.primary,
+                  color: iconColor ?? ColorScheme.of(context).primary,
                 ),
               ),
               const Gap(12),

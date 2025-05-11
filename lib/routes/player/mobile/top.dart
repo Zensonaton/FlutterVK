@@ -19,7 +19,7 @@ class TopBarWidget extends ConsumerWidget {
 
     final playlist = player.playlist;
 
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = ColorScheme.of(context);
     final color = scheme.onSurface;
 
     return Row(

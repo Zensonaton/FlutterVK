@@ -20,7 +20,7 @@ class UserAvatarPlaceholder extends StatelessWidget {
         child: Icon(
           Icons.person,
           size: 36,
-          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+          color: ColorScheme.of(context).onSurface.withValues(alpha: 0.5),
         ),
       ),
     );

@@ -338,7 +338,7 @@ class TrackThumbnailEditDialog extends HookConsumerWidget {
                             snapshot.error.toString(),
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
+                              color: ColorScheme.of(context).error,
                             ),
                           ),
                         );
@@ -357,7 +357,7 @@ class TrackThumbnailEditDialog extends HookConsumerWidget {
                               "click": StyledTextActionTag(
                                 (_, __) => onSearchClear(),
                                 style: TextStyle(
-                                  color: Theme.of(context).colorScheme.primary,
+                                  color: ColorScheme.of(context).primary,
                                 ),
                               ),
                             },

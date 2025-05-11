@@ -51,7 +51,7 @@ class TipWidget extends StatelessWidget {
       "description or richDescription must be provided",
     );
 
-    final color = Theme.of(context).colorScheme.primary;
+    final color = ColorScheme.of(context).primary;
 
     return Card(
       margin: EdgeInsets.zero,
@@ -104,7 +104,7 @@ class TipWidget extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
+                          color: ColorScheme.of(context).primary,
                           fontWeight: FontWeight.w500,
                         ),
                       ),

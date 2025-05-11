@@ -263,7 +263,7 @@ class SettingsImporterRoute extends HookConsumerWidget {
                         context.push("/profile/settings_exporter");
                       },
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
+                        color: ColorScheme.of(context).primary,
                       ),
                     ),
                   },

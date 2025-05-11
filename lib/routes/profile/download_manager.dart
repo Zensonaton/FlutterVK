@@ -51,7 +51,7 @@ class DownloadItemWidget extends HookConsumerWidget {
     });
     final animatedProgress = useValueListenable(valueAnimController);
 
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = ColorScheme.of(context);
     final bool isCompleted = progress == 1.0;
     final allTasks = task.tasks;
 
@@ -285,7 +285,7 @@ class DownloadCategory extends ConsumerWidget {
             Text(
               title,
               style: TextStyle(
-                color: Theme.of(context).colorScheme.primary,
+                color: ColorScheme.of(context).primary,
                 fontWeight: FontWeight.w500,
               ),
             ),

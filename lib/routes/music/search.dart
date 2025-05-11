@@ -262,7 +262,7 @@ class SearchDisplayDialog extends HookConsumerWidget {
                           "click": StyledTextActionTag(
                             (_, __) => onSearchClear(),
                             style: TextStyle(
-                              color: Theme.of(context).colorScheme.primary,
+                              color: ColorScheme.of(context).primary,
                             ),
                           ),
                         },

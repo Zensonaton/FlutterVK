@@ -92,7 +92,7 @@ class PlaylistWidget extends HookConsumerWidget {
                       BoxShadow(
                         blurRadius: 15,
                         spreadRadius: -3,
-                        color: Theme.of(context).colorScheme.tertiary,
+                        color: ColorScheme.of(context).tertiary,
                         blurStyle: BlurStyle.outer,
                       ),
                   ],
@@ -202,8 +202,7 @@ class PlaylistWidget extends HookConsumerWidget {
                                 child: RepaintBoundary(
                                   child: Image.asset(
                                     "assets/images/audioEqualizer.gif",
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
+                                    color: ColorScheme.of(context).primary,
                                     width: 32,
                                     height: 32,
                                     fit: BoxFit.fill,
@@ -225,8 +224,7 @@ class PlaylistWidget extends HookConsumerWidget {
                                           ? Icons.pause
                                           : Icons.play_arrow,
                                       size: 56,
-                                      color:
-                                          Theme.of(context).colorScheme.primary,
+                                      color: ColorScheme.of(context).primary,
                                     ),
                                   ),
                                 ),
@@ -257,7 +255,7 @@ class PlaylistWidget extends HookConsumerWidget {
                               .copyWith(
                                 fontWeight: FontWeight.w500,
                                 color: selected
-                                    ? Theme.of(context).colorScheme.primary
+                                    ? ColorScheme.of(context).primary
                                     : null,
                               ),
                         ),

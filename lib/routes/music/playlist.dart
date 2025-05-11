@@ -303,8 +303,8 @@ class CachePlaylistButtonWidget extends HookConsumerWidget {
               ? Icons.offline_pin
               : Icons.arrow_circle_down,
           color: playlist.cacheTracks ?? false
-              ? Theme.of(context).colorScheme.secondary
-              : Theme.of(context).colorScheme.onSurface,
+              ? ColorScheme.of(context).secondary
+              : ColorScheme.of(context).onSurface,
         ),
         onPressed: onTap,
       );
@@ -312,7 +312,7 @@ class CachePlaylistButtonWidget extends HookConsumerWidget {
 
     final progress = useValueListenable(task.progress);
 
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = ColorScheme.of(context);
 
     // FIXME: Данный виджет стоит переписать, поскольку тут происходит какие-то странные, не имеющие смысла вещи.
     return SizedBox(
@@ -393,7 +393,7 @@ class MobilePlaylistInfoWidget extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l18n = ref.watch(l18nProvider);
 
-    final safeScheme = scheme ?? Theme.of(context).colorScheme;
+    final safeScheme = scheme ?? ColorScheme.of(context);
 
     final String playlistName =
         playlist.title ?? l18n.general_favorites_playlist;
@@ -505,7 +505,7 @@ class MobileControlButtonsWidget extends HookConsumerWidget {
 
     useListenable(scrollController.position);
 
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = ColorScheme.of(context);
 
     final double finalPosition = minAppBarHeight - buttonSize / 2;
     double positionFromTop = maxAppBarHeight;
@@ -674,7 +674,7 @@ class PlaylistAudiosListWidget extends HookConsumerWidget {
               "click": StyledTextActionTag(
                 (_, __) => searchController.clear(),
                 style: TextStyle(
-                  color: Theme.of(context).colorScheme.primary,
+                  color: ColorScheme.of(context).primary,
                 ),
               ),
             },
@@ -778,7 +778,7 @@ class AppBarPlaylistImageWidget extends StatelessWidget {
     final int cacheSize =
         (size * MediaQuery.devicePixelRatioOf(context)).round();
 
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = ColorScheme.of(context);
 
     return Container(
       width: size,
@@ -1030,7 +1030,7 @@ class AppBarWidget extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l18n = ref.watch(l18nProvider);
 
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = ColorScheme.of(context);
 
     final String title = playlist.title ?? l18n.general_favorites_playlist;
 
@@ -1240,7 +1240,7 @@ class PlaylistTypeDescriptionWidget extends HookConsumerWidget {
         playlist.isLiveData || playlist.type == PlaylistType.favorites;
     final areTracksLoaded = playlist.audios != null;
 
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = ColorScheme.of(context);
 
     return Skeletonizer(
       enabled: !hasInfo,
@@ -1326,7 +1326,7 @@ class DesktopAppBarWidget extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l18n = ref.watch(l18nProvider);
 
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = ColorScheme.of(context);
 
     return SliverLayoutBuilder(
       builder: (
@@ -1494,7 +1494,7 @@ class DesktopPlaylistControlsWidget extends HookConsumerWidget {
     final hasTracksLoaded = playlist.audios != null;
     final isSelected = player.playlist?.ownerID == playlist.ownerID &&
         player.playlist?.id == playlist.id;
-    final safeScheme = scheme ?? Theme.of(context).colorScheme;
+    final safeScheme = scheme ?? ColorScheme.of(context);
 
     void onSearchClear() => searchController?.clear();
 
@@ -1509,7 +1509,7 @@ class DesktopPlaylistControlsWidget extends HookConsumerWidget {
           maxHeight: 54 + 8 * 2,
           builder: (BuildContext context, double offset) {
             return Container(
-              color: Theme.of(context).colorScheme.surface,
+              color: ColorScheme.of(context).surface,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [

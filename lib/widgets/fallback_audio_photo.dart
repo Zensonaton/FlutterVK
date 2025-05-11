@@ -20,7 +20,7 @@ class FallbackAudioAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = ColorScheme.of(context);
 
     return Container(
       width: size,
@@ -58,7 +58,7 @@ class FallbackAudioPlaylistAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = ColorScheme.of(context);
 
     return Container(
       width: size,

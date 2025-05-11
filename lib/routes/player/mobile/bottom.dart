@@ -46,7 +46,7 @@ class BottomBarWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = ColorScheme.of(context);
     final color = scheme.primary;
     final disabledColor = scheme.onSurface.withValues(
       alpha: 0.75,

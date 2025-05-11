@@ -58,7 +58,7 @@ class WelcomeRoute extends ConsumerWidget {
                           Uri.parse(repoURL),
                         ),
                         style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                              color: Theme.of(context).colorScheme.primary,
+                              color: ColorScheme.of(context).primary,
                             ),
                       ),
                     },

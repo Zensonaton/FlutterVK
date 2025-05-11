@@ -78,15 +78,14 @@ class SimillarMusicPlaylistWidget extends HookConsumerWidget {
 
     final isHovered = useState(false);
 
-    final Color topColor =
-        color ?? Theme.of(context).colorScheme.primaryContainer;
+    final Color topColor = color ?? ColorScheme.of(context).primaryContainer;
     final bool selectedAndPlaying = selected && currentlyPlaying;
 
     return Container(
       width: 250,
       decoration: BoxDecoration(
         border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant,
+          color: ColorScheme.of(context).outlineVariant,
         ),
         borderRadius: BorderRadius.circular(
           globalBorderRadius * 2,

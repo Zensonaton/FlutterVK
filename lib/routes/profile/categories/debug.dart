@@ -52,7 +52,7 @@ class ProfileDebugSettingsCategory extends HookConsumerWidget {
                 ? "Those options are shown because the app is running in debug mode."
                 : "This section is shown because \"force-show debug\" is enabled in settings.\nNormally, this section is hidden in non-debug modes.",
             style: TextStyle(
-              color: Theme.of(context).colorScheme.primary,
+              color: ColorScheme.of(context).primary,
             ),
           ),
         ),

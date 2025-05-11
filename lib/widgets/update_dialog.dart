@@ -38,7 +38,7 @@ class UpdateAvailableDialog extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l18n = ref.watch(l18nProvider);
 
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = ColorScheme.of(context);
 
     void onMorePressed() {
       launchUrl(
@@ -243,7 +243,7 @@ class ChangelogDialog extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l18n = ref.watch(l18nProvider);
 
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = ColorScheme.of(context);
 
     return DraggableScrollableSheet(
       expand: false,

@@ -221,7 +221,7 @@ class LivePlaylistWidget extends HookWidget {
                                   child: CircularProgressIndicator.adaptive(
                                     strokeWidth: 3.5,
                                     valueColor: AlwaysStoppedAnimation<Color>(
-                                      Theme.of(context).colorScheme.onSurface,
+                                      ColorScheme.of(context).onSurface,
                                     ),
                                   ),
                                 ),
@@ -229,14 +229,12 @@ class LivePlaylistWidget extends HookWidget {
                             : selected
                                 ? PlayPauseAnimatedIcon(
                                     size: 36,
-                                    color:
-                                        Theme.of(context).colorScheme.onSurface,
+                                    color: ColorScheme.of(context).onSurface,
                                   )
                                 : Icon(
                                     Icons.shuffle,
                                     size: 36,
-                                    color:
-                                        Theme.of(context).colorScheme.onSurface,
+                                    color: ColorScheme.of(context).onSurface,
                                   ),
                       ),
                       onPressed: isLoading.value ? null : onPlayToggleWrapper,
@@ -335,7 +333,7 @@ class MoodPlaylistWidget extends StatelessWidget {
             BoxShadow(
               blurRadius: 15,
               spreadRadius: -3,
-              color: Theme.of(context).colorScheme.tertiary,
+              color: ColorScheme.of(context).tertiary,
               blurStyle: BlurStyle.outer,
             ),
         ],

@@ -254,8 +254,7 @@ class SettingsExporterSelector extends HookConsumerWidget {
             tags: {
               "colored": StyledTextTag(
                 style: TextStyle(
-                  color:
-                      disabled ? null : Theme.of(context).colorScheme.primary,
+                  color: disabled ? null : ColorScheme.of(context).primary,
                 ),
               ),
               "icon": StyledTextIconTag(
@@ -540,7 +539,7 @@ class SettingsExporterRoute extends HookConsumerWidget {
                         context.push("/profile/settings_importer");
                       },
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
+                        color: ColorScheme.of(context).primary,
                       ),
                     ),
                   },
