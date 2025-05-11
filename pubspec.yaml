@@ -21,7 +21,6 @@ dependencies:
       path: audio_service
       ref: minor
   audio_session: ^0.1.18
-  awesome_dio_interceptor: ^1.2.0
   cached_network_image: ^3.3.1
   cancellation_token: ^2.0.1
   collection: ^1.17.2
@@ -30,7 +29,6 @@ dependencies:
   device_info_plus: ^11.1.1
   diacritic: ^0.1.5
   dio: ^5.5.0+1
-  dio_http2_adapter: ^2.5.3
   dio_smart_retry: ^7.0.1
   discord_rpc: ^0.0.2
   dynamic_color: ^1.6.9
@@ -70,9 +68,7 @@ dependencies:
   media_kit: ^1.1.11
   media_kit_libs_video: ^1.0.5
   media_kit_video: ^1.2.5
-  msgpack_dart: ^1.0.1
   package_info_plus: ^8.0.0
-  palette_generator: ^0.3.3+3
   path: ^1.8.3
   path_provider: ^2.1.2
   permission_handler: ^11.2.1
@@ -89,7 +85,6 @@ dependencies:
   styled_text: ^8.1.0
   system_tray: ^2.0.3
   url_launcher: ^6.2.2
-  visibility_detector: ^0.4.0+2
   wakelock_plus: ^1.1.4
   window_manager: ^0.4.0
   windows_taskbar: ^1.1.2

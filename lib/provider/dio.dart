@@ -1,10 +1,8 @@
 import "dart:convert";
 import "dart:io";
 
-import "package:awesome_dio_interceptor/awesome_dio_interceptor.dart";
 import "package:dio/dio.dart";
 import "package:dio_smart_retry/dio_smart_retry.dart";
-import "package:flutter/foundation.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 
@@ -74,23 +72,6 @@ void initDioInterceptors(Ref ref, Dio dio, DioType type) {
       ],
       retries: type == DioType.lrcLib ? 1 : 3,
     ),
-    if (kDebugMode && false)
-      // ignore: dead_code
-      AwesomeDioInterceptor(
-        logRequestTimeout: false,
-        logRequestHeaders: false,
-        logResponseHeaders: false,
-        logger: (String log) {
-          String newLog = log;
-
-          // Если слишком длинное, то обрезаем.
-          if (newLog.length > 300) {
-            newLog = "${newLog.substring(0, 300)}...";
-          }
-
-          logger.d(newLog);
-        },
-      ),
   ]);
 }
 
