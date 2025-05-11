@@ -83,16 +83,11 @@ String? extractAccessToken(String input) {
 /// - 0 -> `00:00`
 /// - 5 -> `00:05`
 /// - 61 -> `01:01`
-String secondsAsString(int seconds) {
-  if (seconds <= 0) return "00:00";
-
-  final Duration duration = Duration(
-    seconds: seconds,
-  );
+String durationAsString(Duration duration) {
   final String mins = (duration.inMinutes % 60).toString().padLeft(2, "0");
   final String scnds = (duration.inSeconds % 60).toString().padLeft(2, "0");
 
-  if (seconds >= 3600) {
+  if (duration.inHours >= 1) {
     final String hrs = (duration.inHours).toString().padLeft(2, "0");
 
     return "$hrs:$mins:$scnds";

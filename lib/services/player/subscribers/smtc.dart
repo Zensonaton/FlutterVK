@@ -118,11 +118,7 @@ class SMTCPlayerSubscriber extends PlayerSubscriber {
         thumbnail: audio.maxThumbnail,
       ),
     );
-    await _smtc.setEndTime(
-      Duration(
-        seconds: audio.duration,
-      ),
-    );
+    await _smtc.setEndTime(audio.duration);
   }
 
   /// События SMTC.

@@ -396,8 +396,8 @@ class PlayerLocalServer {
       for (var index = 0; index < _servedAudios.length; index++) {
         final audio = _servedAudios.audios[index];
 
-        final timePassed = secondsAsString(
-          DateTime.now().difference(audio.lastAccessed).inSeconds,
+        final timePassed = durationAsString(
+          DateTime.now().difference(audio.lastAccessed),
         );
         final sizeMB = ((audio.bytes?.length ?? 0) / (1024 * 1024)).round();
 

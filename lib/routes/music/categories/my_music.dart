@@ -110,7 +110,7 @@ class MyMusicBlock extends HookConsumerWidget {
                   ownerID: -1,
                   title: fakeTrackNames[index % fakeTrackNames.length],
                   artist: fakeTrackNames[(index + 1) % fakeTrackNames.length],
-                  duration: 60 * 3,
+                  duration: const Duration(minutes: 3),
                   accessKey: "",
                   date: 0,
                 ),

@@ -903,11 +903,11 @@ class _MusicMiddleSide extends HookConsumerWidget {
     final isPlaying = player.isPlaying;
     final position = player.position.inSeconds;
     final duration =
-        (player.duration != Duration.zero ? player.duration.inSeconds : null) ??
+        (player.duration != Duration.zero ? player.duration : null) ??
             player.audio?.duration;
 
     final durationString = useMemoized(
-      () => secondsAsString(duration ?? 0),
+      () => durationAsString(duration ?? Duration.zero),
       [duration],
     );
 
@@ -1014,18 +1014,18 @@ class _MusicMiddleSide extends HookConsumerWidget {
 
     final positionString = useMemoized(
       () {
-        final safeDuration = duration ?? 0;
+        final safeDuration = duration ?? Duration.zero;
         final safePosition = seekPosition.value ?? positionAnimation.value;
-        final positionSeconds = (safeDuration * safePosition).toInt();
+        final positionSeconds = safeDuration * safePosition;
 
         // Если нам нужно показывать количество оставшегося времени, то показываем его.
         if (showRemainingTime) {
           final remainingSeconds = safeDuration - positionSeconds;
 
-          return secondsAsString(remainingSeconds);
+          return durationAsString(remainingSeconds);
         }
 
-        return secondsAsString(positionSeconds);
+        return durationAsString(positionSeconds);
       },
       [
         position,

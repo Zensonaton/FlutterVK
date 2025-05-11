@@ -116,15 +116,8 @@ class ExtendedPlaylist {
 
     return audios!.fold<Duration>(
       Duration.zero,
-      (
-        Duration totalDuration,
-        ExtendedAudio audio,
-      ) {
-        return totalDuration +
-            Duration(
-              seconds: audio.duration,
-            );
-      },
+      (Duration totalDuration, ExtendedAudio audio) =>
+          totalDuration + audio.duration,
     );
   }
 
@@ -436,8 +429,10 @@ class ExtendedAudio {
   /// Название аудиозаписи.
   final String title;
 
-  /// Длительность аудиозаписи в секундах.
-  final int duration;
+  /// Длительность аудиозаписи.
+  ///
+  /// Данное значение неточное, поскольку API ВКонтакте возвращает длительность в секундах с округлением до ближайшего целого числа.
+  final Duration duration;
 
   /// Подпись трека.
   final String? subtitle;
@@ -521,7 +516,7 @@ class ExtendedAudio {
 
   /// Возвращает длительность данного трека в формате `01:23`.
   String get durationString {
-    _durationString ??= secondsAsString(duration);
+    _durationString ??= durationAsString(duration);
 
     return _durationString!;
   }
@@ -680,7 +675,7 @@ class ExtendedAudio {
         ownerID: audio.ownerID,
         artist: audio.artist,
         title: audio.title,
-        duration: audio.duration,
+        duration: Duration(seconds: audio.duration),
         subtitle: audio.subtitle,
         accessKey: audio.accessKey,
         isExplicit: audio.isExplicit,
@@ -703,7 +698,7 @@ class ExtendedAudio {
   ExtendedAudio basicCopyWith({
     String? artist,
     String? title,
-    int? duration,
+    Duration? duration,
     String? subtitle,
     String? accessKey,
     bool? isExplicit,
@@ -777,7 +772,7 @@ class ExtendedAudio {
     int? ownerID,
     String? artist,
     String? title,
-    int? duration,
+    Duration? duration,
     String? subtitle,
     String? accessKey,
     bool? isExplicit,

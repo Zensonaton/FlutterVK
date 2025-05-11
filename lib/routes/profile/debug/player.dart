@@ -145,7 +145,7 @@ class QueueItems extends HookConsumerWidget {
                   ownerID: 0,
                   artist: "Unknown",
                   title: "Unknown",
-                  duration: 0,
+                  duration: Duration.zero,
                 ),
             isSelected: audio?.id == player.audio?.id,
             isPlaying: true,

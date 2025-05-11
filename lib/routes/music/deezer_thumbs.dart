@@ -322,7 +322,7 @@ class TrackThumbnailEditDialog extends HookConsumerWidget {
                                   fakeTrackNames[index % fakeTrackNames.length],
                               artist: fakeTrackNames[
                                   (index + 1) % fakeTrackNames.length],
-                              duration: 60 * 3,
+                              duration: const Duration(minutes: 3),
                             ),
                           ),
                         );
@@ -372,10 +372,9 @@ class TrackThumbnailEditDialog extends HookConsumerWidget {
                           ownerID: 0,
                           artist: deezerTrack!.artist.name,
                           title: deezerTrack.title,
-                          duration: deezerTrack.duration,
-                          deezerThumbs: ExtendedThumbnails.fromDeezerTrack(
-                            deezerTrack,
-                          ),
+                          duration: Duration(seconds: deezerTrack.duration),
+                          deezerThumbs:
+                              ExtendedThumbnails.fromDeezerTrack(deezerTrack),
                         ),
                         allowImageCache: false,
                         showDuration: false,

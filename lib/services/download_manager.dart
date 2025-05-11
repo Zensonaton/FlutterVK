@@ -272,7 +272,7 @@ class PlaylistCacheDownloadItem extends DownloadItem {
           audio.artist,
           audio.title,
           subtitle: audio.subtitle,
-          duration: audio.duration,
+          duration: audio.duration.inSeconds,
           album: audio.album?.title,
         );
         final match = results.firstOrNull;
@@ -322,7 +322,7 @@ class PlaylistCacheDownloadItem extends DownloadItem {
         audio.title,
         audio.artist,
         album: audio.album?.title,
-        duration: audio.duration,
+        duration: audio.duration.inSeconds,
       );
 
       return response.asLyrics;

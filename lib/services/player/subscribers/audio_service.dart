@@ -69,9 +69,7 @@ class AudioServicePlayerSubscriber extends PlayerSubscriber {
     final album = audio.album?.title;
     final mediaArtUri =
         audio.maxThumbnail != null ? Uri.parse(audio.maxThumbnail!) : null;
-    final Duration mediaDuration = Duration(
-      seconds: audio.duration,
-    );
+    final mediaDuration = audio.duration;
     final Map<String, dynamic> mediaExtras = {
       "albumID": audio.album?.id,
       "mediaKey": id,
