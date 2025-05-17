@@ -22,6 +22,7 @@ class ShortcutsPropagator extends StatelessWidget {
     LogicalKeyboardKey.keyS,
     LogicalKeyboardKey.keyL,
     LogicalKeyboardKey.keyQ,
+    LogicalKeyboardKey.escape,
   ];
 
   /// Виджет, который будет обернут в [ShortcutsPropagator]. Чаще всего, это [TextField].

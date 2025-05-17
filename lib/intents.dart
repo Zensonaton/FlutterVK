@@ -59,3 +59,8 @@ class CloseAppIntent extends Intent {
 class FullscreenPlayerIntent extends Intent {
   const FullscreenPlayerIntent();
 }
+
+/// [Intent], вызываемый при нажатии [LogicalKeyboardKey.escape], который закрывает текущий route.
+class CloseRouteIntent extends Intent {
+  const CloseRouteIntent();
+}

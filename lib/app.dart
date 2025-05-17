@@ -279,6 +279,9 @@ class FlutterVKApp extends HookConsumerWidget {
                 LogicalKeyboardKey.keyQ,
                 control: true,
               ): const CloseAppIntent(),
+              const SingleActivator(
+                LogicalKeyboardKey.escape,
+              ): const CloseRouteIntent(),
             },
             actions: {
               FavoriteTracksIntent: CallbackAction(
@@ -347,6 +350,15 @@ class FlutterVKApp extends HookConsumerWidget {
               ),
               CloseAppIntent: CallbackAction(
                 onInvoke: (intent) => windowManager.close(),
+              ),
+              CloseRouteIntent: CallbackAction(
+                onInvoke: (intent) {
+                  if (!router.canPop()) return;
+
+                  router.pop();
+
+                  return null;
+                },
               ),
             },
           ),
