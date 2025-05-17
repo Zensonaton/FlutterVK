@@ -8,6 +8,7 @@ import "package:flutter_localizations/flutter_localizations.dart";
 import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:local_notifier/local_notifier.dart";
+import "package:universal_back_gesture/back_gesture_page_transitions_builder.dart";
 import "package:url_launcher/url_launcher.dart";
 import "package:window_manager/window_manager.dart";
 
@@ -22,6 +23,7 @@ import "provider/navigation_router.dart";
 import "provider/player.dart";
 import "provider/preferences.dart";
 import "provider/user.dart";
+import "route_transitions.dart";
 import "routes/profile.dart";
 import "services/logger.dart";
 import "utils.dart";
@@ -194,9 +196,9 @@ class FlutterVKApp extends HookConsumerWidget {
         final pageTransitions = PageTransitionsTheme(
           builders: {
             for (final platform in TargetPlatform.values)
-              platform: const ZoomPageTransitionsBuilder(
-                allowSnapshotting: false,
-                allowEnterRouteSnapshotting: false,
+              platform: const BackGesturePageTransitionsBuilder(
+                parentTransitionBuilder:
+                    SharedAxisHorizontalPageTransitionsBuilder(),
               ),
           },
         );
@@ -212,9 +214,7 @@ class FlutterVKApp extends HookConsumerWidget {
                 surface: preferences.oledTheme ? Colors.black : null,
               ),
               cardTheme: preferences.oledTheme
-                  ? CardTheme(
-                      color: darkScheme.surface,
-                    )
+                  ? CardThemeData(color: darkScheme.surfaceContainerLowest)
                   : null,
               pageTransitionsTheme: pageTransitions,
             ),
@@ -222,7 +222,7 @@ class FlutterVKApp extends HookConsumerWidget {
             themeAnimationDuration: const Duration(
               milliseconds: 500,
             ),
-            themeAnimationCurve: Curves.easeInOutCubicEmphasized,
+            themeAnimationCurve: Curves.easeInOut,
             routerConfig: router,
             localizationsDelegates: const [
               AppLocalizations.delegate,

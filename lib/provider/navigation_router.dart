@@ -1,9 +1,10 @@
-import "package:animations/animations.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:go_router/go_router.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:universal_back_gesture/back_gesture_config.dart";
+import "package:universal_back_gesture/back_gesture_page_transitions_builder.dart";
 
 import "../main.dart";
 import "../routes/login.dart";
@@ -36,35 +37,76 @@ import "user.dart";
 
 part "navigation_router.g.dart";
 
-/// Helper-метод, помогающий создать страницу с анимацией перехода по умолчанию.
-CustomTransitionPage buildPageWithDefaultTransition<T>({
-  required BuildContext context,
-  required GoRouterState state,
-  required Widget child,
-  SharedAxisTransitionType transitionType = SharedAxisTransitionType.horizontal,
-}) {
-  return CustomTransitionPage<T>(
-    key: state.pageKey,
-    child: child,
-    transitionsBuilder: (
-      BuildContext context,
-      Animation<double> animation,
-      Animation<double> secondaryAnimation,
-      Widget child,
-    ) {
-      return SharedAxisTransition(
-        animation: animation,
-        secondaryAnimation: secondaryAnimation,
-        transitionType: transitionType,
-        child: child,
-      );
-    },
-  );
+/// Расширение для [MaterialPageRoute], которое добавляет поддержку [BackGestureConfig], используемая для навигации назад с помощью жеста.
+///
+/// Взято из [документации universal_back_gesture](https://pub.dev/packages/universal_back_gesture#2-configuration-for-individual-routes).
+class CustomBackGesturePageRoute extends MaterialPageRoute {
+  final BackGestureConfig config;
+
+  final PageTransitionsBuilder parentTransitionBuilder;
+
+  CustomBackGesturePageRoute({
+    required super.builder,
+    required this.config,
+    required this.parentTransitionBuilder,
+    super.settings,
+  });
+
+  @override
+  Duration get transitionDuration => parentTransitionBuilder.transitionDuration;
+
+  @override
+  Duration get reverseTransitionDuration =>
+      parentTransitionBuilder.reverseTransitionDuration;
+
+  @override
+  DelegatedTransitionBuilder? get delegatedTransition =>
+      parentTransitionBuilder.delegatedTransition;
+
+  @override
+  Widget buildTransitions(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    return BackGesturePageTransitionsBuilder(
+      parentTransitionBuilder: parentTransitionBuilder,
+      config: config,
+    ).buildTransitions(this, context, animation, secondaryAnimation, child);
+  }
+}
+
+/// Расширение для [Page], которое добавляет поддержку [BackGestureConfig], используемая для навигации назад с помощью жеста.
+///
+/// Взято из [документации universal_back_gesture](https://pub.dev/packages/universal_back_gesture#2-configuration-for-individual-routes).
+class MyCustomGoRouterPage extends Page {
+  const MyCustomGoRouterPage({
+    required this.child,
+    this.parentTransitionBuilder = const FadeUpwardsPageTransitionsBuilder(),
+    this.config = const BackGestureConfig(),
+    super.key,
+    super.name,
+    super.arguments,
+    super.restorationId,
+  });
+
+  final Widget child;
+  final PageTransitionsBuilder parentTransitionBuilder;
+  final BackGestureConfig config;
+
+  @override
+  Route createRoute(BuildContext context) {
+    return CustomBackGesturePageRoute(
+      builder: (BuildContext context) => child,
+      settings: this,
+      parentTransitionBuilder: parentTransitionBuilder,
+      config: config,
+    );
+  }
 }
 
 /// [GoRouter], используемый для навигации по приложению.
-///
-/// Если Вам нужно изменить redirect'ы, то обратитесь к [currentAuthStateProvider].
 @riverpod
 GoRouter router(Ref ref) {
   // ignore: avoid_manual_providers_as_generated_provider_dependency
@@ -87,7 +129,7 @@ GoRouter router(Ref ref) {
       routes: [
         GoRoute(
           path: "playlist/:owner_id/:id",
-          pageBuilder: (BuildContext context, GoRouterState state) {
+          builder: (_, GoRouterState state) {
             final ExtendedPlaylist? playlist =
                 ref.read(playlistsProvider.notifier).getPlaylist(
                       int.parse(state.pathParameters["owner_id"]!),
@@ -97,13 +139,9 @@ GoRouter router(Ref ref) {
               throw Exception("Playlist not found");
             }
 
-            return buildPageWithDefaultTransition(
-              context: context,
-              state: state,
-              child: PlaylistRoute(
-                ownerID: playlist.ownerID,
-                id: playlist.id,
-              ),
+            return PlaylistRoute(
+              ownerID: playlist.ownerID,
+              id: playlist.id,
             );
           },
         ),
@@ -144,153 +182,63 @@ GoRouter router(Ref ref) {
       routes: [
         GoRoute(
           path: "download_manager",
-          pageBuilder: (BuildContext context, GoRouterState state) {
-            return buildPageWithDefaultTransition(
-              context: context,
-              state: state,
-              child: const DownloadManagerRoute(),
-            );
-          },
+          builder: (_, __) => const DownloadManagerRoute(),
         ),
         GoRoute(
           path: "settings_exporter",
-          pageBuilder: (BuildContext context, GoRouterState state) {
-            return buildPageWithDefaultTransition(
-              context: context,
-              state: state,
-              child: const SettingsExporterRoute(),
-            );
-          },
+          builder: (_, __) => const SettingsExporterRoute(),
         ),
         GoRoute(
           path: "settings_importer",
-          pageBuilder: (BuildContext context, GoRouterState state) {
-            return buildPageWithDefaultTransition(
-              context: context,
-              state: state,
-              child: const SettingsImporterRoute(),
-            );
-          },
+          builder: (_, __) => const SettingsImporterRoute(),
         ),
         GoRoute(
           path: "setting_theme_mode",
-          pageBuilder: (BuildContext context, GoRouterState state) {
-            return buildPageWithDefaultTransition(
-              context: context,
-              state: state,
-              child: const ThemeSettingPage(),
-            );
-          },
+          builder: (_, __) => const ThemeSettingPage(),
         ),
         GoRoute(
           path: "setting_oled",
-          pageBuilder: (BuildContext context, GoRouterState state) {
-            return buildPageWithDefaultTransition(
-              context: context,
-              state: state,
-              child: const OLEDSettingPage(),
-            );
-          },
+          builder: (_, __) => const OLEDSettingPage(),
         ),
         GoRoute(
           path: "setting_app_wide_colors",
-          pageBuilder: (BuildContext context, GoRouterState state) {
-            return buildPageWithDefaultTransition(
-              context: context,
-              state: state,
-              child: const AppWideColorsSettingPage(),
-            );
-          },
+          builder: (_, __) => const AppWideColorsSettingPage(),
         ),
         GoRoute(
           path: "setting_dynamic_scheme_type",
-          pageBuilder: (BuildContext context, GoRouterState state) {
-            return buildPageWithDefaultTransition(
-              context: context,
-              state: state,
-              child: const DynamicSchemeTypeSettingPage(),
-            );
-          },
+          builder: (_, __) => const DynamicSchemeTypeSettingPage(),
         ),
         GoRoute(
           path: "setting_alternative_slider",
-          pageBuilder: (BuildContext context, GoRouterState state) {
-            return buildPageWithDefaultTransition(
-              context: context,
-              state: state,
-              child: const AlternativeSliderSettingPage(),
-            );
-          },
+          builder: (_, __) => const AlternativeSliderSettingPage(),
         ),
         GoRoute(
           path: "setting_spoiler_next_audio",
-          pageBuilder: (BuildContext context, GoRouterState state) {
-            return buildPageWithDefaultTransition(
-              context: context,
-              state: state,
-              child: const SpoilerNextAudioSettingPage(),
-            );
-          },
+          builder: (_, __) => const SpoilerNextAudioSettingPage(),
         ),
         GoRoute(
           path: "setting_show_audio_thumbs",
-          pageBuilder: (BuildContext context, GoRouterState state) {
-            return buildPageWithDefaultTransition(
-              context: context,
-              state: state,
-              child: const ShowAudioThumbsSettingPage(),
-            );
-          },
+          builder: (_, __) => const ShowAudioThumbsSettingPage(),
         ),
         GoRoute(
           path: "setting_crossfade_audio_colors",
-          pageBuilder: (BuildContext context, GoRouterState state) {
-            return buildPageWithDefaultTransition(
-              context: context,
-              state: state,
-              child: const CrossfadeAudioColorsSettingPage(),
-            );
-          },
+          builder: (_, __) => const CrossfadeAudioColorsSettingPage(),
         ),
         GoRoute(
           path: "color_scheme_debug",
-          pageBuilder: (BuildContext context, GoRouterState state) {
-            return buildPageWithDefaultTransition(
-              context: context,
-              state: state,
-              child: const ColorSchemeDebugMenu(),
-            );
-          },
+          builder: (_, __) => const ColorSchemeDebugMenu(),
         ),
         GoRoute(
           path: "playlists_viewer_debug",
-          pageBuilder: (BuildContext context, GoRouterState state) {
-            return buildPageWithDefaultTransition(
-              context: context,
-              state: state,
-              child: const PlaylistsViewerDebugMenu(),
-            );
-          },
+          builder: (_, __) => const PlaylistsViewerDebugMenu(),
         ),
         GoRoute(
           path: "markdown_viewer_debug",
-          pageBuilder: (BuildContext context, GoRouterState state) {
-            return buildPageWithDefaultTransition(
-              context: context,
-              state: state,
-              child: const MarkdownViewerDebugMenu(),
-            );
-          },
+          builder: (_, __) => const MarkdownViewerDebugMenu(),
         ),
         GoRoute(
           path: "player_debug",
-          pageBuilder: (BuildContext context, GoRouterState state) {
-            return buildPageWithDefaultTransition(
-              context: context,
-              state: state,
-              child: const PlayerDebugMenu(),
-            );
-          },
+          builder: (_, __) => const PlayerDebugMenu(),
         ),
       ],
     ),
@@ -324,23 +272,11 @@ GoRouter router(Ref ref) {
     routes: [
       GoRoute(
         path: "/welcome",
-        pageBuilder: (BuildContext context, GoRouterState state) {
-          return buildPageWithDefaultTransition(
-            context: context,
-            state: state,
-            child: const WelcomeRoute(),
-          );
-        },
+        builder: (_, __) => const WelcomeRoute(),
       ),
       GoRoute(
         path: "/login",
-        pageBuilder: (BuildContext context, GoRouterState state) {
-          return buildPageWithDefaultTransition(
-            context: context,
-            state: state,
-            child: const LoginRoute(),
-          );
-        },
+        builder: (_, __) => const LoginRoute(),
       ),
       ShellRoute(
         builder: (_, state, child) => ShellRouteWrapper(
@@ -353,25 +289,41 @@ GoRouter router(Ref ref) {
             if (item.body != null)
               GoRoute(
                 path: item.path,
-                pageBuilder: (BuildContext context, GoRouterState state) =>
-                    buildPageWithDefaultTransition(
-                  context: context,
-                  state: state,
-                  transitionType: SharedAxisTransitionType.vertical,
-                  child: item.body!(context),
-                ),
                 routes: item.routes,
+                builder: (BuildContext context, _) => item.body!(context),
               ),
         ],
       ),
       GoRoute(
         path: "/player",
-        pageBuilder: (BuildContext context, GoRouterState state) {
-          return buildPageWithDefaultTransition(
-            context: context,
-            state: state,
+        pageBuilder: (_, __) {
+          return CustomTransitionPage(
             child: const PlayerRoute(),
+            transitionsBuilder: (
+              BuildContext context,
+              Animation<double> animation,
+              Animation<double> secondaryAnimation,
+              Widget child,
+            ) {
+              const builder = FadeUpwardsPageTransitionsBuilder();
+
+              return builder.buildTransitions(
+                null,
+                context,
+                animation,
+                secondaryAnimation,
+                child,
+              );
+            },
           );
+
+          // TODO: Сделать поддержку жеста назад для этого route, если universal_back_gesture будет:
+          //  1. Поддерживать вертикальный жест.
+          //  2. Правильно отображать transition для parent route.
+          //
+          // return const MyCustomGoRouterPage(
+          //   child: PlayerRoute(),
+          // );
         },
       ),
     ],
