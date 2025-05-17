@@ -30,6 +30,7 @@
 	"general_details": "Details",
 	"general_install": "Install",
 	"general_show": "Show",
+	"general_settings": "Settings",
 	"general_filesize_mb": "{value} MB",
 	"general_filesize_gb": "{value} GB",
 	"general_favorites_playlist": "Favorites",
@@ -229,7 +230,8 @@
 
 
 
-	"visual_settings": "Visual & cosmetic settings",
+	"visual_settings": "Style & appearance",
+	"visual_settings_desc": "Changes the app appearance and style",
 
 	"app_theme": "Theme",
 	"app_theme_desc": "The dark theme makes the UI more pleasant for use, especially at night or dark environments. Additionally, you can enable the OLED theme, which makes the app background as black as possible to save battery on some devices.",
@@ -256,8 +258,6 @@
 	"alternate_slider_desc": "Determines slider position for displaying track playback progress in the bottom player.",
 	"enable_alternate_slider": "Move slider above player",
 
-	"use_track_thumb_as_player_background": "Track image as fullscreen player background",
-
 	"spoiler_next_audio": "Spoiler next track",
 	"spoiler_next_audio_desc": "This setting indicates whether the title of the next track will be displayed before finishing the current one.",
 	"enable_spoiler_next_audio": "Show next track",
@@ -271,7 +271,14 @@
 	"enable_show_audio_thumbs": "Show track covers",
 
 
-	"music_player": "Music player",
+	"fullscreen_player": "Fullscreen player",
+	"fullscreen_player_desc": "Visual settings for the fullscreen player",
+
+	"use_track_thumb_as_player_background": "Track thumb as background",
+
+
+	"playback": "Playback",
+	"playback_desc": "Controls playback settings and behavior",
 
 	"track_title_in_window_bar": "Track title in window bar",
 
@@ -281,7 +288,7 @@
 	"close_action_minimize": "Minimize",
 	"close_action_minimize_if_playing": "Minimize if music is playing",
 
-	"android_keep_playing_on_close": "Playback after swiping",
+	"android_keep_playing_on_close": "Persistent playback",
 	"android_keep_playing_on_close_desc": "Determines whether playback will continue after closing the app in the list of open apps on Android",
 
 	"shuffle_on_play": "Shuffle on play",
@@ -305,22 +312,17 @@
 	"track_duplicate_found_title": "Duplicate found",
 	"track_duplicate_found_desc": "It looks like this track is already saved. Saving this track will create another copy of it.\nAre you sure you want to create a duplicate of this track?",
 
-	"discord_rpc": "Discord Rich Presence",
-	"discord_rpc_desc": "Broadcasts the playing track in Discord",
+
+	"integrations": "Integrations",
+	"integrations_desc": "Connects app with other services",
 
 	"status_broadcast": "Broadcast in status",
 	"status_broadcast_desc": "Displays track that is currently playing as VK status",
 
-	"export_music_list": "Export track list",
-	"export_music_list_desc": "List of {count, plural, one{{count} liked track} other{{count} liked tracks}}:",
+	"discord_rpc": "Discord Rich Presence",
+	"discord_rpc_desc": "Broadcasts the playing track in Discord",
 
-	"player_debug_logging": "Debug player logging",
-	"player_debug_logging_desc": "Enables output of technical data of the music player to the log. This option is intended for debugging purposes and is not recommended for regular use. Usage of this option may lead to performance issues.",
-
-
-	"experimental_options": "Experimental features",
-
-	"deezer_thumbnails": "Deezer covers",
+	"deezer_thumbnails": "Deezer thumbnails",
 	"deezer_thumbnails_desc": "Downloads covers for tracks from Deezer if the track does not have one.\nSometimes may provide incorrect/low-quality covers",
 
 	"lrclib_lyrics": "Lyrics via LRCLIB",
@@ -328,6 +330,12 @@
 
 	"apple_music_animated_covers": "Animated covers from Apple Music",
 	"apple_music_animated_covers_desc": "Downloads animated covers for tracks from Apple Music if the track does not have one.\nSometimes may provide incorrect/low-quality covers",
+
+
+	"experimental_options": "Experimental features",
+	"experimental_options_desc": "Features that are not yet fully implemented or tested",
+
+	"experimental_no_options_available": "This version of application does not have any experimental features available.",
 
 	"volume_normalization": "Volume normalization",
 	"volume_normalization_desc": "Automatically adjusts the volume of tracks to a consistent level",
@@ -341,7 +349,36 @@
 	"silence_removal_desc": "Removes silence from beginning and end of audio tracks",
 
 
-	"app_settings": "App settings",
+	"updates": "Updates",
+	"updates_desc": "Controls the way app will update itself",
+
+	"app_updates_policy": "Updates display type",
+	"app_updates_policy_desc": "Determines how the app will notify you about new updates",
+	"app_updates_policy_dialog": "Dialog",
+	"app_updates_policy_popup": "Bottom popup",
+	"app_updates_policy_disabled": "Disabled",
+
+	"disable_updates_warning": "Disable app updates",
+	"disable_updates_warning_desc": "It looks like you are trying to disable app updates. This is not recommended as future versions may fix bugs and add new features.\n\nIf you are annoyed by the fullscreen dialog, try changing this setting to \"Bottom popup\": This option will not interfere with your usage.",
+	"disable_updates_warning_disable": "Disable anyway",
+	"updates_are_disabled": "App updates are disabled. You can check for updates manually by clicking the \"About the app\" button on the profile page.",
+
+	"updates_channel": "Updates channel",
+	"updates_channel_desc": "The beta channel has more frequent but less stable builds",
+	"updates_channel_releases": "Main (default)",
+	"updates_channel_prereleases": "Beta",
+
+	"show_changelog": "Changelog",
+	"show_changelog_desc": "Shows the changelog for this version",
+
+	"changelog_dialog": "Changelog for {version}",
+
+	"force_update_check": "Check for updates",
+	"force_update_check_desc": "Installed version: {version}",
+
+
+	"data_control": "Import, export and reset",
+	"data_control_desc": "Controls stored data and settings of the app",
 
 	"export_settings": "Export settings",
 	"export_settings_desc": "Saves local track changes and app settings to a file to restore them on another device",
@@ -396,26 +433,20 @@
 	"settings_import_success_desc_with_delete": "Settings and tracks import completed successfully.\n\nYou may need to restart the app for some settings to be saved and applied.\n\nAfter import, the export file is no longer needed. Do you want to delete it?",
 	"settings_import_success_desc_no_delete": "Settings and tracks import completed successfully. You may need to restart the app for some settings to be saved and applied.",
 
+	"export_music_list": "Export track list",
+	"export_music_list_desc": "List of {count, plural, one{{count} liked track} other{{count} liked tracks}}:",
+
 	"reset_db": "Reset track database",
 	"reset_db_desc": "Clears the local copy of the track database stored on this device",
 	"reset_db_dialog": "Reset track database",
 	"reset_db_dialog_desc": "Continuing will delete the track database stored on this device. Please do not do this unless absolutely necessary.\n\nYour tracks (both liked and downloaded) will not be deleted, but you will need to restart the caching process on previously downloaded playlists.",
 
-	"app_updates_policy": "Updates display type",
-	"app_updates_policy_desc": "Determines how the app will notify you about new updates",
-	"app_updates_policy_dialog": "Dialog",
-	"app_updates_policy_popup": "Bottom popup",
-	"app_updates_policy_disabled": "Disabled",
 
-	"disable_updates_warning": "Disable app updates",
-	"disable_updates_warning_desc": "It looks like you are trying to disable app updates. This is not recommended as future versions may fix bugs and add new features.\n\nIf you are annoyed by the fullscreen dialog, try changing this setting to \"Bottom popup\": This option will not interfere with your usage.",
-	"disable_updates_warning_disable": "Disable anyway",
-	"updates_are_disabled": "App updates are disabled. You can check for updates manually by clicking the \"About the app\" button on the profile page.",
+	"debug_options": "Debug options",
+	"debug_options_desc": "Technical options for debugging and diagnosing issues",
 
-	"updates_channel": "Updates channel",
-	"updates_channel_desc": "The beta channel has more frequent but less stable builds",
-	"updates_channel_releases": "Main (default)",
-	"updates_channel_prereleases": "Beta",
+	"player_debug_logging": "Debug player logging",
+	"player_debug_logging_desc": "Enables output of technical data of the music player to the log. This option is intended for debugging purposes and is not recommended for regular use. Usage of this option may lead to performance issues.",
 
 	"share_logs": "Share log file",
 	"share_logs_desc": "Technical information for debugging errors",
@@ -430,14 +461,14 @@
 	"app_github": "Source code",
 	"app_github_desc": "Click here to visit the Github repository of Flutter VK",
 
-	"show_changelog": "Changelog",
-	"show_changelog_desc": "Shows the changelog for this version",
-
-	"changelog_dialog": "Changelog for {version}",
-
 	"app_version": "About the app",
 	"app_version_desc": "Installed version: {version}.\nClick here to check for new updates",
 	"app_version_prerelease": "beta",
+
+
+	"development_options": "Development options",
+	"development_options_desc": "Those options are intended for developers only",
+
 
 	"download_manager_current_tasks": "Currently downloading",
 	"download_manager_old_tasks": "Previously downloaded",

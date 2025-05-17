@@ -360,7 +360,6 @@ class DownloadManagerRoute extends HookConsumerWidget {
             );
           },
         ),
-        centerTitle: true,
       ),
       body: ListView(
         padding: EdgeInsets.symmetric(

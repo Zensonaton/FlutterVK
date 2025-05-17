@@ -62,8 +62,7 @@ import 'app_localizations_ru.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale)
-      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -71,8 +70,7 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations);
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate =
-      _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -84,8 +82,7 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
-      <LocalizationsDelegate<dynamic>>[
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
     delegate,
     GlobalMaterialLocalizations.delegate,
     GlobalCupertinoLocalizations.delegate,
@@ -271,6 +268,12 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Показать'**
   String get general_show;
+
+  /// No description provided for @general_settings.
+  ///
+  /// In ru, this message translates to:
+  /// **'Настройки'**
+  String get general_settings;
 
   /// No description provided for @general_filesize_mb.
   ///
@@ -774,8 +777,7 @@ abstract class AppLocalizations {
   ///
   /// In ru, this message translates to:
   /// **'Включив загрузку треков, Flutter VK будет автоматически загружать все треки в данном плейлисте, делая их доступных для прослушивания даже оффлайн, а так же после удаления правообладателем.\n\nПродолжив, будет {count, plural, one{загружен {count} трек} few{загружено {count} трека} other{загружено {count} треков}}, что потребует ~{downloadSize} интернет трафика.\nПожалуйста, не запускайте этот процесс, если у Вас лимитированный интернет.'**
-  String enable_download_desc(
-      {required int count, required String downloadSize});
+  String enable_download_desc({required int count, required String downloadSize});
 
   /// No description provided for @disable_download_title.
   ///
@@ -1116,8 +1118,14 @@ abstract class AppLocalizations {
   /// No description provided for @visual_settings.
   ///
   /// In ru, this message translates to:
-  /// **'Визуал, косметические настройки'**
+  /// **'Стиль и внешний вид'**
   String get visual_settings;
+
+  /// No description provided for @visual_settings_desc.
+  ///
+  /// In ru, this message translates to:
+  /// **'Изменение внешнего вида и стиля приложения'**
+  String get visual_settings_desc;
 
   /// No description provided for @app_theme.
   ///
@@ -1188,7 +1196,7 @@ abstract class AppLocalizations {
   /// No description provided for @player_dynamic_color_scheme_type.
   ///
   /// In ru, this message translates to:
-  /// **'Тип палитры цветов обложки'**
+  /// **'Палитра цветовой темы'**
   String get player_dynamic_color_scheme_type;
 
   /// No description provided for @player_dynamic_color_scheme_type_desc.
@@ -1238,12 +1246,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Переместить слайдер над плеером'**
   String get enable_alternate_slider;
-
-  /// No description provided for @use_track_thumb_as_player_background.
-  ///
-  /// In ru, this message translates to:
-  /// **'Изображение трека как фон полноэкранного плеера'**
-  String get use_track_thumb_as_player_background;
 
   /// No description provided for @spoiler_next_audio.
   ///
@@ -1299,11 +1301,35 @@ abstract class AppLocalizations {
   /// **'Включить отображение обложек треков'**
   String get enable_show_audio_thumbs;
 
-  /// No description provided for @music_player.
+  /// No description provided for @fullscreen_player.
   ///
   /// In ru, this message translates to:
-  /// **'Музыкальный плеер'**
-  String get music_player;
+  /// **'Полнооконный плеер'**
+  String get fullscreen_player;
+
+  /// No description provided for @fullscreen_player_desc.
+  ///
+  /// In ru, this message translates to:
+  /// **'Изменение внешнего вида полнооконного плеера'**
+  String get fullscreen_player_desc;
+
+  /// No description provided for @use_track_thumb_as_player_background.
+  ///
+  /// In ru, this message translates to:
+  /// **'Обложка трека как фон'**
+  String get use_track_thumb_as_player_background;
+
+  /// No description provided for @playback.
+  ///
+  /// In ru, this message translates to:
+  /// **'Воспроизведение'**
+  String get playback;
+
+  /// No description provided for @playback_desc.
+  ///
+  /// In ru, this message translates to:
+  /// **'Управение поведением, настройками воспроизведения'**
+  String get playback_desc;
 
   /// No description provided for @track_title_in_window_bar.
   ///
@@ -1350,7 +1376,7 @@ abstract class AppLocalizations {
   /// No description provided for @android_keep_playing_on_close_desc.
   ///
   /// In ru, this message translates to:
-  /// **'Определяет, продолжится ли воспроизведение после закрытия приложения в списке открытых приложений на Android'**
+  /// **'Определяет, продолжится ли воспроизведение после \"закрытия\" приложения в списке \"недавних\"'**
   String get android_keep_playing_on_close_desc;
 
   /// No description provided for @shuffle_on_play.
@@ -1449,6 +1475,30 @@ abstract class AppLocalizations {
   /// **'Похоже, что этот трек уже лайкнут Вами. Сохранив этот трек, у Вас будет ещё одна копия этого трека.\nВы уверены, что хотите сделать дубликат данного трека?'**
   String get track_duplicate_found_desc;
 
+  /// No description provided for @integrations.
+  ///
+  /// In ru, this message translates to:
+  /// **'Интеграции'**
+  String get integrations;
+
+  /// No description provided for @integrations_desc.
+  ///
+  /// In ru, this message translates to:
+  /// **'Работа со сторонними сервисами'**
+  String get integrations_desc;
+
+  /// No description provided for @status_broadcast.
+  ///
+  /// In ru, this message translates to:
+  /// **'Трансляция в статус'**
+  String get status_broadcast;
+
+  /// No description provided for @status_broadcast_desc.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отображает трек в статусе ВКонтакте'**
+  String get status_broadcast_desc;
+
   /// No description provided for @discord_rpc.
   ///
   /// In ru, this message translates to:
@@ -1461,36 +1511,6 @@ abstract class AppLocalizations {
   /// **'Транслирует играющий трек в Discord'**
   String get discord_rpc_desc;
 
-  /// No description provided for @status_broadcast.
-  ///
-  /// In ru, this message translates to:
-  /// **'Трансляция в статус'**
-  String get status_broadcast;
-
-  /// No description provided for @status_broadcast_desc.
-  ///
-  /// In ru, this message translates to:
-  /// **'Отображает играющий трек в статусе ВКонтакте'**
-  String get status_broadcast_desc;
-
-  /// No description provided for @player_debug_logging.
-  ///
-  /// In ru, this message translates to:
-  /// **'Debug-логирование плеера'**
-  String get player_debug_logging;
-
-  /// No description provided for @player_debug_logging_desc.
-  ///
-  /// In ru, this message translates to:
-  /// **'Включает вывод технических данных музыкального плеера в лог. Включение настройки приведёт к понижению производительности приложения'**
-  String get player_debug_logging_desc;
-
-  /// No description provided for @experimental_options.
-  ///
-  /// In ru, this message translates to:
-  /// **'Экспериментальные функции'**
-  String get experimental_options;
-
   /// No description provided for @deezer_thumbnails.
   ///
   /// In ru, this message translates to:
@@ -1500,7 +1520,7 @@ abstract class AppLocalizations {
   /// No description provided for @deezer_thumbnails_desc.
   ///
   /// In ru, this message translates to:
-  /// **'Загружает обложки для треков из Deezer, если у трека её нет.\nИногда может выдавать неправильные обложки'**
+  /// **'Загружает недостающие обложки из Deezer'**
   String get deezer_thumbnails_desc;
 
   /// No description provided for @lrclib_lyrics.
@@ -1512,7 +1532,7 @@ abstract class AppLocalizations {
   /// No description provided for @lrclib_lyrics_desc.
   ///
   /// In ru, this message translates to:
-  /// **'Загружает тексты песен из LRCLIB, если у трека его нет, либо он не синхронизирован.\nИногда может выдавать неправильные/некачественные тексты'**
+  /// **'Берёт тексты песен из LRCLIB если они недоступны во ВКонтакте, либо они не являются синхронизированными'**
   String get lrclib_lyrics_desc;
 
   /// No description provided for @apple_music_animated_covers.
@@ -1524,8 +1544,26 @@ abstract class AppLocalizations {
   /// No description provided for @apple_music_animated_covers_desc.
   ///
   /// In ru, this message translates to:
-  /// **'Включает возможность получения анимированных обложек из Apple Music, отображаемых в полноэкранном плеере. Работает у небольшого количества треков.\nИногда может выдавать неправильные обложки'**
+  /// **'Загружает анимированные обложки из Apple Music, которые отображаются в полнооконном плеере'**
   String get apple_music_animated_covers_desc;
+
+  /// No description provided for @experimental_options.
+  ///
+  /// In ru, this message translates to:
+  /// **'Экспериментальные функции'**
+  String get experimental_options;
+
+  /// No description provided for @experimental_options_desc.
+  ///
+  /// In ru, this message translates to:
+  /// **'Раздел, в котором могут обитать страшные драконы'**
+  String get experimental_options_desc;
+
+  /// No description provided for @experimental_no_options_available.
+  ///
+  /// In ru, this message translates to:
+  /// **'В данной версии приложения нет доступных экспериментальных функций.'**
+  String get experimental_no_options_available;
 
   /// No description provided for @volume_normalization.
   ///
@@ -1581,11 +1619,137 @@ abstract class AppLocalizations {
   /// **'Избавляется от тишины в начале и конце трека'**
   String get silence_removal_desc;
 
-  /// No description provided for @app_settings.
+  /// No description provided for @updates.
   ///
   /// In ru, this message translates to:
-  /// **'Настройки приложения'**
-  String get app_settings;
+  /// **'Обновления'**
+  String get updates;
+
+  /// No description provided for @updates_desc.
+  ///
+  /// In ru, this message translates to:
+  /// **'Параметры системы обновлений'**
+  String get updates_desc;
+
+  /// No description provided for @app_updates_policy.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вид новых обновлений'**
+  String get app_updates_policy;
+
+  /// No description provided for @app_updates_policy_desc.
+  ///
+  /// In ru, this message translates to:
+  /// **'Определяет то, как приложение будет раздражать Вас, напоминая о новом обновлении'**
+  String get app_updates_policy_desc;
+
+  /// No description provided for @app_updates_policy_dialog.
+  ///
+  /// In ru, this message translates to:
+  /// **'Диалог'**
+  String get app_updates_policy_dialog;
+
+  /// No description provided for @app_updates_policy_popup.
+  ///
+  /// In ru, this message translates to:
+  /// **'Надпись снизу'**
+  String get app_updates_policy_popup;
+
+  /// No description provided for @app_updates_policy_disabled.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отключено'**
+  String get app_updates_policy_disabled;
+
+  /// No description provided for @disable_updates_warning.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отключение обновлений'**
+  String get disable_updates_warning;
+
+  /// No description provided for @disable_updates_warning_desc.
+  ///
+  /// In ru, this message translates to:
+  /// **'Похоже, что Вы пытаетесь отключить обновления приложения. Делать это не рекомендуется, поскольку в будущих версиях могут быть исправлены баги, а так же могут добавляться новые функции.\n\nЕсли Вас раздражает полноэкранный диалог, мешающий пользованию приложения, то попробуйте поменять эту настройку на значение \"Надпись снизу\": Такой вариант не будет мешать Вам.'**
+  String get disable_updates_warning_desc;
+
+  /// No description provided for @disable_updates_warning_disable.
+  ///
+  /// In ru, this message translates to:
+  /// **'Всё равно отключить'**
+  String get disable_updates_warning_disable;
+
+  /// No description provided for @updates_are_disabled.
+  ///
+  /// In ru, this message translates to:
+  /// **'Обновления приложения отключены. Вы можете проверять на наличие обновлений вручную, нажав на кнопку \"О приложении\" на странице профиля.'**
+  String get updates_are_disabled;
+
+  /// No description provided for @updates_channel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Канал обновлений'**
+  String get updates_channel;
+
+  /// No description provided for @updates_channel_desc.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бета-канал имеет более частые, но менее стабильные билды'**
+  String get updates_channel_desc;
+
+  /// No description provided for @updates_channel_releases.
+  ///
+  /// In ru, this message translates to:
+  /// **'Основные (по-умолчанию)'**
+  String get updates_channel_releases;
+
+  /// No description provided for @updates_channel_prereleases.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бета'**
+  String get updates_channel_prereleases;
+
+  /// No description provided for @show_changelog.
+  ///
+  /// In ru, this message translates to:
+  /// **'Список изменений'**
+  String get show_changelog;
+
+  /// No description provided for @show_changelog_desc.
+  ///
+  /// In ru, this message translates to:
+  /// **'Показывает список изменений в этой версии приложения'**
+  String get show_changelog_desc;
+
+  /// No description provided for @changelog_dialog.
+  ///
+  /// In ru, this message translates to:
+  /// **'Список изменений в {version}'**
+  String changelog_dialog({required String version});
+
+  /// No description provided for @force_update_check.
+  ///
+  /// In ru, this message translates to:
+  /// **'Проверить на наличие обновлений'**
+  String get force_update_check;
+
+  /// No description provided for @force_update_check_desc.
+  ///
+  /// In ru, this message translates to:
+  /// **'Текущая версия: {version}'**
+  String force_update_check_desc({required String version});
+
+  /// No description provided for @data_control.
+  ///
+  /// In ru, this message translates to:
+  /// **'Экспорт, импорт и удаление данных'**
+  String get data_control;
+
+  /// No description provided for @data_control_desc.
+  ///
+  /// In ru, this message translates to:
+  /// **'Позволяет управлять данными, хранящимися в приложении'**
+  String get data_control_desc;
 
   /// No description provided for @export_settings.
   ///
@@ -1596,7 +1760,7 @@ abstract class AppLocalizations {
   /// No description provided for @export_settings_desc.
   ///
   /// In ru, this message translates to:
-  /// **'Сохраняет локальные изменения треков (обложки и прочие), а так же настроек приложения в файл, чтобы восстановить их на другом устройстве'**
+  /// **'Сохраняет изменения настроек приложения и треков в файл, чтобы восстановить их на другом устройстве'**
   String get export_settings_desc;
 
   /// No description provided for @import_settings.
@@ -1610,18 +1774,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Загружает файл, ранее созданный при помощи «экспорта настроек»'**
   String get import_settings_desc;
-
-  /// No description provided for @export_music_list.
-  ///
-  /// In ru, this message translates to:
-  /// **'Экспорт списка треков'**
-  String get export_music_list;
-
-  /// No description provided for @export_music_list_desc.
-  ///
-  /// In ru, this message translates to:
-  /// **'Список из {count, plural, one{{count} лайкнутого трека} other{{count} лайкнутых треков}}:'**
-  String export_music_list_desc({required int count});
 
   /// No description provided for @export_settings_title.
   ///
@@ -1803,6 +1955,18 @@ abstract class AppLocalizations {
   /// **'Импорт настроек и треков был завершён успешно. Возможно, Вам понадобится перезагрузить приложение, что бы некоторые из настроек успешно сохранились и применились.'**
   String get settings_import_success_desc_no_delete;
 
+  /// No description provided for @export_music_list.
+  ///
+  /// In ru, this message translates to:
+  /// **'Экспорт списка треков'**
+  String get export_music_list;
+
+  /// No description provided for @export_music_list_desc.
+  ///
+  /// In ru, this message translates to:
+  /// **'Список из {count, plural, one{{count} лайкнутого трека} other{{count} лайкнутых треков}}:'**
+  String export_music_list_desc({required int count});
+
   /// No description provided for @reset_db.
   ///
   /// In ru, this message translates to:
@@ -1827,83 +1991,17 @@ abstract class AppLocalizations {
   /// **'Продолжив, Flutter VK удалит базу данных треков, хранимую на этом устройстве. Пожалуйста, не делайте этого без острой необходимости.\n\nВаши треки (как лайкнутые, так и загруженные) не будут удалены, однако Вам придётся по-новой запустить процесс загрузки на ранее загруженных плейлистах.'**
   String get reset_db_dialog_desc;
 
-  /// No description provided for @app_updates_policy.
+  /// No description provided for @debug_options.
   ///
   /// In ru, this message translates to:
-  /// **'Вид новых обновлений'**
-  String get app_updates_policy;
+  /// **'Отладочные опции'**
+  String get debug_options;
 
-  /// No description provided for @app_updates_policy_desc.
+  /// No description provided for @debug_options_desc.
   ///
   /// In ru, this message translates to:
-  /// **'Определяет то, как приложение будет раздражать Вас, напоминая о новом обновлении'**
-  String get app_updates_policy_desc;
-
-  /// No description provided for @app_updates_policy_dialog.
-  ///
-  /// In ru, this message translates to:
-  /// **'Диалог'**
-  String get app_updates_policy_dialog;
-
-  /// No description provided for @app_updates_policy_popup.
-  ///
-  /// In ru, this message translates to:
-  /// **'Надпись снизу'**
-  String get app_updates_policy_popup;
-
-  /// No description provided for @app_updates_policy_disabled.
-  ///
-  /// In ru, this message translates to:
-  /// **'Отключено'**
-  String get app_updates_policy_disabled;
-
-  /// No description provided for @disable_updates_warning.
-  ///
-  /// In ru, this message translates to:
-  /// **'Отключение обновлений'**
-  String get disable_updates_warning;
-
-  /// No description provided for @disable_updates_warning_desc.
-  ///
-  /// In ru, this message translates to:
-  /// **'Похоже, что Вы пытаетесь отключить обновления приложения. Делать это не рекомендуется, поскольку в будущих версиях могут быть исправлены баги, а так же могут добавляться новые функции.\n\nЕсли Вас раздражает полноэкранный диалог, мешающий пользованию приложения, то попробуйте поменять эту настройку на значение \"Надпись снизу\": Такой вариант не будет мешать Вам.'**
-  String get disable_updates_warning_desc;
-
-  /// No description provided for @disable_updates_warning_disable.
-  ///
-  /// In ru, this message translates to:
-  /// **'Всё равно отключить'**
-  String get disable_updates_warning_disable;
-
-  /// No description provided for @updates_are_disabled.
-  ///
-  /// In ru, this message translates to:
-  /// **'Обновления приложения отключены. Вы можете проверять на наличие обновлений вручную, нажав на кнопку \"О приложении\" на странице профиля.'**
-  String get updates_are_disabled;
-
-  /// No description provided for @updates_channel.
-  ///
-  /// In ru, this message translates to:
-  /// **'Канал обновлений'**
-  String get updates_channel;
-
-  /// No description provided for @updates_channel_desc.
-  ///
-  /// In ru, this message translates to:
-  /// **'Бета-канал имеет более частые, но менее стабильные билды'**
-  String get updates_channel_desc;
-
-  /// No description provided for @updates_channel_releases.
-  ///
-  /// In ru, this message translates to:
-  /// **'Основные (по-умолчанию)'**
-  String get updates_channel_releases;
-
-  /// No description provided for @updates_channel_prereleases.
-  ///
-  /// In ru, this message translates to:
-  /// **'Бета'**
-  String get updates_channel_prereleases;
+  /// **'Опции, необходимые для изучения и исправления технических проблем'**
+  String get debug_options_desc;
 
   /// No description provided for @share_logs.
   ///
@@ -1922,6 +2020,18 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Недоступно, поскольку файл логов пуст'**
   String get share_logs_desc_no_logs;
+
+  /// No description provided for @player_debug_logging.
+  ///
+  /// In ru, this message translates to:
+  /// **'Debug-логирование плеера'**
+  String get player_debug_logging;
+
+  /// No description provided for @player_debug_logging_desc.
+  ///
+  /// In ru, this message translates to:
+  /// **'Включает вывод технических данных плеера, ухудшая при этом производительность'**
+  String get player_debug_logging_desc;
 
   /// No description provided for @about_flutter_vk.
   ///
@@ -1953,24 +2063,6 @@ abstract class AppLocalizations {
   /// **'Нажав сюда, мы отправим Вас в прекрасный Github-репозиторий приложения Flutter VK'**
   String get app_github_desc;
 
-  /// No description provided for @show_changelog.
-  ///
-  /// In ru, this message translates to:
-  /// **'Список изменений'**
-  String get show_changelog;
-
-  /// No description provided for @show_changelog_desc.
-  ///
-  /// In ru, this message translates to:
-  /// **'Показывает список изменений в этой версии приложения'**
-  String get show_changelog_desc;
-
-  /// No description provided for @changelog_dialog.
-  ///
-  /// In ru, this message translates to:
-  /// **'Список изменений в {version}'**
-  String changelog_dialog({required String version});
-
   /// No description provided for @app_version.
   ///
   /// In ru, this message translates to:
@@ -1988,6 +2080,18 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'бета'**
   String get app_version_prerelease;
+
+  /// No description provided for @development_options.
+  ///
+  /// In ru, this message translates to:
+  /// **'Опции разработки'**
+  String get development_options;
+
+  /// No description provided for @development_options_desc.
+  ///
+  /// In ru, this message translates to:
+  /// **'Эти опции предназначены лишь для разработчиков'**
+  String get development_options_desc;
 
   /// No description provided for @download_manager_current_tasks.
   ///
@@ -2023,12 +2127,7 @@ abstract class AppLocalizations {
   ///
   /// In ru, this message translates to:
   /// **'v{oldVersion} <arrow></arrow> v{newVersion}, {date}, {time}. {badges}'**
-  String update_available_desc(
-      {required String oldVersion,
-      required String newVersion,
-      required DateTime date,
-      required DateTime time,
-      required String badges});
+  String update_available_desc({required String oldVersion, required String newVersion, required DateTime date, required DateTime time, required String badges});
 
   /// <debug></debug> иконка бета-версии.
   ///
@@ -2073,8 +2172,7 @@ abstract class AppLocalizations {
   String get no_updates_available;
 }
 
-class _AppLocalizationsDelegate
-    extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -2083,25 +2181,25 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) =>
-      <String>['en', 'ru'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>['en', 'ru'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
+
+
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'en':
-      return AppLocalizationsEn();
-    case 'ru':
-      return AppLocalizationsRu();
+    case 'en': return AppLocalizationsEn();
+    case 'ru': return AppLocalizationsRu();
   }
 
   throw FlutterError(
-      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-      'an issue with the localizations generation tool. Please file an issue '
-      'on GitHub with a reproducible sample app and the gen-l10n configuration '
-      'that was used.');
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.'
+  );
 }

@@ -237,7 +237,6 @@ class SettingsImporterRoute extends HookConsumerWidget {
         title: Text(
           l18n.settings_import,
         ),
-        centerTitle: true,
       ),
       body: Stack(
         children: [

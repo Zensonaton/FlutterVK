@@ -310,7 +310,6 @@ class MusicRoute extends HookConsumerWidget {
                   );
                 },
               ),
-              centerTitle: true,
               actions: [
                 // Кнопка для менеджера загрузок.
                 if (downloadManager.downloadStarted)

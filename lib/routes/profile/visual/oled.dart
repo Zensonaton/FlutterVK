@@ -4,10 +4,10 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:rive/rive.dart";
 
-import "../../../../provider/l18n.dart";
-import "../../../../provider/preferences.dart";
-import "../../../../utils.dart";
-import "../../../../widgets/setting_widgets.dart";
+import "../../../provider/l18n.dart";
+import "../../../provider/preferences.dart";
+import "../../../utils.dart";
+import "../../../widgets/setting_widgets.dart";
 
 /// Route для настроек, отображающий параметры настройки "OLED-тема".
 ///

@@ -23,7 +23,6 @@ class WelcomeRoute extends ConsumerWidget {
         title: const Text(
           appName,
         ),
-        centerTitle: true,
       ),
       resizeToAvoidBottomInset: false,
       body: Center(

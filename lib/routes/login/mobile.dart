@@ -67,7 +67,6 @@ class MobileLoginWidget extends HookConsumerWidget {
         title: const Text(
           appName,
         ),
-        centerTitle: true,
         actions: [
           PopupMenuButton(
             itemBuilder: (BuildContext context) {

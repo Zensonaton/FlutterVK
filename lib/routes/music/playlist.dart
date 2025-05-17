@@ -925,7 +925,6 @@ class AppBarRealAppBarWidget extends HookConsumerWidget {
               ),
             ),
       leading: isSearchOpen ? const BackButton() : null,
-      centerTitle: true,
       backgroundColor: Colors.transparent,
       shadowColor: Colors.transparent,
       surfaceTintColor: Colors.transparent,

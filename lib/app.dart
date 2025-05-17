@@ -208,6 +208,9 @@ class FlutterVKApp extends HookConsumerWidget {
             theme: ThemeData(
               colorScheme: lightScheme,
               pageTransitionsTheme: pageTransitions,
+              appBarTheme: const AppBarTheme(
+                centerTitle: true,
+              ),
             ),
             darkTheme: ThemeData(
               colorScheme: darkScheme.copyWith(
@@ -217,6 +220,9 @@ class FlutterVKApp extends HookConsumerWidget {
                   ? CardThemeData(color: darkScheme.surfaceContainerLowest)
                   : null,
               pageTransitionsTheme: pageTransitions,
+              appBarTheme: const AppBarTheme(
+                centerTitle: true,
+              ),
             ),
             themeMode: preferences.theme,
             themeAnimationDuration: const Duration(

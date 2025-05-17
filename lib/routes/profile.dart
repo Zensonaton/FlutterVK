@@ -24,14 +24,9 @@ import "../widgets/audio_player.dart";
 import "../widgets/dialogs.dart";
 import "../widgets/fallback_user_avatar.dart";
 import "../widgets/page_route_builders.dart";
+import "../widgets/profile_category.dart";
 import "../widgets/tip_widget.dart";
 import "login.dart";
-import "profile/categories/about.dart";
-import "profile/categories/app.dart";
-import "profile/categories/debug.dart";
-import "profile/categories/experimental.dart";
-import "profile/categories/music_player.dart";
-import "profile/categories/visual.dart";
 
 /// Вызывает окно, дающее пользователю возможность поделиться файлом логов приложения ([logFilePath]), либо же открывающее проводник (`explorer.exe`) с файлом логов (на OS Windows).
 void shareLogs() async {
@@ -221,6 +216,178 @@ class ProfileAvatar extends ConsumerWidget {
   }
 }
 
+/// Виджет, отображающий [Card] для настроек приложения.
+class SettingsCardWidget extends ConsumerWidget {
+  const SettingsCardWidget({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l18n = ref.watch(l18nProvider);
+
+    final mobileLayout = isMobileLayout(context);
+
+    final developmentOptionsEnabled = ref.watch(
+      preferencesProvider.select(
+        (it) => it.debugOptionsEnabled,
+      ),
+    );
+
+    return ProfileSettingCategory(
+      icon: Icons.settings,
+      title: l18n.general_settings,
+      centerTitle: mobileLayout,
+      padding: EdgeInsets.only(
+        top: mobileLayout ? 0 : 8,
+      ),
+      children: [
+        // Стиль и внешний вид.
+        ListTile(
+          leading: const Icon(
+            Icons.color_lens,
+          ),
+          title: Text(
+            l18n.visual_settings,
+          ),
+          subtitle: Text(
+            l18n.visual_settings_desc,
+          ),
+          onTap: () => context.push(
+            "/profile/settings/visual",
+          ),
+        ),
+
+        // Воспроизведение.
+        ListTile(
+          leading: const Icon(
+            Icons.music_note,
+          ),
+          title: Text(
+            l18n.playback,
+          ),
+          subtitle: Text(
+            l18n.playback_desc,
+          ),
+          onTap: () => context.push(
+            "/profile/settings/playback",
+          ),
+        ),
+
+        // Интеграции.
+        ListTile(
+          leading: const Icon(
+            Icons.extension,
+          ),
+          title: Text(
+            l18n.integrations,
+          ),
+          subtitle: Text(
+            l18n.integrations_desc,
+          ),
+          onTap: () => context.push(
+            "/profile/settings/integrations",
+          ),
+        ),
+
+        // Экспериментальные функции.
+        ListTile(
+          leading: const Icon(
+            Icons.science,
+          ),
+          title: Text(
+            l18n.experimental_options,
+          ),
+          subtitle: Text(
+            l18n.experimental_options_desc,
+          ),
+          onTap: () => context.push(
+            "/profile/settings/experimental",
+          ),
+        ),
+
+        // Обновления.
+        ListTile(
+          leading: const Icon(
+            Icons.system_update,
+          ),
+          title: Text(
+            l18n.updates,
+          ),
+          subtitle: Text(
+            l18n.updates_desc,
+          ),
+          onTap: () => context.push(
+            "/profile/settings/updates",
+          ),
+        ),
+
+        // Экспорт, импорт и удаление данных.
+        ListTile(
+          leading: const Icon(
+            Icons.sync,
+          ),
+          title: Text(
+            l18n.data_control,
+          ),
+          subtitle: Text(
+            l18n.data_control_desc,
+          ),
+          onTap: () => context.push(
+            "/profile/settings/data_control",
+          ),
+        ),
+
+        // Отладочные опции.
+        ListTile(
+          leading: const Icon(
+            Icons.bug_report,
+          ),
+          title: Text(
+            l18n.debug_options,
+          ),
+          subtitle: Text(
+            l18n.debug_options_desc,
+          ),
+          onTap: () => context.push(
+            "/profile/settings/debug",
+          ),
+        ),
+
+        // О Flutter VK.
+        ListTile(
+          leading: const Icon(
+            Icons.info,
+          ),
+          title: Text(
+            l18n.about_flutter_vk,
+          ),
+          onTap: () => context.push(
+            "/profile/settings/about",
+          ),
+        ),
+
+        // Опции разработки.
+        if (kDebugMode || developmentOptionsEnabled)
+          ListTile(
+            leading: const Icon(
+              Icons.logo_dev,
+            ),
+            title: Text(
+              l18n.development_options,
+            ),
+            subtitle: Text(
+              l18n.development_options_desc,
+            ),
+            onTap: () => context.push(
+              "/profile/settings/development",
+            ),
+          ),
+      ],
+    );
+  }
+}
+
 /// Route, отображающий информацию по профилю текущего пользователя, где пользователь может поменять настройки.
 ///
 /// go_route: `/profile`.
@@ -239,11 +406,6 @@ class ProfileRoute extends HookConsumerWidget {
     final downloadManager = ref.watch(downloadManagerProvider);
     ref.watch(playerIsLoadedProvider);
 
-    final bool debugOptionsEnabled = ref.watch(
-      preferencesProvider.select(
-        (it) => it.debugOptionsEnabled,
-      ),
-    );
     final bool recommendationsConnected =
         ref.watch(secondaryTokenProvider) != null;
     final bool isDemo = ref.watch(isDemoProvider);
@@ -276,7 +438,6 @@ class ProfileRoute extends HookConsumerWidget {
                   ),
                 const Gap(16),
               ],
-              centerTitle: true,
             )
           : null,
       body: ListView(
@@ -338,30 +499,9 @@ class ProfileRoute extends HookConsumerWidget {
             const Gap(16),
           ],
 
-          // Визуал.
-          const ProfileVisualSettingsCategory(),
+          // Настройки.
+          const SettingsCardWidget(),
           const Gap(16),
-
-          // Музыкальный плеер.
-          const ProfileMusicPlayerSettingsCategory(),
-          const Gap(16),
-
-          // Экспериментальные функции.
-          const ProfileExperimentalSettingsCategory(),
-          const Gap(16),
-
-          // Настройки приложения.
-          const ProfileAppSettingsCategory(),
-          const Gap(16),
-
-          // О Flutter VK.
-          const ProfileAboutSettingsCategory(),
-
-          // Debug-опции.
-          if (kDebugMode || debugOptionsEnabled) ...[
-            const Gap(16),
-            const ProfileDebugSettingsCategory(),
-          ],
 
           // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
           if (player.isLoaded && mobileLayout)

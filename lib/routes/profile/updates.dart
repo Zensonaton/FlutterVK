@@ -1,18 +1,19 @@
+import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:go_router/go_router.dart";
+import "package:gap/gap.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
-import "../../../enums.dart";
-import "../../../provider/auth.dart";
-import "../../../provider/l18n.dart";
-import "../../../provider/preferences.dart";
-import "../../../services/logger.dart";
-import "../../../utils.dart";
-import "../../../widgets/dialogs.dart";
-import "../../../widgets/profile_category.dart";
-import "../../profile.dart";
+import "../../enums.dart";
+import "../../provider/auth.dart";
+import "../../provider/l18n.dart";
+import "../../provider/player.dart";
+import "../../provider/preferences.dart";
+import "../../provider/updater.dart";
+import "../../utils.dart";
+import "../../widgets/audio_player.dart";
+import "../../widgets/dialogs.dart";
+import "../profile.dart";
 
 /// Диалог, помогающий пользователю поменять настройку "Отображение новых обновлений".
 ///
@@ -154,9 +155,12 @@ class UpdatesChannelDialog extends ConsumerWidget {
   }
 }
 
-/// Раздел настроек для страницы профиля ([ProfileRoute]), отвечающий за настройки приложения Flutter VK.
-class ProfileAppSettingsCategory extends HookConsumerWidget {
-  const ProfileAppSettingsCategory({
+/// Route для управления настройками обновления приложения.
+/// Пользователь может попасть в этот раздел через [ProfileRoute], нажав на "Обновления".
+///
+/// go_route: `/profile/settings/updates`
+class SettingsUpdatesRoute extends ConsumerWidget {
+  const SettingsUpdatesRoute({
     super.key,
   });
 
@@ -165,142 +169,96 @@ class ProfileAppSettingsCategory extends HookConsumerWidget {
     final l18n = ref.watch(l18nProvider);
     final preferences = ref.watch(preferencesProvider);
     final isDemo = ref.watch(isDemoProvider);
-
+    final player = ref.read(playerProvider);
     final mobileLayout = isMobileLayout(context);
+    ref.watch(playerIsLoadedProvider);
 
-    final logExists = useFuture(
-      useMemoized(
-        () async {
-          if (isWeb) return false;
-
-          return (await logFilePath()).existsSync();
-        },
-      ),
-    );
-
-    void onSettingsExportTap() {
-      if (!demoModeDialog(ref, context)) return;
-
-      context.go("/profile/settings_exporter");
-    }
-
-    void onSettingsImportTap() {
-      if (!demoModeDialog(ref, context)) return;
-
-      context.go("/profile/settings_importer");
-    }
-
-    void onDBResetTap() async {
-      final result = await showYesNoDialog(
-        context,
-        icon: Icons.delete,
-        title: l18n.reset_db_dialog,
-        description: l18n.reset_db_dialog_desc,
-        yesText: l18n.general_reset,
-      );
-      if (result != true || !context.mounted) return;
-
-      showWipDialog(context);
-    }
-
-    return ProfileSettingCategory(
-      icon: Icons.settings,
-      title: l18n.app_settings,
-      centerTitle: mobileLayout,
-      padding: EdgeInsets.only(
-        top: mobileLayout ? 0 : 8,
-      ),
-      children: [
-        // Экспорт настроек.
-        ListTile(
-          leading: const Icon(
-            Icons.file_upload_outlined,
-          ),
-          title: Text(
-            l18n.export_settings,
-          ),
-          subtitle: Text(
-            l18n.export_settings_desc,
-          ),
-          onTap: onSettingsExportTap,
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          l18n.updates,
         ),
+      ),
+      body: ListView(
+        children: [
+          // Политика для обновлений.
+          SettingWithDialog(
+            icon: Icons.update,
+            title: l18n.app_updates_policy,
+            subtitle: l18n.app_updates_policy_desc,
+            dialog: const UpdatesDialogTypeActionDialog(),
+            enabled: !isDemo,
+            settingText: {
+              UpdatePolicy.dialog: l18n.app_updates_policy_dialog,
+              UpdatePolicy.popup: l18n.app_updates_policy_popup,
+              UpdatePolicy.disabled: l18n.app_updates_policy_disabled,
+            }[preferences.updatePolicy]!,
+          ),
 
-        // Импорт настроек.
-        ListTile(
-          leading: const Icon(
-            Icons.file_download_outlined,
+          // Канал для автообновлений.
+          SettingWithDialog(
+            icon: Icons.route,
+            title: l18n.updates_channel,
+            subtitle: l18n.updates_channel_desc,
+            dialog: const UpdatesChannelDialog(),
+            enabled:
+                !isDemo && preferences.updatePolicy != UpdatePolicy.disabled,
+            settingText: {
+              UpdateBranch.releasesOnly: l18n.updates_channel_releases,
+              UpdateBranch.preReleases: l18n.updates_channel_prereleases,
+            }[preferences.updateBranch]!,
           ),
-          title: Text(
-            l18n.import_settings,
-          ),
-          subtitle: Text(
-            l18n.import_settings_desc,
-          ),
-          onTap: onSettingsImportTap,
-        ),
 
-        // Сбросить базу данных.
-        if (!isWeb)
+          // Список изменений.
+          if (!isDemo || kDebugMode)
+            ListTile(
+              leading: const Icon(
+                Icons.history,
+              ),
+              title: Text(
+                l18n.show_changelog,
+              ),
+              subtitle: Text(
+                l18n.show_changelog_desc,
+              ),
+              onTap: () async {
+                if (!networkRequiredDialog(ref, context)) return;
+
+                await ref.read(updaterProvider).showChangelog(context);
+              },
+            ),
+
+          // О приложении.
           ListTile(
             leading: const Icon(
-              Icons.delete,
+              Icons.security_update_good,
             ),
             title: Text(
-              l18n.reset_db,
+              l18n.force_update_check,
             ),
             subtitle: Text(
-              l18n.reset_db_desc,
+              l18n.force_update_check_desc(
+                version: getAppVersion(l18n),
+              ),
             ),
-            onTap: onDBResetTap,
+            onTap: () async {
+              if (!demoModeDialog(ref, context)) return;
+              if (!networkRequiredDialog(ref, context)) return;
+
+              await ref.read(updaterProvider).checkForUpdates(
+                    context,
+                    allowPre:
+                        preferences.updateBranch == UpdateBranch.preReleases,
+                    showMessageOnNoUpdates: true,
+                  );
+            },
           ),
 
-        // Политика для обновлений.
-        SettingWithDialog(
-          icon: Icons.update,
-          title: l18n.app_updates_policy,
-          subtitle: l18n.app_updates_policy_desc,
-          dialog: const UpdatesDialogTypeActionDialog(),
-          enabled: !isDemo,
-          settingText: {
-            UpdatePolicy.dialog: l18n.app_updates_policy_dialog,
-            UpdatePolicy.popup: l18n.app_updates_policy_popup,
-            UpdatePolicy.disabled: l18n.app_updates_policy_disabled,
-          }[preferences.updatePolicy]!,
-        ),
-
-        // Канал для автообновлений.
-        SettingWithDialog(
-          icon: Icons.route,
-          title: l18n.updates_channel,
-          subtitle: l18n.updates_channel_desc,
-          dialog: const UpdatesChannelDialog(),
-          enabled: !isDemo && preferences.updatePolicy != UpdatePolicy.disabled,
-          settingText: {
-            UpdateBranch.releasesOnly: l18n.updates_channel_releases,
-            UpdateBranch.preReleases: l18n.updates_channel_prereleases,
-          }[preferences.updateBranch]!,
-        ),
-
-        // Поделиться логами.
-        if (!isWeb)
-          ListTile(
-            leading: const Icon(
-              Icons.bug_report,
-            ),
-            title: Text(
-              l18n.share_logs,
-            ),
-            enabled: logExists.data ?? false,
-            subtitle: Text(
-              logExists.data ?? false
-                  ? l18n.share_logs_desc
-                  : l18n.share_logs_desc_no_logs,
-            ),
-            onTap: shareLogs,
-          ),
-
-        // TODO: Проверить на наличие обновлений.
-      ],
+          // Данный Gap нужен, что бы плеер снизу при Mobile Layout'е не закрывал ничего важного.
+          if (player.isLoaded && mobileLayout)
+            const Gap(MusicPlayerWidget.mobileHeightWithPadding),
+        ],
+      ),
     );
   }
 }

@@ -16,6 +16,7 @@ import "package:window_manager/window_manager.dart";
 import "consts.dart";
 import "enums.dart";
 import "l10n/app_localizations.dart";
+import "main.dart";
 import "provider/user.dart";
 
 /// Класс для отображения Route'ов в [BottomNavigationBar], вместе с их названиями, а так же иконками.
@@ -453,4 +454,35 @@ void openPlayerRouteIfNotOpened(BuildContext context) {
   if (path == "/player") return;
 
   context.push("/player");
+}
+
+/// Возвращает версию приложения в виде строки вида:
+/// - `v1.0.0 (Debug)`
+/// - `v0.6.9 (бета)`
+/// - `v1.0.0`
+String getAppVersion(
+  AppLocalizations l18n, {
+  bool prefixWithV = true,
+  bool addSuffix = true,
+}) {
+  String version = appVersion;
+  if (prefixWithV) {
+    version = "v$version";
+  }
+
+  if (addSuffix) {
+    final List<String> suffixes = [];
+    if (isPrerelease) {
+      suffixes.add(l18n.app_version_prerelease);
+    }
+    if (kDebugMode) {
+      suffixes.add("DEBUG");
+    }
+
+    if (suffixes.isNotEmpty) {
+      version += " (${suffixes.join(", ")})";
+    }
+  }
+
+  return version;
 }

@@ -67,7 +67,6 @@ class DesktopLoginWidget extends HookConsumerWidget {
         title: const Text(
           appName,
         ),
-        centerTitle: true,
       ),
       resizeToAvoidBottomInset: false,
       body: Center(

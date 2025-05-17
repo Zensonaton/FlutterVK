@@ -513,7 +513,6 @@ class SettingsExporterRoute extends HookConsumerWidget {
         title: Text(
           l18n.export_settings_title,
         ),
-        centerTitle: true,
       ),
       body: Stack(
         children: [

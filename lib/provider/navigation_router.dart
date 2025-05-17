@@ -12,21 +12,31 @@ import "../routes/music.dart";
 import "../routes/music/playlist.dart";
 import "../routes/player.dart";
 import "../routes/profile.dart";
-import "../routes/profile/categories/visual/alternative_slider.dart";
-import "../routes/profile/categories/visual/app_wide_colors.dart";
-import "../routes/profile/categories/visual/crossfade_audio_colors.dart";
-import "../routes/profile/categories/visual/dynamic_scheme_type.dart";
-import "../routes/profile/categories/visual/oled.dart";
-import "../routes/profile/categories/visual/show_audio_thumbs.dart";
-import "../routes/profile/categories/visual/spoiler_next_audio.dart";
-import "../routes/profile/categories/visual/theme.dart";
+import "../routes/profile/about.dart";
+import "../routes/profile/debug.dart";
 import "../routes/profile/debug/color_scheme.dart";
 import "../routes/profile/debug/markdown_viewer.dart";
 import "../routes/profile/debug/player.dart";
 import "../routes/profile/debug/playlists_viewer.dart";
+import "../routes/profile/development.dart";
 import "../routes/profile/download_manager.dart";
+import "../routes/profile/experimental.dart";
+import "../routes/profile/integrations.dart";
+import "../routes/profile/data_control.dart";
+import "../routes/profile/playback.dart";
 import "../routes/profile/settings_exporter.dart";
 import "../routes/profile/settings_importer.dart";
+import "../routes/profile/updates.dart";
+import "../routes/profile/visual.dart";
+import "../routes/profile/visual/alternative_slider.dart";
+import "../routes/profile/visual/app_wide_colors.dart";
+import "../routes/profile/visual/crossfade_audio_colors.dart";
+import "../routes/profile/visual/dynamic_scheme_type.dart";
+import "../routes/profile/visual/oled.dart";
+import "../routes/profile/visual/player.dart";
+import "../routes/profile/visual/show_audio_thumbs.dart";
+import "../routes/profile/visual/spoiler_next_audio.dart";
+import "../routes/profile/visual/theme.dart";
 import "../routes/search/search.dart";
 import "../routes/welcome.dart";
 import "../widgets/shell_route_wrapper.dart";
@@ -193,8 +203,50 @@ GoRouter router(Ref ref) {
           builder: (_, __) => const SettingsImporterRoute(),
         ),
         GoRoute(
+          path: "settings/visual",
+          builder: (_, __) => const SettingsVisualRoute(),
+          routes: [
+            GoRoute(
+              path: "player",
+              builder: (_, __) => const SettingsVisualPlayerRoute(),
+            ),
+          ],
+        ),
+        GoRoute(
+          path: "settings/playback",
+          builder: (_, __) => const SettingsPlaybackRoute(),
+        ),
+        GoRoute(
+          path: "settings/integrations",
+          builder: (_, __) => const SettingsIntegrationsRoute(),
+        ),
+        GoRoute(
+          path: "settings/experimental",
+          builder: (_, __) => const SettingsExperimentalRoute(),
+        ),
+        GoRoute(
+          path: "settings/updates",
+          builder: (_, __) => const SettingsUpdatesRoute(),
+        ),
+        GoRoute(
+          path: "settings/data_control",
+          builder: (_, __) => const SettingsDataControlRoute(),
+        ),
+        GoRoute(
+          path: "settings/about",
+          builder: (_, __) => const SettingsAboutRoute(),
+        ),
+        GoRoute(
+          path: "settings/debug",
+          builder: (_, __) => const SettingsDebugRoute(),
+        ),
+        GoRoute(
           path: "setting_theme_mode",
           builder: (_, __) => const ThemeSettingPage(),
+        ),
+        GoRoute(
+          path: "settings/development",
+          builder: (_, __) => const SettingsDevelopmentRoute(),
         ),
         GoRoute(
           path: "setting_oled",
