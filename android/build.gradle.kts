@@ -23,10 +23,10 @@ subprojects {
 	afterEvaluate {
 		if (plugins.hasPlugin("com.android.application") || plugins.hasPlugin("com.android.library")) {
 			extensions.configure<com.android.build.gradle.BaseExtension>("android") {
-				compileSdkVersion(34)
+				compileSdkVersion(35)
 
 				defaultConfig {
-					targetSdkVersion(34)
+					targetSdkVersion(35)
 				}
 			}
 		}
