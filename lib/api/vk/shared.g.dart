@@ -173,7 +173,7 @@ Map<String, dynamic> _$PlaylistToJson(Playlist instance) => <String, dynamic>{
       'update_time': instance.updateTime,
       'genres': instance.genres,
       'is_following': instance.isFollowing,
-      'photo': instance.photo,
+      'photo': instance.photo?.toJson(),
       'permissions': instance.permissions,
       'subtitle_badge': instance.subtitleBadge,
       'play_button': instance.playButton,
@@ -197,7 +197,7 @@ Map<String, dynamic> _$AlbumToJson(Album instance) => <String, dynamic>{
       'owner_id': instance.ownerID,
       'title': instance.title,
       'access_key': instance.accessKey,
-      'thumb': instance.thumbnails,
+      'thumb': instance.thumbnails?.toJson(),
     };
 
 Audio _$AudioFromJson(Map<String, dynamic> json) => Audio(
@@ -248,7 +248,7 @@ Map<String, dynamic> _$AudioToJson(Audio instance) => <String, dynamic>{
       'track_code': instance.trackCode,
       'url': instance.url,
       'date': instance.date,
-      'album': instance.album,
+      'album': instance.album?.toJson(),
       'has_lyrics': instance.hasLyrics,
       'album_id': instance.albumID,
       'genre_id': instance.genreID,

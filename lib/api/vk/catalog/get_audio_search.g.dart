@@ -13,6 +13,14 @@ Suggestion _$SuggestionFromJson(Map<String, dynamic> json) => Suggestion(
       context: json['context'] as String?,
     );
 
+Map<String, dynamic> _$SuggestionToJson(Suggestion instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'title': instance.title,
+      'subtitle': instance.subtitle,
+      'context': instance.context,
+    };
+
 APICatalogGetAudioSearchResponse _$APICatalogGetAudioSearchResponseFromJson(
         Map<String, dynamic> json) =>
     APICatalogGetAudioSearchResponse(
@@ -24,5 +32,5 @@ APICatalogGetAudioSearchResponse _$APICatalogGetAudioSearchResponseFromJson(
 Map<String, dynamic> _$APICatalogGetAudioSearchResponseToJson(
         APICatalogGetAudioSearchResponse instance) =>
     <String, dynamic>{
-      'suggestions': instance.suggestions,
+      'suggestions': instance.suggestions.map((e) => e.toJson()).toList(),
     };

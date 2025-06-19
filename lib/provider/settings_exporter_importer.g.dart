@@ -14,6 +14,14 @@ ExportedThumbnail _$ExportedThumbnailFromJson(Map<String, dynamic> json) =>
       photoMax: json['photoMax'] as String,
     );
 
+Map<String, dynamic> _$ExportedThumbnailToJson(ExportedThumbnail instance) =>
+    <String, dynamic>{
+      'photoSmall': instance.photoSmall,
+      'photoMedium': instance.photoMedium,
+      'photoBig': instance.photoBig,
+      'photoMax': instance.photoMax,
+    };
+
 ExportedAudio _$ExportedAudioFromJson(Map<String, dynamic> json) =>
     ExportedAudio(
       id: (json['id'] as num).toInt(),
@@ -40,7 +48,8 @@ Map<String, dynamic> _$ExportedAudioToJson(ExportedAudio instance) =>
       if (instance.isExported case final value?) 'isExported': value,
       if (instance.forceDeezerThumbs case final value?)
         'forceDeezerThumbs': value,
-      if (instance.deezerThumbs case final value?) 'deezerThumbs': value,
+      if (instance.deezerThumbs?.toJson() case final value?)
+        'deezerThumbs': value,
       if (instance.isCached case final value?) 'isCached': value,
       if (instance.replacedLocally case final value?) 'replacedLocally': value,
     };
@@ -68,14 +77,20 @@ ExportedSections _$ExportedSectionsFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$ExportedSectionsToJson(ExportedSections instance) =>
     <String, dynamic>{
       if (instance.settings case final value?) 'settings': value,
-      if (instance.modifiedThumbnails case final value?)
+      if (instance.modifiedThumbnails?.map((e) => e.toJson()).toList()
+          case final value?)
         'modifiedThumbnails': value,
-      if (instance.modifiedLyrics case final value?) 'modifiedLyrics': value,
-      if (instance.modifiedLocalMetadata case final value?)
+      if (instance.modifiedLyrics?.map((e) => e.toJson()).toList()
+          case final value?)
+        'modifiedLyrics': value,
+      if (instance.modifiedLocalMetadata?.map((e) => e.toJson()).toList()
+          case final value?)
         'modifiedLocalMetadata': value,
-      if (instance.cachedRestricted case final value?)
+      if (instance.cachedRestricted?.map((e) => e.toJson()).toList()
+          case final value?)
         'cachedRestricted': value,
-      if (instance.locallyReplacedAudios case final value?)
+      if (instance.locallyReplacedAudios?.map((e) => e.toJson()).toList()
+          case final value?)
         'locallyReplacedAudios': value,
     };
 
@@ -99,7 +114,7 @@ Map<String, dynamic> _$ExportedAudiosInfoMetadataToJson(
       'exportStartedAt': instance.exportStartedAt,
       'exportedAt': instance.exportedAt,
       'hash': instance.hash,
-      'sections': instance.sections,
+      'sections': instance.sections.toJson(),
     };
 
 // **************************************************************************

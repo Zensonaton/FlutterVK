@@ -13,6 +13,13 @@ AudioMix _$AudioMixFromJson(Map<String, dynamic> json) => AudioMix(
       description: json['description'] as String,
     );
 
+Map<String, dynamic> _$AudioMixToJson(AudioMix instance) => <String, dynamic>{
+      'id': instance.id,
+      'background_animation_url': instance.backgroundAnimationUrl,
+      'title': instance.title,
+      'description': instance.description,
+    };
+
 SimillarPlaylist _$SimillarPlaylistFromJson(Map<String, dynamic> json) =>
     SimillarPlaylist(
       id: (json['id'] as num).toInt(),
@@ -23,6 +30,15 @@ SimillarPlaylist _$SimillarPlaylistFromJson(Map<String, dynamic> json) =>
       color: json['color'] as String,
     );
 
+Map<String, dynamic> _$SimillarPlaylistToJson(SimillarPlaylist instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'owner_id': instance.ownerID,
+      'percentage': instance.percentage,
+      'audios': instance.audios,
+      'color': instance.color,
+    };
+
 BlockAction _$BlockActionFromJson(Map<String, dynamic> json) => BlockAction(
       sectionID: json['section_id'] as String?,
       title: json['title'] as String?,
@@ -30,6 +46,15 @@ BlockAction _$BlockActionFromJson(Map<String, dynamic> json) => BlockAction(
       refLayoutName: json['ref_layout_name'] as String?,
       refDataType: json['ref_data_type'] as String?,
     );
+
+Map<String, dynamic> _$BlockActionToJson(BlockAction instance) =>
+    <String, dynamic>{
+      'section_id': instance.sectionID,
+      'title': instance.title,
+      'ref_items_count': instance.refItemsCount,
+      'ref_layout_name': instance.refLayoutName,
+      'ref_data_type': instance.refDataType,
+    };
 
 SectionBlock _$SectionBlockFromJson(Map<String, dynamic> json) => SectionBlock(
       id: json['id'] as String?,
@@ -47,6 +72,17 @@ SectionBlock _$SectionBlockFromJson(Map<String, dynamic> json) => SectionBlock(
           .toList(),
     );
 
+Map<String, dynamic> _$SectionBlockToJson(SectionBlock instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'title': instance.title,
+      'data_type': instance.dataType,
+      'layout': instance.layout,
+      'actions': instance.actions?.map((e) => e.toJson()).toList(),
+      'audios_ids': instance.audioIDs,
+      'playlists_ids': instance.playlistIDs,
+    };
+
 Section _$SectionFromJson(Map<String, dynamic> json) => Section(
       id: json['id'] as String?,
       title: json['title'] as String?,
@@ -57,6 +93,14 @@ Section _$SectionFromJson(Map<String, dynamic> json) => Section(
       actions: json['actions'] as List<dynamic>?,
     );
 
+Map<String, dynamic> _$SectionToJson(Section instance) => <String, dynamic>{
+      'id': instance.id,
+      'title': instance.title,
+      'url': instance.url,
+      'blocks': instance.blocks?.map((e) => e.toJson()).toList(),
+      'actions': instance.actions,
+    };
+
 Catalog _$CatalogFromJson(Map<String, dynamic> json) => Catalog(
       defaultSection: json['default_section'] as String?,
       sections: (json['sections'] as List<dynamic>)
@@ -66,6 +110,14 @@ Catalog _$CatalogFromJson(Map<String, dynamic> json) => Catalog(
       buttons: json['buttons'],
       pinnedSection: json['pinned_section'] as String?,
     );
+
+Map<String, dynamic> _$CatalogToJson(Catalog instance) => <String, dynamic>{
+      'default_section': instance.defaultSection,
+      'sections': instance.sections.map((e) => e.toJson()).toList(),
+      'header': instance.header,
+      'buttons': instance.buttons,
+      'pinned_section': instance.pinnedSection,
+    };
 
 APICatalogGetAudioResponse _$APICatalogGetAudioResponseFromJson(
         Map<String, dynamic> json) =>
@@ -89,9 +141,11 @@ APICatalogGetAudioResponse _$APICatalogGetAudioResponseFromJson(
 Map<String, dynamic> _$APICatalogGetAudioResponseToJson(
         APICatalogGetAudioResponse instance) =>
     <String, dynamic>{
-      'audios': instance.audios,
-      'playlists': instance.playlists,
-      'catalog': instance.catalog,
-      'recommended_playlists': instance.recommendedPlaylists,
-      'audio_stream_mixes': instance.audioStreamMixes,
+      'audios': instance.audios.map((e) => e.toJson()).toList(),
+      'playlists': instance.playlists.map((e) => e.toJson()).toList(),
+      'catalog': instance.catalog.toJson(),
+      'recommended_playlists':
+          instance.recommendedPlaylists.map((e) => e.toJson()).toList(),
+      'audio_stream_mixes':
+          instance.audioStreamMixes.map((e) => e.toJson()).toList(),
     };

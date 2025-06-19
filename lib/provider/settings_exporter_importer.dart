@@ -22,7 +22,7 @@ import "preferences.dart";
 part "settings_exporter_importer.g.dart";
 
 /// Класс, олицетворяющий экспортированную обложку.
-@JsonSerializable()
+@JsonSerializable(createToJson: true)
 class ExportedThumbnail {
   /// Размеры изображений, в зависимости от источника:
   /// - ВКонтакте: `68x68`.
@@ -53,6 +53,8 @@ class ExportedThumbnail {
 
   factory ExportedThumbnail.fromJson(Map<String, dynamic> json) =>
       _$ExportedThumbnailFromJson(json);
+
+  Map<String, dynamic> toJson() => _$ExportedThumbnailToJson(this);
 }
 
 /// Класс, олицетворяющий экспортированное аудио.
@@ -146,6 +148,8 @@ class ExportedAudio {
 
   factory ExportedAudio.fromJson(Map<String, dynamic> json) =>
       _$ExportedAudioFromJson(json);
+
+  Map<String, dynamic> toJson() => _$ExportedAudioToJson(this);
 }
 
 /// Класс, олицетворяющий секции экспортированных данных.

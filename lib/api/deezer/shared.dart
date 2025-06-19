@@ -5,7 +5,7 @@ import "../../utils.dart";
 part "shared.g.dart";
 
 /// Класс, олицетворяющий исполнителя трека в Deezer.
-@JsonSerializable()
+@JsonSerializable(createToJson: true)
 class DeezerArtist {
   /// ID исполнителя.
   final int id;
@@ -23,10 +23,12 @@ class DeezerArtist {
 
   factory DeezerArtist.fromJson(Map<String, dynamic> json) =>
       _$DeezerArtistFromJson(json);
+
+  Map<String, dynamic> toJson() => _$DeezerArtistToJson(this);
 }
 
 /// Класс, олицетворяющий альбом трека в Deezer.
-@JsonSerializable()
+@JsonSerializable(createToJson: true)
 class DeezerAlbum {
   /// ID альбома.
   final int id;
@@ -68,6 +70,8 @@ class DeezerAlbum {
 
   factory DeezerAlbum.fromJson(Map<String, dynamic> json) =>
       _$DeezerAlbumFromJson(json);
+
+  Map<String, dynamic> toJson() => _$DeezerAlbumToJson(this);
 }
 
 /// Класс, олицетворяющий трек, возвращённый API Deezer.

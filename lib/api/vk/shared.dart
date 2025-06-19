@@ -494,6 +494,8 @@ class Thumbnails {
 
   factory Thumbnails.fromJson(Map<String, dynamic> json) =>
       _$ThumbnailsFromJson(json);
+
+  Map<String, dynamic> toJson() => _$ThumbnailsToJson(this);
 }
 
 /// Объект, олицетворяющий плейлист ВКонтакте.
@@ -666,6 +668,8 @@ class Album {
   });
 
   factory Album.fromJson(Map<String, dynamic> json) => _$AlbumFromJson(json);
+
+  Map<String, dynamic> toJson() => _$AlbumToJson(this);
 }
 
 /// Объект, олицетворяющий аудиозапись ВКонтакте.

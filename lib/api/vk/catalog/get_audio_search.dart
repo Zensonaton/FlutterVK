@@ -30,7 +30,7 @@ Map<String, dynamic> _getFakeData() {
 }
 
 /// Отдельный предложенный запрос поиска для [APICatalogGetAudioSearchResponse].
-@JsonSerializable()
+@JsonSerializable(createToJson: true)
 class Suggestion {
   /// ID предложенного запроса.
   final String? id;
@@ -50,6 +50,8 @@ class Suggestion {
 
   factory Suggestion.fromJson(Map<String, dynamic> json) =>
       _$SuggestionFromJson(json);
+
+  Map<String, dynamic> toJson() => _$SuggestionToJson(this);
 }
 
 /// Ответ для метода [catalog_get_audio_search].
