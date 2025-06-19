@@ -1,0 +1,54 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "build_runner: build",
+			"type": "shell",
+			"command": "dart",
+			"args": [
+				"run",
+				"build_runner",
+				"build",
+				"--delete-conflicting-outputs"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": false
+			}
+		},
+		{
+			"label": "build_runner: watch",
+			"type": "shell",
+			"command": "dart",
+			"args": [
+				"run",
+				"build_runner",
+				"watch",
+				"--delete-conflicting-outputs"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"isBackground": true,
+			"problemMatcher": {
+				"owner": "dart",
+				"pattern": [
+					{
+						"regexp": "^([^:]+):(\\d+):(\\d+): (Error|Warning|info|error|warning): (.*)$",
+						"file": 1,
+						"line": 2,
+						"column": 3,
+						"severity": 4,
+						"message": 5
+					}
+				],
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": "^\\[INFO\\] Starting Build\\.",
+					"endsPattern": "^\\[INFO\\] Succeeded after .*$"
+				}
+			}
+		}
+	]
+}

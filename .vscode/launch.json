@@ -5,10 +5,11 @@
 			"name": "Запустить в debug-режиме",
 			"request": "launch",
 			"type": "dart",
+			"preLaunchTask": "build_runner: watch",
 			"args": [
 				"--dart-define", "PRERELEASE=1",
-                "--web-port=5000",
-                "--web-enable-expression-evaluation"
+				"--web-port=5000",
+				"--web-enable-expression-evaluation"
 			]
 		},
 		{
@@ -16,8 +17,10 @@
 			"request": "launch",
 			"type": "dart",
 			"flutterMode": "profile",
+			"preLaunchTask": "build_runner: build",
 			"args": [
-				"--dart-define", "PRERELEASE=1"
+				"--dart-define",
+				"PRERELEASE=1"
 			]
 		},
 		{
@@ -25,8 +28,10 @@
 			"request": "launch",
 			"type": "dart",
 			"flutterMode": "release",
+			"preLaunchTask": "build_runner: build",
 			"args": [
-				"--dart-define", "PRERELEASE=1"
+				"--dart-define",
+				"PRERELEASE=1"
 			]
 		}
 	]
