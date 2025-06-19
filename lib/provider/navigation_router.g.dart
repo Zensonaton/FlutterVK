@@ -6,11 +6,9 @@ part of 'navigation_router.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$routerHash() => r'2c6f6a1f685d5957aed5f9acb8c87f18e1d8c021';
+String _$routerHash() => r'a954e55b9d239a39cdc28adc74736664d353f500';
 
 /// [GoRouter], используемый для навигации по приложению.
-///
-/// Если Вам нужно изменить redirect'ы, то обратитесь к [currentAuthStateProvider].
 ///
 /// Copied from [router].
 @ProviderFor(router)
