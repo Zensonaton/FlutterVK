@@ -325,7 +325,7 @@ class AudioImageWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (audio == null || audio!.maxThumbnail == null) {
+    if (audio?.maxThumbnail == null) {
       return FallbackAudioAvatar(
         key: const ValueKey(null),
         borderRadius: borderRadius,
@@ -856,7 +856,6 @@ class AudioLyricsListView extends HookConsumerWidget {
       child: ScrollConfiguration(
         behavior: ScrollConfiguration.of(context).copyWith(
           scrollbars: false,
-          overscroll: false,
           dragDevices: {
             PointerDeviceKind.touch,
             PointerDeviceKind.mouse,
